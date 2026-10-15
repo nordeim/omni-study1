@@ -1,0 +1,73 @@
+import { describe, expect, it } from "vitest";
+import { NAV_ITEMS, greetingForHour, pathForView, viewFromPath, VIEWS } from "@/lib/router";
+
+describe("viewFromPath", () => {
+  it("maps every canonical PascalCase path to its view id", () => {
+    for (const item of NAV_ITEMS) {
+      expect(viewFromPath(item.path)).toBe(item.id);
+    }
+  });
+
+  it("maps the root and unknown paths to the dashboard", () => {
+    expect(viewFromPath("/")).toBe("dashboard");
+    expect(viewFromPath("")).toBe("dashboard");
+    expect(viewFromPath("/nope")).toBe("dashboard");
+    expect(viewFromPath("/Tasks/extra")).toBe("tasks"); // first segment wins
+  });
+
+  it("is case-insensitive and tolerates trailing slashes", () => {
+    expect(viewFromPath("/tasks")).toBe("tasks");
+    expect(viewFromPath("/TASKS/")).toBe("tasks");
+    expect(viewFromPath("/MyDay///")).toBe("myday");
+  });
+});
+
+describe("pathForView", () => {
+  it("round-trips with viewFromPath for all views", () => {
+    for (const view of VIEWS) {
+      expect(viewFromPath(pathForView(view))).toBe(view);
+    }
+  });
+
+  it("falls back to /Dashboard for unknown ids", () => {
+    expect(pathForView("unknown" as never)).toBe("/Dashboard");
+  });
+});
+
+describe("NAV_ITEMS", () => {
+  it("contains all 20 reference views in order", () => {
+    expect(NAV_ITEMS).toHaveLength(20);
+    expect(NAV_ITEMS[0]).toMatchObject({ id: "dashboard", label: "Dashboard", path: "/Dashboard" });
+    expect(NAV_ITEMS[19]).toMatchObject({ id: "settings", label: "Settings", path: "/Settings" });
+  });
+
+  it("has unique paths and labels", () => {
+    expect(new Set(NAV_ITEMS.map((n) => n.path)).size).toBe(NAV_ITEMS.length);
+    expect(new Set(NAV_ITEMS.map((n) => n.label)).size).toBe(NAV_ITEMS.length);
+  });
+});
+
+describe("greetingForHour", () => {
+  // Fake-clock probe of the live reference (all 24 hours mapped):
+  // 0-11 → morning, 12-16 → afternoon, 17-23 → evening. "Good night"
+  // never appears in the reference's greeting.
+  it("buckets hours like the reference app (morning covers 0-11, no night bucket)", () => {
+    expect(greetingForHour(0)).toBe("Good morning");
+    expect(greetingForHour(3)).toBe("Good morning");
+    expect(greetingForHour(4)).toBe("Good morning");
+    expect(greetingForHour(6)).toBe("Good morning");
+    expect(greetingForHour(11)).toBe("Good morning");
+    expect(greetingForHour(12)).toBe("Good afternoon");
+    expect(greetingForHour(13)).toBe("Good afternoon");
+    expect(greetingForHour(16)).toBe("Good afternoon");
+    expect(greetingForHour(17)).toBe("Good evening");
+    expect(greetingForHour(18)).toBe("Good evening");
+    expect(greetingForHour(23)).toBe("Good evening");
+  });
+
+  it("never returns 'Good night' (the reference has no such bucket)", () => {
+    for (let h = 0; h < 24; h++) {
+      expect(greetingForHour(h)).not.toBe("Good night");
+    }
+  });
+});
