@@ -1,0 +1,559 @@
+@import "tailwindcss";
+
+/* ---------------------------------------------------------------------------
+   StudyFlow design system — Tailwind v4, CSS-first.
+
+   THE TEN DOCUMENTED v3→v4 TRAPS (docs/Tailwind-V4-Validation-Report.md +
+   AGENTS.md) — every pin below exists because a trap shipped a parity bug:
+
+   1.  @theme inline vars must be FULL hsl() colors — bare triplets resolve to
+       transparent. Shadcn tokens therefore stay raw triplets in :root/.dark,
+       consumed as hsl(var(--x)) INSIDE @theme inline (trap 13 routing).
+   2.  The v3-era palette is PINNED below — v4's oklch defaults drift 1–3
+       units/channel (trap: unpinned colors serialize as lab(...)).
+   3.  --shadow-sm is pinned to v3's exact value — v4 shifted the scale a notch.
+   4.  Never put margin utilities (mt-*, mb-*) as children of space-y/x-*
+       containers — v4's :where() rewrite flips specificity. Convention:
+       flex gap-* only.
+   5.  Exact-sRGB gradients are inline styles / CSS classes, never utility
+       gradients (v4 interpolates in oklab).
+   6.  Radius scale: v4 is v3-identical EXCEPT rounded-sm (2px → xs). Pin
+       --radius-sm ONLY.
+   7.  Opacity utilities serialize as oklab in Chromium — e2e accepts both.
+   8.  pt-* after p-* REPLACES the top — the mobile offset is a single pt-20.
+   9.  BLUR scale shifted: v3 backdrop-blur-sm (4px) is v4 backdrop-blur-xs.
+   10. Modern color syntax serializes as legacy forms — pin asserted colors.
+
+   Dark-mode contract (S10-1): every token that must re-theme is a raw
+   triplet in :root/.dark routed through hsl(var(…)) in @theme inline — a
+   LITERAL there inlines at build time and .dark can never reach it.
+--------------------------------------------------------------------------- */
+
+@theme {
+  /* ---- v3-era palette pins (measured hexes; trap 2/10) ---- */
+  --color-slate-50: #f8fafc;
+  --color-slate-100: #f1f5f9;
+  --color-slate-200: #e2e8f0;
+  --color-slate-300: #cbd5e1;
+  --color-slate-400: #94a3b8;
+  --color-slate-500: #64748b;
+  --color-slate-600: #475569;
+  --color-slate-700: #334155;
+  --color-slate-800: #1e293b;
+  --color-slate-900: #0f172a;
+  --color-slate-950: #020617;
+
+  --color-gray-50: #f9fafb;
+  --color-gray-100: #f3f4f6;
+  --color-gray-200: #e5e7eb;
+  --color-gray-300: #d1d5db;
+  --color-gray-400: #9ca3af;
+  --color-gray-500: #6b7280;
+  --color-gray-600: #4b5563;
+  --color-gray-700: #374151;
+  --color-gray-800: #1f2937;
+  --color-gray-900: #111827;
+  --color-gray-950: #030712;
+
+  --color-violet-50: #f5f3ff;
+  --color-violet-100: #ede9fe;
+  --color-violet-200: #ddd6fe;
+  --color-violet-300: #c4b5fd;
+  --color-violet-400: #a78bfa;
+  --color-violet-500: #8b5cf6;
+  --color-violet-600: #7c3aed;
+  --color-violet-700: #6d28d9;
+  --color-violet-800: #5b21b6;
+  --color-violet-900: #4c1d95;
+
+  --color-indigo-50: #eef2ff;
+  --color-indigo-100: #e0e7ff;
+  --color-indigo-500: #6366f1;
+  --color-indigo-600: #4f46e5;
+  --color-indigo-700: #4338ca;
+
+  --color-blue-50: #eff6ff;
+  --color-blue-100: #dbeafe;
+  --color-blue-400: #60a5fa;
+  --color-blue-500: #3b82f6;
+  --color-blue-600: #2563eb;
+
+  --color-sky-50: #f0f9ff;
+  --color-sky-100: #e0f2fe;
+  --color-sky-400: #38bdf8;
+  --color-sky-500: #0ea5e9;
+  --color-sky-600: #0284c7;
+  --color-sky-700: #0369a1;
+
+  --color-cyan-50: #ecfeff;
+  --color-cyan-100: #cffafe;
+  --color-cyan-400: #22d3ee;
+  --color-cyan-500: #06b6d4;
+  --color-cyan-600: #0891b2;
+  --color-cyan-700: #0e7490;
+
+  --color-teal-50: #f0fdfa;
+  --color-teal-100: #ccfbf1;
+  --color-teal-300: #5eead4;
+  --color-teal-400: #2dd4bf;
+  --color-teal-500: #14b8a6;
+  --color-teal-600: #0d9488;
+  --color-teal-700: #0f766e;
+  --color-teal-900: #134e4a;
+
+  --color-emerald-50: #ecfdf5;
+  --color-emerald-100: #d1fae5;
+  --color-emerald-300: #6ee7b7;
+  --color-emerald-400: #34d399;
+  --color-emerald-500: #10b981;
+  --color-emerald-600: #059669;
+  --color-emerald-700: #047857;
+  --color-emerald-900: #064e3b;
+
+  /* green-100 is the reference's measured FOCUS TIME tint — #dcfce7, NOT
+     emerald-100 (S7 trap 12: same-hue families are not interchangeable). */
+  --color-green-100: #dcfce7;
+  --color-green-500: #22c55e;
+  --color-green-600: #16a34a;
+
+  --color-amber-50: #fffbeb;
+  --color-amber-100: #fef3c7;
+  --color-amber-300: #fcd34d;
+  --color-amber-400: #fbbf24;
+  --color-amber-500: #f59e0b;
+  --color-amber-600: #d97706;
+  --color-amber-700: #b45309;
+  --color-amber-900: #78350f;
+
+  --color-orange-50: #fff7ed;
+  --color-orange-100: #ffedd5;
+  --color-orange-400: #fb923c;
+  --color-orange-500: #f97316;
+  --color-orange-600: #ea580c;
+  --color-orange-700: #c2410c;
+
+  --color-red-50: #fef2f2;
+  --color-red-100: #fee2e2;
+  --color-red-200: #fecaca;
+  --color-red-300: #fca5a5;
+  --color-red-400: #f87171;
+  --color-red-500: #ef4444;
+  --color-red-600: #dc2626;
+  --color-red-700: #b91c1c;
+  --color-red-900: #7f1d1d;
+
+  --color-pink-50: #fdf2f8;
+  --color-pink-100: #fce7f3;
+  --color-pink-300: #f9a8d4;
+  --color-pink-400: #f472b6;
+  --color-pink-500: #ec4899;
+  --color-pink-600: #db2777;
+  --color-pink-700: #be185d;
+  --color-pink-900: #831843;
+
+  --color-rose-50: #fff1f2;
+  --color-rose-100: #ffe4e6;
+  --color-rose-500: #f43f5e;
+  --color-rose-600: #e11d48;
+  --color-rose-700: #be123c;
+
+  --color-yellow-100: #fef9c3;
+  --color-yellow-500: #eab308;
+  --color-yellow-700: #a16207;
+
+  --color-purple-100: #f3e8ff;
+  --color-purple-500: #a855f7;
+
+  /* ---- trap 3: v3's shadow-sm — v4 shifted the whole scale one notch ---- */
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+
+  /* ---- trap 6: only rounded-sm changed meaning in v4 ---- */
+  --radius-sm: 0.125rem;
+
+  /* ---- shadcn token utilities route through runtime-resolvable vars ---- */
+  --color-background: hsl(var(--background));
+  --color-foreground: hsl(var(--foreground));
+  --color-card: hsl(var(--card));
+  --color-card-foreground: hsl(var(--card-foreground));
+  --color-popover: hsl(var(--popover));
+  --color-popover-foreground: hsl(var(--popover-foreground));
+  --color-primary: hsl(var(--primary));
+  --color-primary-foreground: hsl(var(--primary-foreground));
+  --color-secondary: hsl(var(--secondary));
+  --color-secondary-foreground: hsl(var(--secondary-foreground));
+  --color-muted: hsl(var(--muted));
+  --color-muted-foreground: hsl(var(--muted-foreground));
+  --color-accent: hsl(var(--accent));
+  --color-accent-foreground: hsl(var(--accent-foreground));
+  --color-destructive: hsl(var(--destructive));
+  --color-destructive-foreground: hsl(var(--destructive-foreground));
+  --color-border: hsl(var(--border));
+  --color-input: hsl(var(--input));
+  --color-ring: hsl(var(--ring));
+
+  /* The sf-primary color utilities defined in @theme (the only ones —
+     everything else reads the runtime vars via rgb(var(--sf-*))): */
+  --color-sf-primary: rgb(var(--sf-primary));
+  --color-sf-primary-foreground: rgb(var(--sf-primary-foreground));
+  --color-sf-primary-soft: rgb(var(--sf-primary-soft));
+  --color-sf-primary-soft-dark: rgb(var(--sf-primary-soft-dark));
+  --color-sf-primary-strong: rgb(var(--sf-primary-strong));
+  --color-sf-primary-strong-dark: rgb(var(--sf-primary-strong-dark));
+}
+
+/* ---------------------------------------------------------------------------
+   Raw triplet tokens (:root / .dark) — consumed through hsl(var(--x)) inside
+   @theme inline above, so .dark overrides actually reach the utilities
+   (trap 13: a literal in @theme inline inlines at build time).
+--------------------------------------------------------------------------- */
+:root {
+  /* the violet accent's runtime defaults (pre-apply state; the theme store
+     and the boot script overwrite the --sf-* set on <html>) */
+  --sf-primary: 139 92 246;
+  --sf-primary-foreground: 255 255 255;
+  --sf-primary-strong: 124 58 237;
+  --sf-primary-strong-dark: 196 181 253;
+  --sf-primary-deep: 109 40 217;
+  --sf-primary-soft: 243 232 255;
+  --sf-primary-soft-dark: 76 29 149;
+  --sf-primary-softest: 245 243 255;
+  --sf-primary-softest-adjacent: 238 242 255;
+  --sf-primary-gradient-to: 79 70 229;
+  --sf-primary-gradient-to-strong: 67 56 202;
+  --sf-primary-avatar-from: 167 139 250;
+  --sf-primary-avatar-to: 99 102 241;
+  --sf-primary-empty-from: 237 233 254;
+  --sf-primary-empty-to: 224 231 255;
+
+  /* shadcn base — the reference's form-control palette is GRAY (S5) */
+  --background: 0 0% 100%;
+  --foreground: 220 9% 4%; /* gray-950 */
+  --card: 0 0% 100%;
+  --card-foreground: 220 9% 4%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 220 9% 4%;
+  --primary: 251 91% 60%; /* violet-500 in hsl */
+  --primary-foreground: 0 0% 100%;
+  --secondary: 220 14% 96%; /* slate-100 */
+  --secondary-foreground: 215 25% 27%; /* slate-700 */
+  --muted: 220 14% 96%;
+  --muted-foreground: 220 9% 46%; /* gray-400 */
+  --accent: 220 14% 96%;
+  --accent-foreground: 215 25% 27%;
+  --destructive: 0 84% 60%;
+  --destructive-foreground: 0 0% 100%;
+  --border: 220 13% 91%; /* gray-200 */
+  --input: 220 13% 91%;
+  --ring: 251 91% 60%;
+  --radius: 0.5rem;
+}
+
+.dark {
+  --background: 222 47% 5%; /* slate-950 family */
+  --foreground: 210 40% 98%;
+  --card: 222 44% 8%;
+  --card-foreground: 210 40% 98%;
+  --popover: 222 44% 8%;
+  --popover-foreground: 210 40% 98%;
+  --primary: 251 91% 60%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 217 33% 17%;
+  --secondary-foreground: 210 40% 98%;
+  --muted: 217 33% 17%;
+  --muted-foreground: 215 20% 65%;
+  --accent: 217 33% 17%;
+  --accent-foreground: 210 40% 98%;
+  --destructive: 0 72% 51%;
+  --destructive-foreground: 0 0% 100%;
+  --border: 217 33% 20%;
+  --input: 217 33% 20%;
+  --ring: 251 91% 60%;
+}
+
+/* ---------------------------------------------------------------------------
+   Base + utilities
+--------------------------------------------------------------------------- */
+@layer base {
+  * {
+    border-color: hsl(var(--border));
+  }
+  html {
+    font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
+      "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji",
+      "Segoe UI Emoji";
+  }
+  body {
+    background-color: transparent;
+    color: hsl(var(--foreground));
+  }
+}
+
+@utility sf-canvas {
+  /* trap 5: exact sRGB stops, never bg-gradient-to-* */
+  background-image: linear-gradient(
+    to right bottom,
+    #f8fafc,
+    #ffffff,
+    rgb(245 243 255 / 0.3)
+  );
+  .dark & {
+    background-image: linear-gradient(
+      to right bottom,
+      hsl(222 47% 6%),
+      hsl(222 47% 4%),
+      rgb(76 29 149 / 0.12)
+    );
+  }
+}
+
+@utility glass {
+  background-color: rgb(255 255 255 / 0.8);
+  backdrop-filter: blur(20px);
+  border-color: rgb(255 255 255 / 0.5);
+  .dark & {
+    background-color: rgb(15 23 42 / 0.8);
+    border-color: rgb(51 65 85 / 0.5);
+  }
+}
+
+@utility sf-card {
+  background-color: hsl(var(--card));
+  border: 1px solid #f1f5f9;
+  border-radius: 1rem;
+  box-shadow: var(--shadow-sm);
+  .dark & {
+    border-color: hsl(var(--border));
+  }
+}
+
+@utility sf-focus {
+  &:focus-visible {
+    outline: 2px solid rgb(var(--sf-primary));
+    outline-offset: 2px;
+  }
+}
+
+@utility sf-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: rgb(203 213 225 / 0.9) transparent;
+  &::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  &::-webkit-scrollbar-thumb {
+    background-color: rgb(203 213 225 / 0.9);
+    border-radius: 9999px;
+  }
+  .dark & {
+    scrollbar-color: rgb(51 65 85 / 0.9) transparent;
+    &::-webkit-scrollbar-thumb {
+      background-color: rgb(51 65 85 / 0.9);
+    }
+  }
+}
+
+@utility sf-skeleton {
+  position: relative;
+  overflow: hidden;
+  background-color: hsl(var(--muted));
+  &::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-image: linear-gradient(
+      90deg,
+      transparent,
+      rgb(255 255 255 / 0.45),
+      transparent
+    );
+    animation: sf-shimmer 1.6s infinite;
+  }
+  .dark &::after {
+    background-image: linear-gradient(
+      90deg,
+      transparent,
+      rgb(255 255 255 / 0.08),
+      transparent
+    );
+  }
+}
+
+@utility sf-gradient {
+  /* the session-5 gradient CTA surface — sRGB-exact via runtime vars */
+  background-image: linear-gradient(
+    to right,
+    rgb(var(--sf-primary)),
+    rgb(var(--sf-primary-gradient-to))
+  );
+  print-color-adjust: exact;
+  &:hover {
+    background-image: linear-gradient(
+      to right,
+      rgb(var(--sf-primary-strong)),
+      rgb(var(--sf-primary-gradient-to-strong))
+    );
+  }
+}
+
+@utility sf-gradient-shadow {
+  box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+}
+
+@utility sf-gradient-shadow-lg {
+  box-shadow: 0 10px 15px -3px rgb(var(--sf-primary) / 0.25),
+    0 4px 6px -4px rgb(var(--sf-primary) / 0.25);
+}
+
+@utility sf-calc-display {
+  background-image: linear-gradient(
+    to bottom right,
+    rgb(var(--sf-primary-softest)),
+    rgb(var(--sf-primary-softest-adjacent))
+  );
+  .dark & {
+    background-image: linear-gradient(
+      to bottom right,
+      rgb(var(--sf-primary-soft-dark) / 0.35),
+      rgb(var(--sf-primary-soft-dark) / 0.2)
+    );
+  }
+}
+
+@utility sf-overdue-banner {
+  background-image: linear-gradient(to right, #fef2f2, #fff7ed);
+  border: 1px solid #fecaca;
+  .dark & {
+    background-image: linear-gradient(
+      to right,
+      rgb(127 29 29 / 0.35),
+      rgb(120 53 15 / 0.3)
+    );
+    border-color: rgb(127 29 29 / 0.6);
+  }
+}
+
+@utility sf-amber-card {
+  background-image: linear-gradient(to bottom right, #fef3c7, #ffedd5);
+  .dark & {
+    background-image: linear-gradient(
+      to bottom right,
+      rgb(120 53 15 / 0.35),
+      rgb(120 53 15 / 0.2)
+    );
+  }
+}
+
+@utility sf-today-tint {
+  background-color: rgb(var(--sf-primary-empty-from));
+  .dark & {
+    background-color: rgb(var(--sf-primary-soft-dark) / 0.4);
+  }
+}
+
+@utility sf-selected-tint {
+  background-color: rgb(var(--sf-primary));
+}
+
+@utility sf-clock-chip {
+  background-image: linear-gradient(
+    to right bottom,
+    rgb(var(--sf-primary-softest)),
+    rgb(var(--sf-primary-softest-adjacent))
+  );
+  .dark & {
+    background-image: linear-gradient(
+      to bottom right,
+      rgb(var(--sf-primary-soft-dark) / 0.4),
+      rgb(var(--sf-primary-soft-dark) / 0.25)
+    );
+  }
+}
+
+@utility sf-clock-time {
+  color: rgb(var(--sf-primary-deep));
+  .dark & {
+    color: rgb(var(--sf-primary-strong-dark));
+  }
+}
+
+@utility sf-clock-date {
+  color: rgb(var(--sf-primary-strong));
+  .dark & {
+    color: rgb(var(--sf-primary-soft-dark));
+  }
+}
+
+@utility sf-print-exact {
+  print-color-adjust: exact;
+}
+
+@utility sf-skip-link {
+  position: absolute;
+  left: -9999px;
+  top: 0;
+  z-index: 100;
+  &:focus {
+    left: 8px;
+    top: 8px;
+    padding: 8px 12px;
+    background-color: hsl(var(--card));
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgb(0 0 0 / 0.15);
+  }
+}
+
+@keyframes sf-shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes sf-slide-in {
+  from {
+    transform: translateX(-16px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   Forced-colors (Windows HC) state restoration (S12) — state must survive
+   without fills.
+--------------------------------------------------------------------------- */
+@media (forced-colors: active) {
+  [aria-label="Calendar days"] [aria-pressed="true"],
+  [aria-label="Calendar mode"] [aria-pressed="true"],
+  [role="tab"][data-state="active"],
+  [data-today],
+  .sf-today-tint {
+    outline: 2px solid Highlight;
+    outline-offset: -2px;
+  }
+  nav a[aria-current="page"],
+  nav a[aria-current="page"] span {
+    font-weight: 700;
+  }
+  .sf-slider-fill {
+    forced-color-adjust: none;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   Reduced motion (S12) — the standard collapse block.
+--------------------------------------------------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

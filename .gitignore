@@ -53,3 +53,7 @@ playwright-report/
 
 # survey scratch (probe screenshots/json — session artifacts, not docs)
 research/
+
+# local scratch — never committed
+e2e-run.log
+work/
