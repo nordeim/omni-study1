@@ -9,6 +9,12 @@
 
 ---
 
+#### Revision Block — v1.1.0 (rebuild session)
+
+- `[SR]` Implementation rebuilt onto the scaffolded config + test layers: 20 view components, layout chrome, login + S15-S26 auth surfaces, 58 API routes, 24-model Prisma schema + seed, /rum + /export owner panels.
+- `[SR]` Verified contract additions: `/api/auth/me` envelope is `{ ok, user }`; `mutations` is a standalone export in `src/lib/data.ts`; the `react-hooks/set-state-in-effect` lint gate is satisfied via key-remounted dialog forms + render-derived selection.
+- `[SR]` `public/` added (the build copies it into `.next/standalone/`); 14 dev-server captures under `docs/screenshots/`.
+
 #### Revision Block — v1.0.0
 
 - `[SR]` Initial PAD for the StudyFlow rebuild (replaces the prior document describing the retired ORBITAL iteration of this scaffold repo).

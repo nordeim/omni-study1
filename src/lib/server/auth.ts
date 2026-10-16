@@ -105,13 +105,23 @@ export async function requireUser(): Promise<SessionUser> {
 
 // ---- writing/clearing the session ---------------------------------------------------
 
-/** Attach the session cookie to a response: httpOnly, sameSite=lax,
- *  secure in production, 7-day maxAge, path=/. */
-export function setSessionCookie(response: NextResponse, userId: string): NextResponse {
+/**
+ * Attach the session cookie to a response: httpOnly, sameSite=lax, 7-day
+ * maxAge, path=/. `secure` rides the REQUEST protocol — a Secure cookie is
+ * silently DROPPED by browsers on a plain-HTTP non-localhost origin (the
+ * e2e suite serves the standalone build over http on a fixed port), so
+ * deriving it from the request (with the production default when the
+ * caller cannot know) is the correct contract.
+ */
+export function setSessionCookie(
+  response: NextResponse,
+  userId: string,
+  options?: { secure?: boolean },
+): NextResponse {
   response.cookies.set(SESSION_COOKIE_NAME, createSessionToken(userId), {
     httpOnly: true,
     sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
+    secure: options?.secure ?? process.env.NODE_ENV === "production",
     maxAge: SESSION_TTL_SECONDS,
     path: "/",
   });

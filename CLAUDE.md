@@ -176,3 +176,12 @@ You are successful when: the full gate is green; e2e specs that pin parity still
 - Routing brand/avatar gradients through `primary`/`strong` (they end at the ADJACENT hue — use `--sf-primary-gradient-to` / `-avatar-*`).
 - Extra real logins in e2e specs (rate limiter poisons the run).
 - Weakening lint/type gates to ship.
+
+## Session Contracts (rebuild session — hard-won, verified)
+
+- **`/api/auth/me` returns `{ ok, user }`** — the user row is NESTED. Reading the top level silently re-applies default theme/accent on every reload (loadFromUser falls back through `isAccent(undefined)` → violet). Unwrap: `const { user } = await apiGet<{ user: AppUser }>("/api/auth/me")`.
+- **`mutations` is a standalone export** (`export const mutations = {…}` in `src/lib/data.ts`) — NOT a property of `useDataStore`'s state. `useDataStore((s) => s.mutations.createTask)` type-errors; import it directly.
+- **`react-hooks/set-state-in-effect` is a lint gate.** The compliant patterns this repo uses: (a) render-derived selection (`effectiveId = selected && list.some(…) ? selected : list[0]?.id`), (b) key-remounted dialog forms with prop-initialized `useState` (`<TaskDialog key={dialogOpen ? \`open-${editing?.id ?? "new"}\` : "closed"} …>`), (c) deferred macrotask reactions (`window.setTimeout(complete, 0)` from the effect), (d) initial fetches INLINED in the effect (setStates after the await are fine; a wrapped async loader that sets state pre-await is flagged), (e) spinners flipped in event handlers, never in the effect body.
+- **Never run `bun run build` while the e2e suite is running** — the standalone server keeps serving DELETED inodes (the S9 trap, re-verified twice). The webServer gate will pass while later specs chase ghosts.
+- **The ESLint disable directives are NOT pre-seeded** — an unused `eslint-disable-next-line` is itself a lint error (`--report-unused-disable-directives`). Add them only where a rule actually fires.
+- **`public/` must exist** — the build script copies it into `.next/standalone/`; a missing dir fails an otherwise green build.

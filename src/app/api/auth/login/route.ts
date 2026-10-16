@@ -51,7 +51,9 @@ export async function POST(request: NextRequest) {
       return errorResponse(403, UNVERIFIED_COPY);
     }
 
-    return setSessionCookie(NextResponse.json({ user: publicUser(user) }), user.id);
+    return setSessionCookie(NextResponse.json({ user: publicUser(user) }), user.id, {
+      secure: request.nextUrl.protocol === "https:",
+    });
   } catch (err: unknown) {
     return toErrorResponse(err);
   }

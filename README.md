@@ -264,9 +264,10 @@ The verification gate before any push: `bun run lint && bun run typecheck && bun
 
 | Phase | Status | Deliverables |
 |-------|--------|--------------|
+| Rebuild session (from the scaffolded config+test layers to the full implementation) | ✅ Complete | `src/**` (20 views, chrome, 58 API routes, 24-model schema + seed), `prisma/**`, `public/`, `docs/screenshots/**` (14 dev-server captures) |
 | Reference recon (all 20 views, computed-style tokens) | ✅ Complete | Traps + measured tokens in `docs/Tailwind-V4-Validation-Report.md` |
 | Codebase build (20 views, 24 models, 40+ endpoints) | ✅ Complete | `src/**`, `prisma/**` |
-| Test suites (93 unit + 91 e2e) | ✅ Complete | `tests/**` |
+| Test suites (834 unit + 299 e2e) | ✅ Complete | `tests/**` |
 | Visual parity verification | ✅ Complete | `docs/screenshots/**`, `docs/remediation-plan*.md` |
 | Session-2 parity remediation (radius trap, icons, avatar, clock) | ✅ Complete | `docs/remediation-plan.md` |
 | Session-3 mobile-chrome & token remediation (fixed glass app bar + live clock, drawer mirror, greeting map, accent token completeness) | ✅ Complete | `docs/remediation-plan-session3.md` |

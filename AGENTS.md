@@ -205,3 +205,12 @@ Hover-parity probing must run in Playwright, not a touch-emulating browser — v
 - Styling: shadcn-style primitives in `src/components/ui/*`; accent colors via `rgb(var(--sf-*))` inline styles or the `text-sf-primary-*`/`bg-sf-primary-*` utilities — never hardcode violet hexes in view code. Brand gradients end at the ADJACENT hue (`--sf-primary-gradient-to`, indigo-600 for violet) and the avatar uses the lighter `--sf-primary-avatar-from/to` pair (violet-400 → indigo-500, measured) — never route them through primary/strong. Primary CTAs use the Button `gradient` variant (`.sf-gradient` classes) — never solid violet. The green/orange accents are the EMERALD/AMBER families (session-5 — the reference's swatch faces).
 - Errors: API handlers return `{ error }` JSON via `errorResponse()`; client shows `toast.error(err.message)`.
 - Commits: Conventional Commits, atomic units. Never commit `.env`, `db/*.db`, `dev.log`, or SSH keys (all gitignored — keep it that way).
+
+## Rebuild session additions (verified contracts)
+
+- `/api/auth/me` answers `{ ok: true, user: {…} }` — unwrap `.user` before `loadFromUser`, or every reload re-defaults the theme to violet/system.
+- `mutations` lives at `src/lib/data.ts` as a STANDALONE export — import it; it is not on the store state.
+- The `react-hooks/set-state-in-effect` rule is a gate: populate dialog forms via key-remounted components (`key={dialogOpen ? \`open-${id}\` : "closed"}`), derive selections at render, defer reactions to a macrotask, inline initial fetches.
+- Never `bun run build` during a `test:e2e` run — the booting webServer serves deleted inodes; the S9 lesson re-verified.
+- `formatCalcResult` renders 12 significant digits (`3.28083989501` for m→ft) — converter pins may assert the long form.
+- The calculator's `=` REPLACES the expression with the result and the next DIGIT starts fresh (chaining contract pinned by calculator.spec).

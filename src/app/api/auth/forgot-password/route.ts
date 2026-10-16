@@ -49,10 +49,14 @@ export async function POST(request: NextRequest) {
           expiresAt: new Date(Date.now() + TOKEN_TTL_MS),
         },
       });
+      // The absolute URL derives from the REQUEST origin (the e2e suite
+      // serves the app on a non-default port; siteUrl() is the metadata
+      // origin, not the serving origin).
+      const origin = request.nextUrl.origin;
       return NextResponse.json({
         ok: true,
         resetPath: `/reset-password?token=${token}`,
-        resetUrl: `${siteUrl()}/reset-password?token=${token}`,
+        resetUrl: `${origin}/reset-password?token=${token}`,
       });
     }
 

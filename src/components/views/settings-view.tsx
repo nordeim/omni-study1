@@ -1070,6 +1070,7 @@ export function SettingsView() {
             </section>
             <DisplayNameCard key={user ? `dn-${user.id}` : "dn-loading"} user={user} />
             <StudyProfileCard key={user ? `sp-${user.id}` : "sp-loading"} user={user} onRefreshed={setUser} />
+            <SignOutCard />
             <EmailCard user={user} onEmailChanged={setUser} />
             <PasswordCard />
             <DangerZoneCard />
@@ -1095,5 +1096,42 @@ export function SettingsView() {
         </TabsContent>
       </Tabs>
     </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Sign out (the reference's Settings → Profile affordance): clears the
+// session server-side + the theme cache client-side, then a FULL reload to
+// /login so the boot script re-defaults the theme.
+// ---------------------------------------------------------------------------
+
+function SignOutCard() {
+  const [busy, setBusy] = React.useState(false);
+
+  const signOut = async () => {
+    if (busy) return;
+    setBusy(true);
+    try {
+      await apiSend("POST", "/api/auth/logout");
+    } catch {
+      // clearing the cookie client-side still ends the session UX
+    } finally {
+      useThemeStore.getState().clearThemeCache();
+      window.location.replace("/login");
+    }
+  };
+
+  return (
+    <section className="sf-card flex items-center justify-between gap-4 p-6">
+      <div>
+        <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-100">Session</h3>
+        <p className="mt-0.5 text-sm text-slate-500 dark:text-slate-400">
+          Sign out of StudyFlow on this device.
+        </p>
+      </div>
+      <Button type="button" variant="outline" className="h-9" onClick={signOut} disabled={busy}>
+        {busy ? "Signing out…" : "Sign out"}
+      </Button>
+    </section>
   );
 }

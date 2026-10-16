@@ -63,6 +63,7 @@ export async function POST(request: NextRequest) {
     return setSessionCookie(
       NextResponse.json({ ok: true, user: publicUser(verifiedUser) }),
       user.id,
+      { secure: request.nextUrl.protocol === "https:" },
     );
   } catch (err: unknown) {
     return toErrorResponse(err);
