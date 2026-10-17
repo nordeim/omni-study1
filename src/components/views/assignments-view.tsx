@@ -211,7 +211,7 @@ export function AssignmentsView() {
           />
         </div>
       ) : (
-        <div className="flex flex-col gap-3">
+        <div className="flex flex-col gap-3" aria-label="Assignment rows">
           {filtered.map((a) => {
             const due = dueLabel(a);
             return (
@@ -221,7 +221,7 @@ export function AssignmentsView() {
               >
                 <div className="flex items-center gap-3">
                   <div className="min-w-0 flex-1">
-                    <h3 className="truncate font-medium text-slate-700 dark:text-slate-200">
+                    <h3 className="truncate font-semibold text-slate-700 dark:text-slate-200">
                       {a.title}
                     </h3>
                     <div className="mt-1.5 flex flex-wrap items-center gap-2">
@@ -230,7 +230,7 @@ export function AssignmentsView() {
                           "rounded-full px-2.5 py-0.5 text-xs font-medium",
                           due.overdue
                             ? "bg-red-100 text-red-600 dark:bg-red-950 dark:text-red-300"
-                            : "bg-blue-100 text-blue-600 dark:bg-blue-950 dark:text-blue-300",
+                            : "bg-blue-50 text-blue-600 dark:bg-blue-950 dark:text-blue-300",
                         )}
                       >
                         {due.text}

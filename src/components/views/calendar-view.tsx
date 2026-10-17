@@ -237,7 +237,7 @@ export function CalendarView() {
                   type="button"
                   aria-pressed={isSelected}
                   aria-label={formatLongDate(cell.date)}
-                  data-today={isToday ? "" : undefined}
+                  data-today={isToday ? "true" : undefined}
                   onClick={() => setSelected(cell.date)}
                   className={cn(
                     "relative flex aspect-square flex-col items-center justify-center gap-1 rounded-lg text-sm font-medium transition-colors",
@@ -296,7 +296,25 @@ export function CalendarView() {
         </section>
         )}
 
-        <section className="sf-card p-6">
+        <div
+          aria-label="Calendar legend"
+          className="flex flex-wrap items-center gap-4 text-sm text-slate-600 dark:text-slate-300"
+        >
+          <span className="inline-flex items-center gap-1.5">
+            <span className="size-2.5 rounded-full bg-blue-500" aria-hidden /> Tasks
+          </span>
+          <span className="inline-flex items-center gap-1.5">
+            <span className="size-2.5 rounded-full bg-amber-500" aria-hidden /> Assignments
+          </span>
+          <span className="inline-flex items-center gap-1.5">
+            <span className="size-2.5 rounded-full bg-red-500" aria-hidden /> Exams
+          </span>
+          <span className="inline-flex items-center gap-1.5">
+            <span className="size-2.5 rounded-full bg-emerald-500" aria-hidden /> Classes
+          </span>
+        </div>
+
+        <section className="sf-card p-6" aria-label="Day detail">
           <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100">
             {formatLongDate(selected)}
           </h3>
@@ -329,9 +347,9 @@ export function CalendarView() {
                 </article>
               ))}
               {selectedTasks.map((t) => (
-                <article
+                <div
                   key={t.id}
-                  className="flex items-center gap-3 rounded-lg border-l-4 border-l-sf-primary bg-slate-50 p-3 dark:bg-slate-800/60"
+                  className="flex items-center gap-3 rounded-lg border-l-4 border-l-blue-500 bg-blue-50 p-3 dark:bg-slate-800/60"
                 >
                   <PriorityCheckbox
                     checked={t.completed}
@@ -354,7 +372,7 @@ export function CalendarView() {
                     {t.title}
                   </p>
                   <SquareCheckBig className="ml-auto size-4 text-slate-300" strokeWidth={2} />
-                </article>
+                </div>
               ))}
             </div>
           )}

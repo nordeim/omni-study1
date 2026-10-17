@@ -63,6 +63,10 @@ export function MyDayView() {
   const [editing, setEditing] = React.useState<TaskRow | null>(null);
   const [showCompleted, setShowCompleted] = React.useState(false);
   const [showSuggestions, setShowSuggestions] = React.useState(false);
+  const suggestedTasks = React.useMemo(
+    () => tasks.filter((t) => !t.myDay && !t.completed).slice(0, 5),
+    [tasks],
+  );
   const [pendingDelete, setPendingDelete] = React.useState<TaskRow | null>(null);
 
   const today = startOfDay(new Date());
@@ -299,15 +303,33 @@ export function MyDayView() {
         </button>
         {showSuggestions && (
           <div id="my-day-suggestions" aria-label="Suggested tasks" className="mt-3 flex flex-col gap-2">
-            {STUDY_TIPS.map((tip) => (
-              <div
-                key={tip}
-                className="flex items-start gap-2.5 rounded-xl bg-slate-50 p-4 dark:bg-slate-800/50"
-              >
-                <Circle className="mt-0.5 size-4 shrink-0 text-sf-primary" strokeWidth={2} />
-                <p className="text-sm text-slate-600 dark:text-slate-300">{tip}</p>
-              </div>
-            ))}
+            {suggestedTasks.length === 0 ? (
+              <p className="py-4 text-center text-sm text-slate-400 dark:text-slate-500">
+                Nothing to suggest — every task is already in My Day.
+              </p>
+            ) : (
+              suggestedTasks.map((t) => (
+                <div
+                  key={t.id}
+                  className="flex items-center gap-2.5 rounded-xl bg-slate-50 p-4 dark:bg-slate-800/50"
+                >
+                  <Circle className="size-4 shrink-0 text-sf-primary" strokeWidth={2} />
+                  <p className="min-w-0 flex-1 truncate text-sm text-slate-600 dark:text-slate-300">
+                    {t.title}
+                  </p>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      void run(mutations.updateTask(t.id, { myDay: true }), "Could not add the task.");
+                    }}
+                  >
+                    Add
+                  </Button>
+                </div>
+              ))
+            )}
           </div>
         )}
       </div>

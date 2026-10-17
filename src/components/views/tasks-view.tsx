@@ -536,7 +536,6 @@ export function TasksView() {
   const [search, setSearch] = React.useState("");
   const [dialogOpen, setDialogOpen] = React.useState(false);
   const [editing, setEditing] = React.useState<TaskRow | null>(null);
-  const [pendingDelete, setPendingDelete] = React.useState<TaskRow | null>(null);
 
   const today = startOfDay(new Date());
 
@@ -564,7 +563,8 @@ export function TasksView() {
         setEditing(task);
         setDialogOpen(true);
       },
-      onDelete: (task) => setPendingDelete(task),
+      onDelete: (task) =>
+        void run(mutations.deleteTask(task.id), "Could not delete the task."),
     }),
     [run],
   );
@@ -757,38 +757,6 @@ export function TasksView() {
         onOpenChange={setDialogOpen}
         task={editing}
       />
-
-      <AlertDialog
-        open={pendingDelete !== null}
-        onOpenChange={(open) => {
-          if (!open) setPendingDelete(null);
-        }}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete this task?</AlertDialogTitle>
-            <AlertDialogDescription>
-              {pendingDelete
-                ? `"${pendingDelete.title}" will be permanently removed.`
-                : "This task will be permanently removed."}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              className="bg-red-600 text-white hover:bg-red-700"
-              onClick={() => {
-                if (pendingDelete) {
-                  void run(mutations.deleteTask(pendingDelete.id), "Could not delete the task.");
-                }
-                setPendingDelete(null);
-              }}
-            >
-              Delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </div>
   );
 }

@@ -51,7 +51,7 @@ function urgency(row: ExamRow): { text: string; className: string } {
     return { text: "Tomorrow", className: "bg-orange-100 text-orange-600 dark:bg-orange-950 dark:text-orange-300" };
   return {
     text: `in ${diff} days`,
-    className: "bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-300",
+    className: "bg-amber-100 text-amber-600 dark:bg-amber-950 dark:text-amber-300",
   };
 }
 
@@ -192,7 +192,7 @@ export function ExamsView() {
           />
         </div>
       ) : (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3" aria-label="Exam cards">
           {sorted.map((exam) => {
             const subject = subjectOf(exam.subjectId);
             const urgencyBadge = urgency(exam);
@@ -208,6 +208,7 @@ export function ExamsView() {
               <article key={exam.id} className="group sf-card overflow-hidden">
                 <div
                   className="h-2"
+                  aria-label="Subject color strip"
                   style={{ backgroundColor: subject?.color ?? "rgb(var(--sf-primary))" }}
                 />
                 <div className="p-6">

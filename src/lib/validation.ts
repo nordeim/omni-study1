@@ -10,6 +10,12 @@ import { ACCENTS } from "./theme";
 // ---- shared atoms ----------------------------------------------------------
 
 const idField = z.string().min(1);
+// Dialogs send "" for cleared relations — accept it and map to null
+// (the schema must not reject the empty string BEFORE the transform).
+const nullableId = z
+  .union([idField, z.literal("")])
+  .nullish()
+  .transform((v) => (v === "" ? null : (v ?? null)));
 const boundedTitle = z.string().min(1).max(200);
 const passwordField = z.string().min(8).max(200);
 const hexColor = z.string().regex(/^#[0-9a-fA-F]{6}$/);
@@ -135,8 +141,8 @@ export const taskListSchema = z.object({
 export const taskSchema = z.object({
   title: boundedTitle,
   notes: z.string().max(5000).optional().default(""),
-  listId: idField.nullish().transform((v) => (v === "" ? null : v)),
-  subjectId: idField.nullish().transform((v) => (v === "" ? null : v)),
+  listId: nullableId,
+  subjectId: nullableId,
   completed: z.boolean().optional().default(false),
   important: z.boolean().optional().default(false),
   dueDate: optionalDate,
@@ -149,7 +155,7 @@ export const taskSchema = z.object({
 export const assignmentSchema = z.object({
   title: boundedTitle,
   description: z.string().max(5000).optional().default(""),
-  subjectId: idField.nullish().transform((v) => (v === "" ? null : v)),
+  subjectId: nullableId,
   dueDate: optionalDate,
   type: z
     .enum(["homework", "essay", "project", "reading", "lab", "presentation", "other"])
@@ -162,7 +168,7 @@ export const assignmentSchema = z.object({
 export const examSchema = z.object({
   title: boundedTitle,
   date: requiredDate,
-  subjectId: idField.nullish().transform((v) => (v === "" ? null : v)),
+  subjectId: nullableId,
   type: z
     .enum(["test", "quiz", "midterm", "final", "oral", "practical"])
     .optional()
@@ -188,7 +194,7 @@ export const timetableClassSchema = z.object({
   dayOfWeek: z.number().int().min(0).max(6),
   startTime: hhmm,
   endTime: hhmm,
-  subjectId: idField.nullish().transform((v) => (v === "" ? null : v)),
+  subjectId: nullableId,
   room: z.string().max(100).optional().default(""),
   weekType: z.enum(["ALL", "A", "B"]).optional().default("ALL"),
 });
@@ -201,15 +207,15 @@ export const noteSchema = z.object({
   title: boundedTitle,
   content: z.string().max(100_000).optional().default(""),
   tags: z.string().max(2000).optional().default("[]"),
-  notebookId: idField.nullish().transform((v) => (v === "" ? null : v)),
-  subjectId: idField.nullish().transform((v) => (v === "" ? null : v)),
+  notebookId: nullableId,
+  subjectId: nullableId,
 });
 
 export const flashcardDeckSchema = z.object({
   name: boundedTitle,
   description: z.string().max(1000).optional().default(""),
   color: hexColor.optional().default("#8b5cf6"),
-  subjectId: idField.nullish().transform((v) => (v === "" ? null : v)),
+  subjectId: nullableId,
 });
 
 export const flashcardSchema = z.object({
@@ -247,12 +253,12 @@ export const practiceTestSchema = z.object({
     })
     .optional()
     .default("[]"),
-  subjectId: idField.nullish().transform((v) => (v === "" ? null : v)),
+  subjectId: nullableId,
 });
 
 export const studyGroupSchema = z.object({
   name: boundedTitle,
-  subjectId: idField.nullish().transform((v) => (v === "" ? null : v)),
+  subjectId: nullableId,
   members: z
     .array(
       z.object({
@@ -268,11 +274,11 @@ export const gradeSchema = z.object({
   score: z.number().min(0).max(1000),
   maxScore: z.number().min(1).max(1000).optional().default(100),
   weight: z.number().min(0).max(100).optional().default(1),
-  subjectId: idField.nullish().transform((v) => (v === "" ? null : v)),
+  subjectId: nullableId,
 });
 
 export const focusSessionSchema = z.object({
-  subjectId: idField.nullish().transform((v) => (v === "" ? null : v)),
+  subjectId: nullableId,
   startedAt: requiredDate,
   durationSeconds: z.number().int().min(1).max(86_400),
   mode: z.enum(["focus", "short-break", "long-break"]).optional().default("focus"),

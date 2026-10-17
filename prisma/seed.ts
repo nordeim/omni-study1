@@ -64,13 +64,16 @@ async function main(): Promise<void> {
   // Tasks — includes the overdue row behind the dashboard overdue banner
   // ("Return library books") and a today/+1 spread for the KPI cards.
   const taskDefs = [
-    { title: "Return library books", listId: errands.id, dueDate: at(-2, 17), priority: "medium", important: true },
+    { title: "Return library books", listId: errands.id, dueDate: at(-2, 17), priority: "medium" },
     { title: "Finish calculus problem set", listId: homework.id, subjectId: math.id, dueDate: at(0, 20), priority: "high", myDay: true },
-    { title: "Read chapter 4 — kinetics", listId: homework.id, subjectId: chemistry.id, dueDate: at(0, 22), priority: "medium", myDay: true },
+    { title: "Read chapter 4 — vectors", listId: homework.id, subjectId: math.id, dueDate: at(0, 22), priority: "high", important: true, myDay: true },
     { title: "Outline history essay", listId: homework.id, subjectId: history.id, dueDate: at(1, 18), priority: "low" },
+    { title: "Weekly vocabulary review", listId: homework.id, subjectId: english.id, repeat: "weekly" },
+    { title: "Annotate Keats ode", listId: homework.id, subjectId: english.id, dueDate: at(2, 18), priority: "low" },
+    { title: "Lab report: pendulum experiment", listId: homework.id, subjectId: physics.id, dueDate: at(3, 17), priority: "medium" },
     { title: "Lab report draft", listId: homework.id, subjectId: physics.id, dueDate: at(3, 17), priority: "medium" },
     { title: "Practice French vocabulary", listId: myTasks.id, repeat: "daily", myDay: true },
-    { title: "Book dentist appointment", listId: errands.id, important: true },
+    { title: "Book dentist appointment", listId: errands.id },
     { title: "Set up study group chat", listId: myTasks.id, completed: true },
     { title: "Submit scholarship form", listId: myTasks.id, completed: true, dueDate: at(-1, 12) },
   ];
@@ -80,6 +83,7 @@ async function main(): Promise<void> {
 
   const assignmentDefs = [
     { title: "Problem set 7 — integrals", subjectId: math.id, type: "homework", progress: 80, priority: "high", dueDate: at(2, 17) },
+    { title: "Problem set 6", subjectId: math.id, type: "worksheet", progress: 40, priority: "high", dueDate: at(5, 17) },
     { title: "Kinetics lab write-up", subjectId: chemistry.id, type: "lab", progress: 45, priority: "urgent", dueDate: at(4, 17) },
     { title: "Romeo & Juliet analysis", subjectId: english.id, type: "essay", progress: 25, priority: "medium", dueDate: at(6, 17) },
     { title: "Cold War timeline", subjectId: history.id, type: "project", progress: 60, priority: "medium", dueDate: at(8, 17) },
@@ -91,6 +95,7 @@ async function main(): Promise<void> {
 
   const examDefs = [
     { title: "Calculus II Midterm", subjectId: math.id, date: at(1, 9), type: "midterm", duration: 90, topics: JSON.stringify(["Integration by parts", "Series"]) },
+    { title: "Quiz — Integration", subjectId: math.id, date: at(4, 9), type: "quiz", duration: 45, topics: JSON.stringify(["u-substitution"]) },
     { title: "Chemistry Quiz 5", subjectId: chemistry.id, date: at(3, 10), type: "quiz", duration: 30, topics: JSON.stringify(["Equilibrium"]) },
     { title: "Physics Final", subjectId: physics.id, date: at(12, 9), type: "final", duration: 120, topics: JSON.stringify(["Mechanics", "Thermo"]) },
   ];
