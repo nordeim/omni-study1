@@ -24,6 +24,42 @@ export const GET = withUser(async (user) => {
 });
 
 export const POST = withUser(async (user, request: NextRequest) => {
+  // Link-files arrive as JSON (name + url, no binary payload).
+  if ((request.headers.get("content-type") ?? "").includes("application/json")) {
+    const raw: unknown = await request.json().catch(() => null);
+    if (typeof raw !== "object" || raw === null) {
+      return errorResponse(400, "The link payload must be a JSON object.");
+    }
+    const body = raw as { name?: unknown; url?: unknown; folderId?: unknown };
+    const name = typeof body.name === "string" ? body.name.trim() : "";
+    const url = typeof body.url === "string" ? body.url.trim() : "";
+    if (!name) return errorResponse(400, "The link needs a name.");
+    if (!/^https?:\/\//i.test(url)) {
+      return errorResponse(400, "The link needs a valid http(s) URL.");
+    }
+    let folderId: string | null = null;
+    if (typeof body.folderId === "string" && body.folderId.length > 0) {
+      const folder = await db.fileFolder.findFirst({
+        where: { id: body.folderId, userId: user.id },
+        select: { id: true },
+      });
+      if (!folder) return errorResponse(404, "That folder does not exist.");
+      folderId = folder.id;
+    }
+    const link = await db.fileItem.create({
+      data: {
+        userId: user.id,
+        name,
+        mime: "text/uri-list",
+        size: 0,
+        data: null,
+        url,
+        folderId,
+      },
+    });
+    return NextResponse.json(link, { status: 201 });
+  }
+
   const form = await request.formData().catch(() => null);
   if (!form) {
     return errorResponse(400, "Upload the file as multipart form data.");

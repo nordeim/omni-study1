@@ -9,7 +9,7 @@
 // ---------------------------------------------------------------------------
 
 import * as React from "react";
-import { Pause, Play, RotateCcw, Timer } from "lucide-react";
+import { BarChart3, CalendarDays, Pause, Play, RotateCcw, Timer } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -23,7 +23,7 @@ import {
 import { useToast } from "@/components/ui/toast";
 import { mutations, useDataStore } from "@/lib/data";
 import { isSameDay, startOfDay } from "@/lib/date";
-import { Spinner } from "@/components/views/shared";
+import { Spinner, StatCard } from "@/components/views/shared";
 import { cn } from "@/lib/utils";
 
 type TimerMode = "focus" | "short-break" | "long-break";
@@ -35,8 +35,8 @@ const MODE_LABELS: Record<TimerMode, string> = {
 };
 
 const PRESETS = [
-  { id: "pomodoro", label: "Pomodoro 25/5/15", minutes: { focus: 25, "short-break": 5, "long-break": 15 } },
-  { id: "deep", label: "Deep Work 50/10/30", minutes: { focus: 50, "short-break": 10, "long-break": 30 } },
+  { id: "pomodoro", name: "Pomodoro", durations: "25/5/15", minutes: { focus: 25, "short-break": 5, "long-break": 15 } },
+  { id: "deep", name: "Deep Work", durations: "50/10/30", minutes: { focus: 50, "short-break": 10, "long-break": 30 } },
 ] as const;
 
 function errorMessage(err: unknown, fallback: string): string {
@@ -158,6 +158,12 @@ export function FocusTimerView() {
       </header>
 
       <div className="mx-auto flex w-full max-w-md flex-col items-center gap-6">
+        {/* ---- stats ---- */}
+        <div className="grid w-full grid-cols-3 gap-3">
+          <StatCard icon={Timer} label="Pomodoros" value={focusSessions.filter((s) => s.mode === "focus").length} hint="All-time focus sessions" />
+          <StatCard icon={CalendarDays} label="Today" value={sessionsToday} hint="Sessions completed today" />
+          <StatCard icon={BarChart3} label="Sessions" value={focusSessions.length} hint="Total sessions logged" />
+        </div>
         {/* ---- mode tabs ---- */}
         <div className="flex items-center gap-1 rounded-xl bg-slate-100 p-1 dark:bg-slate-800" role="group" aria-label="Timer mode">
           {(Object.keys(MODE_LABELS) as TimerMode[]).map((m) => (
@@ -189,14 +195,17 @@ export function FocusTimerView() {
               className={cn(presetId === preset.id && "border-sf-primary text-sf-primary-strong")}
               onClick={() => applyPreset(preset.id)}
             >
-              {preset.label}
+              <span className="flex flex-col items-center leading-tight">
+                <span className="text-xs text-slate-500 dark:text-slate-400">{preset.name}</span>
+                <span className="text-sm font-semibold">{preset.durations}</span>
+              </span>
             </Button>
           ))}
         </div>
 
         {/* ---- ring + time ---- */}
         <div className="relative">
-          <svg viewBox="0 0 200 200" className="size-64 -rotate-90" role="img" aria-label="Timer progress">
+          <svg viewBox="0 0 200 200" className="h-64 w-64 -rotate-90" role="img" aria-label="Timer progress">
             <circle
               cx="100"
               cy="100"
@@ -219,7 +228,7 @@ export function FocusTimerView() {
             />
           </svg>
           <div className="absolute inset-0 flex flex-col items-center justify-center">
-            <span className="text-6xl font-bold tabular-nums text-slate-800 dark:text-slate-100">
+            <span role="timer" aria-label="Time remaining" className="text-5xl font-bold tabular-nums text-slate-800 dark:text-slate-100">
               {formatClock(remaining)}
             </span>
             <span className="mt-1 text-sm text-slate-500">{MODE_LABELS[mode]}</span>
@@ -250,7 +259,7 @@ export function FocusTimerView() {
             type="button"
             aria-label={running ? "Pause timer" : "Start timer"}
             onClick={() => setRunning((r) => !r)}
-            className="sf-gradient sf-gradient-shadow flex size-20 items-center justify-center rounded-full text-white transition-transform hover:scale-105"
+            className="sf-gradient sf-gradient-shadow-lg flex size-16 items-center justify-center rounded-full text-white transition-transform hover:scale-105"
           >
             {running ? (
               <Pause className="size-8" strokeWidth={2} aria-hidden />

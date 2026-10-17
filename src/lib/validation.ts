@@ -180,6 +180,7 @@ export const eventSchema = z.object({
   location: z.string().max(200).optional().default(""),
   repeat: z.enum(REPEATS).optional().default("none"),
   reminders: jsonArray.optional().default("[]"),
+  description: z.string().max(1000).optional().default(""),
 });
 
 export const timetableClassSchema = z.object({
@@ -199,6 +200,7 @@ export const notebookSchema = z.object({
 export const noteSchema = z.object({
   title: boundedTitle,
   content: z.string().max(100_000).optional().default(""),
+  tags: z.string().max(2000).optional().default("[]"),
   notebookId: idField.nullish().transform((v) => (v === "" ? null : v)),
   subjectId: idField.nullish().transform((v) => (v === "" ? null : v)),
 });

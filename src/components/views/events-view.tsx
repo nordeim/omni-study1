@@ -28,6 +28,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
@@ -100,6 +101,7 @@ export function EventsView() {
     color: EVENT_COLORS[0],
     location: "",
     repeat: "none",
+    description: "",
   });
   const [reminders, setReminders] = React.useState<number[]>([]);
   const [busy, setBusy] = React.useState(false);
@@ -119,6 +121,7 @@ export function EventsView() {
       color: EVENT_COLORS[0],
       location: "",
       repeat: "none",
+      description: "",
     });
     setReminders([]);
     setError("");
@@ -134,6 +137,7 @@ export function EventsView() {
       color: event.color,
       location: event.location,
       repeat: event.repeat,
+      description: event.description ?? "",
     });
     try {
       const parsed: unknown = JSON.parse(event.reminders);
@@ -159,6 +163,7 @@ export function EventsView() {
       location: form.location,
       repeat: form.repeat as EventInput["repeat"],
       reminders: JSON.stringify(reminders),
+      description: form.description,
     };
     try {
       if (dialog.open && dialog.editing) {
@@ -193,12 +198,13 @@ export function EventsView() {
     );
 
   const dayLabel = (day: Date, index: number) => {
-    const base = new Intl.DateTimeFormat("en-US", {
+    if (index === 0) return "Today";
+    if (index === 1) return "Tomorrow";
+    return new Intl.DateTimeFormat("en-US", {
       weekday: "short",
       month: "short",
       day: "numeric",
     }).format(day);
-    return index === 0 ? `${base} (Today)` : base;
   };
 
   return (
@@ -217,6 +223,7 @@ export function EventsView() {
           type="button"
           variant="gradient"
           className="sf-gradient-shadow"
+          aria-label="Create event"
           onClick={openCreate}
         >
           <Plus className="size-4" strokeWidth={2} />
@@ -231,7 +238,7 @@ export function EventsView() {
             title="No events yet"
             hint="Create your first event to see your week come alive."
             cta={
-              <Button type="button" variant="gradient" className="sf-gradient-shadow-lg" onClick={openCreate}>
+              <Button type="button" variant="gradient" className="sf-gradient-shadow-lg" aria-label="Create event" onClick={openCreate}>
                 <Plus className="size-4" strokeWidth={2} />
                 New Event
               </Button>
@@ -239,11 +246,17 @@ export function EventsView() {
           />
         </div>
       ) : (
-        <section className="sf-print-exact rounded-2xl bg-slate-900 p-6 shadow-2xl">
+        <section className="sf-print-exact rounded-2xl bg-slate-900 p-6 shadow-2xl" aria-label="Events panel">
           <div className="flex items-center justify-between">
-            <p className="text-sm font-medium text-slate-400">
-              {new Intl.DateTimeFormat("en-US", { month: "long", year: "numeric" }).format(new Date())}
-            </p>
+            <div>
+              <p className="text-sm font-medium text-slate-400">Events</p>
+              <span className="text-4xl font-bold text-white">
+                {new Date().getDate()}
+              </span>
+              <p className="text-sm font-medium text-slate-400">
+                {new Intl.DateTimeFormat("en-US", { month: "long", year: "numeric" }).format(new Date())}
+              </p>
+            </div>
             <div className="flex items-center gap-4">
               <span className="text-sm font-medium text-cyan-400">
                 CW {isoWeekNumber(new Date())}
@@ -345,7 +358,7 @@ export function EventsView() {
           </DialogHeader>
           <form onSubmit={submit} className="flex flex-col gap-4" noValidate>
             <div className="flex flex-col gap-1.5">
-              <Label htmlFor="event-title">Title</Label>
+              <Label htmlFor="event-title">Title *</Label>
               <Input
                 id="event-title"
                 value={form.title}
@@ -356,7 +369,7 @@ export function EventsView() {
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div className="flex flex-col gap-1.5">
-                <Label htmlFor="event-start">Starts</Label>
+                <Label htmlFor="event-start">Start</Label>
                 <Input
                   id="event-start"
                   type="datetime-local"
@@ -366,7 +379,7 @@ export function EventsView() {
                 />
               </div>
               <div className="flex flex-col gap-1.5">
-                <Label htmlFor="event-end">Ends (optional)</Label>
+                <Label htmlFor="event-end">End</Label>
                 <Input
                   id="event-end"
                   type="datetime-local"
@@ -412,6 +425,15 @@ export function EventsView() {
               />
             </div>
             <div className="flex flex-col gap-1.5">
+              <Label htmlFor="event-description">Description</Label>
+              <Textarea
+                id="event-description"
+                value={form.description}
+                onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
+                rows={3}
+              />
+            </div>
+            <div className="flex flex-col gap-1.5">
               <Label htmlFor="event-repeat">Repeat</Label>
               <Select
                 value={form.repeat}
@@ -429,7 +451,7 @@ export function EventsView() {
               </Select>
             </div>
             <div className="flex flex-col gap-1.5">
-              <Label>Reminders (minutes before)</Label>
+              <Label>Reminders</Label>
               <div className="flex gap-2">
                 {REMINDER_CHOICES.map((m) => (
                   <button

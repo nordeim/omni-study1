@@ -35,7 +35,14 @@ export const PATCH = withUser(async (user, request) => {
       }
     }
 
-    const prefs = parseWith(preferencesSchema, raw);
+    // Map the client `name` alias onto the schema key BEFORE parsing — the
+    // object schema strips unknown keys, so an unmapped alias silently
+    // no-ops (the S14-B3 padded-name lesson).
+    const schemaInput =
+      rawName !== undefined && typeof rawName === "string"
+        ? { ...raw, displayName: rawName }
+        : raw;
+    const prefs = parseWith(preferencesSchema, schemaInput);
     const data: Record<string, unknown> = {};
     if (prefs.themeMode !== undefined) data.themeMode = prefs.themeMode;
     if (prefs.accentColor !== undefined) data.accentColor = prefs.accentColor;

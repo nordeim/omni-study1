@@ -198,6 +198,7 @@ export function MathSolverView() {
       {/* ---- solution (the S14 aria-live contract) ---- */}
       <section
         className="sf-card p-6"
+        aria-label="Math solution"
         aria-live="polite"
         aria-busy={busy}
       >

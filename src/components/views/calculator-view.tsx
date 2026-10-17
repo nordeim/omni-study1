@@ -54,12 +54,11 @@ function relativeTime(iso: string): string {
 
 // ---- keypad plumbing ------------------------------------------------------------------
 
-type CalcKey = { label: string; token: string; kind: "digit" | "op" | "eq" | "clear" | "fn" };
+type CalcKey = { label: string; token: string; kind: "digit" | "op" | "eq" | "clear" | "fn"; span?: boolean };
 
 const BASIC_KEYS: CalcKey[] = [
-  { label: "AC", token: "C", kind: "clear" },
+  { label: "AC", token: "C", kind: "clear", span: true },
   { label: "±", token: "NEG", kind: "fn" },
-  { label: "%", token: "%", kind: "op" },
   { label: "÷", token: "÷", kind: "op" },
   { label: "7", token: "7", kind: "digit" },
   { label: "8", token: "8", kind: "digit" },
@@ -68,7 +67,7 @@ const BASIC_KEYS: CalcKey[] = [
   { label: "4", token: "4", kind: "digit" },
   { label: "5", token: "5", kind: "digit" },
   { label: "6", token: "6", kind: "digit" },
-  { label: "−", token: "-", kind: "op" },
+  { label: "-", token: "-", kind: "op" },
   { label: "1", token: "1", kind: "digit" },
   { label: "2", token: "2", kind: "digit" },
   { label: "3", token: "3", kind: "digit" },
@@ -200,6 +199,7 @@ export function CalculatorView() {
       onClick={() => void press(key.token)}
       className={cn(
         "h-14 rounded-xl text-lg font-medium transition-colors",
+        key.span && "col-span-2",
         key.kind === "digit" &&
           "border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800",
         key.kind === "op" && "bg-sf-primary-soft text-sf-primary-strong hover:brightness-95 dark:bg-sf-primary-soft-dark/40 dark:text-sf-primary-strong-dark",
@@ -228,8 +228,8 @@ export function CalculatorView() {
       </div>
 
       {/* ---- display ---- */}
-      <div className="sf-calc-display rounded-2xl p-6" aria-label="Calculator display" aria-live="polite">
-        <p className="text-right font-mono text-slate-500 dark:text-slate-400" data-testid="calc-expression">
+      <div className="sf-calc-display rounded-2xl p-6 text-4xl" aria-label="Calculator display" aria-live="polite">
+        <p className="text-right font-mono text-sm text-slate-500 dark:text-slate-400" data-testid="calc-expression">
           {expression || "0"}
         </p>
         <p className="mt-1 truncate text-right text-4xl font-bold tabular-nums text-slate-800 dark:text-slate-100" data-testid="calc-result">
@@ -307,7 +307,7 @@ export function CalculatorView() {
       {/* ---- history ---- */}
       <SectionCard title="History" icon={History} action={
         <Button variant="outline" size="sm" onClick={() => void clearHistory()} disabled={clearing || history.length === 0}>
-          {clearing ? <Spinner className="size-4" /> : <Trash2 className="size-4" strokeWidth={2} />} Clear
+          {clearing ? <Spinner className="size-4" /> : <Trash2 className="size-4" strokeWidth={2} />} Empty history
         </Button>
       }>
         {history.length === 0 ? (

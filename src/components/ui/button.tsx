@@ -18,7 +18,7 @@ const buttonVariants = cva(
         default: "bg-sf-primary text-sf-primary-foreground shadow-sm hover:bg-sf-primary-strong sf-print-exact",
         gradient: "sf-gradient sf-gradient-shadow text-sf-primary-foreground",
         destructive: "bg-destructive text-destructive-foreground shadow-sm hover:bg-destructive/90",
-        outline: "border border-input bg-card shadow-sm hover:bg-accent hover:text-accent-foreground",
+        outline: "border border-[#e5e5e5] bg-card text-[#0a0a0a] shadow-xs hover:bg-accent hover:text-accent-foreground dark:border-input dark:bg-card dark:text-foreground",
         secondary: "bg-secondary text-secondary-foreground shadow-sm hover:bg-secondary/80",
         ghost: "hover:bg-accent hover:text-accent-foreground",
         link: "text-sf-primary-strong underline-offset-4 hover:underline",

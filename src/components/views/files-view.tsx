@@ -15,7 +15,9 @@ import {
   FolderOpen,
   Home,
   Image as ImageIcon,
+  LayoutGrid,
   Link2,
+  List,
   Pencil,
   Plus,
   Trash2,
@@ -169,6 +171,11 @@ export function FilesView() {
   const [loading, setLoading] = React.useState(true);
   const [uploading, setUploading] = React.useState(false);
   const [folderDialogOpen, setFolderDialogOpen] = React.useState(false);
+  const [viewMode, setViewMode] = React.useState<"grid" | "list">("grid");
+  const [linkDialogOpen, setLinkDialogOpen] = React.useState(false);
+  const [linkName, setLinkName] = React.useState("");
+  const [linkUrl, setLinkUrl] = React.useState("");
+  const [linkBusy, setLinkBusy] = React.useState(false);
   const [renamingFolder, setRenamingFolder] = React.useState<FileFolderRow | null>(null);
   const [deletingFolder, setDeletingFolder] = React.useState<FileFolderRow | null>(null);
   const [deletingFile, setDeletingFile] = React.useState<FileItemRow | null>(null);
@@ -268,6 +275,25 @@ export function FilesView() {
     }
   };
 
+  const submitLink = async () => {
+    if (linkBusy) return;
+    setLinkBusy(true);
+    try {
+      await apiSend("POST", "/api/files", {
+        name: linkName,
+        url: linkUrl,
+        ...(currentFolderId ? { folderId: currentFolderId } : {}),
+      });
+      toast.success(`${linkName} added`);
+      setLinkDialogOpen(false);
+      await refresh();
+    } catch (err: unknown) {
+      toast.error(errorMessage(err, "The link could not be saved. Try again."));
+    } finally {
+      setLinkBusy(false);
+    }
+  };
+
   const isLinkFile = (file: FileItemRow): boolean => file.url !== null && file.data === null;
 
   return (
@@ -278,6 +304,53 @@ export function FilesView() {
         icon={FolderOpen}
         actions={
           <div className="flex items-center gap-2">
+            <div
+              role="group"
+              aria-label="View mode"
+              className="flex items-center rounded-lg border border-slate-200 p-0.5 dark:border-slate-700"
+            >
+              <button
+                type="button"
+                aria-label="Grid view"
+                aria-pressed={viewMode === "grid"}
+                onClick={() => setViewMode("grid")}
+                className={cn(
+                  "flex size-8 items-center justify-center rounded-md outline-none focus-visible:ring-2 focus-visible:ring-sf-primary/40",
+                  viewMode === "grid"
+                    ? "bg-sf-primary-soft text-sf-primary-strong"
+                    : "text-slate-500 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800",
+                )}
+              >
+                <LayoutGrid className="size-4" strokeWidth={2} aria-hidden />
+              </button>
+              <button
+                type="button"
+                aria-label="List view"
+                aria-pressed={viewMode === "list"}
+                onClick={() => setViewMode("list")}
+                className={cn(
+                  "flex size-8 items-center justify-center rounded-md outline-none focus-visible:ring-2 focus-visible:ring-sf-primary/40",
+                  viewMode === "list"
+                    ? "bg-sf-primary-soft text-sf-primary-strong"
+                    : "text-slate-500 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800",
+                )}
+              >
+                <List className="size-4" strokeWidth={2} aria-hidden />
+              </button>
+            </div>
+            <Button
+              type="button"
+              variant="outline"
+              size="icon"
+              aria-label="Add link"
+              onClick={() => {
+                setLinkName("");
+                setLinkUrl("");
+                setLinkDialogOpen(true);
+              }}
+            >
+              <Link2 className="size-4" strokeWidth={2} aria-hidden />
+            </Button>
             <Button
               variant="outline"
               onClick={() => {
@@ -308,14 +381,14 @@ export function FilesView() {
           type="button"
           onClick={() => setCurrentFolderId(null)}
           className={cn(
-            "flex items-center gap-1.5 rounded-full px-3 py-1 text-sm font-medium transition-colors",
+            "flex items-center gap-1 text-sm font-medium transition-colors",
             currentFolderId === null
-              ? "bg-sf-primary-soft text-sf-primary-strong"
-              : "bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300",
+              ? "text-sf-primary-strong"
+              : "text-slate-600 hover:text-sf-primary dark:text-slate-300",
           )}
         >
           <Home className="size-3.5" strokeWidth={2} aria-hidden />
-          Home
+          All Files
         </button>
         {breadcrumb.map((folder) => (
           <React.Fragment key={folder.id}>
@@ -460,6 +533,35 @@ export function FilesView() {
           )}
         </div>
       )}
+
+      <Dialog open={linkDialogOpen} onOpenChange={setLinkDialogOpen}>
+        <DialogContent className="max-w-md rounded-lg">
+          <DialogHeader>
+            <DialogTitle>Add Link</DialogTitle>
+          </DialogHeader>
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              void submitLink();
+            }}
+            className="flex flex-col gap-4"
+            noValidate
+          >
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="link-name">Name</Label>
+              <Input id="link-name" value={linkName} onChange={(e) => setLinkName(e.target.value)} required />
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="link-url">URL</Label>
+              <Input id="link-url" type="url" value={linkUrl} onChange={(e) => setLinkUrl(e.target.value)} placeholder="https://…" required />
+            </div>
+            <Button type="submit" variant="gradient" className="sf-gradient-shadow" disabled={linkBusy}>
+              {linkBusy ? <Spinner className="size-4" /> : <Link2 className="size-4" strokeWidth={2} />}
+              Save Link
+            </Button>
+          </form>
+        </DialogContent>
+      </Dialog>
 
       <FolderDialog
         open={folderDialogOpen}

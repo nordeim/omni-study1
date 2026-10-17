@@ -77,6 +77,7 @@ export function TimetableView() {
   const mondayOffset = (today.getDay() + 6) % 7;
   const [weekStart, setWeekStart] = React.useState(() => addDays(today, -mondayOffset));
   const [weekType, setWeekType] = React.useState<"ALL" | "A" | "B">("ALL");
+  const [builder, setBuilder] = React.useState(false);
   const [openDay, setOpenDay] = React.useState<number | null>((today.getDay() + 6) % 7);
   const [dialog, setDialog] = React.useState<{ open: boolean; editing: TimetableClassRow | null }>({
     open: false,
@@ -180,7 +181,7 @@ export function TimetableView() {
     }
   };
 
-  const weekLabel = `${new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric" }).format(weekDays[0])} – ${new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric" }).format(weekDays[6])}`;
+  const weekLabel = `${new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric" }).format(weekDays[0])} - ${new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric" }).format(weekDays[6])}`;
 
   const isThisWeek = weekDays.some((d) => d.toDateString() === today.toDateString());
 
@@ -223,7 +224,7 @@ export function TimetableView() {
             value={weekType}
             onValueChange={(v) => setWeekType(v as "ALL" | "A" | "B")}
           >
-            <SelectTrigger className="h-9 w-32" aria-label="Week type filter">
+            <SelectTrigger className="h-9 w-32" aria-label="Week filter">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -232,6 +233,14 @@ export function TimetableView() {
               <SelectItem value="B">Week B</SelectItem>
             </SelectContent>
           </Select>
+          <Button
+            type="button"
+            variant="outline"
+            aria-pressed={builder}
+            onClick={() => setBuilder((b) => !b)}
+          >
+            Grid Builder
+          </Button>
           <Button type="button" variant="gradient" className="sf-gradient-shadow" onClick={() => openCreate()}>
             <Plus className="size-4" strokeWidth={2} />
             Add Class
@@ -258,7 +267,7 @@ export function TimetableView() {
           {/* Desktop week grid */}
           <section className="sf-card overflow-hidden p-6 max-md:hidden">
             <div className="sf-timetable-canvas min-w-[900px] overflow-x-auto">
-              <div className="grid grid-cols-8">
+              <div className="grid grid-cols-8" data-builder={builder ? "true" : undefined} aria-label="Week header">
                 <div />
                 {weekDays.map((day, col) => {
                   const isTodayCol = isThisWeek && day.toDateString() === today.toDateString();

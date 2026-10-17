@@ -196,6 +196,7 @@ model Event {
   // S5-B2 reference dialog fields
   location  String    @default("")
   repeat    String    @default("none") // none | daily | weekly | monthly
+  description String  @default("")
   reminders String    @default("[]") // JSON [minutesBefore]
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
@@ -239,6 +240,7 @@ model Note {
   userId     String
   title      String // 1..200
   content    String    @default("")
+  tags      String    @default("[]") // JSON tag array
   notebookId String?
   subjectId  String?
   createdAt  DateTime  @default(now())

@@ -73,15 +73,40 @@ export function NotesView() {
   const [selectedId, setSelectedId] = React.useState<string | null>(null);
   const [query, setQuery] = React.useState("");
   const [notebookFilter, setNotebookFilter] = React.useState("all");
+  const [tagFilter, setTagFilter] = React.useState("all");
   const [dialog, setDialog] = React.useState<DialogState>({ open: false });
   const [name, setName] = React.useState("");
   const [busy, setBusy] = React.useState(false);
   const [error, setError] = React.useState("");
 
+  const allTags = React.useMemo(() => {
+    const set = new Set<string>();
+    for (const n of notes) {
+      try {
+        const parsed: unknown = JSON.parse(n.tags);
+        if (Array.isArray(parsed)) {
+          for (const t of parsed) if (typeof t === "string" && t) set.add(t);
+        }
+      } catch {
+        // unparseable tags — skip
+      }
+    }
+    return Array.from(set).sort();
+  }, [notes]);
+
   const filtered = React.useMemo(
     () =>
       notes
         .filter((n) => notebookFilter === "all" || n.notebookId === notebookFilter)
+        .filter((n) => {
+          if (tagFilter === "all") return true;
+          try {
+            const parsed: unknown = JSON.parse(n.tags);
+            return Array.isArray(parsed) && parsed.includes(tagFilter);
+          } catch {
+            return false;
+          }
+        })
         .filter((n) => {
           if (!query.trim()) return true;
           const q = query.toLowerCase();
@@ -94,7 +119,7 @@ export function NotesView() {
           (a, b) =>
             new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime(),
         ),
-    [notes, notebookFilter, query],
+    [notes, notebookFilter, tagFilter, query],
   );
 
   // Render-derived selection: a missing/stale id falls back to the first
@@ -194,7 +219,7 @@ export function NotesView() {
             <DropdownMenuTrigger asChild>
               <button
                 type="button"
-                aria-label="New note or notebook"
+                aria-label="New note menu"
                 className="sf-gradient sf-gradient-shadow flex size-9 items-center justify-center rounded-xl text-white outline-none focus-visible:ring-2 focus-visible:ring-sf-primary/40"
               >
                 <Plus className="size-4" strokeWidth={2} />
@@ -238,6 +263,21 @@ export function NotesView() {
               {notebooks.map((nb) => (
                 <SelectItem key={nb.id} value={nb.id}>
                   {nb.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="mt-3">
+          <Select value={tagFilter} onValueChange={setTagFilter}>
+            <SelectTrigger className="h-9" aria-label="Filter by tag">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All tags</SelectItem>
+              {allTags.map((t) => (
+                <SelectItem key={t} value={t}>
+                  {t}
                 </SelectItem>
               ))}
             </SelectContent>

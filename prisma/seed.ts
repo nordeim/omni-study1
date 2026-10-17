@@ -109,10 +109,10 @@ async function main(): Promise<void> {
 
   const classDefs = [
     { name: "Calculus II", dayOfWeek: 0, startTime: "9:00", endTime: "10:30", subjectId: math.id, room: "M201" },
-    { name: "Physics", dayOfWeek: 1, startTime: "11:00", endTime: "12:30", subjectId: physics.id, room: "P105" },
+    { name: "Physics", dayOfWeek: 1, startTime: "11:00", endTime: "12:30", subjectId: physics.id, room: "P105", weekType: "A" },
     { name: "World History", dayOfWeek: 2, startTime: "9:00", endTime: "10:30", subjectId: history.id, room: "H14" },
     { name: "English Literature", dayOfWeek: 3, startTime: "13:00", endTime: "14:30", subjectId: english.id, room: "E3" },
-    { name: "Chemistry Lab", dayOfWeek: 4, startTime: "14:00", endTime: "16:00", subjectId: chemistry.id, room: "Sci 2" },
+    { name: "Chemistry Lab", dayOfWeek: 4, startTime: "14:00", endTime: "16:00", subjectId: chemistry.id, room: "Sci 2", weekType: "B" },
   ];
   for (const c of classDefs) {
     await db.timetableClass.create({ data: { ...c, userId: user.id } });
@@ -124,9 +124,9 @@ async function main(): Promise<void> {
     ),
   );
   const noteDefs = [
-    { title: "Integration techniques", content: "# Integration\n\n- substitution\n- by parts: ∫u dv = uv − ∫v du\n- partial fractions for rational functions", notebookId: notebooks[0].id, subjectId: math.id },
+    { title: "Integration techniques", content: "# Integration\n\n- substitution\n- by parts: ∫u dv = uv − ∫v du\n- partial fractions for rational functions", notebookId: notebooks[0].id, subjectId: math.id, tags: '["calculus","exam-prep"]' },
     { title: "Kinetics summary", content: "Rate laws: zero/first/second order.\nArrhenius: k = A·e^(−Ea/RT).", notebookId: notebooks[0].id, subjectId: chemistry.id },
-    { title: "Essay sources", content: "Primary: letters collection.\nSecondary: two journal articles (2009, 2015).", notebookId: notebooks[1].id, subjectId: history.id },
+    { title: "Essay sources", content: "Primary: letters collection.\nSecondary: two journal articles (2009, 2015).", notebookId: notebooks[1].id, subjectId: history.id, tags: '["research"]' },
   ];
   for (const n of noteDefs) {
     await db.note.create({ data: { ...n, userId: user.id } });

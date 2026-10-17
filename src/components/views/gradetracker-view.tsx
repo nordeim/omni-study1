@@ -273,10 +273,14 @@ export function GradeTrackerView() {
 
       {/* ---- stats (zero-data renders AT ZERO — never an EmptyState, S17) ---- */}
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-        <StatCard icon={ListChecks} label="Overall Average" value={`${overallAvg}%`} hint="Overall Average" />
-        <StatCard icon={ListChecks} label="Highest Grade" value={`${highest}%`} hint="Highest Grade" />
-        <StatCard icon={ListChecks} label="Grades" value={grades.length} hint="Grades" />
-        <StatCard icon={ListChecks} label="Subjects" value={subjects.length} hint="Subjects" />
+        <div className="sf-gradient sf-gradient-shadow-lg rounded-2xl p-6 text-white">
+          <p className="text-sm font-medium text-white/80">Overall Average</p>
+          <p className="mt-2 text-3xl font-bold tabular-nums">{overallAvg}%</p>
+          <p className="mt-1 text-xs text-white/70">{grades.length} grades logged</p>
+        </div>
+        <StatCard icon={ListChecks} label="Highest Grade" value={`${highest}%`} hint="Best score so far" />
+        <StatCard icon={ListChecks} label="Total Grades" value={grades.length} hint="Across all subjects" />
+        <StatCard icon={ListChecks} label="Subjects Tracked" value={subjects.length} hint="This semester" />
       </div>
 
       {/* ---- grades list ---- */}

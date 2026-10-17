@@ -138,6 +138,7 @@ export type EventRow = {
   location: string;
   repeat: RepeatMode;
   reminders: string; // JSON minutesBefore[]
+  description: string;
   createdAt: string;
   updatedAt: string;
 };
@@ -169,6 +170,7 @@ export type NoteRow = {
   userId: string;
   title: string;
   content: string;
+  tags: string; // JSON tag array
   notebookId: string | null;
   subjectId: string | null;
   createdAt: string;

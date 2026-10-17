@@ -9,7 +9,7 @@
 // ---------------------------------------------------------------------------
 
 import * as React from "react";
-import { Bot, Send } from "lucide-react";
+import { BookOpen, Bot, Layers, ListChecks, Send, StickyNote } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -23,14 +23,12 @@ const CHAT_TIMEOUT_MS = 120_000;
 
 type PendingMessage = { id: string; role: "user"; content: string };
 
-const QUICK_PROMPTS = [
-  "Explain a concept",
-  "Study tips",
-  "Summarize my notes",
-  "Solve a problem",
-  "Translate",
-  "Essay ideas",
-];
+const QUICK_ACTIONS = [
+  { title: "Explain Concept", icon: BookOpen, prompt: "Explain a concept from my studies" },
+  { title: "Summarize Notes", icon: StickyNote, prompt: "Summarize my notes" },
+  { title: "Create Flashcards", icon: Layers, prompt: "Create flashcards from a topic" },
+  { title: "Practice Quiz", icon: ListChecks, prompt: "Quiz me on a topic" },
+] as const;
 
 function errorMessage(err: unknown, fallback: string): string {
   return err instanceof Error && err.message ? err.message : fallback;
@@ -83,10 +81,14 @@ export function AIAssistantView() {
       // Rollback: remove the optimistic bubble, bounce the text back.
       setPending((list) => list.filter((m) => m.id !== localId));
       setInput(content);
+      const offline =
+        typeof navigator !== "undefined" && !navigator.onLine;
       toast.error(
-        isTimeoutError(err)
-          ? "The assistant took too long to respond. Please try again."
-          : errorMessage(err, "The assistant could not respond. Try again."),
+        offline
+          ? "You appear to be offline. Check your connection and try again."
+          : isTimeoutError(err)
+            ? "The assistant took too long to respond. Please try again."
+            : errorMessage(err, "The assistant could not respond. Try again."),
       );
     } finally {
       setBusy(false);
@@ -115,16 +117,19 @@ export function AIAssistantView() {
               <p className="text-center text-sm text-slate-500">
                 Ask anything about your studies — or start with a quick prompt.
               </p>
-              <div className="flex flex-wrap justify-center gap-2">
-                {QUICK_PROMPTS.map((prompt) => (
-                  <Button
-                    key={prompt}
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setInput(prompt)}
+              <div className="grid w-full grid-cols-2 gap-2">
+                {QUICK_ACTIONS.map((action) => (
+                  <button
+                    key={action.title}
+                    type="button"
+                    onClick={() => setInput(action.prompt)}
+                    className="sf-card rounded-xl p-4 text-left outline-none transition-colors hover:border-sf-primary/40 focus-visible:ring-2 focus-visible:ring-sf-primary/40"
                   >
-                    {prompt}
-                  </Button>
+                    <action.icon className="size-8 text-sf-primary" strokeWidth={2} aria-hidden />
+                    <span role="heading" aria-level={3} className="mt-2 block text-base font-semibold text-slate-800 dark:text-slate-100">
+                      {action.title}
+                    </span>
+                  </button>
                 ))}
               </div>
             </>
@@ -174,17 +179,18 @@ export function AIAssistantView() {
 
       {/* ---- composer ---- */}
       <form
-        className="flex gap-2 border-t border-slate-100 pt-4 dark:border-slate-800"
+        className="flex flex-col gap-2 border-t border-slate-100 pt-4 dark:border-slate-800"
         onSubmit={(e) => {
           e.preventDefault();
           void send(input);
         }}
       >
+        <div className="flex gap-2">
         <Input
           value={input}
           onChange={(e) => setInput(e.target.value)}
           placeholder="Ask your study copilot anything…"
-          aria-label="Message the AI assistant"
+          aria-label="Message the assistant"
           className="flex-1"
           disabled={busy}
         />
@@ -198,6 +204,10 @@ export function AIAssistantView() {
           {busy ? <Spinner className="size-4" /> : <Send className="size-4" strokeWidth={2} aria-hidden />}
           Send
         </Button>
+        </div>
+        <p className="text-center text-xs text-slate-400 dark:text-slate-500">
+          Press Enter to send, Shift + Enter for a new line
+        </p>
       </form>
     </div>
   );
