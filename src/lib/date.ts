@@ -94,6 +94,23 @@ const SHORT_DATE = new Intl.DateTimeFormat("en-US", {
   day: "numeric",
 });
 
+
+/** "Friday, October 17, 2026" — the dashboard date (S4-I pin: weekday kept). */
+export function formatLongDateWithWeekday(date: Date): string {
+  return LONG_DATE_WITH_WEEKDAY.format(date);
+}
+
+const WEEKDAY_MONTH_DAY = new Intl.DateTimeFormat("en-US", {
+  weekday: "long",
+  month: "long",
+  day: "numeric",
+});
+
+/** "Friday, October 17" — the MyDay subtitle (no year, S4-D pin). */
+export function formatWeekdayMonthDay(date: Date): string {
+  return WEEKDAY_MONTH_DAY.format(date);
+}
+
 /** "October 6, 2026" */
 export function formatLongDate(date: Date): string {
   return LONG_DATE.format(date);

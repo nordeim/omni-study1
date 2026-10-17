@@ -1,5 +1,7 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:is(.dark *));
+
 /* ---------------------------------------------------------------------------
    StudyFlow design system — Tailwind v4, CSS-first.
 
@@ -43,6 +45,17 @@
   --color-slate-900: #0f172a;
   --color-slate-950: #020617;
 
+  --color-zinc-50: #fafafa;
+  --color-zinc-100: #f4f4f5;
+  --color-zinc-200: #e4e4e7;
+  --color-zinc-300: #d4d4d8;
+  --color-zinc-400: #a1a1aa;
+  --color-zinc-500: #71717a;
+  --color-zinc-600: #52525b;
+  --color-zinc-700: #3f3f46;
+  --color-zinc-800: #27272a;
+  --color-zinc-900: #18181b;
+  --color-zinc-950: #09090b;
   --color-gray-50: #f9fafb;
   --color-gray-100: #f3f4f6;
   --color-gray-200: #e5e7eb;
@@ -249,24 +262,26 @@
 }
 
 .dark {
-  --background: 222 47% 5%; /* slate-950 family */
-  --foreground: 210 40% 98%;
-  --card: 222 44% 8%;
-  --card-foreground: 210 40% 98%;
-  --popover: 222 44% 8%;
-  --popover-foreground: 210 40% 98%;
+  /* shadcn-zinc family (S10-1 pins) — card 5.92%, popover/background 3.92%,
+     border+input 15.9%, foreground 98%. Primary stays the violet accent. */
+  --background: 240 10% 3.92%;
+  --foreground: 0 0% 98%;
+  --card: 240 10% 5.92%;
+  --card-foreground: 0 0% 98%;
+  --popover: 240 10% 3.92%;
+  --popover-foreground: 0 0% 98%;
   --primary: 251 91% 60%;
   --primary-foreground: 0 0% 100%;
-  --secondary: 217 33% 17%;
-  --secondary-foreground: 210 40% 98%;
-  --muted: 217 33% 17%;
-  --muted-foreground: 215 20% 65%;
-  --accent: 217 33% 17%;
-  --accent-foreground: 210 40% 98%;
-  --destructive: 0 72% 51%;
-  --destructive-foreground: 0 0% 100%;
-  --border: 217 33% 20%;
-  --input: 217 33% 20%;
+  --secondary: 240 3.7% 15.9%;
+  --secondary-foreground: 0 0% 98%;
+  --muted: 240 3.7% 15.9%;
+  --muted-foreground: 240 5% 64.9%;
+  --accent: 240 3.7% 15.9%;
+  --accent-foreground: 0 0% 98%;
+  --destructive: 0 62.8% 30.6%;
+  --destructive-foreground: 0 0% 98%;
+  --border: 240 3.7% 15.9%;
+  --input: 240 3.7% 15.9%;
   --ring: 251 91% 60%;
 }
 
@@ -425,8 +440,8 @@
   .dark & {
     background-image: linear-gradient(
       to right,
-      rgb(127 29 29 / 0.35),
-      rgb(120 53 15 / 0.3)
+      rgb(127 29 29 / 0.2),
+      rgb(124 45 18 / 0.14)
     );
     border-color: rgb(127 29 29 / 0.6);
   }
@@ -437,8 +452,8 @@
   .dark & {
     background-image: linear-gradient(
       to bottom right,
-      rgb(120 53 15 / 0.35),
-      rgb(120 53 15 / 0.2)
+      rgb(120 53 15 / 0.22),
+      rgb(124 45 18 / 0.16)
     );
   }
 }
@@ -446,12 +461,15 @@
 @utility sf-today-tint {
   background-color: rgb(var(--sf-primary-empty-from));
   .dark & {
-    background-color: rgb(var(--sf-primary-soft-dark) / 0.4);
+    background-color: rgb(var(--sf-primary-soft-dark) / 0.3);
   }
 }
 
 @utility sf-selected-tint {
   background-color: rgb(var(--sf-primary));
+  .dark & {
+    background-color: rgb(var(--sf-primary-soft-dark) / 0.3);
+  }
 }
 
 @utility sf-clock-chip {
@@ -463,8 +481,8 @@
   .dark & {
     background-image: linear-gradient(
       to bottom right,
-      rgb(var(--sf-primary-soft-dark) / 0.4),
-      rgb(var(--sf-primary-soft-dark) / 0.25)
+      rgb(var(--sf-primary-soft-dark) / 0.35),
+      rgb(var(--sf-primary-soft-dark) / 0.12)
     );
   }
 }
@@ -480,6 +498,32 @@
   color: rgb(var(--sf-primary-strong));
   .dark & {
     color: rgb(var(--sf-primary-soft-dark));
+  }
+}
+
+
+@utility sf-progress-card {
+  background-image: linear-gradient(to bottom right, #fffbeb, #fff7ed);
+  border: 1px solid #fef3c7;
+  .dark & {
+    background-image: linear-gradient(
+      to bottom right,
+      rgb(120 53 15 / 0.22),
+      rgb(124 45 18 / 0.16)
+    );
+    border-color: rgb(120 53 15 / 0.5);
+  }
+}
+
+
+@utility sf-timetable-canvas {
+  print-color-adjust: exact;
+}
+
+
+@utility sf-chip-dark {
+  .dark & {
+    background-color: rgb(var(--sf-primary-soft-dark) / 0.3);
   }
 }
 
@@ -555,5 +599,18 @@
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
+  }
+}
+
+@media print {
+  aside {
+    display: none !important;
+  }
+  body {
+    background-color: #ffffff !important;
+  }
+  .sf-timetable-canvas {
+    min-width: 0px !important;
+    overflow-x: visible !important;
   }
 }

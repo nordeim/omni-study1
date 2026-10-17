@@ -57,23 +57,36 @@ type StatCardProps = {
   iconClassName?: string;
 };
 
-/** KPI card: 40px soft icon chip + big 30px value + caption. */
+/** KPI card — the reference anatomy (S3-A/S4-B): label (14px/500 slate-500,
+ *  mb-1) → value h3 (30px/700, normal tracking) → hint (14px slate-400, mt-1)
+ *  stacked left; a 48px solid chip with a 24px WHITE glyph top-right; a soft
+ *  wash blob clipped by the rounded-2xl card. The label/h3/hint are DOM
+ *  SIBLINGS (the e2e reads previousElementSibling/nextElementSibling). */
 export function StatCard({ icon: Icon, label, value, hint, iconClassName }: StatCardProps) {
   return (
-    <div className="sf-card overflow-hidden p-6">
-      <div className="flex items-center gap-4">
-        <div
+    <div className="sf-card relative overflow-hidden rounded-2xl p-6">
+      <span
+        aria-hidden
+        className="pointer-events-none absolute -right-8 -top-8 size-28 rounded-full opacity-70"
+        style={{
+          backgroundImage:
+            "linear-gradient(to bottom right, rgb(var(--sf-primary-empty-from)), rgb(var(--sf-primary-empty-to)))",
+        }}
+      />
+      <div className="relative flex items-start justify-between gap-4">
+        <div className="min-w-0">
+          <p className="mb-1 text-sm font-medium text-slate-500 dark:text-slate-400">{label}</p>
+          <h3 className="text-3xl font-bold text-slate-800 dark:text-slate-100">{value}</h3>
+          <p className="mt-1 text-sm text-slate-400 dark:text-slate-500">{hint ?? label}</p>
+        </div>
+        <span
           className={cn(
-            "flex size-10 shrink-0 items-center justify-center rounded-xl",
-            iconClassName ?? "bg-sf-primary-soft dark:bg-sf-primary-soft-dark/40",
+            "flex size-12 shrink-0 items-center justify-center rounded-xl sf-print-exact",
+            iconClassName ?? "bg-violet-500 dark:bg-violet-500",
           )}
         >
-          <Icon className="size-5 text-sf-primary-strong dark:text-sf-primary-strong-dark" strokeWidth={2} />
-        </div>
-        <div className="min-w-0">
-          <h3 className="truncate text-3xl font-bold text-slate-800 dark:text-slate-100">{value}</h3>
-          <p className="text-sm text-slate-500 dark:text-slate-400">{hint ?? label}</p>
-        </div>
+          <Icon className="size-6 text-white" strokeWidth={2} />
+        </span>
       </div>
     </div>
   );

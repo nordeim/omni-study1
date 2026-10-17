@@ -30,7 +30,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/components/ui/toast";
 import { mutations, useDataStore, type TaskRow } from "@/lib/data";
-import { formatLongDate, startOfDay } from "@/lib/date";
+import { formatWeekdayMonthDay, startOfDay } from "@/lib/date";
 import { greetingForHour } from "@/lib/router";
 import { cn } from "@/lib/utils";
 import { Spinner } from "@/components/views/shared";
@@ -173,10 +173,10 @@ export function MyDayView() {
         </div>
         <div className="min-w-0">
           <h1 className="truncate text-3xl font-bold text-slate-800 dark:text-slate-100">
-            {greetingForHour(today.getHours())}!
+            My Day
           </h1>
-          <p className="text-sm text-slate-500 dark:text-slate-400">
-            {formatLongDate(today)} · {active.length} task{active.length === 1 ? "" : "s"} for today
+          <p className="text-base text-slate-500 dark:text-slate-400">
+            {formatWeekdayMonthDay(today)}
           </p>
         </div>
       </header>
@@ -212,17 +212,10 @@ export function MyDayView() {
       </form>
 
       {/* ---- today's progress (S6-C measured amber card) ---- */}
-      <section
-        aria-label="Today progress"
-        className="rounded-2xl border p-4"
-        style={{
-          backgroundImage: "linear-gradient(to right, #fffbeb, #fff7ed)",
-          borderColor: "#fef3c7",
-        }}
-      >
+      <section aria-label="Today progress" className="sf-progress-card rounded-2xl p-4">
         <div className="flex items-center justify-between gap-4">
           <div>
-            <p className="text-sm font-medium text-amber-700">Today&apos;s Progress</p>
+            <p className="text-sm font-medium text-amber-700 dark:text-amber-400">Today&apos;s Progress</p>
             <p className="mt-1 text-2xl font-bold text-slate-800 dark:text-slate-100">
               {completed.length}/{active.length + completed.length}
             </p>

@@ -210,7 +210,7 @@ export function EventsView() {
             Events &amp; Reminders
           </h1>
           <p className="mt-1 text-base text-slate-500 dark:text-slate-400">
-            Your upcoming week at a glance.
+            Manage your events with custom reminders
           </p>
         </div>
         <Button

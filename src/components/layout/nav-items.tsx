@@ -66,13 +66,15 @@ type NavItemLinkProps = {
   collapsed?: boolean;
   onNavigate?: () => void;
   className?: string;
+  /** "drawer" → light link colors on the dark panel (S10 drawer pin). */
+  tone?: "default" | "drawer";
 };
 
 /**
  * Icon + label + trailing dot; active = 10% gradient tint (primary →
  * avatarTo, the measured S8-A stops) + strong text + aria-current.
  */
-export function NavItemLink({ view, collapsed = false, onNavigate, className }: NavItemLinkProps) {
+export function NavItemLink({ view, collapsed = false, onNavigate, className, tone = "default" }: NavItemLinkProps) {
   const item = NAV_ITEMS.find((n) => n.id === view);
   const active = useAppStore((s) => s.view) === view;
   const navigate = useAppStore((s) => s.navigate);
@@ -91,10 +93,12 @@ export function NavItemLink({ view, collapsed = false, onNavigate, className }: 
         onNavigate?.();
       }}
       className={cn(
-        "group flex px-4 py-3 outline-none transition-colors focus-visible:ring-2 focus-visible:ring-sf-primary/40",
+        "group flex py-3 outline-none transition-colors focus-visible:ring-2 focus-visible:ring-sf-primary/40",
+        collapsed ? "px-0" : "px-4",
         active
           ? "text-sf-primary-strong dark:text-sf-primary-strong-dark"
           : "text-slate-600 dark:text-slate-300",
+        tone === "drawer" && "dark:text-zinc-50",
         className,
       )}
     >
@@ -106,7 +110,7 @@ export function NavItemLink({ view, collapsed = false, onNavigate, className }: 
         className={cn(
           "flex flex-1 items-center rounded-xl transition-colors",
           collapsed
-            ? "" // S52: collapsed icons sit LEFT-ALIGNED at x=32 (16+16)
+            ? "px-4" // S52-C: collapsed icons sit LEFT-ALIGNED at x=32 (nav p-4 + span px-4)
             : "gap-3 hover:bg-slate-100/70 dark:hover:bg-slate-800/60",
         )}
         style={
@@ -117,9 +121,15 @@ export function NavItemLink({ view, collapsed = false, onNavigate, className }: 
             : undefined
         }
       >
-        <Icon className="h-5 w-5 shrink-0" strokeWidth={2} />
+        <Icon
+          className={cn(
+            "h-5 w-5 shrink-0",
+            active && "text-sf-primary dark:text-sf-primary-strong-dark",
+          )}
+          strokeWidth={2}
+        />
         {!collapsed && (
-          <span className="flex-1 truncate text-base">{item.label}</span>
+          <span className={cn("flex-1 truncate text-base", active && "font-medium")}>{item.label}</span>
         )}
         {!collapsed && active && (
           <span

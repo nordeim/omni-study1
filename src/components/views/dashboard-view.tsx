@@ -8,6 +8,7 @@
 
 import * as React from "react";
 import {
+  ArrowRight,
   Calendar,
   CircleAlert,
   ClipboardList,
@@ -24,7 +25,7 @@ import { mutations, useDataStore } from "@/lib/data";
 import {
   dayBucketLabel,
   daysUntil,
-  formatLongDate,
+  formatLongDateWithWeekday,
   formatMinutes,
   formatShortWithYear,
   isSameDay,
@@ -119,8 +120,8 @@ export function DashboardView() {
           <h1 className="text-3xl font-bold text-slate-800 dark:text-slate-100">
             {greetingForHour(today.getHours())}, {firstNameOf(userName)} 👋
           </h1>
-          <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-            {formatLongDate(today)}
+          <p className="mt-1 text-base text-slate-500 dark:text-slate-400">
+            {formatLongDateWithWeekday(today)}
           </p>
         </div>
         <Button
@@ -156,9 +157,10 @@ export function DashboardView() {
               e.preventDefault();
               navigate("tasks");
             }}
-            className="shrink-0 rounded-md text-sm font-medium text-sf-primary-strong outline-none focus-visible:ring-2 focus-visible:ring-sf-primary/40 dark:text-sf-primary-strong-dark"
+            className="flex shrink-0 items-center gap-1 rounded-md text-sm font-medium text-sf-primary-strong outline-none focus-visible:ring-2 focus-visible:ring-sf-primary/40 dark:text-sf-primary-strong-dark"
           >
             View All
+            <ArrowRight className="size-4" strokeWidth={2} aria-hidden />
           </a>
         </div>
       )}
@@ -174,29 +176,29 @@ export function DashboardView() {
             icon={Target}
             label="Today's Progress"
             value={`${doneToday}/${todayScope.length}`}
-            hint="Today's Progress"
-            iconClassName="bg-violet-100 dark:bg-violet-900/40"
+            hint="tasks done today"
+            iconClassName="bg-violet-500"
           />
           <StatCard
             icon={ListTodo}
             label="Pending Tasks"
             value={pendingCount}
-            hint="Pending Tasks"
-            iconClassName="bg-blue-100 dark:bg-blue-900/40"
+            hint="to complete"
+            iconClassName="bg-blue-500"
           />
           <StatCard
             icon={Clock}
             label="Due Soon"
             value={dueSoonCount}
-            hint="Due Soon"
-            iconClassName="bg-orange-100 dark:bg-orange-900/40"
+            hint="next 7 days"
+            iconClassName="bg-orange-500"
           />
           <StatCard
             icon={Timer}
             label="Focus Time"
             value={formatMinutes(focusSeconds / 60)}
-            hint="Focus Time"
-            iconClassName="bg-green-100 dark:bg-green-900/40"
+            hint="logged today"
+            iconClassName="bg-green-500"
           />
         </div>
       )}
@@ -211,9 +213,10 @@ export function DashboardView() {
             <button
               type="button"
               onClick={() => navigate("myday")}
-              className="text-sm font-medium text-sf-primary-strong outline-none focus-visible:ring-2 focus-visible:ring-sf-primary/40 dark:text-sf-primary-strong-dark"
+              className="flex items-center gap-1 text-sm font-medium text-sf-primary-strong outline-none focus-visible:ring-2 focus-visible:ring-sf-primary/40 dark:text-sf-primary-strong-dark"
             >
               View All
+              <ArrowRight className="size-4" strokeWidth={2} aria-hidden />
             </button>
           }
         >

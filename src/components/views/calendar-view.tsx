@@ -13,6 +13,8 @@ import {
   CalendarIcon,
   ChevronLeft,
   ChevronRight,
+  Grid3x3,
+  List,
   SquareCheckBig,
 } from "lucide-react";
 
@@ -42,6 +44,8 @@ export function CalendarView() {
     return { year: now.getFullYear(), month: now.getMonth() };
   });
   const [selected, setSelected] = React.useState(() => new Date());
+  // The S5-G/S9-F segmented switch: month grid or the vertical timeline.
+  const [mode, setMode] = React.useState<"calendar" | "timeline">("calendar");
 
   const cells = React.useMemo(
     () => monthGrid(cursor.year, cursor.month),
@@ -72,14 +76,117 @@ export function CalendarView() {
     year: "numeric",
   }).format(new Date(cursor.year, cursor.month, 1));
 
+  // Timeline mode: the month's days that actually carry events/tasks.
+  const timelineDays = React.useMemo(() => {
+    const days: { date: Date; eventCount: number; taskCount: number }[] = [];
+    const dim = new Date(cursor.year, cursor.month + 1, 0).getDate();
+    for (let d = 1; d <= dim; d++) {
+      const date = new Date(cursor.year, cursor.month, d);
+      const ev = eventsFor(date);
+      const tk = tasksFor(date);
+      if (ev.length > 0 || tk.length > 0) {
+        days.push({ date, eventCount: ev.length, taskCount: tk.length });
+      }
+    }
+    return days;
+  }, [cursor, eventsFor, tasksFor]);
+
   return (
     <div className="flex flex-col gap-6">
-      <h1 className="text-2xl font-bold text-slate-800 dark:text-slate-100">
-        Calendar
-      </h1>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h1 className="text-2xl font-bold text-slate-800 dark:text-slate-100">
+          Calendar
+        </h1>
+        {/* S5-G/S9-F: the bordered segmented control — white p-1 rounded-lg,
+            h-8 tabs, grid3x3/list icons, solid-violet active tab. */}
+        <div
+          aria-label="Calendar mode"
+          className="inline-flex rounded-lg border border-slate-200 bg-white p-1 dark:border-slate-800 dark:bg-slate-900"
+        >
+          <button
+            type="button"
+            aria-pressed={mode === "calendar"}
+            onClick={() => setMode("calendar")}
+            className={cn(
+              "flex h-8 items-center gap-1.5 rounded-md px-3 text-xs font-medium transition-colors",
+              mode === "calendar"
+                ? "sf-selected-tint text-white"
+                : "text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800",
+            )}
+          >
+            <Grid3x3 className="size-3.5" strokeWidth={2} aria-hidden />
+            Calendar
+          </button>
+          <button
+            type="button"
+            aria-pressed={mode === "timeline"}
+            onClick={() => setMode("timeline")}
+            className={cn(
+              "flex h-8 items-center gap-1.5 rounded-md px-3 text-xs font-medium transition-colors",
+              mode === "timeline"
+                ? "sf-selected-tint text-white"
+                : "text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800",
+            )}
+          >
+            <List className="size-3.5" strokeWidth={2} aria-hidden />
+            Timeline
+          </button>
+        </div>
+      </div>
 
       <div className="grid gap-6 lg:grid-cols-3">
-        <section className="sf-card p-6 lg:col-span-2">
+        {mode === "timeline" ? (
+        <section aria-label="Timeline" className="sf-card p-6 lg:col-span-2">
+          <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100">
+            {monthLabel}
+          </h2>
+          {timelineDays.length === 0 ? (
+            <p className="py-8 text-center text-slate-400 dark:text-slate-500">
+              No events this month
+            </p>
+          ) : (
+            <ol className="mt-4 flex flex-col gap-4">
+              {timelineDays.map(({ date, eventCount, taskCount }) => {
+                const isSelected = isSameDay(date, selected);
+                const isToday = isSameDay(date, today);
+                return (
+                  <li key={date.toISOString()}>
+                    <button
+                      type="button"
+                      onClick={() => setSelected(date)}
+                      className={cn(
+                        "flex w-full items-center gap-3 rounded-lg border-l-4 bg-slate-50 p-3 text-left transition-colors dark:bg-slate-800/60",
+                        isSelected ? "border-l-sf-primary" : "border-l-transparent",
+                      )}
+                    >
+                      <span
+                        className={cn(
+                          "flex size-10 shrink-0 flex-col items-center justify-center rounded-lg text-xs font-bold",
+                          isToday
+                            ? "sf-today-tint text-sf-primary-strong dark:text-sf-primary-strong-dark"
+                            : "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300",
+                        )}
+                      >
+                        {date.getDate()}
+                      </span>
+                      <span className="min-w-0 flex-1">
+                        <span className="block font-medium text-slate-700 dark:text-slate-200">
+                          {formatLongDate(date)}
+                        </span>
+                        <span className="block text-xs text-slate-500 dark:text-slate-400">
+                          {eventCount} event{eventCount === 1 ? "" : "s"} · {taskCount} task
+                          {taskCount === 1 ? "" : "s"}
+                        </span>
+                      </span>
+                    </button>
+                  </li>
+                );
+              })}
+            </ol>
+          )}
+        </section>
+        ) : (
+        <section className="sf-card sf-print-exact p-6 lg:col-span-2">
           <div className="flex items-center justify-between">
             <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100">
               {monthLabel}
@@ -130,6 +237,7 @@ export function CalendarView() {
                   type="button"
                   aria-pressed={isSelected}
                   aria-label={formatLongDate(cell.date)}
+                  data-today={isToday ? "" : undefined}
                   onClick={() => setSelected(cell.date)}
                   className={cn(
                     "relative flex aspect-square flex-col items-center justify-center gap-1 rounded-lg text-sm font-medium transition-colors",
@@ -143,7 +251,14 @@ export function CalendarView() {
                     isSelected && "sf-selected-tint text-white",
                   )}
                 >
-                  <span className={cn(isToday && isSelected && "font-semibold")}>
+                  {/* The day number carries its own color (no transition of
+                      its own) so the dark tint lands instantly (S10-4). */}
+                  <span
+                    className={cn(
+                      isToday && !isSelected && "text-sf-primary-strong dark:text-sf-primary-strong-dark",
+                      isToday && isSelected && "font-semibold",
+                    )}
+                  >
                     {cell.date.getDate()}
                   </span>
                   {cell.inMonth && dayEvents.length > 0 && (
@@ -179,6 +294,7 @@ export function CalendarView() {
             })}
           </div>
         </section>
+        )}
 
         <section className="sf-card p-6">
           <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100">

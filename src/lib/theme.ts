@@ -288,7 +288,7 @@ export const THEME_BOOT_SCRIPT = `
     for (var i = 0; i < names.length; i++) st.setProperty("--sf-primary" + (names[i] === "primary" ? "" : "-" + names[i]), vals[i]);
     var meta = document.createElement("meta");
     meta.name = "theme-color";
-    meta.content = dark ? "#0f172a" : "#ffffff";
+    meta.content = dark ? "#020617" : "#ffffff";
     document.head.appendChild(meta);
     var __sfPrintDark = false;
     window.addEventListener("beforeprint", function () {

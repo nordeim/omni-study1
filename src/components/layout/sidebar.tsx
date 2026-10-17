@@ -68,9 +68,14 @@ export function Sidebar() {
             >
               <GraduationCap className="h-5 w-5" strokeWidth={2} />
             </span>
-            <span className="text-lg font-bold text-slate-800 dark:text-slate-100">
-              StudyFlow
-            </span>
+            <div className="min-w-0">
+              <p className="text-lg font-bold leading-tight text-slate-800 dark:text-slate-100">
+                StudyFlow
+              </p>
+              <p className="text-xs leading-tight text-slate-500 dark:text-slate-400">
+                Your study companion
+              </p>
+            </div>
           </div>
         )}
         <button
@@ -89,29 +94,6 @@ export function Sidebar() {
         </button>
       </div>
 
-      {/* Live clock chip — violet-50 → indigo-50 (S3-B), deep time text
-          (S3-C). Collapsed rail fits the time alone. */}
-      <div className={cn("pb-2", collapsed ? "px-2" : "px-4")}>
-        <div
-          className={cn(
-            "sf-clock-chip sf-print-exact rounded-xl",
-            collapsed ? "px-1 py-1.5 text-center" : "p-2",
-          )}
-        >
-          <p
-            className={cn(
-              "sf-clock-time whitespace-nowrap font-semibold",
-              collapsed ? "text-xs" : "text-sm",
-            )}
-          >
-            {formatTime12h(now)}
-          </p>
-          {!collapsed && (
-            <p className="sf-clock-date truncate text-xs">{formatShortWithYear(now)}</p>
-          )}
-        </div>
-      </div>
-
       {/* The ONE nav-item source — NavItemLink for every NAV_ITEM. */}
       <nav
         aria-label="Primary"
@@ -122,18 +104,35 @@ export function Sidebar() {
         ))}
       </nav>
 
-      {/* Footer identity — unmounted when collapsed (reference-exact). */}
-      {!collapsed && (
-        <div className="flex shrink-0 items-center gap-3 p-4">
-          <UserAvatar size="sm" />
-          <div className="min-w-0">
-            <p className="truncate text-sm font-medium text-slate-700 dark:text-slate-200">
-              {userName || "StudyFlow user"}
-            </p>
-            <p className="truncate text-xs text-slate-500 dark:text-slate-400">{email}</p>
-          </div>
-        </div>
-      )}
+      {/* Footer = the aside's LAST child (S52): clock chip + identity when
+          expanded; completely EMPTY when collapsed (stays mounted, zero
+          children, zero height — S52-D). */}
+      {/* A DIV (not <footer>): the S52-A locator reads :scope > div:last-child. */}
+      <div className="shrink-0">
+        {!collapsed && (
+          <>
+            {/* Live clock chip — violet-50 → indigo-50 (S3-B), deep time
+                text (S3-C). */}
+            <div className="px-4 pb-2">
+              <div className="sf-clock-chip sf-print-exact rounded-xl p-2">
+                <p className="sf-clock-time whitespace-nowrap text-sm font-semibold">
+                  {formatTime12h(now)}
+                </p>
+                <p className="sf-clock-date truncate text-xs">{formatShortWithYear(now)}</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-3 p-4 pt-0">
+              <UserAvatar size="sm" />
+              <div className="min-w-0">
+                <p className="truncate text-sm font-medium text-slate-700 dark:text-slate-200">
+                  {userName || "StudyFlow user"}
+                </p>
+                <p className="truncate text-xs text-slate-500 dark:text-slate-400">{email}</p>
+              </div>
+            </div>
+          </>
+        )}
+      </div>
     </aside>
   );
 }

@@ -216,7 +216,7 @@ export function CalculatorView() {
     <div className="flex flex-col gap-6">
       {/* ---- custom header (no ViewHeader — the calculator's own model) ---- */}
       <div className="flex flex-wrap items-center justify-between gap-4">
-        <h1 className="text-2xl font-bold text-slate-800 dark:text-slate-100">Calculator</h1>
+        <h1 className="text-2xl font-bold text-slate-800 dark:text-slate-100">Calculator Suite</h1>
         <Tabs value={tab} onValueChange={setTab}>
           <TabsList aria-label="Calculator mode">
             <TabsTrigger value="basic">Basic</TabsTrigger>

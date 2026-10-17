@@ -153,6 +153,7 @@ export function MobileChrome() {
                   view={item.id}
                   collapsed={sidebarCollapsed}
                   onNavigate={close}
+                  tone="drawer"
                 />
               ))}
             </nav>

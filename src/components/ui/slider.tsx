@@ -28,7 +28,7 @@ function Slider({
         className="relative h-2 w-full grow overflow-hidden rounded-full bg-slate-200 dark:bg-slate-700"
       >
         <SliderPrimitive.Range
-          data-slot="slider-range"
+          data-slot="slider-fill"
           className="sf-slider-fill absolute h-full"
           style={{
             backgroundImage:

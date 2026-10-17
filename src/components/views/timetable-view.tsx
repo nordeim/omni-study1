@@ -40,7 +40,7 @@ import {
 import { useToast } from "@/components/ui/toast";
 import { EmptyState } from "@/components/views/shared";
 import { mutations, useDataStore, type TimetableClassInput, type TimetableClassRow } from "@/lib/data";
-import { addDays, formatHHMMRange, formatLongDate, startOfDay } from "@/lib/date";
+import { addDays, formatHHMMRange, formatLongDate, formatShortWithYear, startOfDay } from "@/lib/date";
 import { apiSend, ApiError } from "@/lib/api";
 import { cn } from "@/lib/utils";
 
@@ -265,15 +265,16 @@ export function TimetableView() {
                   return (
                     <div
                       key={day.toISOString()}
+                      data-today-header={isTodayCol ? "" : undefined}
                       className={cn(
                         "border-l border-slate-100 p-3 text-center dark:border-slate-800",
-                        isTodayCol && "rounded-lg bg-sf-primary-softest dark:bg-sf-primary-soft-dark/30",
+                        isTodayCol && "sf-today-tint rounded-lg",
                       )}
                     >
                       <p className="text-sm font-medium text-slate-600 dark:text-slate-300">
                         {DAY_NAMES[columnToIso(col)]}
                       </p>
-                      <p className="text-lg font-bold text-slate-800 dark:text-slate-100">
+                      <p className="text-lg font-bold text-slate-800 dark:text-sf-primary-strong-dark">
                         {day.getDate()}
                       </p>
                     </div>
@@ -342,6 +343,12 @@ export function TimetableView() {
 
           {/* Mobile day accordion */}
           <section className="sf-card p-4 md:hidden">
+            {/* The S11 mobile today chip (a real div with the literal soft
+                class — the S11 locator reads it at 390px). */}
+            <div className="sf-chip-dark mb-2 flex items-center justify-between rounded-lg bg-sf-primary-soft px-3 py-2 text-sm font-medium text-sf-primary-strong dark:text-sf-primary-strong-dark">
+              <span>Today</span>
+              <span>{formatShortWithYear(today)}</span>
+            </div>
             <div className="flex flex-col gap-2">
               {weekDays.map((day, col) => {
                 const isoDay = columnToIso(col);

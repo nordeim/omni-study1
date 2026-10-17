@@ -12,6 +12,7 @@
 import * as React from "react";
 import {
   BookOpen,
+  ChartColumn,
   Clock,
   Flame,
   GraduationCap,
@@ -23,7 +24,7 @@ import {
 
 import { useDataStore } from "@/lib/data";
 import { addDays, formatMinutes, isSameDay, startOfDay } from "@/lib/date";
-import { SectionCard } from "@/components/views/shared";
+import { SectionCard, ViewHeader } from "@/components/views/shared";
 import { cn } from "@/lib/utils";
 
 // ---- the 7-day chart frame ----------------------------------------------------------
@@ -59,7 +60,7 @@ type AreaChartProps = {
 /** The S9-K measured frame: day labels (12px #666), Y ticks, dashed
  *  gridlines; the slate variant fills #e2e8f0, the focus variant draws the
  *  #8b5cf6 line over the violet gradient area. */
-function AreaChart({ data, labels, variant }: AreaChartProps) {
+function AreaChart({ data, labels, variant, title = "7-day chart" }: AreaChartProps & { title?: string }) {
   const count = data.length;
   const max = niceMax(Math.max(...data, 0));
   const baseline = yAt(0, max);
@@ -77,7 +78,7 @@ function AreaChart({ data, labels, variant }: AreaChartProps) {
       viewBox={`0 0 ${W} ${H}`}
       className="h-[220px] w-full"
       role="img"
-      aria-label="7-day chart"
+      aria-label={title}
     >
       {variant === "focus" && (
         <defs>
@@ -373,6 +374,7 @@ export function AnalyticsView() {
 
   return (
     <div className="flex flex-col gap-6">
+      <ViewHeader title="Analytics" subtitle="Insights across your study activity" icon={ChartColumn} />
       {/* ---- stat cards (icon-block, S8-I) ---- */}
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         <StatBlock
@@ -408,7 +410,7 @@ export function AnalyticsView() {
       {/* ---- 7-day area charts ---- */}
       <div className="grid gap-4 lg:grid-cols-2">
         <SectionCard title="Task Activity" icon={TrendingUp}>
-          <AreaChart data={taskActivity} labels={dayLabels} variant="slate" />
+          <AreaChart data={taskActivity} labels={dayLabels} variant="slate" title="Task activity chart" />
         </SectionCard>
         <SectionCard title="Focus Time" icon={Clock}>
           <AreaChart data={focusByDay} labels={dayLabels} variant="focus" />

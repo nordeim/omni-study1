@@ -97,7 +97,7 @@ export function AIAssistantView() {
 
   return (
     <div className="flex h-[calc(100vh-8rem)] flex-col">
-      <ViewHeader title="AI Assistant" subtitle="Your study copilot" icon={Bot} size="lg" />
+      <ViewHeader title="AI Study Assistant" subtitle="Your study copilot" icon={Bot} size="lg" />
 
       {/* ---- transcript (S14 aria-live contract) ---- */}
       <div

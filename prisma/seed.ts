@@ -32,7 +32,7 @@ async function main(): Promise<void> {
       email: DEMO_EMAIL,
       passwordHash: hashPassword(DEMO_PASSWORD),
       fullName: "Demo Student",
-      themeMode: "system",
+      themeMode: "light",
       accentColor: "violet",
       avatarEmoji: "", // reference default state — initial-letter avatar
       emailVerified: true,

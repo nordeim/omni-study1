@@ -148,13 +148,13 @@ function ThemeCard() {
             aria-pressed={mode === value}
             onClick={() => pick(value)}
             className={cn(
-              "flex h-9 flex-1 items-center justify-center gap-2 rounded-md text-sm font-medium transition-colors",
+              "flex h-[88px] flex-1 flex-col items-center justify-center gap-1.5 rounded-lg text-sm font-medium transition-colors",
               mode === value
-                ? "sf-selected-tint text-white"
-                : "border border-input bg-transparent text-foreground shadow-sm hover:bg-accent",
+                ? "sf-selected-tint border-2 border-sf-primary text-white dark:text-slate-100"
+                : "border-2 border-input bg-transparent text-foreground shadow-sm hover:bg-accent",
             )}
           >
-            <Icon className="size-4" strokeWidth={2} aria-hidden />
+            <Icon className="size-5" strokeWidth={2} aria-hidden />
             {label}
           </button>
         ))}
@@ -188,7 +188,7 @@ function AccentCard() {
             aria-pressed={accent === a}
             onClick={() => pick(a)}
             className={cn(
-              "size-7 rounded-full transition-shadow",
+              "size-12 rounded-full transition-shadow",
               accent === a ? "ring-2 ring-sf-primary ring-offset-2 ring-offset-background" : "hover:scale-110",
             )}
             style={{ backgroundColor: `rgb(${ACCENT_TOKENS[a].primary})` }}
@@ -226,7 +226,7 @@ function AvatarCard() {
             className={cn(
               "flex h-10 items-center justify-center rounded-lg border text-xl transition-colors",
               avatar === emoji
-                ? "border-sf-primary bg-sf-primary-soft dark:bg-sf-primary-soft-dark/40"
+                ? "sf-chip-dark border-sf-primary bg-sf-primary-soft"
                 : "border-slate-200 hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-800",
             )}
           >

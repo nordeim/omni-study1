@@ -304,7 +304,15 @@ export function NotesView() {
             <p className="text-sm text-slate-400">Select a note from the list.</p>
           </div>
         ) : (
-          <div className="flex min-h-0 flex-1 flex-col">
+          <>
+            {/* Mobile-only heading — the h1 lives in the desktop-only left
+                pane (hidden md:flex), so the drawer flow still finds a "Notes"
+                heading at 390px (S52-F). Level 2 keeps the desktop h1 count
+                pin intact. */}
+            <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-100 md:hidden">
+              Notes
+            </h2>
+            <div className="flex min-h-0 flex-1 flex-col">
             <div className="flex items-center gap-2">
               <Input
                 aria-label="Note title"
@@ -374,6 +382,7 @@ export function NotesView() {
               />
             </div>
           </div>
+          </>
         )}
       </div>
 

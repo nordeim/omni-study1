@@ -257,7 +257,7 @@ export function LoginSurface() {
 
             <div className="my-5 flex items-center gap-3" aria-hidden>
               <span className="h-px flex-1 bg-slate-100 dark:bg-slate-800" />
-              <span className="text-xs text-slate-400">or</span>
+              <span className="rounded-full bg-slate-900 px-3 py-1 text-xs font-medium text-slate-300">or</span>
               <span className="h-px flex-1 bg-slate-100 dark:bg-slate-800" />
             </div>
 
