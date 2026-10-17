@@ -303,6 +303,7 @@ model StudyGroup {
   id        String   @id @default(cuid())
   userId    String
   name      String
+  color     String   @default("#8b5cf6")
   subjectId String?
   // JSON string of [{name,email}] — validated as an array at the boundary,
   // serialized by the route (members capped at 50).

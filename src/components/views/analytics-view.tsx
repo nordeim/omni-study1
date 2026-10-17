@@ -288,7 +288,7 @@ type StatBlockProps = {
 function StatBlock({ icon: Icon, iconClasses, value, label, sub }: StatBlockProps) {
   return (
     <div className="rounded-xl border-0 bg-white p-6 shadow-sm dark:bg-card">
-      <div className={cn("flex size-12 items-center justify-center rounded-xl", iconClasses)}>
+      <div className={cn("flex h-12 w-12 items-center justify-center rounded-xl", iconClasses)}>
         <Icon className="size-6" strokeWidth={2} aria-hidden />
       </div>
       <h3 className="mt-4 text-3xl font-bold text-slate-800 dark:text-slate-100">{value}</h3>
@@ -376,7 +376,7 @@ export function AnalyticsView() {
     <div className="flex flex-col gap-6">
       <ViewHeader title="Analytics" subtitle="Insights across your study activity" icon={ChartColumn} />
       {/* ---- stat cards (icon-block, S8-I) ---- */}
-      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4" aria-label="Analytics stats">
         <StatBlock
           icon={SquareCheckBig}
           iconClasses="bg-violet-100 dark:bg-violet-900/50"
@@ -409,10 +409,10 @@ export function AnalyticsView() {
 
       {/* ---- 7-day area charts ---- */}
       <div className="grid gap-4 lg:grid-cols-2">
-        <SectionCard title="Task Activity" icon={TrendingUp}>
+        <SectionCard title="Task Activity (Last 7 Days)" icon={TrendingUp}>
           <AreaChart data={taskActivity} labels={dayLabels} variant="slate" title="Task activity chart" />
         </SectionCard>
-        <SectionCard title="Focus Time" icon={Clock}>
+        <SectionCard title="Focus Time (Last 7 Days)" icon={Clock}>
           <AreaChart data={focusByDay} labels={dayLabels} variant="focus" />
         </SectionCard>
       </div>

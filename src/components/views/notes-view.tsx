@@ -356,9 +356,10 @@ export function NotesView() {
             <div className="flex items-center gap-2">
               <Input
                 aria-label="Note title"
+                placeholder="Note title..."
                 value={selected.title}
                 onChange={(e) => updateNote(selected.id, { title: e.target.value }).catch(() => {})}
-                className="border-none bg-transparent text-xl font-semibold shadow-none focus-visible:ring-0 dark:bg-transparent"
+                className="border-none bg-transparent text-xl font-bold shadow-none focus-visible:ring-0 dark:bg-transparent"
               />
               <div className="flex shrink-0 items-center gap-1">
                 <DropdownMenu>

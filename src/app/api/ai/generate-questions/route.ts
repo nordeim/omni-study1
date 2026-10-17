@@ -40,6 +40,9 @@ const generateQuestionsSchema = z.object({
     .transform((v) => (v === "" ? null : v)),
   count: z.number().int().min(1).max(20).optional().default(10),
   topics: z.string().max(2000).optional().default(""),
+  // persist=false: draft-only generation for the Create Test dialog (the
+  // caller saves the test itself — no double row).
+  persist: z.boolean().optional().default(true),
 });
 
 const questionDraftSchema = z.object({
@@ -55,7 +58,7 @@ export const POST = withUser(async (user, request) => {
       return rateLimitedResponse(limit.retryAfterSec, "Too many AI requests");
     }
 
-    const { title, subjectId, count, topics } = parseWith(
+    const { title, subjectId, count, topics, persist } = parseWith(
       generateQuestionsSchema,
       await readJson(request),
     );
@@ -98,17 +101,19 @@ export const POST = withUser(async (user, request) => {
       return errorResponse(502, "The assistant's reply was not usable question data. Try again.");
     }
 
-    const test = await db.practiceTest.create({
-      data: {
-        userId: user.id,
-        title,
-        durationMinutes: Math.max(count * 2, 10),
-        questions: JSON.stringify(parsed.data),
-        subjectId: subjectId ?? null,
-      },
-    });
+    const test = persist
+      ? await db.practiceTest.create({
+          data: {
+            userId: user.id,
+            title,
+            durationMinutes: Math.max(count * 2, 10),
+            questions: JSON.stringify(parsed.data),
+            subjectId: subjectId ?? null,
+          },
+        })
+      : null;
 
-    return NextResponse.json({ test }, { status: 201 });
+    return NextResponse.json({ test, questions: parsed.data }, { status: 201 });
   } catch (err: unknown) {
     if (err instanceof Error && err.name === "AiDeadlineError") {
       return errorResponse(504, "The assistant took too long to respond. Try again.");

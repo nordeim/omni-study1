@@ -43,6 +43,9 @@ import { mutations, useDataStore, type StudyGroupRow } from "@/lib/data";
 import { EmptyState, initialFor, Spinner, SubjectChip } from "@/components/views/shared";
 import { cn } from "@/lib/utils";
 
+// The measured swatch order: violet, blue, emerald, amber, red, pink (S7-B).
+const GROUP_COLORS = ["#8b5cf6", "#3b82f6", "#10b981", "#f59e0b", "#ef4444", "#ec4899"];
+
 type Member = { name: string; email: string };
 
 function parseMembers(json: string): Member[] {
@@ -79,6 +82,7 @@ function GroupDialog({
   const subjects = useDataStore((s) => s.subjects);
   // State initializes from props per open session (parent key-remount).
   const [name, setName] = React.useState(group?.name ?? "");
+  const [color, setColor] = React.useState(group?.color ?? GROUP_COLORS[0]);
   const [subjectId, setSubjectId] = React.useState(group?.subjectId ?? "none");
   const [saving, setSaving] = React.useState(false);
 
@@ -90,6 +94,7 @@ function GroupDialog({
       const members = group ? parseMembers(group.members) : [];
       const payload = {
         name: name.trim(),
+        color,
         subjectId: subjectId === "none" ? "" : subjectId,
         members,
       };
@@ -141,6 +146,25 @@ function GroupDialog({
                 ))}
               </SelectContent>
             </Select>
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <Label>Color</Label>
+            <div className="flex gap-2" aria-label="Group color swatches">
+              {GROUP_COLORS.map((hex) => (
+                <button
+                  key={hex}
+                  type="button"
+                  aria-label={`Choose color ${hex}`}
+                  aria-pressed={color === hex}
+                  onClick={() => setColor(hex)}
+                  className={cn(
+                    "size-7 rounded-full outline-none focus-visible:ring-2 focus-visible:ring-sf-primary/40",
+                    color === hex && "ring-2 ring-slate-900 ring-offset-2 dark:ring-white",
+                  )}
+                  style={{ backgroundColor: hex }}
+                />
+              ))}
+            </div>
           </div>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
@@ -228,7 +252,7 @@ export function StudyGroupsView() {
           </h1>
           <button
             type="button"
-            aria-label="New group"
+            aria-label="Create study group"
             onClick={() => {
               setEditing(null);
               setDialogOpen(true);

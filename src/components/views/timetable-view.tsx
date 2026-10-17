@@ -40,7 +40,7 @@ import {
 import { useToast } from "@/components/ui/toast";
 import { EmptyState } from "@/components/views/shared";
 import { mutations, useDataStore, type TimetableClassInput, type TimetableClassRow } from "@/lib/data";
-import { addDays, formatHHMMRange, formatLongDate, formatShortWithYear, startOfDay } from "@/lib/date";
+import { addDays, formatHHMMRange, formatLongDate, formatWeekdayMonthDay, formatShortWithYear, startOfDay } from "@/lib/date";
 import { apiSend, ApiError } from "@/lib/api";
 import { cn } from "@/lib/utils";
 
@@ -266,7 +266,7 @@ export function TimetableView() {
         <>
           {/* Desktop week grid */}
           <section className="sf-card overflow-hidden p-6 max-md:hidden">
-            <div className="sf-timetable-canvas min-w-[900px] overflow-x-auto">
+            <div className="sf-timetable-canvas min-w-[900px] overflow-x-auto" aria-label="Week grid">
               <div className="grid grid-cols-8" data-builder={builder ? "true" : undefined} aria-label="Week header">
                 <div />
                 {weekDays.map((day, col) => {
@@ -289,7 +289,8 @@ export function TimetableView() {
                     </div>
                   );
                 })}
-
+              </div>
+              <div className="grid grid-cols-8" aria-label="Hour cells">
                 {HOURS.map((hour) => (
                   <React.Fragment key={hour}>
                     <div className="border-b border-slate-50 pr-2 pt-1 text-right text-xs text-slate-400 dark:border-slate-800">
@@ -451,9 +452,9 @@ export function TimetableView() {
       {/* My Classes */}
       {classes.length > 0 && (
         <section className="sf-card p-6">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between" aria-label="My Classes header">
             <h2 className="text-lg font-bold text-slate-800 dark:text-slate-100">My Classes</h2>
-            <p className="text-sm text-slate-500 dark:text-slate-400">{formatLongDate(today)}</p>
+            <p className="text-sm text-slate-500 dark:text-slate-400">{formatWeekdayMonthDay(today)}</p>
           </div>
           <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {visible.slice(0, 9).map((c) => {

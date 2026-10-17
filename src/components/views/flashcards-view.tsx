@@ -249,7 +249,7 @@ export function FlashcardsView() {
             onChange={(e) => setQuery(e.target.value)}
           />
         </div>
-        <div className="sf-scroll mt-3 flex-1 space-y-2 overflow-y-auto">
+        <div className="sf-scroll mt-3 flex-1 space-y-2 overflow-y-auto" aria-label="Deck rows">
           {filteredDecks.length === 0 ? (
             <p className="py-8 text-center text-sm text-slate-400">
               {decks.length === 0 ? "No decks yet." : "No decks match."}
@@ -291,7 +291,7 @@ export function FlashcardsView() {
       </aside>
 
       {/* Detail pane */}
-      <div className="sf-scroll flex min-w-0 flex-1 flex-col overflow-y-auto">
+      <div className="sf-scroll flex min-w-0 flex-1 flex-col overflow-y-auto" aria-label="Deck detail">
         {decks.length === 0 ? (
           <div className="sf-card flex flex-1 flex-col justify-center">
             <EmptyState
@@ -361,11 +361,11 @@ export function FlashcardsView() {
                 />
               </div>
             ) : (
-              <div className="mt-4 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+              <div className="mt-4 grid gap-4 md:grid-cols-2 lg:grid-cols-3" aria-label="Card grid">
                 {deckCards.map((card) => (
                   <article
                     key={card.id}
-                    className="group rounded-xl border border-slate-200 p-4 transition-shadow hover:shadow-md dark:border-slate-700"
+                    className="group rounded-xl border border-slate-200 bg-white p-4 transition-shadow hover:shadow-md dark:border-slate-700 dark:bg-card"
                   >
                     <div className="flex items-center justify-between gap-2">
                       <span className="rounded-full bg-yellow-100 px-2 py-0.5 text-xs font-medium capitalize text-yellow-700 dark:bg-yellow-950 dark:text-yellow-300">
@@ -427,10 +427,12 @@ export function FlashcardsView() {
             className="h-80 w-full max-w-lg [perspective:1000px] outline-none focus-visible:ring-2 focus-visible:ring-white/60"
           >
             <div
+              data-flip-card
               className="relative size-full [transform-style:preserve-3d] transition-transform duration-500"
               style={{ transform: flipped ? "rotateY(180deg)" : "rotateY(0deg)" }}
             >
               <div
+                data-flip-front
                 className="sf-print-exact absolute inset-0 flex items-center justify-center rounded-2xl p-8 [backface-visibility:hidden]"
                 style={{
                   backgroundImage:
@@ -442,6 +444,7 @@ export function FlashcardsView() {
                 </p>
               </div>
               <div
+                data-flip-back
                 className="absolute inset-0 flex items-center justify-center rounded-2xl border-2 border-violet-200 bg-white p-8 [backface-visibility:hidden] [transform:rotateY(180deg)] dark:border-violet-800 dark:bg-slate-900"
               >
                 <p className="text-center text-lg text-slate-800 dark:text-slate-100">
@@ -483,7 +486,7 @@ export function FlashcardsView() {
           </DialogHeader>
           <form onSubmit={submitDeck} className="flex flex-col gap-4" noValidate>
             <div className="flex flex-col gap-1.5">
-              <Label htmlFor="deck-name">Name</Label>
+              <Label htmlFor="deck-name">Deck Name</Label>
               <Input
                 id="deck-name"
                 value={deckForm.name}
@@ -503,7 +506,7 @@ export function FlashcardsView() {
             </div>
             <div className="flex flex-col gap-1.5">
               <Label>Color</Label>
-              <div className="flex gap-2">
+              <div className="flex gap-2" aria-label="Deck color swatches">
                 {DECK_COLORS.map((hex) => (
                   <button
                     key={hex}

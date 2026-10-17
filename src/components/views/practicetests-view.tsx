@@ -14,6 +14,7 @@ import {
   Pencil,
   Play,
   Plus,
+  Sparkles,
   Trash2,
 } from "lucide-react";
 
@@ -58,6 +59,7 @@ import {
   SubjectChip,
   ViewHeader,
 } from "@/components/views/shared";
+import { apiSend } from "@/lib/api";
 import { cn } from "@/lib/utils";
 
 // ---- question model -----------------------------------------------------------
@@ -143,7 +145,8 @@ function TestDialog({
   const subjects = useDataStore((s) => s.subjects);
   // State initializes from props per open session (parent key-remount).
   const [title, setTitle] = React.useState(test?.title ?? "");
-  const [duration, setDuration] = React.useState(test ? String(test.durationMinutes) : "30");
+  const [duration, setDuration] = React.useState(test ? String(test.durationMinutes) : "60");
+  const [generating, setGenerating] = React.useState(false);
   const [subjectId, setSubjectId] = React.useState(test?.subjectId ?? "none");
   const [drafts, setDrafts] = React.useState<DraftQuestion[]>(
     test
@@ -159,6 +162,47 @@ function TestDialog({
 
   const updateDraft = (index: number, patch: Partial<DraftQuestion>) => {
     setDrafts((list) => list.map((d, i) => (i === index ? { ...d, ...patch } : d)));
+  };
+
+  const generateQuestions = async () => {
+    if (generating) return;
+    if (!title.trim()) {
+      toast.error("Give the test a title first — the AI needs a topic.");
+      return;
+    }
+    setGenerating(true);
+    try {
+      const res = await apiSend<{
+        questions: { question: string; type: string }[];
+      }>("POST", "/api/ai/generate-questions", {
+        title: title.trim(),
+        subjectId: subjectId === "none" ? "" : subjectId,
+        count: 5,
+        persist: false,
+      });
+      const drafts = (res.questions ?? [])
+        .filter((q) => typeof q.question === "string" && q.question.trim())
+        .map((q) => ({
+          question: q.question,
+          type: (["multiple_choice", "true_false", "short_answer"] as const).includes(
+            q.type as "multiple_choice",
+          )
+            ? (q.type as DraftQuestion["type"])
+            : ("short_answer" as const),
+          options: "",
+          correctAnswer: "",
+        }));
+      if (drafts.length === 0) {
+        toast.error("The assistant returned no usable questions. Try again.");
+        return;
+      }
+      setDrafts(drafts);
+      toast.success("Questions generated — review and save.");
+    } catch (err: unknown) {
+      toast.error(errorMessage(err, "Could not generate questions. Try again."));
+    } finally {
+      setGenerating(false);
+    }
   };
 
   const submit = async (event: React.FormEvent) => {
@@ -237,7 +281,7 @@ function TestDialog({
         </DialogHeader>
         <form className="flex flex-col gap-4" onSubmit={(e) => void submit(e)}>
           <div className="flex flex-col gap-1.5">
-            <Label htmlFor="test-title">Title</Label>
+            <Label htmlFor="test-title">Test Title</Label>
             <Input
               id="test-title"
               value={title}
@@ -249,7 +293,7 @@ function TestDialog({
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="flex flex-col gap-1.5">
-              <Label htmlFor="test-duration">Duration (minutes)</Label>
+              <Label htmlFor="test-duration">Time Limit (minutes)</Label>
               <Input
                 id="test-duration"
                 type="number"
@@ -280,6 +324,17 @@ function TestDialog({
           <div className="flex flex-col gap-3">
             <div className="flex items-center justify-between">
               <Label>Questions</Label>
+              <div className="flex items-center gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => void generateQuestions()}
+                disabled={generating}
+              >
+                {generating ? <Spinner className="size-4" /> : <Sparkles className="size-4" strokeWidth={2} />}
+                AI Generate Questions
+              </Button>
               <Button
                 type="button"
                 variant="outline"
@@ -293,7 +348,9 @@ function TestDialog({
               >
                 <Plus className="size-4" strokeWidth={2} /> Add question
               </Button>
+              </div>
             </div>
+            <p className="text-xs text-slate-400 dark:text-slate-500">{drafts.length} questions added</p>
             {drafts.map((draft, index) => (
               <div key={index} className="flex flex-col gap-2 rounded-xl border border-slate-200 p-3 dark:border-slate-700">
                 <div className="flex items-center gap-2">

@@ -7,7 +7,11 @@
 // ---------------------------------------------------------------------------
 
 import * as React from "react";
-import { ListChecks, Pencil, Plus, Trash2 } from "lucide-react";
+import { ListChecks, Pencil, Plus, Trash2,
+  Award,
+  Target,
+  ChartColumn,
+} from "lucide-react";
 
 import {
   AlertDialog,
@@ -217,6 +221,28 @@ function GradeDialog({
 
 // ---- the view ----------------------------------------------------------------------
 
+
+function GtSummaryCard({
+  icon: Icon,
+  label,
+  value,
+  hint,
+}: {
+  icon: React.ComponentType<{ className?: string; strokeWidth?: number; "aria-hidden"?: boolean }>;
+  label: string;
+  value: string | number;
+  hint: string;
+}) {
+  return (
+    <div className="sf-card rounded-2xl p-6">
+      <Icon className="h-8 w-8 text-sf-primary" strokeWidth={2} aria-hidden />
+      <p className="mt-3 text-sm font-medium text-slate-500 dark:text-slate-400">{label}</p>
+      <p className="mt-1 text-3xl font-bold text-slate-800 dark:text-slate-100">{value}</p>
+      <p className="mt-1 text-xs text-slate-400 dark:text-slate-500">{hint}</p>
+    </div>
+  );
+}
+
 export function GradeTrackerView() {
   const { toast } = useToast();
   const grades = useDataStore((s) => s.grades);
@@ -272,15 +298,16 @@ export function GradeTrackerView() {
       />
 
       {/* ---- stats (zero-data renders AT ZERO — never an EmptyState, S17) ---- */}
-      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4" aria-label="Grade summary">
         <div className="sf-gradient sf-gradient-shadow-lg rounded-2xl p-6 text-white">
-          <p className="text-sm font-medium text-white/80">Overall Average</p>
-          <p className="mt-2 text-3xl font-bold tabular-nums">{overallAvg}%</p>
+          <Award className="h-8 w-8" strokeWidth={2} aria-hidden />
+          <p className="mt-3 text-sm font-medium text-white/80">Overall Average</p>
+          <p className="mt-1 text-3xl font-bold tabular-nums">{overallAvg}%</p>
           <p className="mt-1 text-xs text-white/70">{grades.length} grades logged</p>
         </div>
-        <StatCard icon={ListChecks} label="Highest Grade" value={`${highest}%`} hint="Best score so far" />
-        <StatCard icon={ListChecks} label="Total Grades" value={grades.length} hint="Across all subjects" />
-        <StatCard icon={ListChecks} label="Subjects Tracked" value={subjects.length} hint="This semester" />
+        <GtSummaryCard icon={Target} label="Highest Grade" value={`${highest}%`} hint="Best score so far" />
+        <GtSummaryCard icon={ChartColumn} label="Total Grades" value={grades.length} hint="Across all subjects" />
+        <GtSummaryCard icon={ListChecks} label="Subjects Tracked" value={subjects.length} hint="This semester" />
       </div>
 
       {/* ---- grades list ---- */}

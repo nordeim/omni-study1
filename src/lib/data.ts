@@ -214,6 +214,7 @@ export type StudyGroupRow = {
   id: string;
   userId: string;
   name: string;
+  color: string;
   subjectId: string | null;
   members: string; // JSON [{name,email}]
   createdAt: string;

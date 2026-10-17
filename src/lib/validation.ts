@@ -258,6 +258,7 @@ export const practiceTestSchema = z.object({
 
 export const studyGroupSchema = z.object({
   name: boundedTitle,
+  color: hexColor.optional().default("#8b5cf6"),
   subjectId: nullableId,
   members: z
     .array(

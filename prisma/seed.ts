@@ -129,6 +129,7 @@ async function main(): Promise<void> {
     ),
   );
   const noteDefs = [
+    { title: "Dot product intuition", content: "The dot product measures alignment: positive when vectors point the same way, zero when perpendicular.", notebookId: notebooks[0].id, subjectId: math.id, tags: '["calculus"]' },
     { title: "Integration techniques", content: "# Integration\n\n- substitution\n- by parts: ∫u dv = uv − ∫v du\n- partial fractions for rational functions", notebookId: notebooks[0].id, subjectId: math.id, tags: '["calculus","exam-prep"]' },
     { title: "Kinetics summary", content: "Rate laws: zero/first/second order.\nArrhenius: k = A·e^(−Ea/RT).", notebookId: notebooks[0].id, subjectId: chemistry.id },
     { title: "Essay sources", content: "Primary: letters collection.\nSecondary: two journal articles (2009, 2015).", notebookId: notebooks[1].id, subjectId: history.id, tags: '["research"]' },
@@ -139,11 +140,13 @@ async function main(): Promise<void> {
 
   const decks = await Promise.all(
     [
+      { name: "Integration rules", description: "Derivatives and antiderivatives", color: "#8b5cf6", subjectId: math.id },
       { name: "Biology Chapter 5", description: "Cell energy and enzymes", color: "#10b981", subjectId: biology.id },
       { name: "Spanish Vocabulary", description: "Unit 4 — travel", color: "#3b82f6", subjectId: null },
     ].map((d) => db.flashcardDeck.create({ data: { ...d, userId: user.id } })),
   );
   const cardDefs = [
+    { deckId: decks[0].id, front: "Chain rule", back: "Differentiate the outer function and multiply by the inner derivative — e.g. d/dx sin(x^2) = 2x cos(x)", difficulty: "medium" },
     { deckId: decks[0].id, front: "What does ATP stand for?", back: "Adenosine triphosphate", difficulty: "easy" },
     { deckId: decks[0].id, front: "Enzyme function definition", back: "A biological catalyst that lowers activation energy", difficulty: "medium" },
     { deckId: decks[0].id, front: "Krebs cycle location", back: "Mitochondrial matrix", difficulty: "hard" },
@@ -153,6 +156,19 @@ async function main(): Promise<void> {
   for (const c of cardDefs) {
     await db.flashcard.create({ data: c });
   }
+
+  await db.practiceTest.create({
+    data: {
+      userId: user.id,
+      title: "Vectors practice set",
+      durationMinutes: 30,
+      questions: JSON.stringify([
+        { question: "What is the dot product of two orthogonal vectors?", type: "short_answer" },
+        { question: "The magnitude of a vector is always positive.", type: "true_false" },
+      ]),
+      subjectId: math.id,
+    },
+  });
 
   await db.practiceTest.create({
     data: {
