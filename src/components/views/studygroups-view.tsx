@@ -307,7 +307,7 @@ export function StudyGroupsView() {
                       : "border-transparent hover:bg-slate-50 dark:hover:bg-slate-800/40",
                   )}
                 >
-                  <h3 className="font-medium text-slate-800 dark:text-slate-100">{group.name}</h3>
+                  <h2 className="font-medium text-slate-800 dark:text-slate-100">{group.name}</h2>
                   <div className="mt-1 flex flex-wrap items-center gap-2">
                     <span className="text-xs text-slate-500">{memberCount} members</span>
                     <SubjectChip name={subject?.name} color={subject?.color} />

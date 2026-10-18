@@ -287,9 +287,9 @@ export function FlashcardsView() {
                     <Layers className="size-5" strokeWidth={2} />
                   </span>
                   <span className="min-w-0 flex-1">
-                    <h3 className="truncate text-sm font-medium text-slate-700 dark:text-slate-200">
+                    <h2 className="truncate text-sm font-medium text-slate-700 dark:text-slate-200">
                       {deck.name}
-                    </h3>
+                    </h2>
                     <p className="text-xs text-slate-500 dark:text-slate-400">
                       {count} {count === 1 ? "card" : "cards"}
                     </p>

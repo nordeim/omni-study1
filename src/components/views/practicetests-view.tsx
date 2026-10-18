@@ -350,11 +350,11 @@ function TestDialog({
               </Button>
               </div>
             </div>
-            <p className="text-xs text-slate-400 dark:text-slate-500">{drafts.length} questions added</p>
+            <p className="text-xs text-slate-500">{drafts.length} questions added</p>
             {drafts.map((draft, index) => (
               <div key={index} className="flex flex-col gap-2 rounded-xl border border-slate-200 p-3 dark:border-slate-700">
                 <div className="flex items-center gap-2">
-                  <span className="text-xs font-semibold text-slate-400">Q{index + 1}</span>
+                  <span className="text-xs font-semibold text-slate-500">Q{index + 1}</span>
                   <Select
                     value={draft.type}
                     onValueChange={(value) => updateDraft(index, { type: value as QuestionType })}
@@ -731,7 +731,7 @@ export function PracticeTestsView() {
               <div key={test.id} className="group sf-card flex flex-col justify-between gap-4 p-6">
                 <div>
                   <div className="flex items-start justify-between gap-2">
-                    <h3 className="font-medium text-slate-800 dark:text-slate-100">{test.title}</h3>
+                    <h2 className="font-medium text-slate-800 dark:text-slate-100">{test.title}</h2>
                     <div className="flex shrink-0 items-center gap-1 opacity-0 transition-opacity focus-within:opacity-100 group-hover:opacity-100">
                       <button
                         type="button"
@@ -760,7 +760,7 @@ export function PracticeTestsView() {
                   </p>
                   <div className="mt-2 flex flex-wrap items-center gap-2">
                     <SubjectChip name={subject?.name} color={subject?.color} />
-                    <span className="text-xs text-slate-400">
+                    <span className="text-xs text-slate-500">
                       {new Date(test.createdAt).toLocaleDateString("en-US", {
                         month: "short",
                         day: "numeric",

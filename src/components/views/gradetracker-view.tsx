@@ -329,10 +329,10 @@ export function GradeTrackerView() {
               <div key={grade.id} className="group sf-card flex items-center justify-between gap-4 p-4">
                 <div className="flex min-w-0 items-center gap-3">
                   <div className="min-w-0">
-                    <h3 className="truncate font-medium text-slate-800 dark:text-slate-100">{grade.title}</h3>
+                    <h2 className="truncate font-medium text-slate-800 dark:text-slate-100">{grade.title}</h2>
                     <div className="mt-1 flex flex-wrap items-center gap-2">
                       <SubjectChip name={subject?.name} color={subject?.color} />
-                      <span className="text-xs text-slate-400">weight {grade.weight}</span>
+                      <span className="text-xs text-slate-500">weight {grade.weight}</span>
                     </div>
                   </div>
                 </div>

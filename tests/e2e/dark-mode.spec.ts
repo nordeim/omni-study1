@@ -76,7 +76,7 @@ test.describe("S10-1 · shadcn token utilities re-theme in dark mode", () => {
     // The S9-C outline filter button: bg-card + border-input must resolve to
     // the dark tokens (was: inlined white bg + near-white inherited text at
     // contrast 1.04 — invisible).
-    const ctrl = page.locator('main button[aria-label="Filter tasks"]');
+    const ctrl = page.locator('main button[aria-label^="Filter tasks"]');
     await expect(ctrl).toBeVisible();
     const ctrlBg = await ctrl.evaluate((el) => getComputedStyle(el).backgroundColor);
     expect(ctrlBg).toBe(CARD_DARK);
@@ -252,9 +252,9 @@ test.describe("regression guard · light mode is byte-identical", () => {
     await setMode(page, "light");
     await page.goto("/Tasks");
     await page.waitForFunction(
-      () => !document.documentElement.classList.contains("dark") && !!document.querySelector('main button[aria-label="Filter tasks"]'),
+      () => !document.documentElement.classList.contains("dark") && !!document.querySelector('main button[aria-label^="Filter tasks"]'),
     );
-    const ctrl = page.locator('main button[aria-label="Filter tasks"]');
+    const ctrl = page.locator('main button[aria-label^="Filter tasks"]');
     const ctrlBg = await ctrl.evaluate((el) => getComputedStyle(el).backgroundColor);
     expect(ctrlBg).toBe("rgb(255, 255, 255)"); // card (light) — unchanged
 

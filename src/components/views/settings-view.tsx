@@ -143,7 +143,7 @@ function ThemeCard() {
 
   return (
     <section className="sf-card p-6">
-      <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-100">Theme</h3>
+      <h2 className="text-lg font-semibold text-slate-800 dark:text-slate-100">Theme</h2>
       <p className="mt-1 text-sm text-slate-500">Choose how StudyFlow looks on this device.</p>
       <div className="mt-4 flex gap-2">
         {options.map(({ value, label, icon: Icon }) => (
@@ -182,7 +182,7 @@ function AccentCard() {
 
   return (
     <section className="sf-card p-6">
-      <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-100">Accent color</h3>
+      <h2 className="text-lg font-semibold text-slate-800 dark:text-slate-100">Accent color</h2>
       <p className="mt-1 text-sm text-slate-500">One tap re-themes buttons, chips, and charts.</p>
       <div className="mt-4 flex flex-wrap gap-3">
         {ACCENTS.map((a) => (
@@ -218,7 +218,7 @@ function AvatarCard() {
 
   return (
     <section className="sf-card p-6">
-      <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-100">Avatar</h3>
+      <h2 className="text-lg font-semibold text-slate-800 dark:text-slate-100">Avatar</h2>
       <p className="mt-1 text-sm text-slate-500">Pick an emoji — or keep your initial.</p>
       <div className="mt-4 grid grid-cols-8 gap-2">
         {AVATAR_EMOJIS.map((emoji) => (
@@ -285,7 +285,7 @@ function DisplayNameCard({ user }: { user: AppUser | null }) {
 
   return (
     <section className="sf-card p-6">
-      <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-100">Display name</h3>
+      <h2 className="text-lg font-semibold text-slate-800 dark:text-slate-100">Display name</h2>
       <div className="mt-4 flex flex-col gap-3">
         <div className="flex flex-col gap-1.5">
           <Label htmlFor="display-name">Name</Label>
@@ -334,7 +334,7 @@ function StudyProfileCard({ user, onRefreshed }: { user: AppUser | null; onRefre
 
   return (
     <section className="sf-card p-6">
-      <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-100">Study profile</h3>
+      <h2 className="text-lg font-semibold text-slate-800 dark:text-slate-100">Study profile</h2>
       <div className="mt-4 flex flex-col gap-4">
         <div className="flex flex-col gap-1.5">
           <Label htmlFor="school-name">School name</Label>
@@ -440,7 +440,7 @@ function EmailCard({ user, onEmailChanged }: { user: AppUser | null; onEmailChan
 
   return (
     <section aria-label="Email address" className="sf-card p-6">
-      <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-100">Email address</h3>
+      <h2 className="text-lg font-semibold text-slate-800 dark:text-slate-100">Email address</h2>
       <div className="mt-1 text-sm text-slate-500">
         Update the address you use to sign in. Currently{" "}
         <span className="font-medium text-slate-700 dark:text-slate-200">{user?.email ?? "…"}</span>.
@@ -530,7 +530,7 @@ function PasswordCard() {
 
   return (
     <section aria-label="Change password" className="sf-card p-6">
-      <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-100">Change password</h3>
+      <h2 className="text-lg font-semibold text-slate-800 dark:text-slate-100">Change password</h2>
       <form className="mt-4 flex flex-col gap-3" onSubmit={(e) => void submit(e)}>
         <div className="flex flex-col gap-1.5">
           <Label htmlFor="current-password">Current password</Label>
@@ -605,7 +605,7 @@ function DangerZoneCard() {
 
   return (
     <section aria-label="Danger zone" className="sf-card border-red-200 p-6 dark:border-red-900">
-      <h3 className="text-lg font-semibold text-red-600 dark:text-red-400">Danger zone</h3>
+      <h2 className="text-lg font-semibold text-red-600 dark:text-red-400">Danger zone</h2>
       <p className="mt-1 text-sm text-slate-500">
         Permanently delete your account and every study record in it. Consider downloading a backup
         from the export page first.
@@ -768,7 +768,7 @@ function SubjectsTab() {
   return (
     <section className="sf-card p-6">
       <div className="flex items-center justify-between gap-3">
-        <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-100">Subjects</h3>
+        <h2 className="text-lg font-semibold text-slate-800 dark:text-slate-100">Subjects</h2>
         <Button
           variant="gradient"
           size="sm"
@@ -947,7 +947,7 @@ function HolidaysTab() {
     <section className="sf-card p-6">
       <div className="flex items-center justify-between gap-3">
         <div>
-          <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-100">Holidays &amp; Breaks</h3>
+          <h2 className="text-lg font-semibold text-slate-800 dark:text-slate-100">Holidays &amp; Breaks</h2>
           <p className="mt-1 text-sm text-slate-500">Set your school holidays and breaks</p>
         </div>
         <Button variant="gradient" size="sm" className="sf-gradient-shadow" onClick={() => setDialogOpen(true)}>
@@ -1015,7 +1015,7 @@ function NotificationsTab({ user, onRefreshed }: { user: AppUser | null; onRefre
       <p className="text-sm text-slate-500 dark:text-slate-400">Manage your notification preferences</p>
       <div className="mt-4 flex items-center justify-between gap-4">
         <div>
-          <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-100">Enable Notifications</h3>
+          <h2 className="text-lg font-semibold text-slate-800 dark:text-slate-100">Enable Notifications</h2>
           <p className="mt-1 text-sm text-slate-500">Receive reminders for tasks and assignments</p>
         </div>
         <Switch checked={enabled} onCheckedChange={setEnabled} aria-label="Enable Notifications" />
@@ -1092,7 +1092,7 @@ export function SettingsView() {
         <TabsContent value="profile" aria-label="Profile" className="mt-6">
           <div className="mx-auto flex max-w-2xl flex-col gap-6">
             <section className="sf-card p-6">
-              <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-100">Account</h3>
+              <h2 className="text-lg font-semibold text-slate-800 dark:text-slate-100">Account</h2>
               <p className="mt-1 text-sm text-slate-500">Your account and study information.</p>
               <p className="mt-2 text-sm text-slate-500">
                 {user ? (
@@ -1163,7 +1163,7 @@ function SignOutCard() {
   return (
     <section className="sf-card flex items-center justify-between gap-4 p-6">
       <div>
-        <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-100">Session</h3>
+        <h2 className="text-lg font-semibold text-slate-800 dark:text-slate-100">Session</h2>
         <p className="mt-0.5 text-sm text-slate-500 dark:text-slate-400">
           Sign out of StudyFlow on this device.
         </p>

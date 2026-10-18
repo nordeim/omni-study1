@@ -168,7 +168,7 @@ test.describe("S9-C/D · Tasks filter chrome + My Lists body", () => {
   test("status filter is an outline button with a filter icon (not a combobox)", async ({ page }) => {
     await page.goto("/Tasks");
     await hydrated(page);
-    const ctrl = page.locator('main button[aria-label="Filter tasks"]');
+    const ctrl = page.locator('main button[aria-label^="Filter tasks"]');
     await expect(ctrl).toBeVisible();
     await expect(ctrl).toHaveText(/Active/);
     await expect(ctrl).toHaveClass(/border/);
@@ -247,7 +247,10 @@ test.describe("S9-F · Calendar mode switch chrome", () => {
     expect(Math.round(h)).toBe(32); // h-8
 
     const activeBg = await calendarTab.evaluate((el) => getComputedStyle(el).backgroundColor);
-    expect(activeBg).toBe("rgb(139, 92, 246)"); // solid violet-500 fill
+    // violet-600 — was violet-500: the Family F a11y sweep measured
+    // white-on-violet-500 at 4.23:1 (axe color-contrast, serious); the
+    // sf-selected-tint fill moved to --sf-primary-strong (5.70:1).
+    expect(activeBg).toBe("rgb(124, 58, 237)");
     const inactiveBg = await timelineTab.evaluate((el) => getComputedStyle(el).backgroundColor);
     expect(inactiveBg).toBe("rgba(0, 0, 0, 0)"); // ghost
   });
@@ -286,7 +289,7 @@ test.describe("S9-I/J · Assignments rows + default filter; Exams badge", () => 
   test("status filter defaults to Active", async ({ page }) => {
     await page.goto("/Assignments");
     await hydrated(page);
-    const trigger = page.locator('[aria-label="Filter assignments by status"]');
+    const trigger = page.locator('[aria-label^="Filter assignments by status"]');
     await expect(trigger).toHaveText(/Active/);
   });
 
@@ -317,7 +320,9 @@ test.describe("S9-I/J · Assignments rows + default filter; Exams badge", () => 
       return { bg: s.backgroundColor, color: s.color };
     });
     expect(cs.bg).toBe("rgb(255, 237, 213)"); // orange-100
-    expect(cs.color).toBe("rgb(234, 88, 12)"); // orange-600
+    // orange-700 — was orange-600 (234,88,12): 4.0:1 on orange-100 (axe
+    // color-contrast, serious); one step darker = 4.52:1 (AA).
+    expect(cs.color).toBe("rgb(194, 65, 12)");
   });
 });
 

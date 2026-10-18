@@ -244,7 +244,7 @@ export function CalendarView() {
                   onClick={() => setSelected(cell.date)}
                   className={cn(
                     "relative flex aspect-square flex-col items-center justify-center gap-1 rounded-lg text-sm font-medium transition-colors",
-                    !cell.inMonth && "text-slate-300 dark:text-slate-600",
+                    !cell.inMonth && "text-slate-500 dark:text-slate-600",
                     cell.inMonth &&
                       !isSelected &&
                       !isToday &&

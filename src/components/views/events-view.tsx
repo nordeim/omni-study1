@@ -223,7 +223,6 @@ export function EventsView() {
           type="button"
           variant="gradient"
           className="sf-gradient-shadow"
-          aria-label="Create event"
           onClick={openCreate}
         >
           <Plus className="size-4" strokeWidth={2} />
@@ -238,7 +237,7 @@ export function EventsView() {
             title="No events yet"
             hint="Create your first event to see your week come alive."
             cta={
-              <Button type="button" variant="gradient" className="sf-gradient-shadow-lg" aria-label="Create event" onClick={openCreate}>
+              <Button type="button" variant="gradient" className="sf-gradient-shadow-lg" onClick={openCreate}>
                 <Plus className="size-4" strokeWidth={2} />
                 New Event
               </Button>
@@ -279,11 +278,11 @@ export function EventsView() {
               );
               return (
                 <div key={day.toISOString()}>
-                  <h3 className="text-sm font-semibold text-cyan-400">
+                  <h2 className="text-sm font-semibold text-cyan-400">
                     {dayLabel(day, index)}
-                  </h3>
+                  </h2>
                   {dayEvents.length === 0 ? (
-                    <p className="mt-1 text-sm text-slate-600">No events.</p>
+                    <p className="mt-1 text-sm text-slate-400">No events.</p>
                   ) : (
                     <div className="mt-2 flex flex-col gap-2">
                       {dayEvents.map((e) => (

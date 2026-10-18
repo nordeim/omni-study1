@@ -293,7 +293,7 @@ export function TimetableView() {
               <div className="grid grid-cols-8" aria-label="Hour cells">
                 {HOURS.map((hour) => (
                   <React.Fragment key={hour}>
-                    <div className="border-b border-slate-50 pr-2 pt-1 text-right text-xs text-slate-400 dark:border-slate-800">
+                    <div className="border-b border-slate-50 pr-2 pt-1 text-right text-xs text-slate-500 dark:border-slate-800">
                       {hour === 12 ? "12 PM" : hour > 12 ? `${hour - 12} PM` : `${hour} AM`}
                     </div>
                     {weekDays.map((day, col) => {
@@ -329,7 +329,7 @@ export function TimetableView() {
                                 <p className="font-medium text-slate-700 dark:text-slate-200">
                                   {c.name}
                                 </p>
-                                <p className="text-[10px] text-slate-500 dark:text-slate-400">
+                                <p className="text-[10px] text-slate-600 dark:text-slate-400">
                                   {c.startTime}–{c.endTime}
                                   {c.room ? ` · ${c.room}` : ""}
                                 </p>
@@ -410,7 +410,7 @@ export function TimetableView() {
                     {open && (
                       <div className="flex flex-col gap-2 px-3 pb-3">
                         {dayClasses.length === 0 ? (
-                          <p className="py-2 text-sm text-slate-400">No classes this day.</p>
+                          <p className="py-2 text-sm text-slate-500">No classes this day.</p>
                         ) : (
                           dayClasses.map((c) => {
                             const subject = subjectOf(c.subjectId);
@@ -483,7 +483,7 @@ export function TimetableView() {
                         </span>
                       )}
                     </p>
-                    <p className="mt-1 text-xs text-slate-400">
+                    <p className="mt-1 text-xs text-slate-500">
                       {DAY_NAMES[c.dayOfWeek]} · {WEEK_TYPE_LABELS[c.weekType]}
                     </p>
                   </div>

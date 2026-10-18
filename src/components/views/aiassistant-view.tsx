@@ -137,7 +137,7 @@ export function AIAssistantView() {
                     className="sf-card rounded-xl p-4 text-left outline-none transition-colors hover:border-sf-primary/40 focus-visible:ring-2 focus-visible:ring-sf-primary/40"
                   >
                     <action.icon className="size-8 text-sf-primary" strokeWidth={2} aria-hidden />
-                    <span role="heading" aria-level={3} className="mt-2 block text-base font-semibold text-slate-800 dark:text-slate-100">
+                    <span role="heading" aria-level={2} className="mt-2 block text-base font-semibold text-slate-800 dark:text-slate-100">
                       {action.title}
                     </span>
                   </button>

@@ -152,7 +152,7 @@ export function EmptyState({ icon: Icon, title, hint, cta }: EmptyStateProps) {
       >
         <Icon className="size-10 text-sf-primary" strokeWidth={2} />
       </div>
-      <h3 className="mt-4 text-xl font-semibold text-slate-800 dark:text-slate-100">{title}</h3>
+      <h2 className="mt-4 text-xl font-semibold text-slate-800 dark:text-slate-100">{title}</h2>
       <p className="mt-1 text-base text-slate-500 dark:text-slate-400">{hint}</p>
       {cta && <div className="mt-6">{cta}</div>}
     </div>

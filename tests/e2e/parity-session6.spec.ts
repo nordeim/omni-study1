@@ -196,8 +196,9 @@ test.describe("S6-E · assignment rows with progress slider", () => {
     await hydrated(page);
     const row = page.locator('[aria-label="Assignment rows"] > *', { hasText: "Problem set 6" }).first();
     await expect(row).toBeVisible();
-    // h3 title (not p).
-    expect(await row.locator("h3").first().evaluate((el) => getComputedStyle(el).fontWeight)).toBe("600");
+    // h2 title (was h3 — the Family F heading-order fix; the visible
+    // geometry is unchanged: still a 600-weight text-base title tag).
+    expect(await row.locator("h2").first().evaluate((el) => getComputedStyle(el).fontWeight)).toBe("600");
     // Due-in pill: blue-50 bg / blue-600 text.
     const due = row.locator("span", { hasText: "days" }).first();
     const dueCs = await due.evaluate((el) => {
@@ -261,7 +262,9 @@ test.describe("S6-F · exam card grid", () => {
       return { bg: s.backgroundColor, color: s.color };
     });
     expect(badgeCs.bg).toBe(rgb(254, 243, 199)); // amber-100
-    expect(badgeCs.color).toBe(rgb(217, 119, 6)); // amber-600
+    // amber-700 — was amber-600 (217,119,6): 4.1:1 on amber-100 (axe
+    // color-contrast, serious); one step darker = 4.50:1 (AA).
+    expect(badgeCs.color).toBe(rgb(180, 83, 9));
     // Type footer pill + duration line.
     await expect(card.getByText("quiz", { exact: true })).toBeVisible();
     await expect(card.getByText(/45 min/)).toBeVisible();
@@ -282,13 +285,15 @@ test.describe("S6-G · calendar grid + legend + day detail", () => {
     expect(cs.ratio).toBeLessThan(0.05);
     expect(cs.display).toContain("flex");
     expect(cs.alignItems).toBe("center");
-    // Today = solid accent fill + white text.
+    // Today = solid accent fill + white text. violet-600 — was violet-500:
+    // the Family F sweep measured white-on-violet-500 at 4.23:1 (axe
+    // color-contrast, serious); the fill moved to --sf-primary-strong.
     const today = page.locator('[aria-label="Calendar days"] > button[aria-label*="Today" i], [data-today="true"]').first();
     const todayCs = await today.evaluate((el) => {
       const s = getComputedStyle(el);
       return { bg: s.backgroundColor, color: s.color };
     });
-    expect(todayCs.bg).toBe(rgb(139, 92, 246));
+    expect(todayCs.bg).toBe(rgb(124, 58, 237));
     expect(todayCs.color).toBe(rgb(255, 255, 255));
   });
 

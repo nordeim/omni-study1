@@ -81,7 +81,10 @@ test.describe("S5-B · Events dark terminal panel", () => {
   test("the New Event dialog carries the reference field set (location, repeat, reminders)", async ({ page }) => {
     await page.goto("/Events");
     await hydrated(page);
-    await page.getByRole("button", { name: "New Event" }).click();
+    // .first() = the header CTA (the panel's own "New Event" text button
+    // now shares the visible name — the CTA's mismatched aria-label
+    // "Create event" was removed in the Family F a11y fix).
+    await page.getByRole("button", { name: "New Event" }).first().click();
     const dialog = page.getByRole("dialog");
     await expect(dialog).toBeVisible();
     await expect(dialog.getByLabel("Title *")).toBeVisible();
@@ -197,7 +200,10 @@ test.describe("S5-G · Calendar segmented switch", () => {
     const active = page.getByRole("button", { name: "Calendar", exact: true });
     await expect(active).toBeVisible();
     const bg = await active.evaluate((el) => getComputedStyle(el).backgroundColor);
-    expect(bg).toBe("rgb(139, 92, 246)"); // solid accent — measured.
+    // violet-600 — was violet-500: the Family F a11y sweep measured
+    // white-on-violet-500 at 4.23:1 (axe color-contrast, serious); the
+    // sf-selected-tint fill moved to --sf-primary-strong (5.70:1).
+    expect(bg).toBe("rgb(124, 58, 237)");
     expect(await active.evaluate((el) => getComputedStyle(el).fontSize)).toBe("12px");
   });
 });
@@ -208,7 +214,9 @@ test.describe("S5-H · Calculator keypad + display", () => {
     await hydrated(page);
     const clear = page.getByRole("button", { name: "Clear" });
     await expect(clear).toBeVisible();
-    expect(await clear.evaluate((el) => getComputedStyle(el).color)).toBe("rgb(220, 38, 38)"); // red-600 — measured.
+    // red-700 — was red-600 (220,38,38): the Family F sweep measured 3.99:1
+    // on red-100 (axe color-contrast, serious); one step darker = 4.61:1.
+    expect(await clear.evaluate((el) => getComputedStyle(el).color)).toBe("rgb(185, 28, 28)");
     const clearBox = await clear.boundingBox();
     expect(Math.round(clearBox?.width ?? 0)).toBeGreaterThanOrEqual(190); // half the 448px card.
     const eq = page.getByRole("button", { name: "Equals" });

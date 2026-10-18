@@ -679,7 +679,7 @@ export function TasksView() {
           </div>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" aria-label="Filter tasks" className="bg-white dark:bg-card">
+              <Button variant="outline" aria-label={`Filter tasks: ${STATUS_LABELS[status]}`} className="bg-white dark:bg-card">
                 <Filter className="size-4 text-slate-500" strokeWidth={2} />
                 {STATUS_LABELS[status]}
               </Button>
@@ -791,7 +791,7 @@ function AsideRow({
     >
       {icon}
       <span className="flex-1 truncate font-medium">{label}</span>
-      <span className="text-sm opacity-70">{count}</span>
+      <span className={cn("text-sm", !active && "text-slate-500 dark:text-slate-400")}>{count}</span>
     </button>
   );
 }

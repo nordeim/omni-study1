@@ -297,9 +297,9 @@ function StatBlock({ icon: Icon, iconClasses, value, label, sub }: StatBlockProp
       <div className={cn("flex h-12 w-12 items-center justify-center rounded-xl", iconClasses)}>
         <Icon className="size-6" strokeWidth={2} aria-hidden />
       </div>
-      <h3 className="mt-4 text-3xl font-bold text-slate-800 dark:text-slate-100">{value}</h3>
+      <h2 className="mt-4 text-3xl font-bold text-slate-800 dark:text-slate-100">{value}</h2>
       <p className="text-sm text-slate-500 dark:text-slate-400">{label}</p>
-      <p className="text-xs text-slate-400 dark:text-slate-500">{sub}</p>
+      <p className="text-xs text-slate-500">{sub}</p>
     </div>
   );
 }

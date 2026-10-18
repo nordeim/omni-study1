@@ -215,7 +215,10 @@ test.describe("S8-C · Calendar rework", () => {
     const selected = grid.locator("button[aria-pressed=true]");
     await expect(selected).toHaveCount(1);
     const selCs = await selected.evaluate((el) => getComputedStyle(el).backgroundColor);
-    expect(selCs).toBe(rgb(139, 92, 246)); // violet-500 fill
+    // violet-600 — was violet-500 (139,92,246): the Family F a11y sweep
+    // measured white-on-violet-500 at 4.23:1 (axe color-contrast, serious);
+    // the selected fill moved one step to --sf-primary-strong (5.70:1).
+    expect(selCs).toBe(rgb(124, 58, 237));
     const selCls = await selected.evaluate((el) => el.className);
     expect(selCls).not.toContain("hover:bg");
     // Click another day: the old day becomes the tinted TODAY cell. The
@@ -239,7 +242,8 @@ test.describe("S8-C · Calendar rework", () => {
     const newSel = grid.locator("button[aria-pressed=true]");
     await expect(newSel).toHaveCount(1);
     const newSelCs = await newSel.evaluate((el) => getComputedStyle(el).backgroundColor);
-    expect(newSelCs).toBe(rgb(139, 92, 246));
+    // violet-600 — the sf-selected-tint a11y fix (see the S8-C note above).
+    expect(newSelCs).toBe(rgb(124, 58, 237));
   });
 
   test("day detail is a simple p-6 card with a font-bold h3 long date", async ({ page }) => {
@@ -521,7 +525,9 @@ test.describe("S8-K · Calculator Clear icon", () => {
   test("Clear key renders the rotate-ccw icon", async ({ page }) => {
     await page.goto("/Calculator");
     await hydrated(page);
-    const clear = page.locator('button[aria-label="Clear"]');
+    // ^="Clear" — the name became "Clear: AC" in the Family F fix
+    // (label-content-name-mismatch: the visible "AC" must be in the name).
+    const clear = page.locator('button[aria-label^="Clear"]');
     await expect(clear.locator("svg.lucide-rotate-ccw")).toHaveCount(1);
   });
 });

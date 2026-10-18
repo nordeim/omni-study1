@@ -47,12 +47,12 @@ const EXAM_TYPES = ["test", "quiz", "midterm", "final", "oral", "practical"];
 function urgency(row: ExamRow): { text: string; className: string } {
   const diff = daysUntil(new Date(row.date), new Date());
   if (diff < 0) return { text: "Past", className: "bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400" };
-  if (diff === 0) return { text: "Today", className: "bg-red-100 text-red-600 dark:bg-red-950 dark:text-red-300" };
+  if (diff === 0) return { text: "Today", className: "bg-red-100 text-red-700 dark:bg-red-950 dark:text-red-300" };
   if (diff === 1)
-    return { text: "Tomorrow", className: "bg-orange-100 text-orange-600 dark:bg-orange-950 dark:text-orange-300" };
+    return { text: "Tomorrow", className: "bg-orange-100 text-orange-700 dark:bg-orange-950 dark:text-orange-300" };
   return {
     text: `in ${diff} days`,
-    className: "bg-amber-100 text-amber-600 dark:bg-amber-950 dark:text-amber-300",
+    className: "bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-300",
   };
 }
 
@@ -230,15 +230,16 @@ export function ExamsView() {
             return (
               <div key={exam.id} className="group sf-card overflow-hidden">
                 <div
+                  role="img"
                   className="h-2"
                   aria-label="Subject color strip"
                   style={{ backgroundColor: subject?.color ?? "rgb(var(--sf-primary))" }}
                 />
                 <div className="p-6">
                   <div className="flex items-start justify-between gap-2">
-                    <h3 className="font-semibold text-slate-800 dark:text-slate-100">
+                    <h2 className="font-semibold text-slate-800 dark:text-slate-100">
                       {exam.title}
-                    </h3>
+                    </h2>
                     <span
                       className={cn(
                         "shrink-0 rounded-full px-2.5 py-0.5 text-xs font-medium",

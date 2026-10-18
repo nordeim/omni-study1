@@ -293,7 +293,7 @@ export function NotesView() {
 
         <div className="sf-scroll mt-3 flex-1 space-y-2 overflow-y-auto">
           {filtered.length === 0 ? (
-            <p className="py-8 text-center text-sm text-slate-400">
+            <p className="py-8 text-center text-sm text-slate-500">
               {notes.length === 0 ? "No notes yet." : "No notes match."}
             </p>
           ) : (
@@ -312,14 +312,14 @@ export function NotesView() {
                   )}
                 >
                   <div className="flex items-start justify-between gap-2">
-                    <h3 className="truncate text-sm font-medium text-slate-700 dark:text-slate-200">
+                    <h2 className="truncate text-sm font-medium text-slate-700 dark:text-slate-200">
                       {note.title}
-                    </h3>
+                    </h2>
                   </div>
                   <p className="mt-1 truncate text-xs text-slate-500 dark:text-slate-400">
                     {note.content.replace(/[#*\n]/g, " ").slice(0, 60) || "Empty note"}
                   </p>
-                  <p className="mt-1 text-xs text-slate-400">
+                  <p className="mt-1 text-xs text-slate-500">
                     {notebook ? `${notebook.name} · ` : ""}
                     {formatShortWithYear(new Date(note.updatedAt))}
                   </p>
@@ -355,7 +355,7 @@ export function NotesView() {
           </div>
         ) : !selected ? (
           <div className="flex flex-1 items-center justify-center">
-            <p className="text-sm text-slate-400">Select a note from the list.</p>
+            <p className="text-sm text-slate-500">Select a note from the list.</p>
           </div>
         ) : (
           <>
@@ -382,7 +382,7 @@ export function NotesView() {
                   <DropdownMenuContent align="end">
                     {notebooks.length > 0 && (
                       <div className="px-2 py-1.5">
-                        <p className="mb-1 text-xs font-medium text-slate-400">Move to notebook</p>
+                        <p className="mb-1 text-xs font-medium text-slate-500">Move to notebook</p>
                         <Select
                           value={selected.notebookId ?? "none"}
                           onValueChange={(v) =>
@@ -411,7 +411,7 @@ export function NotesView() {
                 </DropdownMenu>
               </div>
             </div>
-            <p className="mt-1 text-xs text-slate-400">
+            <p className="mt-1 text-xs text-slate-500">
               Last updated {formatShortWithYear(new Date(selected.updatedAt))}
             </p>
             <div className="sf-card mt-3 flex min-h-0 flex-1 flex-col p-4">
@@ -496,7 +496,7 @@ export function NotesView() {
             <DropdownMenuTrigger asChild>
               <button
                 type="button"
-                className="mt-2 flex items-center gap-1 text-xs font-medium text-slate-400 outline-none hover:text-slate-600 focus-visible:ring-2 focus-visible:ring-sf-primary/40"
+                className="mt-2 flex items-center gap-1 text-xs font-medium text-slate-500 outline-none hover:text-slate-600 focus-visible:ring-2 focus-visible:ring-sf-primary/40"
               >
                 <Pencil className="size-3" strokeWidth={2} />
                 Manage notebooks

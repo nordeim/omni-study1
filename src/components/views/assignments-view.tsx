@@ -196,7 +196,9 @@ export function AssignmentsView() {
                 type="button"
                 variant="outline"
                 className="h-9"
-                aria-label="Filter assignments by status"
+                aria-label={`Filter assignments by status: ${
+                  status === "active" ? "Active" : status === "completed" ? "Completed" : "All"
+                }`}
               >
                 <Filter className="size-4 text-slate-400" strokeWidth={2} />
                 <span>
@@ -242,9 +244,9 @@ export function AssignmentsView() {
               >
                 <div className="flex items-center gap-3">
                   <div className="min-w-0 flex-1">
-                    <h3 className="truncate font-semibold text-slate-700 dark:text-slate-200">
+                    <h2 className="truncate font-semibold text-slate-700 dark:text-slate-200">
                       {a.title}
-                    </h3>
+                    </h2>
                     <div className="mt-1.5 flex flex-wrap items-center gap-2">
                       <span
                         className={cn(

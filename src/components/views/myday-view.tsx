@@ -166,6 +166,7 @@ export function MyDayView() {
       {/* ---- header: 56px amber-gradient sun block + text-3xl greeting (S8-D) ---- */}
       <header className="flex items-center gap-4">
         <div
+          role="img"
           aria-label="My Day header block"
           className="flex size-14 shrink-0 items-center justify-center rounded-2xl"
           style={{

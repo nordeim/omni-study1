@@ -195,7 +195,13 @@ export function CalculatorView() {
     <button
       key={`${key.label}-${key.token}`}
       type="button"
-      aria-label={key.kind === "eq" ? "Equals" : key.token === "C" ? "Clear" : `Insert ${key.label}`}
+      aria-label={
+        key.kind === "eq"
+          ? "Equals"
+          : key.token === "C"
+            ? "Clear: AC" // must contain the visible token "AC" (axe strips parentheticals)
+            : `Insert ${key.label}`
+      }
       onClick={() => void press(key.token)}
       className={cn(
         "h-14 rounded-xl text-lg font-medium transition-colors",
@@ -205,7 +211,7 @@ export function CalculatorView() {
         key.kind === "op" && "bg-sf-primary-soft text-sf-primary-strong hover:brightness-95 dark:bg-sf-primary-soft-dark/40 dark:text-sf-primary-strong-dark",
         key.kind === "fn" &&
           "border border-slate-200 bg-white text-sm text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800",
-        key.kind === "clear" && "bg-red-100 text-red-600 hover:bg-red-200",
+        key.kind === "clear" && "bg-red-100 text-red-700 hover:bg-red-200",
       )}
     >
       {key.kind === "clear" && (
@@ -218,16 +224,19 @@ export function CalculatorView() {
   return (
     <div className="flex flex-col gap-6">
       {/* ---- custom header (no ViewHeader — the calculator's own model) ---- */}
+      {/* ONE Tabs tree: the triggers and the contents previously lived in two
+          separate <Tabs> roots, so every trigger's aria-controls pointed at a
+          panel id that never rendered (axe aria-valid-attr-value, critical).
+          Radix Tabs.Root renders no DOM of its own, so this is DOM-identical. */}
+      <Tabs value={tab} onValueChange={setTab}>
       <div className="flex flex-wrap items-center justify-between gap-4">
         <h1 className="text-2xl font-bold text-slate-800 dark:text-slate-100">Calculator Suite</h1>
-        <Tabs value={tab} onValueChange={setTab}>
-          <TabsList aria-label="Calculator mode">
-            <TabsTrigger value="basic">Basic</TabsTrigger>
-            <TabsTrigger value="scientific">Scientific</TabsTrigger>
-            <TabsTrigger value="gpa">GPA Calculator</TabsTrigger>
-            <TabsTrigger value="unit">Unit Converter</TabsTrigger>
-          </TabsList>
-        </Tabs>
+        <TabsList aria-label="Calculator mode">
+          <TabsTrigger value="basic" className="data-[state=inactive]:text-slate-600 dark:data-[state=inactive]:text-slate-400">Basic</TabsTrigger>
+          <TabsTrigger value="scientific" className="data-[state=inactive]:text-slate-600 dark:data-[state=inactive]:text-slate-400">Scientific</TabsTrigger>
+          <TabsTrigger value="gpa" className="data-[state=inactive]:text-slate-600 dark:data-[state=inactive]:text-slate-400">GPA Calculator</TabsTrigger>
+          <TabsTrigger value="unit" className="data-[state=inactive]:text-slate-600 dark:data-[state=inactive]:text-slate-400">Unit Converter</TabsTrigger>
+        </TabsList>
       </div>
 
       {/* ---- display ---- */}
@@ -241,7 +250,6 @@ export function CalculatorView() {
       </div>
 
       {/* ---- BASIC + SCIENTIFIC share the display ---- */}
-      <Tabs value={tab} onValueChange={setTab}>
         <TabsContent value="basic" aria-label="Basic" className="mt-0">
           <div className="grid grid-cols-4 gap-2">{BASIC_KEYS.map(keyButton)}</div>
           <div className="mt-2 grid grid-cols-4 gap-2">
@@ -306,6 +314,7 @@ export function CalculatorView() {
           <UnitPanel />
         </TabsContent>
       </Tabs>
+      {/* (the single Tabs root opened at the custom header closes here) */}
 
       {/* ---- history ---- */}
       <SectionCard title="History" icon={History} action={

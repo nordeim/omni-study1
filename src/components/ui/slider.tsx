@@ -14,6 +14,10 @@ function Slider({
   className,
   ...props
 }: React.ComponentProps<typeof SliderPrimitive.Root>) {
+  // role="slider" is carried by the THUMB, so the accessible name must be
+  // on the thumb — an aria-label parked on the root span never reaches it
+  // (axe aria-input-field-name, serious).
+  const { "aria-label": ariaLabel, ...rootProps } = props;
   return (
     <SliderPrimitive.Root
       data-slot="slider"
@@ -21,7 +25,7 @@ function Slider({
         "relative flex w-full touch-none items-center select-none",
         className,
       )}
-      {...props}
+      {...rootProps}
     >
       <SliderPrimitive.Track
         data-slot="slider-track"
@@ -38,6 +42,7 @@ function Slider({
       </SliderPrimitive.Track>
       <SliderPrimitive.Thumb
         data-slot="slider-thumb"
+        aria-label={ariaLabel}
         className="block size-5 rounded-full border-2 border-sf-primary bg-white shadow-sm transition-colors focus-visible:ring-2 focus-visible:ring-sf-primary/40 focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50"
       />
     </SliderPrimitive.Root>
