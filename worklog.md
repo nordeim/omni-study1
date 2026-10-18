@@ -249,3 +249,62 @@ reference site** to confirm no upstream drift since session-53.
   dashboard verified live).
 - Remote `main` = local `main` (this entry rides on top). Still no
   branches; `skills/` still excluded from all checks.
+
+---
+
+## Session 59 (continuation 10) — the desktop drift check found (and fixed) the dead greeting name
+
+**Context.** Synced to `2a64e09` (the user-side `docs/session_5.md`
+transcript of session 58 — no new asks). This session executed the
+standing re-verification AND the remaining suggested next step: the
+**desktop surface drift check**. It found a real bug the mobile check
+could not see.
+
+**The bug (High, fixed TDD-style).**
+
+- **Symptom (live, both warm and cold):** the clone's dashboard greeted
+  every user "Good morning, **there** 👋" and the sidebar showed the
+  "StudyFlow user" fallback — the reference greets by account name.
+- **Root cause chain:** `publicUser()` (src/lib/server/auth.ts:66)
+  deliberately serializes the DB's `fullName` as the wire field **`name`**
+  (documented in the route comment), but the client `AppUser` type
+  declared **`fullName`** — so `loadFromUser` read a field the wire never
+  sends, `userName` stayed `""` forever, and `firstNameOf("")` fell back
+  to "there". The type drift is exactly why tsc never caught it.
+- **Fix (client-side only, wire contract respected):** `AppUser.fullName`
+  → `AppUser.name` (store.ts, with a comment pinning the publicUser
+  mapping), `loadFromUser` reads `user.name`, settings DisplayNameCard
+  initial reads `user?.name`. Blast radius verified first: all API
+  emitters use `publicUser` (me/login/verify-email/change-email/
+  preferences), no other client consumer of `.fullName` existed, and NO
+  spec pins the fallback strings — safe to change.
+- **TDD:** new `tests/user-hydration.test.ts` written first against the
+  real wire shape — red (1 failed) → fix → **3/3 green**. Full unit suite
+  **837/837** (+3). lint ✓ tsc ✓.
+- **Live verification:** rebuilt (repo build script, REAL_EXIT=0),
+  relaunched the standalone server (the S22 boot guard correctly refused
+  the first boot without AUTH_SECRET — generated a scratch 64-hex secret,
+  process-env only), logged in, and observed "**Good morning, Demo 👋**"
+  + sidebar "Demo Student" on the new bundle.
+
+**Regression certification (post-fix bundle).** Fresh e2e DB, three
+chunks: **151 + 95 + 55 = 301/301 GREEN** (the chunk-1 "150" was the
+known cold-start skip-link race — passed solo and in the re-run).
+
+**Desktop drift verdict.** Reference vs clone at 1440×900 across
+Dashboard / Tasks / Analytics / Settings: same structural skeleton
+(brand H1 + greeting, 4 stat H3s, 3 section H2s, 20-link nav; per-page
+page titles identical). Content differs only by data (seeded demo vs the
+reference's empty account). The reference renders section titles as
+styled divs where the clone uses semantic h2 — an accessibility
+improvement, consistent with the documented superset approach. Evidence
+archived as nine `59-*.png` captures (both sides, all four surfaces).
+
+**Stage summary.**
+
+- One production bug fixed (the dead greeting name) + 3 unit pins.
+- Gates: lint ✓ tsc ✓ unit **837/837** e2e **301/301** build ✓
+  (REAL_EXIT).
+- S22 boot guard observed working live (refused an AUTH_SECRET-less
+  production boot, then booted clean with one).
+- Still `main` only; `skills/` still excluded.
