@@ -190,7 +190,11 @@ test.describe("S26 the email-change flow — the change round-trip (fresh user)"
     await page.fill("input[type=email]", originalEmail);
     await page.fill("input[type=password]", "Fresh1234!");
     await page.click("button[type=submit]");
-    await page.waitForFunction(() => document.querySelector("main") !== null, null, { timeout: 30000 });
+    // main#main-content — the authed shell's landmark. Plain "main" also
+    // matches the login page's own <main> (session-61 landmark fix), which
+    // resolves the wait before the post-login redirect and aborts the next
+    // goto (the S16/S26 ERR_ABORTED races).
+    await page.waitForFunction(() => document.querySelector("main#main-content") !== null, null, { timeout: 30000 });
 
     // The Settings Profile tab — the pinned surfaces still render FIRST…
     await page.goto("/Settings");

@@ -11,7 +11,7 @@ import { LoginSurface } from "@/components/auth/login-surface";
 
 function AuthFallback() {
   return (
-    <div className="sf-canvas flex min-h-dvh items-center justify-center p-4">
+    <main className="sf-canvas flex min-h-dvh items-center justify-center p-4">
       <div className="flex w-full max-w-sm flex-col items-center rounded-2xl border border-slate-100 bg-card p-8 shadow-2xl dark:border-slate-800">
         <span
           className="sf-print-exact flex h-11 w-11 animate-pulse items-center justify-center rounded-xl text-white"
@@ -23,7 +23,7 @@ function AuthFallback() {
           <GraduationCap className="size-6" strokeWidth={2} />
         </span>
       </div>
-    </div>
+    </main>
   );
 }
 

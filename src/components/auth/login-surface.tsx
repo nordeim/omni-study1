@@ -214,7 +214,9 @@ export function LoginSurface() {
   );
 
   return (
-    <div className="sf-canvas flex min-h-dvh items-center justify-center p-4">
+    // main, not div — the auth surface is a standalone page (no shell) and
+    // needs the one-main landmark (Lighthouse landmark-one-main, session 61).
+    <main className="sf-canvas flex min-h-dvh items-center justify-center p-4">
       <div className="relative w-full max-w-md overflow-hidden rounded-2xl bg-white/95 p-8 shadow-2xl backdrop-blur-xs dark:bg-slate-900/95">
         <div
           aria-hidden
@@ -618,7 +620,7 @@ export function LoginSurface() {
           </>
         )}
       </div>
-    </div>
+    </main>
   );
 }
 

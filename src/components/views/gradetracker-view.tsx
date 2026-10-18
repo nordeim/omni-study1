@@ -237,7 +237,7 @@ function GtSummaryCard({
       <Icon className="h-8 w-8 text-sf-primary" strokeWidth={2} aria-hidden />
       <p className="mt-3 text-sm font-medium text-slate-500 dark:text-slate-400">{label}</p>
       <p className="mt-1 text-3xl font-bold text-slate-800 dark:text-slate-100">{value}</p>
-      <p className="mt-1 text-xs text-slate-400 dark:text-slate-500">{hint}</p>
+      <p className="mt-1 text-xs text-slate-500">{hint}</p>
     </div>
   );
 }

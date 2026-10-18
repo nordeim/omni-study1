@@ -126,7 +126,8 @@ test.describe("S25 the account-deletion flow — the deletion round-trip (fresh 
     await page.fill("input[type=email]", email);
     await page.fill("input[type=password]", "Fresh1234!");
     await page.click("button[type=submit]");
-    await page.waitForFunction(() => document.querySelector("main") !== null, null, { timeout: 30000 });
+    // main#main-content — see the s26 note (the login page now has its own <main>).
+    await page.waitForFunction(() => document.querySelector("main#main-content") !== null, null, { timeout: 30000 });
 
     // The Settings Profile tab — the pinned surfaces still render FIRST…
     await page.goto("/Settings");

@@ -323,3 +323,81 @@ test.describe("light regression guard (S12)", () => {
     expect(fill).toContain("linear-gradient");
   });
 });
+
+test.describe("E · the Lighthouse audit pins (dashboard, light)", () => {
+  // Family E pins the four findings of the first Lighthouse pass on the
+  // production bundle (docs/lighthouse/, session 61): heading-order skips,
+  // the slate-400 stat hints (2.56:1), the red-600 overdue badges (3.95:1),
+  // and the aria-label on the roleless toast viewport. The color fixes
+  // darken reference-measured muted tokens by exactly one step (slate-400
+  // → slate-500 = 4.76:1, red-600 → red-700 = 5.32:1); dark values are
+  // untouched.
+  test("dashboard headings never skip a level (Lighthouse heading-order)", async ({ page }) => {
+    await page.goto("/Dashboard");
+    await hydrated(page);
+    // hydrated covers the theme var only, not the Dashboard collection
+    // round-trip (the S8-G lesson) — bound-wait for the mounted content
+    // before the read-all.
+    await expect(page.locator("main h1").first()).toBeVisible();
+    await expect(page.locator("main .sf-card h2").first()).toBeVisible();
+    const levels = await page
+      .locator("main h1, main h2, main h3, main h4, main h5, main h6")
+      .evaluateAll((els) => els.map((el) => Number(el.tagName[1])));
+    expect(levels.length).toBeGreaterThan(3);
+    expect(levels[0]).toBe(1); // the greeting h1 leads
+    for (let i = 1; i < levels.length; i++) {
+      expect(levels[i], `heading #${i} (h${levels[i]}) after h${levels[i - 1]}`).toBeLessThanOrEqual(
+        levels[i - 1] + 1,
+      );
+    }
+  });
+
+  test("stat-card hint text meets WCAG AA contrast (slate-500)", async ({ page }) => {
+    await page.goto("/Dashboard");
+    await hydrated(page);
+    // The four KPI hints ("due this week" &c.) under the stat values.
+    const hints = page.locator("main .sf-card p.mt-1");
+    await expect(hints.first()).toBeVisible();
+    const count = await hints.count();
+    expect(count).toBeGreaterThanOrEqual(4);
+    for (let i = 0; i < count; i++) {
+      const color = await hints.nth(i).evaluate((el) => getComputedStyle(el).color);
+      expect(color).toBe("rgb(100, 116, 139)"); // slate-500 — was slate-400 (2.56:1)
+    }
+  });
+
+  test("the overdue badge text meets WCAG AA contrast (red-700)", async ({ page }) => {
+    await page.goto("/Dashboard");
+    await hydrated(page);
+    // The seeded demo trips both red-100 pill surfaces: the Today's Tasks
+    // DuePills and the Upcoming Exams missed badge.
+    const badges = page.locator("main span.bg-red-100");
+    await expect(badges.first()).toBeVisible();
+    const count = await badges.count();
+    expect(count).toBeGreaterThanOrEqual(1);
+    for (let i = 0; i < count; i++) {
+      const color = await badges.nth(i).evaluate((el) => getComputedStyle(el).color);
+      expect(color).toBe("rgb(185, 28, 28)"); // red-700 — was red-600 (3.95:1)
+    }
+  });
+
+  test("the toast viewport is a named region (Lighthouse aria-prohibited-attr)", async ({ page }) => {
+    await page.goto("/Dashboard");
+    await hydrated(page);
+    // aria-label needs a role; the viewport becomes a named region
+    // (the radix-toast pattern) instead of a roleless div.
+    const viewport = page.locator('div[role="region"][aria-label="Notifications"]');
+    await expect(viewport).toBeAttached();
+    await expect(viewport).toHaveAttribute("aria-live", "polite");
+  });
+
+  test("the auth surface carries the one-main landmark (Lighthouse landmark-one-main)", async ({
+    page,
+  }) => {
+    // /login is a standalone page (no shell) — its root is <main> since
+    // session 61; the sub-screens swap inside it.
+    await page.goto("/login");
+    await expect(page.locator("main").first()).toBeVisible();
+    await expect(page.getByRole("main")).toHaveCount(1);
+  });
+});

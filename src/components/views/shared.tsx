@@ -58,10 +58,15 @@ type StatCardProps = {
 };
 
 /** KPI card — the reference anatomy (S3-A/S4-B): label (14px/500 slate-500,
- *  mb-1) → value h3 (30px/700, normal tracking) → hint (14px slate-400, mt-1)
+ *  mb-1) → value heading (30px/700, normal tracking) → hint (14px, mt-1)
  *  stacked left; a 48px solid chip with a 24px WHITE glyph top-right; a soft
- *  wash blob clipped by the rounded-2xl card. The label/h3/hint are DOM
- *  SIBLINGS (the e2e reads previousElementSibling/nextElementSibling). */
+ *  wash blob clipped by the rounded-2xl card. The label/hint are DOM
+ *  SIBLINGS of the value heading (the e2e reads
+ *  previousElementSibling/nextElementSibling). The value renders as h2 and
+ *  the hint as slate-500 — one conscious visual deviation each, both
+ *  Lighthouse-driven (session 61): the stat h3s under the greeting h1
+ *  tripped heading-order, and the reference's slate-400 hint fails WCAG AA
+ *  on white (2.56:1; slate-500 = 4.76:1). Dark keeps the reference value. */
 export function StatCard({ icon: Icon, label, value, hint, iconClassName }: StatCardProps) {
   return (
     <div className="sf-card relative overflow-hidden rounded-2xl p-6">
@@ -76,8 +81,8 @@ export function StatCard({ icon: Icon, label, value, hint, iconClassName }: Stat
       <div className="relative flex items-start justify-between gap-4">
         <div className="min-w-0">
           <p className="mb-1 text-sm font-medium text-slate-500 dark:text-slate-400">{label}</p>
-          <h3 className="text-3xl font-bold text-slate-800 dark:text-slate-100">{value}</h3>
-          <p className="mt-1 text-sm text-slate-400 dark:text-slate-500">{hint ?? label}</p>
+          <h2 className="text-3xl font-bold text-slate-800 dark:text-slate-100">{value}</h2>
+          <p className="mt-1 text-sm text-slate-500">{hint ?? label}</p>
         </div>
         <span
           className={cn(
@@ -229,7 +234,9 @@ export function DuePill({ label, overdue }: { label: string; overdue?: boolean }
       className={cn(
         "inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium",
         overdue
-          ? "bg-red-100 text-red-600 dark:bg-red-950 dark:text-red-300"
+          // red-700 not the reference's red-600 — 5.32:1 on red-100 vs 3.95
+          // (WCAG AA at the pill's 12px); Lighthouse session 61.
+          ? "bg-red-100 text-red-700 dark:bg-red-950 dark:text-red-300"
           : "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300",
       )}
     >

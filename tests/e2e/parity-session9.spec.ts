@@ -82,8 +82,10 @@ test.describe("S9-A · Dashboard overdue alert banner", () => {
     await expect(iconBlock).toHaveClass(/h-10 w-10/);
     const iconBlockBg = await iconBlock.evaluate((el) => getComputedStyle(el).backgroundColor);
     expect(iconBlockBg).toBe("rgb(254, 226, 226)"); // red-100
-    await expect(banner.getByRole("heading", { level: 3 })).toHaveText(/overdue item/);
-    await expect(banner.getByRole("heading", { level: 3 })).toHaveClass(/text-red-700/);
+    // The banner title renders as h2 (session 61: the h3 tripped Lighthouse
+    // heading-order under the greeting h1; tag swap is visually identical).
+    await expect(banner.getByRole("heading", { level: 2 })).toHaveText(/overdue item/);
+    await expect(banner.getByRole("heading", { level: 2 })).toHaveClass(/text-red-700/);
     await expect(banner.getByText("Don't forget to complete them!")).toBeVisible();
 
     // CTA links to the Tasks view.

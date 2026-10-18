@@ -121,9 +121,10 @@ test.describe("S10-2/3/5 · banner, amber card and clock chip re-theme", () => {
     expect(bg).toContain("127, 29, 29");
     expect(bg).toContain("124, 45, 18");
     // The existing dark: text variants now read correctly on the dark wash.
-    const h3 = banner.getByRole("heading", { level: 3 });
-    const h3Color = await h3.evaluate((el) => getComputedStyle(el).color);
-    expect(h3Color).toBe("rgb(252, 165, 165)"); // red-300
+    // h2 since session 61 (Lighthouse heading-order fix; visual no-op).
+    const h2 = banner.getByRole("heading", { level: 2 });
+    const h2Color = await h2.evaluate((el) => getComputedStyle(el).color);
+    expect(h2Color).toBe("rgb(252, 165, 165)"); // red-300
   });
 
   test("MyDay amber progress card carries a dark amber wash", async ({ page }) => {

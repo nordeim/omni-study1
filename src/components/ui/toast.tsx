@@ -55,6 +55,7 @@ export function Toaster() {
   const dismiss = useToastStore((s) => s.dismiss);
   return (
     <div
+      role="region"
       aria-live="polite"
       aria-label="Notifications"
       className="pointer-events-none fixed bottom-4 right-4 z-[60] flex w-80 flex-col gap-2"

@@ -87,7 +87,11 @@ test.describe("S16-A dashboard load stability (CLS guard)", () => {
     await page.getByLabel("Email", { exact: true }).fill("demo@studyflow.app");
     await page.getByLabel("Password", { exact: true }).fill("Demo1234!");
     await page.getByRole("button", { name: "Sign in", exact: true }).click();
-    await page.waitForFunction(() => document.querySelector("main") !== null, null, {
+    // main#main-content — the authed shell's landmark. Plain "main" also
+    // matches the login page's own <main> (session-61 landmark fix), which
+    // resolved this wait before the post-login redirect and aborted the
+    // measured goto (ERR_ABORTED).
+    await page.waitForFunction(() => document.querySelector("main#main-content") !== null, null, {
       timeout: 30000,
     });
 

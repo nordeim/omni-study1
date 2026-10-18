@@ -144,9 +144,9 @@ export function DashboardView() {
             <CircleAlert className="size-5 text-red-500" strokeWidth={2} />
           </div>
           <div className="min-w-0 flex-1">
-            <h3 className="font-semibold text-red-700 dark:text-red-300">
+            <h2 className="font-semibold text-red-700 dark:text-red-300">
               You have {overdue.length} overdue item{overdue.length === 1 ? "" : "s"}
-            </h3>
+            </h2>
             <p className="text-sm text-red-600 dark:text-red-400">
               Don't forget to complete them!
             </p>
@@ -289,7 +289,7 @@ export function DashboardView() {
                         {formatShortWithYear(new Date(exam.date))}
                       </p>
                     </div>
-                    <span className="shrink-0 rounded-full bg-red-100 px-2.5 py-0.5 text-xs font-medium text-red-600 dark:bg-red-950 dark:text-red-300">
+                    <span className="shrink-0 rounded-full bg-red-100 px-2.5 py-0.5 text-xs font-medium text-red-700 dark:bg-red-950 dark:text-red-300">
                       {label}
                     </span>
                   </li>
