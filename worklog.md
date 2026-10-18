@@ -192,3 +192,60 @@ to `71b70ae`; local == remote.
   top as the only new commit).
 - The delegation's standing state: **lint ✓ tsc ✓ unit 834/834 ✓ e2e
   301/301 ✓ build ✓** — all on `main`, no branches.
+
+---
+
+## Session 58 (continuation 9) — sync, re-certification, and the reference drift check
+
+**Context.** The workspace survived again. Local held the session-57
+record; remote had moved to `31c54c9` (the user-side `docs/session_4.md`
+addition, which already contained `e1763f8`). Fast-forwarded; local ==
+remote. `session_4.md` is the user's saved transcript of session 57 —
+no new asks, so this session executed the standing contract: independent
+re-verification, plus the one outstanding "suggested next step" from the
+session-3/4 notes that had never been done — **a live re-sweep of the
+reference site** to confirm no upstream drift since session-53.
+
+**Work log.**
+
+1. **Fast gates re-run**: lint ✓ · tsc ✓ · unit **834/834** ✓; the
+   standalone build proven still current (no src file newer than
+   `.next/BUILD_ID`).
+2. **E2E re-certified cold**: stray-server kill, fresh `db/e2e.db`,
+   three chunks — **151 + 95 + 55 = 301/301 GREEN** (2.2m / 1.3m /
+   45.4s), matching the record for the third consecutive session.
+3. **The reference drift check (agent-browser, first since session-53).**
+   Logged into `omni-study1.base44.app` with the delegated credentials,
+   switched to a 390×844 mobile viewport, opened the mobile navigation
+   drawer, and mapped its live structure:
+   - Brand "StudyFlow" + "Your study companion" subtitle.
+   - The 20-link nav in order: Dashboard, My Day, Tasks, Calendar,
+     Events, Timetable, Assignments, Exams, Notes, Flashcards, Practice
+     Tests, Study Groups, Grade Tracker, Analytics, Files, Calculator,
+     Math Solver, AI Assistant, Focus Timer, Settings.
+   - Footer: live clock ("05:12 AM" — the pinned 2-digit-hour 12-hour
+     format), date, user avatar + name + email.
+   - Fixed-position translucent drawer (ASIDE, white/80).
+4. **Drift verdict: ZERO drift.** Every observed element matches the
+   clone's `mobile-navigation.spec.ts` pins line-for-line — the same 20
+   labels in the same order, the same brand block, the same clock regex
+   (`^\d{2}:\d{2} (AM|PM)$`), the same drawer semantics. The reference
+   dashboard also still shows the pinned greeting ("Good morning,
+   … 👋"), Start My Day CTA, four stat headings, and the three content
+   sections (Today's Tasks / Upcoming Exams / Upcoming Assignments).
+   The delegation's mobile-nav / Tailwind-v4 concern is re-confirmed
+   healthy: the clone already passes all 10 mobile-navigation specs
+   against this exact structure.
+5. **Evidence archived**: the two live reference captures saved as
+   `docs/screenshots/58-ref-mobile-dashboard.png` and
+   `58-ref-mobile-drawer-open.png`.
+
+**Stage summary.**
+
+- No code changes — verification + drift check only. All gates green
+  on this machine: lint ✓ tsc ✓ unit 834/834 ✓ e2e 301/301 ✓.
+- **Upstream parity confirmed current**: the reference site has not
+  drifted from the clone's pinned contracts (mobile nav verified live;
+  dashboard verified live).
+- Remote `main` = local `main` (this entry rides on top). Still no
+  branches; `skills/` still excluded from all checks.
