@@ -133,7 +133,7 @@ Rules: unique row titles in e2e (the db persists across runs); exactly one share
 ## Communication & Documentation
 
 - Comments explain *why*, not *what* — the six Tailwind v4 traps and the db-path anchors are commented at their sources; keep those comments true.
-- `README.md` (users) → `AGENTS.md` (agent quick-reference) → `Project_Architecture_Document.md` (full blueprint + ADRs) → `omni-study_SKILL.md` (distilled engineering knowledge — traps, anti-patterns, debugging, lessons). Update the right layer for the change you made.
+- `README.md` (users) → `AGENTS.md` (agent quick-reference) → `Project_Architecture_Document.md` (full blueprint + ADRs) → `omni-study1_SKILL.md` (distilled engineering knowledge — traps, anti-patterns, debugging, lessons). Update the right layer for the change you made.
 
 ## Project-Specific Standards
 

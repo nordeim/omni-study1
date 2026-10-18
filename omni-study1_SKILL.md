@@ -1,5 +1,5 @@
 ---
-name: omni-study
+name: omni-study1
 description: >
   Comprehensive engineering skill distilled from the StudyFlow (Omni-Study)
   codebase — a production-grade Next.js 16 clone (functional superset, measured
@@ -9,7 +9,7 @@ description: >
   routing model, the CRUD factory, auth, and the two-layer testing strategy.
   Use this to extend, debug, onboard, or replicate the architecture without
   re-deriving two sessions of hard-won knowledge.
-version: 1.0.0
+version: 2.0.0
 tags:
   - nextjs16
   - react19
@@ -24,8 +24,10 @@ tags:
 # StudyFlow (Omni-Study) — Engineering SKILL
 
 > **What this is:** the single-source-of-truth reference for working in
-> `nordeim/omni-study`. Every fact below is verified against the codebase
-> (1133 tests green at last update: 834 Vitest unit + 299 Playwright e2e incl. 1 setup).
+> `nordeim/omni-study1`. Every fact below is verified against the codebase
+> (1133 tests green, re-verified at the 2.0 update: 834 Vitest unit + 299
+> Playwright e2e incl. 1 setup — the full suite re-run in six chunks after the
+> parity re-application + account-flow completion + regression hardening).
 > Sections marked with ⚠️ encode non-obvious contracts — violating them has
 > historically produced silent visual or data-path bugs.
 
@@ -483,6 +485,12 @@ notes, decks, grades; `avatarEmoji: ""` (reference default state).
 | AP-88 | MEDIUM | The theme-space matrix was declared fully swept after S41 — but every proof ran at SEED volume (tens of rows), and the S13 data-volume audit (the only standing probe at 300+ rows) runs LIGHT + VIOLET only (zero theme references); the densest renderings (300 task rows / the 250-event terminal panel / the 200-note list) had never carried a theme variation, the volume budgets (long tasks, click latency, payload bounds) had never been measured under a theme variation, and the SIDEBAR's active-link tint had never been read through the navigation lifecycle in DARK mode at any volume | the guard: a contract proven at seed volume is not proven at volume — density multiplies the surfaces the theme touches (a contrast defect that fires once per row is invisible at seed and systematic at volume), so each cross-axis cell (volume × mode × accent) needs its own sweep with BOTH families' contracts folded in (the S42 accent-volume-sweep COUNT-VERIFIES the insert through Prisma before measuring — a sweep that silently measured seed volume must never run — and carries the S13 budgets + the S38 dark detectors + the S41 interaction evidence in one envelope; the volume × light family stays the documented bracketed non-gap) | S42 data-volume × dark × accent stress (session-42) |
 | AP-89 | MEDIUM | The S42 cross-axis proof closed the DARK half of the volume × theme cell and the light half stayed a documented bracketed non-gap — but the two halves are NOT interchangeable: the light canvas carries its own exemption families (the calendar adjacent-month slate-300 days + the yellow-500 priority pills are the reference's own design in LIGHT and re-theme in dark, so the dark seam exempts the CTA-face ONLY), the flashbulb class exists ONLY in dark (in light, light surfaces are by-design), and the rendering paths differ (white cards on the light canvas gradient vs the dark surface inversion) — so a mode half swept does not transfer its proof to the sibling mode | the guard: each mode half of a cross-axis cell needs its own sweep with its OWN doctrine folded in (the S43 accent-volume-light-sweep runs the LIGHT checker with the THREE signature-strict light exemptions, NO flashbulb class, and the same COUNT-verified volume profile — the mode rot guard INVERTED at the seam: an envelope with mode=dark fed to the light seam reads NON-green, and vice versa) | S43 data-volume × light × accent stress (session-43) |
 | AP-90 | MEDIUM | The S43 light probe's exploration crashed at its own chrome precondition (run 1: the `!html.dark` mode gate — TRUE at first paint in light mode, BEFORE hydration + the auth gate mount the shell) and its suite integration run crashed mid-sweep (run 2: the `data-accent === accent` gate — the theme boot script applies the CACHED accent pre-hydration, so the wait passed at first paint while the aside was not yet in the DOM; the immediate nav-geometry evaluate read `aside nav` as null). Both crashes are the SAME class: a wait condition satisfiable PRE-MOUNT is not a gate for POST-MOUNT reads — the dark probes never hit it only because their `html.dark` wait happens to coincide with the post-hydration theme lifecycle | the guard: every post-navigation wait that precedes a shell-DOM read must gate on a POST-MOUNT observable — the greeting heading (`main h1` — the S41 light-mode gate) for mode gates, and the shell presence itself (`!!document.querySelector("aside nav")`) folded into the accent gates; back-ported to the S41/S42 sidebar-vehicle siblings (the drawer-vehicle probes are safe by Playwright's actionable-click auto-waiting) | S43 data-volume × light × accent stress (session-43) |
+| AP-91 | MEDIUM | A dark bg asserted as `rgba(76, 29, 149, 0.3)` came back `oklab(0.37963 ... / 0.3)` — the Tailwind v4 opacity-modifier form `dark:bg-sf-primary-soft-dark/30` on a @theme color emits `color-mix(in oklab, ...)`, and browsers serialize computed color-mix to oklab | the opacity-modifier trap has a THIRD face (after the lab() defaults and the unpinned-palette lab() reads): never ship `/NN` modifiers on theme colors for asserted surfaces — a raw `rgb(var(--x) / a)` dark branch inside a custom utility serializes as plain rgba. `sf-today-tint` is now the SINGLE today-tint contract: one utility whose light branch (violet-50 softest) and raw-rgb dark branch satisfy the dark-mode serialization pin, the forced-colors outline pin, AND the exact-token locator pin simultaneously | timetable today header (session-55) |
+| AP-92 | LOW | A spec locator `[class*="bg-sf-primary-soft"]` matched the HIDDEN desktop today header (its dark variant carried the substring after the AP-91 class swap) and DOM order made the hidden element win `.first()` — the assertion timed out on an element that existed | spec locators that key on class substrings must upgrade to exact CSS class tokens (`div.bg-sf-primary-soft`) the moment two states can carry the same substring; an exact token cannot collide with a variant-prefixed sibling | theme-system mobile-chip locator (session-55) |
+| AP-93 | HIGH | The suite's 11th loopback login 429'd — the login limiter counted EVERY POST (success included) toward the 10/IP bucket, but three specs document "successful logins RESET the IP limiter" as the product model | progressive throttling: `resetRateLimit("login:" + ip)` on successful credential verification — only FAILED attempts consume budget; a legitimate user's later sign-ins must never inherit an attacker's spent bucket | login route (session-55) |
+| AP-94 | HIGH | Task-dialog creates/updates 400'd: dialogs send `""` for cleared optional IDs, and Prisma's `idField.nullish()` rejects the empty string before the `""`→null transform | every nullable ID field hardens with a union-based atom (`z.union([z.literal(""), idField.nullish()]).transform(...)`), so the empty string means null at the schema boundary | taskSchema and siblings (session-55 re-verify) |
+| AP-95 | MEDIUM | Playwright's own server boot hung: a "killed" dev server still held :3000 — the actual process is `bun .next/standalone/server.js` (the repo start script), so `pkill -f "next start"` matches nothing | kill by PID or pattern-match the REAL process name; verify the port is actually free (`curl` 000) before letting the Playwright config boot its own server | session-55 |
+| AP-96 | HIGH | The shell hydration marker fired on the LOADING commit — before the auth gate resolved — so nav-svg probes raced the sidebar's first render | the two-layer gate: a STATUS-GATED `data-app-hydrated` on `<html>` that fires only when the authed shell actually renders, plus feature-specific markers (`data-calc-kb`) for raw-interaction specs; naive `--sf-primary` gates satisfy themselves at first paint (the boot script sets it pre-hydration) | shell page.tsx + calculator.spec (session-55 re-verify) |
 
 ---
 
@@ -533,6 +541,11 @@ bun run lint && bun run typecheck && bun run test && bun run build && bun run te
 ```
 Current green state: lint ✓ · tsc ✓ · 834 unit ✓ · build ✓ · 299 e2e ✓ (1133 green).
 
+**Full-suite chunk map** (one server-boot per chunk; the 10-min tool cap makes
+one-shot full runs unreliable — six chunks, all green at the 2.0 update):
+chrome+s14 104 · S5+calc+S6 46 · S7+S8+S9 79 · tasks/resilience/s16/s17 20 ·
+auth+s18–s23 35 · s24–s26 18.
+
 **Pre-deployment:** set a real `AUTH_SECRET` (`openssl rand -hex 32`); use an
 ABSOLUTE `DATABASE_URL` (see `docs/DEPLOYMENT.md` §4); never ship `.env`,
 `db/*.db`, `dev.log`, or SSH material (all gitignored — keep it that way).
@@ -546,7 +559,8 @@ radii, avatar, stat icons, clock chip, mobile app bar + drawer); spot-check
 the sidebar geometry (260px / glass / 260px offset); mobile: content starts
 at y=80, drawer open → navigate → auto-close.
 
-**Security:** no user enumeration on auth errors; rate limiter active;
+**Security:** no user enumeration on auth errors; rate limiter active with the
+progressive-throttling model — successful logins RESET the IP bucket (AP-93);
 uploads capped ≤ 2 MiB; `z-ai-web-dev-sdk` absent from client bundles.
 
 **Git:** Conventional Commits, `main` only, push via
@@ -586,6 +600,24 @@ the wrapper verifies remote == local HEAD and shreds its key copy).
    canvas stop (AP-5); write measured colors in exact sRGB.
 10. *VLM verdicts need DOM cross-examination* — three of its four flags were
     false positives; two of its "GOOD" misses were real (radius, icons).
+
+**Session 55 (the parity re-application + account flows + hardening):**
+
+11. *One utility can serve three contracts* — `sf-today-tint` satisfies the
+    dark rgb-serialization pin, the forced-colors outline pin, and the
+    exact-token locator pin at once; inline arbitrary classes satisfied one
+    and silently broke the other two (AP-91/92).
+12. *Specs encode the product model, not just the UI* — the "successful
+    logins reset the IP limiter" budget note was the limiter's missing
+    behavior, not a test convenience (AP-93).
+13. *Pin-fixing is TDD on already-built features* — the s24–s26 routes and
+    cards existed; the specs failed on aria-labels, copy, a `<p>`-with-email
+    strict-mode collision, and a missing intro line. Decode the exact pins,
+    patch minimally, re-run the chunk.
+14. *Display phantoms are real* — stdout/Read can eat bracket-h and
+    bracket-m byte sequences and show a corrupted selector for the real one
+    (the disk bytes are clean); verify with `od -c` before "fixing"
+    corrupted-looking source.
 
 ---
 
