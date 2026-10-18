@@ -260,7 +260,7 @@ function DisplayNameCard({ user }: { user: AppUser | null }) {
   const setUserName = useThemeStore((s) => s.setUserName);
   // State initializes from the hydrated user (parent key-remounts on user
   // arrival — no populate-on-hydrate effect).
-  const [value, setValue] = React.useState(userName || user?.fullName || "");
+  const [value, setValue] = React.useState(userName || user?.name || "");
   const [error, setError] = React.useState<string | null>(null);
   const [saving, setSaving] = React.useState(false);
 

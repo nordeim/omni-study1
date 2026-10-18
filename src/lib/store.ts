@@ -30,7 +30,8 @@ const SIDEBAR_COLLAPSED_KEY = "sf-sidebar-collapsed";
 export type AppUser = {
   id: string;
   email: string;
-  fullName: string;
+  /** The API's public field (publicUser() maps the DB's fullName → name). */
+  name: string;
   avatarEmoji: string;
   themeMode: string;
   accentColor: string;
@@ -174,7 +175,7 @@ export const useThemeStore = create<ThemeStore>((set, get) => ({
       mode: isThemeMode(user.themeMode) ? user.themeMode : "system",
       accent: isAccent(user.accentColor) ? user.accentColor : "violet",
       avatar: typeof user.avatarEmoji === "string" ? user.avatarEmoji : "",
-      userName: typeof user.fullName === "string" ? user.fullName : "",
+      userName: typeof user.name === "string" ? user.name : "",
       email: typeof user.email === "string" ? user.email : "",
     });
     get().applyToDocument();
