@@ -438,6 +438,11 @@ test.describe("S8-G · Notes two-pane", () => {
     await page.goto("/Notes");
     await hydrated(page);
     const combos = page.locator('[aria-label="Notes list pane"] [role="combobox"]');
+    // The `hydrated` gate covers the authed shell + theme, not the Notes
+    // collection round-trip — on a cold server the comboboxes mount a beat
+    // later. Bound-wait for the first mount; the assertions below are
+    // unchanged (exactly two triggers, exact labels).
+    await combos.first().waitFor({ state: "visible" });
     expect(await combos.count()).toBe(2);
     await expect(combos.first()).toContainText("All Notebooks");
     await expect(combos.nth(1)).toContainText("All Tags");
