@@ -438,3 +438,91 @@ found what sixty sessions of spec-driven gates could not.
   cost (structural client-bundle weight) and the reference-measured
   muted tokens on non-audited surfaces (calendar/myday/settings empty
   states) — the follow-up checklist is in Batch R.
+
+---
+
+## Session 62 (continuation 13) — the Lighthouse-equivalent sweep: ALL 20 views audited, 35 violations found and fixed
+
+**Context.** The workspace survived; remote had moved to `6748510`
+(our session-61 commits + the user-side `docs/session_8.md` — the
+transcript of session 61: no new asks, but its suggested next steps
+named the two documented debts — the non-audited surfaces' muted tokens
+and the structural perf cost). This session executed the first and, in
+doing so, extended the a11y-100 achievement from 2 surfaces to ALL 20.
+
+**Work log.**
+
+1. **Sync + re-certification.** Fast-forwarded to `6748510`; fast gates
+   re-run (lint ✓ tsc ✓ unit **837/837** ✓), build proven current, e2e
+   cold **306/306** (156+95+55) — fifth consecutive session matching
+   the record.
+2. **Family F — the Lighthouse-equivalent sweep.** Lighthouse's a11y
+   category IS axe-core (13.x: tags wcag2a+wcag2aa + a 28-rule overlay,
+   mirrored byte-for-byte from the installed 13.5.0 gatherer source).
+   The 18 non-audited views are client-switched inside the single-route
+   shell — unreachable by URL — so the new `tests/e2e/a11y-sweep.spec.ts`
+   runs the SAME axe config on every authed view (20 tests, one per
+   view, semantic mount markers per AP-102; axe-core added as an
+   explicit devDependency). The Dashboard test doubles as the
+   equivalence anchor: it must pass because real Lighthouse certified
+   it at 100. First run: **17/20 views failed — 35 violations.**
+3. **All 35 fixed TDD-style** (sweep red → source fix → sweep green;
+   the full table is remediation-plan **Batch S**, S1–S8): the muted
+   `text-slate-400` tokens on seven surfaces (the documented debt);
+   heading-order h3→h2 class-identical swaps across ten views + the
+   shared EmptyState (Settings alone carried 13); `sf-selected-tint`
+   violet-500→violet-600 via `--sf-primary-strong` (white on violet-500
+   = 4.23:1; the key insight: SOLID fills are axe-resolvable while the
+   violet GRADIENT CTAs report unscored "incomplete" — which is why 61
+   sessions of Lighthouse never saw it); exams/calculator badge tokens
+   one step darker; `role="img"` on the two aria-labelled decorative
+   blocks; the shared Slider's aria-label forwarded from Root to the
+   radix THUMB (role="slider" lives there — axe aria-input-field-name
+   ×6); the Calculator's two-`<Tabs>`-roots bug merged into one tree
+   (every trigger's aria-controls pointed at a never-rendered panel id
+   — a genuine screen-reader defect, axe aria-valid-attr-value
+   [critical]; radix Tabs.Root renders no DOM, so the merge is
+   DOM-identical); three label-content-name-mismatch fixes (Events
+   "Create event" vs visible "New Event", dynamic filter labels
+   "Filter tasks: All", the calculator key "Clear: AC" — axe STRIPS
+   PARENTHETICALS from the name before matching, so "Clear (AC)" still
+   fails; AP-104).
+4. **Eight pinned values updated in-place with justification comments**
+   (the R1/R3 precedent): S8-C ×2 (selected fill), S6-G (today cell +
+   amber badge), S5-G (mode-switch tab), S9-F (mode-switch tab), S9-J
+   (orange badge), S5-H (clear-key color); plus four locator updates
+   where a fix legitimately changed an accessible name ("Filter tasks"
+   → prefix-match ×4, the assignments filter ×1, the S8-K clear-icon
+   locator, and the S5-B New-Event click now `.first()` — the removed
+   mismatched aria-label unmasked the panel's own same-named text
+   button).
+5. **Verified by the audit itself + the full suite.** Family F 21/21
+   green; full cold re-certification **176 + 95 + 55 = 326/326** (the
+   306 plus the twenty sweep pins); lint ✓ tsc ✓ unit **837/837** ✓
+   build REAL_EXIT=0 ✓. Lighthouse re-audit on the final bundle:
+   /login **P100 · A11y 100**, dashboard **P98 · A11y 100** (perf =
+   run-to-run variance on the documented structural debt — the RSC
+   remedy stays in Batch R).
+6. **Evidence + docs.** `docs/lighthouse/62-{dashboard,login}-after.json`;
+   `docs/screenshots/62-clone-desktop-{Calendar,Settings,Calculator}.png`
+   (the violet-600 selected states + the merged Tabs + the red-700
+   clear key, verified visually); remediation-plan Batch S; README
+   Session-62 row; SKILL.md **AP-103** (audit engines must cover the
+   app's real navigation surface — mirror the auditor's own rule table
+   and keep an equivalence anchor) + **AP-104** (axe strips
+   parentheticals from accessible names before label-content-name
+   matching).
+
+**Stage summary.**
+
+- All 20 authed views + both auth surfaces now certified against the
+  Lighthouse rule set: **zero violations, by construction, permanently
+  gated.**
+- Gates: lint ✓ tsc ✓ unit **837/837** e2e **326/326** (176+95+55)
+  build ✓ — all on `main`, no branches; `skills/` still excluded.
+- One real functional bug fixed beyond the contrast/heading classes:
+  the Calculator tabs' dangling aria-controls (S7) — found only because
+  the sweep finally looked at the views Lighthouse couldn't reach.
+- Remaining honest debt (unchanged, documented in Batch R): the
+  structural perf cost of the client-bundle (RSC conversion of the
+  read-only views) — the one candidate the sweep cannot absorb.

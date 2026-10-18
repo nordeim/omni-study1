@@ -176,6 +176,39 @@ e2e **306/306** cold (156 + 95 + 55 — the 301 plus the five Family E
 pins) · build REAL_EXIT=0 ✓ · Lighthouse re-audit: both surfaces a11y
 100.
 
+### Batch S — Session-62: the Lighthouse-equivalent sweep across ALL 20 authed views
+
+Session 61 audited the two surfaces Lighthouse can reach by URL; the
+other views are client-switched inside the single-route shell. Family F
+(`tests/e2e/a11y-sweep.spec.ts`) runs Lighthouse 13.x's exact axe rule
+table (tags wcag2a+wcag2aa + the 28-rule overlay, mirrored from the
+13.5.0 gatherer source) on every authed view — Lighthouse-equivalent by
+construction, with the Dashboard test as the equivalence anchor. First
+run: **17 of 20 views failed with 35 violations** — the same defect
+classes as Batch R, at ten times the scale, plus a genuinely functional
+ARIA bug. All fixed TDD-style; the sweep is now a permanent gate.
+
+| # | Finding (axe, Family F first run) | Root cause | Fix | Guard |
+|---|---------|-----------|-----|-------|
+| S1 | `color-contrast` ×~45 nodes — muted meta text `text-slate-400` on white (Notes card dates, GradeTracker weights, PracticeTests dates, Timetable day cells, Events "No events." on the dark panel) | the Batch R2 fix darkened the dashboard/GradeTracker stat hints; the same reference-measured token survived on every non-audited surface | one step darker per the R2 recipe: light `slate-400`→`slate-500` (4.76:1); on the Events dark panel one step lighter `slate-600`→`slate-400` (6.9:1 on slate-900); dark branches untouched | Family F pins zero violations on every view |
+| S2 | `heading-order` ×9 — h1→h3 skips (Flashcards/PracticeTests/StudyGroups/Files/Exams/Assignments/Settings×13/Events panel/Notes/GradeTracker/Analytics stat values, AIAssistant role="heading" aria-level 3) | the R1 swap fixed the dashboard only; every view repeated the pattern | class-identical tag swaps h3→h2 (AIAssistant aria-level 3→2); zero visual delta | Family F heading-order |
+| S3 | `color-contrast` — white on `sf-selected-tint` (violet-500) = 4.23:1 (Calendar cells + mode switch, Settings tab, Timetable selected) | the brand selected-fill is a SOLID color — axe resolves it; the violet CTAs are GRADIENTS — axe reports "incomplete" (unscored), which is why 61 sessions of Lighthouse never saw it | the utility's bg moved to `--sf-primary-strong` (violet-600, 5.70:1); `--sf-primary` itself unchanged; five pinned values updated with justification (S8-C ×2, S6-G, S5-G, S9-F) | Family F + the updated pins |
+| S4 | `color-contrast` — status badges: exams amber/orange/red 600-on-100 pairs, the calculator clear key red-600 | same reference-measured badge tokens as R3 | one step darker: red/orange/amber 600→700 on the light branch (dark 300/950 branches untouched); the pinned amber-600 (S6) and orange-600 (S9-J) values updated | Family F + updated pins |
+| S5 | `aria-prohibited-attr` — `aria-label` on roleless divs (MyDay's 56px sun block, the Exams subject color strips ×4) | aria-label needs a supporting role | `role="img"` on both (image-like indicators); the pinned locators keep working | Family F |
+| S6 | `aria-input-field-name` ×6 — the assignment Slider thumbs (`role="slider"`) had no accessible name; the label was parked on the Root span | the shared Slider component forwards aria-label to Root, but radix puts role="slider" on the THUMB | slider.tsx now forwards `aria-label` to the Thumb | Family F |
+| S7 | `aria-valid-attr-value` [critical] — every Calculator tab trigger's `aria-controls` pointed at a panel id that never rendered | the triggers and the TabsContents lived in TWO separate `<Tabs>` roots, so radix minted mismatched id families in each tree — screen readers announced tabs controlling missing panels (a functional defect, not cosmetic) | merged into ONE `<Tabs>` root (radix Tabs.Root renders no DOM — byte-identical output); plus the inactive-trigger contrast 4.38→6.87 on `bg-muted` (explicit slate-600 inactive class) | Family F |
+| S8 | `label-content-name-mismatch` ×3 — "Create event" vs visible "New Event" (Events ×2), "Filter tasks"/"Filter assignments by status" vs the visible status word, the calculator "AC" key | the accessible name must CONTAIN the visible text; axe additionally strips parentheticals from the name before matching, so "Clear (AC)" still fails | dropped the mismatched aria-labels (visible text wins), made the filter labels dynamic (`Filter tasks: All`), renamed the key "Clear: AC" | Family F |
+
+**Verified:** Family F 21/21 green; full cold re-certification **326/326**
+(176 + 95 + 55 — the 306 plus the twenty sweep pins); lint ✓ tsc ✓
+unit 837/837 ✓; build REAL_EXIT=0 ✓; Lighthouse re-audit: /login
+P100·A11y 100, dashboard P98·A11y 100 (perf = run-to-run variance on the
+documented structural debt). Evidence: `docs/lighthouse/62-*.json`,
+`docs/screenshots/62-*.png`. Eight pinned values were updated in-place
+with justification comments (the R1/R3 precedent) — every one a
+class-identical or one-step-darker deviation in the documented
+a11y-superset direction.
+
 ## 3a. Verification (session-56 re-run, from a fresh clone)
 
 | Gate | Result |
