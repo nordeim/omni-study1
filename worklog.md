@@ -366,3 +366,75 @@ delegation and rebuilt everything from scratch.
   Notes/Flashcards/Calendar (60) — ALL surfaces, ZERO drift.
 - Push infra: rebuilt with the venv-pip and fingerprint lessons; remote
   `main` = local `main` after this entry. Still no branches.
+
+---
+
+## Session 61 (continuation 12) — the first real-audit pass: Lighthouse found (and fixed) five a11y defects
+
+**Context.** The workspace survived again; remote had moved to `de77e22`
+(our two session-60 commits, already sync-promoted by the user, plus the
+user-side `docs/session_7.md` — no new asks, but its "suggested next
+steps" named the one never-done item: **a Lighthouse/perf pass on the
+production build**). This session executed that, and the audit engine
+found what sixty sessions of spec-driven gates could not.
+
+**Work log.**
+
+1. **Sync + re-certification.** Fast-forwarded to `de77e22`; fast gates
+   re-run (lint ✓ tsc ✓ unit **837/837** ✓), build proven current (0
+   source files newer than BUILD_ID), e2e cold **301/301**
+   (151+95+55) — fourth consecutive session matching the record.
+2. **The Lighthouse pass (first ever).** Production standalone on :3200
+   (dev DB + scratch AUTH_SECRET), Lighthouse 13.5 desktop preset, the
+   authed dashboard measured via cookie injection:
+   /login **P93 · A11y 94 · BP 96 · SEO 100**;
+   dashboard **P76 · A11y 90 · BP 96 · SEO 100** — with five concrete
+   a11y findings: `heading-order` (h1→h3 skips: the overdue banner +
+   the four StatCard values), `color-contrast` ×2 (the StatCard hint
+   slate-400 on white = 2.56:1; the overdue pills red-600 on red-100 =
+   3.95:1), `aria-prohibited-attr` (the roleless toast viewport's
+   aria-label), and `landmark-one-main` (the standalone auth surface).
+3. **All five fixed TDD-style.** accessibility Family E written first
+   (5 pins: no-skip heading walk, the two computed-color pins, the
+   named toast region, the one-main auth landmark) — red (4 failed) →
+   fix → green. Fixes: banner h3→h2 + StatCard value h3→h2
+   (class-identical swaps, zero visual delta); hint slate-400→slate-500
+   (4.76:1; dark untouched — was already slate-500) on StatCard +
+   GradeTracker; pills red-600→red-700 (5.32:1) on the dashboard badge
+   + the shared DuePill; toast viewport `role="region"` (the radix
+   pattern); login-surface root + both Suspense fallbacks div→main.
+   The three pinned level-3 assertions (parity-session9 ×2, dark-mode
+   ×1) updated with justification comments — visually identical tag
+   swaps, the S26 p→div precedent.
+4. **The landmark fix broke four specs — and the failures lied.** s16/
+   s24/s25/s26 waited for `querySelector("main") !== null` after
+   signing in through the login UI; the login page's own new `<main>`
+   resolved the wait before the post-login redirect, and the next goto
+   raced it into `net::ERR_ABORTED` (S16-A twice in chunk runs, S26
+   once — both green solo, masquerading as cold-start flake). Root
+   cause over flake-call: all four waits now target `main#main-content`
+   (the shell's skip-link anchor). AP-102 recorded.
+5. **Verified by the audit itself + the full suite.** Lighthouse
+   re-audit: /login a11y **94 → 100**, dashboard a11y **90 → 100**
+   (perf 75 = run-to-run noise on documented structural debt: LCP
+   3.3s, TBT 700ms, CLS 0.00 — the RSC-conversion remedy noted in
+   Batch R). Full cold re-run: **156 + 95 + 55 = 306/306** (the 301 +
+   the five Family E pins); lint ✓ tsc ✓ unit **837/837** ✓ build
+   REAL_EXIT=0 ✓.
+6. **Evidence + docs.** `docs/lighthouse/` (before/after pairs, JSON +
+   HTML, both surfaces); `61-clone-desktop-Dashboard.png` (the
+   remediated dashboard); remediation-plan **Batch R** (R1–R6); README
+   Session-61 row; SKILL.md **AP-101** (real audit tooling sees what
+   spec suites forget) + **AP-102** (spec waits need semantically
+   precise markers).
+
+**Stage summary.**
+
+- Five a11y defects fixed + one indirect spec-proxy regression killed;
+  both audited surfaces at **a11y 100**.
+- Gates: lint ✓ tsc ✓ unit **837/837** e2e **306/306** build ✓ — all
+  on `main`, no branches; `skills/` still excluded.
+- Remaining honest debt (documented, not hidden): the dashboard perf
+  cost (structural client-bundle weight) and the reference-measured
+  muted tokens on non-audited surfaces (calendar/myday/settings empty
+  states) — the follow-up checklist is in Batch R.

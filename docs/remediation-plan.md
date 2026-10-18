@@ -138,6 +138,44 @@ batch did not; a re-verification pass from a fresh clone surfaced them
 
 ---
 
+### Batch R — Session-61: the first real-audit pass (Lighthouse) on the production bundle
+
+The session-7 transcript's suggested next step — a Lighthouse/perf pass —
+had never been run; every prior gate was spec-driven, and the specs' own
+blind spots (semantic-DOM quality, computed contrast, landmark structure)
+are exactly what an audit engine sees. First-ever runs, `/login` and the
+authed `/` (cookie-injected), production standalone on :3200.
+
+**Before → after (Lighthouse 13.5, desktop):**
+
+| Surface | Perf | A11y | Best-Practices | SEO |
+|---------|------|------|----------------|-----|
+| /login before → after | 93 → 94 | 94 → **100** | 96 | 100 |
+| / (dashboard) before → after | 76 → 75 | 90 → **100** | 96 | 100 |
+
+| # | Finding (Lighthouse) | Root cause | Fix | Guard |
+|---|---------|-----------|-----|-------|
+| R1 | `heading-order` — the dashboard h1 was followed by h3s (the overdue banner title, then the StatCard values) | semantic headings were added over sessions without a whole-page level audit | banner title h3→h2 (dashboard-view) + StatCard value h3→h2 (shared.tsx) — class-identical tag swaps, zero visual delta; the three pinned level-3 assertions updated with justification comments (parity-session9 ×2, dark-mode ×1) | accessibility Family E: no heading level may skip downward on /Dashboard |
+| R2 | `color-contrast` — the StatCard hint `text-slate-400` on white = 2.56:1 (AA needs 4.5) | reference-measured muted token (the reference itself fails AA here); no spec pinned the color (S4-B pins size/margin only) | one step darker: `text-slate-500` = 4.76:1, dark branch untouched (was already slate-500); the same fix on the GradeTracker stat hint | Family E: every `main .sf-card p.mt-1` reads rgb(100,116,139) |
+| R3 | `color-contrast` — the overdue pills `text-red-600` on `bg-red-100` = 3.95:1 at 12px | same class of reference-measured token | `text-red-700` = 5.32:1 on the dashboard exam badge + the shared DuePill overdue variant; dark branch untouched | Family E: every `main span.bg-red-100` reads rgb(185,28,28) |
+| R4 | `aria-prohibited-attr` — `aria-label="Notifications"` on the roleless toast viewport div | aria-label needs a supporting role | `role="region"` (the radix-toast viewport pattern) | Family E: the viewport is a named region with aria-live polite |
+| R5 | `landmark-one-main` — the standalone auth surface had no `<main>` | the auth page root was a div (the authed shell's main#main-content made the suite assume "main ⇒ shell") | login-surface root div→main + both Suspense fallbacks (login/reset-password pages) | Family E: exactly one main on /login |
+| R6 | **The R5 fix broke four specs indirectly** — s16/s24/s25/s26 waited for `querySelector("main") !== null` after signing in through the login UI; the login page's own new `<main>` resolved the wait before the post-login redirect, so the next goto raced it and died `net::ERR_ABORTED` (S16-A twice in chunk runs, S26 once; both green solo) | a spec proxy (`main exists` ⇒ authed shell) that a legitimate semantic fix made ambiguous | all four waits target `main#main-content` (the shell's skip-link anchor) with the race documented | the four hardened waits + AP-102 |
+
+Perf (documented, not "fixed" — structural): dashboard LCP 3.3s / TBT
+700ms / SI 1.2s / CLS 0.00 under the desktop preset; the cost is the
+client-component bundle (top wasted chunks 83/27/24 KiB) — the honest
+remedy is a staged RSC conversion of the read-only views, out of scope
+for a parity session; the repo's own `scripts/cwv-audit-s16.mjs` +
+`cwv-volume-stress.mjs` already track these budgets against the
+reference's measured anchors. Reports: `docs/lighthouse/` (before/after
+pairs, JSON + HTML).
+
+**Gates on the remediated bundle:** lint ✓ · tsc ✓ · unit 837/837 ✓ ·
+e2e **306/306** cold (156 + 95 + 55 — the 301 plus the five Family E
+pins) · build REAL_EXIT=0 ✓ · Lighthouse re-audit: both surfaces a11y
+100.
+
 ## 3a. Verification (session-56 re-run, from a fresh clone)
 
 | Gate | Result |
