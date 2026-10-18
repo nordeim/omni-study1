@@ -40,7 +40,10 @@ const isRound = (radius: string) => radius === "9999px" || radius === "3.35544e+
 test.describe("S8-A · Sidebar chrome", () => {
   test("nav icons match the reference's lucide set (6 swaps)", async ({ page }) => {
     await page.goto("/Dashboard");
-    await hydrated(page);
+    // The nav svg set only exists once the authed shell commits — the
+    // --sf-primary wait resolves pre-paint (boot script), so gate on the
+    // shell-level hydration marker (S8-A spec hygiene).
+    await page.waitForFunction(() => document.documentElement.dataset.appHydrated === "true");
     const icons = await page.locator("nav a svg").evaluateAll((svgs) =>
       svgs.map((s) => s.getAttribute("class") ?? ""),
     );

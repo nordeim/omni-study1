@@ -9,7 +9,16 @@
 // ---------------------------------------------------------------------------
 
 import * as React from "react";
-import { BookOpen, Bot, Layers, ListChecks, Send, StickyNote } from "lucide-react";
+import {
+  BookOpen,
+  Bot,
+  Brain,
+  Calculator,
+  FileText,
+  Languages,
+  Lightbulb,
+  Send,
+} from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -25,9 +34,11 @@ type PendingMessage = { id: string; role: "user"; content: string };
 
 const QUICK_ACTIONS = [
   { title: "Explain Concept", icon: BookOpen, prompt: "Explain a concept from my studies" },
-  { title: "Summarize Notes", icon: StickyNote, prompt: "Summarize my notes" },
-  { title: "Create Flashcards", icon: Layers, prompt: "Create flashcards from a topic" },
-  { title: "Practice Quiz", icon: ListChecks, prompt: "Quiz me on a topic" },
+  { title: "Study Tips", icon: Brain, prompt: "Give me study tips for my next exam" },
+  { title: "Summarize Notes", icon: FileText, prompt: "Summarize my notes" },
+  { title: "Solve Problem", icon: Calculator, prompt: "Solve this problem step by step" },
+  { title: "Essay Ideas", icon: Lightbulb, prompt: "Brainstorm essay ideas for my topic" },
+  { title: "Translate", icon: Languages, prompt: "Translate a passage I am studying" },
 ] as const;
 
 function errorMessage(err: unknown, fallback: string): string {
@@ -117,7 +128,7 @@ export function AIAssistantView() {
               <p className="text-center text-sm text-slate-500">
                 Ask anything about your studies — or start with a quick prompt.
               </p>
-              <div className="grid w-full grid-cols-2 gap-2">
+              <div className="grid w-full grid-cols-2 gap-2" aria-label="Quick actions">
                 {QUICK_ACTIONS.map((action) => (
                   <button
                     key={action.title}

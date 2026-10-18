@@ -124,10 +124,10 @@ export function NotesView() {
 
   // Render-derived selection: a missing/stale id falls back to the first
   // note — no auto-select effect (the set-state-in-effect lint contract).
+  // No auto-select - the reference's editor pane stays bare (Select a
+  // note from the list.) until the user picks a note (S8-G).
   const effectiveNoteId =
-    selectedId && notes.some((n) => n.id === selectedId)
-      ? selectedId
-      : (filtered[0]?.id ?? null);
+    selectedId && notes.some((n) => n.id === selectedId) ? selectedId : null;
   const selected = notes.find((n) => n.id === effectiveNoteId) ?? null;
 
   const openNewNote = () => {
@@ -209,7 +209,10 @@ export function NotesView() {
   return (
     <div className="flex h-[calc(100vh-8rem)] gap-6">
       {/* Left pane */}
-      <aside className="hidden w-80 shrink-0 flex-col border-r border-slate-100 pr-6 md:flex dark:border-slate-800">
+      <aside
+        aria-label="Notes list pane"
+        className="hidden w-80 shrink-0 flex-col border-r border-slate-100 pr-6 md:flex dark:border-slate-800"
+      >
         <div className="flex items-center gap-3">
           <h1 className="flex flex-1 items-center gap-2 text-2xl font-bold text-slate-800 dark:text-slate-100">
             <BookOpen className="size-6 text-sf-primary" strokeWidth={2} />
@@ -228,11 +231,11 @@ export function NotesView() {
             <DropdownMenuContent align="end">
               <DropdownMenuItem onClick={openNewNote}>
                 <FileText className="size-4" strokeWidth={2} />
-                New note
+                New Note
               </DropdownMenuItem>
               <DropdownMenuItem onClick={openNewNotebook}>
                 <Notebook className="size-4" strokeWidth={2} />
-                New notebook
+                New Notebook
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -259,7 +262,7 @@ export function NotesView() {
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All notebooks</SelectItem>
+              <SelectItem value="all">All Notebooks</SelectItem>
               {notebooks.map((nb) => (
                 <SelectItem key={nb.id} value={nb.id}>
                   {nb.name}
@@ -274,7 +277,7 @@ export function NotesView() {
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All tags</SelectItem>
+              <SelectItem value="all">All Tags</SelectItem>
               {allTags.map((t) => (
                 <SelectItem key={t} value={t}>
                   {t}
@@ -324,7 +327,7 @@ export function NotesView() {
       </aside>
 
       {/* Right pane — BARE (no card wrapper) */}
-      <div className="flex min-w-0 flex-1 flex-col">
+      <div className="flex min-w-0 flex-1 flex-col" aria-label="Note editor pane">
         {notes.length === 0 ? (
           <div className="sf-card flex flex-1 flex-col justify-center">
             <EmptyState

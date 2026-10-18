@@ -333,7 +333,7 @@
 
 @utility sf-card {
   background-color: hsl(var(--card));
-  border: 1px solid #f1f5f9;
+  border: 1px solid #e2e8f0;
   border-radius: 1rem;
   box-shadow: var(--shadow-sm);
   .dark & {

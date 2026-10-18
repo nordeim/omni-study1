@@ -52,6 +52,18 @@ import { StudyGroupsView } from "@/components/views/studygroups-view";
 import { TasksView } from "@/components/views/tasks-view";
 import { TimetableView } from "@/components/views/timetable-view";
 
+/**
+ * Sets data-app-hydrated on the shell commit — the e2e gate that proves
+ * the authed chrome (sidebar nav) has actually rendered. The --sf-primary
+ * wait alone resolves pre-paint via the boot script (S8-A lesson).
+ */
+function HydrationMarker() {
+  React.useEffect(() => {
+    document.documentElement.dataset.appHydrated = "true";
+  }, []);
+  return null;
+}
+
 /** The static view registry — one component per NAV_ITEM view id. */
 const VIEW_COMPONENTS: Record<ViewId, React.ComponentType> = {
   dashboard: DashboardView,
@@ -191,6 +203,7 @@ export default function Home() {
         Skip to main content
       </a>
       <Sidebar />
+      <HydrationMarker />
       <MobileChrome />
       <ConnectivityBanner />
       <RumBeacon />

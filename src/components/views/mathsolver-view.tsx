@@ -119,13 +119,13 @@ export function MathSolverView() {
       />
 
       {/* ---- input card ---- */}
-      <div className="sf-card p-0">
+      <div className="sf-card p-6" aria-label="Math solver input">
         <Textarea
           value={problem}
           onChange={(e) => setProblem(e.target.value)}
           placeholder="Type your math problem… e.g. Solve 2x + 5 = 15"
           aria-label="Math problem"
-          className="min-h-[120px] resize-none border-0 text-lg shadow-none focus-visible:ring-0 dark:bg-transparent"
+          className="min-h-[120px] resize-none border-0 p-0 text-lg shadow-none focus-visible:ring-0 dark:bg-transparent"
         />
         {image && (
           <div className="px-4 pb-3">
@@ -142,38 +142,31 @@ export function MathSolverView() {
             </div>
           </div>
         )}
-        <div className="flex items-center justify-between gap-3 border-t border-slate-100 p-3 dark:border-slate-800">
-          <div className="flex items-center gap-1">
-            <button
+        <div className="mt-3 flex items-center justify-between gap-3 border-t border-slate-100 pt-3 dark:border-slate-800">
+          <div className="flex items-center gap-2">
+            <Button
               type="button"
-              aria-label="Attach an image of your problem"
+              variant="ghost"
+              size="sm"
               onClick={onPickImage}
               disabled={busy}
-              className="flex h-9 w-9 items-center justify-center rounded-lg text-slate-400 hover:bg-slate-100 hover:text-sf-primary disabled:opacity-50 dark:hover:bg-slate-800"
             >
-              <ImagePlus className="size-5" strokeWidth={2} aria-hidden />
-            </button>
-            <button
+              <Camera className="size-4" strokeWidth={2} aria-hidden />
+              Upload Image
+            </Button>
+            <Button
               type="button"
-              aria-label="Take a photo of your problem"
-              onClick={onPickImage}
-              disabled={busy}
-              className="flex h-9 w-9 items-center justify-center rounded-lg text-slate-400 hover:bg-slate-100 hover:text-sf-primary disabled:opacity-50 dark:hover:bg-slate-800"
-            >
-              <Camera className="size-5" strokeWidth={2} aria-hidden />
-            </button>
-            <button
-              type="button"
-              aria-label="Clear the problem"
+              variant="ghost"
+              size="sm"
               onClick={() => {
                 setProblem("");
                 setImage(null);
               }}
               disabled={busy}
-              className="flex h-9 w-9 items-center justify-center rounded-lg text-slate-400 hover:bg-slate-100 hover:text-sf-primary disabled:opacity-50 dark:hover:bg-slate-800"
             >
-              <RefreshCw className="size-5" strokeWidth={2} aria-hidden />
-            </button>
+              <RefreshCw className="size-4" strokeWidth={2} aria-hidden />
+              Clear
+            </Button>
             <input
               ref={fileInputRef}
               type="file"

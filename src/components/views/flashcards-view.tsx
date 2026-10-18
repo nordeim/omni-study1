@@ -270,7 +270,7 @@ export function FlashcardsView() {
                   )}
                 >
                   <span
-                    className="flex size-10 shrink-0 items-center justify-center rounded-xl text-white"
+                    className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-white"
                     style={{ backgroundColor: deck.color }}
                   >
                     <Layers className="size-5" strokeWidth={2} />

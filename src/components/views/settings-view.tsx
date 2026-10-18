@@ -1038,7 +1038,10 @@ export function SettingsView() {
       <ViewHeader title="Settings" subtitle="Personalize your study companion" icon={SettingsIcon} />
 
       <Tabs defaultValue="appearance">
-        <TabsList aria-label="Settings sections">
+        <TabsList
+          aria-label="Settings sections"
+          className="h-auto flex-wrap justify-start gap-1 rounded-lg border border-slate-200 bg-white p-1 dark:border-slate-800 dark:bg-card"
+        >
           <TabsTrigger value="appearance">Appearance</TabsTrigger>
           <TabsTrigger value="profile">Profile</TabsTrigger>
           <TabsTrigger value="subjects">Subjects</TabsTrigger>

@@ -25,6 +25,7 @@ import {
   addMonths,
   CALENDAR_WEEKDAYS,
   formatLongDate,
+  formatLongDateWithWeekday,
   isSameDay,
   monthGrid,
 } from "@/lib/date";
@@ -186,7 +187,7 @@ export function CalendarView() {
           )}
         </section>
         ) : (
-        <section className="sf-card sf-print-exact p-6 lg:col-span-2">
+        <section className="sf-card sf-print-exact p-6 lg:col-span-2" aria-label="Calendar month">
           <div className="flex items-center justify-between">
             <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100">
               {monthLabel}
@@ -215,10 +216,7 @@ export function CalendarView() {
             </div>
           </div>
 
-          <div
-            aria-label="Calendar days"
-            className="mt-4 grid grid-cols-7 gap-1"
-          >
+          <div aria-label="Calendar weekdays" className="grid grid-cols-7 gap-1">
             {CALENDAR_WEEKDAYS.map((d) => (
               <div
                 key={d}
@@ -227,6 +225,11 @@ export function CalendarView() {
                 {d}
               </div>
             ))}
+          </div>
+          <div
+            aria-label="Calendar days"
+            className="mt-1 grid grid-cols-7 gap-1"
+          >
             {cells.map((cell) => {
               const dayEvents = eventsFor(cell.date);
               const isSelected = isSameDay(cell.date, selected);
@@ -316,7 +319,7 @@ export function CalendarView() {
 
         <section className="sf-card p-6" aria-label="Day detail">
           <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100">
-            {formatLongDate(selected)}
+            {formatLongDateWithWeekday(selected)}
           </h3>
 
           {selectedEvents.length === 0 && selectedTasks.length === 0 ? (

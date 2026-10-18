@@ -234,7 +234,7 @@ function AssignmentDonut({ counts }: { counts: Record<(typeof DONUT_SECTORS)[num
   return (
     <div className="flex items-center justify-center gap-8">
       <div className="relative">
-        <svg viewBox="0 0 160 160" className="size-40 -rotate-90" role="img" aria-label="Assignment status donut">
+        <svg viewBox="0 0 160 160" className="h-[250px] w-[250px] -rotate-90" role="img" aria-label="Assignment status chart">
           <circle cx="80" cy="80" r={radius} fill="none" stroke="#f1f5f9" strokeWidth="20" className="dark:stroke-slate-800" />
           {total > 0 &&
             DONUT_SECTORS.map((sector) => {
@@ -423,7 +423,7 @@ export function AnalyticsView() {
         </SectionCard>
 
         <SectionCard title="Subject Workload" icon={Target}>
-          <div className="h-[250px] overflow-y-auto sf-scroll">
+          <div aria-label="Subject workload chart" className="h-[250px] overflow-y-auto sf-scroll">
             {workload.length === 0 ? (
               <p className="py-10 text-center text-sm text-slate-500">No subjects yet.</p>
             ) : (
@@ -453,16 +453,16 @@ export function AnalyticsView() {
 
       <div className="grid gap-4 lg:grid-cols-2">
         <SectionCard title="Active Items by Priority" icon={Flame}>
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-2" aria-label="Priority chips">
             {priorityCounts.map((chip) => (
-              <span
+              <div
                 key={chip.key}
                 className="flex items-center gap-2 rounded-xl bg-slate-50 px-3 py-2 text-sm text-slate-600 dark:bg-slate-800 dark:text-slate-300"
               >
                 <span aria-hidden className="size-2 rounded-full" style={{ backgroundColor: chip.color }} />
                 <span className="font-semibold text-slate-800 dark:text-slate-100">{chip.count}</span>
                 {chip.label}
-              </span>
+              </div>
             ))}
           </div>
         </SectionCard>

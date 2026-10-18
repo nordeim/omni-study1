@@ -15,6 +15,7 @@ import {
   MoreHorizontal,
   Pencil,
   Plus,
+  Search,
   Trash2,
 } from "lucide-react";
 
@@ -67,6 +68,7 @@ export function AssignmentsView() {
   const { toast } = useToast();
 
   const [status, setStatus] = React.useState<StatusFilter>("active");
+  const [search, setSearch] = React.useState("");
   const [dialog, setDialog] = React.useState<{ open: boolean; editing: AssignmentRow | null }>({
     open: false,
     editing: null,
@@ -83,7 +85,9 @@ export function AssignmentsView() {
 
   const filtered = React.useMemo(() => {
     const today = startOfDay(new Date());
+    const q = search.trim().toLowerCase();
     return assignments
+      .filter((a) => (q ? a.title.toLowerCase().includes(q) : true))
       .filter((a) => {
         if (status === "active") return a.progress < 100;
         if (status === "completed") return a.progress >= 100;
@@ -172,6 +176,20 @@ export function AssignmentsView() {
           </p>
         </div>
         <div className="flex items-center gap-2">
+          <div className="relative">
+            <Search
+              aria-hidden
+              className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400"
+              strokeWidth={2}
+            />
+            <Input
+              aria-label="Search assignments"
+              placeholder="Search assignments…"
+              className="h-9 w-48 pl-9"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+          </div>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button type="button" variant="outline" className="h-9">

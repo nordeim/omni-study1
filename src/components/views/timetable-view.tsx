@@ -277,7 +277,7 @@ export function TimetableView() {
                       data-today-header={isTodayCol ? "" : undefined}
                       className={cn(
                         "border-l border-slate-100 p-3 text-center dark:border-slate-800",
-                        isTodayCol && "sf-today-tint rounded-lg",
+                        isTodayCol && "rounded-lg bg-[rgb(var(--sf-primary-softest))] dark:bg-sf-primary-soft-dark/30",
                       )}
                     >
                       <p className="text-sm font-medium text-slate-600 dark:text-slate-300">
@@ -302,20 +302,28 @@ export function TimetableView() {
                       return (
                         <div
                           key={`${day.toISOString()}-${hour}`}
-                          className="min-h-[60px] border-b border-l border-slate-50 p-1 dark:border-slate-800"
+                          className="relative min-h-[60px] border-b border-l border-slate-50 dark:border-slate-800"
                         >
-                          {cellClasses.map((c) => {
+                          {cellClasses.map((c, idx) => {
                             const subject = subjectOf(c.subjectId);
                             const color = subject?.color ?? "rgb(var(--sf-primary))";
+                            const startHour = Number(c.startTime.split(":")[0]);
+                            const endHour = Number(c.endTime.split(":")[0]);
+                            const span = Math.max(1, endHour - startHour);
                             return (
                               <button
                                 key={c.id}
                                 type="button"
                                 onClick={() => openEdit(c)}
-                                className="group block w-full rounded-lg border-l-4 p-2 text-left text-xs outline-none focus-visible:ring-2 focus-visible:ring-sf-primary/40"
+                                className="group absolute inset-x-1 rounded-lg border-l-4 p-2 text-left text-xs outline-none focus-visible:ring-2 focus-visible:ring-sf-primary/40"
                                 style={{
+                                  top: 2 + idx * 4,
+                                  height: `calc(${span} * 60px - 8px)`,
+                                  left: `${2 + idx * 10}%`,
+                                  right: `${2 + idx * 10}%`,
                                   backgroundColor: `${color}1a`,
                                   borderLeftColor: color,
+                                  zIndex: 1,
                                 }}
                               >
                                 <p className="font-medium text-slate-700 dark:text-slate-200">

@@ -10,7 +10,7 @@
 // ---------------------------------------------------------------------------
 
 import * as React from "react";
-import { History, Trash2 } from "lucide-react";
+import { History, RotateCcw, Trash2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -208,6 +208,9 @@ export function CalculatorView() {
         key.kind === "clear" && "bg-red-100 text-red-600 hover:bg-red-200",
       )}
     >
+      {key.kind === "clear" && (
+        <RotateCcw className="size-4" strokeWidth={2} aria-hidden />
+      )}
       {key.label}
     </button>
   );

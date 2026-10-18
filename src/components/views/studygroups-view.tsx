@@ -244,7 +244,10 @@ export function StudyGroupsView() {
   return (
     <div className="flex h-[calc(100vh-8rem)] gap-6">
       {/* ---- left pane: groups list ---- */}
-      <aside className="flex w-80 shrink-0 flex-col border-r border-slate-100 pr-6 dark:border-slate-800">
+      <aside
+        aria-label="Study groups pane"
+        className="flex w-80 shrink-0 flex-col border-r border-slate-100 pr-6 dark:border-slate-800"
+      >
         <div className="flex items-center gap-2">
           <h1 className="flex flex-1 items-center gap-2 text-2xl font-bold text-slate-800 dark:text-slate-100">
             <Users className="size-6 shrink-0 text-sf-primary" strokeWidth={2} aria-hidden />
@@ -317,15 +320,21 @@ export function StudyGroupsView() {
       </aside>
 
       {/* ---- right pane: detail ---- */}
-      <section className="flex min-w-0 flex-1 flex-col">
+      <section className="flex min-w-0 flex-1 flex-col" aria-label="Study group detail pane">
         {!selected ? (
-          <div className="flex flex-1 items-center justify-center">
-            <EmptyState
-              icon={Users}
-              title="No study groups"
-              hint="Create a group to organize study partners by subject."
-            />
-          </div>
+          groups.length === 0 ? (
+            <div className="flex flex-1 items-center justify-center">
+              <EmptyState
+                icon={Users}
+                title="No study groups"
+                hint="Create a group to organize study partners by subject."
+              />
+            </div>
+          ) : (
+            <div className="flex flex-1 items-center justify-center">
+              <p className="text-sm text-slate-400">Select a group from the list.</p>
+            </div>
+          )
         ) : (
           <div className="flex min-w-0 flex-1 flex-col gap-6">
             <div className="flex items-start justify-between gap-4">

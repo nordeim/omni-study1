@@ -311,7 +311,7 @@ export function MyDayView() {
               suggestedTasks.map((t) => (
                 <div
                   key={t.id}
-                  className="flex items-center gap-2.5 rounded-xl bg-slate-50 p-4 dark:bg-slate-800/50"
+                  className="flex items-center gap-2.5 rounded-xl bg-slate-50 p-3 dark:bg-slate-800/50"
                 >
                   <Circle className="size-4 shrink-0 text-sf-primary" strokeWidth={2} />
                   <p className="min-w-0 flex-1 truncate text-sm text-slate-600 dark:text-slate-300">

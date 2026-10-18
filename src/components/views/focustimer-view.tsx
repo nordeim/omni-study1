@@ -9,7 +9,7 @@
 // ---------------------------------------------------------------------------
 
 import * as React from "react";
-import { BarChart3, CalendarDays, Pause, Play, RotateCcw, Timer } from "lucide-react";
+import { BarChart3, CalendarDays, Check, Pause, Play, RotateCcw, Timer } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -269,6 +269,15 @@ export function FocusTimerView() {
           </button>
           <Button variant="ghost" size="icon" aria-label="Reset timer" onClick={reset}>
             <RotateCcw className="size-5" strokeWidth={2} aria-hidden />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            aria-label="Complete session"
+            onClick={complete}
+            disabled={saving}
+          >
+            <Check className="size-5" strokeWidth={2} aria-hidden />
           </Button>
           {saving && <Spinner className="size-4 text-sf-primary" />}
         </div>

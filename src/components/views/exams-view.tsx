@@ -14,6 +14,7 @@ import {
   GraduationCap,
   Pencil,
   Plus,
+  Search,
   Trash2,
 } from "lucide-react";
 
@@ -67,6 +68,7 @@ export function ExamsView() {
     open: false,
     editing: null,
   });
+  const [search, setSearch] = React.useState("");
   const [form, setForm] = React.useState({
     title: "",
     date: "",
@@ -81,10 +83,15 @@ export function ExamsView() {
 
   const sorted = React.useMemo(
     () =>
-      [...exams].sort(
-        (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime(),
-      ),
-    [exams],
+      [...exams]
+        .filter((e) => {
+          const q = search.trim().toLowerCase();
+          return q ? e.title.toLowerCase().includes(q) : true;
+        })
+        .sort(
+          (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime(),
+        ),
+    [exams, search],
   );
 
   const subjectOf = (id: string | null) => subjects.find((s) => s.id === id) ?? null;
@@ -171,10 +178,26 @@ export function ExamsView() {
             Your upcoming exams and assessments.
           </p>
         </div>
-        <Button type="button" variant="gradient" className="sf-gradient-shadow" onClick={openCreate}>
-          <Plus className="size-4" strokeWidth={2} />
-          Add Exam
-        </Button>
+        <div className="flex items-center gap-2">
+          <div className="relative">
+            <Search
+              aria-hidden
+              className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400"
+              strokeWidth={2}
+            />
+            <Input
+              aria-label="Search exams"
+              placeholder="Search exams…"
+              className="h-9 w-48 pl-9"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+          </div>
+          <Button type="button" variant="gradient" className="sf-gradient-shadow" onClick={openCreate}>
+            <Plus className="size-4" strokeWidth={2} />
+            Add Exam
+          </Button>
+        </div>
       </div>
 
       {sorted.length === 0 ? (
@@ -205,7 +228,7 @@ export function ExamsView() {
               topics = [];
             }
             return (
-              <article key={exam.id} className="group sf-card overflow-hidden">
+              <div key={exam.id} className="group sf-card overflow-hidden">
                 <div
                   className="h-2"
                   aria-label="Subject color strip"
@@ -251,11 +274,10 @@ export function ExamsView() {
                   </div>
                 </div>
                 <div className="flex items-center justify-between border-t border-slate-100 px-6 py-3 dark:border-slate-800">
-                  <span className="text-xs font-medium capitalize text-slate-500 dark:text-slate-400">
+                  <span className="rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-medium capitalize text-slate-600 dark:bg-slate-800 dark:text-slate-300">
                     {exam.type}
                   </span>
                   <div className="flex items-center gap-2">
-                    <SubjectChip name={subject?.name} color={subject?.color} />
                     <div className="flex gap-1 opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100">
                       <button
                         type="button"
@@ -276,7 +298,7 @@ export function ExamsView() {
                     </div>
                   </div>
                 </div>
-              </article>
+              </div>
             );
           })}
         </div>
