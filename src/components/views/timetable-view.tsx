@@ -203,29 +203,6 @@ export function TimetableView() {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            className="h-9 w-9 rounded-lg"
-            aria-label="Previous week"
-            onClick={() => setWeekStart((w) => addDays(w, -7))}
-          >
-            <ChevronLeft className="size-4" strokeWidth={2} />
-          </Button>
-          <span className="min-w-32 text-center text-sm font-medium text-slate-600 dark:text-slate-300">
-            {weekLabel}
-          </span>
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            className="h-9 w-9 rounded-lg"
-            aria-label="Next week"
-            onClick={() => setWeekStart((w) => addDays(w, 7))}
-          >
-            <ChevronRight className="size-4" strokeWidth={2} />
-          </Button>
           <Select
             value={weekType}
             onValueChange={(v) => setWeekType(v as "ALL" | "A" | "B")}
@@ -270,6 +247,45 @@ export function TimetableView() {
         </div>
       ) : (
         <>
+          {/* Session-64 Batch U: the reference's centered month/week banner
+              sits between the header and the grid — a white card carrying
+              [‹] [month-year + range] [›]; the week nav lives HERE (the ref
+              chevrons are unnamed, at the card's padding edges). The h2
+              reads the week's FIRST-DAY month (measured: the spanning week
+              Sep 27 - Oct 3 renders "September 2026"). */}
+          <div
+            role="group"
+            aria-label="Week banner"
+            className="flex items-center justify-between rounded-xl border border-slate-100 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-card"
+          >
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              className="h-9 w-9 rounded-md"
+              aria-label="Previous week"
+              onClick={() => setWeekStart((w) => addDays(w, -7))}
+            >
+              <ChevronLeft className="size-4" strokeWidth={2} />
+            </Button>
+            <div className="text-center">
+              <h2 className="font-semibold text-slate-700 dark:text-slate-200">
+                {new Intl.DateTimeFormat("en-US", { month: "long", year: "numeric" }).format(weekStart)}
+              </h2>
+              <p className="text-sm text-slate-500 dark:text-slate-400">{weekLabel}</p>
+            </div>
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              className="h-9 w-9 rounded-md"
+              aria-label="Next week"
+              onClick={() => setWeekStart((w) => addDays(w, 7))}
+            >
+              <ChevronRight className="size-4" strokeWidth={2} />
+            </Button>
+          </div>
+
           {/* Desktop week grid */}
           <section className="sf-card overflow-hidden p-6 max-md:hidden">
             <div className="sf-timetable-canvas min-w-[900px] overflow-x-auto" aria-label="Week grid">

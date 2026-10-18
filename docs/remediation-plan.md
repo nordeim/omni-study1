@@ -249,6 +249,32 @@ chunks), then GREEN; full cold re-certification **184 + 98 + 55 =
 `63-clone-desktop-dashboard-evening-greeting.png` vs the
 `63-ref-desktop-*.png` probe set.
 
+### Batch U — Session-64: the three Batch-T deferred structural drifts (Events day-focus carousel, Timetable week banner, Assignments subject filter)
+
+A 9th workspace reset (fresh clone at `38fd29e`) forced the full
+environment rebuild again; the received state was re-certified cold first
+(unit 842/842, e2e 337/337, lint/tsc/build). Then the three drifts Batch T
+deferred WITH their probes were implemented — each re-measured on the live
+reference before writing code (fresh probes 2026-10-18/19: the carousel
+step semantics, the banner's month convention across a month boundary, the
+two selects' options and the reference's two-row Assignments header).
+
+| # | Finding (reference-measured 2026-10-18/19) | Root cause (clone) | Fix | Guard |
+|---|---------|-----------|-----|-------|
+| U1 | The Events header is a **DAY-FOCUS carousel**: four unnamed controls (‹ ○ › ∨, lucide size-4 in h-6 w-6 ghost buttons, `text-slate-400 hover:text-white hover:bg-slate-800`) step the focused day; the big date (text-4xl/700), the weekday abbrev ("Sun", text-lg/500) and the **"Oct 2026 CW 43"** line (ONE slate-400 p, short month) all track the FOCUSED day; the 7-day list re-anchors to it (focused + 6) while Today/Tomorrow stay anchored to the REAL today (stepping back to Sat Oct 17 rendered "Saturday, October 17" first, then "Today"); the New Event button is a FULL-WIDTH cyan row (h-9) at the strip's bottom, under a slate-700 divider | the header had no controls and stacked overline/big-date/long-month with CW + a cyan text link on the right; `windowDays` was today-anchored forever; `dayLabel` keyed relative labels on the list INDEX (window[0] = "Today"), which mislabels any re-anchored window; the page-level gradient New Event CTA was clone-invented (the ref's page header is title + subtitle only) | `focused` state (default today) + the four controls (aria-labeled — the a11y superset; the ref's are unnamed) + `listOpen` toggle (∨ collapses the list, chevron rotates, `aria-expanded`); big-date row + CW track `focused` (`referenceWeekNumber(focused)`); `dayLabel` derives relative labels from `daysUntil(day, today)` and falls back to `formatWeekdayMonthDay` (no year); window = `focused + 6`; measured 3-row strip (overline+controls / big date / full-width cyan New Event) with the `border-b border-slate-700` divider; page CTA removed | S5-U1 (4 pins, clock-pinned at 2026-10-18: controls' names, the 17/Sat/CW 42 step + re-anchor + real-today relatives, the ○ jump home, the short-month line + the long-month absence) |
+| U2 | The Timetable carries a **centered month/week banner** between header and grid: a white card (`rounded-xl p-4 shadow-sm border-slate-100`, `flex items-center justify-between`) holding [‹] [h2 "October 2026" (font-semibold text-slate-700) + p "Oct 18 - Oct 24" (text-sm text-slate-500)] [›] — the week nav lives INSIDE the banner (36px chevrons at the card's padding edges); the h2 reads the week's **FIRST-DAY month** (the spanning week Sep 27 - Oct 3 rendered "September 2026", probed by stepping ‹ ×3); the chevrons compute a **6px radius** (`rounded-md`) | the clone's chevrons + range label lived in the page header row (the ref's header row holds only All Weeks / Grid Builder / Add Class); no banner; the old S8-E pin expected an 8px radius — it had encoded the clone's own `rounded-lg` drift, not the reference | the nav moved into the new `aria-label="Week banner"` card (`role="group"`); h2 = `Intl.DateTimeFormat("en-US", {month:"long", year:"numeric"}).format(weekStart)`; the S8-E pin re-measured and updated 8px → 6px WITH the justification (never weakened — corrected to the reference-measured value) | S5-U2 (2 pins: banner content + nav inside; the month-boundary convention) + S8-E (updated, justified) |
+| U3 | The Assignments header is **TWO rows**: [h1 + subtitle \| Add Assignment] then [search flex-1 (604px @1440) \| status select w-160 \| subject select w-160]; the status control is a **SELECT** (radix trigger, h-9) whose options read **All / Active / Completed** (that order, probed); a **subject filter** lists "All Subjects" + the user's subjects (the ref's account has none — its list was "All Subjects" alone; its dialog's own subject select was empty, the options derive from the account's Subject entities) | the clone crammed search (w-48) + a status DropdownMenu BUTTON (Filter icon) + Add Assignment into one row; no subject filter existed | two-row restructure (search `flex-1`, both selects `w-full md:w-40`); status DropdownMenu → Select keeping the `Filter assignments by status: …` aria-label (the S9-I prefix pin survives) with the measured option order; new `aria-label="Subject filter"` Select ("All Subjects" + `subjects` from the store) filtering `filtered` by `a.subjectId` before status | S8-U3 (3 pins: the filter + options; Mathematics → exactly the 2 seeded active math rows and All Subjects restores; the status select + option order) |
+
+**Verified:** the 9 new pins RED-first (9 failed / 1 setup passed), then
+GREEN; the S8-E radius pin re-measured (6px) — one committed pin updated
+with its justification; full cold re-certification **190 + 101 + 55 =
+346/346**; lint ✓ tsc ✓ unit **842/842** ✓; build REAL_EXIT=0 ✓; live
+verification on the production standalone (step 17/CW 42 + re-anchor,
+banner "September 2026" across the boundary, Mathematics → 2 rows) with
+captures `64-clone-desktop-{Events,Events-carousel,Timetable-banner,
+Assignments-filter}.png` vs `64-ref-desktop-{Events,Events-banner,
+Timetable,Assignments}.png`.
+
 ## 3a. Verification (session-56 re-run, from a fresh clone)
 
 | Gate | Result |

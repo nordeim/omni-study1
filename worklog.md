@@ -631,3 +631,85 @@ UTC) then exposed what 63 sessions of UTC-morning runs had masked.
   deferred section (Events carousel, Timetable banner, Assignments
   subject filter) — each with its measured behavior documented for the
   next session.
+
+## Session 64 (continuation 15) — the three Batch-T deferred structural drifts implemented (Batch U)
+
+**Context.** The workspace was RESET a 9th time (fresh clone at
+`38fd29e`); the user's `docs/session_10.md` is the session-63 transcript —
+no new asks, its suggested next steps naming "implement the three probed
+structural drifts (Events day-focus carousel, Timetable centered week
+banner, Assignments subject filter — facts recorded in Batch T)" FIRST,
+then the Batch-R RSC conversion. This session executed that first option
+against fresh reference measurements.
+
+**Work log.**
+
+1. **Environment rebuild (9th recovery).** npm ci (489 pkgs), prisma,
+   `.env` from `.env.example` + `db:push`/`db:seed`, production build,
+   chromium re-download (Playwright 1.64.1 outgrew the cached
+   chromium-1200 — the S60/S63 lesson, reproduced a third time), and the
+   SSH-infra venv (paramiko; key fingerprint re-verified
+   `3ddaNlFhMz1J…U4PU`; the runbook's Appendix-A shim deployed to
+   `/home/z/ssh-infra/ssh` — ls-remote round-trip green before any work).
+2. **Independent re-certification of the received state.** lint ✓ tsc ✓
+   unit **842/842** ✓; the audit confirmed every s63 fix in place
+   (`currentGreeting()` at both call sites, `referenceWeekNumber()`, the
+   Timetable Sunday-start anchor + accordion, the Exams live-count
+   subtitle + status filter, the s59 `AppUser.name` contract). E2E cold
+   **337/337** (184+98+55) on the seventh consecutive session.
+3. **Fresh reference probes (the Batch-T facts re-verified + extended).**
+   The carousel step (‹ from Sun Oct 18 → big date 17 / Sat / CW 42; the
+   list re-anchors with "Saturday, October 17" first, then "Today" — the
+   relative labels belong to the REAL today, not the window index); ○ is
+   a jump-home; ∨ shows no observable effect on the empty account (the
+   clone implements it as an aria-expanded day-list collapse — the a11y
+   superset, invisible by default); the header's measured 3-row strip
+   (overline + controls / big-date baseline row / FULL-WIDTH cyan New
+   Event, h-9) and the page header carrying NO CTA (the clone's gradient
+   button was invented); the Timetable banner's month convention probed
+   across a boundary (Sep 27 - Oct 3 → "September 2026": the FIRST day's
+   month) and the chevrons' computed 6px radius; the Assignments two-row
+   header (search flex-1 604px @1440 | status select w-160 | subject
+   select w-160), the status options measured All/Active/Completed in
+   that order, and the subject select's options deriving from the
+   account's Subject entities (empty account → "All Subjects" alone).
+4. **TDD Batch U.** 9 new pins written first (S5-U1 ×4 in
+   parity-session5, S5-U2 ×2 in parity-session5, S8-U3 ×3 in
+   parity-session8) — **RED 9 failed / 1 setup passed** exactly as
+   designed. GREEN: the Events `focused` state + 4 aria-labeled controls +
+   `listOpen` collapse + the measured strip + `daysUntil`-based relative
+   labels + `referenceWeekNumber(focused)` + the page CTA removal; the
+   Timetable `aria-label="Week banner"` group card with the nav moved in
+   and the first-day-month h2; the Assignments two-row restructure, the
+   status DropdownMenu → Select (keeping the `Filter assignments by
+   status: …` label the S9-I prefix pin keys on) and the new Subject
+   filter Select filtering by `a.subjectId`.
+5. **One committed pin corrected with its measurement (AP-108).** The S8-E
+   chevron-radius pin (8px) failed in chunk 2 — the probe showed the
+   REFERENCE computes 6px (`rounded-md`); the 8px expectation had encoded
+   the clone's own `rounded-lg` drift. Updated 8px → 6px with the probe
+   documented in-place (corrected to the measured value, never weakened).
+6. **Verified.** lint ✓ tsc ✓ unit **842/842** ✓; build REAL_EXIT=0;
+   full cold re-certification **190 + 101 + 55 = 346/346** on the final
+   bundle. Live verification on the production standalone: step →
+   "17 / Sat / CW 42" + the re-anchored heads, ○ jumps home, the banner
+   renders "September 2026 / Sep 27 - Oct 3" across the boundary and
+   returns, the subject filter narrows to the 2 seeded math rows and
+   restores. Captures: `64-ref-desktop-{Events,Events-banner,Timetable,
+   Assignments}.png` + `64-clone-desktop-{Events,Events-carousel,
+   Timetable-banner,Assignments-filter}.png` (8). Docs: Batch U in the
+   remediation plan, README Session-64 row, SKILL.md AP-107/108, AGENTS
+   counts (842/346).
+
+**Stage summary.**
+
+- All three Batch-T deferred structural drifts implemented against their
+  recorded probes + fresh measurements; one invented CTA removed; one
+  status control converted to the reference's select chrome; one drift-
+  encoding pin corrected to the reference-measured value; nine new
+  permanent pins.
+- Gates: lint ✓ tsc ✓ unit **842/842** e2e **346/346** (190+101+55)
+  build ✓ — all on `main`, no branches; `skills/` still excluded.
+- Remaining honest debt: Batch R's structural perf (RSC conversion) is
+  now the LAST open item from the remediation plan; the drift matrix now
+  covers every view checked across s58–s64 with no known visual drift.

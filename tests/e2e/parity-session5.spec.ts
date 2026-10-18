@@ -118,6 +118,74 @@ test.describe("S5-B · Events dark terminal panel", () => {
   });
 });
 
+// ---------------------------------------------------------------------------
+// S5-U1 · Events day-focus carousel (session-64 Batch U).
+//
+// Measured on the live reference (2026-10-18/19, empty account): the Events
+// header carries FOUR unnamed controls (‹ ○ › ∨, lucide size-4 in h-6 w-6
+// ghost buttons); the big date, the weekday abbrev and the "Oct 2026 CW 43"
+// line all track the FOCUSED day; the day list re-anchors to the focused
+// day (focused day + 6) while the Today/Tomorrow labels stay anchored to
+// the REAL today (stepping back to Sat Oct 17 rendered "Saturday, October
+// 17" first, then "Today"); the CW followed the focused day (18→43, 17→42).
+// The reference's controls have NO accessible names — the clone supersets.
+// ---------------------------------------------------------------------------
+test.describe("S5-U1 · Events day-focus carousel", () => {
+  test("the header carries the day-focus controls with accessible names", async ({ page }) => {
+    await page.goto("/Events");
+    await hydrated(page);
+    const panel = page.locator('[aria-label="Events panel"]');
+    await expect(panel.getByRole("button", { name: "Previous day" })).toBeVisible();
+    await expect(panel.getByRole("button", { name: "Jump to today" })).toBeVisible();
+    await expect(panel.getByRole("button", { name: "Next day" })).toBeVisible();
+    await expect(panel.getByRole("button", { name: "Toggle day list" })).toBeVisible();
+  });
+
+  test("the big date, weekday and CW track the focused day and the list re-anchors", async ({ page }) => {
+    await page.clock.setFixedTime(new Date(2026, 9, 18, 12, 0, 0));
+    await page.goto("/Events");
+    await hydrated(page);
+    const panel = page.locator('[aria-label="Events panel"]');
+    await panel.getByRole("button", { name: "Previous day" }).click();
+    // Reference-measured step (‹ from Sun Oct 18): "17 | Sat | CW 42".
+    await expect(panel.locator("span.text-4xl")).toHaveText("17");
+    await expect(panel.getByText("Sat", { exact: true })).toBeVisible();
+    await expect(panel.getByText("CW 42", { exact: true })).toBeVisible();
+    // The list re-anchors to the focused day (full-format heading, NOT
+    // "Today" — the relative labels stay anchored to the real today).
+    await expect(panel.getByRole("heading", { name: "Saturday, October 17" })).toBeVisible();
+    await expect(panel.getByRole("heading", { name: "Today" })).toBeVisible();
+    await expect(panel.getByRole("heading", { name: "Tomorrow" })).toBeVisible();
+    // Stepping forward returns to today (CW 43).
+    await panel.getByRole("button", { name: "Next day" }).click();
+    await expect(panel.locator("span.text-4xl")).toHaveText("18");
+    await expect(panel.getByText("CW 43", { exact: true })).toBeVisible();
+  });
+
+  test("the circle control jumps back to today from a focused offset", async ({ page }) => {
+    await page.clock.setFixedTime(new Date(2026, 9, 18, 12, 0, 0));
+    await page.goto("/Events");
+    await hydrated(page);
+    const panel = page.locator('[aria-label="Events panel"]');
+    await panel.getByRole("button", { name: "Previous day" }).click();
+    await panel.getByRole("button", { name: "Previous day" }).click();
+    await expect(panel.locator("span.text-4xl")).toHaveText("16");
+    await panel.getByRole("button", { name: "Jump to today" }).click();
+    await expect(panel.locator("span.text-4xl")).toHaveText("18");
+  });
+
+  test("the month-year line uses the reference's short-month form beside the CW", async ({ page }) => {
+    await page.clock.setFixedTime(new Date(2026, 9, 18, 12, 0, 0));
+    await page.goto("/Events");
+    await hydrated(page);
+    const panel = page.locator('[aria-label="Events panel"]');
+    // Measured: "Oct 2026 CW 43" in ONE slate-400 line — the old stacked
+    // long-month header ("October 2026" + CW on the right) is gone.
+    await expect(panel.getByText("Oct 2026")).toBeVisible();
+    await expect(panel.getByText("October 2026")).toHaveCount(0);
+  });
+});
+
 test.describe("S5-C · dialog chrome", () => {
   test("dialogs render at max-w-md with the 8px radius and 36px inputs", async ({ page }) => {
     await page.goto("/Tasks");
@@ -317,6 +385,47 @@ test.describe("S5-J · Timetable chrome", () => {
     await page.goto("/Timetable");
     await hydrated(page);
     await expect(page.getByText("Manage your class schedule", { exact: true })).toBeVisible();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// S5-U2 · Timetable centered week banner (session-64 Batch U).
+//
+// Measured on the live reference (2026-10-19): a white card (rounded-xl,
+// p-4, shadow-sm, border-slate-100, flex items-center justify-between) sits
+// between the header row and the grid, carrying [‹] [centered h2 month-year
+// + p range] [›] — the week navigation lives INSIDE the banner (chevrons at
+// the card's padding edges, 36px, unnamed on the reference; the h2 reads
+// the week's FIRST-DAY month: the spanning week Sep 27 - Oct 3 rendered
+// "September 2026"). The clone's old chevrons lived in the page header row.
+// ---------------------------------------------------------------------------
+test.describe("S5-U2 · Timetable week banner", () => {
+  test("the centered month/week banner carries the range and the week nav", async ({ page }) => {
+    await page.clock.setFixedTime(new Date(2026, 9, 18, 12, 0, 0));
+    await page.goto("/Timetable");
+    await hydrated(page);
+    const banner = page.locator('[aria-label="Week banner"]');
+    await expect(banner).toBeVisible();
+    await expect(banner.getByText("October 2026")).toBeVisible();
+    await expect(banner.getByText("Oct 18 - Oct 24")).toBeVisible();
+    // The nav buttons live INSIDE the banner (measured ref position).
+    await expect(banner.getByRole("button", { name: "Previous week" })).toBeVisible();
+    await expect(banner.getByRole("button", { name: "Next week" })).toBeVisible();
+  });
+
+  test("the banner month reads the week's first-day month across a month boundary", async ({ page }) => {
+    await page.clock.setFixedTime(new Date(2026, 9, 18, 12, 0, 0));
+    await page.goto("/Timetable");
+    await hydrated(page);
+    const banner = page.locator('[aria-label="Week banner"]');
+    await banner.getByRole("button", { name: "Previous week" }).click();
+    await expect(banner.getByText("Oct 11 - Oct 17")).toBeVisible();
+    await banner.getByRole("button", { name: "Previous week" }).click();
+    await banner.getByRole("button", { name: "Previous week" }).click();
+    // Reference-measured: Sep 27 - Oct 3 renders "September 2026" (the
+    // first day's month), NOT "October 2026".
+    await expect(banner.getByText("September 2026")).toBeVisible();
+    await expect(banner.getByText("Sep 27 - Oct 3")).toBeVisible();
   });
 });
 

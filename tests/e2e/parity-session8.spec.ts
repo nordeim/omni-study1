@@ -365,7 +365,12 @@ test.describe("S8-E · Timetable today tint + nav", () => {
     });
     expect(cs.w).toBe(36);
     expect(cs.h).toBe(36);
-    expect(cs.radius).toBe("8px"); // rounded-md ghost, NOT rounded-full
+    // Session-64 Batch U: the chevrons moved INTO the week banner (the
+    // reference's measured position). The REFERENCE chevron computes a
+    // 6px radius (`rounded-md` — probed 2026-10-19: getComputedStyle →
+    // "6px", class "rounded-md"); the old 8px expectation here had
+    // encoded the clone's `rounded-lg` drift, not the reference.
+    expect(cs.radius).toBe("6px");
     expect(cs.bg).toBe("rgba(0, 0, 0, 0)");
     expect(cs.border).toBe("0px");
   });
@@ -654,5 +659,63 @@ test.describe("S8-P · Search icons + exam card", () => {
     const footer = card.locator(".border-t");
     await expect(footer.locator("span.rounded-full")).toHaveCount(1);
     await expect(footer).not.toContainText(/topic/i);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// S8-U3 · Assignments subject filter + status select (session-64 Batch U).
+//
+// Measured on the live reference (2026-10-19): the header is TWO rows —
+// [h1 + subtitle | Add Assignment] then [search (flex-1) | Active select
+// (w-160) | All Subjects select (w-160)] — the status control is a SELECT
+// whose options read All/Active/Completed (that exact order), and a second
+// select lists the user's subjects ("All Subjects" + dynamic entries; the
+// reference's account had none, so its list was "All Subjects" alone — the
+// clone's seed carries six). Both triggers are unnamed on the reference;
+// the clone supersets with aria-labels.
+// ---------------------------------------------------------------------------
+test.describe("S8-U3 · Assignments subject filter + status select", () => {
+  test("the header carries the reference's subject filter (default All Subjects)", async ({ page }) => {
+    await page.goto("/Assignments");
+    await hydrated(page);
+    const filter = page.getByRole("combobox", { name: "Subject filter" });
+    await expect(filter).toBeVisible();
+    await expect(filter).toHaveText(/All Subjects/);
+    await filter.click();
+    await expect(page.getByRole("option", { name: "All Subjects" })).toBeVisible();
+    await expect(page.getByRole("option", { name: "Mathematics" })).toBeVisible();
+    await expect(page.getByRole("option", { name: "Biology" })).toBeVisible();
+    await page.keyboard.press("Escape");
+  });
+
+  test("selecting a subject narrows the rows and All Subjects restores them", async ({ page }) => {
+    await page.goto("/Assignments");
+    await hydrated(page);
+    const rows = page.locator('[aria-label="Assignment rows"] > *');
+    const before = await rows.count();
+    expect(before).toBeGreaterThan(0);
+    const filter = page.getByRole("combobox", { name: "Subject filter" });
+    await filter.click();
+    await page.getByRole("option", { name: "Mathematics" }).click();
+    // Seeded active mathematics rows only (both math assignments are <100).
+    expect(await rows.count()).toBe(2);
+    await expect(page.getByText("Problem set 7 — integrals")).toBeVisible();
+    await expect(page.getByText("Kinetics lab write-up")).toHaveCount(0);
+    await filter.click();
+    await page.getByRole("option", { name: "All Subjects" }).click();
+    expect(await rows.count()).toBe(before);
+  });
+
+  test("the status filter renders as the reference's select with All/Active/Completed", async ({ page }) => {
+    await page.goto("/Assignments");
+    await hydrated(page);
+    const status = page.locator('[aria-label^="Filter assignments by status"]');
+    await expect(status).toHaveText(/Active/);
+    await status.click();
+    // Reference-measured option order: All, Active, Completed.
+    await expect(page.getByRole("option", { name: "All", exact: true })).toBeVisible();
+    await expect(page.getByRole("option", { name: "Active", exact: true })).toBeVisible();
+    await expect(page.getByRole("option", { name: "Completed", exact: true })).toBeVisible();
+    await page.keyboard.press("Escape");
   });
 });

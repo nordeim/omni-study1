@@ -5,12 +5,16 @@
 // (onValueCommit PATCHes), the blue due-in pill, bordered priority pill and
 // slate-100 type pill; the status filter defaults to "Active"; rows render
 // NO subject span / NO description paragraph.
+// Session-64 Batch U (reference-measured): the header is TWO rows —
+// [h1 + subtitle | Add Assignment] then [search flex-1 | status SELECT
+// (All/Active/Completed, that order) | subject SELECT ("All Subjects" +
+// the user's subjects)] — the status control was a DropdownMenu button and
+// the subject filter did not exist.
 // ---------------------------------------------------------------------------
 
 import * as React from "react";
 import {
   ClipboardList,
-  Filter,
   Flag,
   MoreHorizontal,
   Pencil,
@@ -62,12 +66,14 @@ type StatusFilter = "all" | "active" | "completed";
 
 export function AssignmentsView() {
   const assignments = useDataStore((s) => s.assignments);
+  const subjects = useDataStore((s) => s.subjects);
   const createAssignment = mutations.createAssignment;
   const updateAssignment = mutations.updateAssignment;
   const deleteAssignment = mutations.deleteAssignment;
   const { toast } = useToast();
 
   const [status, setStatus] = React.useState<StatusFilter>("active");
+  const [subjectId, setSubjectId] = React.useState<string>("all");
   const [search, setSearch] = React.useState("");
   const [dialog, setDialog] = React.useState<{ open: boolean; editing: AssignmentRow | null }>({
     open: false,
@@ -88,6 +94,7 @@ export function AssignmentsView() {
     const q = search.trim().toLowerCase();
     return assignments
       .filter((a) => (q ? a.title.toLowerCase().includes(q) : true))
+      .filter((a) => (subjectId === "all" ? true : a.subjectId === subjectId))
       .filter((a) => {
         if (status === "active") return a.progress < 100;
         if (status === "completed") return a.progress >= 100;
@@ -98,7 +105,7 @@ export function AssignmentsView() {
         const bDue = b.dueDate ? daysUntil(new Date(b.dueDate), today) : Number.MAX_SAFE_INTEGER;
         return aDue - bDue;
       });
-  }, [assignments, status]);
+  }, [assignments, status, subjectId, search]);
 
   const openCreate = () => {
     setForm({ title: "", type: "homework", priority: "medium", progress: 0, dueDate: "" });
@@ -166,6 +173,7 @@ export function AssignmentsView() {
 
   return (
     <div className="flex flex-col gap-6">
+      {/* Row 1 (measured Batch U): title + subtitle | Add Assignment. */}
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-slate-800 dark:text-slate-100">
@@ -177,48 +185,57 @@ export function AssignmentsView() {
             Track your homework and projects
           </p>
         </div>
-        <div className="flex items-center gap-2">
-          <div className="relative">
-            <Search
-              aria-hidden
-              className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400"
-              strokeWidth={2}
-            />
-            <Input
-              aria-label="Search assignments"
-              placeholder="Search assignments..."
-              className="h-9 w-48 pl-9"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-            />
-          </div>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                type="button"
-                variant="outline"
-                className="h-9"
-                aria-label={`Filter assignments by status: ${
-                  status === "active" ? "Active" : status === "completed" ? "Completed" : "All"
-                }`}
-              >
-                <Filter className="size-4 text-slate-400" strokeWidth={2} />
-                <span>
-                  {status === "active" ? "Active" : status === "completed" ? "Completed" : "All"}
-                </span>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={() => setStatus("active")}>Active</DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setStatus("completed")}>Completed</DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setStatus("all")}>All</DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-          <Button type="button" variant="gradient" className="sf-gradient-shadow" onClick={openCreate}>
-            <Plus className="size-4" strokeWidth={2} />
-            Add Assignment
-          </Button>
+        <Button type="button" variant="gradient" className="sf-gradient-shadow" onClick={openCreate}>
+          <Plus className="size-4" strokeWidth={2} />
+          Add Assignment
+        </Button>
+      </div>
+
+      {/* Row 2 (measured Batch U): search flex-1 | status | subject. */}
+      <div className="flex flex-col gap-4 md:flex-row">
+        <div className="relative flex-1">
+          <Search
+            aria-hidden
+            className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400"
+            strokeWidth={2}
+          />
+          <Input
+            aria-label="Search assignments"
+            placeholder="Search assignments..."
+            className="h-9 pl-9"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
         </div>
+        <Select value={status} onValueChange={(v) => setStatus(v as StatusFilter)}>
+          <SelectTrigger
+            aria-label={`Filter assignments by status: ${
+              status === "active" ? "Active" : status === "completed" ? "Completed" : "All"
+            }`}
+            className="h-9 w-full md:w-40"
+          >
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {/* Reference-measured option order: All, Active, Completed. */}
+            <SelectItem value="all">All</SelectItem>
+            <SelectItem value="active">Active</SelectItem>
+            <SelectItem value="completed">Completed</SelectItem>
+          </SelectContent>
+        </Select>
+        <Select value={subjectId} onValueChange={setSubjectId}>
+          <SelectTrigger aria-label="Subject filter" className="h-9 w-full md:w-40">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Subjects</SelectItem>
+            {subjects.map((s) => (
+              <SelectItem key={s.id} value={s.id}>
+                {s.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
 
       {filtered.length === 0 ? (

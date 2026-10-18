@@ -2,14 +2,21 @@
 
 // ---------------------------------------------------------------------------
 // Events (S5): a DARK slate-900 terminal panel — intentionally dark in BOTH
-// themes; no dark: overrides inside. Day sections run 7 days from today with
-// year-less labels; the header carries the CW<calendar week> label and the
-// cyan New Event link. Recurring events expand occurrences in-window.
+// themes; no dark: overrides inside. The header is a DAY-FOCUS carousel
+// (session-64 Batch U, measured on the reference): four controls (‹ ○ › ∨)
+// step the focused day; the big date, the weekday abbrev and the
+// "Oct 2026 CW <referenceWeekNumber>" line all track it, and the 7-day list
+// re-anchors to the focused day while the Today/Tomorrow labels stay
+// anchored to the REAL today. Recurring events expand occurrences in-window.
 // ---------------------------------------------------------------------------
 
 import * as React from "react";
 import {
   CalendarDays,
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
+  Circle,
   Clock,
   MapPin,
   Pencil,
@@ -40,7 +47,7 @@ import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/components/ui/toast";
 import { EmptyState } from "@/components/views/shared";
 import { mutations, useDataStore, type EventInput, type EventRow } from "@/lib/data";
-import { addDays, referenceWeekNumber, startOfDay } from "@/lib/date";
+import { addDays, daysUntil, formatWeekdayMonthDay, referenceWeekNumber, startOfDay } from "@/lib/date";
 import { apiSend, ApiError } from "@/lib/api";
 import { cn } from "@/lib/utils";
 
@@ -107,10 +114,16 @@ export function EventsView() {
   const [busy, setBusy] = React.useState(false);
   const [error, setError] = React.useState("");
 
-  const windowDays = React.useMemo(() => {
-    const today = startOfDay(new Date());
-    return Array.from({ length: 7 }, (_, i) => addDays(today, i));
-  }, []);
+  // The day-focus carousel state (Batch U): the header + list track the
+  // FOCUSED day; the relative Today/Tomorrow labels never do (they read
+  // the real clock inside dayLabel).
+  const [focused, setFocused] = React.useState(() => startOfDay(new Date()));
+  const [listOpen, setListOpen] = React.useState(true);
+
+  const windowDays = React.useMemo(
+    () => Array.from({ length: 7 }, (_, i) => addDays(focused, i)),
+    [focused],
+  );
 
   const openCreate = () => {
     setForm({
@@ -197,39 +210,37 @@ export function EventsView() {
         : [...prev, minutes].sort((a, b) => a - b),
     );
 
-  const dayLabel = (day: Date, index: number) => {
-    if (index === 0) return "Today";
-    if (index === 1) return "Tomorrow";
-    // The reference's measured format: full weekday + full month
+  // The measured rule (Batch U probe): relative labels belong to the REAL
+  // today/tomorrow — an index-based rule mislabels the re-anchored list
+  // (the ref rendered "Saturday, October 17" for yesterday, then "Today").
+  const dayLabel = (day: Date) => {
+    const diff = daysUntil(day, startOfDay(new Date()));
+    if (diff === 0) return "Today";
+    if (diff === 1) return "Tomorrow";
+    // The reference's measured format: full weekday + full month, no year
     // ("Tuesday, October 20" — session-63 Batch T).
-    return new Intl.DateTimeFormat("en-US", {
-      weekday: "long",
-      month: "long",
-      day: "numeric",
-    }).format(day);
+    return formatWeekdayMonthDay(day);
   };
+
+  const focusControls = [
+    { label: "Previous day", icon: ChevronLeft, action: () => setFocused((f) => addDays(f, -1)) },
+    { label: "Jump to today", icon: Circle, action: () => setFocused(startOfDay(new Date())) },
+    { label: "Next day", icon: ChevronRight, action: () => setFocused((f) => addDays(f, 1)) },
+  ] as const;
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex items-center justify-between gap-4">
-        <div>
-          <h1 className="flex items-center gap-2 text-2xl font-bold text-slate-800 dark:text-slate-100">
-            <CalendarDays className="size-6 text-sf-primary" strokeWidth={2} />
-            Events &amp; Reminders
-          </h1>
-          <p className="mt-1 text-base text-slate-500 dark:text-slate-400">
-            Manage your events with custom reminders
-          </p>
-        </div>
-        <Button
-          type="button"
-          variant="gradient"
-          className="sf-gradient-shadow"
-          onClick={openCreate}
-        >
-          <Plus className="size-4" strokeWidth={2} />
-          New Event
-        </Button>
+      {/* Measured Batch U: the reference's page header carries ONLY the
+          title + subtitle — its New Event CTA lives INSIDE the dark panel
+          (full-width cyan row); the old gradient CTA here was invented. */}
+      <div>
+        <h1 className="flex items-center gap-2 text-2xl font-bold text-slate-800 dark:text-slate-100">
+          <CalendarDays className="size-6 text-sf-primary" strokeWidth={2} />
+          Events &amp; Reminders
+        </h1>
+        <p className="mt-1 text-base text-slate-500 dark:text-slate-400">
+          Manage your events with custom reminders
+        </p>
       </div>
 
       {events.length === 0 ? (
@@ -248,43 +259,75 @@ export function EventsView() {
         </div>
       ) : (
         <section className="sf-print-exact rounded-2xl bg-slate-900 p-6 shadow-2xl" aria-label="Events panel">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-slate-400">Events</p>
-              <span className="text-4xl font-bold text-white">
-                {new Date().getDate()}
-              </span>
-              <p className="text-sm font-medium text-slate-400">
-                {new Intl.DateTimeFormat("en-US", { month: "long", year: "numeric" }).format(new Date())}
-              </p>
+          {/* Header strip (measured Batch U): overline + controls / big date
+              / full-width cyan New Event — the ref's strip is p-4 with a
+              slate-700 divider above the day list. */}
+          <div className="border-b border-slate-700 pb-4">
+            <div className="flex items-center justify-between">
+              <p className="text-xs uppercase tracking-wider text-slate-400">Events</p>
+              <div className="flex items-center gap-1">
+                {focusControls.map(({ label, icon: Icon, action }) => (
+                  <button
+                    key={label}
+                    type="button"
+                    aria-label={label}
+                    onClick={action}
+                    className="inline-flex size-6 items-center justify-center rounded-md text-slate-400 outline-none hover:bg-slate-800 hover:text-white focus-visible:ring-2 focus-visible:ring-cyan-400/40"
+                  >
+                    <Icon className="size-4" strokeWidth={2} />
+                  </button>
+                ))}
+                <button
+                  type="button"
+                  aria-label="Toggle day list"
+                  aria-expanded={listOpen}
+                  onClick={() => setListOpen((o) => !o)}
+                  className="inline-flex size-6 items-center justify-center rounded-md text-slate-400 outline-none hover:bg-slate-800 hover:text-white focus-visible:ring-2 focus-visible:ring-cyan-400/40"
+                >
+                  <ChevronDown
+                    className={cn("size-4 transition-transform", !listOpen && "-rotate-90")}
+                    strokeWidth={2}
+                  />
+                </button>
+              </div>
             </div>
-            <div className="flex items-center gap-4">
-              <span className="text-sm font-medium text-cyan-400">
-                {/* the reference's OWN week convention — US Sunday-start
-                    (measured CW 43 on Sun 2026-10-18 where ISO reads 42;
-                    session-63 Batch T). */}
-                CW {referenceWeekNumber(new Date())}
-              </span>
-              <button
-                type="button"
-                onClick={openCreate}
-                className="flex items-center gap-1 text-sm font-medium text-cyan-400 outline-none hover:text-cyan-300 focus-visible:ring-2 focus-visible:ring-cyan-400/40"
-              >
-                <Plus className="size-4" strokeWidth={2} />
-                New Event
-              </button>
+            <div className="mt-2 flex items-baseline gap-2">
+              <span className="text-4xl font-bold text-white">{focused.getDate()}</span>
+              <div>
+                <span className="text-lg font-medium text-white">
+                  {new Intl.DateTimeFormat("en-US", { weekday: "short" }).format(focused)}
+                </span>
+                <p className="text-sm text-slate-400">
+                  {new Intl.DateTimeFormat("en-US", { month: "short", year: "numeric" }).format(focused)}{" "}
+                  <span>
+                    {/* the reference's OWN week convention — US Sunday-start
+                        (measured CW 43 on Sun 2026-10-18 where ISO reads 42;
+                        session-63 Batch T) — tracking the FOCUSED day. */}
+                    CW {referenceWeekNumber(focused)}
+                  </span>
+                </p>
+              </div>
             </div>
+            <button
+              type="button"
+              onClick={openCreate}
+              className="mt-4 flex h-9 w-full items-center justify-center gap-2 rounded-md text-sm font-medium text-cyan-400 outline-none hover:bg-slate-800 hover:text-cyan-300 focus-visible:ring-2 focus-visible:ring-cyan-400/40"
+            >
+              <Plus className="size-4" strokeWidth={2} />
+              New Event
+            </button>
           </div>
 
+          {listOpen && (
           <div className="mt-4 flex flex-col gap-5">
-            {windowDays.map((day, index) => {
+            {windowDays.map((day) => {
               const dayEvents = events.flatMap((e) =>
                 expandOccurrences(e, [day]).map(() => e),
               );
               return (
                 <div key={day.toISOString()}>
                   <h2 className="text-sm font-semibold text-cyan-400">
-                    {dayLabel(day, index)}
+                    {dayLabel(day)}
                   </h2>
                   {dayEvents.length === 0 ? (
                     <p className="mt-1 text-sm text-slate-400">No events.</p>
@@ -352,6 +395,7 @@ export function EventsView() {
               );
             })}
           </div>
+          )}
         </section>
       )}
 
