@@ -333,7 +333,7 @@ export function StudyGroupsView() {
           ) : (
             <div className="flex flex-1 items-center justify-center">
               <p className="text-sm text-slate-400">
-                Choose a study group from the sidebar or create a new one
+                Select a group — choose a study group from the sidebar or create a new one
               </p>
             </div>
           )

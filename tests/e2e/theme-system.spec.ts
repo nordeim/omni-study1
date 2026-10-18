@@ -159,7 +159,11 @@ test.describe("S11-2..5 · accent surfaces re-theme in dark (the 300-level conve
     await page.waitForTimeout(900); // accordion re-render on breakpoint change
     // Stable locator across RED→GREEN: the conditional class list keeps the
     // light utility substring in both states (attribute substring match).
-    const chip = page.locator('[class*="md:hidden"] div[class*="bg-sf-primary-soft"]').first();
+    // Exact class token — the S8 softest-tint header swap put the substring
+    // "bg-sf-primary-soft" on the DESKTOP header's dark variant too, and DOM
+    // order made that hidden element win the substring match. The literal
+    // utility lives only on the mobile chip (the comment's own contract).
+    const chip = page.locator("div.bg-sf-primary-soft");
     await expect(chip).toBeVisible();
     const bg = await chip.evaluate((el) => getComputedStyle(el).backgroundColor);
     expect(bg).toContain(SOFT_DARK);
@@ -215,7 +219,11 @@ test.describe("light regression guard (S11)", () => {
     await page.goto("/Timetable");
     await page.setViewportSize({ width: 390, height: 844 });
     await page.waitForTimeout(900);
-    const chip = page.locator('[class*="md:hidden"] div[class*="bg-sf-primary-soft"]').first();
+    // Exact class token — the S8 softest-tint header swap put the substring
+    // "bg-sf-primary-soft" on the DESKTOP header's dark variant too, and DOM
+    // order made that hidden element win the substring match. The literal
+    // utility lives only on the mobile chip (the comment's own contract).
+    const chip = page.locator("div.bg-sf-primary-soft");
     await expect(chip).toBeVisible();
     const bg = await chip.evaluate((el) => getComputedStyle(el).backgroundColor);
     expect(bg).toBe("rgb(243, 232, 255)"); // violet-100 (--sf-primary-soft)
