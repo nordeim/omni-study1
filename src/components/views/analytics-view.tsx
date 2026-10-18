@@ -108,7 +108,13 @@ function AreaChart({ data, labels, variant, title = "7-day chart" }: AreaChartPr
             fill="#666"
             className="dark:fill-slate-400"
           >
-            {max >= 100 ? Math.round(tick) : Number.isInteger(tick) ? tick : tick.toFixed(1)}
+            {variant === "focus"
+              ? `${(tick / 60) % 1 === 0 ? tick / 60 : (tick / 60).toFixed(1)}h`
+              : max >= 100
+                ? Math.round(tick)
+                : Number.isInteger(tick)
+                  ? tick
+                  : tick.toFixed(1)}
           </text>
         </g>
       ))}
@@ -140,8 +146,8 @@ function AreaChart({ data, labels, variant, title = "7-day chart" }: AreaChartPr
       ) : (
         <>
           <path d={areaPath} fill="url(#focusGradient)" />
-          <polyline
-            points={linePoints}
+          <path
+            d={`M ${linePoints.split(" ").join(" L ")}`}
             fill="none"
             stroke="#8b5cf6"
             strokeWidth="2"
@@ -413,7 +419,7 @@ export function AnalyticsView() {
           <AreaChart data={taskActivity} labels={dayLabels} variant="slate" title="Task activity chart" />
         </SectionCard>
         <SectionCard title="Focus Time (Last 7 Days)" icon={Clock}>
-          <AreaChart data={focusByDay} labels={dayLabels} variant="focus" />
+          <AreaChart data={focusByDay} labels={dayLabels} variant="focus" title="Focus time chart" />
         </SectionCard>
       </div>
 

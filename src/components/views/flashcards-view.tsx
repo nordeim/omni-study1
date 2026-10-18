@@ -18,9 +18,16 @@ import {
   Sparkles,
   Trash2,
   X,
+  Ellipsis,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
   Dialog,
   DialogContent,
@@ -258,12 +265,16 @@ export function FlashcardsView() {
             filteredDecks.map((deck) => {
               const count = flashcards.filter((c) => c.deckId === deck.id).length;
               return (
-                <button
+                <div
                   key={deck.id}
-                  type="button"
+                  role="button"
+                  tabIndex={0}
                   onClick={() => setSelectedDeckId(deck.id)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") setSelectedDeckId(deck.id);
+                  }}
                   className={cn(
-                    "flex w-full items-center gap-3 rounded-xl border-2 p-4 text-left outline-none transition-colors focus-visible:ring-2 focus-visible:ring-sf-primary/40",
+                    "group flex w-full cursor-pointer items-center gap-3 rounded-xl border-2 p-4 text-left outline-none transition-colors focus-visible:ring-2 focus-visible:ring-sf-primary/40",
                     selectedDeckId === deck.id
                       ? "border-sf-primary/30 bg-slate-50 dark:bg-slate-800"
                       : "border-transparent bg-slate-50 hover:border-slate-200 dark:bg-slate-800/50 dark:hover:border-slate-700",
@@ -275,7 +286,7 @@ export function FlashcardsView() {
                   >
                     <Layers className="size-5" strokeWidth={2} />
                   </span>
-                  <span className="min-w-0">
+                  <span className="min-w-0 flex-1">
                     <h3 className="truncate text-sm font-medium text-slate-700 dark:text-slate-200">
                       {deck.name}
                     </h3>
@@ -283,7 +294,38 @@ export function FlashcardsView() {
                       {count} {count === 1 ? "card" : "cards"}
                     </p>
                   </span>
-                </button>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <button
+                        type="button"
+                        aria-label={`Deck options for ${deck.name}`}
+                        onClick={(e) => e.stopPropagation()}
+                        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-slate-400 opacity-0 outline-none transition-opacity hover:bg-slate-100 hover:text-slate-600 focus-visible:opacity-100 focus-visible:ring-2 focus-visible:ring-sf-primary/40 group-hover:opacity-100 dark:hover:bg-slate-700"
+                      >
+                        <Ellipsis className="size-4" strokeWidth={2} />
+                      </button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          openDeckDialog(deck);
+                        }}
+                      >
+                        <Pencil className="size-4" strokeWidth={2} /> Edit
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        className="text-red-600 focus:text-red-600 dark:text-red-400"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          removeDeck(deck);
+                        }}
+                      >
+                        <Trash2 className="size-4" strokeWidth={2} /> Delete
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
               );
             })
           )}

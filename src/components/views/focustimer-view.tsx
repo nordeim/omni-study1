@@ -9,7 +9,19 @@
 // ---------------------------------------------------------------------------
 
 import * as React from "react";
-import { BarChart3, CalendarDays, Check, Pause, Play, RotateCcw, Timer } from "lucide-react";
+import {
+  Clock,
+  Coffee,
+  Flame,
+  Pause,
+  Play,
+  RotateCcw,
+  Target,
+  Timer,
+  Zap,
+  Check,
+  type LucideIcon,
+} from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -32,6 +44,14 @@ const MODE_LABELS: Record<TimerMode, string> = {
   focus: "Focus",
   "short-break": "Short Break",
   "long-break": "Long Break",
+};
+
+// The mode tabs carry the measured glyphs (S9-L: Long Break reads coffee;
+// the moon is deliberately absent from the reference set).
+const MODE_ICONS: Record<TimerMode, LucideIcon> = {
+  focus: Clock,
+  "short-break": Timer,
+  "long-break": Coffee,
 };
 
 const PRESETS = [
@@ -160,9 +180,9 @@ export function FocusTimerView() {
       <div className="mx-auto flex w-full max-w-md flex-col items-center gap-6">
         {/* ---- stats ---- */}
         <div className="grid w-full grid-cols-3 gap-3">
-          <StatCard icon={Timer} label="Pomodoros" value={focusSessions.filter((s) => s.mode === "focus").length} hint="All-time focus sessions" />
-          <StatCard icon={CalendarDays} label="Today" value={sessionsToday} hint="Sessions completed today" />
-          <StatCard icon={BarChart3} label="Sessions" value={focusSessions.length} hint="Total sessions logged" />
+          <StatCard icon={Flame} label="Pomodoros" value={focusSessions.filter((s) => s.mode === "focus").length} hint="All-time focus sessions" />
+          <StatCard icon={Target} label="Today" value={sessionsToday} hint="Sessions completed today" />
+          <StatCard icon={Zap} label="Sessions" value={focusSessions.length} hint="Total sessions logged" />
         </div>
         {/* ---- mode tabs ---- */}
         <div className="flex items-center gap-1 rounded-xl bg-slate-100 p-1 dark:bg-slate-800" role="group" aria-label="Timer mode">
@@ -180,6 +200,11 @@ export function FocusTimerView() {
               )}
             >
               {MODE_LABELS[m]}
+              {React.createElement(MODE_ICONS[m], {
+                className: "size-3.5",
+                strokeWidth: 2,
+                "aria-hidden": true,
+              })}
             </button>
           ))}
         </div>

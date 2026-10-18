@@ -134,12 +134,12 @@ export function MyDayView() {
           Good {bucket}!
         </h3>
         <p className="mt-1 text-base text-slate-500 dark:text-slate-400">
-          Add your first task for today
+          What would you like to accomplish today?
         </p>
         <div className="mt-6">
           <Button
             variant="gradient"
-            className="sf-gradient-shadow-lg"
+            className="sf-amber-cta sf-gradient-shadow-lg"
             onClick={() => {
               setEditing(null);
               setDialogMyDay(true);

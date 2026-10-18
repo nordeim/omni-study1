@@ -216,14 +216,14 @@ export function CalendarView() {
             </div>
           </div>
 
-          <div aria-label="Calendar weekdays" className="grid grid-cols-7 gap-1">
+          <div aria-label="Calendar weekdays" className="mb-2 grid grid-cols-7 gap-1">
             {CALENDAR_WEEKDAYS.map((d) => (
-              <div
+              <span
                 key={d}
                 className="py-2 text-center text-sm font-medium text-slate-500 dark:text-slate-400"
               >
                 {d}
-              </div>
+              </span>
             ))}
           </div>
           <div

@@ -195,6 +195,9 @@ test.describe("S9-E · Calendar Sunday-first grid", () => {
     await page.goto("/Calendar");
     await hydrated(page);
     const header = page.locator('[aria-label="Calendar weekdays"]');
+    // allTextContents does not auto-wait — gate on the header rendering
+    // first (the hydrated() wait resolves pre-paint; spec hygiene).
+    await expect(header).toBeVisible();
     const labels = await header.locator("span").allTextContents();
     expect(labels).toEqual(["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]);
     // The reference's weekday row carries an mb-2 tail.

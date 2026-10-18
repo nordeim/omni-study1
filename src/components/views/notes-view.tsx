@@ -17,6 +17,8 @@ import {
   Plus,
   Search,
   Trash2,
+  Folder,
+  Tag,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -259,6 +261,7 @@ export function NotesView() {
         <div className="mt-3">
           <Select value={notebookFilter} onValueChange={setNotebookFilter}>
             <SelectTrigger className="h-9" aria-label="Filter by notebook">
+              <Folder className="size-4 text-slate-400" strokeWidth={2} aria-hidden />
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -274,6 +277,7 @@ export function NotesView() {
         <div className="mt-3">
           <Select value={tagFilter} onValueChange={setTagFilter}>
             <SelectTrigger className="h-9" aria-label="Filter by tag">
+              <Tag className="size-4 text-slate-400" strokeWidth={2} aria-hidden />
               <SelectValue />
             </SelectTrigger>
             <SelectContent>

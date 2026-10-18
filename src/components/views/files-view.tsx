@@ -14,8 +14,8 @@ import {
   Folder,
   FolderOpen,
   Home,
+  Grid3x3,
   Image as ImageIcon,
-  LayoutGrid,
   Link2,
   List,
   Pencil,
@@ -321,7 +321,7 @@ export function FilesView() {
                     : "text-slate-500 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800",
                 )}
               >
-                <LayoutGrid className="size-4" strokeWidth={2} aria-hidden />
+                <Grid3x3 className="size-4" strokeWidth={2} aria-hidden />
               </button>
               <button
                 type="button"

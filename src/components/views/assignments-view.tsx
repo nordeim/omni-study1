@@ -192,9 +192,16 @@ export function AssignmentsView() {
           </div>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button type="button" variant="outline" className="h-9">
+              <Button
+                type="button"
+                variant="outline"
+                className="h-9"
+                aria-label="Filter assignments by status"
+              >
                 <Filter className="size-4 text-slate-400" strokeWidth={2} />
-                <span className="capitalize">{status}</span>
+                <span>
+                  {status === "active" ? "Active" : status === "completed" ? "Completed" : "All"}
+                </span>
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
@@ -253,6 +260,8 @@ export function AssignmentsView() {
                       >
                         {due.text}
                       </span>
+                    </div>
+                    <div className="mb-3 flex flex-wrap items-center gap-2">
                       <span className="inline-flex items-center gap-1 rounded-full border border-slate-200 px-2.5 py-0.5 text-xs font-medium capitalize text-slate-600 dark:border-slate-700 dark:text-slate-300">
                         <Flag className="size-3" strokeWidth={2} />
                         {a.priority}

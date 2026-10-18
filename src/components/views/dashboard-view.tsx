@@ -148,7 +148,7 @@ export function DashboardView() {
               You have {overdue.length} overdue item{overdue.length === 1 ? "" : "s"}
             </h3>
             <p className="text-sm text-red-600 dark:text-red-400">
-              Some tasks slipped past their due date.
+              Don't forget to complete them!
             </p>
           </div>
           <a

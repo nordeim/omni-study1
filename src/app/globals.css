@@ -448,6 +448,10 @@
   }
 }
 
+@utility sf-amber-cta {
+  background-image: linear-gradient(to bottom right, #f59e0b, #f97316);
+}
+
 @utility sf-amber-card {
   background-image: linear-gradient(to bottom right, #fef3c7, #ffedd5);
   .dark & {

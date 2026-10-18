@@ -17,6 +17,11 @@ import {
   Settings as SettingsIcon,
   Sun,
   Trash2,
+  Bell,
+  BookOpen,
+  Calendar,
+  Palette,
+  User,
 } from "lucide-react";
 
 import {
@@ -1042,11 +1047,26 @@ export function SettingsView() {
           aria-label="Settings sections"
           className="h-auto flex-wrap justify-start gap-1 rounded-lg border border-slate-200 bg-white p-1 dark:border-slate-800 dark:bg-card"
         >
-          <TabsTrigger value="appearance">Appearance</TabsTrigger>
-          <TabsTrigger value="profile">Profile</TabsTrigger>
-          <TabsTrigger value="subjects">Subjects</TabsTrigger>
-          <TabsTrigger value="holidays">Holidays</TabsTrigger>
-          <TabsTrigger value="notifications">Notifications</TabsTrigger>
+          <TabsTrigger value="appearance">
+            <Palette className="size-4" strokeWidth={2} aria-hidden />
+            Appearance
+          </TabsTrigger>
+          <TabsTrigger value="profile">
+            <User className="size-4" strokeWidth={2} aria-hidden />
+            Profile
+          </TabsTrigger>
+          <TabsTrigger value="subjects">
+            <BookOpen className="size-4" strokeWidth={2} aria-hidden />
+            Subjects
+          </TabsTrigger>
+          <TabsTrigger value="holidays">
+            <Calendar className="size-4" strokeWidth={2} aria-hidden />
+            Holidays
+          </TabsTrigger>
+          <TabsTrigger value="notifications">
+            <Bell className="size-4" strokeWidth={2} aria-hidden />
+            Notifications
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="appearance" aria-label="Appearance" className="mt-6">

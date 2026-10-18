@@ -17,7 +17,7 @@ import {
   FileText,
   Languages,
   Lightbulb,
-  Send,
+  WandSparkles,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -212,7 +212,7 @@ export function AIAssistantView() {
           disabled={busy || !input.trim()}
           aria-label="Send message"
         >
-          {busy ? <Spinner className="size-4" /> : <Send className="size-4" strokeWidth={2} aria-hidden />}
+          {busy ? <Spinner className="size-4" /> : <WandSparkles className="size-4" strokeWidth={2} aria-hidden />}
           Send
         </Button>
         </div>
