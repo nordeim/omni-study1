@@ -706,8 +706,8 @@ export function PracticeTestsView() {
         <div className="sf-card">
           <EmptyState
             icon={FileText}
-            title="No practice tests"
-            hint="Build your first test to sharpen your recall before the exam."
+            title="No practice tests yet"
+            hint="Create your first practice test"
             cta={
               <Button
                 variant="gradient"

@@ -204,8 +204,8 @@ export function ExamsView() {
         <div className="sf-card">
           <EmptyState
             icon={GraduationCap}
-            title="No exams scheduled"
-            hint="Add your first exam to start your revision countdown."
+            title="No exams found"
+            hint="Add your exams to start tracking"
             cta={
               <Button type="button" variant="gradient" className="sf-gradient-shadow-lg" onClick={openCreate}>
                 <Plus className="size-4" strokeWidth={2} />

@@ -64,7 +64,7 @@ export function MathSolverView() {
     event.target.value = "";
     if (!file) return;
     if (!ACCEPTED_IMAGE_TYPES.includes(file.type)) {
-      toast.error("Only PNG, JPG, or WebP images are supported.");
+      toast.error("Please choose an image file");
       return;
     }
     const reader = new FileReader();
@@ -170,7 +170,7 @@ export function MathSolverView() {
             <input
               ref={fileInputRef}
               type="file"
-              accept="image/png,image/jpeg,image/webp"
+              accept="image/*"
               className="hidden"
               aria-label="Choose a problem image"
               onChange={onImageSelected}

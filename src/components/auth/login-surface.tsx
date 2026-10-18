@@ -202,7 +202,7 @@ export function LoginSurface() {
   const backToSignIn = (
     <button
       type="button"
-      className="text-center text-sm font-medium text-sf-primary-strong outline-none focus-visible:ring-2 focus-visible:ring-sf-primary/40 dark:text-sf-primary-strong-dark"
+      className="block text-center text-sm font-medium text-sf-primary-strong outline-none focus-visible:ring-2 focus-visible:ring-sf-primary/40 dark:text-sf-primary-strong-dark"
       onClick={() => {
         setError("");
         setStatus("");
@@ -340,7 +340,7 @@ export function LoginSurface() {
             <div className="flex flex-col items-center text-center">
               {brandChip}
               {/* h2 — the sub-screen REPLACES the brand block (no h1, S15 pin) */}
-              <h2 className="mt-4 text-2xl font-bold text-slate-800 dark:text-slate-100">
+              <h2 className="mt-2 text-xl font-bold text-slate-800 dark:text-slate-100 sm:text-2xl sm:mt-4">
                 Create your account
               </h2>
               <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
@@ -409,11 +409,14 @@ export function LoginSurface() {
 
         {view === "verify" && (
           <>
-            <div className="flex flex-col items-center text-center">
-              <span className="sf-print-exact flex h-11 w-11 items-center justify-center rounded-xl bg-sf-primary-soft text-sf-primary-strong dark:bg-sf-primary-soft-dark/40 dark:text-sf-primary-strong-dark">
+            {/* S16 geometry: Back-bottom→h2-top 76px = container mt-3 (12)
+                + circle 44 + circle mb-3 (12) + h2 mt-2 (8). */}
+            <div className="text-center">{backToSignIn}</div>
+            <div className="mt-3 flex flex-col items-center text-center">
+              <span className="sf-print-exact mb-3 flex h-11 w-11 items-center justify-center rounded-xl bg-sf-primary-soft text-sf-primary-strong dark:bg-sf-primary-soft-dark/40 dark:text-sf-primary-strong-dark">
                 <ShieldCheck className="size-6" strokeWidth={2} />
               </span>
-              <h2 className="mt-4 text-2xl font-bold text-slate-800 dark:text-slate-100">
+              <h2 className="mt-2 text-xl font-bold text-slate-800 dark:text-slate-100 sm:text-2xl sm:mt-4">
                 Verify your email
               </h2>
               <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
@@ -473,16 +476,17 @@ export function LoginSurface() {
               <Button type="button" variant="ghost" className="h-9 w-full" onClick={resend}>
                 Resend code
               </Button>
-              {backToSignIn}
             </form>
           </>
         )}
 
         {view === "forgot" && (
           <>
+            {/* S16 geometry: Back-top→h2-top 28px = back link 20px + h2 mt-2
+                (8). The sub-screen replaces the brand block (S15). */}
+            <div className="text-center">{backToSignIn}</div>
             <div className="flex flex-col items-center text-center">
-              {brandChip}
-              <h2 className="mt-4 text-2xl font-bold text-slate-800 dark:text-slate-100">
+              <h2 className="mt-2 text-xl font-bold text-slate-800 dark:text-slate-100 sm:text-2xl sm:mt-4">
                 {forgotDone ? "Check your email" : "Reset your password"}
               </h2>
               {!forgotDone && (
@@ -550,7 +554,6 @@ export function LoginSurface() {
                     "Send reset link"
                   )}
                 </Button>
-                {backToSignIn}
               </form>
             )}
           </>
@@ -560,7 +563,7 @@ export function LoginSurface() {
           <>
             <div className="flex flex-col items-center text-center">
               {brandChip}
-              <h2 className="mt-4 text-2xl font-bold text-slate-800 dark:text-slate-100">
+              <h2 className="mt-2 text-xl font-bold text-slate-800 dark:text-slate-100 sm:text-2xl sm:mt-4">
                 Reset your password
               </h2>
               <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">

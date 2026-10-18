@@ -221,12 +221,8 @@ export function AssignmentsView() {
         <div className="sf-card">
           <EmptyState
             icon={ClipboardList}
-            title="No assignments"
-            hint={
-              status === "active"
-                ? "You're all caught up — add an assignment to track progress."
-                : "Add an assignment to get started."
-            }
+            title="No assignments yet"
+            hint="Add your first assignment to start tracking"
             cta={
               <Button type="button" variant="gradient" className="sf-gradient-shadow-lg" onClick={openCreate}>
                 <Plus className="size-4" strokeWidth={2} />

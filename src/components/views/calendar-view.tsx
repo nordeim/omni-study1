@@ -250,7 +250,7 @@ export function CalendarView() {
                       !isToday &&
                       "text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800",
                     // SELECTED and TODAY strip the hover class (S8-C pin).
-                    isToday && !isSelected && "sf-today-tint text-sf-primary-strong dark:text-sf-primary-strong-dark",
+                    isToday && !isSelected && "sf-today-cell-tint text-sf-primary-strong dark:text-sf-primary-strong-dark",
                     isSelected && "sf-selected-tint text-white",
                   )}
                 >

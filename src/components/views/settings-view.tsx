@@ -342,7 +342,7 @@ function StudyProfileCard({ user, onRefreshed }: { user: AppUser | null; onRefre
             id="school-name"
             value={school}
             onChange={(e) => setSchool(e.target.value)}
-            placeholder="e.g. Northgate High"
+            placeholder="Your school..."
           />
         </div>
         <div className="flex flex-col gap-1.5">
@@ -374,8 +374,8 @@ function StudyProfileCard({ user, onRefreshed }: { user: AppUser | null; onRefre
               className="flex-1"
               aria-label="Daily study goal in hours"
             />
-            <span className="w-20 text-right text-sm font-medium text-slate-600 dark:text-slate-300">
-              {goal} {goal === 1 ? "hour" : "hours"}
+            <span className="whitespace-nowrap text-right text-sm font-medium text-slate-600 dark:text-slate-300">
+              Daily Study Goal: {goal} {goal === 1 ? "hour" : "hours"}
             </span>
           </div>
         </div>
@@ -781,9 +781,10 @@ function SubjectsTab() {
           <Plus className="size-4" strokeWidth={2} /> Add Subject
         </Button>
       </div>
+      <p className="mt-1 text-sm text-slate-500">Manage your subjects and classes</p>
       {subjects.length === 0 ? (
         <p className="py-8 text-center text-sm text-slate-500">
-          No subjects yet — add one to color-code your schedule.
+          No subjects yet. Add your first subject to get started!
         </p>
       ) : (
         <ul className="mt-4 flex flex-col gap-2">
@@ -945,14 +946,17 @@ function HolidaysTab() {
   return (
     <section className="sf-card p-6">
       <div className="flex items-center justify-between gap-3">
-        <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-100">Holidays</h3>
+        <div>
+          <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-100">Holidays &amp; Breaks</h3>
+          <p className="mt-1 text-sm text-slate-500">Set your school holidays and breaks</p>
+        </div>
         <Button variant="gradient" size="sm" className="sf-gradient-shadow" onClick={() => setDialogOpen(true)}>
           <Plus className="size-4" strokeWidth={2} /> Add Holiday
         </Button>
       </div>
       {sorted.length === 0 ? (
         <p className="py-8 text-center text-sm text-slate-500">
-          No holidays yet — add breaks so your plan stays realistic.
+          No holidays set. Add your school holidays!
         </p>
       ) : (
         <ul className="mt-4 flex flex-col gap-2">
@@ -990,28 +994,35 @@ function HolidaysTab() {
 
 function NotificationsTab({ user, onRefreshed }: { user: AppUser | null; onRefreshed: (u: AppUser) => void }) {
   const { toast } = useToast();
-  const enabled = user?.notificationsEnabled ?? false;
+  // Initialized from the server snapshot; the parent remounts this card via
+  // key= when the user record loads/changes, so no resync effect is needed.
+  const [enabled, setEnabled] = React.useState(user?.notificationsEnabled ?? false);
+  const [saving, setSaving] = React.useState(false);
 
-  const toggle = (checked: boolean) => {
-    apiSend<{ ok: true; user: AppUser }>("PATCH", "/api/settings/preferences", { notificationsEnabled: checked })
+  const save = () => {
+    setSaving(true);
+    apiSend<{ ok: true; user: AppUser }>("PATCH", "/api/settings/preferences", { notificationsEnabled: enabled })
       .then((response) => {
         onRefreshed(response.user);
-        toast.success(checked ? "Notifications enabled" : "Notifications muted");
+        toast.success("Preferences saved.");
       })
-      .catch((err: unknown) => toast.error(errorMessage(err, "Could not update notifications.")));
+      .catch((err: unknown) => toast.error(errorMessage(err, "Could not save your preferences.")))
+      .finally(() => setSaving(false));
   };
 
   return (
     <section className="sf-card p-6">
-      <div className="flex items-center justify-between gap-4">
+      <p className="text-sm text-slate-500 dark:text-slate-400">Manage your notification preferences</p>
+      <div className="mt-4 flex items-center justify-between gap-4">
         <div>
-          <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-100">Enable notifications</h3>
-          <p className="mt-1 text-sm text-slate-500">
-            Reminders for tasks, exams, and study sessions.
-          </p>
+          <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-100">Enable Notifications</h3>
+          <p className="mt-1 text-sm text-slate-500">Receive reminders for tasks and assignments</p>
         </div>
-        <Switch checked={enabled} onCheckedChange={toggle} aria-label="Enable notifications" />
+        <Switch checked={enabled} onCheckedChange={setEnabled} aria-label="Enable Notifications" />
       </div>
+      <Button variant="gradient" className="sf-gradient-shadow mt-6 self-start" onClick={save} disabled={saving}>
+        {saving ? <Spinner className="size-4" /> : null} Save Preferences
+      </Button>
       <p className="mt-6 text-sm text-slate-400 dark:text-slate-500">
         More notification settings arrive with the mobile companion.
       </p>
@@ -1071,6 +1082,7 @@ export function SettingsView() {
 
         <TabsContent value="appearance" aria-label="Appearance" className="mt-6">
           <div className="mx-auto flex max-w-2xl flex-col gap-6">
+            <p className="text-sm text-slate-500 dark:text-slate-400">Customize how StudyFlow looks</p>
             <ThemeCard />
             <AccentCard />
             <AvatarCard />
@@ -1090,6 +1102,9 @@ export function SettingsView() {
                 ) : (
                   "Loading your account…"
                 )}
+              </p>
+              <p className="mt-1 text-sm text-slate-500">
+                {user ? `Account created: ${formatLongDate(new Date(user.createdAt))}` : "Account created: —"}
               </p>
             </section>
             <DisplayNameCard key={user ? `dn-${user.id}` : "dn-loading"} user={user} />
@@ -1115,7 +1130,7 @@ export function SettingsView() {
 
         <TabsContent value="notifications" aria-label="Notifications" className="mt-6">
           <div className="mx-auto max-w-2xl">
-            <NotificationsTab user={user} onRefreshed={setUser} />
+            <NotificationsTab key={user ? `nt-${user.id}-${user.notificationsEnabled ? "1" : "0"}` : "nt-loading"} user={user} onRefreshed={setUser} />
           </div>
         </TabsContent>
       </Tabs>

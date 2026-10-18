@@ -418,7 +418,7 @@ export function FilesView() {
           <EmptyState
             icon={FolderOpen}
             title="No files yet"
-            hint="Upload study materials or create folders to organize them."
+            hint="Upload your first file to get started"
             cta={
               <Button variant="gradient" className="sf-gradient-shadow-lg" onClick={onPickFile}>
                 <Upload className="size-4" strokeWidth={2} /> Upload a file

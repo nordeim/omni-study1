@@ -231,6 +231,7 @@
   --sf-primary-soft-dark: 76 29 149;
   --sf-primary-softest: 245 243 255;
   --sf-primary-softest-adjacent: 238 242 255;
+  --sf-primary-empty: 237 233 254;
   --sf-primary-gradient-to: 79 70 229;
   --sf-primary-gradient-to-strong: 67 56 202;
   --sf-primary-avatar-from: 167 139 250;
@@ -468,6 +469,17 @@
      serializes as rgba(...) — the opacity-modifier utility form would emit
      color-mix(in oklab) and break the rgb-serialization assertions. */
   background-color: rgb(var(--sf-primary-softest));
+  .dark & {
+    background-color: rgb(var(--sf-primary-soft-dark) / 0.3);
+  }
+}
+
+@utility sf-today-cell-tint {
+  /* The calendar cell's unselected-today fill — the reference's emptyFrom
+     (violet-100), one step deeper than the timetable header's softest tint
+     (S8-C vs S8-E pins). Shares sf-today-tint's raw-rgb dark branch so the
+     dark re-theme serializes as rgba(...), never color-mix(in oklab). */
+  background-color: rgb(var(--sf-primary-empty));
   .dark & {
     background-color: rgb(var(--sf-primary-soft-dark) / 0.3);
   }

@@ -395,21 +395,21 @@ export function AnalyticsView() {
           iconClasses="bg-blue-100 dark:bg-blue-900/50"
           value={`${completedAssignments}/${assignments.length}`}
           label="Assignments"
-          sub={`${assignmentRate}% completed`}
+          sub={`${assignmentRate}% avg progress`}
         />
         <StatBlock
           icon={Clock}
           iconClasses="bg-green-100 dark:bg-green-900/50"
           value={formatMinutes(focusSecondsWeek / 60)}
           label="Focus Time"
-          sub="last 7 days"
+          sub={`${Math.round(focusSecondsWeek / 3600)} total study hours`}
         />
         <StatBlock
           icon={GraduationCap}
           iconClasses="bg-orange-100 dark:bg-orange-900/50"
           value={String(upcomingExams)}
           label="Upcoming Exams"
-          sub="scheduled ahead"
+          sub={`${upcomingExams} exams scheduled`}
         />
       </div>
 
@@ -431,7 +431,7 @@ export function AnalyticsView() {
         <SectionCard title="Subject Workload" icon={Target}>
           <div aria-label="Subject workload chart" className="h-[250px] overflow-y-auto sf-scroll">
             {workload.length === 0 ? (
-              <p className="py-10 text-center text-sm text-slate-500">No subjects yet.</p>
+              <p className="py-10 text-center text-sm text-slate-500">No subject data yet</p>
             ) : (
               <div className="flex flex-col gap-3">
                 {workload.map((row) => (

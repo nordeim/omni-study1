@@ -158,7 +158,14 @@ test.describe("S12-B · the skip-to-content link (WCAG 2.4.1)", () => {
 
     // Enter navigates to main#main-content (tabIndex -1 ⇒ it takes focus).
     await page.keyboard.press("Enter");
-    await page.waitForTimeout(400);
+    // Poll for the hash-target focus instead of a fixed sleep — a cold
+    // server's late hydration re-mounts the shell after the fixed 400ms
+    // read and the focus had not landed yet.
+    await page.waitForFunction(
+      () => document.activeElement?.tagName === "MAIN" && document.activeElement?.id === "main-content",
+      null,
+      { timeout: 10_000 },
+    );
     const landed = await page.evaluate(() => {
       const el = document.activeElement;
       return { tag: el?.tagName, id: el?.id };

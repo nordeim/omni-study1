@@ -323,17 +323,22 @@ export function StudyGroupsView() {
       <section className="flex min-w-0 flex-1 flex-col" aria-label="Study group detail pane">
         {!selected ? (
           groups.length === 0 ? (
-            <div className="flex flex-1 items-center justify-center">
-              <EmptyState
-                icon={Users}
-                title="No study groups"
-                hint="Create a group to organize study partners by subject."
-              />
+            // Zero groups: the placeholder stays visible above the empty
+            // state (the content parity the reference carries in both
+            // panes — S17-G). The two spans are separate elements so the
+            // exact-text "Select a group" pin resolves without the dash.
+            <div className="flex flex-1 flex-col items-center justify-center gap-5">
+              <p className="text-sm text-slate-400">
+                <span className="block">Select a group</span>
+                <span className="block">Choose a study group from the sidebar or create a new one</span>
+              </p>
+              <EmptyState icon={Users} title="No study groups" hint="Create a group to collaborate" />
             </div>
           ) : (
             <div className="flex flex-1 items-center justify-center">
               <p className="text-sm text-slate-400">
-                Select a group — choose a study group from the sidebar or create a new one
+                <span className="block">Select a group</span>
+                <span className="block">Choose a study group from the sidebar or create a new one</span>
               </p>
             </div>
           )

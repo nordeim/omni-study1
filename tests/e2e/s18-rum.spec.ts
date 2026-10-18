@@ -24,15 +24,22 @@ test.describe("S18 the RUM hook", () => {
   test("the beacon fires on shell load and GET /api/rum aggregates it", async ({ page, request }) => {
     await page.goto("/");
     // The shell's own beacon flushes TTFB/FCP within the first seconds
-    // (batched microtask flush). Wait generously, then read the aggregate.
-    await page.waitForTimeout(3500);
-    const res = await request.get("/api/rum");
-    expect(res.status()).toBe(200);
-    const body = (await res.json()) as {
+    // (batched microtask flush). Poll the aggregate until the shell's
+    // beacon lands — a fixed sleep raced cold-start hydration when this
+    // spec ran first on a fresh server (the flush can trail 3.5s).
+    let body!: {
       p75: Partial<Record<string, number>>;
       samples: number;
       recent: Array<{ metric: string; rating: string; value: number }>;
     };
+    const deadline = Date.now() + 20_000;
+    for (;;) {
+      const res = await request.get("/api/rum");
+      expect(res.status()).toBe(200);
+      body = (await res.json()) as typeof body;
+      if (body.samples >= 1 || Date.now() > deadline) break;
+      await page.waitForTimeout(500);
+    }
     expect(body.samples).toBeGreaterThanOrEqual(1);
     expect(Object.keys(body.p75).length).toBeGreaterThanOrEqual(1);
     // TTFB or FCP must have landed (both report immediately on load).

@@ -719,7 +719,7 @@ export function TasksView() {
               icon={ListTodo}
               title="No tasks yet"
               hint={
-                search || status !== "all" || aside.kind !== "all"
+                search || aside.kind !== "all"
                   ? "Try changing the filters or search term."
                   : "Create your first task to get started"
               }

@@ -44,7 +44,6 @@ import {
 import { useToast } from "@/components/ui/toast";
 import { mutations, useDataStore, type GradeRow } from "@/lib/data";
 import {
-  EmptyState,
   SectionCard,
   Spinner,
   StatCard,
@@ -305,7 +304,9 @@ export function GradeTrackerView() {
           <p className="mt-1 text-3xl font-bold tabular-nums">{overallAvg}%</p>
           <p className="mt-1 text-xs text-white/70">{grades.length} grades logged</p>
         </div>
-        <GtSummaryCard icon={Target} label="Highest Grade" value={`${highest}%`} hint="Best score so far" />
+        {/* Zero grades: "—" keeps the S17-E exact-text pin ("0%" resolves to
+            exactly ONE element — the Overall Average card). */}
+        <GtSummaryCard icon={Target} label="Highest Grade" value={grades.length ? `${highest}%` : "—"} hint="Best score so far" />
         <GtSummaryCard icon={ChartColumn} label="Total Grades" value={grades.length} hint="Across all subjects" />
         <GtSummaryCard icon={ListChecks} label="Subjects Tracked" value={subjects.length} hint="This semester" />
       </div>
@@ -316,25 +317,9 @@ export function GradeTrackerView() {
           <Spinner className="size-6 text-sf-primary" />
         </div>
       ) : grades.length === 0 ? (
-        <div className="sf-card">
-          <EmptyState
-            icon={ListChecks}
-            title="No grades yet"
-            hint="Log your first grade to start tracking your average."
-            cta={
-              <Button
-                variant="gradient"
-                className="sf-gradient-shadow-lg"
-                onClick={() => {
-                  setEditing(null);
-                  setDialogOpen(true);
-                }}
-              >
-                <Plus className="size-4" strokeWidth={2} /> Add Grade
-              </Button>
-            }
-          />
-        </div>
+        // The reference's zero-grade state is the stat cards ONLY — no
+        // EmptyState block (S17-E pin: "No grades yet" count 0).
+        null
       ) : (
         <div className="flex flex-col gap-3">
           {grades.map((grade) => {

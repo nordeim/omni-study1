@@ -339,7 +339,7 @@ export function FlashcardsView() {
             <EmptyState
               icon={Layers}
               title="No decks yet"
-              hint="Create a deck to start memorizing with spaced practice."
+              hint="Create your first flashcard deck"
               cta={
                 <Button type="button" variant="gradient" className="sf-gradient-shadow-lg" onClick={() => openDeckDialog(null)}>
                   <Plus className="size-4" strokeWidth={2} />

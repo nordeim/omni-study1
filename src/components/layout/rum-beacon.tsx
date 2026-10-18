@@ -13,16 +13,6 @@ import * as React from "react";
 
 type Metric = import("web-vitals").Metric;
 
-const SESSION_COOKIE = "sf_session";
-
-function hasSessionCookie(): boolean {
-  try {
-    return document.cookie.includes(SESSION_COOKIE);
-  } catch {
-    return false;
-  }
-}
-
 function reportMetric(sessionId: string, metric: Metric): void {
   // The keepalive POST survives the page unload that LCP/INP sometimes
   // ride; every failure is silent by contract.
@@ -50,7 +40,10 @@ function reportMetric(sessionId: string, metric: Metric): void {
 
 export function RumBeacon() {
   React.useEffect(() => {
-    if (!hasSessionCookie()) return;
+    // Auth gating lives at the MOUNT POINT: the shell renders this component
+    // only inside its authed branch. The previous document.cookie gate could
+    // never open — the session cookie is httpOnly, so document.cookie never
+    // contains it and the beacon silently never fired.
     const sessionId =
       typeof crypto !== "undefined" && "randomUUID" in crypto
         ? crypto.randomUUID()
