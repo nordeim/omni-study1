@@ -71,3 +71,82 @@ This session re-verified the workspace, finished the remaining superset
   `sf-today-tint` utility contract, the exact-token locator rule, the
   status-gated two-layer hydration gate (re-verified), and the union-based
   nullable-ID atoms (re-verified).
+
+---
+
+## Session 56 (continuation 7) — fresh-clone re-verification; the lost S17 batch recovered; cold full regression
+
+**Context.** The sixth workspace reset wiped the local tree; the remote
+main survived at `3ccc6c8` (the session-55 docs chain intact). This session
+re-cloned, rebuilt the push infrastructure (ed25519 key + paramiko GIT_SSH
+shim in `/home/z/ssh-infra/`, host fingerprints pinned from GitHub's
+published docs after the meta API rate-limited), and re-verified EVERY
+recorded gate from scratch instead of trusting the session-55 "final
+gates" claim.
+
+**Work log.**
+
+1. **Fast gates re-verified.** lint ✓ tsc ✓ unit 834/834 ✓ build
+   (repo script, REAL_EXIT) ✓ — all green on the fresh clone.
+2. **The full e2e sweep immediately contradicted the record.** S8-C
+   failed (78/79): commit `d3a1d74` had collapsed the calendar cell's
+   violet-100 pin into `sf-today-tint`'s violet-50 (S8-E's header value)
+   and the S8 chunk was never re-run. Fixed with a sibling utility
+   `sf-today-cell-tint` (light `--sf-primary-empty` = violet-100 237 233
+   254; shared raw-rgb dark branch) — 115/115 across S7–S9 +
+   dark-mode + accessibility + theme-system.
+3. **The s17 family: specs survived, implementation didn't.** 5/6 tests
+   failed from a fresh clone; the pinned strings never existed in src
+   (`git log -S` showed them only in specs since the initial scaffolding).
+   Implemented the whole batch TDD-style: the seven reference-measured
+   empty-state hint families (+ the tasks hint no longer counting the
+   "active" status default), analytics zero-state sub-captions
+   (avg progress / total study hours / exams scheduled / No subject data
+   yet), GradeTracker stat-cards-only zero state (Highest Grade "—" keeps
+   the exact-"0%" pin single), the Settings depth (Appearance intro,
+   Subjects/Holidays reference copy + headers, School placeholder, Daily
+   Study Goal readout, Account created line), the Notifications
+   master-toggle rebuild (local state + Save Preferences → PATCH +
+   "Preferences saved." + reload persistence; remount-key resync — the
+   setState-in-effect lint gate forced the better pattern), and the
+   StudyGroups zero-state placeholder split (exact "Select a group" span
+   + the full-sentence span, visible above the empty state in both panes
+   — S8-H + S9-S + S17-G all satisfied). 6/6 green.
+4. **Cold-start residuals the warm sweep had hidden.** resilience-A3:
+   the mathsolver input was `accept="image/png,image/jpeg,image/webp"`
+   (the spec targets `accept="image/*"`) and the guard toast copy was
+   invented — fixed to the reference's. S16: the auth sub-screens shipped
+   desktop values — h2 `text-xl sm:text-2xl`, the back link moved ABOVE
+   the h2 on verify/forgot with the measured gaps (76px = 12+44+12+8;
+   28px = 20+8; the link is `display:block` so the inline line-box
+   descender cannot add 2px). s16 4/4, resilience 5/5.
+5. **The RUM beacon never fired — ever.** A fresh-DB s18 run with a 20s
+   poll still saw samples=0; a network probe showed ZERO /api/rum calls
+   on a real Dashboard load. Root cause: `hasSessionCookie()` reads
+   `document.cookie`, and the `sf_session` cookie is httpOnly — invisible
+   to JS — so the gate was permanently closed and every prior "green"
+   s18 was fed by other specs' POSTed batches. Gate removed (the
+   authed-shell mount point is the auth gate). s18–s23 25/25.
+6. **Spec hygiene (cold-start races, assertions unchanged).** s18's fixed
+   3.5s sleep → bounded poll on samples≥1; the skip-link's fixed 400ms
+   focus read → bounded poll on MAIN#main-content.
+7. **Final certification.** Three chunks on the FINAL bundle with a cold
+   server + fresh DB each: 149 + 98 + 54 = **301/301**; unit 834/834;
+   lint/tsc/build clean. 13 new screenshots (`56-*.png`).
+8. **Push infrastructure rebuilt + debugged.** The paramiko shim needed
+   three fixes this session: the `-o` flag's separate value was parsed as
+   the host (DNS error), the read-all-then-write stdin feed deadlocks a
+   push (stream chunks instead), and the `makefile("rb")` stdout reader
+   starved under git (raw `recv_ready()` polling). Insurance commits
+   pushed after every green batch.
+
+**Stage summary.**
+
+- Final gates: lint ✓ · tsc ✓ · build ✓ (REAL_EXIT) · unit 834/834 ·
+  e2e 301/301 (cold, fresh DB, 3 chunks) — all on `main`, no branches.
+- Commits this session: `70be173` (the s17 batch + residuals + beacon
+  fix) · the docs/worklog/screenshots commit.
+- Standing lessons recorded: AP-97 (httpOnly cookie gates), AP-98
+  (sibling tint utilities for divergent light pins), AP-99 (specs are
+  the pin source — re-verify from a fresh clone), AP-100 (bounded polls
+  over fixed sleeps).

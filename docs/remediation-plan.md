@@ -117,6 +117,37 @@ studygroups hint, `SimpleEmptyState` slim icon. Guard: `parity-session9.spec.ts`
 | P3 | dark-mode:159 computed `oklab(...)` instead of rgb | the `/30` opacity modifier on a theme color emits `color-mix(in oklab)` | `sf-today-tint` utility restored (light violet-50 softest + raw-rgb dark branch) — one class satisfying the oklab serialization, forced-colors outline, and exact-token pins | dark-mode + accessibility + theme-system |
 | P4 | s52 drawer flow found no "Notes" heading at 390px | the mobile h2 rendered only in the selected-note branch | hoisted to the right-pane top (every notes-present state) | s52:161 |
 
+### Batch Q — Session-56: the lost S17 batch + full-regression residuals
+
+The s17 specs survived every workspace reset but their implementation
+batch did not; a re-verification pass from a fresh clone surfaced them
+(along with three more residuals the recorded final gates had missed).
+
+| # | Finding | Root cause | Fix | Guard |
+|---|---------|-----------|-----|-------|
+| Q1 | Seven empty-state hint families drifted from the measured copy (assignments/exams/flashcards/practicetests/files + the tasks filter-variant hint fired on load because `status` defaults to "active") | specs committed, implementation lost in a reset | reference copy restored verbatim; tasks hint no longer counts the status filter | `s17-fresh-user.spec.ts` (6/6) |
+| Q2 | Analytics zero-state sub-captions missing ("avg progress", "total study hours", "exams scheduled", "No subject data yet") | same | StatBlock subs carry the measured phrasing | s17-D |
+| Q3 | GradeTracker rendered a "No grades yet" EmptyState the reference never shows; "Highest Grade" 0% collided with the exact-"0%" pin | same | zero grades render the stat cards only; Highest Grade shows "—" at zero | s17-E |
+| Q4 | Settings depth: Appearance intro, Subjects/Holidays per-tab headers + zero-empty copy, School placeholder "Your school...", "Daily Study Goal: N hours" readout, "Account created:" line | same | built into the existing cards | s17-A/C |
+| Q5 | Notifications tab was a placeholder (no master-toggle structure, no Save flow) | same | intro + "Enable Notifications" h3 + reminders line + local-state Switch + Save Preferences (PATCH + toast + reload-persist); remount-key resync instead of a setState-in-effect | s17-B |
+| Q6 | StudyGroups zero-state: the dash-joined placeholder failed the exact-"Select a group" pin; the right pane showed no placeholder at zero groups | superset copy joined two pins into one text node | placeholder split into two spans; visible above the empty state in both panes | s17-G + S8-H + S9-S |
+| Q7 | S16 auth sub-screens: h2 24px (reference 20px at <sm), back link at the bottom (reference: above), gaps unmeasurable | desktop values shipped | `text-xl sm:text-2xl`; back link moved above (verify: 12+44+12+8=76px; forgot: 20+8=28px — the link is `block` so no line-box descender); mathsolver `accept="image/*"` + "Please choose an image file" guard | s16 + resilience A3 |
+| Q8 | **The RUM beacon never fired** — `document.cookie.includes("sf_session")` can never match an httpOnly cookie | the gate was unwritable from JS | gate removed; auth gating lives at the authed-shell mount point | s18 (polls the aggregate) |
+| Q9 | sf-today-tint collapsed two different light pins (S8-E header violet-50 vs S8-C cell violet-100) into violet-50 | one shared utility for two surfaces | `sf-today-cell-tint` (light `--sf-primary-empty` 237 233 254, shared raw-rgb dark branch) | S8-C + dark-mode S10 |
+| Q10 | s18 beacon sleep + skip-link fixed-focus sleep raced cold-start hydration | fixed sleeps | bounded polls on the pinned condition (assertions unchanged) | s18 + S12-B |
+
+---
+
+## 3a. Verification (session-56 re-run, from a fresh clone)
+
+| Gate | Result |
+|------|--------|
+| lint / `tsc --noEmit` | clean |
+| Vitest unit | 834/834 |
+| Playwright e2e (final bundle, cold server + fresh DB per chunk) | **301/301**: chrome+S5/calc/S6 149 · S7–S9+tasks/resilience/s16/s17 98 · auth+s18–s26 54 |
+| build (repo script, REAL_EXIT) | green |
+| Screenshots | +13 session-56 captures (settings tabs, analytics/gradetracker zero states, studygroups mobile, auth signup mobile, calendar) |
+
 ---
 
 ## 3. Verification (final)

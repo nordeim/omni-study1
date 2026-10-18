@@ -9,7 +9,7 @@ description: >
   routing model, the CRUD factory, auth, and the two-layer testing strategy.
   Use this to extend, debug, onboard, or replicate the architecture without
   re-deriving two sessions of hard-won knowledge.
-version: 2.0.0
+version: 2.1.0
 tags:
   - nextjs16
   - react19
@@ -491,6 +491,10 @@ notes, decks, grades; `avatarEmoji: ""` (reference default state).
 | AP-94 | HIGH | Task-dialog creates/updates 400'd: dialogs send `""` for cleared optional IDs, and Prisma's `idField.nullish()` rejects the empty string before the `""`→null transform | every nullable ID field hardens with a union-based atom (`z.union([z.literal(""), idField.nullish()]).transform(...)`), so the empty string means null at the schema boundary | taskSchema and siblings (session-55 re-verify) |
 | AP-95 | MEDIUM | Playwright's own server boot hung: a "killed" dev server still held :3000 — the actual process is `bun .next/standalone/server.js` (the repo start script), so `pkill -f "next start"` matches nothing | kill by PID or pattern-match the REAL process name; verify the port is actually free (`curl` 000) before letting the Playwright config boot its own server | session-55 |
 | AP-96 | HIGH | The shell hydration marker fired on the LOADING commit — before the auth gate resolved — so nav-svg probes raced the sidebar's first render | the two-layer gate: a STATUS-GATED `data-app-hydrated` on `<html>` that fires only when the authed shell actually renders, plus feature-specific markers (`data-calc-kb`) for raw-interaction specs; naive `--sf-primary` gates satisfy themselves at first paint (the boot script sets it pre-hydration) | shell page.tsx + calculator.spec (session-55 re-verify) |
+| AP-97 | HIGH | The RUM beacon NEVER fired in production: `document.cookie.includes("sf_session")` can never match — the session cookie is httpOnly, invisible to `document.cookie` — so the gate closed forever and every "green" s18 run was fed by other specs' POSTed batches | never gate client-side telemetry on an httpOnly cookie's JS visibility; the auth gating belongs at the MOUNT POINT (the shell renders the beacon only in its authed branch) | rum-beacon.tsx + s18 (session-56) |
+| AP-98 | MEDIUM | One shared tint utility collapsed TWO different light pins: `sf-today-tint` (violet-50, the S8-E timetable header) also served the calendar cell whose spec pins violet-100 — the chunk that introduced it never re-ran the S8 family | when two surfaces share a dark branch but pin different light values, ship sibling utilities over the same token family (`sf-today-cell-tint` light `--sf-primary-empty`, shared raw-rgb dark); a tint change must re-run every spec family that pins any consumer | globals.css utilities + S8-C/S8-E (session-56) |
+| AP-99 | HIGH | A fresh-clone re-verification contradicted the recorded final gates: committed SPECS survived the workspace resets while their implementation batch did not (the whole s17 family), and later hardening commits (the tint collapse, the S16 auth geometry) landed without re-running the chunks that pin their neighbors | the spec files are the authoritative pin source — after ANY reset, re-run the FULL suite from a fresh clone before trusting a "final gates" claim; a hardening commit's blast radius is the union of every spec that touches its surfaces | session-56 full sweep (301/301) |
+| AP-100 | LOW | Two fixed sleeps raced cold starts: s18's 3.5s beacon sleep and the skip-link's 400ms focus read both failed as the FIRST tests on a fresh server (hydration trails the fixed wait), yet passed warm | replace fixed sleeps that precede server-derived reads with bounded polls on the PINNED condition (assertions unchanged — only the wait strategy hardens) | s18 + accessibility S12-B (session-56) |
 
 ---
 
