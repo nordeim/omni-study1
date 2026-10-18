@@ -308,3 +308,61 @@ archived as nine `59-*.png` captures (both sides, all four surfaces).
 - S22 boot guard observed working live (refused an AUTH_SECRET-less
   production boot, then booted clean with one).
 - Still `main` only; `skills/` still excluded.
+
+---
+
+## Session 60 (continuation 11) — 7th workspace reset; full cold-start rebuild; drift coverage completed
+
+**Context.** The seventh reset wiped the workspace AND `/home/z/ssh-infra/`.
+Remote `main` survived at `82cbeb4` (the session-59 chain + the user-side
+`docs/session_6.md` transcript — no new asks). Re-cloned per the
+delegation and rebuilt everything from scratch.
+
+**Work log.**
+
+1. **Cold-start rebuild.** `npm ci` (install-scripts gated → explicit
+   `prisma generate`), `.env` recreated
+   (`DATABASE_URL="file:../db/custom.db"`), `db:push` + `db:seed`
+   (`db/custom.db`, demo account ready), Playwright chromium binary
+   re-downloaded (the wiped browser cache made the first chunk fail 150×
+   with "Executable doesn't exist" — infrastructure failure, not source
+   debt).
+2. **Push infrastructure rebuilt + hardened.** ed25519 key from the
+   delegation; paramiko shim re-authored with all three session-56 fixes
+   (`-o` value consumed, streamed stdin feed, `recv_ready()` polling).
+   Two new traps this time: (a) `pip` targeted the system Python 3.13
+   while `python3` is the uv venv 3.12 — paramiko must go in via
+   `python3 -m pip`; (b) the ed25519 fingerprint TYPED FROM MEMORY was
+   wrong (`…krUUvCO5E` vs the real `…kr4UvCOqU`) — fetched the
+   authoritative set from GitHub's docs page (the meta API rate-limited
+   again) and cached it. Lesson re-confirmed: NEVER trust remembered
+   fingerprints. `ls-remote` verified before any push.
+3. **All gates re-certified from scratch** (AP-99): lint ✓ tsc ✓ unit
+   **837/837** ✓ build ✓ (REAL_EXIT=0) · e2e cold: **151 + 95 + 55 =
+   301/301**.
+4. **One spec-hygiene hardening (cold-start race).** S8-G "notebook/tag
+   filters" counted the two combobox triggers immediately after the
+   theme-var `hydrated` gate — which covers the authed shell + theme but
+   NOT the Notes collection round-trip. On a cold server the triggers
+   mount a beat later (count 0 → flaky; passed 2-of-3 solo). Added
+   `combos.first().waitFor({ state: "visible" })` before the count —
+   assertions UNCHANGED (exactly two triggers, exact labels); 3/3 cold
+   green after.
+5. **Drift coverage completed** — the last three desktop surfaces,
+   reference vs clone at 1440×900: Notes, Flashcards, Calendar.
+   Calendar matches exactly (both render "October 2026"); Notes and
+   Flashcards match structurally (page identity, layout skeleton), with
+   content differences purely data-driven (seeded demo vs the
+   reference's empty account). No upstream drift. Six `60-*.png`
+   captures archived.
+
+**Stage summary.**
+
+- Gates on the fresh clone: lint ✓ tsc ✓ unit 837/837 e2e 301/301
+  build ✓ (REAL_EXIT) — everything re-verified, nothing trusted.
+- One flaky spec hardened (race removed, no assertion weakened).
+- Drift evidence now covers: mobile nav (58) + desktop
+  Dashboard/Tasks/Analytics/Settings (59) + desktop
+  Notes/Flashcards/Calendar (60) — ALL surfaces, ZERO drift.
+- Push infra: rebuilt with the venv-pip and fingerprint lessons; remote
+  `main` = local `main` after this entry. Still no branches.
