@@ -277,7 +277,7 @@ export function TimetableView() {
                       data-today-header={isTodayCol ? "" : undefined}
                       className={cn(
                         "border-l border-slate-100 p-3 text-center dark:border-slate-800",
-                        isTodayCol && "rounded-lg bg-[rgb(var(--sf-primary-softest))] dark:bg-sf-primary-soft-dark/30",
+                        isTodayCol && "rounded-lg sf-today-tint",
                       )}
                     >
                       <p className="text-sm font-medium text-slate-600 dark:text-slate-300">
@@ -381,7 +381,7 @@ export function TimetableView() {
                       onClick={() => setOpenDay(open ? null : col)}
                       className={cn(
                         "flex w-full items-center gap-3 rounded-xl p-3 text-left",
-                        isTodayCol && "bg-sf-primary-softest dark:bg-sf-primary-soft-dark/30",
+                        isTodayCol && "sf-today-tint",
                       )}
                     >
                       <span

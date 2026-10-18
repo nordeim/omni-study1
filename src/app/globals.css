@@ -464,7 +464,10 @@
 }
 
 @utility sf-today-tint {
-  background-color: rgb(var(--sf-primary-empty-from));
+  /* light: the violet-50 softest tint (S8-E header pin); dark: the raw rgb()
+     serializes as rgba(...) — the opacity-modifier utility form would emit
+     color-mix(in oklab) and break the rgb-serialization assertions. */
+  background-color: rgb(var(--sf-primary-softest));
   .dark & {
     background-color: rgb(var(--sf-primary-soft-dark) / 0.3);
   }

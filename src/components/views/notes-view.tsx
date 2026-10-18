@@ -332,6 +332,13 @@ export function NotesView() {
 
       {/* Right pane — BARE (no card wrapper) */}
       <div className="flex min-w-0 flex-1 flex-col" aria-label="Note editor pane">
+        {/* Mobile-only heading — the h1 lives in the desktop-only left pane
+            (hidden md:flex), so the drawer flow still finds a "Notes" heading
+            at 390px (S52-F) in EVERY notes-present state. Level 2 keeps the
+            desktop h1 count pin intact. */}
+        {notes.length > 0 && (
+          <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-100 md:hidden">Notes</h2>
+        )}
         {notes.length === 0 ? (
           <div className="sf-card flex flex-1 flex-col justify-center">
             <EmptyState
@@ -352,13 +359,6 @@ export function NotesView() {
           </div>
         ) : (
           <>
-            {/* Mobile-only heading — the h1 lives in the desktop-only left
-                pane (hidden md:flex), so the drawer flow still finds a "Notes"
-                heading at 390px (S52-F). Level 2 keeps the desktop h1 count
-                pin intact. */}
-            <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-100 md:hidden">
-              Notes
-            </h2>
             <div className="flex min-h-0 flex-1 flex-col">
             <div className="flex items-center gap-2">
               <Input
