@@ -526,3 +526,108 @@ doing so, extended the a11y-100 achievement from 2 surfaces to ALL 20.
 - Remaining honest debt (unchanged, documented in Batch R): the
   structural perf cost of the client-bundle (RSC conversion of the
   read-only views) — the one candidate the sweep cannot absorb.
+
+---
+
+## Session 63 (continuation 14) — the live-clock greeting fix + the 5-view reference drift sweep
+
+**Context.** The workspace was RESET an 8th time (fresh clone at
+`975e251`); the user's new `docs/session_9.md` is the session-62
+transcript — no new asks, its suggested next steps naming the RSC perf
+conversion "or simply periodic re-certification". With a full environment
+rebuild owed, this session executed the re-certification AND moved the
+drift matrix to the five views never compared against the live reference
+(MyDay, Events, Timetable, Assignments, Exams — s58 mobile, s59 four
+desktop views, s60 three more). The reference's evening clock (~19:00
+UTC) then exposed what 63 sessions of UTC-morning runs had masked.
+
+**Work log.**
+
+1. **Environment rebuild (8th recovery).** npm ci, prisma generate,
+   `.env` from `.env.example` + `db:push`/`db:seed`, production build,
+   chromium-1248 (npm ci had bumped Playwright past the cached
+   chromium-1200 — the S60 lesson, reproduced), and the SSH-infra venv
+   (paramiko 5.1.0; key fingerprint re-verified
+   `3ddaNlFhMz1J…U4PU`).
+2. **Independent re-certification of the received state.** lint ✓ tsc ✓
+   unit 837/837 ✓; the audit confirmed every s62 fix in place
+   (`sf-selected-tint` → `--sf-primary-strong`, the single Calculator
+   Tabs root, Family F, the s59 `AppUser.name` contract). E2E cold
+   326/326 (176+95+55) on the sixth consecutive session — after the
+   chromium rebuild; the first chunk-1 attempt died wholesale on the
+   missing browser binary (the "1 passed" mass failure decoded in one
+   step).
+3. **Family G — the greeting is time-of-day aware (T1).** The reference
+   at 19:08 rendered "Good evening, sepnetflix2023 👋" and its MyDay
+   zero-task state "Good evening!" (captured); the clone rendered "Good
+   morning, Demo 👋" at the same clock — both greeting sites fed
+   `greetingForHour` the day-anchor `startOfDay(new Date())` whose
+   `getHours()` is always 0, since the ORIGINAL implementation. Fixed
+   with `currentGreeting()` (live clock) + a new
+   `tests/e2e/greeting-clock.spec.ts` pinning all three dashboard
+   buckets and the MyDay evening empty state via `page.clock.setFixedTime`
+   — deterministic at any wall-clock hour (RED 3 → GREEN 5/5). Live
+   verified: "Good evening, Demo 👋" at 19:35.
+4. **The 5-view drift sweep, probe-verified.** Every finding was
+   measured on the live reference before fixing (the evidence set:
+   `63-ref-desktop-*.png` + three interactive probes — the Events
+   carousel step, the two selects' options, and a create-probe-delete
+   exam cycle for the count semantics; the reference account left
+   clean):
+   - **T2** Events CW: ISO 42 → the reference's US Sunday-start **43**
+     (carousel-verified via Sat → 42) — new `referenceWeekNumber()`.
+   - **T3** Events day headings "Tue, Oct 20" → "Tuesday, October 20".
+   - **T4** the Timetable grid misaligned weekday labels vs dates
+     ("Sunday 12" for a Monday; today-tint on the column labeled
+     "Saturday 18") — Monday-anchored `weekStart` under Sunday-first
+     labels; ONE root fix (Sunday-anchored week) aligned the range
+     ("Oct 18 - Oct 24"), every head date, the tint and the mobile
+     accordion's open day; storage `dayOfWeek` semantics untouched.
+   - **T5** three clone-invented subtitles replaced with measured copy
+     (Timetable "Manage your class schedule", Assignments "Track your
+     homework and projects", Exams **"<n> upcoming · <m> this week"**
+     live counts — semantics measured: upcoming = daysUntil ≥ 0, week
+     = ≤ 6).
+   - **T6** the Exams header gained the reference's **All Exams /
+     Upcoming / Past** status filter (default Upcoming; `aria-label` on
+     the TRIGGER per the Week-filter pattern).
+   - **T7** three-dot search placeholders.
+   Seven new pins RED-first (7 failed / 56 passed in their chunks) →
+   GREEN; the fixes are Batch T in the remediation plan.
+5. **Deferred with probes recorded** (Batch T tail): the Events
+   DAY-FOCUS carousel (‹ ○ › ∨ — CW + big date track the focused day),
+   the Timetable centered month/week banner, the Assignments
+   subject-filter select. Structural; the next session can implement
+   against the recorded facts.
+6. **A trap refined into lesson 9.** The "stale server" that kept
+   serving the OLD bundle through two rebuilds: Next renames the
+   standalone server's process title to `next-server (vNNN)`, so
+   `pkill -f "standalone/server.js"` silently matches NOTHING and the
+   new boots die EADDRINUSE in an unread log. `pkill -f next-server` /
+   kill by port-owner PID. (Remediation-plan Standing Lessons 9 refined
+   + 11/12 added: the day-anchor vs live-clock rule and the
+   fake-clock-pin rule; SKILL.md AP-105/AP-106.)
+7. **Verified.** lint ✓ tsc ✓ unit **842/842** (839 + the 3
+   `referenceWeekNumber` pins); build REAL_EXIT=0; full cold
+   re-certification **184 + 98 + 55 = 337/337** on the final bundle.
+   Live captures: `63-clone-desktop-{Events,Timetable,Assignments,
+   Exams}-fixed.png` + `63-clone-desktop-dashboard-evening-greeting.png`
+   + `63-clone-desktop-MyDay.png` vs the `63-ref-desktop-*.png` probe
+   set (12 captures). Docs: Batch T + Standing Lessons 9/11/12,
+   README Session-63 row, SKILL.md AP-105/106, AGENTS counts
+   (842/337 — the first count update since session-56).
+
+**Stage summary.**
+
+- One production-grade behavioral bug fixed (the frozen greeting — the
+  app's most visible string was wrong every afternoon and evening since
+  the original implementation) + one convention bug (the CW label) +
+  one layout-convention bug (the Timetable alignment) + the reference's
+  Exams status filter adopted; seven new permanent pins.
+- Gates: lint ✓ tsc ✓ unit **842/842** e2e **337/337** (184+98+55)
+  build ✓ — all on `main`, no branches; `skills/` still excluded.
+- Remaining honest debt: Batch R's structural perf (RSC conversion),
+  plus the three probed structural drifts recorded in Batch T's
+  deferred section (Events carousel, Timetable banner, Assignments
+  subject filter) — each with its measured behavior documented for the
+  next session.

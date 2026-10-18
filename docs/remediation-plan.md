@@ -209,6 +209,46 @@ with justification comments (the R1/R3 precedent) — every one a
 class-identical or one-step-darker deviation in the documented
 a11y-superset direction.
 
+### Batch T — Session-63: the live-clock greeting + the 5-view reference drift sweep (Events/Timetable/Assignments/Exams/MyDay)
+
+An 8th workspace reset forced a full environment rebuild (npm ci, prisma,
+`.env`+seed, build, chromium, the SSH-infra venv). After re-certifying all
+gates cold (the record now 326/326), the drift sweep moved to the five
+never-compared views — and found the reference account's clock state
+(~19:00 UTC) exposing a defect 63 sessions of UTC-morning runs had masked:
+the clone's greeting froze at "Good morning" while the reference rendered
+"Good evening" at the same wall clock. The same sweep re-measured five
+views against the live reference; every finding below was probe-verified
+on the reference (not inferred) before fixing.
+
+| # | Finding (reference-measured 2026-10-18) | Root cause | Fix | Guard |
+|---|---------|-----------|-----|-------|
+| T1 | The dashboard h1 + MyDay's zero-task amber heading read **"Good morning" at every hour**; the reference rendered "Good evening, sepnetflix2023 👋" (dashboard, 19:08) and **"Good evening!"** (MyDay empty state, 19:11) at the same clock | both call sites fed `greetingForHour` the DAY-ANCHOR `today = startOfDay(new Date())` — whose `getHours()` is always 0 — present since the original implementation (`7b1e78d`); the sandbox clock runs UTC and nearly every session ran in the UTC morning, so the frozen bucket looked correct | the views now call the new `currentGreeting()` (reads the LIVE clock); the day-anchor stays for day-relative logic where it belongs | `tests/e2e/greeting-clock.spec.ts` (Family G): `page.clock.setFixedTime` pins all three buckets on the dashboard h1 + the MyDay evening empty state — deterministic at any wall-clock hour; unit pins on `currentGreeting` incl. the startOfDay trap |
+| T2 | Events' **CW label reads ISO 8601 (42)**; the reference rendered **"CW 43"** on Sun 2026-10-18, and its header carousel stepped to Sat 10-17 → "CW 42" — the US week-of-year convention (Sunday-start, week 1 contains Jan 1) is the only rule producing both | the clone assumed ISO when it added the reference-matching label; ISO vs US only diverges across a Sunday, so mid-week probes never caught it | new `referenceWeekNumber()` in date.ts (documented, unit-pinned incl. the ref-measured pair); the Events panel uses it | Family G-adjacent pins in S5-B: "CW 43" clock-pinned at 2026-10-18 |
+| T3 | Events' day-group headings read **"Tue, Oct 20"**; the reference renders **"Tuesday, October 20"** (full weekday + full month) | the clone's `Intl.DateTimeFormat` used `weekday/month: "short"` | one-line format change | S5-B pin: the full-format heading |
+| T4 | **The Timetable grid misaligned weekday labels vs dates**: the header range read "Oct 12 - Oct 18" (Monday-start) while the columns rendered Sunday-first labels — "Sunday 12" for a Monday, and the today-tint landed on the column labeled "Saturday 18"; the reference's week is Sunday-start: "Oct 18 - Oct 24" with today FIRST | `weekStart` was Monday-anchored (`(getDay()+6)%7` back) while `DAY_NAMES[columnToIso(col)]` labels columns Sunday-first — two conventions meeting in one header; the mobile accordion's initial open day used the same ISO-index math | one root fix: Sunday-anchored `weekStart` (`today.getDay()` back) aligns range, dates, today-tint AND the mobile accordion; storage semantics (`dayOfWeek`, 0=Monday) untouched — class chips were always on the right columns | S5-J pin: clock-pinned "Oct 18 - Oct 24" + the Sunday head carrying "18" |
+| T5 | The three view subtitles were **clone-invented copy never pinned**: Timetable "Your weekly class schedule.", Assignments "Track your coursework and progress.", Exams "Your upcoming exams and assessments."; the reference reads "Manage your class schedule" / "Track your homework and projects" / **a live count "<n> upcoming · <m> this week"** ("0 · 0" probed on the empty account; create-a-probe-exam measured tomorrow → "1 upcoming · 1 this week") | invented copy from early sessions; no spec asserted it | subtitles replaced with the measured strings; the Exams subtitle computes live counts from the FULL list (upcoming = `daysUntil ≥ 0`, this week = `≤ 6`) | S5-J + S8-P pins on all three strings |
+| T6 | The Exams header had **no status filter**; the reference carries **All Exams / Upcoming / Past** (default Upcoming — probed by opening the control) | a functional gap the header-chrome pins never covered | a Select (radix, `aria-label="Exam filter"` on the TRIGGER per the Week-filter pattern) filtering `sorted` before search; the seeded 4-upcoming data keeps every existing exam pin green | S8-P pin: the three options + default |
+| T7 | The search placeholders used "…" or none; the reference uses three dots ("Search exams...", "Search assignments...") | cosmetic drift, unpinned | placeholder strings aligned (aria-labels untouched — the pins key on those) | covered by the S8-P subtitle test run |
+
+**Deferred with measured evidence** (structural, Batch-R-style honest
+debt): the reference's Events header is a DAY-FOCUS carousel (unnamed ‹ ○ ›
+∨ controls; the CW + big date track the focused day; the day list re-anchors
+to it) — a real interactive restructure, not a one-line alignment; the
+reference's Timetable carries a centered month/week banner ("October 2026 /
+Oct 18 - Oct 24") between header and grid; its Assignments header carries a
+second select (subject filter: "All Subjects" + dynamic subject options —
+empty on the current account). All three are recorded here with their
+probes so the next session can implement against facts, not guesses.
+
+**Verified:** the 7 new pins RED-first (7 failed / 56 passed in their
+chunks), then GREEN; full cold re-certification **184 + 98 + 55 =
+337/337**; lint ✓ tsc ✓ unit **842/842** ✓ (839 + the 3
+`referenceWeekNumber` pins); build REAL_EXIT=0 ✓; live screenshots
+`63-clone-desktop-{Events,Timetable,Assignments,Exams}-fixed.png` +
+`63-clone-desktop-dashboard-evening-greeting.png` vs the
+`63-ref-desktop-*.png` probe set.
+
 ## 3a. Verification (session-56 re-run, from a fresh clone)
 
 | Gate | Result |
@@ -265,6 +305,24 @@ auth+s18–s23 35/35 · s24–s26 18/18.
    failures consume budget.
 9. **Stale standalone servers hold ports** — the process is
    `bun .next/standalone/server.js`, not `next start`; kill by PID before
-   letting the Playwright config boot its own server.
+   letting the Playwright config boot its own server. (Session-63
+   refinement: Next RENAMES the process title to `next-server (vNNN)` —
+   `/proc/<pid>/cmdline` no longer contains the script path, so
+   `pkill -f "standalone/server.js"` silently matches nothing and the
+   stale server survives every cleanup while the new boot dies
+   EADDRINUSE in a log nobody reads; `pkill -f next-server` or kill by
+   the port-owner PID.)
 10. **Display phantoms are real** — stdout/Read can eat `[h`/`[m` byte
     sequences; verify with `od -c` before "fixing" corrupted-looking source.
+11. **A day-anchor is the right input for day-relative logic and the
+    WRONG input for time-of-day logic** — `startOfDay(new Date())` is the
+    correct "today" for due-date math and the wrong "now" for greeting
+    buckets: `getHours()` on it is always 0. Sixty-three sessions of
+    UTC-morning runs hid the frozen "Good morning". Related: when copying
+    a reference COMPUTATION (a week number, a count), measure the
+    reference's own convention first — the CW label was assumed ISO and
+    was wrong by one across every Sunday.
+12. **Time-dependent UI needs a fake-clock pin, not a wall-clock hope** —
+    `page.clock.setFixedTime` makes greeting buckets, week numbers and
+    date alignments deterministic at any hour; a pin that only fails at
+    certain wall-clock times is coverage roulette.
