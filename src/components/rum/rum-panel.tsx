@@ -17,6 +17,7 @@ import {
   buildPanelRows,
   buildSparklinePoints,
   type RumAggregate,
+  formatMetricValue,
 } from "@/lib/rum-diagnostics";
 import { useThemeStore, type AppUser } from "@/lib/store";
 import { cn } from "@/lib/utils";
@@ -67,6 +68,14 @@ export function RumPanel() {
     void load();
   }, [load]);
 
+  // Initial load on mount (the panel opens empty otherwise — the 30s
+  // interval alone leaves the first view on the loading line). The macrotask
+  // hop keeps the effect body free of synchronous setState (lint contract).
+  React.useEffect(() => {
+    const t = window.setTimeout(() => void load(), 0);
+    return () => window.clearTimeout(t);
+  }, [load]);
+
   // Optional ambient refresh — one interval, cleaned up.
   React.useEffect(() => {
     const id = window.setInterval(() => {
@@ -97,7 +106,7 @@ export function RumPanel() {
     <main className="mx-auto flex w-full max-w-5xl flex-col gap-6 p-6 pt-10">
       <header className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-slate-800 dark:text-slate-100">RUM diagnostics</h1>
+          <h1 className="text-2xl font-bold text-slate-800 dark:text-slate-100">Performance Diagnostics</h1>
           <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
             Field performance (p75) for your sessions.
           </p>
@@ -126,7 +135,11 @@ export function RumPanel() {
       {!rows ? (
         <p className="py-16 text-center text-sm text-slate-500">Loading the field metrics…</p>
       ) : (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div
+          role="region"
+          aria-label="Core Web Vitals at p75"
+          className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3"
+        >
           {rows.cards.map((card) => {
             const points = buildSparklinePoints(card.points, 100, 32);
             return (
@@ -177,6 +190,61 @@ export function RumPanel() {
             );
           })}
         </div>
+      )}
+
+      {rows && rows.recent.length > 0 && (
+        <section className="sf-card overflow-hidden" aria-label="Recent samples">
+          <h2 className="border-b border-slate-100 p-4 text-sm font-semibold text-slate-700 dark:border-slate-800 dark:text-slate-200">
+            Recent samples
+          </h2>
+          <div className="max-h-96 overflow-y-auto sf-scroll">
+            <table className="w-full text-left text-sm">
+              <thead>
+                <tr className="border-b border-slate-100 text-xs uppercase tracking-wider text-slate-400 dark:border-slate-800">
+                  <th className="px-4 py-2 font-medium">Metric</th>
+                  <th className="px-4 py-2 font-medium">Value</th>
+                  <th className="px-4 py-2 font-medium">Rating</th>
+                  <th className="px-4 py-2 font-medium">Path</th>
+                  <th className="px-4 py-2 font-medium">When</th>
+                </tr>
+              </thead>
+              <tbody>
+                {rows.recent.map((sample, i) => (
+                  <tr
+                    key={`${sample.sessionId}-${sample.metric}-${i}`}
+                    className="border-b border-slate-50 last:border-0 dark:border-slate-800/60"
+                  >
+                    <td className="px-4 py-2 font-mono text-xs font-semibold text-slate-700 dark:text-slate-200">
+                      {sample.metric}
+                    </td>
+                    <td className="px-4 py-2 tabular-nums text-slate-600 dark:text-slate-300">
+                      {formatMetricValue(sample.metric, sample.value)}
+                    </td>
+                    <td className="px-4 py-2">
+                      <span
+                        className={cn(
+                          "rounded-full px-2 py-0.5 text-xs font-medium",
+                          RATING_BADGE_CLASSES[sample.rating] ?? "bg-slate-100 text-slate-600",
+                        )}
+                      >
+                        {RATING_LABELS[sample.rating] ?? sample.rating}
+                      </span>
+                    </td>
+                    <td className="px-4 py-2 font-mono text-xs text-slate-500 dark:text-slate-400">
+                      {sample.path}
+                    </td>
+                    <td className="px-4 py-2 text-xs text-slate-400 dark:text-slate-500">
+                      {new Date(sample.createdAt).toLocaleTimeString("en-US", {
+                        hour: "numeric",
+                        minute: "2-digit",
+                      })}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
       )}
     </main>
   );
