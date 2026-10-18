@@ -179,7 +179,7 @@ export const POST = async (request: NextRequest) => {
         collection === "cards"
           ? { deck: { userId: user.id } }
           : { userId: user.id };
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+       
       const existing = await (db[model] as any).findMany({
         where,
         select: { id: true },
@@ -232,7 +232,7 @@ export const POST = async (request: NextRequest) => {
         const rows = parsed.get(collection);
         if (!rows || rows.length === 0) continue;
         const model = MODEL[collection] as keyof PrismaClient;
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+         
         const delegate = tx[model] as any;
         let c = 0;
         let u = 0;

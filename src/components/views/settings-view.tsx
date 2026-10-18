@@ -439,12 +439,12 @@ function EmailCard({ user, onEmailChanged }: { user: AppUser | null; onEmailChan
   };
 
   return (
-    <section className="sf-card p-6">
+    <section aria-label="Email address" className="sf-card p-6">
       <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-100">Email address</h3>
-      <p className="mt-1 text-sm text-slate-500">
-        The address you sign in with. Currently{" "}
+      <div className="mt-1 text-sm text-slate-500">
+        Update the address you use to sign in. Currently{" "}
         <span className="font-medium text-slate-700 dark:text-slate-200">{user?.email ?? "…"}</span>.
-      </p>
+      </div>
       <form className="mt-4 flex flex-col gap-3" onSubmit={(e) => void submit(e)}>
         <div className="flex flex-col gap-1.5">
           <Label htmlFor="new-email">New email</Label>
@@ -479,7 +479,7 @@ function EmailCard({ user, onEmailChanged }: { user: AppUser | null; onEmailChan
         <InlineError message={error} />
         <InlineStatus message={success} />
         <Button type="submit" variant="gradient" className="sf-gradient-shadow self-start" disabled={busy}>
-          {busy ? <Spinner className="size-4" /> : null} Update email
+          {busy ? <Spinner className="size-4" /> : null} Update email address
         </Button>
       </form>
     </section>
@@ -529,7 +529,7 @@ function PasswordCard() {
   };
 
   return (
-    <section className="sf-card p-6">
+    <section aria-label="Change password" className="sf-card p-6">
       <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-100">Change password</h3>
       <form className="mt-4 flex flex-col gap-3" onSubmit={(e) => void submit(e)}>
         <div className="flex flex-col gap-1.5">
@@ -604,7 +604,7 @@ function DangerZoneCard() {
   };
 
   return (
-    <section className="sf-card border-red-200 p-6 dark:border-red-900">
+    <section aria-label="Danger zone" className="sf-card border-red-200 p-6 dark:border-red-900">
       <h3 className="text-lg font-semibold text-red-600 dark:text-red-400">Danger zone</h3>
       <p className="mt-1 text-sm text-slate-500">
         Permanently delete your account and every study record in it. Consider downloading a backup
@@ -627,7 +627,7 @@ function DangerZoneCard() {
             />
           </div>
           <div className="flex flex-col gap-1.5">
-            <Label htmlFor="delete-confirmation">Type DELETE to confirm</Label>
+            <Label htmlFor="delete-confirmation">Confirmation</Label>
             <Input
               id="delete-confirmation"
               value={confirmation}
@@ -1081,6 +1081,7 @@ export function SettingsView() {
           <div className="mx-auto flex max-w-2xl flex-col gap-6">
             <section className="sf-card p-6">
               <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-100">Account</h3>
+              <p className="mt-1 text-sm text-slate-500">Your account and study information.</p>
               <p className="mt-2 text-sm text-slate-500">
                 {user ? (
                   <>

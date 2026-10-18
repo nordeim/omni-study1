@@ -7,7 +7,7 @@
 
 import { NextResponse, type NextRequest } from "next/server";
 
-import { checkRateLimit, verifyPassword } from "@/lib/auth";
+import { checkRateLimit, resetRateLimit, verifyPassword } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { loginSchema } from "@/lib/validation";
 import { clientIp, publicUser, setSessionCookie } from "@/lib/server/auth";
@@ -50,6 +50,11 @@ export async function POST(request: NextRequest) {
     if (!user.emailVerified) {
       return errorResponse(403, UNVERIFIED_COPY);
     }
+
+    // Successful sign-ins RESET the IP limiter (the documented progressive-
+    // throttling model — only FAILED attempts consume budget; a legitimate
+    // user's later logins must never inherit an attacker's spent bucket).
+    resetRateLimit(`login:${ip}`);
 
     return setSessionCookie(NextResponse.json({ user: publicUser(user) }), user.id, {
       secure: request.nextUrl.protocol === "https:",

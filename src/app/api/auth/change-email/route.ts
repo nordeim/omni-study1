@@ -58,7 +58,7 @@ export async function POST(request: NextRequest) {
       select: { id: true },
     });
     if (taken) {
-      return errorResponse(409, "That email address is already in use.");
+      return errorResponse(409, "An account with this email already exists. Use a different address.");
     }
 
     const updated = await db.user.update({
