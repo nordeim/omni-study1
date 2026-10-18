@@ -78,6 +78,24 @@ test.describe("S5-B · Events dark terminal panel", () => {
     await expect(page.getByText(/CW \d+/)).toBeVisible();
   });
 
+  // Session-63 drift finds (Batch T): the reference renders the CW in its
+  // OWN convention — US week-of-year, Sunday-start (Sun 2026-10-18 →
+  // "CW 43", carousel-verified; ISO says 42) — and its day-group headings
+  // use the full weekday-month format ("Tuesday, October 20", measured).
+  test("the CW label reads the reference's US Sunday-start week number", async ({ page }) => {
+    await page.clock.setFixedTime(new Date(2026, 9, 18, 12, 0, 0));
+    await page.goto("/Events");
+    await hydrated(page);
+    await expect(page.getByText("CW 43", { exact: true })).toBeVisible();
+  });
+
+  test("the day-group headings use the reference's full weekday-month format", async ({ page }) => {
+    await page.clock.setFixedTime(new Date(2026, 9, 18, 12, 0, 0));
+    await page.goto("/Events");
+    await hydrated(page);
+    await expect(page.getByRole("heading", { name: "Tuesday, October 20" })).toBeVisible();
+  });
+
   test("the New Event dialog carries the reference field set (location, repeat, reminders)", async ({ page }) => {
     await page.goto("/Events");
     await hydrated(page);
@@ -276,6 +294,29 @@ test.describe("S5-J · Timetable chrome", () => {
     ).toBeVisible();
     // My Classes renders the alternating-week badges (seeded).
     await expect(page.getByText(/Week A/).first()).toBeVisible();
+  });
+
+  // Session-63 drift find: the reference's week is SUNDAY-START (Sun
+  // 2026-10-18's week reads "Oct 18 - Oct 24" with today in the FIRST
+  // column); the clone rendered a Monday-start range (Oct 12 - Oct 18)
+  // under Sunday-first labels, misaligning every head's date by one day
+  // ("Sunday 12" for a Monday). The clock pin makes it deterministic.
+  test("the week grid aligns Sunday-first: today leads the range and the Sunday head carries today's date", async ({ page }) => {
+    await page.clock.setFixedTime(new Date(2026, 9, 18, 12, 0, 0));
+    await page.goto("/Timetable");
+    await hydrated(page);
+    await expect(page.getByText("Oct 18 - Oct 24")).toBeVisible();
+    const sunday = page.locator('[aria-label="Week header"] > div').nth(1); // first day head (after the time cell)
+    await expect(sunday.getByText("Sunday", { exact: true })).toBeVisible();
+    await expect(sunday.getByText("18", { exact: true })).toBeVisible();
+  });
+
+  // Session-63: the reference-measured subtitle (the invented
+  // "Your weekly class schedule." was never reference-measured).
+  test("the header subtitle reads the reference's measured copy", async ({ page }) => {
+    await page.goto("/Timetable");
+    await hydrated(page);
+    await expect(page.getByText("Manage your class schedule", { exact: true })).toBeVisible();
   });
 });
 

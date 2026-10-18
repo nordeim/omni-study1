@@ -31,7 +31,7 @@ import { Input } from "@/components/ui/input";
 import { useToast } from "@/components/ui/toast";
 import { mutations, useDataStore, type TaskRow } from "@/lib/data";
 import { formatWeekdayMonthDay, startOfDay } from "@/lib/date";
-import { greetingForHour } from "@/lib/router";
+import { currentGreeting } from "@/lib/router";
 import { cn } from "@/lib/utils";
 import { Spinner } from "@/components/views/shared";
 import {
@@ -124,7 +124,9 @@ export function MyDayView() {
 
   // The amber greeting empty (S9-B) replaces the whole view at zero tasks.
   if (!loading && tasks.length === 0) {
-    const bucket = greetingForHour(today.getHours()).replace("Good ", "").toLowerCase();
+    // LIVE clock, not the day-anchor `today` (hour 0) — same session-63
+    // drift find as the dashboard greeting; Family G pins the bucket.
+    const bucket = currentGreeting().replace("Good ", "").toLowerCase();
     return (
       <div className="flex flex-col items-center py-12 text-center">
         <div className="sf-amber-card flex size-20 items-center justify-center rounded-2xl">

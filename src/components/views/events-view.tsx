@@ -40,7 +40,7 @@ import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/components/ui/toast";
 import { EmptyState } from "@/components/views/shared";
 import { mutations, useDataStore, type EventInput, type EventRow } from "@/lib/data";
-import { addDays, isoWeekNumber, startOfDay } from "@/lib/date";
+import { addDays, referenceWeekNumber, startOfDay } from "@/lib/date";
 import { apiSend, ApiError } from "@/lib/api";
 import { cn } from "@/lib/utils";
 
@@ -200,9 +200,11 @@ export function EventsView() {
   const dayLabel = (day: Date, index: number) => {
     if (index === 0) return "Today";
     if (index === 1) return "Tomorrow";
+    // The reference's measured format: full weekday + full month
+    // ("Tuesday, October 20" — session-63 Batch T).
     return new Intl.DateTimeFormat("en-US", {
-      weekday: "short",
-      month: "short",
+      weekday: "long",
+      month: "long",
       day: "numeric",
     }).format(day);
   };
@@ -258,7 +260,10 @@ export function EventsView() {
             </div>
             <div className="flex items-center gap-4">
               <span className="text-sm font-medium text-cyan-400">
-                CW {isoWeekNumber(new Date())}
+                {/* the reference's OWN week convention — US Sunday-start
+                    (measured CW 43 on Sun 2026-10-18 where ISO reads 42;
+                    session-63 Batch T). */}
+                CW {referenceWeekNumber(new Date())}
               </span>
               <button
                 type="button"

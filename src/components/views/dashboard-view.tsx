@@ -31,7 +31,7 @@ import {
   isSameDay,
   startOfDay,
 } from "@/lib/date";
-import { greetingForHour } from "@/lib/router";
+import { currentGreeting } from "@/lib/router";
 import { Button } from "@/components/ui/button";
 import { useAppStore, useThemeStore } from "@/lib/store";
 import {
@@ -118,7 +118,10 @@ export function DashboardView() {
       <header className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h1 className="text-3xl font-bold text-slate-800 dark:text-slate-100">
-            {greetingForHour(today.getHours())}, {firstNameOf(userName)} 👋
+            {/* the greeting reads the LIVE clock (reference parity — a
+                midnight-anchored `today` froze it at "Good morning";
+                Family G pins the bucket with a fake clock). */}
+            {currentGreeting()}, {firstNameOf(userName)} 👋
           </h1>
           <p className="mt-1 text-base text-slate-500 dark:text-slate-400">
             {formatLongDateWithWeekday(today)}

@@ -15,6 +15,7 @@ import {
   minutesToHHMM,
   monthGrid,
   parseHHMM,
+  referenceWeekNumber,
   startOfDay,
 } from "@/lib/date";
 
@@ -28,6 +29,29 @@ describe("isoWeekNumber", () => {
     // Mon Oct 5 and Sun Oct 11 2026 share week 41.
     expect(isoWeekNumber(new Date(2026, 9, 5))).toBe(41);
     expect(isoWeekNumber(new Date(2026, 9, 11))).toBe(41);
+  });
+});
+
+describe("referenceWeekNumber (the Events panel's CW, session-63)", () => {
+  // The reference's CW is NOT ISO 8601: measured on the live reference,
+  // Sunday 2026-10-18 rendered "CW 43" (ISO says 42) and stepping the
+  // carousel back to Saturday 2026-10-17 rendered "CW 42". The convention
+  // that produces both values: US week-of-year — weeks start SUNDAY and
+  // week 1 is the week containing Jan 1.
+  it("reads one ahead of ISO on Sunday-dated views (the ref-measured values)", () => {
+    expect(referenceWeekNumber(new Date(2026, 9, 18))).toBe(43); // Sun — ref: CW 43
+    expect(referenceWeekNumber(new Date(2026, 9, 17))).toBe(42); // Sat — ref: CW 42
+    expect(isoWeekNumber(new Date(2026, 9, 18))).toBe(42); // the old label, wrong
+  });
+  it("keeps the US week-1 rule: week 1 is the week containing Jan 1 of the date's own year", () => {
+    expect(referenceWeekNumber(new Date(2026, 0, 1))).toBe(1); // Jan 1 2026 (Thu)
+    expect(referenceWeekNumber(new Date(2026, 0, 3))).toBe(1); // its week's Saturday
+    expect(referenceWeekNumber(new Date(2026, 11, 28))).toBe(53); // the year's 53rd week
+  });
+  it("agrees with ISO mid-week (the divergence only shows across a Sunday)", () => {
+    // Wed Oct 14: both conventions count the same week ordinal.
+    expect(referenceWeekNumber(new Date(2026, 9, 14))).toBe(42);
+    expect(isoWeekNumber(new Date(2026, 9, 14))).toBe(42);
   });
 });
 

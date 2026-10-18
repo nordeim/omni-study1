@@ -57,6 +57,26 @@ export function isoWeekNumber(date: Date): number {
   return Math.round((d.getTime() - week1.getTime()) / (7 * 86_400_000)) + 1;
 }
 
+/**
+ * The reference's calendar-week convention (the Events panel's "CW <n>"):
+ * US week-of-year — weeks start SUNDAY and week 1 is the week containing
+ * Jan 1 of the date's own year. Measured on the live reference
+ * (session-63): Sunday 2026-10-18 rendered "CW 43" (ISO says 42) and the
+ * carousel's Saturday 2026-10-17 rendered "CW 42" — only this rule
+ * produces both values. The Events panel must use THIS, not
+ * {@link isoWeekNumber}; mid-week the two agree, across a Sunday they
+ * drift by one.
+ */
+export function referenceWeekNumber(date: Date): number {
+  const d = startOfDay(date);
+  // This week's Sunday (getDay(): 0 = Sunday).
+  const weekStart = addDays(d, -d.getDay());
+  const jan1 = new Date(d.getFullYear(), 0, 1);
+  // Week 1's Sunday (the Sunday on or before Jan 1).
+  const week1Start = addDays(startOfDay(jan1), -jan1.getDay());
+  return Math.round((weekStart.getTime() - week1Start.getTime()) / (7 * 86_400_000)) + 1;
+}
+
 export type MonthCell = { date: Date; inMonth: boolean };
 
 /**

@@ -73,12 +73,18 @@ export function TimetableView() {
   const { toast } = useToast();
 
   const today = startOfDay(new Date());
-  // The week containing today, Monday-first.
-  const mondayOffset = (today.getDay() + 6) % 7;
-  const [weekStart, setWeekStart] = React.useState(() => addDays(today, -mondayOffset));
+  // The week containing today, SUNDAY-first (session-63 Batch T: the
+  // reference's week runs Sun→Sat — "Oct 18 - Oct 24" with today in the
+  // FIRST column). The old Monday-first range under Sunday-first labels
+  // misaligned every head's date by one day ("Sunday 12" for a Monday).
+  const sundayOffset = today.getDay();
+  const [weekStart, setWeekStart] = React.useState(() => addDays(today, -sundayOffset));
   const [weekType, setWeekType] = React.useState<"ALL" | "A" | "B">("ALL");
   const [builder, setBuilder] = React.useState(false);
-  const [openDay, setOpenDay] = React.useState<number | null>((today.getDay() + 6) % 7);
+  // The mobile accordion opens on today's COLUMN (Sunday-first display:
+  // column === getDay()). The old ISO-index math pointed one column off
+  // under the Sunday-first heads — part of the session-63 misalignment.
+  const [openDay, setOpenDay] = React.useState<number | null>(today.getDay());
   const [dialog, setDialog] = React.useState<{ open: boolean; editing: TimetableClassRow | null }>({
     open: false,
     editing: null,
@@ -193,7 +199,7 @@ export function TimetableView() {
             Timetable
           </h1>
           <p className="mt-1 text-base text-slate-500 dark:text-slate-400">
-            Your weekly class schedule.
+            Manage your class schedule
           </p>
         </div>
         <div className="flex items-center gap-2">

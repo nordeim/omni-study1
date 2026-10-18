@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { NAV_ITEMS, greetingForHour, pathForView, viewFromPath, VIEWS } from "@/lib/router";
+import { NAV_ITEMS, currentGreeting, greetingForHour, pathForView, viewFromPath, VIEWS } from "@/lib/router";
+import { startOfDay } from "@/lib/date";
 
 describe("viewFromPath", () => {
   it("maps every canonical PascalCase path to its view id", () => {
@@ -69,5 +70,32 @@ describe("greetingForHour", () => {
     for (let h = 0; h < 24; h++) {
       expect(greetingForHour(h)).not.toBe("Good night");
     }
+  });
+});
+
+describe("currentGreeting (the live-clock greeting — session-63)", () => {
+  // The reference renders the greeting from the CURRENT wall clock
+  // ("Good evening, …" captured at 19:08 local —
+  // docs/screenshots/63-ref-desktop-dashboard-evening-greeting.png).
+  // The clone rendered "Good morning" at every hour because the view call
+  // sites fed greetingForHour a midnight-anchored `today` whose
+  // getHours() is always 0. currentGreeting is the correct seam: it reads
+  // the hour of the date it is handed, and the views must hand it the
+  // LIVE clock — never the day-anchor.
+  it("reads the hour of the given date across all three buckets", () => {
+    expect(currentGreeting(new Date(2026, 9, 19, 0))).toBe("Good morning");
+    expect(currentGreeting(new Date(2026, 9, 19, 8))).toBe("Good morning");
+    expect(currentGreeting(new Date(2026, 9, 19, 11))).toBe("Good morning");
+    expect(currentGreeting(new Date(2026, 9, 19, 12))).toBe("Good afternoon");
+    expect(currentGreeting(new Date(2026, 9, 19, 16))).toBe("Good afternoon");
+    expect(currentGreeting(new Date(2026, 9, 19, 17))).toBe("Good evening");
+    expect(currentGreeting(new Date(2026, 9, 19, 19))).toBe("Good evening");
+    expect(currentGreeting(new Date(2026, 9, 19, 23))).toBe("Good evening");
+  });
+
+  it("documents the trap: a startOfDay anchor reads hour 0, i.e. 'Good morning' at any wall-clock hour", () => {
+    const evening = new Date(2026, 9, 19, 19, 8);
+    expect(currentGreeting(startOfDay(evening))).toBe("Good morning");
+    expect(currentGreeting(evening)).toBe("Good evening");
   });
 });

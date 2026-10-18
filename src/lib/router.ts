@@ -97,3 +97,12 @@ export function greetingForHour(hour: number): string {
   if (hour <= 16) return "Good afternoon";
   return "Good evening";
 }
+
+/** The greeting the reference renders: the CURRENT wall-clock hour's
+ *  bucket. Call sites must hand this the live clock (`currentGreeting()`),
+ *  never a day-anchored date — `startOfDay(new Date()).getHours()` is
+ *  always 0, which froze the clone's greeting at "Good morning" around the
+ *  clock (session-63 drift find; Family G pins it with a fake clock). */
+export function currentGreeting(now: Date = new Date()): string {
+  return greetingForHour(now.getHours());
+}

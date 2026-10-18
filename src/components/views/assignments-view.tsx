@@ -172,7 +172,9 @@ export function AssignmentsView() {
             Assignments
           </h1>
           <p className="mt-1 text-base text-slate-500 dark:text-slate-400">
-            Track your coursework and progress.
+            {/* the reference's measured subtitle (session-63 Batch T — the
+                invented "Track your coursework and progress." replaced). */}
+            Track your homework and projects
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -184,7 +186,7 @@ export function AssignmentsView() {
             />
             <Input
               aria-label="Search assignments"
-              placeholder="Search assignments…"
+              placeholder="Search assignments..."
               className="h-9 w-48 pl-9"
               value={search}
               onChange={(e) => setSearch(e.target.value)}

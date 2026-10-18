@@ -606,6 +606,37 @@ test.describe("S8-P · Search icons + exam card", () => {
     await expect(wrap.locator("svg.lucide-search")).toHaveCount(1);
   });
 
+  // Session-63 drift finds (Batch T, re-measured 2026-10-18): the
+  // reference's Exams header carries a LIVE-COUNT subtitle ("<n> upcoming
+  // · <m> this week" — "0 · 0" on its empty account; the clone's seed has
+  // 4 upcoming of which 3 fall inside the +6-day window) and an
+  // All Exams/Upcoming/Past status filter defaulting to Upcoming; the
+  // Assignments subtitle is "Track your homework and projects" — the old
+  // strings were clone-invented and never pinned.
+  test("the exams header reads the reference's live-count subtitle", async ({ page }) => {
+    await page.goto("/Exams");
+    await hydrated(page);
+    await expect(page.getByText("4 upcoming · 3 this week")).toBeVisible();
+  });
+
+  test("the exams header carries the reference's status filter (default Upcoming)", async ({ page }) => {
+    await page.goto("/Exams");
+    await hydrated(page);
+    const filter = page.getByRole("combobox", { name: "Exam filter" });
+    await expect(filter).toBeVisible();
+    await filter.click();
+    await expect(page.getByRole("option", { name: "All Exams" })).toBeVisible();
+    await expect(page.getByRole("option", { name: "Upcoming", exact: true })).toBeVisible();
+    await expect(page.getByRole("option", { name: "Past", exact: true })).toBeVisible();
+    await page.keyboard.press("Escape");
+  });
+
+  test("the assignments header subtitle reads the reference's measured copy", async ({ page }) => {
+    await page.goto("/Assignments");
+    await hydrated(page);
+    await expect(page.getByText("Track your homework and projects", { exact: true })).toBeVisible();
+  });
+
   test("exams search input has the inline search icon", async ({ page }) => {
     await page.goto("/Exams");
     await hydrated(page);

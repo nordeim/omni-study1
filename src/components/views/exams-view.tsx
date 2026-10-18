@@ -69,6 +69,9 @@ export function ExamsView() {
     editing: null,
   });
   const [search, setSearch] = React.useState("");
+  // The reference's status filter (measured 2026-10-18, session-63):
+  // All Exams / Upcoming / Past, defaulting to Upcoming.
+  const [statusFilter, setStatusFilter] = React.useState<"all" | "upcoming" | "past">("upcoming");
   const [form, setForm] = React.useState({
     title: "",
     date: "",
@@ -81,9 +84,30 @@ export function ExamsView() {
   const [busy, setBusy] = React.useState(false);
   const [error, setError] = React.useState("");
 
+  // The subtitle's live counts read the FULL list (the reference reported
+  // "0 upcoming · 0 this week" while its Upcoming filter was active).
+  const counts = React.useMemo(() => {
+    let upcoming = 0;
+    let week = 0;
+    for (const e of exams) {
+      const diff = daysUntil(new Date(e.date), new Date());
+      if (diff >= 0) {
+        upcoming += 1;
+        if (diff <= 6) week += 1;
+      }
+    }
+    return { upcoming, week };
+  }, [exams]);
+
   const sorted = React.useMemo(
     () =>
       [...exams]
+        .filter((e) => {
+          const diff = daysUntil(new Date(e.date), new Date());
+          if (statusFilter === "upcoming") return diff >= 0;
+          if (statusFilter === "past") return diff < 0;
+          return true;
+        })
         .filter((e) => {
           const q = search.trim().toLowerCase();
           return q ? e.title.toLowerCase().includes(q) : true;
@@ -91,7 +115,7 @@ export function ExamsView() {
         .sort(
           (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime(),
         ),
-    [exams, search],
+    [exams, search, statusFilter],
   );
 
   const subjectOf = (id: string | null) => subjects.find((s) => s.id === id) ?? null;
@@ -175,7 +199,9 @@ export function ExamsView() {
         <div>
           <h1 className="text-2xl font-bold text-slate-800 dark:text-slate-100">Exams</h1>
           <p className="mt-1 text-base text-slate-500 dark:text-slate-400">
-            Your upcoming exams and assessments.
+            {/* the reference's live-count subtitle (measured on its empty
+                account: "0 upcoming · 0 this week" — session-63 Batch T). */}
+            {counts.upcoming} upcoming · {counts.week} this week
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -187,12 +213,25 @@ export function ExamsView() {
             />
             <Input
               aria-label="Search exams"
-              placeholder="Search exams…"
+              placeholder="Search exams..."
               className="h-9 w-48 pl-9"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />
           </div>
+          <Select
+            value={statusFilter}
+            onValueChange={(v) => setStatusFilter(v as "all" | "upcoming" | "past")}
+          >
+            <SelectTrigger aria-label="Exam filter" className="h-9 w-[130px]">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Exams</SelectItem>
+              <SelectItem value="upcoming">Upcoming</SelectItem>
+              <SelectItem value="past">Past</SelectItem>
+            </SelectContent>
+          </Select>
           <Button type="button" variant="gradient" className="sf-gradient-shadow" onClick={openCreate}>
             <Plus className="size-4" strokeWidth={2} />
             Add Exam
