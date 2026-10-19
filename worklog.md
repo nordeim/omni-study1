@@ -893,3 +893,100 @@ gap TDD-style.
 - Remaining honest debt: Batch R's structural perf (RSC conversion) —
   the clone already outperforms the live reference on the CWV evidence
   (183–297KB vs 771KB JS; ref login-mobile LCP POOR 9452ms).
+
+---
+
+## Session 67 (continuation 18) — the 11th workspace reset; the brand-header typography drift (Batch X) + the mobile-nav probe-resolution lesson
+
+**Context.** The workspace was reset an 11th time (everything under
+`/home/z/my-project` wiped — repo, ssh-infra, playwright cache). The
+user's `docs/session_13.md` is the s66 transcript — no new asks; its
+suggested next step = repeat the gate+re-sweep rhythm (or Batch R).
+This cycle: rebuild the environment from scratch, re-certify the
+received state, re-sweep the reference, deep-dive the user-flagged
+mobile navigation.
+
+**Work log.**
+
+1. **Environment rebuilt from zero.** Fresh clone at `bb729e4` (the
+   s66 docs commit); `bun install` (489 pkgs); paramiko 5.1.0 +
+   chromium-1243; the paramiko ssh shim re-extracted BYTE-EXACT from
+   the how-to doc's Appendix A into `/home/z/ssh-infra/ssh` (shebang →
+   the venv python) — `ls-remote` pre-flight green against the SSH
+   remote; `.env` restored from `.env.example` (dev posture,
+   `AUTH_SECRET=""`); `db/custom.db` pushed + seeded; build
+   REAL_EXIT=0.
+2. **Independent re-certification of the received state.** lint ✓
+   tsc ✓ unit **842/842** ✓; e2e cold across all 30 spec files in a
+   re-derived 3-chunk/5-sub-run map (chunk 1 split a/b/c to stay under
+   the shell timeout, no day boundary crossed between sub-runs):
+   **64 + 85 + 91 + 56 + 58 = 354/354** zero flakes, zero retries —
+   chunk 2's register spend 9/10 (the AP-110 census re-verified: s9=2
+   call sites, s17=7 after the W merge).
+3. **The reference re-sweep (s66 probe class, s67 tag).**
+   `scripts/ref-resweep-s67.mjs` — **18/18 invariants green** (9 ref +
+   9 clone): the reference UNCHANGED since s65 on every measured
+   dimension; the clone matching everywhere incl. the Batch-W Events
+   zero state. Generic mobile-drawer probe fails identically on both
+   sites (documented heuristic weakness).
+4. **The mobile-nav deep-dive (user-flagged surface).** The generic
+   probe's failure root-caused with a diagnostic probe: the reference
+   hamburger is an UNLABELED icon button (`aria-label` absent) in a
+   fixed glass header, and its drawer mounts neither `role="dialog"`
+   nor `data-state` — the clone's "Open navigation menu" aria-labels
+   and Radix-style dialog semantics are the documented a11y superset.
+   A REAL Playwright click opens the reference drawer fine (screenshot
+   `67-ref-mobile-drawer-open.png`); the probe's own selectors were
+   the weakness. Tailwind v4 trap check: no `color-mix` serialization
+   on either site's drawer surfaces.
+5. **The brand-header drift found + measured.** Side-by-side drawer
+   screenshots exposed a wrap difference: the clone's "Your study
+   companion" subtitle broke onto TWO lines. Escalated to a
+   TreeWalker node dump (`brand-node-dump-s67.mjs` — every matching
+   text node with computed styles + DOM path + class string):
+   reference desktop brand = `h1.text-lg` (18/28), app-bar brand =
+   `span` text-base (16/24), drawer = text-base/text-xs. Clone had
+   `text-lg leading-tight` on the desktop title (right size, crushed
+   lh 22.5 vs 28), `text-xs leading-tight` subtitle (15 vs 16), and
+   text-lg/text-sm on the mobile surfaces (18/22.5 + 14/wrapped where
+   the reference renders 16/24 + 12/one-line). An earlier probe's
+   16px desktop read was a MIS-MEASUREMENT (unscoped `.pop()` of a
+   two-node query) — caught by probe-vs-probe disagreement BEFORE
+   pinning, resolved by the node dump (AP-111).
+6. **TDD Batch X.** S3-H (desktop sidebar brand typography) + S3-I
+   (drawer brand typography incl. the single-line subtitle box +
+   app-bar brand as part 1) written RED — the S3-G name collision
+   with the existing Start-My-Day CTA pin caught during RED and
+   renamed. GREEN: size+lh corrected on all three surfaces
+   (`mobile-chrome.tsx` drawer + app bar, `sidebar.tsx`) — every
+   value byte-equal to the node dump. Affected files re-run green.
+7. **Verified.** lint ✓ tsc ✓ unit **842/842** ✓; build REAL_EXIT=0
+   (fresh bundle); full cold re-certification **64 + 86 + 92 + 56 +
+   58 = 356/356** on fresh servers (the earlier 85/1b read was a
+   tail-truncation artifact — re-run measured 86); the node dump
+   re-run post-fix shows clone == reference on every surface; the
+   fixed drawer captured (`67-clone-drawer-brand-fixed.png`).
+   Captures: `67-ref-*` ×7 desktop + `67-clone-*` ×7 desktop + mobile
+   pairs + drawer-open + brand-fixed + diagnostics (21 files).
+   Probe scripts: `ref-resweep-s67.mjs`, `mobile-nav-compare-s67.mjs`,
+   `ref-mobile-diag-s67.mjs`, `drawer-brand-compare-s67.mjs`,
+   `sidebar-brand-compare-s67.mjs`, `brand-node-dump-s67.mjs`,
+   `captures-s67-final.mjs`. Docs: Batch X in the remediation plan,
+   README Session-67 row, SKILL.md AP-111, AGENTS counts (842/356).
+
+**Stage summary.**
+
+- The reference remains UNCHANGED since s65; the one new gap (the
+  brand-header typography across sidebar + app bar + drawer — found by
+  the mobile-nav deep-dive the user keeps flagging) fixed TDD-style
+  with two permanent pins (S3-H, S3-I).
+- Gates: lint ✓ tsc ✓ unit **842/842** e2e **356/356**
+  (64+86+92+56+58) build ✓ — all on `main`, no branches; `skills/`
+  still excluded.
+- New AP-111: when probes disagree, dump ALL candidate nodes with DOM
+  paths and pin from the path-identified node — never from an
+  unscoped `.pop()`; a mis-measurement caught pre-landing (AP-108)
+  never becomes a pin.
+- Remaining honest debt: Batch R's structural perf (RSC conversion) —
+  the s65 CWV evidence still stands (clone 183–297KB JS / LCP GOOD
+  everywhere vs reference 771KB JS / login-mobile LCP POOR 9452ms).

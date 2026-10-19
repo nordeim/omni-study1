@@ -24,7 +24,12 @@ test.describe("mobile navigation", () => {
     await expect(bar).toHaveCSS("background-color", "rgba(255, 255, 255, 0.8)");
     await expect(bar).toHaveCSS("backdrop-filter", /blur\(20px\)/);
     await expect(bar.getByRole("button", { name: "Open navigation menu" })).toBeVisible();
-    await expect(bar.getByText("StudyFlow", { exact: true })).toBeVisible();
+    // S3-I part 1 (session-67 node dump): the app-bar brand span is
+    // text-base — 16px/24px; the clone's text-lg read 18px/28px here.
+    const barBrand = bar.getByText("StudyFlow", { exact: true });
+    await expect(barBrand).toBeVisible();
+    await expect(barBrand).toHaveCSS("font-size", "16px");
+    await expect(barBrand).toHaveCSS("line-height", "24px");
     // The header clock renders the reference's 2-digit-hour 12-hour format.
     await expect(bar.getByText(/^\d{2}:\d{2} (AM|PM)$/, { exact: true })).toBeVisible();
   });
@@ -116,6 +121,32 @@ test.describe("mobile navigation", () => {
     // The reference drawer has NO footer section (brand header + nav only).
     await expect(panel.locator("footer, [data-testid=drawer-footer]")).toHaveCount(0);
     await expect(panel.getByText(/@/)).toHaveCount(0);
+  });
+
+  test("the drawer brand header typography matches the measured reference (S3-I pin)", async ({ page }) => {
+    // Reference (measured 390×844, session-67): drawer brand title 16px
+    // bold / 24px line-height (text-base defaults), subtitle 12px / 16px
+    // (text-xs defaults) — the subtitle fits ONE line in the 288px panel.
+    // The clone shipped text-lg (18px) + text-sm (14px), which read
+    // visibly larger and wrapped the subtitle to two lines. (S3-I; the
+    // S3-H sibling pins the desktop sidebar brand header.)
+    await page.getByRole("button", { name: "Open navigation menu" }).tap();
+    const dialog = page.getByRole("dialog");
+    await expect(dialog).toBeVisible();
+
+    const title = dialog.getByText("StudyFlow", { exact: true });
+    await expect(title).toBeVisible();
+    await expect(title).toHaveCSS("font-size", "16px");
+    await expect(title).toHaveCSS("font-weight", "700");
+    await expect(title).toHaveCSS("line-height", "24px");
+
+    const subtitle = dialog.getByText("Your study companion", { exact: true });
+    await expect(subtitle).toBeVisible();
+    await expect(subtitle).toHaveCSS("font-size", "12px");
+    await expect(subtitle).toHaveCSS("line-height", "16px");
+    // ONE line at 16px lh — the reference never wraps (two lines ≈ 32px).
+    const subBox = await subtitle.boundingBox();
+    expect(subBox?.height ?? 0).toBeLessThan(20);
   });
 
   test("drawer links navigate and the drawer closes", async ({ page }) => {

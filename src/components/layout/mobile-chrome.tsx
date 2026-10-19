@@ -88,7 +88,7 @@ export function MobileChrome() {
           >
             <GraduationCap className="h-4 w-4" strokeWidth={2} />
           </span>
-          <span className="text-lg font-bold text-slate-800 dark:text-slate-100">
+          <span className="text-base font-bold text-slate-800 dark:text-slate-100">
             StudyFlow
           </span>
         </div>
@@ -124,10 +124,10 @@ export function MobileChrome() {
                   <GraduationCap className="h-5 w-5" strokeWidth={2} />
                 </span>
                 <div>
-                  <p className="text-lg font-bold leading-tight text-slate-800 dark:text-slate-100">
+                  <p className="text-base font-bold text-slate-800 dark:text-slate-100">
                     StudyFlow
                   </p>
-                  <p className="text-sm text-slate-500 dark:text-slate-400">
+                  <p className="text-xs text-slate-500 dark:text-slate-400">
                     Your study companion
                   </p>
                 </div>

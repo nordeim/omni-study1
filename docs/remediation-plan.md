@@ -366,6 +366,56 @@ the W family merged into ONE test/ONE registration — chunk 2 now spends
 comment. Never design a suite to exactly exhaust a shared time-windowed
 budget.
 
+### Batch X — Session-67: the brand-header typography drift (sidebar + app bar + drawer) found by the mobile-nav deep-dive
+
+The 11th workspace reset forced a full environment rebuild (fresh clone
+`bb729e4`, deps, chromium-1243, paramiko shim re-extracted from the
+how-to doc's Appendix A). Cycle rhythm: gates re-certified cold on the
+received state (354/354 + 842/842 — the chunk map re-derived as
+5 sub-runs under the register-budget rule), the s66 invariants re-sweep
+came back **18/18 green** (reference unchanged, clone matching), and
+the user-flagged mobile-navigation surface got a PRECISE probe (the
+generic sweep probe fails identically on both sites because the
+reference's hamburger is an UNLABELED icon button and its drawer mounts
+neither `role="dialog"` nor `data-state` — the clone's aria-labels are
+the documented a11y superset). Visual comparison of the two drawers
+then exposed a wrap difference: the clone's drawer subtitle
+("Your study companion") broke onto two lines where the reference kept
+one. Measurement escalated to a node dump (TreeWalker over text nodes +
+computed styles + DOM paths), which settled the truth table:
+
+| Surface | Reference (measured s67) | Clone before | Clone after |
+|---|---|---|---|
+| Desktop sidebar title | `h1.text-lg` → **18px/28px**/700 | `text-lg leading-tight` → 18px/**22.5px** (lh drift) | `text-lg` (v4 default lh 28) |
+| Desktop sidebar subtitle | **12px/16px** | `text-xs leading-tight` → 12px/**15px** | `text-xs` (16) |
+| App-bar brand span (mobile) | **16px/24px**/700 (`span.font-bold` = text-base) | `text-lg` → 18px/28px | `text-base` |
+| Drawer brand title (mobile) | **16px/24px**/700 | `text-lg leading-tight` → 18px/22.5px | `text-base` (24) |
+| Drawer subtitle (mobile) | **12px/16px**, ONE line | `text-sm` → 14px/**wrapped 2 lines** | `text-xs` (one line) |
+
+| # | Finding | Root cause | Fix | Guard |
+|---|---------|-----------|-----|-------|
+| X1 | Drawer subtitle wrapped to 2 lines; drawer/app-bar titles read visibly larger than the reference | `text-lg`/`text-sm` shipped where the reference renders `text-base`/`text-xs` on the mobile surfaces; `leading-tight` crushed the desktop lh (22.5/15 vs the reference's v4-default 28/16) | size+lh corrected on all three surfaces (mobile-chrome.tsx drawer + app bar, sidebar.tsx) — every value now byte-equal to the node-dump measurements | **S3-I** (drawer title 16/24 + subtitle 12/16 + single-line box <20px; app-bar brand 16/24 as part 1) + **S3-H** (sidebar title 18/28 + subtitle 12/16) |
+
+**The probe-agreement lesson (AP-111).** Two runs of the same probe
+class measured the reference's desktop brand title 16px then 18px. The
+resolution — a TreeWalker node dump capturing EVERY matching text node
+with computed styles + DOM path + class string — found the reference's
+own two brand nodes (`h1.text-lg` desktop 18/28, `span` app-bar 16/24)
+and proved the 16px desktop read had grabbed the wrong node. Rule: when
+two probes disagree, do not average or re-run hoping for stability —
+dump ALL candidate nodes with DOM paths; pin from the node whose path
+identifies the element, never from an unscoped `.pop()` of a query. A
+pin corrected pre-landing (AP-108) beats a pin corrected after it
+enshrines a mis-measurement.
+
+**Verified:** both pins RED-first (2 failed as designed, the S3-G name
+collision with the existing CTA pin caught and renamed S3-I), GREEN
+after the fix; lint ✓ tsc ✓ unit **842/842** ✓; build REAL_EXIT=0; full
+cold re-certification **64 + 86 + 92 + 56 + 58 = 356/356** on fresh
+servers (chunk-2 register spend 9/10 unchanged); node-dump re-run
+confirms clone == reference on all three surfaces; the fixed drawer
+captured (`67-clone-drawer-brand-fixed.png` — subtitle one line).
+
 ## 3a. Verification (session-56 re-run, from a fresh clone)
 
 | Gate | Result |

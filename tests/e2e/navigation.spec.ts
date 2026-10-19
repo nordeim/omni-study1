@@ -91,6 +91,25 @@ test.describe("sidebar navigation (desktop)", () => {
     await page.getByRole("button", { name: "Expand sidebar" }).click();
     await expect(aside).toHaveCSS("width", "260px");
   });
+
+  test("the brand header typography matches the measured reference (S3-H pin)", async ({ page }) => {
+    // Reference (measured 1440×900, session-67 node dump): the sidebar
+    // brand is h1.text-lg — v4 defaults render 18px bold / 28px lh — with
+    // a text-xs (12px/16px) subtitle. The clone had the right 18px SIZE
+    // but crushed the lh to 22.5 via leading-tight; the subtitle lh read
+    // 15px for the same reason. (An earlier probe's 16px read was a
+    // mis-measurement — corrected per AP-108 before pinning.)
+    const title = page.locator("aside").getByText("StudyFlow", { exact: true });
+    await expect(title).toBeVisible();
+    await expect(title).toHaveCSS("font-size", "18px");
+    await expect(title).toHaveCSS("font-weight", "700");
+    await expect(title).toHaveCSS("line-height", "28px");
+
+    const subtitle = page.locator("aside").getByText("Your study companion", { exact: true });
+    await expect(subtitle).toBeVisible();
+    await expect(subtitle).toHaveCSS("font-size", "12px");
+    await expect(subtitle).toHaveCSS("line-height", "16px");
+  });
 });
 
 test.describe("all views render (desktop)", () => {

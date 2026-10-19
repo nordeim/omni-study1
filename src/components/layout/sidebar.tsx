@@ -69,10 +69,12 @@ export function Sidebar() {
               <GraduationCap className="h-5 w-5" strokeWidth={2} />
             </span>
             <div className="min-w-0">
-              <p className="text-lg font-bold leading-tight text-slate-800 dark:text-slate-100">
+              {/* Reference (measured s67): h1.text-lg — v4 defaults render
+                  18px/28px; the old leading-tight crushed the lh to 22.5. */}
+              <p className="text-lg font-bold text-slate-800 dark:text-slate-100">
                 StudyFlow
               </p>
-              <p className="text-xs leading-tight text-slate-500 dark:text-slate-400">
+              <p className="text-xs text-slate-500 dark:text-slate-400">
                 Your study companion
               </p>
             </div>
