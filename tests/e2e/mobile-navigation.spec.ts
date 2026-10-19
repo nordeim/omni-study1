@@ -31,7 +31,12 @@ test.describe("mobile navigation", () => {
     await expect(barBrand).toHaveCSS("font-size", "16px");
     await expect(barBrand).toHaveCSS("line-height", "24px");
     // The header clock renders the reference's 2-digit-hour 12-hour format.
-    await expect(bar.getByText(/^\d{2}:\d{2} (AM|PM)$/, { exact: true })).toBeVisible();
+    const barClock = bar.getByText(/^\d{2}:\d{2} (AM|PM)$/, { exact: true });
+    await expect(barClock).toBeVisible();
+    // S3-L part 1 (measured s68): the reference app-bar clock reads 14px /
+    // 500 / slate-600 (rgb(71,85,105)) — the clone shipped 600 / slate-700.
+    await expect(barClock).toHaveCSS("font-weight", "500");
+    await expect(barClock).toHaveCSS("color", "rgb(71, 85, 105)");
   });
 
   test("mobile content starts at 80px — no dead gap under the fixed bar (S3-E pin)", async ({ page }) => {
@@ -149,6 +154,49 @@ test.describe("mobile navigation", () => {
     expect(subBox?.height ?? 0).toBeLessThan(20);
   });
 
+  test("the drawer chrome matches the s68-measured reference (S3-L pin)", async ({ page }) => {
+    // Reference (measured s68, 390×844): the drawer brand block is p-6 with
+    // a border-b divider (1px slate-100) and renders 89px tall — the clone's
+    // p-6 pb-4 block was 80px with NO divider. The nav rows start at y ≈ 105
+    // (89 + the nav's p-4) and sit FLUSH (48px pitch — the clone's gap-1
+    // produced 52px). The drawer subtitle reads slate-400 (the clone's
+    // slate-500 was the same drift the desktop sidebar carried).
+    await page.getByRole("button", { name: "Open navigation menu" }).tap();
+    const dialog = page.getByRole("dialog");
+    await expect(dialog).toBeVisible();
+
+    const panel = dialog.locator("div.absolute.inset-y-0.left-0");
+    // The brand block is the panel's first div child (its next sibling is
+    // the <nav> — no intermediate divs).
+    const brandBlock = panel.locator("div").first();
+    await expect(brandBlock).toHaveCSS("padding-top", "24px");
+    await expect(brandBlock).toHaveCSS("padding-bottom", "24px");
+    await expect(brandBlock).toHaveCSS("border-bottom-width", "1px");
+    await expect(brandBlock).toHaveCSS("border-bottom-color", "rgb(241, 245, 249)");
+    const blockH = await brandBlock.evaluate((el) => el.getBoundingClientRect().height);
+    expect(blockH).toBe(89);
+
+    const subtitle = dialog.getByText("Your study companion", { exact: true });
+    // The reference renders slate-400 (2.56:1 — an axe failure); the clone
+    // keeps slate-500 (4.76:1) — the documented a11y-superset deviation.
+    await expect(subtitle).toHaveCSS("color", "rgb(100, 116, 139)"); // slate-500
+
+    // FLUSH 48px row pitch; the first row sits at y ≈ 105.
+    const rows = panel.locator("a");
+    const geo = await rows.evaluateAll((as) => {
+      const vis = as.filter((a) => a.getBoundingClientRect().width > 0);
+      return vis.length >= 2
+        ? {
+            first: vis[0].getBoundingClientRect().y,
+            pitch: vis[1].getBoundingClientRect().y - vis[0].getBoundingClientRect().y,
+          }
+        : null;
+    });
+    expect(geo).not.toBeNull();
+    expect(Math.round(geo!.first)).toBe(105);
+    expect(geo!.pitch).toBe(48);
+  });
+
   test("drawer links navigate and the drawer closes", async ({ page }) => {
     await page.getByRole("button", { name: "Open navigation menu" }).tap();
     const dialog = page.getByRole("dialog");
@@ -196,8 +244,10 @@ test.describe("mobile navigation", () => {
 
   test("the Start My Day CTA hugs its content on mobile (S3-G pin)", async ({ page }) => {
     // Reference: 155×36 inline-flex CTA at 390px — NOT stretched. The old
-    // flex-col parent stretched the unconstrained child to 358px.
-    const cta = page.getByRole("button", { name: "Start My Day" });
+    // flex-col parent stretched the unconstrained child to 358px. (S4-K,
+    // measured s68: the CTA is an anchor with a sparkles icon — the button
+    // locator corrected per AP-108.)
+    const cta = page.getByRole("link", { name: "Start My Day" });
     await expect(cta).toBeVisible();
     const box = await cta.boundingBox();
     expect(Math.round(box?.height ?? 0)).toBe(36);

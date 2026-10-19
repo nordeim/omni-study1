@@ -92,7 +92,9 @@ export function MobileChrome() {
             StudyFlow
           </span>
         </div>
-        <p className="shrink-0 text-sm font-semibold text-slate-700 dark:text-slate-200">
+        {/* S3-L part 1 (measured s68): the reference app-bar clock reads
+            14px/500 slate-600 — the old 600/slate-700 read a step heavier. */}
+        <p className="shrink-0 text-sm font-medium text-slate-600 dark:text-slate-200">
           {formatTime12h(now)}
         </p>
       </header>
@@ -112,7 +114,10 @@ export function MobileChrome() {
             className="absolute inset-0 bg-black/20 backdrop-blur-xs"
           />
           <div className="sf-slide-in absolute inset-y-0 left-0 flex w-72 max-w-[85vw] flex-col bg-white shadow-2xl dark:bg-slate-950">
-            <div className="flex shrink-0 items-start justify-between gap-3 p-6 pb-4">
+            {/* S3-L (measured s68): the reference brand block is p-6 with a
+                border-b divider (89px tall) — the old p-6 pb-4 (80px, no
+                divider) dropped the line the reference draws under it. */}
+            <div className="flex shrink-0 items-start justify-between gap-3 border-b border-slate-100 p-6 dark:border-slate-800">
               <div className="flex items-center gap-3">
                 <span
                   className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-white sf-print-exact"
@@ -127,6 +132,10 @@ export function MobileChrome() {
                   <p className="text-base font-bold text-slate-800 dark:text-slate-100">
                     StudyFlow
                   </p>
+                  {/* S3-L note (measured s68): the reference renders this
+                      subtitle text-slate-400 (2.56:1 — an axe failure); the
+                      clone keeps slate-500 (4.76:1) — the documented
+                      a11y-superset deviation. */}
                   <p className="text-xs text-slate-500 dark:text-slate-400">
                     Your study companion
                   </p>
@@ -145,7 +154,7 @@ export function MobileChrome() {
                 rail is collapsed — the reference's own drawer behavior). */}
             <nav
               aria-label="Primary"
-              className="sf-scroll flex flex-1 flex-col gap-1 overflow-y-auto p-4"
+              className="sf-scroll flex flex-1 flex-col overflow-y-auto p-4"
             >
               {NAV_ITEMS.map((item) => (
                 <NavItemLink

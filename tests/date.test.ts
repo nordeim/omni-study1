@@ -7,9 +7,11 @@ import {
   formatHHMMRange,
   formatLongDate,
   formatMinutes,
+  formatFocusHours,
   formatShortWithYear,
   formatTime12h,
   isSameDay,
+  isSameMonth,
   isoWeekNumber,
   isoWeekday,
   minutesToHHMM,
@@ -109,6 +111,25 @@ describe("formatters", () => {
     expect(formatMinutes(45)).toBe("45m");
     expect(formatMinutes(60)).toBe("1h");
     expect(formatMinutes(135)).toBe("2h 15m");
+  });
+
+  // S4-K (measured s68): the reference dashboard's Focus Time stat reads
+  // "0h" + hint "this month" — MONTH-scoped hours, not today-minutes. The
+  // stat renders fractional hours with the trailing ".0" trimmed; only the
+  // zero state is reference-verifiable (the ref account holds no focus
+  // data) — the fractional format is the documented interpolation.
+  it("formatFocusHours renders month hours with trimmed decimals", () => {
+    expect(formatFocusHours(0)).toBe("0h");
+    expect(formatFocusHours(60)).toBe("1h");
+    expect(formatFocusHours(90)).toBe("1.5h");
+    expect(formatFocusHours(45)).toBe("0.8h");
+    expect(formatFocusHours(-5)).toBe("0h");
+  });
+
+  it("isSameMonth compares calendar months only", () => {
+    expect(isSameMonth(new Date(2026, 9, 6), new Date(2026, 9, 19))).toBe(true);
+    expect(isSameMonth(new Date(2026, 8, 30), new Date(2026, 9, 1))).toBe(false);
+    expect(isSameMonth(new Date(2025, 9, 6), new Date(2026, 9, 6))).toBe(false);
   });
 });
 

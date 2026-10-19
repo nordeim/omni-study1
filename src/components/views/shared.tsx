@@ -55,6 +55,8 @@ type StatCardProps = {
   value: React.ReactNode;
   hint?: string;
   iconClassName?: string;
+  /** Inline sRGB gradient for the icon block (S4-K, the v4 trap-5 path). */
+  iconBackground?: string;
 };
 
 /** KPI card — the reference anatomy (S3-A/S4-B): label (14px/500 slate-500,
@@ -67,7 +69,7 @@ type StatCardProps = {
  *  Lighthouse-driven (session 61): the stat h3s under the greeting h1
  *  tripped heading-order, and the reference's slate-400 hint fails WCAG AA
  *  on white (2.56:1; slate-500 = 4.76:1). Dark keeps the reference value. */
-export function StatCard({ icon: Icon, label, value, hint, iconClassName }: StatCardProps) {
+export function StatCard({ icon: Icon, label, value, hint, iconClassName, iconBackground }: StatCardProps) {
   return (
     <div className="sf-card relative overflow-hidden rounded-2xl p-6">
       <span
@@ -89,6 +91,7 @@ export function StatCard({ icon: Icon, label, value, hint, iconClassName }: Stat
             "flex size-12 shrink-0 items-center justify-center rounded-xl sf-print-exact",
             iconClassName ?? "bg-violet-500 dark:bg-violet-500",
           )}
+          style={iconBackground ? { backgroundImage: iconBackground } : undefined}
         >
           <Icon className="size-6 text-white" strokeWidth={2} />
         </span>

@@ -110,6 +110,124 @@ test.describe("sidebar navigation (desktop)", () => {
     await expect(subtitle).toHaveCSS("font-size", "12px");
     await expect(subtitle).toHaveCSS("line-height", "16px");
   });
+
+  test("the nav icon glyphs match the s68-measured reference set (S8-Y pin)", async ({ page }) => {
+    // Reference (measured s68, drawer + sidebar DOM lucide classes — the
+    // icon source is shared so one surface proves both): six glyphs had
+    // drifted from the S8-A-era records — Timetable calendar-range→calendar,
+    // Assignments clipboard-list→book-open, Practice Tests file-text→
+    // file-question, Grade Tracker list-checks→trending-up, AI Assistant
+    // bot→sparkles, Focus Timer clock→timer. The other fourteen match.
+    const EXPECTED: Array<[string, string]> = [
+      ["Dashboard", "lucide-layout-dashboard"],
+      ["My Day", "lucide-sun"],
+      ["Tasks", "lucide-square-check-big"],
+      ["Calendar", "lucide-calendar"],
+      ["Events", "lucide-calendar-days"],
+      ["Timetable", "lucide-calendar"],
+      ["Assignments", "lucide-book-open"],
+      ["Exams", "lucide-graduation-cap"],
+      ["Notes", "lucide-book-open"],
+      ["Flashcards", "lucide-layers"],
+      ["Practice Tests", "lucide-file-question"],
+      ["Study Groups", "lucide-users"],
+      ["Grade Tracker", "lucide-trending-up"],
+      ["Analytics", "lucide-chart-column"],
+      ["Files", "lucide-folder-open"],
+      ["Calculator", "lucide-calculator"],
+      ["Math Solver", "lucide-calculator"],
+      ["AI Assistant", "lucide-sparkles"],
+      ["Focus Timer", "lucide-timer"],
+      ["Settings", "lucide-settings"],
+    ];
+    const nav = page.getByRole("navigation", { name: "Primary" });
+    for (const [label, icon] of EXPECTED) {
+      const link = nav.getByRole("link", { name: label, exact: true });
+      const cls = await link.locator("svg").evaluate((el) => el.getAttribute("class") ?? "");
+      expect(cls, `${label} icon`).toContain(icon);
+    }
+  });
+
+  test("the expanded sidebar chrome matches the s68-measured reference (S3-J pin)", async ({ page }) => {
+    // Reference (measured s68, 1440×900): the sidebar brand header is
+    // p-6 with a border-b (1px slate-100) and renders ~109px tall — the
+    // subtitle WRAPS to two lines in its ~124px text container (the clone's
+    // h-16/px-4 header was 64px with a one-line slate-500 subtitle). The
+    // nav rows sit FLUSH (48px pitch — the reference's own space-y-1 class
+    // is inert on its markup; the clone's gap-1 produced 52px pitch). The
+    // active pill is the FULL 48px row (the reference paints px-4 py-3 +
+    // bg on the row box; the clone painted a 24px inner span). The footer
+    // clock reads 24px/700 under a border-t p-4 block (the clone read
+    // 14px/600 with no divider).
+    const header = page.locator("aside > div").first();
+    await expect(header).toHaveCSS("padding-top", "24px");
+    await expect(header).toHaveCSS("border-bottom-width", "1px");
+    await expect(header).toHaveCSS("border-bottom-color", "rgb(241, 245, 249)");
+    const headerH = await header.evaluate((el) => el.getBoundingClientRect().height);
+    expect(headerH).toBeGreaterThanOrEqual(100); // 109 with the wrapped subtitle
+
+    const subtitle = page.locator("aside").getByText("Your study companion", { exact: true });
+    // The reference renders slate-400 (2.56:1 — an axe color-contrast
+    // failure); the clone keeps slate-500 (4.76:1) — the documented
+    // a11y-superset deviation (the Batch-R/S seven-surface family's call).
+    await expect(subtitle).toHaveCSS("color", "rgb(100, 116, 139)"); // slate-500
+    const subH = await subtitle.evaluate((el) => el.getBoundingClientRect().height);
+    expect(subH).toBeGreaterThanOrEqual(30); // wraps to two lines (32)
+
+    // FLUSH 48px nav pitch.
+    const rows = page.locator("aside nav a");
+    const pitch = await rows.evaluateAll((as) => {
+      const vis = as.filter((a) => a.getBoundingClientRect().width > 0);
+      return vis.length >= 2
+        ? vis[1].getBoundingClientRect().y - vis[0].getBoundingClientRect().y
+        : -1;
+    });
+    expect(pitch).toBe(48);
+
+    // The active pill is the full 48px row (the S8-A chip's box).
+    const active = page
+      .getByRole("navigation", { name: "Primary" })
+      .getByRole("link", { name: "Dashboard", exact: true });
+    const chipH = await active.locator("span").first().evaluate((el) => el.getBoundingClientRect().height);
+    expect(chipH).toBe(48);
+
+    // Footer: the clock block carries a border-t divider; the time is 24px/700.
+    const clockBlock = page.locator("aside > div").last().locator("div").first();
+    await expect(clockBlock).toHaveCSS("border-top-width", "1px");
+    await expect(clockBlock).toHaveCSS("padding-top", "16px");
+    const time = page.locator("aside").getByText(/^\d{2}:\d{2} (AM|PM)$/).first();
+    await expect(time).toHaveCSS("font-size", "24px");
+    await expect(time).toHaveCSS("font-weight", "700");
+  });
+
+  test("the collapsed sidebar chrome matches the s68-measured reference (S3-K pin)", async ({ page }) => {
+    // Reference (measured s68, collapsed via the header chevron): the
+    // header keeps the SAME p-6 + border-b classes (85px tall — the clone's
+    // collapsed branch was h-16/64px with a centered chevron; the reference
+    // left-aligns the lone chevron at the p-6 edge, x ≈ 25). Collapsed rows
+    // are 44px tall and FLUSH (44px pitch).
+    await page.getByRole("button", { name: "Collapse sidebar" }).click();
+    const header = page.locator("aside > div").first();
+    await expect(header).toHaveCSS("padding-top", "24px");
+    await expect(header).toHaveCSS("border-bottom-width", "1px");
+    const headerH = await header.evaluate((el) => el.getBoundingClientRect().height);
+    expect(headerH).toBeGreaterThanOrEqual(80); // 85 = p-6*2 + 36 chevron + 1 border
+
+    const chevronX = await page
+      .getByRole("button", { name: "Expand sidebar" })
+      .evaluate((el) => el.getBoundingClientRect().x);
+    expect(chevronX).toBeGreaterThanOrEqual(22);
+    expect(chevronX).toBeLessThanOrEqual(27); // left-aligned at the p-6 edge (ref 25)
+
+    const rows = page.locator("aside nav a");
+    const pitch = await rows.evaluateAll((as) => {
+      const vis = as.filter((a) => a.getBoundingClientRect().width > 0);
+      return vis.length >= 2
+        ? vis[1].getBoundingClientRect().y - vis[0].getBoundingClientRect().y
+        : -1;
+    });
+    expect(pitch).toBe(44);
+  });
 });
 
 test.describe("all views render (desktop)", () => {
@@ -132,12 +250,15 @@ test.describe("all views render (desktop)", () => {
     await expect(page.getByRole("heading", { name: "Today's Tasks" })).toBeVisible();
     await expect(page.getByRole("heading", { name: "Upcoming Exams" })).toBeVisible();
     await expect(page.getByRole("heading", { name: "Upcoming Assignments" })).toBeVisible();
-    await expect(page.getByRole("button", { name: "Start My Day" })).toBeVisible();
+    // S4-K (measured s68): the reference's hero CTA is an ANCHOR (a real
+    // /MyDay link, the overdue View All pattern) with a sparkles icon —
+    // the clone shipped an iconless button.
+    await expect(page.getByRole("link", { name: "Start My Day" })).toBeVisible();
   });
 
   test("Start My Day navigates to MyDay", async ({ page }) => {
     await page.goto("/Dashboard");
-    await page.getByRole("button", { name: "Start My Day" }).click();
+    await page.getByRole("link", { name: "Start My Day" }).click();
     await expect(page).toHaveURL(/\/MyDay\/?$/);
     await expect(page.getByRole("heading", { name: "My Day" })).toBeVisible();
   });
@@ -179,7 +300,9 @@ test.describe("view chrome (computed parity pins)", () => {
     const card = page.locator("main .overflow-hidden.rounded-2xl").first();
     await expect(card).toHaveCSS("border-radius", "16px");
 
-    const button = page.getByRole("button", { name: "Start My Day" });
+    // S4-K (measured s68): the reference's hero CTA is an anchor with a
+    // sparkles icon — the button locator corrected per AP-108.
+    const button = page.getByRole("link", { name: "Start My Day" });
     await expect(button).toHaveCSS("border-radius", "6px");
 
     // Sidebar nav items use rounded-xl → 12px (reference inner div measured).
@@ -311,7 +434,9 @@ test.describe("view chrome (computed parity pins)", () => {
     await page.goto("/Dashboard");
     // CTA: linear-gradient(to right, rgb(139,92,246), rgb(79,70,229)) —
     // violet-500 → indigo-600 (the clone previously ended violet-600).
-    const cta = page.getByRole("button", { name: "Start My Day" });
+    // S4-K (measured s68): the CTA is an anchor (the button locator
+    // corrected per AP-108).
+    const cta = page.getByRole("link", { name: "Start My Day" });
     const ctaBg = await cta.evaluate((el) => getComputedStyle(el).backgroundImage);
     expect(ctaBg.replace(/\s+/g, " ")).toContain("rgb(139, 92, 246)");
     expect(ctaBg.replace(/\s+/g, " ")).toContain("rgb(79, 70, 229)");
@@ -354,6 +479,30 @@ test.describe("view chrome (computed parity pins)", () => {
     await expect(viewAll.locator("svg").first()).toBeVisible();
     const box = await viewAll.locator("svg").first().boundingBox();
     expect(Math.round(box?.width ?? 0)).toBe(16);
+  });
+
+  test("the dashboard stat cards match the measured reference copy and focus semantics (S4-K pin)", async ({ page }) => {
+    // Reference (measured s68, zero state): the four stat hints read
+    // "tasks completed" / "to be done" / "assignments" / "this month" —
+    // the clone's "tasks done today" / "to complete" / "next 7 days" /
+    // "logged today" were invented copy no pin guarded. The Focus Time
+    // VALUE is month-scoped HOURS ("0h"), not today-minutes ("0m").
+    await page.goto("/Dashboard");
+    for (const hint of ["tasks completed", "to be done", "assignments", "this month"]) {
+      await expect(page.getByText(hint, { exact: true })).toBeVisible();
+    }
+    for (const stale of ["tasks done today", "logged today"]) {
+      await expect(page.getByText(stale, { exact: true })).toHaveCount(0);
+    }
+    // The Focus Time VALUE is month-scoped hours — the demo account holds
+    // focus sessions, so the exact value varies; assert the HOURS FORMAT
+    // (the zero-state "0h" equality is the sweep probes' cross-check).
+    const focusValue = page.getByRole("heading", { level: 2, name: /^\d+(\.\d+)?h$/ });
+    await expect(focusValue).toBeVisible();
+    // The hero CTA carries the reference's sparkles icon.
+    const cta = page.getByRole("link", { name: "Start My Day" });
+    const iconCls = await cta.locator("svg").evaluate((el) => el.getAttribute("class") ?? "");
+    expect(iconCls).toContain("lucide-sparkles");
   });
 
   test("the sidebar clock chip and time format match the reference (S3-B/S3-C pins)", async ({ page }) => {

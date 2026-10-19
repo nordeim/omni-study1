@@ -416,6 +416,65 @@ servers (chunk-2 register spend 9/10 unchanged); node-dump re-run
 confirms clone == reference on all three surfaces; the fixed drawer
 captured (`67-clone-drawer-brand-fixed.png` — subtitle one line).
 
+### Batch Y — Session-68: the nav-chrome + dashboard-copy drifts found by the extended invariant sweep
+
+The 12th cycle ran on the PRESERVED workspace (no reset — first time
+since s66). Gates re-certified cold on the received state (356/356 +
+842/842), the Batch-X diff audited clean against the repo's
+code-review checklist, and the s66/s67 invariant sweep was EXTENDED
+with the Batch-X brand typography as standing invariants — which
+immediately caught the next drift layer. The sweep's mobile probe
+initially reported drawers CLOSED on both sites: two probe-logic bugs
+(the `.find()` visibility check grabbed the hidden sidebar's link, and
+the `.fixed button` selector matched the hidden aside's chevron first —
+AP-112), fixed with visibility-scoped evaluateAll + a DOM-click route;
+the side-by-side drawers then exposed the drifts:
+
+| # | Finding | Root cause | Fix | Guard |
+|---|---------|-----------|-----|-------|
+| Y1 | SIX nav icons wrong (both surfaces): Timetable `calendar-range`→`calendar`, Assignments `clipboard-list`→`book-open`, Practice Tests `file-text`→`file-question`, Grade Tracker `list-checks`→`trending-up`, AI Assistant `bot`→`sparkles`, Focus Timer `clock`→`timer` | the S8-A-era icon records covered 7 named glyphs; the unpinned 13 drifted (or the reference updated) and no pin guarded the map | NAV_ICONS corrected from the live DOM dump; the Practice Tests glyph is byte-identical path data under the lucide rename (`file-question`→`file-question-mark` — the BarChart3→chart-column precedent) | **S8-Y** (the full 20-entry lucide map pinned from the sidebar DOM — one surface proves both) |
+| Y2 | The active nav pill was a 24px inner-span chip; the reference paints the FULL 48px row (px-4 py-3 + bg on the row box) | the clone put py-3 on the `<a>` and the gradient on the inner span | padding moved onto the chip span (now the full-row pill; hover too); the S8-A/S52-C assertions survive unchanged | **S3-J** (chip box height 48) |
+| Y3 | Nav rows sat 4px apart (52px pitch); the reference is FLUSH 48px (its own `space-y-1` class is inert on its markup) | the clone modeled the ref's class STRING (`space-y-1`) as `gap-1` — v4 trap 4's flex-gap convention applied where the reference's own spacing is dead | `gap-1` removed from both nav containers (desktop 48/48, drawer 48/48, collapsed 44/44) | **S3-J/S3-K/S3-L** (pitch pins per surface + state) |
+| Y4 | Desktop sidebar header: clone `h-16 px-4` 64px no-divider vs reference `p-6 justify-between border-b` 109px (the subtitle WRAPS in the ~124px text container); collapsed 64px centered-chevron vs 85px left-aligned | the h-16 was the MOBILE app bar's geometry, never re-measured on the desktop sidebar | header = `p-6 border-b border-slate-100 dark:border-slate-800` in BOTH states; chevron left-aligned when collapsed | **S3-J** (pad/border/height≥100, wrapped subtitle) + **S3-K** (collapsed 85px, chevron x≈25, pitch 44) |
+| Y5 | Drawer brand block: clone `p-6 pb-4` 80px NO divider vs reference `p-6` 89px with the border-b | same divider class the desktop header carries | `border-b border-slate-100 dark:border-slate-800` + uniform p-6; drawer rows start y=105 (byte-equal) | **S3-L** (block 89px, border, first row 105) |
+| Y6 | Sidebar footer: no divider, tight clock (14px/600) vs reference `border-t p-4` block + a 24px/700 statement clock + `px-4 pb-4` identity | the footer geometry was never measured (S3-B/C pinned the chip's gradient + color, not the block) | footer = `border-t border-slate-100 dark:border-slate-800 p-4` + chip `p-4` + time `text-2xl font-bold` + identity `px-4 pb-4` | **S3-J** (border-t, pt-16, time 24px/700) |
+| Y7 | App-bar clock: 600/slate-700 vs reference 500/slate-600 | weight/color one step heavy | `font-medium text-slate-600` | **S3-L part 1** |
+| Y8 | Dashboard stat HINTS invented: "tasks done today"/"to complete"/"next 7 days"/"logged today" vs reference "tasks completed"/"to be done"/"assignments"/"this month"; stat icons list-todo/clock/timer vs square-check-big/book-open/flame; blocks SOLID vs the reference's 48px 12px GRADIENTS (violet→indigo, blue→cyan, orange→amber, pink→rose); Focus Time "0m logged today" vs "0h this month" — a SEMANTIC drift (today-minutes vs month-hours) | the stat subs/icons/blocks predate the measurement discipline and no pin guarded them | hints + icons corrected; blocks carry the measured inline sRGB gradients (v4 trap 5); `formatFocusHours` + `isSameMonth` seams (unit-pinned) scope the stat to month-hours | **S4-K** (hints exact, stale strings count 0, hours format, sparkles CTA) + date.test.ts |
+| Y9 | Hero CTA: iconless BUTTON vs reference ANCHOR with a sparkles icon | same unmeasured-era copy | `Button asChild` → real `/MyDay` anchor (the overdue View All pattern) + Sparkles; 4 button-locator pins corrected per AP-108 | **S4-K** (link role + lucide-sparkles) + S4-G/S3-G locator updates |
+
+**The a11y-vs-parity call (documented deviation).** The reference's
+brand subtitle renders `text-slate-400` (2.56:1 on white — an axe
+color-contrast failure). The clone KEEPS `text-slate-500` (4.76:1) on
+both surfaces — the Batch-R/S seven-surface family's own call (the
+StatCard hint docstring records the identical decision from session
+61). The S3-J/S3-L pins assert the superset value with the
+justification in-place.
+
+**The sweep-extension lesson (AP-112).** The invariant sweep's first
+mobile pass reported drawers closed on BOTH sites while both opened
+fine: `.find()`/`.first()` over label-matching links picks the HIDDEN
+sidebar's copy (display:none, width 0) before the drawer's, and a
+`header button, .fixed button` selector matches the hidden fixed aside
+before the visible fixed header. Rule: visibility checks must scope to
+VISIBLE nodes (evaluateAll over rect width), and positional selectors
+must filter by rendered geometry, not DOM order. Second trap in the
+same family: the drawer overlays the app bar at the SAME y-range, so a
+y-threshold cannot separate the two brand nodes — anchor the drawer
+title to the (unique, visible) subtitle node instead.
+
+**Verified:** S8-Y/S3-J/S3-K/S3-L + the app-bar clock extension RED on
+the received bundle (5 failed / 54 passed); GREEN after the chrome
+fixes; S4-K + the unit seams RED-first on the measured pre-fix state;
+lint ✓ tsc ✓ unit **844/844** ✓; build REAL_EXIT=0; full cold
+re-certification **74 + 76 + 97 + 56 + 58 = 361/361** on fresh servers
+(chunk-2 register spend 9/10 unchanged); the s68 sweep reports
+**ok:true** — 18/18 original invariants + the desktop brand table +
+drawer-open + bar/drawer brand typography green on BOTH hosts; the
+post-fix node dumps: desktop/drawer pitch 48/48, drawer rows start
+y=105/153/201 (byte-equal), Practice Tests glyph path-identical; the
+corrected dashboard + drawer captured (`68-clone-dashboard.png`,
+`68-clone-mobile-drawer.png`).
+
 ## 3a. Verification (session-56 re-run, from a fresh clone)
 
 | Gate | Result |

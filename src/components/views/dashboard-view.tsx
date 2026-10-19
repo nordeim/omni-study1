@@ -9,15 +9,17 @@
 import * as React from "react";
 import {
   ArrowRight,
+  BookOpen,
   Calendar,
   CircleAlert,
   ClipboardList,
   Clock,
+  Flame,
   GraduationCap,
-  ListTodo,
+  Sparkles,
+  SquareCheckBig,
   Sun,
   Target,
-  Timer,
 } from "lucide-react";
 
 import { useToast } from "@/components/ui/toast";
@@ -25,10 +27,11 @@ import { mutations, useDataStore } from "@/lib/data";
 import {
   dayBucketLabel,
   daysUntil,
+  formatFocusHours,
   formatLongDateWithWeekday,
-  formatMinutes,
   formatShortWithYear,
   isSameDay,
+  isSameMonth,
   startOfDay,
 } from "@/lib/date";
 import { currentGreeting } from "@/lib/router";
@@ -81,7 +84,9 @@ export function DashboardView() {
     return diff >= 0 && diff <= 7;
   }).length;
   const focusSeconds = focusSessions
-    .filter((s) => isSameDay(new Date(s.startedAt), today))
+    // S4-K (measured s68): the reference's Focus Time stat is MONTH-scoped
+    // ("0h" + hint "this month") — not today-minutes.
+    .filter((s) => isSameMonth(new Date(s.startedAt), today))
     .reduce((acc, s) => acc + s.durationSeconds, 0);
 
   // ---- overdue banner (S9-A) -------------------------------------------------
@@ -128,12 +133,22 @@ export function DashboardView() {
           </p>
         </div>
         <Button
-          type="button"
           variant="gradient"
           className="sf-gradient-shadow h-9 w-fit self-start"
-          onClick={() => navigate("myday")}
+          asChild
         >
-          Start My Day
+          {/* S4-K (measured s68): the reference's hero CTA is an ANCHOR (the
+              overdue View All pattern) carrying a sparkles icon. */}
+          <a
+            href="/MyDay"
+            onClick={(e) => {
+              e.preventDefault();
+              navigate("myday");
+            }}
+          >
+            <Sparkles className="size-4" strokeWidth={2} aria-hidden />
+            Start My Day
+          </a>
         </Button>
       </header>
 
@@ -175,33 +190,36 @@ export function DashboardView() {
         </div>
       ) : (
         <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+          {/* S4-K (measured s68): the hints and the icon-block gradients are
+              the reference's measured values (inline sRGB gradients — the v4
+              oklab-interpolation trap); the Focus Time value is month-hours. */}
           <StatCard
             icon={Target}
             label="Today's Progress"
             value={`${doneToday}/${todayScope.length}`}
-            hint="tasks done today"
-            iconClassName="bg-violet-500"
+            hint="tasks completed"
+            iconBackground="linear-gradient(to right bottom, rgb(139, 92, 246), rgb(79, 70, 229))"
           />
           <StatCard
-            icon={ListTodo}
+            icon={SquareCheckBig}
             label="Pending Tasks"
             value={pendingCount}
-            hint="to complete"
-            iconClassName="bg-blue-500"
+            hint="to be done"
+            iconBackground="linear-gradient(to right bottom, rgb(59, 130, 246), rgb(8, 145, 178))"
           />
           <StatCard
-            icon={Clock}
+            icon={BookOpen}
             label="Due Soon"
             value={dueSoonCount}
-            hint="next 7 days"
-            iconClassName="bg-orange-500"
+            hint="assignments"
+            iconBackground="linear-gradient(to right bottom, rgb(249, 115, 22), rgb(217, 119, 6))"
           />
           <StatCard
-            icon={Timer}
+            icon={Flame}
             label="Focus Time"
-            value={formatMinutes(focusSeconds / 60)}
-            hint="logged today"
-            iconClassName="bg-green-500"
+            value={formatFocusHours(focusSeconds / 60)}
+            hint="this month"
+            iconBackground="linear-gradient(to right bottom, rgb(236, 72, 153), rgb(225, 29, 72))"
           />
         </div>
       )}

@@ -3,31 +3,32 @@
 // ---------------------------------------------------------------------------
 // The ONE nav-item markup source (AGENTS.md) — consumed by BOTH the desktop
 // sidebar and the mobile drawer; never re-implement the item markup.
-// Icon set is reference-measured (S8-A): Calendar/Timetable share `calendar`,
-// Events is calendar-days, Notes reuses book-open, Files is folder-open,
-// Math Solver reuses calculator, Tasks is square-check-big, Analytics is
-// chart-column.
+// Icon set is reference-measured (S8-A; re-dumped s68 after six glyphs
+// drifted from the S8-A-era records — the S8-Y pin now guards the full
+// 20-entry map): Calendar/Timetable share `calendar`, Events is
+// calendar-days, Assignments reuses book-open (as Notes does), Math Solver
+// reuses `calculator`, Tasks is square-check-big, Analytics is chart-column,
+// Practice Tests is file-question, Grade Tracker is trending-up, AI
+// Assistant is sparkles, Focus Timer is timer.
 // ---------------------------------------------------------------------------
 
 import {
   BookOpen,
-  Bot,
   Calculator,
   Calendar,
   CalendarDays,
-  CalendarRange,
   ChartColumn,
-  ClipboardList,
-  Clock,
-  FileText,
+  FileQuestion,
   FolderOpen,
   GraduationCap,
   LayoutDashboard,
-  ListChecks,
   Layers,
   Settings,
+  Sparkles,
   SquareCheckBig,
   Sun,
+  Timer,
+  TrendingUp,
   Users,
   type LucideIcon,
 } from "lucide-react";
@@ -44,20 +45,20 @@ export const NAV_ICONS: Record<ViewId, LucideIcon> = {
   tasks: SquareCheckBig,
   calendar: Calendar,
   events: CalendarDays,
-  timetable: CalendarRange,
-  assignments: ClipboardList,
+  timetable: Calendar,
+  assignments: BookOpen,
   exams: GraduationCap,
   notes: BookOpen,
   flashcards: Layers,
-  practicetests: FileText,
+  practicetests: FileQuestion,
   studygroups: Users,
-  gradetracker: ListChecks,
+  gradetracker: TrendingUp,
   analytics: ChartColumn,
   files: FolderOpen,
   calculator: Calculator,
   mathsolver: Calculator,
-  aiassistant: Bot,
-  focustimer: Clock,
+  aiassistant: Sparkles,
+  focustimer: Timer,
   settings: Settings,
 };
 
@@ -93,8 +94,7 @@ export function NavItemLink({ view, collapsed = false, onNavigate, className, to
         onNavigate?.();
       }}
       className={cn(
-        "group flex py-3 outline-none transition-colors focus-visible:ring-2 focus-visible:ring-sf-primary/40",
-        collapsed ? "px-0" : "px-4",
+        "group flex outline-none transition-colors focus-visible:ring-2 focus-visible:ring-sf-primary/40",
         active
           ? "text-sf-primary-strong dark:text-sf-primary-strong-dark"
           : "text-slate-600 dark:text-slate-300",
@@ -105,13 +105,15 @@ export function NavItemLink({ view, collapsed = false, onNavigate, className, to
       {/* The tinted tile the e2e pins measure (navigation.spec: the first
           span of the active link carries the 10% gradient + violet-600 text,
           span.rounded-xl reads 12px, the trailing dot carries ml-auto). The
-          <a> is the hit area; this span is the visual chip. */}
+          <a> is the hit area; this span is the visual chip. S3-J (measured
+          s68): the chip is the FULL row box — the reference paints px-4
+          py-3 + the bg on the row itself (48px pill, flush rows), so the
+          padding lives here, not on the <a>. */}
       <span
         className={cn(
-          "flex flex-1 items-center rounded-xl transition-colors",
-          collapsed
-            ? "px-4" // S52-C: collapsed icons sit LEFT-ALIGNED at x=32 (nav p-4 + span px-4)
-            : "gap-3 hover:bg-slate-100/70 dark:hover:bg-slate-800/60",
+          "flex flex-1 items-center rounded-xl px-4 py-3 transition-colors",
+          !collapsed &&
+            "gap-3 hover:bg-slate-100/70 dark:hover:bg-slate-800/60",
         )}
         style={
           active

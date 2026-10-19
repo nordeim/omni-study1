@@ -53,8 +53,12 @@ export function Sidebar() {
           states — S52; the brand chip unmounts when collapsed). */}
       <div
         className={cn(
-          "flex h-16 shrink-0 items-center px-4",
-          collapsed ? "justify-center" : "justify-between",
+          // S3-J (measured s68): the reference header is p-6 + border-b in
+          // BOTH states — 109px expanded (the subtitle wraps in the ~124px
+          // text container), 85px collapsed with the lone chevron
+          // LEFT-aligned at the p-6 edge. The old h-16/px-4 block was the
+          // mobile app bar's geometry, never the desktop sidebar's.
+          "flex shrink-0 items-center justify-between border-b border-slate-100 p-6 dark:border-slate-800",
         )}
       >
         {!collapsed && (
@@ -74,6 +78,11 @@ export function Sidebar() {
               <p className="text-lg font-bold text-slate-800 dark:text-slate-100">
                 StudyFlow
               </p>
+              {/* S3-J note (measured s68): the reference renders this
+                  subtitle text-slate-400 (2.56:1 on white — an axe
+                  color-contrast failure). The clone keeps slate-500
+                  (4.76:1) — the documented a11y-superset deviation, the
+                  Batch-R/S seven-surface family's own call. */}
               <p className="text-xs text-slate-500 dark:text-slate-400">
                 Your study companion
               </p>
@@ -84,10 +93,7 @@ export function Sidebar() {
           type="button"
           onClick={toggleSidebar}
           aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-          className={cn(
-            "flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-slate-500 outline-none transition-colors hover:bg-slate-100/70 focus-visible:ring-2 focus-visible:ring-sf-primary/40 dark:text-slate-400 dark:hover:bg-slate-800/60",
-            collapsed && "mx-auto",
-          )}
+          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-slate-500 outline-none transition-colors hover:bg-slate-100/70 focus-visible:ring-2 focus-visible:ring-sf-primary/40 dark:text-slate-400 dark:hover:bg-slate-800/60"
         >
           <ChevronLeft
             className={cn("h-5 w-5 transition-transform", collapsed && "rotate-180")}
@@ -99,7 +105,7 @@ export function Sidebar() {
       {/* The ONE nav-item source — NavItemLink for every NAV_ITEM. */}
       <nav
         aria-label="Primary"
-        className="sf-scroll flex flex-1 flex-col gap-1 overflow-y-auto p-4"
+        className="sf-scroll flex flex-1 flex-col overflow-y-auto p-4"
       >
         {NAV_ITEMS.map((item) => (
           <NavItemLink key={item.id} view={item.id} collapsed={collapsed} />
@@ -114,16 +120,18 @@ export function Sidebar() {
         {!collapsed && (
           <>
             {/* Live clock chip — violet-50 → indigo-50 (S3-B), deep time
-                text (S3-C). */}
-            <div className="px-4 pb-2">
-              <div className="sf-clock-chip sf-print-exact rounded-xl p-2">
-                <p className="sf-clock-time whitespace-nowrap text-sm font-semibold">
+                text (S3-C). S3-J (measured s68): the block carries the
+                reference's border-t divider + p-4, and the time reads
+                24px/700 (the old 14px/600 read like a caption). */}
+            <div className="border-t border-slate-100 p-4 dark:border-slate-800">
+              <div className="sf-clock-chip sf-print-exact rounded-xl p-4">
+                <p className="sf-clock-time whitespace-nowrap text-2xl font-bold">
                   {formatTime12h(now)}
                 </p>
                 <p className="sf-clock-date truncate text-xs">{formatShortWithYear(now)}</p>
               </div>
             </div>
-            <div className="flex items-center gap-3 p-4 pt-0">
+            <div className="flex items-center gap-3 px-4 pb-4">
               <UserAvatar size="sm" />
               <div className="min-w-0">
                 <p className="truncate text-sm font-medium text-slate-700 dark:text-slate-200">

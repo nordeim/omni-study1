@@ -159,6 +159,26 @@ export function formatMinutes(totalMinutes: number): string {
   return `${hours}h ${minutes}m`;
 }
 
+/**
+ * Month-hours for the dashboard Focus Time stat (S4-K, measured s68): the
+ * reference renders "0h" + hint "this month" — whole hours with one
+ * fractional decimal, trailing ".0" trimmed. Only the zero state is
+ * reference-verifiable; the fractional format is the documented
+ * interpolation (see tests/date.test.ts).
+ */
+export function formatFocusHours(totalMinutes: number): string {
+  const h = Math.max(0, totalMinutes) / 60;
+  const rounded = Math.round(h * 10) / 10;
+  return `${Number.isInteger(rounded) ? rounded : rounded.toFixed(1)}h`;
+}
+
+/** Calendar-month equality (the Focus Time stat's month scope). */
+export function isSameMonth(a: Date, b: Date): boolean {
+  return (
+    a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth()
+  );
+}
+
 /** Whole-day difference (negative in the past) between two calendar days. */
 export function daysUntil(date: Date, from: Date): number {
   return Math.round(

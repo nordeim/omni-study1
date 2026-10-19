@@ -990,3 +990,79 @@ mobile navigation.
 - Remaining honest debt: Batch R's structural perf (RSC conversion) —
   the s65 CWV evidence still stands (clone 183–297KB JS / LCP GOOD
   everywhere vs reference 771KB JS / login-mobile LCP POOR 9452ms).
+
+## Session 68 (continuation 19) — the preserved-workspace cycle; the nav-chrome + dashboard drifts found by the extended invariant sweep (Batch Y)
+
+**Context.** The user's `docs/session_14.md` is the s67 transcript —
+no new asks; its suggested next step = repeat the gate+re-sweep rhythm
+(or Batch R). This cycle: refresh, re-certify, re-sweep — and the
+sweep, EXTENDED with the Batch-X brand invariants, caught the next
+drift layer. First preserved-workspace cycle since s66 (no reset).
+
+**Work log.**
+
+1. **Workspace refreshed.** `git pull --ff-only` fast-forwarded
+   `5211468..1ad5b89` (the session_14.md transcript commit). The
+   environment survived intact (deps, chromium-1243, `.env` posture,
+   fresh build, db) — only the SSH deploy key needed re-provisioning
+   (shredded post-push last cycle); `ls-remote` pre-flight green.
+2. **Alignment validated.** Batch X in-tree (sidebar/mobile-chrome +
+   S3-H/S3-I pins); doc chain (session_14 + remediation-plan Batch W/X
+   + worklog Session 67 + AGENTS/CLAUDE/README/SKILL) consistent with
+   the codebase.
+3. **Batch X audited** via the repo's code-review-checklist skill
+   (Standards + Spec axes on the `bb729e4..5211468` diff): zero
+   findings — the diff matches the node-dump truth table, pins RED-first
+   with exact-token locators, docs synced.
+4. **Gates re-certified cold on the received state.** lint ✓ tsc ✓
+   unit 842/842 ✓; e2e across the 5-sub-run map (fresh `db/e2e.db` +
+   fresh server per chunk): 74+72+96+56+58 = **356/356** zero flakes.
+5. **The reference re-sweep, extended (s68 tag).** The s67 sweep class
+   + the Batch-X brand table as standing invariants (desktop sidebar
+   18/28 + 12/16 via TreeWalker; app-bar 16/24; drawer brand + one-line
+   subtitle). The mobile probe initially reported drawers CLOSED on
+   both sites — two probe-logic bugs (AP-112: `.find()` grabbed the
+   hidden sidebar's link; `.fixed button` matched the hidden aside's
+   chevron), fixed with visibility-scoped evaluateAll + a DOM-click
+   route. 18/18 original invariants green; desktop brand table green
+   on both hosts — and the side-by-side drawers exposed the next layer.
+6. **Batch Y found + fixed TDD** (pins first, RED confirmed: 5 failed /
+   54 passed):
+   - Y1 six nav icons (NAV_ICONS re-dumped; the Practice Tests glyph
+     path-identical under the lucide rename) — S8-Y pins the full
+     20-entry map;
+   - Y2 the active pill is the FULL 48px row (padding moved from the
+     `<a>` onto the chip span) — S3-J;
+   - Y3 nav rows FLUSH 48px (the reference's `space-y-1` class is dead
+     on its markup; the clone's `gap-1` modeled the string, not the
+     render) — S3-J/K/L pitch pins;
+   - Y4 desktop header `p-6 border-b` 109px (subtitle wraps) +
+     collapsed 85px left-aligned chevron — S3-J/S3-K;
+   - Y5 drawer brand block `p-6 border-b` 89px, rows start y=105 —
+     S3-L;
+   - Y6 footer `border-t p-4` + the 24px/700 statement clock — S3-J;
+   - Y7 app-bar clock 500/slate-600 — S3-L part 1;
+   - Y8 dashboard stat hints/icons/gradients + the Focus Time semantic
+     (month-hours via the new `formatFocusHours`/`isSameMonth` seams,
+     unit-pinned) — S4-K + date.test.ts;
+   - Y9 the hero CTA is an anchor with a sparkles icon (Button asChild;
+     4 button-locator pins corrected per AP-108).
+   - The a11y-vs-parity call documented: the reference's slate-400
+     subtitle (2.56:1) stays slate-500 (4.76:1) in the clone — the
+     Batch-R/S seven-surface family's own call.
+7. **Verified.** lint ✓ tsc ✓ unit **844/844** ✓; build REAL_EXIT=0;
+   full cold re-certification **74 + 76 + 97 + 56 + 58 = 361/361** on
+   fresh servers (chunk-2 register spend 9/10 unchanged); the s68 sweep
+   reports **ok:true** (18 invariants + desktop brand + drawer-open +
+   bar/drawer brand green on BOTH hosts); post-fix node dumps:
+   desktop/drawer pitch 48/48, drawer rows start 105/153/201
+   (byte-equal); corrected dashboard + drawer captured.
+
+**Stage summary.** HEAD = the Batch-Y commit. Baselines: e2e **361/361**
+(74+76+97+56+58, 30 spec files), unit **844/844**, Lighthouse a11y
+anchor green via the Lighthouse-equivalent sweep (21/21). New pins:
+S8-Y, S3-J, S3-K, S3-L, S4-K (+2 unit seams). New lesson AP-112 (probe
+visibility scoping). Remaining honest debt: Batch R's structural perf
+(RSC conversion) — the s65 CWV evidence still stands (clone 183–297KB
+JS / LCP GOOD everywhere vs reference 771KB JS / login-mobile LCP POOR
+9452ms).
