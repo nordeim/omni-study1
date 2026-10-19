@@ -713,3 +713,99 @@ against fresh reference measurements.
 - Remaining honest debt: Batch R's structural perf (RSC conversion) is
   now the LAST open item from the remediation plan; the drift matrix now
   covers every view checked across s58–s64 with no known visual drift.
+
+## Session 65 (continuation 16) — the zero-state + stat-card drifts (Batch V): the 20-view drift matrix completed
+
+**Context.** The workspace was RESET a 10th time (fresh clone at
+`41239bc`); the user's `docs/session_11.md` is the session-64 transcript —
+no new asks; the newer remote commit (`41239bc`) was a v2→v5.1 restructure
+of `docs/replicate-web-app_SKILL.md` (general methodology, no new asks for
+this repo). This cycle's value-add was chosen from the coverage map: the
+s58–s64 sweeps had covered 16 of the 20 authed views — My Day, Grade
+Tracker, Practice Tests and Study Groups were never probed. This session
+probed all four, completing the matrix, and fixed every drift found TDD-
+style (Batch V).
+
+**Work log.**
+
+1. **Environment rebuild (10th recovery).** npm ci (489 pkgs), prisma,
+   `.env` + `db:push`/`db:seed`, production build (the first build was
+   reaped — the S32 `setsid` subshell recipe), chromium-1248 matching
+   Playwright 1.64.1 (the version-mismatch lesson, reproduced a 4th
+   time), and the SSH-infra shim: the runbook's parse_args had a real
+   bug (`else: host = a` overwrote the host with the command string) —
+   fixed in `/home/z/ssh-infra/git_ssh_shim.py`; ls-remote round-trip
+   green (key fingerprint re-verified) before any work.
+2. **Independent re-certification of the received state.** lint ✓ tsc ✓
+   unit **842/842** ✓; e2e cold: chunk 1 **189/190 + 1 known first-chunk
+   cold-start race** (solo re-run green — not a regression); chunk 2
+   first failed on the s22 negative-spawn guard — root cause the S46
+   class again: the repo `.env`'s REAL AUTH_SECRET got bundled into
+   `.next/standalone/.env` at build time, so the guard CORRECTLY boots;
+   `.env` reset to `AUTH_SECRET=""` (dev fallback posture) and the
+   bundle rebuilt; chunk 3 first hit the aged-DB class (s23 fixed-id
+   envelope) — `rm -f db/e2e.db` and cold re-run → **101/101 + 55/55**;
+   effective total **346/346**.
+3. **The matrix-completion sweep (4 never-probed surfaces).** Reference
+   fingerprints captured (empty account, desktop): My Day, Grade
+   Tracker, Practice Tests, Study Groups + Settings control. The
+   subtitle sweep found 2 copy drifts (Grade Tracker, Practice Tests);
+   the empty-state sweep (fresh registered user, the s17 recipe) found
+   the My Day early-return drift and the Study Groups pane-role swap;
+   the seeded Grade Tracker needed an authorized gated write probe (the
+   s64 precedent: create → measure → delete → verify zero residue) —
+   the reference's seeded row is THREE cards with NO sub-captions and
+   NO Highest Grade, plus subject progress rows + "Recent Grades". The
+   probe's cleanup surfaced a REFERENCE-side dangling record (deleting
+   the probe subject cascade-removed its grade but an orphan grade
+   persisted; no UI delete path) — an endpoint-learning probe
+   (intercepting the UI's own create call) captured the entity API
+   (`/api/apps/{id}/entities/{Entity}`, Bearer JWT from localStorage)
+   and deleted both records through it; zero residue verified (0
+   grades, 0 subjects); the Grade entity schema captured.
+4. **TDD Batch V.** 5 new pins written first (S5-V1/V2 in
+   parity-session5, S17-V1/V2/V3 in s17-fresh-user) — RED as designed
+   (one pin's own locator chain fixed during RED: the CTA button is a
+   sibling of the h3, not a child). GREEN: the My Day early return
+   removed — the amber greeting block now renders BELOW the header +
+   quick-add chrome; the Grade Tracker row re-measured to the
+   reference's 3-card `md:grid-cols-3` (Highest Grade deleted, hints
+   deleted, `text-4xl` values, emerald-500/blue-500 icons, subtitle
+   "Monitor your academic performance"); the Practice Tests subtitle
+   ("Test yourself with practice exams"); the Study Groups EmptyState +
+   gradient Create Group CTA moved into the LIST panel, the right pane
+   rebuilt as the bold hint (`text-xl/600` h3 + `max-w-sm` p, `py-16
+   px-4`), + button `rounded-xl` → `rounded-md` (measured).
+5. **Verified.** lint ✓ tsc ✓ unit **842/842** ✓; affected files green;
+   full cold re-certification **192 + 104 + 55 = 351/351** on the final
+   bundle, zero flakes. Live comparison on the production standalone:
+   clone fingerprints now match the reference on all four surfaces
+   (seeded + empty). Lighthouse re-certified a11y **100** on both
+   surfaces (`65-{dashboard,login}-after.json`); the CWV budget audit
+   refreshed the Batch-R deferral evidence — the clone ships 183–297KB
+   JS with LCP GOOD everywhere while the live reference ships 1232KB
+   total / 771KB JS and its login-mobile LCP is POOR (9452ms).
+   Captures: `65-ref-desktop-*.png` (6) + `65-clone-desktop-*.png` (9);
+   17 probe scripts preserved (`scripts/*-s65.mjs`). Docs: Batch V in
+   the remediation plan, README Session-65 row, SKILL.md AP-109, AGENTS
+   counts (842/351).
+
+**Stage summary.**
+
+- The 20-view drift matrix is COMPLETE (s58–s65): every authed view has
+  now been fingerprint-compared against the live reference on desktop
+  (and the high-traffic set on mobile); all four new-surface drifts
+  fixed TDD-style; five new permanent pins (S5-V ×2, S17-V ×3).
+- Gates: lint ✓ tsc ✓ unit **842/842** e2e **351/351** (192+104+55)
+  build ✓ Lighthouse a11y 100×2 — all on `main`, no branches; `skills/`
+  still excluded.
+- Remaining honest debt: Batch R's structural perf (RSC conversion) —
+  now carrying fresh CWV evidence that the clone outperforms the live
+  reference on every probed surface (183–297KB vs 771KB JS; ref
+  login-mobile LCP POOR at 9452ms) — remains the LAST open item, with
+  its deferral evidence refreshed this cycle.
+- New AP: **AP-109** — when the reference UI has no path for an
+  operation (or a dangling record blocks cleanup), intercept the UI's
+  own network calls to learn the entity API + auth scheme, then drive
+  the API directly; a reference account is stateful and its residue is
+  OURS to clean (zero-residue verification is part of the probe).

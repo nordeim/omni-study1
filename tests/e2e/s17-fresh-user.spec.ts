@@ -263,3 +263,67 @@ test.describe("S17-B · Notifications tab: the master toggle", () => {
     await expect(page.getByText(/preferences saved/i).first()).toBeVisible({ timeout: 10000 });
   });
 });
+
+test.describe("S17-V · session-65 zero-state drift fixes (measured on the live reference 2026-10-19)", () => {
+  test.use({ storageState: { cookies: [], origins: [] } });
+
+  test("S17-V1 My Day at zero: header + quick-add stay visible, the amber block renders BELOW (not instead)", async ({ page }) => {
+    await registerFreshUser(page, "v1-myday");
+    await page.goto("/MyDay");
+    await hydrated(page);
+    // The reference keeps the full chrome at zero (measured 2026-10-19:
+    // header h1 + date + quick-add form + More Options + the amber greeting
+    // block below) — the clone's early-return replaced the WHOLE view.
+    await expect(page.getByRole("heading", { level: 1, name: "My Day" })).toBeVisible();
+    const form = page.locator("main form").first();
+    await expect(form).toBeVisible();
+    await expect(form.locator("button")).toHaveText(/More Options/);
+    await expect(form.locator("input")).toHaveAttribute("placeholder", "Add a task for today...");
+    // the amber block still renders (the S9-B design) — below the chrome
+    const empty = page.locator("main").getByText(/Good (morning|afternoon|evening)!/).locator("..");
+    await expect(empty).toBeVisible();
+    await expect(empty.getByRole("button", { name: "Add Your First Task" })).toBeVisible();
+  });
+
+  test("S17-V2 Study Groups at zero: the EmptyState + Create Group CTA live in the LIST PANEL; the right pane is the bold hint", async ({ page }) => {
+    await registerFreshUser(page, "v2-sg");
+    await page.goto("/StudyGroups");
+    await hydrated(page);
+    // Reference (measured): the LIST panel carries the EmptyState with a
+    // gradient Create Group button; the right pane carries ONLY the
+    // "Select a group" hint at text-xl/600 slate-800. The clone had the
+    // hint-muted + EmptyState (no CTA) arrangement swapped.
+    const pane = page.locator('[aria-label="Study groups pane"]');
+    const cta = pane.getByRole("button", { name: "Create Group" });
+    await expect(cta).toBeVisible();
+    const ctaBg = await cta.evaluate((el) => getComputedStyle(el).backgroundImage);
+    expect(ctaBg).toContain("linear-gradient");
+    await expect(pane.getByText("No study groups", { exact: true })).toBeVisible();
+    await expect(pane.getByText("Create a group to collaborate")).toBeVisible();
+    // right pane: h3 "Select a group" at the measured typography
+    const right = page.locator('[aria-label="Study group detail pane"]');
+    const hint = right.getByRole("heading", { level: 3, name: "Select a group" });
+    await expect(hint).toBeVisible();
+    const cs = await hint.evaluate((el) => {
+      const s = getComputedStyle(el);
+      return { size: s.fontSize, weight: s.fontWeight, color: s.color };
+    });
+    expect(cs.size).toBe("20px");
+    expect(cs.weight).toBe("600");
+    expect(cs.color).toBe("rgb(30, 41, 59)");
+    await expect(right.getByText("Choose a study group from the sidebar or create a new one")).toBeVisible();
+  });
+
+  test("S17-V3 Grade Tracker at zero: exactly the reference's three stat cards — no Highest Grade, no hints", async ({ page }) => {
+    await registerFreshUser(page, "v3-gt");
+    await page.goto("/GradeTracker");
+    await hydrated(page);
+    await expect(page.getByText("Highest Grade")).toHaveCount(0);
+    await expect(page.getByText(/grades logged/)).toHaveCount(0);
+    await expect(page.getByText("Monitor your academic performance")).toBeVisible();
+    const grid = page.locator('main [aria-label="Grade summary"]');
+    await expect(grid).toBeVisible();
+    const cols = await grid.evaluate((el) => getComputedStyle(el).gridTemplateColumns.split(" ").length);
+    expect(cols).toBe(3);
+  });
+});

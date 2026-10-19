@@ -497,3 +497,50 @@ test.describe("S5-N · AI quick-action cards", () => {
     await expect(page.getByText("Press Enter to send, Shift + Enter for a new line")).toBeVisible();
   });
 });
+
+test.describe("S5-V · session-65 reference drift fixes (measured on the live reference 2026-10-19)", () => {
+  test("S5-V1 GradeTracker: the reference's 3-card stat row — no Highest Grade, no sub-captions, measured colors", async ({ page }) => {
+    await page.goto("/GradeTracker");
+    await hydrated(page);
+    // The reference's stat row is THREE cards (measured DOM: grid
+    // md:grid-cols-3 gap-4) — the Highest Grade card and every sub-caption
+    // ("N grades logged" / "Best score so far" / "Across all subjects" /
+    // "This semester") were clone inventions (probed zero AND seeded).
+    await expect(page.getByText("Highest Grade")).toHaveCount(0);
+    await expect(page.getByText(/grades logged/)).toHaveCount(0);
+    await expect(page.getByText("Best score so far")).toHaveCount(0);
+    await expect(page.getByText("Across all subjects")).toHaveCount(0);
+    await expect(page.getByText("This semester")).toHaveCount(0);
+    // The reference header subtitle (measured copy — was "Track your grades
+    // across subjects", clone-invented).
+    await expect(page.getByText("Monitor your academic performance")).toBeVisible();
+    // The stat grid computes THREE equal tracks at the desktop viewport.
+    const grid = page.locator('main [aria-label="Grade summary"]');
+    await expect(grid).toBeVisible();
+    const cols = await grid.evaluate((el) => getComputedStyle(el).gridTemplateColumns.split(" ").length);
+    expect(cols).toBe(3);
+    // Values read text-4xl (36px) — the clone's text-3xl was drift.
+    const avgValue = grid.locator("p", { hasText: /^0%$|^\d+(\.\d+)?%$/ }).first();
+    await expect(avgValue).toBeVisible();
+    expect(await avgValue.evaluate((el) => getComputedStyle(el).fontSize)).toBe("36px");
+    // Measured icon colors: the Total Grades target is emerald-500, the
+    // Subjects Tracked chart-column is blue-500 (the clone's violet sf icons
+    // were drift); the gradient card's award rides white.
+    const totalCard = grid.locator("div").filter({ hasText: /^Total Grades/ }).last();
+    const targetIcon = totalCard.locator("svg.lucide-target");
+    await expect(targetIcon).toBeVisible();
+    expect(await targetIcon.evaluate((el) => getComputedStyle(el).color)).toBe("rgb(16, 185, 129)");
+    const subjectsCard = grid.locator("div").filter({ hasText: /^Subjects Tracked/ }).last();
+    const chartIcon = subjectsCard.locator("svg.lucide-chart-column, svg.lucide-bar-chart-3").first();
+    await expect(chartIcon).toBeVisible();
+    expect(await chartIcon.evaluate((el) => getComputedStyle(el).color)).toBe("rgb(59, 130, 246)");
+  });
+
+  test("S5-V2 PracticeTests: the reference's measured subtitle copy", async ({ page }) => {
+    await page.goto("/PracticeTests");
+    await hydrated(page);
+    // Measured on the live reference 2026-10-19 (the clone's "Build and
+    // take practice tests" was invented).
+    await expect(page.getByText("Test yourself with practice exams")).toBeVisible();
+  });
+});

@@ -223,21 +223,20 @@ function GradeDialog({
 
 function GtSummaryCard({
   icon: Icon,
+  iconClass = "text-sf-primary",
   label,
   value,
-  hint,
 }: {
   icon: React.ComponentType<{ className?: string; strokeWidth?: number; "aria-hidden"?: boolean }>;
+  iconClass?: string;
   label: string;
   value: string | number;
-  hint: string;
 }) {
   return (
     <div className="sf-card rounded-2xl p-6">
-      <Icon className="h-8 w-8 text-sf-primary" strokeWidth={2} aria-hidden />
-      <p className="mt-3 text-sm font-medium text-slate-500 dark:text-slate-400">{label}</p>
-      <p className="mt-1 text-3xl font-bold text-slate-800 dark:text-slate-100">{value}</p>
-      <p className="mt-1 text-xs text-slate-500">{hint}</p>
+      <Icon className={cn("mb-3 h-8 w-8", iconClass)} strokeWidth={2} aria-hidden />
+      <p className="text-sm text-slate-500 dark:text-slate-400">{label}</p>
+      <p className="mt-2 text-4xl font-bold text-slate-800 dark:text-slate-100">{value}</p>
     </div>
   );
 }
@@ -263,7 +262,6 @@ export function GradeTrackerView() {
   const percents = grades.map(percentOf);
   const overallAvg =
     percents.length > 0 ? Math.round(percents.reduce((a, b) => a + b, 0) / percents.length) : 0;
-  const highest = percents.length > 0 ? Math.round(Math.max(...percents)) : 0;
 
   const bySubject = subjects
     .map((subject) => {
@@ -280,7 +278,7 @@ export function GradeTrackerView() {
     <div className="flex flex-col gap-6">
       <ViewHeader
         title="Grade Tracker"
-        subtitle="Track your grades across subjects"
+        subtitle="Monitor your academic performance"
         icon={ListChecks}
         actions={
           <Button
@@ -296,19 +294,22 @@ export function GradeTrackerView() {
         }
       />
 
-      {/* ---- stats (zero-data renders AT ZERO — never an EmptyState, S17) ---- */}
-      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4" aria-label="Grade summary">
+      {/* ---- stats (zero-data renders AT ZERO — never an EmptyState, S17) ----
+          Session-65 re-measure: the reference's row is THREE cards
+          (grid md:grid-cols-3 gap-4) — no Highest Grade card and no
+          sub-captions; the white-card icons are emerald-500/blue-500. */}
+      <div className="grid gap-4 md:grid-cols-3" aria-label="Grade summary">
         <div className="sf-gradient sf-gradient-shadow-lg rounded-2xl p-6 text-white">
-          <Award className="h-8 w-8" strokeWidth={2} aria-hidden />
-          <p className="mt-3 text-sm font-medium text-white/80">Overall Average</p>
-          <p className="mt-1 text-3xl font-bold tabular-nums">{overallAvg}%</p>
-          <p className="mt-1 text-xs text-white/70">{grades.length} grades logged</p>
+          <Award className="mb-3 h-8 w-8 opacity-80" strokeWidth={2} aria-hidden />
+          <p className="text-sm opacity-90">Overall Average</p>
+          <p className="mt-2 text-4xl font-bold">{overallAvg}%</p>
         </div>
         {/* Zero grades: "—" keeps the S17-E exact-text pin ("0%" resolves to
-            exactly ONE element — the Overall Average card). */}
-        <GtSummaryCard icon={Target} label="Highest Grade" value={grades.length ? `${highest}%` : "—"} hint="Best score so far" />
-        <GtSummaryCard icon={ChartColumn} label="Total Grades" value={grades.length} hint="Across all subjects" />
-        <GtSummaryCard icon={ListChecks} label="Subjects Tracked" value={subjects.length} hint="This semester" />
+            exactly ONE element — the Overall Average card). Session-65: the
+            reference's zero state shows the same three cards at 0/0/0 — the
+            hints and the Highest Grade card were clone inventions. */}
+        <GtSummaryCard icon={Target} iconClass="text-emerald-500" label="Total Grades" value={grades.length} />
+        <GtSummaryCard icon={ChartColumn} iconClass="text-blue-500" label="Subjects Tracked" value={subjects.length} />
       </div>
 
       {/* ---- grades list ---- */}

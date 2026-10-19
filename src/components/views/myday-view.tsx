@@ -122,46 +122,10 @@ export function MyDayView() {
     }
   };
 
-  // The amber greeting empty (S9-B) replaces the whole view at zero tasks.
-  if (!loading && tasks.length === 0) {
-    // LIVE clock, not the day-anchor `today` (hour 0) — same session-63
-    // drift find as the dashboard greeting; Family G pins the bucket.
-    const bucket = currentGreeting().replace("Good ", "").toLowerCase();
-    return (
-      <div className="flex flex-col items-center py-12 text-center">
-        <div className="sf-amber-card flex size-20 items-center justify-center rounded-2xl">
-          <Sun className="size-10 text-amber-500" strokeWidth={2} />
-        </div>
-        <h3 className="mt-4 text-xl font-semibold text-slate-700 dark:text-slate-200">
-          Good {bucket}!
-        </h3>
-        <p className="mt-1 text-base text-slate-500 dark:text-slate-400">
-          What would you like to accomplish today?
-        </p>
-        <div className="mt-6">
-          <Button
-            variant="gradient"
-            className="sf-amber-cta sf-gradient-shadow-lg"
-            onClick={() => {
-              setEditing(null);
-              setDialogMyDay(true);
-              setDialogOpen(true);
-            }}
-          >
-            <Plus className="size-4" strokeWidth={2} />
-            Add Your First Task
-          </Button>
-        </div>
-        <TaskDialog
-          key={dialogOpen ? `open-new` : "closed"}
-          open={dialogOpen}
-          onOpenChange={setDialogOpen}
-          task={null}
-          defaultMyDay={dialogMyDay}
-        />
-      </div>
-    );
-  }
+  // The amber greeting empty (S9-B) renders BELOW the header + quick-add
+  // row at zero tasks — the reference keeps the full chrome (session-65
+  // re-measure: the old early-return replaced the whole view; the live
+  // reference shows header + quick-add + the amber block beneath).
 
   return (
     <div className="flex flex-col gap-6">
@@ -218,6 +182,37 @@ export function MyDayView() {
         </Button>
       </form>
 
+      {/* ---- zero-day amber empty (S9-B) — BELOW the chrome, session-65 ---- */}
+      {!loading && tasks.length === 0 ? (
+        // LIVE clock, not the day-anchor `today` (hour 0) — same session-63
+        // drift find as the dashboard greeting; Family G pins the bucket.
+        <div className="flex flex-col items-center py-12 text-center">
+          <div className="sf-amber-card flex size-20 items-center justify-center rounded-2xl">
+            <Sun className="size-10 text-amber-500" strokeWidth={2} />
+          </div>
+          <h3 className="mt-4 text-xl font-semibold text-slate-700 dark:text-slate-200">
+            Good {currentGreeting().replace("Good ", "").toLowerCase()}!
+          </h3>
+          <p className="mt-1 text-base text-slate-500 dark:text-slate-400">
+            What would you like to accomplish today?
+          </p>
+          <div className="mt-6">
+            <Button
+              variant="gradient"
+              className="sf-amber-cta sf-gradient-shadow-lg"
+              onClick={() => {
+                setEditing(null);
+                setDialogMyDay(true);
+                setDialogOpen(true);
+              }}
+            >
+              <Plus className="size-4" strokeWidth={2} />
+              Add Your First Task
+            </Button>
+          </div>
+        </div>
+      ) : (
+        <>
       {/* ---- today's progress (S6-C measured amber card) ---- */}
       <section aria-label="Today progress" className="sf-progress-card rounded-2xl p-4">
         <div className="flex items-center justify-between gap-4">
@@ -336,6 +331,8 @@ export function MyDayView() {
           </div>
         )}
       </div>
+        </>
+      )}
 
       <TaskDialog
         key={dialogOpen ? `open-${editing?.id ?? "new"}` : "closed"}

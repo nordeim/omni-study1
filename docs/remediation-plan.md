@@ -275,6 +275,49 @@ captures `64-clone-desktop-{Events,Events-carousel,Timetable-banner,
 Assignments-filter}.png` vs `64-ref-desktop-{Events,Events-banner,
 Timetable,Assignments}.png`.
 
+### Batch V — Session-65: the zero-state + stat-card drifts (My Day, Grade Tracker, Practice Tests, Study Groups) — the 20-view matrix completed
+
+The drift sweeps s58–s64 had covered 16 of the 20 authed views (s58 mobile:
+Dashboard/Tasks/Analytics/Settings; s60 desktop: Notes/Flashcards/Calendar;
+s63–s64: Dashboard/Events/Timetable/Exams/Assignments). This cycle probed the
+four never-swept surfaces — My Day, Grade Tracker, Practice Tests, Study
+Groups — completing the matrix. The reference account is EMPTY, so the
+seeded Grade Tracker comparison needed an authorized gated write probe (the
+s64 precedent: create → measure → delete → verify zero residue). The probe
+also surfaced a reference-side dangling record: deleting the probe subject
+cascade-removed its grade but the account's "Total Grades 1" counter kept a
+second orphan grade — no UI delete path exists for it; an endpoint-learning
+probe (intercepting the UI's own create call) captured the entity API
+(`/api/apps/{id}/entities/{Entity}`, Bearer JWT from localStorage) and both
+records were deleted through it. Zero residue verified (0 grades, 0
+subjects); the Grade entity schema was captured as a bonus.
+
+| # | Finding (reference-measured 2026-10-19) | Root cause (clone) | Fix | Guard |
+|---|---------|-----------|-----|-------|
+| V1 | **My Day at zero keeps the full chrome**: the header + the quick-add row stay visible and the amber greeting block (sun tile, "Good {bucket}!", "What would you like to accomplish today?", "Add Your First Task") renders BELOW them — not instead of them | the S9-era early return replaced the WHOLE view with the amber empty; S9-B pinned only the block's internals, not its position | the early return removed; the amber block is now a conditional branch after the quick-add form (`!loading && tasks.length === 0`), the progress/list chrome renders otherwise; S9-B's parent-locator structure survives | S17-V1 (header h1 + quick-add visible AND amber h3 below, at zero) |
+| V2 | **Practice Tests subtitle copy**: "Test yourself with practice exams" | the clone invented "Build and take practice tests" | one-line subtitle swap in the ViewHeader | S5-V2 (exact copy pin) |
+| V3 | **Grade Tracker is a 3-card row with no sub-captions**: `grid md:grid-cols-3 gap-4`; cards = Overall Average (gradient) / **Total Grades** (white, emerald-500 Target) / **Subjects Tracked** (white, blue-500 ChartColumn); values `text-4xl font-bold mt-2`, labels `text-sm` — NO Highest Grade card, NO hint lines; the header subtitle reads **"Monitor your academic performance"**; the seeded view adds subject progress rows + "Recent Grades" (probed with data, then deleted) | the clone had FOUR cards (invented Highest Grade + a 2×2/4-col grid), a hint paragraph under every value, and the subtitle "Track your grades across subjects" | GtSummaryCard: `hint` prop removed, `iconClass` prop added, value `text-3xl mt-1` → `text-4xl mt-2`, icon `mb-3`; grid → `md:grid-cols-3`; Highest Grade card deleted, Total Grades + Subjects Tracked reordered into the measured order with the measured icon colors; the "—" zero sentinel (S17-E exact-text pin) survives on the gradient card; subtitle corrected | S5-V1 (3-card row, no Highest Grade, no hints, measured colors + subtitle) + S17-V3 (the zero state shows the same three cards at 0/0/0) |
+| V4 | **Study Groups panes swap their empties**: at zero the LIST panel carries the EmptyState (Users icon, "No study groups", "Create a group to collaborate") WITH the gradient **Create Group** CTA; the right pane is the bold hint ONLY (h3 "Select a group" `text-xl font-semibold text-slate-800 mb-2` + p `text-slate-500 max-w-sm mb-6`, centered `py-16 px-4`); the header's + button radius is **6px** (`rounded-md`) | the clone had the roles swapped — a bare "No study groups yet." text line in the list panel and the EmptyState (no CTA) in the right pane; the + button used `rounded-xl` | EmptyState + CTA moved into the list panel's zero branch (the search-no-results line stays — unprobed); right pane rebuilt as the bold hint; S17-G's mobile stacking pins survive (both panes stack); + button `rounded-xl` → `rounded-md` | S17-V2 (list-panel EmptyState + CTA; right-pane bold hint; no right-pane EmptyState) |
+
+**Verified:** the 5 new pins RED-first, then GREEN (one pin's locator chain
+fixed during RED — the CTA button is a sibling of the h3, not a child);
+affected files re-run green; full cold re-certification **192 + 104 + 55 =
+351/351** on the final bundle with zero flakes; lint ✓ tsc ✓ unit
+**842/842** ✓; the standalone bundle rebuilt in-cycle for the RED→GREEN
+verification (REAL_EXIT=0; `find src prisma -newer .next/BUILD_ID` empty —
+fresh); live comparison on the production standalone:
+clone fingerprints now match the reference on all four surfaces (seeded +
+empty captures); Lighthouse re-certified a11y **100** on both surfaces
+(`65-{dashboard,login}-after.json`); CWV budget audit refreshed the
+Batch-R deferral evidence — the clone ships 183–297KB JS with LCP GOOD on
+every probed surface while the live reference ships 1232KB total / 771KB
+JS and its login-mobile LCP is POOR (9452ms). Captures:
+`65-ref-desktop-{myday,gradetracker,practicetests,studygroups,settings,
+gradetracker-probe}.png` + `65-clone-desktop-{myday,myday-empty,
+gradetracker,gradetracker-empty,practicetests,practicetests-empty,
+studygroups,studygroups-empty,settings}.png` (15). Probe scripts preserved
+under `scripts/*-s65.mjs` (17).
+
 ## 3a. Verification (session-56 re-run, from a fresh clone)
 
 | Gate | Result |

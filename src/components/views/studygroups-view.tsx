@@ -260,7 +260,7 @@ export function StudyGroupsView() {
               setEditing(null);
               setDialogOpen(true);
             }}
-            className="sf-gradient sf-gradient-shadow flex size-9 shrink-0 items-center justify-center rounded-xl text-white"
+            className="sf-gradient sf-gradient-shadow flex size-9 shrink-0 items-center justify-center rounded-md text-white"
           >
             <Plus className="size-5" strokeWidth={2} aria-hidden />
           </button>
@@ -287,9 +287,31 @@ export function StudyGroupsView() {
               <Spinner className="size-5 text-sf-primary" />
             </div>
           ) : filtered.length === 0 ? (
-            <p className="px-1 py-8 text-center text-sm text-slate-500">
-              {groups.length === 0 ? "No study groups yet." : "No groups match your search."}
-            </p>
+            groups.length === 0 ? (
+              // Session-65 re-measure: the reference's LIST panel carries the
+              // EmptyState WITH the gradient Create Group CTA at zero (the
+              // clone's plain "No study groups yet." line was drift). The
+              // search-no-results variant below stays as-is (unprobed).
+              <EmptyState
+                icon={Users}
+                title="No study groups"
+                hint="Create a group to collaborate"
+                cta={
+                  <Button
+                    variant="gradient"
+                    onClick={() => {
+                      setEditing(null);
+                      setDialogOpen(true);
+                    }}
+                  >
+                    <Plus className="size-4" strokeWidth={2} />
+                    Create Group
+                  </Button>
+                }
+              />
+            ) : (
+              <p className="px-1 py-8 text-center text-sm text-slate-500">No groups match your search.</p>
+            )
           ) : (
             filtered.map((group) => {
               const memberCount = parseMembers(group.members).length;
@@ -323,16 +345,15 @@ export function StudyGroupsView() {
       <section className="flex min-w-0 flex-1 flex-col" aria-label="Study group detail pane">
         {!selected ? (
           groups.length === 0 ? (
-            // Zero groups: the placeholder stays visible above the empty
-            // state (the content parity the reference carries in both
-            // panes — S17-G). The two spans are separate elements so the
-            // exact-text "Select a group" pin resolves without the dash.
-            <div className="flex flex-1 flex-col items-center justify-center gap-5">
-              <p className="text-sm text-slate-400">
-                <span className="block">Select a group</span>
-                <span className="block">Choose a study group from the sidebar or create a new one</span>
+            // Session-65 re-measure: at zero the reference's right pane is
+            // the BOLD hint ONLY (h3 text-xl/600 slate-800 + p slate-500) —
+            // the EmptyState lives in the LIST panel (S17-V2). The panes'
+            // roles were swapped in the clone.
+            <div className="flex flex-1 flex-col items-center justify-center py-16 px-4 text-center">
+              <h3 className="text-xl font-semibold text-slate-800 dark:text-slate-100 mb-2">Select a group</h3>
+              <p className="text-slate-500 dark:text-slate-400 max-w-sm mb-6">
+                Choose a study group from the sidebar or create a new one
               </p>
-              <EmptyState icon={Users} title="No study groups" hint="Create a group to collaborate" />
             </div>
           ) : (
             <div className="flex flex-1 items-center justify-center">

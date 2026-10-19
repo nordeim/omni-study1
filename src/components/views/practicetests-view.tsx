@@ -682,7 +682,7 @@ export function PracticeTestsView() {
     <div className="flex flex-col gap-6">
       <ViewHeader
         title="Practice Tests"
-        subtitle="Build and take practice tests"
+        subtitle="Test yourself with practice exams"
         icon={FileText}
         actions={
           <Button
