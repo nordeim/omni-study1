@@ -345,13 +345,22 @@ export function StudyGroupsView() {
       <section className="flex min-w-0 flex-1 flex-col" aria-label="Study group detail pane">
         {!selected ? (
           groups.length === 0 ? (
-            // Session-65 re-measure: at zero the reference's right pane is
-            // the BOLD hint ONLY (h3 text-xl/600 slate-800 + p slate-500) —
-            // the EmptyState lives in the LIST panel (S17-V2). The panes'
-            // roles were swapped in the clone.
-            <div className="flex flex-1 flex-col items-center justify-center py-16 px-4 text-center">
-              <h3 className="text-xl font-semibold text-slate-800 dark:text-slate-100 mb-2">Select a group</h3>
-              <p className="text-slate-500 dark:text-slate-400 max-w-sm mb-6">
+            // S8-Z (re-measured s69): at zero the reference's right pane is
+            // the top-anchored icon EmptyState (80px gradient users block
+            // above the h3) — the s65 "bold hint only" reading no longer
+            // matches the live reference (AP-108: re-probe, re-pin).
+            <div className="flex flex-1 flex-col items-center px-4 pt-1 text-center">
+              <div
+                className="flex size-20 items-center justify-center rounded-2xl"
+                style={{
+                  backgroundImage:
+                    "linear-gradient(to bottom right, rgb(var(--sf-primary-empty-from)), rgb(var(--sf-primary-empty-to)))",
+                }}
+              >
+                <Users className="size-10 text-sf-primary" strokeWidth={2} />
+              </div>
+              <h3 className="mt-4 mb-2 text-xl font-semibold text-slate-800 dark:text-slate-100">Select a group</h3>
+              <p className="max-w-sm text-slate-500 dark:text-slate-400">
                 Choose a study group from the sidebar or create a new one
               </p>
             </div>

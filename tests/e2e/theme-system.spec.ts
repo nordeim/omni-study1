@@ -189,6 +189,94 @@ test.describe("S11-2..5 · accent surfaces re-theme in dark (the 300-level conve
   });
 });
 
+const hydrated = (page: Page) =>
+  page.waitForFunction(() => document.documentElement.style.getPropertyValue("--sf-primary") !== "");
+
+test.describe("S11-7 · the Appearance tab is the reference's single card (s69)", () => {
+  test("the appearance pane renders ONE max-w-4xl card with the ref's anatomy", async ({ page }) => {
+    // Reference (measured s69): ONE `rounded-xl border bg-card shadow`
+    // card, 896px (max-w-4xl) centered, containing the Appearance title,
+    // the "Customize how StudyFlow looks" description, the Theme /
+    // Accent Color / Avatar labels, and the Save Preferences gradient
+    // button. The clone rendered THREE sf-cards at max-w-2xl.
+    await page.goto("/Settings");
+    await hydrated(page);
+    const pane = page.locator('[aria-label="Appearance"]');
+    await expect(pane.getByText("Customize how StudyFlow looks")).toBeVisible();
+    const cards = pane.locator("div.rounded-xl.border");
+    await expect(cards).toHaveCount(1);
+    const cs = await cards.first().evaluate((el) => {
+      const s = getComputedStyle(el);
+      const r = el.getBoundingClientRect();
+      return {
+        bg: s.backgroundColor,
+        radius: s.borderRadius,
+        w: Math.round(r.width),
+        x: Math.round(r.x),
+      };
+    });
+    expect(cs.radius).toBe("12px");
+    expect(Math.abs(cs.w - 896)).toBeLessThanOrEqual(8);
+    // centered in the content area right of the 260px sidebar
+    const vw = await page.evaluate(() => window.innerWidth);
+    expect(Math.abs(cs.x - (260 + (vw - 260 - 896) / 2))).toBeLessThanOrEqual(8);
+    for (const label of ["Theme", "Accent Color", "Avatar"]) {
+      await expect(pane.getByText(label, { exact: true })).toBeVisible();
+    }
+    await expect(pane.getByRole("button", { name: /save preferences/i })).toBeVisible();
+  });
+
+  test("theme buttons + swatches + emoji tiles carry the measured geometry", async ({ page }) => {
+    // Reference (measured s69): theme buttons flex-1 h-88 rounded-xl
+    // border-2 with a 24px icon; accent swatches 48px rounded-xl; emoji
+    // tiles 48px rounded-xl on a slate-100 fill (NO border) in a
+    // flex-wrap gap-2 row.
+    await page.goto("/Settings");
+    await hydrated(page);
+    const light = page.getByRole("button", { name: "Light", exact: true });
+    const tcs = await light.evaluate((el) => {
+      const s = getComputedStyle(el);
+      const svg = el.querySelector("svg")!;
+      return {
+        h: Math.round(el.getBoundingClientRect().height),
+        radius: s.borderRadius,
+        border: s.borderTopWidth,
+        icon: Math.round(svg.getBoundingClientRect().width),
+      };
+    });
+    expect(tcs.h).toBe(88);
+    expect(tcs.radius).toBe("12px");
+    expect(tcs.border).toBe("2px");
+    expect(tcs.icon).toBe(24);
+    const swatch = page.getByRole("button", { name: "Violet accent" });
+    const scs = await swatch.evaluate((el) => {
+      const s = getComputedStyle(el);
+      return { size: Math.round(el.getBoundingClientRect().width), radius: s.borderRadius };
+    });
+    expect(scs.size).toBe(48);
+    expect(scs.radius).toBe("12px");
+    const tile = page.getByRole("button", { name: "Choose avatar 🎓" });
+    const tiles = await tile.evaluate((el) => {
+      const s = getComputedStyle(el);
+      const parent = el.parentElement!;
+      return {
+        size: Math.round(el.getBoundingClientRect().width),
+        radius: s.borderRadius,
+        border: s.borderTopWidth,
+        bg: s.backgroundColor,
+        parentDisplay: getComputedStyle(parent).display,
+        gap: getComputedStyle(parent).gap,
+      };
+    });
+    expect(tiles.size).toBe(48);
+    expect(tiles.radius).toBe("12px");
+    expect(tiles.border).toBe("0px");
+    expect(tiles.bg).toBe("rgb(241, 245, 249)"); // slate-100 fill
+    expect(tiles.parentDisplay).toBe("flex");
+    expect(tiles.gap).toBe("8px");
+  });
+});
+
 test.describe("S11-6 · minimal print styles (superset)", () => {
   test("print emulation hides the chrome and resets the canvas", async ({ page }) => {
     await gotoMode(page, "/Dashboard", "light");

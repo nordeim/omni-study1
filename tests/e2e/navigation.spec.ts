@@ -519,4 +519,110 @@ test.describe("view chrome (computed parity pins)", () => {
     const time = clockChip.locator("p").first();
     await expect(time).toHaveText(/^\d{2}:\d{2} (AM|PM)$/);
   });
+
+  test("the dashboard section grid matches the reference's 3-track row (S4-L pin)", async ({ page }) => {
+    // Reference (measured s69): the section row is `grid lg:grid-cols-3
+    // gap-6` with Today's Tasks spanning TWO tracks (736px) and Upcoming
+    // Exams one (356px). The clone's lg:grid-cols-2 rendered 546/546.
+    await page.goto("/Dashboard");
+    const tasksCard = page
+      .locator("section", { has: page.getByRole("heading", { name: "Today's Tasks" }) })
+      .first();
+    await expect(tasksCard).toBeVisible();
+    const span = await tasksCard.evaluate((el) => getComputedStyle(el).gridColumn);
+    expect(span).toBe("span 2 / span 2");
+    const grid = tasksCard.evaluate((el) => getComputedStyle(el.parentElement!).gridTemplateColumns);
+    expect((await grid).split(" ")).toHaveLength(3);
+  });
+
+  test("the dashboard section header icons match the reference map (S4-M pin)", async ({ page }) => {
+    // Reference (measured s69): Today's Tasks = square-check-big,
+    // Upcoming Exams = graduation-cap, Upcoming Assignments = book-open.
+    // The clone's sun/clipboard-list were S8-era guesses.
+    await page.goto("/Dashboard");
+    for (const [title, icon] of [
+      ["Today's Tasks", "lucide-square-check-big"],
+      ["Upcoming Exams", "lucide-graduation-cap"],
+      ["Upcoming Assignments", "lucide-book-open"],
+    ] as const) {
+      const h2 = page.getByRole("heading", { level: 2, name: title });
+      const cls = await h2.locator("svg").evaluate((el) => el.getAttribute("class") ?? "");
+      expect(cls).toContain(icon);
+    }
+  });
+
+  test("the Upcoming Exams header carries the reference's All anchor (S4-N pin)", async ({ page }) => {
+    // Reference (measured s69): a plain anchor href="/Exams" labelled "All"
+    // with a 16px arrow-right icon, 16px neutral-950 text — the clone had
+    // NO action on this card.
+    await page.goto("/Dashboard");
+    const examsCard = page
+      .locator("section", { has: page.getByRole("heading", { name: "Upcoming Exams" }) })
+      .first();
+    const all = examsCard.locator("a").filter({ hasText: /^All/ });
+    await expect(all).toBeVisible();
+    const href = await all.getAttribute("href");
+    expect(href).toBe("/Exams");
+    const cls = await all.locator("svg").evaluate((el) => el.getAttribute("class") ?? "");
+    expect(cls).toContain("lucide-arrow-right");
+    await expect(all).toHaveCSS("font-size", "16px");
+  });
+
+  test("the dashboard section empties match the reference icons and copy (S4-O pin)", async ({ page }) => {
+    // Reference (measured s69, zero state): "No upcoming exams" (NO
+    // period) and "No upcoming assignments" (the clone's "No active
+    // assignments." was invented); the empty icons mirror the header
+    // icons (square-check-big / graduation-cap / book-open); the message
+    // renders 16px (the reference's measured size). Zero state = the S17
+    // fresh-user pattern (the demo seed ships exams/assignments); the
+    // cookie clear detaches the shared demo storageState first.
+    await page.context().clearCookies();
+    const email = `s4o-${Date.now()}@studyflow.app`;
+    const res = await page.request.post("/api/auth/register", {
+      data: { email, password: "Fresh1234!", name: "S4O Probe" },
+    });
+    expect(res.ok(), `register failed: ${res.status()}`).toBe(true);
+    const { code } = (await res.json()) as { code: string };
+    await page.request.post("/api/auth/verify-email", { data: { email, code } });
+    await page.goto("/Dashboard");
+    await expect(page.getByText("No upcoming exams", { exact: true })).toBeVisible();
+    await expect(page.getByText("No upcoming assignments", { exact: true })).toBeVisible();
+    await expect(page.getByText("No active assignments.", { exact: true })).toHaveCount(0);
+    const examsCard = page
+      .locator("section", { has: page.getByRole("heading", { name: "Upcoming Exams" }) })
+      .first();
+    const msg = examsCard.getByText("No upcoming exams", { exact: true });
+    await expect(msg).toHaveCSS("font-size", "16px");
+    const assignCard = page
+      .locator("section", { has: page.getByRole("heading", { name: "Upcoming Assignments" }) })
+      .first();
+    const iconCls = await assignCard
+      .locator("svg")
+      .filter({ hasNot: page.locator("h2 svg") })
+      .evaluateAll((svgs) => svgs.map((s) => s.getAttribute("class") ?? "").join(","));
+    expect(iconCls).toContain("lucide-book-open");
+  });
+
+  test("the view header icons match the re-dumped reference map (S3-M pin)", async ({ page }) => {
+    // Reference (measured s69): Grade Tracker's h1 icon is trending-up,
+    // Practice Tests' is file-question — the Batch-Y NAV_ICONS fix never
+    // reached the ViewHeader call sites (they kept the pre-Y1 glyphs).
+    await page.goto("/GradeTracker");
+    const gt = page.getByRole("heading", { level: 1, name: "Grade Tracker" });
+    expect(await gt.locator("svg").evaluate((el) => el.getAttribute("class") ?? "")).toContain(
+      "lucide-trending-up",
+    );
+    await page.goto("/PracticeTests");
+    const pt = page.getByRole("heading", { level: 1, name: "Practice Tests" });
+    expect(await pt.locator("svg").evaluate((el) => el.getAttribute("class") ?? "")).toContain(
+      "lucide-file-question",
+    );
+  });
+
+  test("the Settings subtitle reads the reference's copy (S4-P pin)", async ({ page }) => {
+    // Reference (measured s69): "Customize your StudyFlow experience" —
+    // the clone's "Personalize your study companion" was invented.
+    await page.goto("/Settings");
+    await expect(page.getByText("Customize your StudyFlow experience", { exact: true })).toBeVisible();
+  });
 });

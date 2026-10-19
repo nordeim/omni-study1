@@ -162,12 +162,14 @@ export function EmptyState({ icon: Icon, title, hint, cta }: EmptyStateProps) {
   );
 }
 
-/** The slim inline empty (dashboard sections inside flush cards — S9-R). */
+/** The slim inline empty (dashboard sections inside flush cards — S9-R).
+ *  The reference's section-empty message renders 16px (measured s69,
+ *  S4-O) — not the 14px the S9-era build shipped. */
 export function SimpleEmptyState({ icon: Icon, message }: { icon: LucideIcon; message: string }) {
   return (
     <div className="p-8 text-center text-slate-500 dark:text-slate-400">
       <Icon className="mx-auto mb-3 h-12 w-12 text-slate-300 dark:text-slate-600" strokeWidth={2} />
-      <p className="text-sm text-slate-500 dark:text-slate-400">{message}</p>
+      <p className="text-base text-slate-500 dark:text-slate-400">{message}</p>
     </div>
   );
 }

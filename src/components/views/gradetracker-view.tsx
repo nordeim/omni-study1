@@ -7,7 +7,7 @@
 // ---------------------------------------------------------------------------
 
 import * as React from "react";
-import { ListChecks, Pencil, Plus, Trash2,
+import { ListChecks, Pencil, Plus, Trash2, TrendingUp,
   Award,
   Target,
   ChartColumn,
@@ -279,7 +279,9 @@ export function GradeTrackerView() {
       <ViewHeader
         title="Grade Tracker"
         subtitle="Monitor your academic performance"
-        icon={ListChecks}
+        // S3-M (measured s69): the reference's header icon is trending-up
+        // (the Batch-Y nav fix never reached this call site).
+        icon={TrendingUp}
         actions={
           <Button
             variant="gradient"

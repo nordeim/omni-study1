@@ -12,6 +12,7 @@
 
 import * as React from "react";
 import {
+  Calendar,
   CalendarDays,
   ChevronDown,
   ChevronLeft,
@@ -20,7 +21,6 @@ import {
   Clock,
   MapPin,
   Pencil,
-  Plus,
   Repeat,
   Trash2,
 } from "lucide-react";
@@ -244,14 +244,16 @@ export function EventsView() {
 
       {/* Session-66 re-measure: the strip is DATE-driven, not data-driven —
           the reference at zero still shows the full panel (controls, big
-          date, CW line, the 7-day list reading "No events." per day) and
+          date, CW line, the 7-day list reading "No events" per day) and
           renders NO empty card; the old early return replaced the whole
-          panel with an invented EmptyState (S17-W). */}
-      <section className="sf-print-exact rounded-2xl bg-slate-900 p-6 shadow-2xl" aria-label="Events panel">
-          {/* Header strip (measured Batch U): overline + controls / big date
-              / full-width cyan New Event — the ref's strip is p-4 with a
-              slate-700 divider above the day list. */}
-          <div className="border-b border-slate-700 pb-4">
+          panel with an invented EmptyState (S17-W).
+          S5-V2 (measured s69): the panel itself is p-0 + overflow-hidden;
+          the strip carries its own px-4 paddings (no border-b); the day
+          rows are full-width slate-800/50 bands with slate-300 labels. */}
+      <section className="sf-print-exact overflow-hidden rounded-2xl bg-slate-900 shadow-2xl" aria-label="Events panel">
+          {/* Header strip (measured Batch U + s69): overline + controls /
+              big date / full-width left-aligned cyan New Event. */}
+          <div className="px-4 pb-4 pt-6">
             <div className="flex items-center justify-between">
               <p className="text-xs uppercase tracking-wider text-slate-400">Events</p>
               <div className="flex items-center gap-1">
@@ -300,28 +302,37 @@ export function EventsView() {
             <button
               type="button"
               onClick={openCreate}
-              className="mt-4 flex h-9 w-full items-center justify-center gap-2 rounded-md text-sm font-medium text-cyan-400 outline-none hover:bg-slate-800 hover:text-cyan-300 focus-visible:ring-2 focus-visible:ring-cyan-400/40"
+              className="mt-4 flex h-9 w-full items-center justify-start gap-2 rounded-md px-4 text-sm font-medium text-cyan-400 outline-none hover:bg-slate-800 hover:text-cyan-300 focus-visible:ring-2 focus-visible:ring-cyan-400/40"
             >
-              <Plus className="size-4" strokeWidth={2} />
+              <Calendar className="size-4" strokeWidth={2} />
               New Event
             </button>
           </div>
 
           {listOpen && (
-          <div className="mt-4 flex flex-col gap-5">
+          <div className="flex flex-col">
             {windowDays.map((day) => {
               const dayEvents = events.flatMap((e) =>
                 expandOccurrences(e, [day]).map(() => e),
               );
               return (
                 <div key={day.toISOString()}>
-                  <h2 className="text-sm font-semibold text-cyan-400">
-                    {dayLabel(day)}
-                  </h2>
+                  {/* S5-V2 (measured s69): the day label sits in a full-width
+                      slate-800/50 band, slate-300/600 at 14px. */}
+                  <div className="bg-slate-800/50 px-4 py-2">
+                    <h2 className="text-sm font-semibold text-slate-300">
+                      {dayLabel(day)}
+                    </h2>
+                  </div>
                   {dayEvents.length === 0 ? (
-                    <p className="mt-1 text-sm text-slate-400">No events.</p>
+                    <div className="px-4 py-2">
+                      {/* slate-400, not the reference's slate-500 — the
+                          reference's 3.48:1 on slate-900 fails WCAG AA at
+                          14px; the Batch-R/S/Y a11y-wins precedent (S5-V2). */}
+                      <p className="my-3 text-sm text-slate-400">No events</p>
+                    </div>
                   ) : (
-                    <div className="mt-2 flex flex-col gap-2">
+                    <div className="flex flex-col gap-2 px-4 py-3">
                       {dayEvents.map((e) => (
                         <article
                           key={`${e.id}-${day.toISOString()}`}

@@ -475,6 +475,62 @@ y=105/153/201 (byte-equal), Practice Tests glyph path-identical; the
 corrected dashboard + drawer captured (`68-clone-dashboard.png`,
 `68-clone-mobile-drawer.png`).
 
+### Batch Z — Session-69: the screenshot-sweep drift layer (dashboard sections, My Day column, view-header icons, Events bands, the Settings Appearance card)
+
+The 13th cycle ran on a RESET workspace (fresh clone at the
+session_15 transcript `f0d01b1`). Environment re-provisioned from
+scratch (bun install, `.env`, `db/custom.db` push+seed, chromium-1243,
+the paramiko ssh shim rebuilt at `/home/z/ssh-infra/ssh` after the
+reset shredded it; `ls-remote` pre-flight green). Gates re-certified
+cold on the received state: lint ✓ tsc ✓ unit 844/844 ✓; e2e across
+the re-derived 5-sub-run map (12 zero-register files split by weight;
+the s9+s17+tasks/resilience/s16/s14 register family on its own fresh
+server; auth + s18–s26 + greeting on the third) — **361/361** zero
+flakes (105+100+42+56+58). The s69 invariant sweep (the s68 class +
+tags) reported **ok:true** on both hosts — and the side-by-side
+screenshot pairs (`69-ref-*` vs `69-clone-*`) exposed the next drift
+layer, DOM-probed into a 12-finding truth table
+(`scripts/z-probe{,2,3,4,5}-s69.mjs`):
+
+| # | Finding | Root cause | Fix | Guard |
+|---|---------|-----------|-----|-------|
+| Z1 | Dashboard section row: clone `lg:grid-cols-2` (546/546) vs reference `grid lg:grid-cols-3 gap-6` with Today's Tasks `col-span-2` (736+356) | the S8-B-era 2-col grid was never re-measured | `lg:grid-cols-3` + SectionCard `lg:col-span-2` | **S4-L** (span 2 + 3 tracks) |
+| Z2 | Dashboard section header icons: sun / graduation-cap / clipboard-list vs reference square-check-big / graduation-cap / book-open | S8-era guesses, no pin on the header map | header icons corrected | **S4-M** (3-entry map) |
+| Z3 | The Upcoming Exams header had NO action; the reference carries a plain 16px neutral-950 **"All" anchor → /Exams** with an arrow-right icon | unmeasured header slot | anchor added (the AP-108-measured value: `text-base text-neutral-950`) | **S4-N** |
+| Z4 | Dashboard section empties: "No upcoming exams." (invented period), "No active assignments." (invented copy), 14px messages vs reference "No upcoming exams" / "No upcoming assignments" at **16px** | SimpleEmptyState predates the measurement discipline | copy corrected; SimpleEmptyState message `text-sm`→`text-base` | **S4-O** (fresh-user — the seed ships exams/assignments, AP-114) |
+| Z5 | My Day rendered FULL-width (x=292, w=1061) vs the reference's centered **max-w-3xl** column (x=466, w=768); the quick-add plus TRAILING 16px vs the reference's LEADING 20px slate-400 plus with a 48px input inset; More Options white outline rounded-xl vs the reference's **neutral-950 6px-radius dark button** | the My Day shell was never measured | root `mx-auto max-w-3xl`; leading plus (`left-4 size-5`) + `pl-12`; gap-3; new Button **`neutral` variant** (arbitrary hexes — the first draft's `bg-neutral-950` serialized `lab(...)`, v4 trap 10 re-hit) | **S9-R2** ×3 |
+| Z6 | Grade Tracker h1 icon list-checks vs reference **trending-up**; Practice Tests h1 icon file-text vs **file-question** | the Batch-Y NAV_ICONS fix never reached the ViewHeader call sites | icons corrected (ListChecks kept for the By-subject card) | **S3-M** |
+| Z7 | Practice Tests zero state wrapped in an sf-card; the reference's floats **BARE on the canvas** (probe: no bordered/bg ancestor within 6 levels) | the wrapper predates the zero-state matrix | wrapper dropped | **S7-P** (fresh-user, AP-114) |
+| Z8 | Study Groups right pane at zero: the centered bold-hint-only variant vs the reference's **top-anchored icon EmptyState** (80px gradient users block, icon y≈96, h3 y≈200) | the s65 reading no longer matches the live reference (AP-108: re-probe, re-pin) | icon block + h3 (level kept for the s17 pin) + hint, top-anchored | **S8-Z** (fresh-user, AP-114) |
+| Z9 | Events day rows: bare cyan-400 labels, centered plus-icon New Event, "No events." vs the reference's **full-width slate-800/50 band rows** (`px-4 py-2`, slate-300/600 14px labels), a **left-aligned calendar-icon New Event** full-width row (`px-4 py-2`), "No events" without the period; the panel itself `p-0 overflow-hidden` with the strip carrying `px-4 pt-6 pb-4` | the Batch-U/W chrome modeled the pre-restructure reference | panel/strip/day-row structure rebuilt; "No events" color stays **slate-400** — the reference's slate-500 is 3.48:1 on slate-900 (the a11y-wins precedent); the band bg asserts accept the oklab serialization (v4 trap 7) | **S5-V2** ×2 + S17-W updated (the Batch-W period pin re-pinned per AP-108) |
+| Z10 | Settings subtitle "Personalize your study companion" vs reference **"Customize your StudyFlow experience"** | invented copy | corrected | **S4-P** |
+| Z11 | Settings Appearance tab: THREE sf-cards at max-w-2xl with per-card headings/hints vs the reference's **ONE shadcn card** (`rounded-xl border bg-card shadow`, 896px = max-w-4xl centered) holding CardTitle "Appearance" + "Customize how StudyFlow looks" + the Theme / Accent Color / Avatar labels (`text-sm font-medium`) + h-88 rounded-xl border-2 theme buttons (24px icons) + 48px rounded-xl swatches + a flex-wrap gap-2 grid of 48px rounded-xl emoji tiles + a Save Preferences gradient button (save icon) | the S11-era three-card design was invented before the appearance surface was ever measured | AppearanceCard composite (the pickers keep the immediate-PATCH contract; Save re-PATCHes the triple; the None/Preview row dropped — ref has neither; labels carry dark: variants, the reference's dark-mode rendering of them is unreadable and the clone's dark mode is the documented superset) | **S11-7** ×2 |
+| Z12 | Avatar vocabulary: the S11-era 24-list (✏️ 🌱 🔥 ☕ 🐢 🐙 🦄 🌈 ⚡ invented) vs the reference's **22-emoji list** (🎓 📚 🧠 💡 🎯 🚀 🌟 🦊 🐱 🐶 🐼 🦁 🐸 🦉 🐧 🎨 🎵 🎮 🏀 🎾 🏆 🎪) | never dumped | AVATAR_EMOJIS re-dumped | the theme.test.ts unit pin (the full list) |
+
+**The discriminator probe (AP-113).** The reference's Appearance card
+renders BLACK with the account stuck in dark mode. Clicking the
+reference's own "Light" option changes NOTHING (html.dark stays set,
+Dark stays selected) — the Base44 theme picker is a hard no-op, so the
+account's mode is frozen state and the light-mode rendering of
+dark-artifact surfaces is UNKNOWABLE through the UI. The pins
+therefore target the mode-independent structure (anatomy, geometry,
+copy, vocabulary — the `bg-card`/`rounded-xl`/896px facts) and the
+clone's dark-mode contract owns the mode-dependent values (dark:
+variants; the labels stay readable).
+
+**Verified:** 16 new pins RED-first (15 e2e + the AVATAR_EMOJIS unit
+pin; the unit pin's RED rides the e2e S11-7 RED — the source landed in
+the same pass); lint ✓ tsc ✓ unit **844/844** ✓; build REAL_EXIT=0
+(fresh: `find src prisma -newer BUILD_ID` empty); full cold
+re-certification **108 + 107 + 44 + 59 + 58 = 376/376** on fresh
+servers, zero flakes; the final s69 sweep **ok:true** (18 invariants +
+brand tables + drawer/bar typography green on BOTH hosts, post-fix);
+the standing dark-sweep: zero NEW findings (the pre-existing
+`sf-clock-date` gradient-bg artifact reads identically pre/post —
+verified by stashing the batch and re-running the sweep on the
+received bundle); post-fix evidence captured (`69-ref-*` /
+`69-clone-*`).
+
 ## 3a. Verification (session-56 re-run, from a fresh clone)
 
 | Gate | Result |

@@ -14,6 +14,7 @@ import {
   Moon,
   Pencil,
   Plus,
+  Save,
   Settings as SettingsIcon,
   Sun,
   Trash2,
@@ -62,7 +63,6 @@ import { ACCENTS, ACCENT_TOKENS, AVATAR_EMOJIS, type Accent, type ThemeMode } fr
 import type { AppUser } from "@/lib/store";
 import { useThemeStore } from "@/lib/store";
 import { Spinner, ViewHeader } from "@/components/views/shared";
-import { UserAvatar } from "@/components/layout/user-avatar";
 import { cn } from "@/lib/utils";
 
 const GRADE_LEVELS = [
@@ -121,11 +121,20 @@ function InlineStatus({ message }: { message: string | null }) {
   );
 }
 
-// ---- APPEARANCE -----------------------------------------------------------------
+// ---- APPEARANCE (S11-7, the s69 re-measure) ----------------------------------------
+// The reference's Appearance tab is ONE shadcn card (max-w-4xl centered)
+// containing the Theme / Accent Color / Avatar sections and a Save
+// Preferences gradient button — not the three sf-cards the S11-era build
+// shipped. The pickers keep their immediate-PATCH behavior (the
+// settings-roundtrip contract); Save re-PATCHes the current triple.
 
-function ThemeCard() {
+function AppearanceCard() {
   const mode = useThemeStore((s) => s.mode);
   const setMode = useThemeStore((s) => s.setMode);
+  const accent = useThemeStore((s) => s.accent);
+  const setAccent = useThemeStore((s) => s.setAccent);
+  const avatar = useThemeStore((s) => s.avatar);
+  const setAvatar = useThemeStore((s) => s.setAvatar);
   const { toast } = useToast();
 
   const options: { value: ThemeMode; label: string; icon: typeof Sun }[] = [
@@ -134,121 +143,110 @@ function ThemeCard() {
     { value: "system", label: "System", icon: Monitor },
   ];
 
-  const pick = (next: ThemeMode) => {
+  const pickTheme = (next: ThemeMode) => {
     setMode(next);
     patchPreferences({ themeMode: next }).catch((err: unknown) =>
       toast.error(errorMessage(err, "Could not save the theme preference.")),
     );
   };
 
-  return (
-    <section className="sf-card p-6">
-      <h2 className="text-lg font-semibold text-slate-800 dark:text-slate-100">Theme</h2>
-      <p className="mt-1 text-sm text-slate-500">Choose how StudyFlow looks on this device.</p>
-      <div className="mt-4 flex gap-2">
-        {options.map(({ value, label, icon: Icon }) => (
-          <button
-            key={value}
-            type="button"
-            aria-pressed={mode === value}
-            onClick={() => pick(value)}
-            className={cn(
-              "flex h-[88px] flex-1 flex-col items-center justify-center gap-1.5 rounded-lg text-sm font-medium transition-colors",
-              mode === value
-                ? "sf-selected-tint border-2 border-sf-primary text-white dark:text-slate-100"
-                : "border-2 border-input bg-transparent text-foreground shadow-sm hover:bg-accent",
-            )}
-          >
-            <Icon className="size-5" strokeWidth={2} aria-hidden />
-            {label}
-          </button>
-        ))}
-      </div>
-    </section>
-  );
-}
-
-function AccentCard() {
-  const accent = useThemeStore((s) => s.accent);
-  const setAccent = useThemeStore((s) => s.setAccent);
-  const { toast } = useToast();
-
-  const pick = (next: Accent) => {
+  const pickAccent = (next: Accent) => {
     setAccent(next);
     patchPreferences({ accentColor: next }).catch((err: unknown) =>
       toast.error(errorMessage(err, "Could not save the accent color.")),
     );
   };
 
-  return (
-    <section className="sf-card p-6">
-      <h2 className="text-lg font-semibold text-slate-800 dark:text-slate-100">Accent color</h2>
-      <p className="mt-1 text-sm text-slate-500">One tap re-themes buttons, chips, and charts.</p>
-      <div className="mt-4 flex flex-wrap gap-3">
-        {ACCENTS.map((a) => (
-          <button
-            key={a}
-            type="button"
-            aria-label={`${a.charAt(0).toUpperCase()}${a.slice(1)} accent`}
-            aria-pressed={accent === a}
-            onClick={() => pick(a)}
-            className={cn(
-              "size-12 rounded-full transition-shadow",
-              accent === a ? "ring-2 ring-sf-primary ring-offset-2 ring-offset-background" : "hover:scale-110",
-            )}
-            style={{ backgroundColor: `rgb(${ACCENT_TOKENS[a].primary})` }}
-          />
-        ))}
-      </div>
-    </section>
-  );
-}
-
-function AvatarCard() {
-  const avatar = useThemeStore((s) => s.avatar);
-  const setAvatar = useThemeStore((s) => s.setAvatar);
-  const { toast } = useToast();
-
-  const pick = (emoji: string) => {
+  const pickAvatar = (emoji: string) => {
     setAvatar(emoji);
     patchPreferences({ avatarEmoji: emoji }).catch((err: unknown) =>
       toast.error(errorMessage(err, "Could not save the avatar.")),
     );
   };
 
+  const saveAll = () => {
+    patchPreferences({ themeMode: mode, accentColor: accent, avatarEmoji: avatar })
+      .then(() => toast.success("Preferences saved."))
+      .catch((err: unknown) =>
+        toast.error(errorMessage(err, "Could not save your preferences.")),
+      );
+  };
+
   return (
-    <section className="sf-card p-6">
-      <h2 className="text-lg font-semibold text-slate-800 dark:text-slate-100">Avatar</h2>
-      <p className="mt-1 text-sm text-slate-500">Pick an emoji — or keep your initial.</p>
-      <div className="mt-4 grid grid-cols-8 gap-2">
-        {AVATAR_EMOJIS.map((emoji) => (
-          <button
-            key={emoji}
-            type="button"
-            aria-label={`Choose avatar ${emoji}`}
-            aria-pressed={avatar === emoji}
-            onClick={() => pick(emoji)}
-            className={cn(
-              "flex h-10 items-center justify-center rounded-lg border text-xl transition-colors",
-              avatar === emoji
-                ? "sf-chip-dark border-sf-primary bg-sf-primary-soft"
-                : "border-slate-200 hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-800",
-            )}
-          >
-            {emoji}
-          </button>
-        ))}
+    <div className="mx-auto w-full max-w-4xl rounded-xl border bg-card text-card-foreground shadow dark:bg-card">
+      <div className="p-6">
+        <h2 className="text-base font-semibold tracking-tight text-foreground">Appearance</h2>
+        <p className="mt-1 text-sm text-muted-foreground">Customize how StudyFlow looks</p>
       </div>
-      <div className="mt-4 flex items-center justify-between gap-4">
-        <Button variant="outline" size="sm" onClick={() => pick("")}>
-          None
-        </Button>
-        <div className="flex items-center gap-3">
-          <span className="text-sm text-slate-500">Preview</span>
-          <UserAvatar size="lg" />
+      <div className="px-6 pb-6">
+        <p className="text-sm font-medium text-slate-700 dark:text-slate-300">Theme</p>
+        <div className="mt-3 flex gap-2">
+          {options.map(({ value, label, icon: Icon }) => (
+            <button
+              key={value}
+              type="button"
+              aria-pressed={mode === value}
+              onClick={() => pickTheme(value)}
+              className={cn(
+                "flex h-[88px] flex-1 flex-col items-center justify-center gap-2 rounded-xl border-2 p-4 text-sm font-medium transition-colors",
+                mode === value
+                  ? "sf-selected-tint border-sf-primary text-white dark:text-slate-100"
+                  : "border-slate-200 bg-transparent text-foreground hover:bg-accent dark:border-slate-700",
+              )}
+            >
+              <Icon className="size-6" strokeWidth={2} aria-hidden />
+              {label}
+            </button>
+          ))}
         </div>
+
+        <p className="mt-9 text-sm font-medium text-slate-700 dark:text-slate-300">Accent Color</p>
+        <div className="mt-3 flex flex-wrap gap-3">
+          {ACCENTS.map((a) => (
+            <button
+              key={a}
+              type="button"
+              aria-label={`${a.charAt(0).toUpperCase()}${a.slice(1)} accent`}
+              aria-pressed={accent === a}
+              onClick={() => pickAccent(a)}
+              className={cn(
+                "size-12 rounded-xl transition-shadow",
+                accent === a ? "ring-2 ring-sf-primary ring-offset-2 ring-offset-background" : "hover:scale-110",
+              )}
+              style={{ backgroundColor: `rgb(${ACCENT_TOKENS[a].primary})` }}
+            />
+          ))}
+        </div>
+
+        <p className="mt-9 text-sm font-medium text-slate-700 dark:text-slate-300">Avatar</p>
+        <div className="mt-3 flex flex-wrap gap-2">
+          {AVATAR_EMOJIS.map((emoji) => (
+            <button
+              key={emoji}
+              type="button"
+              aria-label={`Choose avatar ${emoji}`}
+              aria-pressed={avatar === emoji}
+              onClick={() => pickAvatar(emoji)}
+              className={cn(
+                "flex size-12 items-center justify-center rounded-xl text-xl transition-colors",
+                avatar === emoji
+                  // sf-chip-dark: the dark-mode wash is rgb(76 29 149 / .3) —
+                  // the S11-2..5 pin polls it (the light value violet-100 is
+                  // the reference's measured active fill).
+                  ? "sf-chip-dark bg-sf-primary-soft"
+                  : "bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700",
+              )}
+            >
+              {emoji}
+            </button>
+          ))}
+        </div>
+
+        <Button variant="gradient" className="sf-gradient-shadow mt-6 self-start" onClick={saveAll}>
+          <Save className="size-4" strokeWidth={2} aria-hidden /> Save Preferences
+        </Button>
       </div>
-    </section>
+    </div>
   );
 }
 
@@ -1051,7 +1049,7 @@ export function SettingsView() {
 
   return (
     <div className="flex flex-col gap-6">
-      <ViewHeader title="Settings" subtitle="Personalize your study companion" icon={SettingsIcon} />
+      <ViewHeader title="Settings" subtitle="Customize your StudyFlow experience" icon={SettingsIcon} />
 
       <Tabs defaultValue="appearance">
         <TabsList
@@ -1081,12 +1079,7 @@ export function SettingsView() {
         </TabsList>
 
         <TabsContent value="appearance" aria-label="Appearance" className="mt-6">
-          <div className="mx-auto flex max-w-2xl flex-col gap-6">
-            <p className="text-sm text-slate-500 dark:text-slate-400">Customize how StudyFlow looks</p>
-            <ThemeCard />
-            <AccentCard />
-            <AvatarCard />
-          </div>
+          <AppearanceCard />
         </TabsContent>
 
         <TabsContent value="profile" aria-label="Profile" className="mt-6">

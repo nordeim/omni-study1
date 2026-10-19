@@ -1066,3 +1066,89 @@ visibility scoping). Remaining honest debt: Batch R's structural perf
 (RSC conversion) — the s65 CWV evidence still stands (clone 183–297KB
 JS / LCP GOOD everywhere vs reference 771KB JS / login-mobile LCP POOR
 9452ms).
+
+## Session 69 (continuation 20) — the 13th workspace reset; the screenshot-sweep drift layer (Batch Z): dashboard sections, My Day column, view-header icons, Events bands, the Settings Appearance card
+
+**Context.** The user's `docs/session_15.md` is the s68 transcript —
+its suggested next step = repeat the gate+re-sweep rhythm (or Batch R).
+This cycle: the workspace came back RESET (fresh clone), so the cycle
+re-provisioned everything, re-certified the received state, ran the
+s69 sweep, and the side-by-side screenshot pairs exposed the next
+drift layer (Batch Z).
+
+**Work log.**
+
+1. **Workspace refreshed from scratch.** Fresh clone → HEAD `f0d01b1`
+   (the session_15 transcript commit on top of Batch Y `7f24fe7`).
+   Environment re-provisioned: bun install (489 pkgs), `.env`
+   (`DATABASE_URL="file:../db/custom.db"`, `AUTH_SECRET=""` — the s46
+   posture), `db/custom.db` pushed + seeded, chromium-1243,
+   production build fresh. The reset shredded the SSH infra — the
+   paramiko shim rebuilt at `/home/z/ssh-infra/ssh` (+ key 0600 +
+   config), `ls-remote` pre-flight green.
+2. **Alignment validated.** session_15 (the s68 transcript) + the doc
+   chain read; Batch Y verified in-tree (NAV_ICONS map, sidebar
+   header/footer chrome, dashboard stat hints/icons/gradients + the
+   month-hours seams, S4-K). Doc chain consistent with the codebase.
+3. **Gates re-certified cold on the received state.** lint ✓ tsc ✓
+   unit **844/844** ✓; e2e across the re-derived 5-sub-run map —
+   chunk 1 split 3 ways by weight (12 zero-register files), chunk 2 =
+   the s9+s17+tasks/resilience/s16/s14 register family (fresh server),
+   chunk 3 = auth + s18–s26 + greeting: **105+100+42+56+58 = 361/361**
+   zero flakes.
+4. **The s69 sweep + the screenshot pairs.** The s68 sweep class
+   re-tagged (`ref-resweep-s69.mjs`): **ok:true** — 9/9 invariants per
+   host, the brand tables byte-matched, drawers open + bar/drawer
+   typography green on both. The side-by-side `69-ref-*` vs
+   `69-clone-*` pairs then exposed the next layer; five DOM probes
+   (`z-probe{,2,3,4,5}-s69.mjs`) turned 12 screenshot hypotheses into a
+   measured truth table (AP-111 discipline; the ref dashboard needed a
+   broader structure dump — its section heads are h2 but the first
+   probe's selectors missed).
+5. **The discriminator probe (AP-113).** The ref Appearance card
+   renders black with the account in dark mode; clicking the ref's own
+   "Light" option changes NOTHING (the Base44 picker is a hard no-op) —
+   the mode is frozen state, so the pins target mode-independent
+   structure and the clone's dark contract owns mode-dependent values.
+   Zero residue: the account stayed dark-selected throughout.
+6. **Batch Z implemented TDD** (16 pins RED-first: 15 e2e + 1 unit):
+   Z1 dashboard 3-track section row + col-span-2 (S4-L); Z2 section
+   header icon map (S4-M); Z3 the Exams "All → /Exams" neutral anchor
+   (S4-N); Z4 empty copy at 16px + SimpleEmptyState text-base (S4-O);
+   Z5 My Day max-w-3xl + leading plus + the Button `neutral` variant
+   (S9-R2 ×3 — the first draft's unpinned `bg-neutral-950` serialized
+   lab(), v4 trap 10 re-hit → arbitrary hexes); Z6 ViewHeader icons
+   trending-up/file-question (S3-M); Z7 the PT bare empty state (S7-P);
+   Z8 the SG right-pane icon EmptyState, top-anchored (S8-Z — the s65
+   reading re-measured, AP-108); Z9 the Events band chrome + the
+   left-aligned calendar New Event row + "No events" without the
+   period (S5-V2 ×2 + the S17-W period pin re-pinned; "No events" stays
+   slate-400 — the ref's slate-500 is 3.48:1, a11y wins); Z10 the
+   Settings subtitle (S4-P); Z11 the Appearance single-card rework
+   (S11-7 ×2); Z12 the 22-emoji vocabulary (unit pin).
+7. **Pin hardening during GREEN.** The zero-state pins (S4-O/S7-P/S8-Z)
+   failed against the demo seed (which ships exams/assignments/PT/
+   groups) → the fresh-account pattern inline (clearCookies +
+   register/verify; `test.use` inside a test body is illegal — AP-114);
+   the centering pins became viewport-aware (the e2e viewport is 1280,
+   not the probe's 1440); the band-bg pin accepts both serializations
+   (trap 7); the avatar dark pin recovered `sf-chip-dark` (the S11-2..5
+   wash contract).
+8. **Verified.** lint ✓ tsc ✓ unit **844/844** ✓; build REAL_EXIT=0
+   fresh; full cold re-certification **108+107+44+59+58 = 376/376**
+   zero flakes; the final s69 sweep **ok:true** post-fix; the standing
+   dark-sweep clean of NEW findings — the pre-existing `sf-clock-date`
+   gradient-bg artifact verified identical pre/post by stashing the
+   batch and re-running the sweep on the received bundle.
+
+**Stage summary.** HEAD = the Batch-Z commit. Baselines: e2e **376/376**
+(108+107+44+59+58, 30 spec files), unit **844/844**. New pins: S4-L/M/
+N/O/P, S3-M, S9-R2 ×3, S7-P, S8-Z, S5-V2 ×2, S11-7 ×2 (+ the
+AVATAR_EMOJIS unit pin; S17-W re-pinned). New lessons AP-113 (the
+reference's frozen mode — measure mode-independent structure) and
+AP-114 (zero-state pins need a fresh account; the seed's data
+inventory is part of the pin's environment contract). New Button
+variant: `neutral`. Honest debt: Batch R (RSC structural perf — the
+s65 CWV evidence stands); the pre-existing sf-clock-date dark-sweep
+artifact (the sweep's effective-bg resolver skips gradient
+backgrounds) — recorded for a future audit-tools cycle.

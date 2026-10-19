@@ -12,13 +12,11 @@ import {
   BookOpen,
   Calendar,
   CircleAlert,
-  ClipboardList,
   Clock,
   Flame,
   GraduationCap,
   Sparkles,
   SquareCheckBig,
-  Sun,
   Target,
 } from "lucide-react";
 
@@ -224,12 +222,14 @@ export function DashboardView() {
         </div>
       )}
 
-      {/* ---- flush section cards (S8-B) ---- */}
-      <div className="grid gap-6 lg:grid-cols-2">
+      {/* ---- flush section cards (S8-B; the 3-track row + the Exams "All"
+              anchor + the section icons/copy are the s69 re-measure, S4-L/N) ---- */}
+      <div className="grid gap-6 lg:grid-cols-3">
         <SectionCard
           title="Today's Tasks"
-          icon={Sun}
+          icon={SquareCheckBig}
           flush
+          className="lg:col-span-2"
           action={
             <button
               type="button"
@@ -242,7 +242,7 @@ export function DashboardView() {
           }
         >
           {todayScope.length === 0 ? (
-            <SimpleEmptyState icon={Sun} message="No tasks for today. Add some from My Day!" />
+            <SimpleEmptyState icon={SquareCheckBig} message="No tasks for today. Add some from My Day!" />
           ) : (
             <ul aria-label="Today's tasks">
               {todayScope.map((task) => (
@@ -288,9 +288,28 @@ export function DashboardView() {
           )}
         </SectionCard>
 
-        <SectionCard title="Upcoming Exams" icon={GraduationCap} flush>
+        <SectionCard
+          title="Upcoming Exams"
+          icon={GraduationCap}
+          flush
+          action={
+            // S4-N (measured s69): the reference's Exams header carries a
+            // plain 16px neutral-950 "All" anchor with the arrow icon.
+            <a
+              href="/Exams"
+              onClick={(e) => {
+                e.preventDefault();
+                navigate("exams");
+              }}
+              className="flex items-center gap-1 text-base text-neutral-950 outline-none focus-visible:ring-2 focus-visible:ring-sf-primary/40 dark:text-neutral-100"
+            >
+              All
+              <ArrowRight className="size-4" strokeWidth={2} aria-hidden />
+            </a>
+          }
+        >
           {upcomingExams.length === 0 ? (
-            <SimpleEmptyState icon={GraduationCap} message="No upcoming exams." />
+            <SimpleEmptyState icon={GraduationCap} message="No upcoming exams" />
           ) : (
             <ul aria-label="Upcoming exams">
               {upcomingExams.map((exam) => {
@@ -320,9 +339,9 @@ export function DashboardView() {
           )}
         </SectionCard>
 
-        <SectionCard title="Upcoming Assignments" icon={ClipboardList} flush>
+        <SectionCard title="Upcoming Assignments" icon={BookOpen} flush>
           {activeAssignments.length === 0 ? (
-            <SimpleEmptyState icon={ClipboardList} message="No active assignments." />
+            <SimpleEmptyState icon={BookOpen} message="No upcoming assignments" />
           ) : (
             <ul aria-label="Upcoming assignments">
               {activeAssignments.map((assignment) => {

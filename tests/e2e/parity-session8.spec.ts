@@ -719,3 +719,43 @@ test.describe("S8-U3 · Assignments subject filter + status select", () => {
     await page.keyboard.press("Escape");
   });
 });
+
+test.describe("S8-Z · Study Groups right pane at zero", () => {
+  // The demo seed ships a study group — the zero state needs a fresh
+  // account (the S17 pattern: empty storageState + register/verify).
+  test.use({ storageState: { cookies: [], origins: [] } });
+
+  test("the zero-group right pane is the reference's icon EmptyState, top-anchored (S8-Z pin)", async ({ page }) => {
+    // Reference (re-measured s69): at zero the right pane renders the
+    // 80px gradient users block ABOVE the h3, top-anchored (icon y≈96,
+    // h3 y≈200) — NOT the centered bold-hint-only variant the s65 cycle
+    // recorded (the reference's own rendering moved; AP-108: re-probe
+    // and re-pin from the live measurement).
+    const email = `s8z-${Date.now()}@studyflow.app`;
+    const res = await page.request.post("/api/auth/register", {
+      data: { email, password: "Fresh1234!", name: "S8Z Probe" },
+    });
+    expect(res.ok(), `register failed: ${res.status()}`).toBe(true);
+    const { code } = (await res.json()) as { code: string };
+    await page.request.post("/api/auth/verify-email", { data: { email, code } });
+    await page.goto("/StudyGroups");
+    await hydrated(page);
+    const right = page.locator('[aria-label="Study group detail pane"]');
+    const h3 = right.getByRole("heading", { level: 3, name: "Select a group" });
+    await expect(h3).toBeVisible();
+    const geo = await h3.evaluate((el) => {
+      const pane = el.closest('[aria-label="Study group detail pane"]')!;
+      const prev = el.parentElement!.querySelector("div");
+      const svg = prev?.querySelector("svg");
+      return {
+        h3y: Math.round(el.getBoundingClientRect().y),
+        paneTop: Math.round(pane.getBoundingClientRect().y),
+        icon: svg ? (svg.getAttribute("class") ?? "").match(/lucide-[a-z0-9-]+/g)?.join(",") : null,
+        blockW: prev ? Math.round(prev.getBoundingClientRect().width) : 0,
+      };
+    });
+    expect(geo.icon).toContain("lucide-users");
+    expect(geo.blockW).toBe(80);
+    expect(geo.h3y - geo.paneTop).toBeLessThan(320); // top-anchored, not centered
+  });
+});

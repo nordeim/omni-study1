@@ -128,7 +128,9 @@ export function MyDayView() {
   // reference shows header + quick-add + the amber block beneath).
 
   return (
-    <div className="flex flex-col gap-6">
+    // S9-R2 (measured s69): the reference's My Day lives in a centered
+    // 768px column (max-w-3xl) — the old full-width shell was never measured.
+    <div className="mx-auto flex w-full max-w-3xl flex-col gap-6">
       {/* ---- header: 56px amber-gradient sun block + text-3xl greeting (S8-D) ---- */}
       <header className="flex items-center gap-4">
         <div
@@ -152,26 +154,28 @@ export function MyDayView() {
         </div>
       </header>
 
-      {/* ---- quick-add row: input + More Options ONLY — Enter submits (S9-Q) ---- */}
-      <form className="flex gap-2" onSubmit={(e) => void quickAddSubmit(e)}>
+      {/* ---- quick-add row: input + More Options ONLY — Enter submits (S9-Q);
+              the LEADING plus + the 48px input inset + the gap-3 row + the
+              dark neutral More Options are the s69 re-measure (S9-R2) ---- */}
+      <form className="flex gap-3" onSubmit={(e) => void quickAddSubmit(e)}>
         <div className="relative flex-1">
           <Input
             value={quickAdd}
             onChange={(e) => setQuickAdd(e.target.value)}
             placeholder="Add a task for today..."
             aria-label="Add a task for today"
-            className="h-12 rounded-xl pr-10"
+            className="h-12 rounded-xl pl-12"
           />
           <Plus
             aria-hidden
-            className="pointer-events-none absolute right-3 top-1/2 size-4 -translate-y-1/2 text-slate-400"
+            className="pointer-events-none absolute left-4 top-1/2 size-5 -translate-y-1/2 text-slate-400"
             strokeWidth={2}
           />
         </div>
         <Button
           type="button"
-          variant="outline"
-          className="h-12 rounded-xl bg-white dark:bg-card"
+          variant="neutral"
+          className="h-12"
           onClick={() => {
             setEditing(null);
             setDialogMyDay(true);

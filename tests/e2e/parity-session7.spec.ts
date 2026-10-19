@@ -355,3 +355,43 @@ test.describe("S7-F · Notes editor title", () => {
     expect(cs.weight).toBe("700");
   });
 });
+
+test.describe("S7-P · Practice Tests bare empty state", () => {
+  // The demo seed ships practice tests — the zero state needs a fresh
+  // account (the S17 pattern: empty storageState + register/verify).
+  test.use({ storageState: { cookies: [], origins: [] } });
+
+  test("the empty state sits BARE on the canvas with the file-question icon (S7-P pin)", async ({ page }) => {
+    // Reference (measured s69): the PT zero state floats directly on the
+    // canvas — NO white card wrapper — and the icon block carries
+    // file-question (the clone wrapped EmptyState in an sf-card and used
+    // the pre-Y1 file-text glyph).
+    const email = `s7p-${Date.now()}@studyflow.app`;
+    const res = await page.request.post("/api/auth/register", {
+      data: { email, password: "Fresh1234!", name: "S7P Probe" },
+    });
+    expect(res.ok(), `register failed: ${res.status()}`).toBe(true);
+    const { code } = (await res.json()) as { code: string };
+    await page.request.post("/api/auth/verify-email", { data: { email, code } });
+    await page.goto("/PracticeTests");
+    await hydrated(page);
+    const title = page.getByRole("heading", { name: "No practice tests yet" });
+    await expect(title).toBeVisible();
+    const boxed = await title.evaluate((el) => {
+      let node: Element | null = el;
+      for (let i = 0; i < 6 && node; i++) {
+        node = node.parentElement;
+        if (!node) break;
+        const cs = getComputedStyle(node);
+        if (cs.borderTopWidth !== "0px" && cs.backgroundColor !== "rgba(0, 0, 0, 0)") {
+          return { found: true, cls: node.className.slice(0, 120) };
+        }
+      }
+      return { found: false, cls: "" };
+    });
+    expect(boxed.found).toBe(false);
+    const icon = title.locator("xpath=preceding-sibling::div[1]").locator("svg");
+    const cls = await icon.evaluate((el) => el.getAttribute("class") ?? "");
+    expect(cls).toContain("lucide-file-question");
+  });
+});

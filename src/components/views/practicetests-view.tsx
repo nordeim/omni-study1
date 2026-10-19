@@ -10,7 +10,7 @@
 import * as React from "react";
 import {
   Clock,
-  FileText,
+  FileQuestion,
   Pencil,
   Play,
   Plus,
@@ -683,7 +683,8 @@ export function PracticeTestsView() {
       <ViewHeader
         title="Practice Tests"
         subtitle="Test yourself with practice exams"
-        icon={FileText}
+        // S3-M (measured s69): the reference's header icon is file-question.
+        icon={FileQuestion}
         actions={
           <Button
             variant="gradient"
@@ -703,25 +704,25 @@ export function PracticeTestsView() {
           <Spinner className="size-6 text-sf-primary" />
         </div>
       ) : tests.length === 0 ? (
-        <div className="sf-card">
-          <EmptyState
-            icon={FileText}
-            title="No practice tests yet"
-            hint="Create your first practice test"
-            cta={
-              <Button
-                variant="gradient"
-                className="sf-gradient-shadow-lg"
-                onClick={() => {
-                  setEditing(null);
-                  setDialogOpen(true);
-                }}
-              >
-                <Plus className="size-4" strokeWidth={2} /> Create Test
-              </Button>
-            }
-          />
-        </div>
+        // S7-P (measured s69): the reference's zero state sits BARE on the
+        // canvas — no card wrapper.
+        <EmptyState
+          icon={FileQuestion}
+          title="No practice tests yet"
+          hint="Create your first practice test"
+          cta={
+            <Button
+              variant="gradient"
+              className="sf-gradient-shadow-lg"
+              onClick={() => {
+                setEditing(null);
+                setDialogOpen(true);
+              }}
+            >
+              <Plus className="size-4" strokeWidth={2} /> Create Test
+            </Button>
+          }
+        />
       ) : (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {tests.map((test) => {

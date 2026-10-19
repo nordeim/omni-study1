@@ -72,6 +72,85 @@ test.describe("S5-B · Events dark terminal panel", () => {
     await expect(panel.getByRole("heading", { name: "Tomorrow" })).toBeVisible();
   });
 
+  test("the day rows carry the reference's banded chrome (S5-V2 pin)", async ({ page }) => {
+    // Reference (measured s69): each day label sits in a FULL-WIDTH
+    // slate-800/50 band row (px-4 py-2, 36px) rendered slate-300/600 at
+    // 14px; the "No events" row reads slate-500 with NO trailing period;
+    // consecutive labels sit ~92-102px apart. The clone rendered bare
+    // cyan-400 labels with no band and "No events." (period).
+    await page.goto("/Events");
+    await hydrated(page);
+    const panel = page.locator('[aria-label="Events panel"]');
+    const today = panel.getByRole("heading", { name: "Today" });
+    await expect(today).toBeVisible();
+    const band = await today.evaluate((el) => {
+      const row = el.parentElement!;
+      const cs = getComputedStyle(row);
+      const pr = row.parentElement!;
+      return {
+        bandBg: cs.backgroundColor,
+        bandW: Math.round(row.getBoundingClientRect().width),
+        panelW: Math.round(pr.getBoundingClientRect().width),
+        color: getComputedStyle(el).color,
+        fw: getComputedStyle(el).fontWeight,
+        fs: getComputedStyle(el).fontSize,
+      };
+    });
+    // bg-slate-800/50 serializes as oklab (v4 trap 7) — accept both it and
+    // the reference's rgba form; the rendered colors are identical.
+    const isBandBg = (s: string) => s.includes("30, 41, 59") || s.startsWith("oklab");
+    expect(isBandBg(band.bandBg)).toBe(true);
+    expect(band.bandW).toBe(band.panelW);
+    expect(band.color).toBe("rgb(203, 213, 225)");
+    expect(band.fw).toBe("600");
+    expect(band.fs).toBe("14px");
+    const noEv = panel.getByText("No events", { exact: true }).first();
+    await expect(noEv).toBeVisible();
+    // slate-400, not the reference's slate-500 — the reference's 3.48:1 on
+    // slate-900 fails WCAG AA at 14px (the Batch-R/S/Y a11y-wins precedent).
+    expect(await noEv.evaluate((el) => getComputedStyle(el).color)).toBe("rgb(148, 163, 184)");
+    await expect(panel.getByText("No events.", { exact: true })).toHaveCount(0);
+    // band + empty-row heights imply the measured 96px group pitch (the
+    // seeded events sit on today/+2/+4, so a cross-group pitch assert would
+    // be data-dependent).
+    const heights = await noEv.evaluate((el) => {
+      const row = el.parentElement!;
+      const band = row.previousElementSibling!;
+      return {
+        row: Math.round(row.getBoundingClientRect().height),
+        band: Math.round(band.getBoundingClientRect().height),
+      };
+    });
+    expect(heights.band).toBeGreaterThanOrEqual(32);
+    expect(heights.band).toBeLessThanOrEqual(40);
+    expect(heights.row).toBeGreaterThanOrEqual(50);
+    expect(heights.row).toBeLessThanOrEqual(68);
+  });
+
+  test("the New Event row is the reference's left-aligned calendar row (S5-V2 pin)", async ({ page }) => {
+    // Reference (measured s69): the full-width New Event button carries a
+    // CALENDAR icon (not plus) and left-aligned content (justify-start,
+    // px-4) — the clone centered a plus-icon row.
+    await page.goto("/Events");
+    await hydrated(page);
+    const newEvent = page
+      .locator('[aria-label="Events panel"]')
+      .getByRole("button", { name: "New Event" });
+    await expect(newEvent).toBeVisible();
+    const cs = await newEvent.evaluate((el) => {
+      const svg = el.querySelector("svg")!;
+      return {
+        justify: getComputedStyle(el).justifyContent,
+        icon: (svg.getAttribute("class") ?? "").match(/lucide-[a-z0-9-]+/g)?.join(",") ?? "",
+        w: Math.round(el.getBoundingClientRect().width),
+      };
+    });
+    expect(cs.justify).toBe("flex-start");
+    expect(cs.icon).toContain("lucide-calendar");
+    const vw = await page.evaluate(() => window.innerWidth);
+    expect(cs.w).toBeGreaterThan(0.6 * (vw - 260)); // the full-width strip row
+  });
+
   test("the day sections render the CW (calendar week) label", async ({ page }) => {
     await page.goto("/Events");
     await hydrated(page);

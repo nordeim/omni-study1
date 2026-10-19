@@ -162,6 +162,59 @@ test.describe("S9-B/Q · MyDay empty state + quick-add row", () => {
     const input = form.locator("input");
     await expect(input).toHaveAttribute("placeholder", "Add a task for today...");
   });
+
+  test("the My Day view is the reference's centered max-w-3xl column (S9-R2 pin)", async ({ page }) => {
+    // Reference (measured s69): the whole view lives in a 768px column
+    // centered in the content area (quick-add row x=466, w=768 at 1440) —
+    // the clone rendered full-width (x=292, w=1061).
+    await page.goto("/MyDay");
+    await hydrated(page);
+    const form = page.locator("main form").first();
+    const box = await form.boundingBox();
+    expect(Math.round(box?.width ?? 0)).toBe(768);
+    // centered in the content area right of the 260px sidebar
+    const vw = await page.evaluate(() => window.innerWidth);
+    const expectedX = 260 + (vw - 260 - 768) / 2;
+    expect(Math.abs((box?.x ?? 0) - expectedX)).toBeLessThanOrEqual(4);
+  });
+
+  test("the quick-add input carries the reference's LEADING plus (S9-R2 pin)", async ({ page }) => {
+    // Reference (measured s69): one lucide-plus (20px, slate-400) INSIDE
+    // the input's left edge (x≈input.x+16) with a 48px left padding — the
+    // clone had a TRAILING 16px plus and no left padding.
+    await page.goto("/MyDay");
+    await hydrated(page);
+    const wrap = page.locator("main form div.relative").first();
+    const input = wrap.locator("input");
+    await expect(input).toHaveCSS("padding-left", "48px");
+    const svgs = wrap.locator("svg");
+    await expect(svgs).toHaveCount(1);
+    const plus = svgs.first();
+    const cls = await plus.evaluate((el) => el.getAttribute("class") ?? "");
+    expect(cls).toContain("lucide-plus");
+    const [bx, ix] = await plus.evaluate((el) => {
+      const input = el.parentElement!.querySelector("input")!;
+      return [el.getBoundingClientRect().x, input.getBoundingClientRect().x];
+    });
+    expect(bx - ix).toBeGreaterThanOrEqual(12); // the plus sits at the LEFT
+    expect(bx - ix).toBeLessThanOrEqual(24);
+  });
+
+  test("More Options is the reference's dark neutral button (S9-R2 pin)", async ({ page }) => {
+    // Reference (measured s69): bg rgb(10,10,10) (neutral-950), white
+    // text, 6px radius — the clone rendered a white outline rounded-xl.
+    await page.goto("/MyDay");
+    await hydrated(page);
+    const more = page.getByRole("button", { name: "More Options" });
+    const cs = await more.evaluate((el) => {
+      const s = getComputedStyle(el);
+      return { bg: s.backgroundColor, color: s.color, radius: s.borderRadius, h: Math.round(el.getBoundingClientRect().height) };
+    });
+    expect(cs.bg).toBe("rgb(10, 10, 10)");
+    expect(cs.color).toBe("rgb(250, 250, 250)");
+    expect(cs.radius).toBe("6px");
+    expect(cs.h).toBe(48);
+  });
 });
 
 test.describe("S9-C/D · Tasks filter chrome + My Lists body", () => {
