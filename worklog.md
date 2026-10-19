@@ -809,3 +809,87 @@ style (Batch V).
   own network calls to learn the entity API + auth scheme, then drive
   the API directly; a reference account is stateful and its residue is
   OURS to clean (zero-residue verification is part of the probe).
+
+## Session 66 (continuation 17) — the reference-unchanged re-sweep + the Events zero-state drift (Batch W) + the register-budget lesson
+
+**Context.** Workspace PRESERVED from s65 (first no-reset cycle); the
+user's `docs/session_12.md` is the s65+66 transcript — no new asks; the
+new remote commit (`b65e454`) added the transcript plus a `skills/`
+restructure (new `full-page-screenshot` skill, rewritten
+`agent-browser` SKILL — excluded from checks). This cycle: re-certify
+the received state, re-sweep the reference for upstream drift, fix any
+gap TDD-style.
+
+**Work log.**
+
+1. **Sync + decode.** `git pull --ff-only` → `b65e454` (session_12.md +
+   skills/ only); `docs/session_12.md` read — state: Batch V pushed as
+   `8b84dae`, 351/351 + 842/842, its suggested next step = gate re-run +
+   reference re-scan (or Batch R).
+2. **Environment verified preserved.** node_modules, chromium-1248,
+   build fresh per AP-70 (`find src prisma -newer .next/BUILD_ID`
+   empty), dbs present, the paramiko shim green (`GIT_SSH_COMMAND=
+   /home/z/ssh-infra/ssh` — the `git_ssh_shim.py` PATH wrapper is the
+   WRONG recipe; the direct paramiko shim is the working one).
+3. **Independent re-certification of the received state.** lint ✓ tsc ✓
+   unit **842/842** ✓; e2e cold on fresh servers: **192 + 104 + 55 =
+   351/351** zero flakes — chunk 1 green first try this cycle (no
+   cold-start race), `.env` verified at the dev posture
+   (`AUTH_SECRET=""`, length-2 guard).
+4. **The reference re-sweep (new probe class).**
+   `scripts/ref-resweep-s66.mjs` — logs into BOTH hosts, fingerprints 7
+   desktop surfaces (dashboard/myday/gradetracker/practicetests/
+   studygroups/events/settings) and evaluates the s63–s65 measured
+   invariants IN-SCRIPT (18 checks: 9 reference + 9 clone via a fresh
+   registered user). First run: reference **9/9 UNCHANGED since s65**;
+   clone 8/9 — the clone's EMPTY Events page rendered NO day-focus
+   strip at all.
+5. **Isolation + reference measurement.** `clone-events-check-s66.mjs`
+   (no strip, no CW, no controls at zero) + `ref-events-zero-s66.mjs`
+   (the reference at zero: "EVENTS" overline + 4 controls, big date 19
+   / Mon, "Oct 2026 CW 43", Today/Tomorrow + 5 dated heads each "No
+   events.", full-width New Event — NO empty card). Root cause: the
+   S17-era `events.length === 0 ? EmptyState : panel` early return —
+   Batch U rebuilt the strip inside the NON-zero branch, so the seeded
+   pins never walked the zero path. The strip is DATE-driven, not
+   data-driven.
+6. **TDD Batch W.** S17-W pins written RED (2 failed as split), the
+   early return removed (the panel now renders unconditionally; the
+   day list already prints "No events." per empty day; the EmptyState
+   branch + its import deleted), GREEN; affected files re-run green.
+   The W family then merged into ONE test/ONE registration after the
+   budget finding (below); final pin: strip chrome + CW + 7×"No
+   events." + New Event AND the invented card absent.
+7. **The register-budget finding.** The full chunk-2 first failed its
+   LAST test with `register failed: 429`. Isolation: solo runs green;
+   curl experiment on a fresh server = 10×201 then 429 (the limiter is
+   exactly 10/IP/15min); the failed chunk run's DB holds exactly 9
+   successful registrations — the suite had ZERO headroom (S9's 2 +
+   s17's 8 = 10/10). Fix: one merged W registration → chunk 2 spends
+   9/10 (documented in the spec's design comment); standing rule —
+   never design a suite to exactly exhaust a shared time-windowed
+   budget.
+8. **Verified.** lint ✓ tsc ✓ unit **842/842** ✓; build REAL_EXIT=0
+   (fresh bundle); full cold re-certification **192 + 105 + 55 =
+   352/352** on fresh servers (pkill before each chunk — the
+   reuseExistingServer bucket-inheritance class); the re-sweep then
+   reports **18/18 invariants green**. Captures: `66-ref-desktop-*.png`
+   ×8 (incl. events-zero) + `66-clone-desktop-*.png` ×7 + mobile pair;
+   probe scripts `ref-resweep-s66.mjs`, `clone-events-check-s66.mjs`,
+   `ref-events-zero-s66.mjs`. Docs: Batch W in the remediation plan,
+   README Session-66 row, SKILL.md AP-110, AGENTS counts (842/352).
+
+**Stage summary.**
+
+- The reference is UNCHANGED since s65 on every measured dimension; the
+  one new gap (Events zero-state — the last unknown the matrix left)
+  found and fixed TDD-style with one permanent pin (S17-W).
+- Gates: lint ✓ tsc ✓ unit **842/842** e2e **352/352** (192+105+55)
+  build ✓ — all on `main`, no branches; `skills/` still excluded.
+- New AP-110: a shared time-windowed rate limiter is a SUITE-WIDE
+  budget — count every consumer across chunks, keep ≥1 slot of
+  headroom, and boot each chunk against a fresh server
+  (reuseExistingServer inherits partially-spent buckets).
+- Remaining honest debt: Batch R's structural perf (RSC conversion) —
+  the clone already outperforms the live reference on the CWV evidence
+  (183–297KB vs 771KB JS; ref login-mobile LCP POOR 9452ms).

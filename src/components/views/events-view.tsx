@@ -45,7 +45,6 @@ import {
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/components/ui/toast";
-import { EmptyState } from "@/components/views/shared";
 import { mutations, useDataStore, type EventInput, type EventRow } from "@/lib/data";
 import { addDays, daysUntil, formatWeekdayMonthDay, referenceWeekNumber, startOfDay } from "@/lib/date";
 import { apiSend, ApiError } from "@/lib/api";
@@ -243,22 +242,12 @@ export function EventsView() {
         </p>
       </div>
 
-      {events.length === 0 ? (
-        <div className="sf-card">
-          <EmptyState
-            icon={CalendarDays}
-            title="No events yet"
-            hint="Create your first event to see your week come alive."
-            cta={
-              <Button type="button" variant="gradient" className="sf-gradient-shadow-lg" onClick={openCreate}>
-                <Plus className="size-4" strokeWidth={2} />
-                New Event
-              </Button>
-            }
-          />
-        </div>
-      ) : (
-        <section className="sf-print-exact rounded-2xl bg-slate-900 p-6 shadow-2xl" aria-label="Events panel">
+      {/* Session-66 re-measure: the strip is DATE-driven, not data-driven —
+          the reference at zero still shows the full panel (controls, big
+          date, CW line, the 7-day list reading "No events." per day) and
+          renders NO empty card; the old early return replaced the whole
+          panel with an invented EmptyState (S17-W). */}
+      <section className="sf-print-exact rounded-2xl bg-slate-900 p-6 shadow-2xl" aria-label="Events panel">
           {/* Header strip (measured Batch U): overline + controls / big date
               / full-width cyan New Event — the ref's strip is p-4 with a
               slate-700 divider above the day list. */}
@@ -397,7 +386,6 @@ export function EventsView() {
           </div>
           )}
         </section>
-      )}
 
       <Dialog open={dialog.open} onOpenChange={(open) => !open && setDialog({ open: false })}>
         <DialogContent className="max-w-md rounded-lg">

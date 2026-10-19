@@ -318,6 +318,54 @@ gradetracker,gradetracker-empty,practicetests,practicetests-empty,
 studygroups,studygroups-empty,settings}.png` (15). Probe scripts preserved
 under `scripts/*-s65.mjs` (17).
 
+### Batch W — Session-66: the Events zero-state drift (the last unknown left by the matrix) + the reference-unchanged re-sweep
+
+The re-certification cycle on the preserved s65 workspace: full gates
+re-run cold (351/351 as received), then the reference re-sweep (a NEW
+probe class — invariants evaluated in-script from the s63–s65 measured
+records, both hosts) to detect upstream drift. The reference came back
+UNCHANGED on all 9 measured dimensions — but the sweep exposed one
+clone-side defect the matrix had missed: **Events at zero**. The s64
+Batch-U strip work had been verified against the SEEDED clone only; the
+clone's S17-era early return (`events.length === 0 ? EmptyState : panel`)
+had survived beneath it. The reference (whose account is empty) shows the
+OPPOSITE: the day-focus strip is DATE-driven, not data-driven — at zero it
+still renders the overline + controls, the big focused date, the CW line,
+the 7-day list with every day reading "No events.", and the full-width
+cyan New Event row — and NO empty card anywhere (the per-day lines ARE
+the zero state).
+
+| # | Finding (reference-measured 2026-10-19) | Root cause (clone) | Fix | Guard |
+|---|---------|-----------|-----|-------|
+| W1 | **Events at zero still renders the full day-focus strip**: 4 controls (3 focus + toggle), big date, "Oct 2026 CW 43", Today/Tomorrow + 5 dated heads each reading "No events.", full-width New Event — and no empty card | the S17-era `events.length === 0` early return rendered an invented EmptyState ("No events yet / Create your first event to see your week come alive.") INSTEAD of the panel; Batch U rebuilt the strip inside the non-zero branch so seeded pins never saw the zero path | the early return removed — the panel renders unconditionally (the day list already prints "No events." per empty day); the EmptyState branch + its import deleted | S17-W (one pin, one registration: strip chrome + CW + 7×"No events." + New Event AND "No events yet"/"come alive" absent) |
+
+**Verified:** the pin RED-first (2 failed as split, then merged — see the
+budget note), GREEN after the fix; lint ✓ tsc ✓ unit **842/842** ✓; build
+REAL_EXIT=0 (fresh bundle, `find src -newer .next/BUILD_ID` empty); full
+cold re-certification **192 + 105 + 55 = 352/352** on fresh servers (the
+chunk-2 budget lesson below); the re-sweep then reports **all 18
+invariants green** (9 reference + 9 clone) — the reference unchanged
+since s65, the clone matching on every measured dimension. Captures:
+`66-ref-desktop-*.png` ×10 (7 sweep surfaces + events-zero + the mobile
+pair) + `66-clone-desktop-*.png` ×9 (7 sweep surfaces + the mobile
+pair) = 19; the generic mobile-drawer
+probe heuristic found no drawer button on EITHER site (probe weakness,
+identical both sides — `mobile-navigation.spec.ts` stays the authority,
+green in chunk 1). Probe scripts: `ref-resweep-s66.mjs`,
+`clone-events-check-s66.mjs`, `ref-events-zero-s66.mjs`.
+
+**The register-budget lesson (standing).** The register limiter is
+10/IP/15 min and `reuseExistingServer: !CI` means a chunk can inherit a
+partially-spent bucket from a prior run. The W pins first shipped as two
+tests (2 registrations) — the full chunk-2 then spent S9's 2 + s17's 8 =
+the entire budget with ZERO headroom and the LAST register 429'd
+(curl-proven baseline: 10 calls pass, the 11th 429s; the chunk run
+reached the boundary under conditions not fully reproduced solo). Fix:
+the W family merged into ONE test/ONE registration — chunk 2 now spends
+9/10, a deliberate one-slot headroom, documented in the spec's design
+comment. Never design a suite to exactly exhaust a shared time-windowed
+budget.
+
 ## 3a. Verification (session-56 re-run, from a fresh clone)
 
 | Gate | Result |

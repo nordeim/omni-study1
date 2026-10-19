@@ -327,3 +327,38 @@ test.describe("S17-V · session-65 zero-state drift fixes (measured on the live 
     expect(cols).toBe(3);
   });
 });
+
+test.describe("S17-W · session-66 zero-state drift fix: Events at zero (measured on the live reference 2026-10-19)", () => {
+  test.use({ storageState: { cookies: [], origins: [] } });
+
+  // ONE test, ONE registration: the register limiter is 10/IP/15min and
+  // chunk 2 spends S9's 2 + this file's 7 = 9 of that budget — running the
+  // W family at 2 registrations left ZERO headroom and the chunk run's last
+  // register 429'd (session-66). W2's assertions ride the same page state.
+  test("S17-W Events at zero: the day-focus strip ALWAYS renders AND the invented empty card is GONE", async ({ page }) => {
+    await registerFreshUser(page, "w-events");
+    await page.goto("/Events");
+    await hydrated(page);
+    // Reference (measured 2026-10-19 on its empty account): the strip is
+    // DATE-driven, not data-driven — at zero it still shows the overline +
+    // controls, the big focused date, "Oct 2026 CW <n>" and the 7-day list
+    // where every day reads "No events." The clone's old early return
+    // replaced the whole panel with an invented empty card.
+    const panel = page.locator('[aria-label="Events panel"]');
+    await expect(panel).toBeVisible();
+    for (const label of ["Previous day", "Jump to today", "Next day", "Toggle day list"]) {
+      await expect(panel.getByRole("button", { name: label })).toBeVisible();
+    }
+    await expect(panel.getByText(/^CW \d+$/)).toBeVisible();
+    // the day list re-anchors from today: every empty day reads "No events."
+    await expect(panel.getByRole("heading", { name: "Today" })).toBeVisible();
+    await expect(panel.getByRole("heading", { name: "Tomorrow" })).toBeVisible();
+    await expect(panel.getByText("No events.")).toHaveCount(7);
+    // the reference's full-width cyan New Event row inside the strip
+    await expect(panel.getByRole("button", { name: "New Event" })).toBeVisible();
+    // and NO empty card: the per-day "No events." lines ARE the zero state —
+    // the reference renders no "No events yet" block anywhere
+    await expect(page.getByText("No events yet")).toHaveCount(0);
+    await expect(page.getByText(/see your week come alive/)).toHaveCount(0);
+  });
+});
