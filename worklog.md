@@ -1406,3 +1406,81 @@ GOOD vs the reference's mobile-login POOR still supports deferring);
 the pre-existing sf-clock-date dark-sweep artifact; the analytics
 dark-rendering titles (AP-113 class) are documented, not fixable
 through the light-mode UI.
+
+---
+
+## Session 74 (continuation 25) — the 14th workspace reset; the post-AB re-certification cycle: full cold re-cert 389/389 + 844/844, s74 sweep ok, zero drift, zero source changes needed
+
+**Context.** The user's `docs/session_19.md` is the s73 transcript (Batch
+AB delivered end-to-end and pushed as `3fb9b79`). This cycle's directive
+re-pointed the doc chain at `session_19.md` with the standing rhythm
+(audit recent changes → gate re-certification → sweep → evidence → docs →
+push). The workspace had been reset AGAIN between cycles (fresh clone at
+`61e593a`; `bea1b92`/`61e593a` are docs-only session-log commits), so the
+cycle doubled as a from-scratch provisioning validation.
+
+**Work log.**
+
+1. **Workspace + infrastructure rebuilt from zero.** Fresh clone at
+   `61e593a` (remote main == local HEAD, nothing to pull). Full
+   provisioning: `bun install` (489 packages); `paramiko` 5.1.0 into the
+   venv; `/home/z/ssh-infra/` restored (the shim copied from the repo's
+   own `docs/ssh.sh` — the field-tested implementation now carried
+   in-repo — with the shebang re-pointed at the paramiko venv python; the
+   delegated ed25519 key materialized 0600; fingerprint verified
+   `3ddaNlFhMz1JXiGEDgVEaRsUzI4Ev0IpGEEB7NnU4PU`; auth preflight via
+   `git ls-remote` green). `.env` = `DATABASE_URL="file:../db/custom.db"`
+   + `AUTH_SECRET=""`; `db/` at repo root; schema pushed; seed
+   (demo@studyflow.app) green; production build fresh.
+2. **Playwright browser cache ALSO wiped this reset** — first e2e attempt
+   failed every test in ~1–9 ms with `browserType.launch: Executable
+   doesn't exist … chromium_headless_shell-1243`. `bunx playwright
+   install chromium` restored the pinned build; the cold block then ran
+   clean. (Provisioning checklist item, not a code lesson: on a reset,
+   browsers go with the cache.)
+3. **Audit of the recent code changes (the `3fb9b79` Batch AB bundle).**
+   Two-axis review of the three view diffs against the s72 measured
+   anatomy: Standards — unused `SectionCard`/`History`/`ListChecks`
+   imports removed everywhere, the slide-in panel gated behind
+   `aria-controls` only while mounted (aria-valid-attr-value stays clean
+   at zero), role hooks (`gt-subject-avg`) per AP-117, `spacedExpression`
+   documented against the engine's compact token stream; Spec — subtitle
+   copy, panel anatomy (`2 + 3` / `= 5` / black Clear History), the
+   free-standing Recent-Problems h2, and the per-subject card grid all
+   byte-match the probe measurements. One display-phantom scare: the diff
+   tooling showed `const istoryOpen, setHistoryOpen]` (a seemingly eaten
+   `[h`), but `od -c` confirmed the file bytes are `const [historyOpen…`
+   — lesson 10 re-confirmed, NO fix applied. No drift found; the commit
+   is clean.
+4. **Gates + full cold re-certification.** lint ✓ tsc ✓ unit **844/844**
+   ✓ build fresh (`find src prisma -newer BUILD_ID` empty). AP-116 census
+   re-derived per file: 1a = 57+43+12 (+1 setup) = **113**; 1b =
+   28+18+14+15+20+6+7 (+1) = **109**; 1c = 41+5+3 (+1) = **50**; 2 =
+   20+11+10+9+8 (+1) = **59**; 3 = 6+5+4+5+4+4+5+2+5+5+5+7 (+1) = **58**
+   — byte-consistent with the session-73 map, 389 total, all 30 spec
+   files exactly once. Cold run after `rm -f db/e2e.db` + stale-server
+   kill: **389/389, zero failures, first pass on every chunk**.
+5. **Evidence.** s74 sweep (`ref-resweep-s74.mjs`, the standing class
+   re-tagged): **ok:true** — 9/9 invariants both hosts, brand tables
+   byte-matched, mobile drawers green on both (the user-flagged surface;
+   drawerOpened/barOk/brandOk all true). `capture-s74-populated.mjs`
+   re-captured the Batch AB surfaces on the seeded demo account
+   (`74-clone-gradetracker-populated.png` — the 4-card grid with the
+   ramp math visible: 95→100%, 78→87%, 88→98%, 89→99%;
+   `74-clone-mathsolver.png` — measured subtitle + free-standing h2;
+   `74-clone-calculator-history-open.png` — the slide-in panel with the
+   spaced `2 + 3` / bold `= 5` entry + black full-width Clear History).
+   The `73-*` ref-side populated evidence from s72/s73 remains the
+   measurement record.
+
+**Stage summary.** HEAD = `61e593a` + this cycle's commit (s74 sweep +
+capture scripts, 74-* screenshots, this worklog entry). Baselines
+unchanged: e2e **389/389** (113+109+50+59+58, 30 spec files censused),
+unit **844/844**, lint/tsc/build clean, s74 sweep ok:true. Zero source
+changes this cycle — the re-certification found no drift and the audit
+found no defects, which is itself the result: Batch AB is stable across
+a from-scratch rebuild. Honest debt (standing): Batch R (RSC structural
+perf — the clone's all-surface LCP GOOD vs the reference's mobile-login
+POOR still supports deferring); the pre-existing sf-clock-date
+dark-sweep artifact; the analytics dark-rendering titles (AP-113 class)
+are documented, not fixable through the light-mode UI.
