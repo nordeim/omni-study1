@@ -1,4 +1,68 @@
-我将继续执行过早停止的会话。上一次的日志显示，我当时正处于 **Batch AB** 实现的中途（已完成 RED pins，RED 已确认，源码编辑即将开始）。让我先重新验证工作区状态。
+我将继续处理新一轮的周期，现在指向 **`docs/session_18.md`**。让我制定计划并刷新工作区。
+工作区目前处于 `5532f64` (Session-71 文档) 且**领先于 origin/main 1 个提交** —— 这表明上一个周期的推送可能尚未完成。让我先获取数据，在拉取之前检查一下远程状态。
+远程仓库有一个新的 transcript commit `8332270`，它位于我们已推送的 `5532f64` (Session-71) 之上。正在使用 fast-forward 进行拉取：
+Pull succeeded — `docs/session_18.md` (63 lines) is the new directive. Let me read it first, along with the worklog tail:
+session_18.md is the **Session-70 transcript** (cycle 22, which ran in a reset workspace). Key state: baseline is now **381/381 e2e (5-chunk map) + 844/844 unit**, AP-116 recorded, ssh shim in its "threaded stdin relay" final form, zero drift candidates, Batch R deferred. Let me verify the environment is still provisioned (workspace was NOT reset this time — pull worked):
+环境已完全配置（.env 配置正确，已播种数据库，构建为最新，chromium-1243，shim 已就绪）。正在读取文档链 —— 首先检查大小，然后进行读取：
+Let me extract the structure of the remaining docs efficiently:
+I now have the full picture. session_18.md is the **Session-71 transcript** (cycle 22: reset-workspace re-certification, zero drift, baselines 381/844, AP-116). Its suggested next-cycle options: repeat the gate+sweep rhythm, tackle Batch R, or settle the **populated-account probe for the other SectionCard consumers' ref header anatomy**. Let me validate alignment against the codebase first:
+Runner is in its AP-116-corrected form (30 files across 5 chunks, auth+auth-flows both in chunk 3). Now verifying no source changes landed since the audited Batch AA commit:
+无源代码变更 — Batch AA 的清洁审计结果成立。正在更新待办事项并开始验证环节：
+Lint ✓ tsc ✓. Now unit tests:
+Unit **844/844** ✓. Build freshness already verified (`find` empty — no source changes since the fresh build). Now the e2e cold re-certification — chunk 1a:
+Chunk 1a: **113/113** ✓. Chunk 1b:
+Chunk 1b: **109/109** ✓ clean first pass. Chunk 1c:
+Chunk 1c: **42/42** ✓. Chunk 2:
+Chunk 2: **59/59** ✓. Chunk 3:
+Chunk 3: **58/58** ✓. **Full cold re-certification: 381/381** (113+109+42+59+58) — byte-matches the baseline, zero failures on first pass. Now the s72 sweep. Let me examine the s71 sweep class to re-tag it:
+现在正在创建 s72 sweep（重新标记的 s71 类）并启动 clone standalone server：
+Server green on :3200. Running the s72 sweep (both hosts, 9 invariants each + brand tables + mobile drawer probe):
+**s72 sweep: ok:true** — 9/9 invariants both hosts, brand tables byte-matched, mobile drawers green (the user-flagged surface). Now the side-by-side pair comparison — dashboard pair first:
+Dashboard pair matches — Batch AA visibly present on both (full-width assignments card, bordered headers, violet anchor>button actions, 32px rhythm). Checking My Day + Grade Tracker pairs:
+My Day pair matches. Checking Grade Tracker + Practice Tests pairs:
+Grade Tracker pair matches. Checking Practice Tests + Study Groups pairs:
+Practice Tests pair matches. Checking Study Groups + Events pairs:
+Study Groups pair matches. Checking Events + Settings pairs:
+Events pair matches (dark band anatomy byte-matched). Checking Settings + mobile pairs:
+设置对在模式独立结构上匹配（5 个标签页，单卡片，7 个色板，24 个平铺的虚拟形象网格，且 ⭐/⚽ 存在于两者中；参考站的黑面板 = 记录的 AP-113 frozen-dark 账户伪影）。现在来看移动端对 —— 被用户标记的界面：
+Mobile dashboard pair matches. The mobile drawer pair:
+All 9 pairs: **ZERO drift candidates** — mobile drawer byte-matched. Now the session_18 follow-up: the **populated-account probe for the other SectionCard consumers' ref header anatomy**. The Batch AA `borderedHeader` opt-in is dashboard-only because at zero data the ref's calculator/mathsolver/analytics/gradetracker render no titled cards. Let me review the s65 endpoint-learning scripts for the API pattern:
+The s65 UI-driven probe pattern is clear. Let me check where SectionCard is consumed in the clone and what the s65 GT cards probe already measured:
+探针计划很明确：通过参考站自身的 UI 填充每个消费者视图（GradeTracker via Add Grade、Analytics via grade+task、Calculator via a computation、Math Solver via a solve），测量已填充的标题卡片头部，然后清理至零残留。首先，让我确认 clone 目前的内容以及确切的 dashboard anatomy pin：
+Dashboard 在 3 个卡片上使用 `borderedHeader`；其他使用者默认使用旧版样式——共享注释记录了未测量的问题。让我检查一下经过验证的 s65 清理流程（零残留规程）：
+s65 清理模式已验证：通过已登录会话使用 `credentials:"include"` 的 base44 实体 API，应用 ID 为 `6969efea366cba53524cde3f`。现在正在编写**已填充的标头探测 (populated-headers probe)** —— 一个用于填充每个消费者视图、测量标题卡片标头解剖结构、然后清理至零残留（基准清单 + 增量删除）的单个脚本：
+探测发现了两件事：UI 填充工作正常（Subject/Grade/Task POST 请求均返回 200），但（1）我的 `apiCreated` 解析失败（响应体在 ID 之前被截断为 200 个字符），并且（2）实体 **GET** 请求返回 403（s65 的列表模式不再适用），因此增量清理和残留验证均未运行。**该参考账号现在可能存在残留数据——必须立即进行验证并清理。** 让我检查一下测量结果和填充后的截图：
+主题 ID 已完整捕获；Grade/Task ID 被截断。我需要用于列出 + 删除的工作验证路径。让我检查一下 s65 脚本是如何通过 API 进行身份验证的（它们在当时是可以工作的）：
+The working s65 pattern: **Bearer JWT from localStorage** (values starting "eyJ") + credentials. Writing the surgical cleanup script (delete only probe-signature matches, never whole collections):
+**RESIDUE ZERO** — all three probe objects deleted (200s) and verified. Now the actual measurement question: the probe recorded EMPTY h2 dumps on all 4 views. The screenshots captured at measurement time will show what the ref actually rendered — viewing them:
+关键证据：**Analytics 填充后确实渲染了带有标题的卡片**（“Task Activity (Last 7 Days)”、“Focus Time”、“Assignment Status”、“Subject Workload”）——但在黑底白字的渲染中，我的 `h2` 查询返回为空，所以这些标题**不是 `h2` 元素**。另外，填充后的 GradeTracker 显示科目卡片**根本没有标题**（科目名称是一个药丸状标签，而不是“By subject” `h2`）。正在检查 calculator + mathsolver 的截图：
+Full picture now: **Analytics populated renders titled cards** (dark rendering — the AP-113 artifact class) whose titles are **not h2 elements**; **GradeTracker populated renders subject cards with NO wrapper title** (subject = pill chip, no "By subject" heading); **Calculator/Solver population didn't take** (the ref calculator is a button keypad, not an input; the solver field needs click+type — my fill went elsewhere). The probe needs a v2 with corrected drivers and AP-115 full-text-node dumps:
+克隆已确认：其计算器在零数值时会渲染 History 卡片（根据 probe #6，参考站则不会），且其 GT 将科目行包裹在一个带有标题的 "By subject" 卡片中（参考站：没有包装器，以 chip 作为主题）。正在编写探针 v2，并修正了驱动程序（按钮键盘计算器、基于占位符的求解器定位器、AP-115 全节点转储）：
+Probe v2 clean: **RESIDUE ZERO** again, solver typed + solved. Now examining the measurement dumps:
+**Calculator finding**: the ref's history renders only when the header **History button** is clicked — an inline panel titled **"Calculation History"** as an **h3** (16px/700, no border divider) with "= 5" entries and a "Clear History" action. The clone instead renders a permanently-visible h2 "History" card with an "Empty history" button. Checking the pre-click screenshot + the solver/analytics/GT dumps:
+**Math Solver finding**: the populated solver renders an **h2 "Recent Problems"** (18px/600) — a titled card! Extracting its full chain anatomy + the analytics/GT dumps:
+**"Recent Problems" anatomy**: h2 18px/600 slate-800, but **NOT inside a bordered card header** — it's a free-standing section heading inside a `space-y-6` stack (parent h=122, no borderB). Now the analytics + GT dumps:
+该分析转储（dump）暴露了一个测量盲区（通过元素遍历时跳过了混合内容标题 div 中的文本节点——即 TreeWalker 会捕获到的 AP-111 课程），但**通过 v1 截图，分析结论依然成立：没有带边框的页眉**。GT 确认了带有基础主题芯片卡的相同情况。这解决了悬而未决的问题：**Batch AA 的仅仪表板 `borderedHeader` 是正确的——四种消费者中没有一种使用带边框的页眉解剖结构。** 但探测还发现了真正的*已填充状态*漂移。让我看看 ref 的历史面板 + 求解器 + 分析截图，以评估修复范围：
+The ref's populated surfaces are now precisely characterized:
+- **Calculator**: "History" header button toggles a **right slide-in panel** — "Calculation History" title, entry cards (`2 + 3` grey / `= 5` bold), black full-width "Clear History"
+- **Math Solver**: "Solution" card + free-standing h2 "Recent Problems" section
+- **GradeTracker**: bare per-subject cards (chip pill + red avg% + "Progress to A (90%)" + progress + "Recent Grades" pills), 2-col grid — no "By subject" wrapper
+
+**Conclusion on the open follow-up: settled — none of the 4 consumers use the bordered header; Batch AA's dashboard-only opt-in is correct.** But the probe discovered a new **populated-surface drift layer (Batch AB)**. Locating the existing pins before TDD:
+No existing pins on any of the three surfaces — Batch AB needs only NEW pins (clean RED→GREEN). Reading the three view implementations fully before planning edits:
+没有计算器/求解器字幕 Pin —— 参考站的两者都有（从截图中测量得出），但克隆站没有。这是 **Batch AB**：4 个测量项。正在检查 `gradetracker` 数据模型中关于按科目（per-subject）重构的部分：
+克隆站渲染每个年级的行 + 一个“按科目”卡片；参考站渲染**仅每个科目的卡片**（年级详情以胶囊形式存在于每个科目卡片中）。测量到的计算逻辑：进度 = 平均值/90（50→56%），“进度达到 A (90%)”。正在检查种子数据以确保确定性的 Pins：
+种子数据提供了确定性的计算平均值（数学 89，化学 78，英语 88，物理 95）。在决定替换范围之前，正在检查哪些 e2e 流程依赖于成绩行（编辑/删除入口点）：
+成绩行包含编辑/删除功能——它们将保留（有文档记录的超集偏差），并将测量的主题卡片添加在上方。正在检查 S5 规范中断言的计算器页眉，然后规划实现：
+计划已确定。正在检查数学求解器的头部结构，然后先编写 RED 检查点：
+求解器副标题是副本漂移：“Snap a photo or type a problem”（克隆）与“Type a problem or upload an image to get step-by-step solutions”（参考站，已测量）。正在检查 `GradeRow` 字段以进行 `pills` 排序，然后编写 `RED pins`：
+所有先决条件已确认。正在将 RED pins 写入 `parity-session5.spec.ts` —— 先检查其尾部结构：
+规范细节需要 seed 主题名称（用于范围限定断言 — “88%” 同时出现在 Overall 卡片和英语科目卡片中）。正在检查 seed 主题：
+4 张主题卡片（数学 89，化学 78，英语 88，物理 95），带有稳定的名称用于范围界定。正在编写 RED 标记：
+正在针对当前（AB 前）版本验证 RED：
+**RED 已确认：所有 8 个 AB pins 均失败。** 有一个意料之外的“1 个通过” —— 正在检查 `-g` 过滤器匹配到了什么：
+这个“1个通过”的是 auth setup 项目（匹配每个过滤器）—— RED 正好是预期的 8 个失败项。现在正在实现 Batch AB。首先是计算器视图 —— 正在检查其导入和状态：
+
 工作区与中断时完全一致：HEAD `8332270`（已拉取 `session_18.md`），在 `parity-session5.spec.ts` 中有 8 个 RED AB 引脚处于未提交状态，源代码视图尚未被修改。让我确认一下这些引脚和探针的发现。
 8个 RED pin 已就绪且结构清晰。现在，让我读取这三个 view 的实现，以规划具体的编辑内容。
 Calculator 视图很清晰。现在处理另外两个视图：
