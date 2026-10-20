@@ -1484,3 +1484,95 @@ perf — the clone's all-surface LCP GOOD vs the reference's mobile-login
 POOR still supports deferring); the pre-existing sf-clock-date
 dark-sweep artifact; the analytics dark-rendering titles (AP-113 class)
 are documented, not fixable through the light-mode UI.
+
+---
+
+## Session 75 (continuation 26) — the 15th workspace reset; re-certification 389/389 + 844/844; the CWV re-audit strengthened the Batch R deferral; the populated S6-family probe measured Batch AC (pending), 2 new probe lessons (AP-118/119), zero source changes
+
+**Context.** The user's `docs/session_20.md` is the s74 transcript. The
+suggested next-cycle options: Batch R (deferred RSC perf) or the
+gate+sweep rhythm. This cycle ran the rhythm AND added a new evidence
+layer — the populated S6-family re-measure on the reference — which
+surfaced the next drift layer (Batch AC) exactly as the s72 probe
+surfaced Batch AB.
+
+**Work log.**
+
+1. **Workspace rebuilt from zero (15th reset).** Fresh clone at
+   `ef0ed0a` (`f701a53` + the docs-only session_20 commit). Full
+   provisioning: bun install, paramiko 5.1.0, `/home/z/ssh-infra/`
+   restored (shim from the repo's own `docs/ssh.sh`, delegated key
+   0600, fingerprint verified, ls-remote auth green), `.env`
+   (`file:../db/custom.db` + empty `AUTH_SECRET`), db push + seed,
+   build fresh, chromium-1243 restored (`bunx playwright install` —
+   the browser cache does not survive resets; the first-run failure
+   signature is `browserType.launch: Executable doesn't exist`).
+2. **Audit of the recent changes:** `f701a53..ef0ed0a` is docs-only —
+   the audited Batch AB state stands unchanged.
+3. **Gates + full cold re-certification.** lint ✓ tsc ✓ unit
+   **844/844** ✓ build fresh. AP-116 census re-derived per file (each
+   chunk = chromium sum + 1 setup): **113+109+50+59+58 = 389/389**
+   cold, zero failures, first pass on every chunk — baseline
+   byte-matched again.
+4. **s75 standing sweep** (`ref-resweep-s75.mjs`, the class re-tagged):
+   **ok:true** — 9/9 invariants both hosts, brand tables byte-matched,
+   mobile drawers green on both (the user-flagged surface).
+5. **CWV re-audit** (`cwv-audit-s16.mjs`): the clone GOOD on every
+   measured surface (dashboard mobile-throttled LCP 2308ms ≤ 2500,
+   CLS 0; login mobile 1884ms; desktops sub-500ms); the reference
+   login-mobile LCP **8032ms POOR**, dashboard-mobile LCP **4296ms**
+   and **CLS 0.254 POOR**. The Batch R deferral (RSC structural perf)
+   is re-validated on stronger evidence — the clone now outperforms
+   the reference on every anchor.
+6. **The populated S6-family probe (the cycle's new layer).** Five
+   iterations against the live reference: v1 (UI drivers missed:
+   calculator keypad, solver click+type — the s72 lessons held), v2
+   (added dialog-closure verification; exposed the REAL blockers — the
+   ref's date fields are popover pickers and the account has ZERO
+   subjects so subject-bearing dialogs could not validate), v3 (the
+   v1-proven Settings→Subjects chain first; discovered the event
+   Start/End are `datetime-local` inputs → EVENT SUBMITTED), v4 (the
+   pickers' day-15 was in the past — future day 28 + popover
+   instrumentation; the picks registered but submits still failed), v5
+   (AP-119: popovers are modal dialogs too — form-title-scoped
+   locators + popover-close → ASSIGNMENT AND EXAM SUBMITS TRUE).
+   Populated: Subject, Task (My Day quick-add), Event
+   (datetime-local), Assignment (subject combobox + due-date picker),
+   Exam (subject combobox + date picker). Notes: the New Note editor
+   is an inline pane, never persisted — unmeasured positive case.
+7. **RESIDUE ZERO — twice.** The v5 delta cleanup deleted 4 objects
+   (Task/Subject/Assignment/Event, all 200). The cross-check against
+   the measured UI (5 probe rows visible, 4 deletions) exposed the
+   surviving exam (AP-118: `Exam` missing from the inherited candidate
+   list); the follow-up cleanup deleted it (200) and re-verified ZERO
+   across the extended list. The reference account is clean.
+8. **Measurements → Batch AC (measured, PENDING).** 7 populated views
+   dumped (widened leaf dump) + screenshotted on the ref, and the same
+   7 captured on the seeded clone (`75-clone-populated-*.png`) for the
+   apples-to-apples comparison. New drift layer (full table in
+   remediation-plan): AC1 assignment due pill (ref INLINE+violet+"7
+   days" vs clone own-line+blue+"Due in N days"), AC2 assignment
+   subject chip + amber bell priority (clone: neither), AC3 exam date
+   FULL format, AC4 exam subject chip, AC5 exam location
+   end-to-end (`Exam.location` missing from schema/dialog/card — the
+   S8 "no location row" pin's rationale was a data artifact), AC6
+   topics-row conditionality, AC7 exam pill copy, AC8 task pill date
+   form. Measured-and-matching recorded alongside (headers, pill
+   placements that DO match, duration suffix, type pills, dashboard
+   cards, calendar day-detail, My Day row).
+9. **Docs.** remediation-plan: the Cycle-25 record + the Batch AC
+   table + AP-118 (probe candidate completeness) + AP-119 (popover
+   layering). No source changes this cycle — AC is documented for the
+   next cycle's TDD implementation per the established
+   probe→implement rhythm (the Batch AB pattern: probed s72,
+   implemented s73).
+
+**Stage summary.** HEAD = `ef0ed0a` + this cycle's commit (probe
+scripts v1–v5 + the exam-residue cleanup + capture-s75-clone-populated
++ the s75 sweep + 75-* screenshots + docs + worklog). Baselines
+unchanged: e2e **389/389**, unit **844/844**, lint/tsc/build clean,
+s75 sweep ok:true. Batch AC is the next cycle's implementation work;
+Batch R stays deferred (strengthened CWV evidence). The reference
+remains UNCHANGED on every standing zero-state invariant; the
+populated S6-family surfaces are now MEASURED territory with a
+committed evidence trail.

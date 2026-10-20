@@ -643,6 +643,55 @@ mobile drawers green on both); the populated clone surfaces captured
 (`73-clone-gradetracker-populated.png`, `73-clone-mathsolver.png`,
 `73-clone-calculator-history-open.png` against the s72 ref evidence).
 
+### Cycle 25 (session-75) — the re-certification cycle + the populated S6-family probe (Batch AC measured, PENDING)
+
+Ran on a RESET workspace (fresh clone at `ef0ed0a` = Session-74 + the
+session_20 transcript). Full re-provision again (deps, paramiko,
+ssh-infra, `.env`/db/seed, build, chromium-1243 — browsers go with the
+cache on every reset). Gates re-certified cold: lint/tsc clean, unit
+**844/844**, e2e **389/389** (113+109+50+59+58, census byte-matched,
+first pass every chunk), s75 sweep **ok:true** (9/9 both hosts, mobile
+drawers green), CWV re-audit re-validated the Batch R deferral on
+STRONGER evidence: clone GOOD on every surface (dashboard
+mobile-throttled LCP 2308ms, CLS 0) while the reference measured
+login-mobile LCP **8032ms POOR** and dashboard-mobile LCP **4296ms** +
+**CLS 0.254 POOR**.
+
+**The new evidence layer: the populated S6-family re-measure on the
+reference** (the S6/S7/S8 pins were decoded in the s6–s8 era; the
+ref-side populated surfaces had never been re-measured). Five probe
+iterations (v1 UI-driver misses → v2 dialog-closure verification →
+v3 datetime-local + subject chain → v4 future-day pick + instrumentation
+→ v5 form-title-scoped submits) populated Subject + Task + Event +
+Assignment + Exam on the reference through its own UI, measured 7
+populated views, and cleaned to **RESIDUE ZERO**. Probe-protocol lessons
+(AP-118 + the popover-layering fix) are in the lessons table.
+
+**Batch AC — the populated-row drift layer, MEASURED, PENDING (the
+next cycle's TDD work, per the established probe→implement rhythm
+that produced Batch AB):**
+
+| # | Surface | Ref (measured, `75-ref-populated-*.png`) | Clone today | Class |
+|---|---------|------------------------------------------|-------------|-------|
+| AC1 | Assignment due pill | INLINE with the title, copy "7 days", violet tint | own line below the title, "Due tomorrow"/"Due in 2 days", blue-50 | placement + copy + tint |
+| AC2 | Assignment meta row | subject chip (dot+name violet pill) + amber "🔔 Medium" priority + gray type | neutral flag-pill priority + type; NO subject chip | missing chip; priority icon + tint |
+| AC3 | Exam card date | FULL format "Wednesday, October 28, 2026" | short "Wed, Oct 21" | format |
+| AC4 | Exam card subject chip | renders (violet-50 pill) | absent | missing |
+| AC5 | Exam card location | 📍 row renders WHEN set; the dialog has a Location field | no schema field, no dialog field, no row — the S8 pin "no location row" encoded a DATA ARTIFACT (the decode-era ref exams had no locations); the pin stays valid for the seeded no-location rows but its rationale is amended | E1-class end-to-end gap (`Exam.location` schema + dialog + card) |
+| AC6 | Exam card topics | absent when empty | renders for seeded exams | data-conditional — re-measure the ref's positive case before pinning |
+| AC7 | Exam due pill copy | "7 days" | "in 12 days" | micro-copy |
+| AC8 | Task due pill | red DATE pill "📅 Oct 20" for a due-today task (quick-add defaults due=today) | relative "Today" | copy form (measure the ref's far-date form before pinning) |
+
+Measured-and-MATCHING (no drift): exams header live-count
+("N upcoming · N this week"), the amber above-title exam pill
+placement, exam type pill title-case, the "· N min" duration suffix,
+the assignments header + search + Active + All Subjects + violet Add
+button, the progress track + violet % right, the populated dashboard
+cards (Today's Progress N/M "tasks completed", Pending Tasks, Due
+Soon, Focus Time), the calendar month grid + day-detail task rows, and
+the My Day task row. The ref dashboard greeting renders the account's
+name — behavior matches (the clone shows the display name).
+
 ## 3a. Verification (session-56 re-run, from a fresh clone)
 
 | Gate | Result |
@@ -760,3 +809,5 @@ auth+s18–s23 35/35 · s24–s26 18/18.
     date alignments deterministic at any hour; a pin that only fails at
     certain wall-clock times is coverage roulette.
 | AP-117 | MEDIUM | The Batch-AB pin draft asserted `getByText("78%")` on the populated GradeTracker's Chemistry card and would strict-mode-violate at GREEN time: Chemistry has ONE seeded grade (78/100), so the card renders the SAME string in two roles (the big avg AND the Recent-Grades pill). The reference never hits this because its avg format is 1dp ("50.0%") while its pills are integer — the clone's integer convention (the measured Overall card) makes avg==pill collisions inherent for single-grade subjects | when a surface renders the same value in two roles, assert through a role hook (`data-testid="gt-subject-avg"`), never bare text; before pinning populated aggregates, check the SEED for coincidences (single-grade subjects, avg==grade); a RED run cannot catch this class — the failure only appears at GREEN when the surface finally renders | tests/e2e/parity-session5.spec.ts (S5-AB7) + scripts/capture-s73-populated.mjs |
+| AP-118 | HIGH | The s75 probe's residue scan reported ZERO while a probe-created exam SURVIVED on the reference: the CANDIDATES entity list (inherited verbatim from the s72 probe) had no `Exam` entry — the ref stores exams under `Exam` — so neither the delta scan nor the signature scan ever listed it. DELETIONS showed 4 objects against a measured UI showing 5 probe rows; that cross-check (lesson 8: verify state, not exit codes) is what caught it, and the follow-up cleanup deleted the exam (200) and re-verified ZERO across the extended list | a probe's cleanup candidate list must cover EVERY entity its UI session can write — derive it from the dialogs actually driven, not from a prior session's list; always cross-check the DELETIONS count against the rows the UI measurably gained before accepting a RESIDUE ZERO verdict | scripts/ref-populated-s6family5-s75.mjs + scripts/ref-exam-residue-cleanup-s75.mjs |
+| AP-119 | MEDIUM | The s75 probe's assignment/exam submits silently verified the WRONG dialog layer: Radix date-picker popovers are themselves modal `[role=dialog]` elements, so `[role=dialog]` `.last()` scoped the submit-click and the detach-wait to the popover (which never detached) while the form stayed open — the run then poisoned every later nav click and the failure looked like a nav-timeout | scope form dialogs by TITLE (`[role=dialog]:has-text("Add Assignment")`), close the popover first (Escape once → verify `[data-radix-popper-content-wrapper]` is gone), then submit and detach-wait the SCOPED form; verify closure of the layer you mean, never whichever dialog happens to be last | scripts/ref-populated-s6family4-s75.mjs (the failure) vs ref-populated-s6family5-s75.mjs (the fix; submits went false→true) |
