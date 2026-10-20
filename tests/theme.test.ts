@@ -164,17 +164,21 @@ describe("accentCssVars", () => {
 });
 
 describe("AVATAR_EMOJIS", () => {
-  it("matches the reference's 22-emoji picker (re-dumped s69)", () => {
-    // The s69 Appearance-card dump: the reference's picker vocabulary is
-    // these 22 glyphs in this order (the clone's 24-list carried invented
-    // entries — ✏️ 🌱 🔥 ☕ 🐢 🐙 🦄 🌈 ⚡ — and missed 🐶 💡 🐸 🎮 🎾 🎪).
+  it("matches the reference's 24-emoji picker (re-dumped s70 — the s69 22-read dropped ⭐ and ⚽)", () => {
+    // The s70 scoped visible-tile dump (probe #2, AP-108 re-measure): the
+    // reference's picker vocabulary is these 24 glyphs in this order. The
+    // s69 Z12 dump reported 22 — it dropped ⭐ (index 6) and ⚽ (index 19).
+    // The S11-era 24-list had carried INVENTED entries (✏️ 🌱 🔥 ☕ 🐢 🐙
+    // 🦄 🌈 ⚡) and missed 🐶 💡 🐸 🎮 🎾 🎪 — a coincidence of counts,
+    // not a match.
     expect(AVATAR_EMOJIS).toEqual([
-      "🎓", "📚", "🧠", "💡", "🎯", "🚀", "🌟", "🦊",
-      "🐱", "🐶", "🐼", "🦁", "🐸", "🦉", "🐧", "🎨",
-      "🎵", "🎮", "🏀", "🎾", "🏆", "🎪",
+      "🎓", "📚", "🧠", "💡", "🎯", "🚀", "⭐", "🌟",
+      "🦊", "🐱", "🐶", "🐼", "🦁", "🐸", "🦉", "🐧",
+      "🎨", "🎵", "🎮", "⚽", "🏀", "🎾", "🏆", "🎪",
     ]);
-    expect(AVATAR_EMOJIS).toHaveLength(22);
+    expect(AVATAR_EMOJIS).toHaveLength(24);
     expect(AVATAR_EMOJIS[0]).toBe("🎓");
-    expect(AVATAR_EMOJIS[6]).toBe("🌟");
+    expect(AVATAR_EMOJIS[6]).toBe("⭐");
+    expect(AVATAR_EMOJIS[19]).toBe("⚽");
   });
 });

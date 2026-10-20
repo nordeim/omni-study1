@@ -275,6 +275,23 @@ test.describe("S11-7 · the Appearance tab is the reference's single card (s69)"
     expect(tiles.parentDisplay).toBe("flex");
     expect(tiles.gap).toBe("8px");
   });
+
+  test("the avatar vocabulary is the reference's 24-emoji list (S11-7c pin, s70)", async ({ page }) => {
+    // Reference (RE-measured s70, probe #2 scoped visible-tile dump —
+    // AP-108): the s69 Z12 dump reported 22, but the reference renders 24
+    // — ⭐ sits at index 6 (between 🚀 and 🌟) and ⚽ at index 19 (between
+    // 🎮 and 🏀). The s69 scan dropped both glyphs.
+    await page.goto("/Settings");
+    await hydrated(page);
+    const pane = page.locator('[aria-label="Appearance"]');
+    const tiles = pane.locator("button").filter({ hasText: /^\p{Extended_Pictographic}$/u });
+    await expect(tiles).toHaveCount(24);
+    const glyphs = await tiles.evaluateAll((els) => els.map((el) => el.textContent.trim()));
+    expect(glyphs[6]).toBe("⭐");
+    expect(glyphs[19]).toBe("⚽");
+    expect(glyphs.filter((g) => g === "⭐")).toHaveLength(1);
+    expect(glyphs.filter((g) => g === "⚽")).toHaveLength(1);
+  });
 });
 
 test.describe("S11-6 · minimal print styles (superset)", () => {

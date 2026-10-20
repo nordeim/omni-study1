@@ -552,9 +552,11 @@ test.describe("view chrome (computed parity pins)", () => {
   });
 
   test("the Upcoming Exams header carries the reference's All anchor (S4-N pin)", async ({ page }) => {
-    // Reference (measured s69): a plain anchor href="/Exams" labelled "All"
-    // with a 16px arrow-right icon, 16px neutral-950 text — the clone had
-    // NO action on this card.
+    // Reference (RE-measured s70, probe #3 node dump — AP-108): the s69
+    // probe read the ANCHOR's inherited styles (16px neutral-950); the
+    // dump revealed the anchor wraps a BUTTON (shadcn base) whose visible
+    // text renders 12px/500 violet-600 rgb(124,58,237) at h-32 — all three
+    // section headers share this anchor>button anatomy.
     await page.goto("/Dashboard");
     const examsCard = page
       .locator("section", { has: page.getByRole("heading", { name: "Upcoming Exams" }) })
@@ -565,7 +567,129 @@ test.describe("view chrome (computed parity pins)", () => {
     expect(href).toBe("/Exams");
     const cls = await all.locator("svg").evaluate((el) => el.getAttribute("class") ?? "");
     expect(cls).toContain("lucide-arrow-right");
-    await expect(all).toHaveCSS("font-size", "16px");
+    const btn = all.locator("button");
+    const cs = await btn.evaluate((el) => {
+      const s = getComputedStyle(el);
+      return { fs: s.fontSize, fw: s.fontWeight, color: s.color, h: Math.round(el.getBoundingClientRect().height) };
+    });
+    expect(cs.fs).toBe("12px");
+    expect(cs.fw).toBe("500");
+    expect(cs.color).toBe("rgb(124, 58, 237)");
+    expect(cs.h).toBe(32);
+  });
+
+  test("all three dashboard section actions share the anchor>button anatomy (S4-Q pin)", async ({ page }) => {
+    // Reference (measured s70, probes #2/#3): Today's Tasks → <a href="/MyDay">,
+    // Upcoming Exams → <a href="/Exams">, Upcoming Assignments →
+    // <a href="/Assignments"> — each wrapping a 12px/500 violet-600 h-8
+    // button labelled "View All" / "All" / "View All" with the arrow icon.
+    // The clone's Tasks action was a bare button; the Assignments card had
+    // NO action at all.
+    await page.goto("/Dashboard");
+    const cases = [
+      { head: "Today's Tasks", href: "/MyDay", label: /^View All/ },
+      { head: "Upcoming Exams", href: "/Exams", label: /^All$/ },
+      { head: "Upcoming Assignments", href: "/Assignments", label: /^View All/ },
+    ];
+    for (const c of cases) {
+      const card = page
+        .locator("section", { has: page.getByRole("heading", { name: c.head }) })
+        .first();
+      const a = card.locator("a").filter({ hasText: c.label }).first();
+      await expect(a).toBeVisible();
+      expect(await a.getAttribute("href")).toBe(c.href);
+      const btn = a.locator("button");
+      const cs = await btn.evaluate((el) => {
+        const s = getComputedStyle(el);
+        return {
+          text: (el.textContent ?? "").trim(),
+          fs: s.fontSize,
+          fw: s.fontWeight,
+          color: s.color,
+          h: Math.round(el.getBoundingClientRect().height),
+        };
+      });
+      expect(cs.text).toMatch(c.label);
+      expect(cs.fs).toBe("12px");
+      expect(cs.fw).toBe("500");
+      expect(cs.color).toBe("rgb(124, 58, 237)");
+      expect(cs.h).toBe(32);
+      const svg = await a.locator("svg").evaluate((el) => el.getAttribute("class") ?? "");
+      expect(svg).toContain("lucide-arrow-right");
+    }
+  });
+
+  test("the Upcoming Assignments card sits OUTSIDE the section grid (S4-R pin)", async ({ page }) => {
+    // Reference (measured s70, probes #3/#4): the assignments card is a
+    // DIRECT child of the root flow (a sibling of the 3-track grid, which
+    // holds only Tasks col-span-2 + Exams), so it renders FULL-width
+    // (1116px at 1440). The clone had it as a grid item (row 2, track 1).
+    await page.goto("/Dashboard");
+    const tasksCard = page
+      .locator("section", { has: page.getByRole("heading", { name: "Today's Tasks" }) })
+      .first();
+    const assignmentsCard = page
+      .locator("section", { has: page.getByRole("heading", { name: "Upcoming Assignments" }) })
+      .first();
+    await expect(assignmentsCard).toBeVisible();
+    const inside = await tasksCard.evaluate((tasks, assign) => {
+      const grid = tasks.parentElement!;
+      return grid.contains(assign);
+    }, await assignmentsCard.elementHandle());
+    expect(inside).toBe(false);
+    // full width = the grid's own width
+    const widths = await tasksCard.evaluate((tasks, assign) => ({
+      grid: Math.round(tasks.parentElement!.getBoundingClientRect().width),
+      card: Math.round(assign.getBoundingClientRect().width),
+    }), await assignmentsCard.elementHandle());
+    expect(widths.card).toBe(widths.grid);
+  });
+
+  test("the dashboard root rhythm is the reference's 32px stack (S4-S pin)", async ({ page }) => {
+    // Reference (measured s70, probe #4): the root container stacks the
+    // greeting / stats / section grid / assignments card with space-y-8
+    // (32px) gaps — the clone's gap-6 rendered 24px (the stat row sat 8px
+    // high: y=120 vs the reference's y=128).
+    await page.goto("/Dashboard");
+    const tasksCard = page
+      .locator("section", { has: page.getByRole("heading", { name: "Today's Tasks" }) })
+      .first();
+    const rootGap = await tasksCard.evaluate((el) => {
+      const root = el.parentElement!.parentElement!;
+      return getComputedStyle(root).rowGap;
+    });
+    expect(rootGap).toBe("32px");
+  });
+
+  test("the dashboard section headers carry the reference's bordered block (S4-T pin)", async ({ page }) => {
+    // Reference (measured s70, probe #5): the section header is an OUTER
+    // div `p-6 border-b border-slate-100` (24/24 + a 1px slate-100 divider
+    // spanning the card) wrapping an inner `flex items-center
+    // justify-between` row (h=32, no gap) — the clone's single `p-6 pb-4`
+    // row rendered 24/16 with no divider (card 218px vs the ref's 231px).
+    await page.goto("/Dashboard");
+    const tasksCard = page
+      .locator("section", { has: page.getByRole("heading", { name: "Today's Tasks" }) })
+      .first();
+    const header = tasksCard.locator("div").first();
+    const cs = await header.evaluate((el) => {
+      const s = getComputedStyle(el);
+      const row = el.firstElementChild!;
+      const rs = getComputedStyle(row);
+      return {
+        pt: s.paddingTop, pb: s.paddingBottom,
+        bbw: s.borderBottomWidth, bbc: s.borderBottomColor,
+        rowDisplay: rs.display, rowGap: rs.columnGap,
+        rowH: Math.round(row.getBoundingClientRect().height),
+      };
+    });
+    expect(cs.pt).toBe("24px");
+    expect(cs.pb).toBe("24px");
+    expect(cs.bbw).toBe("1px");
+    expect(cs.bbc).toBe("rgb(241, 245, 249)"); // slate-100
+    expect(cs.rowDisplay).toBe("flex");
+    expect(cs.rowGap).toBe("normal");
+    expect(cs.rowH).toBe(32);
   });
 
   test("the dashboard section empties match the reference icons and copy (S4-O pin)", async ({ page }) => {

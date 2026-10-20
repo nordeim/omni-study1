@@ -531,6 +531,52 @@ verified by stashing the batch and re-running the sweep on the
 received bundle); post-fix evidence captured (`69-ref-*` /
 `69-clone-*`).
 
+### Batch AA — Session-70: the probe re-measure layer (the dashboard section actions' true anatomy, the assignments card placement, the root rhythm, the bordered section headers, the 24-emoji avatar list)
+
+Cycle 21 ran on a PRESERVED workspace (fast-forward pull of the
+session_16 transcript `5fcbea6` onto Batch Z `095a022`; the environment
+survived — deps, chromium-1243, `.env` posture, fresh build, db; only
+the shredded deploy key was re-provisioned at `/home/z/ssh-infra/key`,
+`ls-remote` pre-flight green). Gates re-certified cold on the received
+state: lint ✓ tsc ✓ unit 844/844 ✓; e2e across the 5-sub-run map —
+**376/376** zero flakes (113+109+42+59+58 on the s70 sub-split; chunk
+1b's single first-pass failure was the documented accessibility.spec
+cold-boot race, green on the solo re-run). The s70 invariant sweep (the
+s69 class re-tagged, `scripts/ref-resweep-s70.mjs`) reported **ok:true**
+on both hosts — and the side-by-side screenshot pairs exposed the next
+layer, which SIX probes (`scripts/z-probe{,2,3,4,5,6}-s70.mjs`) turned
+into a measured truth table:
+
+| # | Finding | Root cause | Fix | Guard |
+|---|---------|-----------|-----|-------|
+| AA1 | Dashboard Upcoming Assignments card: clone = a 3-track GRID ITEM (row 2, track 1, ≈360px) vs reference = a SIBLING of the grid (probe #3's DOM path: `space-y-8 > div[3].bg-white.rounded-2xl`, OUTSIDE `div[2].grid.lg:grid-cols-3`), full-width 1116px | the Z1 fix set the grid + the Tasks span but never measured where the third card lived | the SectionCard moved out of the grid into the root flow | **S4-R** (outside the grid + width == the grid's width) |
+| AA2 | Dashboard root rhythm: clone `gap-6` (24px) vs reference `space-y-8` (32px — stats y=128 vs clone y=120, the exact 8px gap delta, probe #4) | the S8-B-era root predated the rhythm measurement | root `gap-6` → `gap-8` | **S4-S** (root row-gap 32px) |
+| AA3 | The Upcoming Assignments header had NO action; the reference carries **"View All"** in the shared action anatomy | the card was never header-measured | SectionLink action added | **S4-Q** (3-case table) |
+| AA4 | ALL THREE section actions' true anatomy (probe #3 node dump): `<a href="/MyDay\|/Exams\|/Assignments">` wrapping a **button** rendering **12px/500 violet-600 rgb(124,58,237) at h-32** with the arrow svg — the s69 probe had read the ANCHOR's inherited styles (16px neutral-950) and missed the button inside (AP-108 re-measure; probe-vs-probe disagreement resolved by the full-path dump per AP-111) | one-element-deep reads | the shared `SectionLink` (module-scope component — the static-components rule) on all three headers; the anchor stays unstyled + the focus-ring a11y superset; S4-N re-pinned to the button's values | **S4-N** (re-pinned) + **S4-Q** |
+| AA5 | Section headers: clone single row `p-6 pb-4` (24/16, no divider, card h=218) vs reference OUTER `p-6 border-b border-slate-100` (24/24 + 1px slate-100 divider) wrapping an inner gap-less flex row (h=32, card h=231) (probe #5) | the flush-card header was never padding-measured | SectionCard `borderedHeader` opt-in prop (the other consumers' ref anatomy is UNMEASURED — their zero states render no titled cards to probe; recorded as the open follow-up) | **S4-T** (outer pt/pb 24 + 1px rgb(241,245,249) + inner row h=32 gap normal) |
+| AA6 | Avatar vocabulary: the Z12-pinned **22-list was a mis-measurement** — the reference renders **24** emojis; the s69 emoji-scan dropped ⭐ (index 6) and ⚽ (index 19) (probe #2's scoped visible-tile dump) | the s69 scan filtered without visibility scoping | AVATAR_EMOJIS 24-list; the unit pin + a new e2e pin re-pinned (AP-108) | **S11-7c** (24 tiles, ⭐ at 6, ⚽ at 19) + the theme.test.ts unit pin |
+
+**The discriminator lesson (AP-115).** Two of this cycle's six probes
+DISAGREED on the same node (anchor/16px/gray vs button/12px/violet) and
+one standing pin (Z12's 22-emoji) was overturned by a scoped re-dump.
+Rule: when probes disagree — or when a pin encodes a probe reading —
+dump EVERY candidate node with its DOM PATH and PARENT chain
+(`parentFs`/`parentColor` caught the anchor-wrapping-button structure);
+a text-node's inherited styles are not the visible text's styles. And
+scope every filtered scan to VISIBLE nodes (`offsetParent !== null`) —
+a filter over the whole document silently drops or invents members.
+
+**Verified:** 7 pins RED-first on the pre-fix bundle (S4-N rewrite +
+S4-Q/R/S/T + S11-7c + the unit pin — 6 e2e failed + the unit RED);
+GREEN after the source fixes (`dashboard-view.tsx` root/action/placement,
+`shared.tsx` borderedHeader, `theme.ts` vocabulary); lint ✓ tsc ✓ unit
+**844/844** ✓; build REAL_EXIT=0 fresh; full cold re-certification
+**113 + 109 + 42 + 59 + 58 = 381/381** (376 + 5 new pins, accounting
+exact); the post-fix s70 sweep **ok:true** (after the s63
+EADDRINUSE lesson re-bited — the stale pre-fix standalone held :3200
+through `pkill -f next-server`; killed by the port-owner PID); the
+fixed dashboard captured (`70-clone-dashboard.png` vs `70-ref-dashboard.png`).
+
 ## 3a. Verification (session-56 re-run, from a fresh clone)
 
 | Gate | Result |

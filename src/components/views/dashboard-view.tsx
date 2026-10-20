@@ -32,7 +32,7 @@ import {
   isSameMonth,
   startOfDay,
 } from "@/lib/date";
-import { currentGreeting } from "@/lib/router";
+import { currentGreeting, type ViewId } from "@/lib/router";
 import { Button } from "@/components/ui/button";
 import { useAppStore, useThemeStore } from "@/lib/store";
 import {
@@ -46,6 +46,35 @@ import {
 function firstNameOf(userName: string): string {
   const first = userName.trim().split(/\s+/)[0];
   return first || "there";
+}
+
+// S4-Q (measured s70, probes #2/#3): all three section headers share the
+// reference's anchor>button anatomy — <a href href>
+// <button text-xs font-medium text-sf-primary-strong (violet-600,
+// rgb(124,58,237)) h-8>label<ArrowRight/></button></a>. The anchor is
+// unstyled on the reference; the focus ring is the clone's documented a11y
+// superset. The s69 probe had read the anchor's inherited 16px neutral-950
+// — the visible text is the button's (AP-108 re-measure). Module scope per
+// the static-components rule (a component declared in render resets state).
+function SectionLink({ href, view, label, onNavigate }: { href: string; view: ViewId; label: string; onNavigate: (v: ViewId) => void }) {
+  return (
+    <a
+      href={href}
+      onClick={(e) => {
+        e.preventDefault();
+        onNavigate(view);
+      }}
+      className="rounded-md outline-none focus-visible:ring-2 focus-visible:ring-sf-primary/40"
+    >
+      <button
+        type="button"
+        className="inline-flex h-8 items-center justify-center gap-2 whitespace-nowrap px-3.5 text-xs font-medium text-sf-primary-strong transition-colors outline-none dark:text-sf-primary-strong-dark"
+      >
+        {label}
+        <ArrowRight className="size-4" strokeWidth={2} aria-hidden />
+      </button>
+    </a>
+  );
 }
 
 export function DashboardView() {
@@ -115,8 +144,14 @@ export function DashboardView() {
       void run(mutations.toggleTask(id), "Could not update the task."),
   };
 
+  // (SectionLink lives at module scope — the static-components rule;
+  // onNavigate is threaded per call site below.)
+
   return (
-    <div className="flex flex-col gap-6">
+    // S4-S (measured s70): the root stack is the reference's 32px rhythm
+    // (space-y-8) — the old gap-6 rendered 24px and sat the stat row 8px
+    // high (y=120 vs 128).
+    <div className="flex flex-col gap-8">
       {/* ---- greeting header ---- */}
       <header className="flex flex-wrap items-end justify-between gap-3">
         <div>
@@ -222,24 +257,17 @@ export function DashboardView() {
         </div>
       )}
 
-      {/* ---- flush section cards (S8-B; the 3-track row + the Exams "All"
-              anchor + the section icons/copy are the s69 re-measure, S4-L/N) ---- */}
+      {/* ---- flush section cards (S8-B; the 3-track row + the section
+              icons/copy are the s69 re-measure; the bordered headers + the
+              anchor>button actions are the s70 re-measure, S4-Q/T) ---- */}
       <div className="grid gap-6 lg:grid-cols-3">
         <SectionCard
           title="Today's Tasks"
           icon={SquareCheckBig}
           flush
+          borderedHeader
           className="lg:col-span-2"
-          action={
-            <button
-              type="button"
-              onClick={() => navigate("myday")}
-              className="flex items-center gap-1 text-sm font-medium text-sf-primary-strong outline-none focus-visible:ring-2 focus-visible:ring-sf-primary/40 dark:text-sf-primary-strong-dark"
-            >
-              View All
-              <ArrowRight className="size-4" strokeWidth={2} aria-hidden />
-            </button>
-          }
+          action={<SectionLink href="/MyDay" view="myday" label="View All" onNavigate={navigate} />}
         >
           {todayScope.length === 0 ? (
             <SimpleEmptyState icon={SquareCheckBig} message="No tasks for today. Add some from My Day!" />
@@ -292,21 +320,8 @@ export function DashboardView() {
           title="Upcoming Exams"
           icon={GraduationCap}
           flush
-          action={
-            // S4-N (measured s69): the reference's Exams header carries a
-            // plain 16px neutral-950 "All" anchor with the arrow icon.
-            <a
-              href="/Exams"
-              onClick={(e) => {
-                e.preventDefault();
-                navigate("exams");
-              }}
-              className="flex items-center gap-1 text-base text-neutral-950 outline-none focus-visible:ring-2 focus-visible:ring-sf-primary/40 dark:text-neutral-100"
-            >
-              All
-              <ArrowRight className="size-4" strokeWidth={2} aria-hidden />
-            </a>
-          }
+          borderedHeader
+          action={<SectionLink href="/Exams" view="exams" label="All" onNavigate={navigate} />}
         >
           {upcomingExams.length === 0 ? (
             <SimpleEmptyState icon={GraduationCap} message="No upcoming exams" />
@@ -338,45 +353,56 @@ export function DashboardView() {
             </ul>
           )}
         </SectionCard>
-
-        <SectionCard title="Upcoming Assignments" icon={BookOpen} flush>
-          {activeAssignments.length === 0 ? (
-            <SimpleEmptyState icon={BookOpen} message="No upcoming assignments" />
-          ) : (
-            <ul aria-label="Upcoming assignments">
-              {activeAssignments.map((assignment) => {
-                const color = subjectColor(assignment.subjectId);
-                return (
-                  <li
-                    key={assignment.id}
-                    className="flex items-center gap-3 p-4 hover:bg-slate-50 dark:hover:bg-slate-800/50"
-                  >
-                    <span
-                      aria-hidden
-                      className="h-12 w-1 shrink-0 rounded-full"
-                      style={{ backgroundColor: color ?? "rgb(var(--sf-primary))" }}
-                    />
-                    <div className="min-w-0 flex-1">
-                      <h3 className="truncate font-medium text-slate-700 dark:text-slate-200">
-                        {assignment.title}
-                      </h3>
-                      <p className="mt-0.5 flex items-center gap-1.5 text-sm text-slate-500 dark:text-slate-400">
-                        <Clock className="size-3.5 shrink-0" strokeWidth={2} aria-hidden />
-                        {assignment.dueDate
-                          ? `Due ${dayBucketLabel(new Date(assignment.dueDate), today)}`
-                          : "No due date"}
-                      </p>
-                    </div>
-                    <span className="shrink-0 rounded-full bg-yellow-100 px-2 py-0.5 text-xs font-medium capitalize text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-300">
-                      {assignment.priority}
-                    </span>
-                  </li>
-                );
-              })}
-            </ul>
-          )}
-        </SectionCard>
       </div>
+
+      {/* S4-R (measured s70, probes #3/#4): the assignments card is a
+          SIBLING of the section grid (a direct child of the root flow), so
+          it renders full-width — the ref's DOM path is space-y-8 >
+          div[3].bg-white.rounded-2xl, OUTSIDE the grid. The old placement
+          (grid item, row 2 track 1) rendered a 1/3-width card. */}
+      <SectionCard
+        title="Upcoming Assignments"
+        icon={BookOpen}
+        flush
+        borderedHeader
+        action={<SectionLink href="/Assignments" view="assignments" label="View All" onNavigate={navigate} />}
+      >
+        {activeAssignments.length === 0 ? (
+          <SimpleEmptyState icon={BookOpen} message="No upcoming assignments" />
+        ) : (
+          <ul aria-label="Upcoming assignments">
+            {activeAssignments.map((assignment) => {
+              const color = subjectColor(assignment.subjectId);
+              return (
+                <li
+                  key={assignment.id}
+                  className="flex items-center gap-3 p-4 hover:bg-slate-50 dark:hover:bg-slate-800/50"
+                >
+                  <span
+                    aria-hidden
+                    className="h-12 w-1 shrink-0 rounded-full"
+                    style={{ backgroundColor: color ?? "rgb(var(--sf-primary))" }}
+                  />
+                  <div className="min-w-0 flex-1">
+                    <h3 className="truncate font-medium text-slate-700 dark:text-slate-200">
+                      {assignment.title}
+                    </h3>
+                    <p className="mt-0.5 flex items-center gap-1.5 text-sm text-slate-500 dark:text-slate-400">
+                      <Clock className="size-3.5 shrink-0" strokeWidth={2} aria-hidden />
+                      {assignment.dueDate
+                        ? `Due ${dayBucketLabel(new Date(assignment.dueDate), today)}`
+                        : "No due date"}
+                    </p>
+                  </div>
+                  <span className="shrink-0 rounded-full bg-yellow-100 px-2 py-0.5 text-xs font-medium capitalize text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-300">
+                    {assignment.priority}
+                  </span>
+                </li>
+              );
+            })}
+          </ul>
+        )}
+      </SectionCard>
     </div>
   );
 }

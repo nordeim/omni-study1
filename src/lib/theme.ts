@@ -210,12 +210,13 @@ export const NAV_ACTIVE_GRADIENT_STOPS = {
   alpha: 0.1,
 } as const;
 
-/** The reference's 22-emoji avatar picker (re-dumped s69, S11-7 — the
- *  S11-era 24-list carried invented glyphs the reference never offered). */
+/** The reference's 24-emoji avatar picker (re-dumped s70, S11-7c — the
+ *  s69 Z12 dump reported 22 but dropped ⭐ (index 6) and ⚽ (index 19);
+ *  the scoped visible-tile dump is the authority). */
 export const AVATAR_EMOJIS: string[] = [
-  "🎓", "📚", "🧠", "💡", "🎯", "🚀", "🌟", "🦊",
-  "🐱", "🐶", "🐼", "🦁", "🐸", "🦉", "🐧", "🎨",
-  "🎵", "🎮", "🏀", "🎾", "🏆", "🎪",
+  "🎓", "📚", "🧠", "💡", "🎯", "🚀", "⭐", "🌟",
+  "🦊", "🐱", "🐶", "🐼", "🦁", "🐸", "🦉", "🐧",
+  "🎨", "🎵", "🎮", "⚽", "🏀", "🎾", "🏆", "🎪",
 ];
 
 // ---------------------------------------------------------------------------

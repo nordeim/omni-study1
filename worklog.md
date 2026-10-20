@@ -1152,3 +1152,95 @@ variant: `neutral`. Honest debt: Batch R (RSC structural perf — the
 s65 CWV evidence stands); the pre-existing sf-clock-date dark-sweep
 artifact (the sweep's effective-bg resolver skips gradient
 backgrounds) — recorded for a future audit-tools cycle.
+
+## Session 70 (continuation 21) — the preserved-workspace cycle; the probe re-measure layer (Batch AA): the dashboard section actions' true anatomy, the assignments card placement, the root rhythm, the bordered section headers, the 24-emoji avatar list
+
+**Context.** The user's `docs/session_16.md` is the s69 transcript —
+its suggested next step = repeat the gate+re-sweep rhythm (or Batch R).
+This cycle: refresh, re-certify, re-sweep — and the s70 sweep's
+side-by-side pairs exposed the next drift layer, which the DOM probes
+turn into a truth table that also OVERTURNED one of Batch Z's own
+readings (the 22-emoji list).
+
+**Work log.**
+
+1. **Workspace refreshed.** `git pull --ff-only` fast-forwarded
+   `095a022..5fcbea6` (the session_16 transcript commit). Preserved
+   workspace — deps, chromium-1243, `.env` posture, fresh build, and
+   `db/custom.db` all survived; only the post-push-shredded deploy key
+   needed re-provisioning (`/home/z/ssh-infra/key` 0600 + `ls-remote`
+   pre-flight green against `5fcbea6`).
+2. **Alignment validated.** session_16 (the s69 transcript) + the doc
+   chain read; Batch Z verified in-tree (the 3-track grid + col-span-2,
+   My Day max-w-3xl + leading plus + the neutral variant, ViewHeader
+   icons, the Events band rework, the single-card Appearance + the
+   22-emoji list, S4-L..P/S3-M/S9-R2/S7-P/S8-Z/S5-V2/S11-7 pins).
+3. **Batch Z audited** via the repo's code-review-checklist skill
+   (Standards + Spec axes on the `f0d01b1..095a022` diff, 47 files):
+   zero findings — measured values documented in comments, the v4 traps
+   handled (arbitrary hexes on the neutral variant, oklab-tolerant band
+   pins, raw-rgb gradients), the dead `UserAvatar` import removed, the
+   immediate-PATCH contract preserved, the a11y-wins calls justified.
+4. **Gates re-certified cold on the received state.** lint ✓ tsc ✓
+   unit 844/844 ✓; e2e across the 5-sub-run map (fresh `db/e2e.db` +
+   fresh server per chunk): **109+108+42+59+58 = 376/376** zero flakes
+   (chunk 1b's single first-pass failure = the documented
+   accessibility.spec cold-boot race, green on the solo re-run).
+5. **The s70 sweep + the screenshot pairs.** The s69 sweep class
+   re-tagged (`ref-resweep-s70.mjs`): **ok:true** — 9/9 invariants per
+   host, brand tables byte-matched, drawers open + bar/drawer typography
+   green on both. The dashboard pair then exposed the layer: the ref's
+   Upcoming Assignments card renders FULL-WIDTH with a "View All"
+   action; the clone's sat in one grid track, actionless.
+6. **Six DOM probes** (`scripts/z-probe{,2,3,4,5,6}-s70.mjs`) turned the
+   screenshot hypotheses into the measured truth table (AP-111
+   discipline):
+   - probe #1: assignments card x=292 w=1116 (full 3-track span) + an
+     action read that CONTRADICTED the screenshot;
+   - probe #2 (scoped visible-node re-dump): 24 avatar tiles (⭐ at
+     index 6, ⚽ at 19) — the Z12 22-read was a filter-drop mis-measure;
+   - probe #3 (the AP-111 full-path dump): ALL THREE section actions =
+     `<a href="/MyDay|/Exams|/Assignments">` wrapping a BUTTON at
+     12px/500 violet-600 rgb(124,58,237) h-32 — the s69 probe had read
+     the anchor's inherited 16px neutral-950 (probe #1's "a/16px/gray"
+     vs probe #2's "button/12px/violet" disagreement resolved by the
+     path dump: the anchor's parentFs/parentColor matched probe #1
+     EXACTLY, the text-parent button matched probe #2);
+   - probe #4 (both hosts): root rhythm 32px (stats y=128 vs 120 — the
+     exact gap-6/gap-8 delta), stats 4×267×134 byte-equal, the section
+     grid `lg:grid-cols-3` re-confirmed, the assignments card y=557;
+   - probe #5: the ref header = outer `p-6 border-b border-slate-100`
+     (24/24, h=81) + inner gap-less row (h=32); the clone = single
+     `p-6 pb-4` (24/16, h=68, no divider, card 218 vs 231);
+   - probe #6: the other SectionCard consumers (calculator/mathsolver/
+     analytics/gradetracker) render NO titled cards at zero on the ref —
+     their header anatomy is UNMEASURABLE this cycle → the opt-in prop.
+7. **Batch AA implemented TDD** (7 pins RED-first: S4-N rewritten to
+   the button's values, S4-Q the 3-case action table, S4-R the
+   outside-the-grid placement + full-width, S4-S the 32px root rhythm,
+   S4-T the bordered header block, S11-7c the 24-emoji list + the unit
+   pin; RED verified 6 e2e failed + the unit RED). GREEN:
+   `dashboard-view.tsx` (root gap-8, the module-scope SectionLink —
+   the static-components lint rule caught the first in-render draft —
+   the assignments card moved out of the grid), `shared.tsx`
+   (borderedHeader opt-in), `theme.ts` (the 24-list).
+8. **Verified.** lint ✓ tsc ✓ unit **844/844** ✓; build REAL_EXIT=0
+   fresh; full cold re-certification **113+109+42+59+58 = 381/381**
+   (376 + 5 new pins, accounting exact); the post-fix s70 sweep
+   **ok:true** on both hosts — after the s63 EADDRINUSE lesson re-bit
+   (the stale pre-fix standalone held :3200 through `pkill -f
+   next-server`; killed by the port-owner PID, rebooted fresh); the
+   fixed dashboard captured (`70-clone-dashboard.png` — the full-width
+   assignments card + the violet anchor>button actions + the bordered
+   headers, matching `70-ref-dashboard.png`).
+
+**Stage summary.** HEAD = the Batch-AA commit. Baselines: e2e **381/381**
+(113+109+42+59+58, 30 spec files), unit **844/844**. New pins: S4-Q/R/S/T,
+S11-7c (+ the AVATAR_EMOJIS unit pin re-pinned to 24; S4-N re-pinned to
+the button anatomy). New lesson AP-115 (probe-vs-probe disagreement →
+full-path node dumps with parent chains; filtered scans scoped to
+visible nodes). The reference remains UNCHANGED on every standing
+invariant. Honest debt: Batch R (RSC structural perf — the s65 CWV
+evidence stands); the pre-existing sf-clock-date dark-sweep artifact;
+the other SectionCard consumers' ref header anatomy (unmeasurable at
+zero — a populated-account probe could settle it).

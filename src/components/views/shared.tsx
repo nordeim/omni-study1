@@ -109,21 +109,42 @@ type SectionCardProps = {
   flush?: boolean;
   className?: string;
   bodyClassName?: string;
+  /** S4-T (s70): the reference's dashboard section-header block — outer
+   *  `p-6 border-b border-slate-100` + inner gap-less flex row. */
+  borderedHeader?: boolean;
   children: React.ReactNode;
 };
 
 /** Card with an h2 header row; flush = edge-to-edge divide-y rows (S8). */
-export function SectionCard({ title, icon: Icon, action, flush = false, className, bodyClassName, children }: SectionCardProps) {
+export function SectionCard({ title, icon: Icon, action, flush = false, className, bodyClassName, borderedHeader = false, children }: SectionCardProps) {
   return (
     <section className={cn("sf-card overflow-hidden", className)}>
       {title && (
-        <div className="flex items-center justify-between gap-3 p-6 pb-4">
-          <h2 className="flex items-center gap-2 text-lg font-semibold text-slate-800 dark:text-slate-100">
-            {Icon && <Icon className="size-5 text-sf-primary" strokeWidth={2} />}
-            {title}
-          </h2>
-          {action}
-        </div>
+        borderedHeader ? (
+          // S4-T (measured s70): the reference's section header is an OUTER
+          // `p-6 border-b border-slate-100` block wrapping an inner
+          // `flex items-center justify-between` row (h=32, no gap) — the
+          // single padded row rendered 24/16 with no divider. Opt-in: the
+          // other SectionCard consumers' reference anatomy is unmeasured
+          // (their zero states render no titled cards to probe).
+          <div className="border-b border-slate-100 p-6 dark:border-slate-800">
+            <div className="flex items-center justify-between">
+              <h2 className="flex items-center gap-2 text-lg font-semibold text-slate-800 dark:text-slate-100">
+                {Icon && <Icon className="size-5 text-sf-primary" strokeWidth={2} />}
+                {title}
+              </h2>
+              {action}
+            </div>
+          </div>
+        ) : (
+          <div className="flex items-center justify-between gap-3 p-6 pb-4">
+            <h2 className="flex items-center gap-2 text-lg font-semibold text-slate-800 dark:text-slate-100">
+              {Icon && <Icon className="size-5 text-sf-primary" strokeWidth={2} />}
+              {title}
+            </h2>
+            {action}
+          </div>
+        )
       )}
       <div className={cn(flush ? "divide-y divide-slate-50 dark:divide-slate-800" : "p-6 pt-0", title && !flush && "pt-0", bodyClassName)}>
         {children}
