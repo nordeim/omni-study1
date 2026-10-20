@@ -623,3 +623,121 @@ test.describe("S5-V · session-65 reference drift fixes (measured on the live re
     await expect(page.getByText("Test yourself with practice exams")).toBeVisible();
   });
 });
+
+test.describe("S5-AB · the populated-surface drift layer (measured on the POPULATED reference 2026-10-20 — the s72 endpoint-learning probes)", () => {
+  // The zero-state probes (s70 probe #6) could never see these surfaces:
+  // the reference renders NO history/recent/subject chrome at zero, so
+  // Batch AA shipped with this layer explicitly unmeasured. The s72 cycle
+  // populated the reference account through its own UI (subject + grade +
+  // task + a keyed evaluation + a solved problem), measured the populated
+  // anatomy, and cleaned up to zero residue. Three drift items:
+  // the calculator's header button + slide-in panel (the bottom SectionCard
+  // was a clone invention), the solver's free-standing "Recent Problems"
+  // h2, and GradeTracker's bare per-subject cards.
+
+  test("S5-AB1 Calculator: the measured header subtitle", async ({ page }) => {
+    await page.goto("/Calculator");
+    await hydrated(page);
+    // Measured 2026-10-20 (72-ref-populated-calculator.png): the subtitle
+    // sits under the h1; the clone rendered the h1 alone.
+    await expect(page.getByText("All your calculation needs in one place")).toBeVisible();
+  });
+
+  test("S5-AB2 Calculator: the header History toggle, panel hidden by default", async ({ page }) => {
+    await page.goto("/Calculator");
+    await hydrated(page);
+    const toggle = page.getByRole("button", { name: "History" });
+    await expect(toggle).toBeVisible();
+    await expect(toggle).toHaveAttribute("aria-expanded", "false");
+    // the ref's panel only exists while toggled (72-ref-populated-
+    // calculator2.png: display "5", NO history chrome until the click)
+    await expect(page.getByRole("complementary", { name: "Calculation History" })).toHaveCount(0);
+  });
+
+  test("S5-AB3 Calculator: the toggle opens the Calculation History panel; the bottom h2 card is gone", async ({ page }) => {
+    await page.goto("/Calculator");
+    await hydrated(page);
+    await page.getByRole("button", { name: "History" }).click();
+    const panel = page.getByRole("complementary", { name: "Calculation History" });
+    await expect(panel).toBeVisible();
+    // the ref's title reads "Calculation History" (h3 16px/700 on the ref —
+    // the clone renders the same text at the same size as an h2: the R1
+    // heading-order contract owns the level, the measurement owns the copy)
+    await expect(panel.getByRole("heading", { name: "Calculation History" })).toBeVisible();
+    await expect(panel.getByRole("button", { name: "Clear History" })).toBeVisible();
+    // the zero-era bottom SectionCard (h2 "History" + "Empty history") is gone
+    await expect(page.getByRole("heading", { name: "History", exact: true })).toHaveCount(0);
+    await expect(page.getByRole("button", { name: /Empty history/ })).toHaveCount(0);
+  });
+
+  test("S5-AB4 Calculator: an evaluated entry renders the ref's expr / = result card", async ({ page }) => {
+    await page.goto("/Calculator");
+    await hydrated(page);
+    await page.getByRole("button", { name: "Insert 2" }).click();
+    await page.getByRole("button", { name: "Insert +" }).click();
+    await page.getByRole("button", { name: "Insert 3" }).click();
+    await page.getByRole("button", { name: "Equals" }).click();
+    await page.getByRole("button", { name: "History" }).click();
+    const panel = page.getByRole("complementary", { name: "Calculation History" });
+    // the ref's entry: the expression spaced ("2 + 3") above the bold result ("= 5").
+    // Residue-tolerant (the e2e db is a living scratch db): assert on the
+    // NEWEST entry — the panel sorts descending by createdAt, so the first
+    // listitem is the entry this test just evaluated.
+    const newest = panel.getByRole("listitem").first();
+    await expect(newest.getByText("2 + 3")).toBeVisible();
+    await expect(newest.getByText("= 5")).toBeVisible();
+  });
+
+  test("S5-AB5 Math Solver: the measured header subtitle", async ({ page }) => {
+    await page.goto("/MathSolver");
+    await hydrated(page);
+    // Measured 2026-10-20: "Type a problem or upload an image to get
+    // step-by-step solutions" (the clone's "Snap a photo or type a problem"
+    // was invented copy).
+    await expect(
+      page.getByText("Type a problem or upload an image to get step-by-step solutions"),
+    ).toBeVisible();
+  });
+
+  test("S5-AB6 Math Solver: Recent Problems is a free-standing h2; the SectionCard title is gone", async ({ page }) => {
+    await page.goto("/MathSolver");
+    await hydrated(page);
+    // Measured: h2 18px/600 slate-800 in the space-y-6 stack — not a card
+    // header (the chain read: no borderB, parent pad 0/0).
+    await expect(page.getByRole("heading", { name: "Recent Problems" })).toBeVisible();
+    await expect(page.getByText("Recent solutions")).toHaveCount(0);
+  });
+
+  test("S5-AB7 GradeTracker: per-subject cards render chip + avg + the Progress-to-A row", async ({ page }) => {
+    await page.goto("/GradeTracker");
+    await hydrated(page);
+    // Seed: Mathematics 92+85 → 89, Chemistry 78, English 88, Physics 95 —
+    // four populated subject cards (the ref's card anatomy measured with
+    // one probe subject; the grid cell measured ≈547px on a 1116px canvas
+    // = sm:grid-cols-2). The measured logic: progress = avg/90 (50 → 56%).
+    const cards = page.getByTestId("gt-subject-card");
+    await expect(cards).toHaveCount(4);
+    const math = cards.filter({ hasText: "Mathematics" });
+    await expect(math).toHaveCount(1);
+    await expect(math.getByText("89%")).toBeVisible();
+    await expect(math.getByText("Progress to A (90%)")).toBeVisible();
+    // Chemistry has ONE seeded grade (78/100), so its avg and its Recent
+    // Grades pill are both "78%" — the ref dodges the collision with a 1dp
+    // avg ("50.0%"), but the clone's integer convention (the measured
+    // Overall card) cannot; the avg hook scopes the assertion. (AP-117)
+    await expect(cards.filter({ hasText: "Chemistry" }).getByTestId("gt-subject-avg")).toHaveText("78%");
+    // the invented "By subject" wrapper is gone
+    await expect(page.getByRole("heading", { name: "By subject" })).toHaveCount(0);
+  });
+
+  test("S5-AB8 GradeTracker: each subject card carries the Recent Grades pills", async ({ page }) => {
+    await page.goto("/GradeTracker");
+    await hydrated(page);
+    const cards = page.getByTestId("gt-subject-card");
+    const math = cards.filter({ hasText: "Mathematics" });
+    await expect(math.getByText("Recent Grades")).toBeVisible();
+    // Mathematics has two seeded grades → two percent pills
+    await expect(math.getByText("92%")).toBeVisible();
+    await expect(math.getByText("85%")).toBeVisible();
+  });
+});

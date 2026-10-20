@@ -1334,3 +1334,75 @@ LCP is GOOD where the reference's mobile login LCP is POOR); the
 pre-existing sf-clock-date dark-sweep artifact; the other SectionCard
 consumers' ref header anatomy (a populated-account probe could settle
 it).
+
+## Session 73 (continuations 23–24) — the s72 populated-account probe cycle completed: Batch AB (the populated-surface drift layer) fixed, baselines 389/389 + 844/844
+
+**Context.** The user's `docs/session_18.md` is the s71 transcript; the
+suggested next-cycle options included settling the populated-account
+probe for the other SectionCard consumers' ref header anatomy. The
+continuation-23 session ran the probes, wrote the 8 RED pins, and was
+stopped prematurely mid-implementation; this session resumed the
+workspace exactly there (HEAD `8332270`, the pins uncommitted, zero
+source edits yet) and completed the cycle.
+
+**Work log.**
+
+1. **Resume-state verified.** `git status` clean-vs-`8332270` except the
+   8 uncommitted AB pins in `parity-session5.spec.ts` + the s72 sweep
+   screenshots + 4 probe scripts (untracked). No pull needed (already
+   up to date with origin/main). The s72 evidence re-read: the
+   populated-headers probe v1/v2 dumps + screenshots, the residue-zero
+   cleanup, and the settled question (NONE of the four SectionCard
+   consumers uses the bordered header — Batch AA's dashboard-only
+   opt-in correct) + the NEW populated-surface drift layer it surfaced
+   (calculator history panel, solver Recent Problems, GT subject cards).
+2. **Batch AB implemented TDD.** RED was confirmed pre-stop (8/8 failed
+   vs the pre-fix bundle). Amended AB7's chemistry line pre-commit
+   (AP-117: Chemistry has ONE seeded grade → avg and pill both "78%" →
+   `getByText` strict-mode collision; the ref dodges it by FORMAT
+   (1dp avg) while the clone's integer convention cannot — asserted
+   through the `gt-subject-avg` hook instead) and AB4 (residue-tolerant:
+   the e2e db is a living scratch db, so the entry assertion scopes to
+   the NEWEST listitem). Then the source fixes: `calculator-view.tsx`
+   (the measured subtitle; the black aria-expanded History toggle; the
+   slide-in `aside` "Calculation History" panel mounted ONLY while
+   toggled — h2 title per the R1 heading-order contract; the
+   spacedExpression display helper; the zero-era bottom "History"
+   SectionCard + relativeTime helper removed),
+   `mathsolver-view.tsx` (measured subtitle; free-standing h2 "Recent
+   Problems" replacing the SectionCard), `gradetracker-view.tsx` (the
+   measured per-subject card grid — chip + ramp-colored avg + "Progress
+   to A (90%)" with progress=avg/90 clamped + Recent Grades pills,
+   `sm:grid-cols-2`; grade rows kept below as the documented superset).
+3. **GREEN + gates.** 8/8 AB pins green on the first post-fix run;
+   parity-session5 cold **42/42**; lint ✓ tsc ✓ unit **844/844** ✓;
+   rebuild REAL_EXIT=0 fresh (`find src prisma -newer BUILD_ID` empty).
+4. **Full cold re-certification — AP-116 census first.** Per-file
+   `--list` counts re-derived the 5-chunk map byte-consistent with the
+   prior totals (chunk 3 = auth + auth-flows + greeting + s18–s26 = 57+1
+   = 58 exact; all 30 spec files exactly once): **113 + 109 + 50 + 59 +
+   58 = 389/389** zero flakes, first pass on every chunk (chunk 1c grew
+   by the 8 AB pins: 42 → 50).
+5. **Evidence.** `scripts/capture-s73-populated.mjs` captured the
+   populated clone surfaces on the seeded demo account
+   (`73-clone-gradetracker-populated.png` — the 4-card grid matching the
+   s72 ref anatomy; `73-clone-mathsolver.png` — measured subtitle +
+   free-standing h2; `73-clone-calculator-history-open.png` — the
+   slide-in panel with the `2 + 3` / `= 5` entry + black Clear History).
+   The s73 sweep (`ref-resweep-s73.mjs`, the standing class re-tagged):
+   **ok:true** — 9/9 invariants both hosts, brand tables byte-matched,
+   mobile drawers green on both (the user-flagged surface).
+
+**Stage summary.** HEAD = `8332270` + this cycle's commit (Batch AB
+source + pins + s72/s73 evidence + doc chain). Baselines: e2e
+**389/389** (113+109+50+59+58, 30 spec files censused), unit **844/844**,
+lint/tsc clean, build fresh. New lesson AP-117 (avg==pill text
+collisions on single-grade subjects — assert populated aggregates
+through role hooks; RED cannot catch the class, it bites at GREEN).
+The open SectionCard question is CLOSED (measured, not assumed). The
+reference remains UNCHANGED on every standing invariant. Honest debt
+(standing): Batch R (RSC structural perf — the clone's all-surface LCP
+GOOD vs the reference's mobile-login POOR still supports deferring);
+the pre-existing sf-clock-date dark-sweep artifact; the analytics
+dark-rendering titles (AP-113 class) are documented, not fixable
+through the light-mode UI.

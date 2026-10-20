@@ -7,6 +7,12 @@
 // (S15) and is guarded against form fields. History persists through
 // mutations.createCalculatorEntry; clear-all is a direct DELETE (no
 // collection-wide helper exists in mutations).
+// Batch AB (s72, populated-ref measurement): the header History button
+// toggles a right slide-in "Calculation History" panel — at zero the panel
+// does not exist in the DOM (the ref renders NO history chrome at zero,
+// probe #6), and entries render the expression spaced ("2 + 3") above the
+// bold result ("= 5"). The zero-era bottom "History" SectionCard was a
+// clone invention and is gone.
 // ---------------------------------------------------------------------------
 
 import * as React from "react";
@@ -35,21 +41,22 @@ import {
 } from "@/lib/calculator";
 import { mutations, useDataStore } from "@/lib/data";
 import { apiSend } from "@/lib/api";
-import { SectionCard, Spinner } from "@/components/views/shared";
+import { Spinner } from "@/components/views/shared";
 import { cn } from "@/lib/utils";
 
 function errorMessage(err: unknown, fallback: string): string {
   return err instanceof Error && err.message ? err.message : fallback;
 }
 
-function relativeTime(iso: string): string {
-  const diffMs = Date.now() - new Date(iso).getTime();
-  const minutes = Math.round(diffMs / 60_000);
-  if (minutes < 1) return "just now";
-  if (minutes < 60) return `${minutes}m ago`;
-  const hours = Math.round(minutes / 60);
-  if (hours < 24) return `${hours}h ago`;
-  return `${Math.round(hours / 24)}d ago`;
+/** The ref's history entries render the expression spaced ("2 + 3") — the
+ *  engine stores the compact token stream ("2+3"). Operators get spaces;
+ *  a leading minus (negation) and decimals stay intact. */
+function spacedExpression(expr: string): string {
+  return expr
+    .replace(/([+×÷^])/g, " $1 ")
+    .replace(/(\d)-(\d)/g, "$1 - $2")
+    .replace(/\s+/g, " ")
+    .trim();
 }
 
 // ---- keypad plumbing ------------------------------------------------------------------
@@ -100,6 +107,7 @@ export function CalculatorView() {
   const [tab, setTab] = React.useState("basic");
   const [expression, setExpression] = React.useState("");
   const [clearing, setClearing] = React.useState(false);
+  const [historyOpen, setHistoryOpen] = React.useState(false);
   const [lastGood, setLastGood] = React.useState("");
   const justEvaluated = React.useRef(false);
 
@@ -229,8 +237,28 @@ export function CalculatorView() {
           panel id that never rendered (axe aria-valid-attr-value, critical).
           Radix Tabs.Root renders no DOM of its own, so this is DOM-identical. */}
       <Tabs value={tab} onValueChange={setTab}>
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <h1 className="text-2xl font-bold text-slate-800 dark:text-slate-100">Calculator Suite</h1>
+      {/* Batch AB header: subtitle under the h1; the History toggle lives
+          top-right (the ref's black pill) — aria-controls only while the
+          panel exists, so aria-valid-attr-value stays clean at zero. */}
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-slate-800 dark:text-slate-100">Calculator Suite</h1>
+          <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+            All your calculation needs in one place
+          </p>
+        </div>
+        <Button
+          variant="outline"
+          aria-expanded={historyOpen}
+          aria-controls={historyOpen ? "calc-history-panel" : undefined}
+          onClick={() => setHistoryOpen((open) => !open)}
+          className="bg-slate-900 text-white hover:bg-slate-800 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white"
+        >
+          <History className="size-4" strokeWidth={2} aria-hidden />
+          History
+        </Button>
+      </div>
+      <div>
         <TabsList aria-label="Calculator mode">
           <TabsTrigger value="basic" className="data-[state=inactive]:text-slate-600 dark:data-[state=inactive]:text-slate-400">Basic</TabsTrigger>
           <TabsTrigger value="scientific" className="data-[state=inactive]:text-slate-600 dark:data-[state=inactive]:text-slate-400">Scientific</TabsTrigger>
@@ -316,35 +344,53 @@ export function CalculatorView() {
       </Tabs>
       {/* (the single Tabs root opened at the custom header closes here) */}
 
-      {/* ---- history ---- */}
-      <SectionCard title="History" icon={History} action={
-        <Button variant="outline" size="sm" onClick={() => void clearHistory()} disabled={clearing || history.length === 0}>
-          {clearing ? <Spinner className="size-4" /> : <Trash2 className="size-4" strokeWidth={2} />} Empty history
-        </Button>
-      }>
-        {history.length === 0 ? (
-          <p className="py-6 text-center text-sm text-slate-500">
-            Your calculations will appear here.
-          </p>
-        ) : (
-          <ul className="flex flex-col gap-2">
-            {[...history]
-              .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-              .slice(0, 20)
-              .map((entry) => (
-                <li
-                  key={entry.id}
-                  className="flex items-center justify-between gap-3 rounded-lg bg-slate-50 px-3 py-2 dark:bg-slate-800/60"
-                >
-                  <span className="min-w-0 truncate font-mono text-sm text-slate-600 dark:text-slate-300">
-                    {entry.expression} = {entry.result}
-                  </span>
-                  <span className="shrink-0 text-xs text-slate-400">{relativeTime(entry.createdAt)}</span>
-                </li>
-              ))}
-          </ul>
-        )}
-      </SectionCard>
+      {/* ---- history: the ref's right slide-in panel, mounted ONLY while
+          toggled (at zero the ref renders no history chrome — probe #6) ---- */}
+      {historyOpen && (
+        <aside
+          id="calc-history-panel"
+          aria-label="Calculation History"
+          className="fixed inset-y-0 right-0 z-50 flex w-80 max-w-[85vw] flex-col overflow-y-auto border-l border-slate-200 bg-white p-6 shadow-2xl dark:border-slate-800 dark:bg-slate-900"
+        >
+          {/* the ref renders this title as an h3 (16px/700) — the R1
+              heading-order contract owns the level (h1 → h2, no skip) */}
+          <h2 className="text-base font-bold text-slate-800 dark:text-slate-100">Calculation History</h2>
+          <div className="mt-4 flex flex-col gap-3">
+            {history.length === 0 ? (
+              <p className="text-sm text-slate-500 dark:text-slate-400">
+                Your calculations will appear here.
+              </p>
+            ) : (
+              <ul className="flex flex-col gap-3">
+                {[...history]
+                  .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+                  .slice(0, 20)
+                  .map((entry) => (
+                    <li
+                      key={entry.id}
+                      className="rounded-xl border border-slate-200 px-4 py-3 dark:border-slate-700"
+                    >
+                      <p className="truncate font-mono text-sm text-slate-500 dark:text-slate-400">
+                        {spacedExpression(entry.expression)}
+                      </p>
+                      <p className="mt-1 text-lg font-bold text-slate-800 dark:text-slate-100">
+                        = {entry.result}
+                      </p>
+                    </li>
+                  ))}
+              </ul>
+            )}
+          </div>
+          <Button
+            className="mt-4 w-full bg-slate-900 text-white hover:bg-slate-800 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white"
+            onClick={() => void clearHistory()}
+            disabled={clearing || history.length === 0}
+          >
+            {clearing ? <Spinner className="size-4" /> : null}
+            Clear History
+          </Button>
+        </aside>
+      )}
     </div>
   );
 }

@@ -6,17 +6,21 @@
 // fire ZERO outbound requests), the /api/math/solve round-trip (120 s AI
 // deadline), the aria-live "Math solution" card, and the persisted solver
 // history from the aiMessages slice (surface "solver").
+// Batch AB (s72, populated-ref measurement): the measured subtitle and the
+// free-standing "Recent Problems" h2 (the SectionCard header was a clone
+// invention — the ref renders a bare 18px/600 section heading in the
+// space-y-6 stack, no card chrome).
 // ---------------------------------------------------------------------------
 
 import * as React from "react";
-import { Calculator, Camera, History, ImagePlus, RefreshCw, Sparkles, X } from "lucide-react";
+import { Calculator, Camera, ImagePlus, RefreshCw, Sparkles, X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/toast";
 import { apiSend, isTimeoutError } from "@/lib/api";
 import { mutations, useDataStore } from "@/lib/data";
-import { SectionCard, Spinner, ViewHeader } from "@/components/views/shared";
+import { Spinner, ViewHeader } from "@/components/views/shared";
 import { cn } from "@/lib/utils";
 
 const SOLVER_TIMEOUT_MS = 120_000;
@@ -113,7 +117,7 @@ export function MathSolverView() {
     <div className="mx-auto flex w-full max-w-4xl flex-col gap-6">
       <ViewHeader
         title="Math Solver"
-        subtitle="Snap a photo or type a problem"
+        subtitle="Type a problem or upload an image to get step-by-step solutions"
         icon={Calculator}
         size="lg"
       />
@@ -209,14 +213,16 @@ export function MathSolverView() {
         )}
       </section>
 
-      {/* ---- past solutions ---- */}
-      <SectionCard title="Recent solutions" icon={History}>
+      {/* ---- past solutions: the ref's free-standing section heading
+          (measured h2 18px/600 slate-800, no card header chrome) ---- */}
+      <section className="flex flex-col gap-3" aria-label="Recent Problems">
+        <h2 className="text-lg font-semibold text-slate-800 dark:text-slate-100">Recent Problems</h2>
         {loading && history.length === 0 ? (
           <div className="flex justify-center py-6">
             <Spinner className="size-5 text-sf-primary" />
           </div>
         ) : history.length === 0 ? (
-          <p className="py-6 text-center text-sm text-slate-500">
+          <p className="text-sm text-slate-500 dark:text-slate-400">
             Problems you solve will be saved here.
           </p>
         ) : (
@@ -231,7 +237,7 @@ export function MathSolverView() {
             ))}
           </ul>
         )}
-      </SectionCard>
+      </section>
     </div>
   );
 }

@@ -577,6 +577,72 @@ EADDRINUSE lesson re-bited — the stale pre-fix standalone held :3200
 through `pkill -f next-server`; killed by the port-owner PID); the
 fixed dashboard captured (`70-clone-dashboard.png` vs `70-ref-dashboard.png`).
 
+### Batch AB — Session-73: the populated-surface drift layer (the s72 endpoint-learning probe finding)
+
+**Finding.** The Batch-AA cycle had left one question open: do the OTHER
+four SectionCard consumers (calculator, mathsolver, analytics,
+gradetracker) use the dashboard's new bordered-header anatomy on the
+reference? The zero-state probes (s70 probe #6) could never see those
+surfaces — the reference renders NO history/recent/subject chrome at
+zero, so the layer was explicitly unmeasured. The s72 cycle settled it
+with a populated-account endpoint-learning probe
+(`scripts/ref-populated-headers-s72.mjs` + the v2 re-drive): it filled
+the reference account THROUGH THE REFERENCE'S OWN UI/API (subject +
+grade + task POSTs against `/api/apps/6969efea366cba53524cde3f/entities/*`
+with the Bearer JWT from localStorage, a keyed evaluation, a solved
+problem), measured the populated card headers, then cleaned up to ZERO
+RESIDUE (surgical signature-matched deletes via the same entity API —
+verified by re-list; the s65 protocol).
+
+**The settled question + the new layer.** NONE of the four consumers
+uses the bordered header — Batch AA's dashboard-only opt-in is correct
+(analytics renders titled cards whose titles are NOT h2 elements inside
+a dark rendering — the AP-113 artifact class; GradeTracker renders
+subject cards with NO wrapper title). But the probe surfaced a NEW
+drift layer — the populated states of three surfaces:
+
+| # | Surface | Reference (measured, s72 screenshots) | Clone before |
+|---|---------|----------------------------------------|--------------|
+| AB-1 | Calculator header | subtitle "All your calculation needs in one place" under the h1; black History pill top-right | h1 alone |
+| AB-2/3 | Calculator history | a header History toggle → right slide-in panel "Calculation History" (h3 16px/700), entry cards (expr spaced `2 + 3` grey / `= 5` bold), black full-width "Clear History"; NO history chrome at zero | a permanently-visible bottom h2 "History" SectionCard with an "Empty history" button (clone invention) |
+| AB-4 | Calculator entry | expression spaced + bold result | `{expression} = {result}` one-liner |
+| AB-5 | Math Solver header | subtitle "Type a problem or upload an image to get step-by-step solutions" | invented "Snap a photo or type a problem" |
+| AB-6 | Math Solver history | free-standing h2 "Recent Problems" (18px/600 slate-800, no card chrome) | SectionCard "Recent solutions" |
+| AB-7/8 | GradeTracker | bare per-subject cards in a 2-col grid: chip pill + large colored avg% + "Progress to A (90%)" row (progress = avg/90, 50 → 56%) + "Recent Grades" percent pills; NO "By subject" wrapper | a "By subject" SectionCard with per-subject progress rows |
+
+**Fix.** `calculator-view.tsx` (subtitle, the aria-expanded History
+toggle with the panel mounted ONLY while toggled — zero chrome at zero,
+the spacedExpression display helper, the slide-in `aside` with the h2
+title per the R1 heading-order contract), `mathsolver-view.tsx`
+(measured subtitle; the free-standing h2 section), `gradetracker-view.tsx`
+(the measured card grid with the `gt-subject-card`/`gt-subject-avg`
+hooks, the avg text ramp on the badge thresholds, progressToA clamped;
+the grade rows kept BELOW the cards as the documented superset — they
+carry the edit/delete entry points the reference lacks).
+
+**AP-117 (the seed-coincidence collision).** The first AB7 draft
+asserted `getByText("78%")` on the Chemistry card — but Chemistry has
+ONE seeded grade (78/100), so its avg and its only Recent-Grades pill
+are BOTH "78%" and the locator resolves to two elements (strict-mode
+violation). The reference dodges the collision BY FORMAT (1dp avg
+"50.0%" vs integer pills); the clone's integer convention (the measured
+Overall card) cannot. Rule: when a surface renders the same value in
+two roles, assert through a role hook (`data-testid`), never through
+the bare text — and check the seed for single-grade subjects before
+pinning populated aggregates.
+
+**Verified.** 8 pins RED-first on the pre-fix bundle (all 8 failed;
+the amended AB7 chemistry line still RED through the hook); GREEN
+after the source fixes; lint ✓ tsc ✓ unit **844/844** ✓; build
+REAL_EXIT=0 fresh (`find src prisma -newer BUILD_ID` empty); full cold
+re-certification across the AP-116-censused 5-chunk map (all 30 spec
+files exactly once): **113 + 109 + 50 + 59 + 58 = 389/389** (376 + 8
+new pins, accounting exact — chunk 1c grew by the 8 AB pins); the s73
+sweep **ok:true** (9/9 invariants both hosts, brand tables byte-matched,
+mobile drawers green on both); the populated clone surfaces captured
+(`73-clone-gradetracker-populated.png`, `73-clone-mathsolver.png`,
+`73-clone-calculator-history-open.png` against the s72 ref evidence).
+
 ## 3a. Verification (session-56 re-run, from a fresh clone)
 
 | Gate | Result |
@@ -693,3 +759,4 @@ auth+s18–s23 35/35 · s24–s26 18/18.
     `page.clock.setFixedTime` makes greeting buckets, week numbers and
     date alignments deterministic at any hour; a pin that only fails at
     certain wall-clock times is coverage roulette.
+| AP-117 | MEDIUM | The Batch-AB pin draft asserted `getByText("78%")` on the populated GradeTracker's Chemistry card and would strict-mode-violate at GREEN time: Chemistry has ONE seeded grade (78/100), so the card renders the SAME string in two roles (the big avg AND the Recent-Grades pill). The reference never hits this because its avg format is 1dp ("50.0%") while its pills are integer — the clone's integer convention (the measured Overall card) makes avg==pill collisions inherent for single-grade subjects | when a surface renders the same value in two roles, assert through a role hook (`data-testid="gt-subject-avg"`), never bare text; before pinning populated aggregates, check the SEED for coincidences (single-grade subjects, avg==grade); a RED run cannot catch this class — the failure only appears at GREEN when the surface finally renders | tests/e2e/parity-session5.spec.ts (S5-AB7) + scripts/capture-s73-populated.mjs |

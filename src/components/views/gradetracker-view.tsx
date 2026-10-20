@@ -2,12 +2,15 @@
 
 // ---------------------------------------------------------------------------
 // GradeTrackerView — KPI stat row (zero-data renders AT ZERO — the S17
-// fresh-user contract), the grade card list with the measured score-badge
-// palette, a per-subject aggregate card, and the add/edit dialog.
+// fresh-user contract), the measured per-subject cards (Batch AB, s72:
+// chip + avg + "Progress to A (90%)" row + Recent Grades pills, 2-col grid —
+// the ref renders NO "By subject" wrapper and NO grade detail rows), and the
+// add/edit dialog. The grade rows below the cards are the documented
+// superset extension (they carry the edit/delete entry points).
 // ---------------------------------------------------------------------------
 
 import * as React from "react";
-import { ListChecks, Pencil, Plus, Trash2, TrendingUp,
+import { Pencil, Plus, Trash2, TrendingUp,
   Award,
   Target,
   ChartColumn,
@@ -44,7 +47,6 @@ import {
 import { useToast } from "@/components/ui/toast";
 import { mutations, useDataStore, type GradeRow } from "@/lib/data";
 import {
-  SectionCard,
   Spinner,
   StatCard,
   SubjectChip,
@@ -67,6 +69,21 @@ function scoreBadgeClass(pct: number): string {
   if (pct >= 80) return "bg-sky-100 text-sky-700";
   if (pct >= 70) return "bg-amber-100 text-amber-700";
   return "bg-red-100 text-red-700";
+}
+
+/** The per-subject card's avg text ramp (Batch AB: the ref renders the avg
+ *  as large colored text — red on the probe subject's 50; the same
+ *  thresholds as the badge ramp, as text tones). */
+function avgTextClass(pct: number): string {
+  if (pct >= 90) return "text-emerald-600 dark:text-emerald-400";
+  if (pct >= 80) return "text-sky-600 dark:text-sky-400";
+  if (pct >= 70) return "text-amber-600 dark:text-amber-400";
+  return "text-red-600 dark:text-red-400";
+}
+
+/** The measured progress logic: progress toward an A is avg/90 (50 → 56%). */
+function progressToA(avg: number): number {
+  return Math.min(100, Math.round((avg / 90) * 100));
 }
 
 // ---- add/edit dialog ----------------------------------------------------------
@@ -270,7 +287,7 @@ export function GradeTrackerView() {
         rows.length > 0
           ? Math.round(rows.reduce((acc, g) => acc + percentOf(g), 0) / rows.length)
           : null;
-      return { subject, count: rows.length, avg };
+      return { subject, count: rows.length, avg, rows };
     })
     .filter((row) => row.count > 0);
 
@@ -314,7 +331,56 @@ export function GradeTrackerView() {
         <GtSummaryCard icon={ChartColumn} iconClass="text-blue-500" label="Subjects Tracked" value={subjects.length} />
       </div>
 
-      {/* ---- grades list ---- */}
+      {/* ---- per-subject cards (Batch AB, measured on the populated ref:
+          bare cards in a 2-col grid — chip + avg, the Progress-to-A row,
+          and the Recent Grades pills; NO "By subject" wrapper heading) ---- */}
+      {bySubject.length > 0 && (
+        <div className="grid gap-4 sm:grid-cols-2" aria-label="Subject breakdown">
+          {bySubject.map(({ subject, avg, rows }) => (
+            <div
+              key={subject.id}
+              data-testid="gt-subject-card"
+              className="sf-card flex flex-col gap-4 rounded-2xl p-6"
+            >
+              <div className="flex items-center justify-between gap-3">
+                <SubjectChip name={subject.name} color={subject.color} />
+                <span
+                  data-testid="gt-subject-avg"
+                  className={cn("text-2xl font-bold", avgTextClass(avg ?? 0))}
+                >
+                  {avg}%
+                </span>
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <div className="flex items-center justify-between gap-3 text-sm">
+                  <span className="text-slate-600 dark:text-slate-300">Progress to A (90%)</span>
+                  <span className="text-slate-500 dark:text-slate-400">{progressToA(avg ?? 0)}%</span>
+                </div>
+                <Progress value={progressToA(avg ?? 0)} aria-label={`${subject.name} progress to A`} />
+              </div>
+              <div className="flex flex-col gap-2 border-t border-slate-100 pt-3 dark:border-slate-800">
+                <p className="text-sm text-slate-600 dark:text-slate-300">Recent Grades</p>
+                <div className="flex flex-wrap gap-2">
+                  {[...rows]
+                    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+                    .slice(0, 5)
+                    .map((g) => (
+                      <span
+                        key={g.id}
+                        className="rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-medium text-slate-600 dark:bg-slate-800 dark:text-slate-300"
+                      >
+                        {Math.round(percentOf(g))}%
+                      </span>
+                    ))}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* ---- grades list (the documented superset extension: the ref
+          renders NO per-grade rows — these carry edit/delete) ---- */}
       {loading && grades.length === 0 ? (
         <div className="flex justify-center py-16">
           <Spinner className="size-6 text-sf-primary" />
@@ -374,30 +440,6 @@ export function GradeTrackerView() {
             );
           })}
         </div>
-      )}
-
-      {/* ---- per-subject aggregates ---- */}
-      {bySubject.length > 0 && (
-        <SectionCard title="By subject" icon={ListChecks}>
-          <div className="flex flex-col gap-4">
-            {bySubject.map(({ subject, avg }) => (
-              <div key={subject.id} className="flex flex-col gap-1.5">
-                <div className="flex items-center justify-between gap-3">
-                  <span className="flex items-center gap-2 text-sm font-medium text-slate-700 dark:text-slate-200">
-                    <span
-                      aria-hidden
-                      className="size-2 rounded-full"
-                      style={{ backgroundColor: subject.color }}
-                    />
-                    {subject.name}
-                  </span>
-                  <span className="text-sm font-semibold text-slate-600 dark:text-slate-300">{avg}%</span>
-                </div>
-                <Progress value={avg ?? 0} aria-label={`${subject.name} average`} />
-              </div>
-            ))}
-          </div>
-        </SectionCard>
       )}
 
       <GradeDialog
