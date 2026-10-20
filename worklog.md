@@ -1244,3 +1244,93 @@ invariant. Honest debt: Batch R (RSC structural perf — the s65 CWV
 evidence stands); the pre-existing sf-clock-date dark-sweep artifact;
 the other SectionCard consumers' ref header anatomy (unmeasurable at
 zero — a populated-account probe could settle it).
+
+## Session 71 (continuation 22) — the reset-workspace re-certification cycle: all gates green, zero drift candidates, the chunk-map census lesson (AP-116)
+
+**Context.** The user's `docs/session_17.md` is the s70 transcript (Batch
+AA) — its suggested next step = repeat the gate + extended-sweep rhythm
+(or Batch R). This cycle ran on a RESET workspace (fresh clone at the
+session_17 transcript `2d04221`): the full environment re-provisioning
+path, then the standing rhythm. Result: a clean zero-drift
+re-certification — no new batch, no new pins; the baselines hold.
+
+**Work log.**
+
+1. **Workspace refreshed (reset path).** `git clone` at `2d04221` (the
+   Batch-AA commit `e161e70` + the session_17 transcript). Full env
+   re-provision: `bun install` (489 pkgs), `.env` from `.env.example`
+   (the `DATABASE_URL="file:../db/custom.db"` + `AUTH_SECRET=""`
+   posture), `db/custom.db` push + seed, chromium-1243, and the
+   paramiko ssh shim REBUILT at `/home/z/ssh-infra/ssh` (the reset
+   shredded it) — this time as a full BIDIRECTIONAL PUMP (select-based
+   stdin/stdout/stderr relay against the exec channel): the first
+   draft's buffered `stdout.read()` DEADLOCKED git's upload-pack
+   handshake (git waits for the ref advertisement; the shim waited for
+   channel EOF); `ls-remote` preflight green against `2d04221`.
+2. **Alignment validated.** session_17 (the s70 transcript) + the doc
+   chain read (README Session-70 row, SKILL AP-110…115, AGENTS
+   381/844, the remediation-plan Batch AA section); Batch AA verified
+   in-tree (the SectionLink module-scope component, the assignments
+   card outside the grid, the gap-8 root, the borderedHeader opt-in,
+   the 24-emoji list with ⭐ at 6 / ⚽ at 19).
+3. **Batch AA audited** via the repo's code-review-checklist skill
+   (Standards + Spec axes on the `5fcbea6..e161e70` source diff, 3
+   files + 3 spec files): zero findings — measured values documented
+   at every pin site, the v4 traps handled (`text-sf-primary-strong`
+   carries no opacity modifier; the s70 pins avoided the oklab
+   serialization), the DRY 3-case action table, the opt-in prop
+   defaulting to zero behavior change for the other 4 SectionCard
+   consumers, the anchor>button anatomy documented as the ref's own
+   markup (nested-interactive already disabled in the sweep rule set).
+4. **Gates re-certified cold on the received state.** lint ✓ tsc ✓
+   unit **844/844** ✓; build REAL_EXIT=0 fresh (`find src prisma
+   -newer BUILD_ID` empty; the bundled `.env` carries the empty-string
+   AUTH_SECRET posture); e2e across the 5-sub-run map (fresh
+   `db/e2e.db` + killed stale server per chunk): **113 + 109 + 42 +
+   59 + 58 = 381/381** — the s70 baseline byte-matched. Chunk 1b's
+   single first-pass failure = the calculator S15 keyboard test, the
+   documented cold-boot race family (solo re-run green 1.1s, clean
+   109/109 on the chunk re-run). **AP-116 (the chunk-map census
+   lesson): the first chunk-3 run reported 53, not the expected 58 —
+   the map line "auth" in the s70 transcript's compressed notation
+   meant BOTH auth.spec.ts AND auth-flows.spec.ts; the compressed
+   file lists in a transcript are NOT a census. Rule: before running a
+   re-derived chunk map, enumerate `tests/e2e/*.spec.ts` and diff
+   against the map's file set (30 spec files here, exactly once each).
+5. **The s71 sweep + the screenshot pairs.** The s70 sweep class
+   re-tagged (`scripts/ref-resweep-s71.mjs`): **ok:true** — 9/9
+   invariants per host, the brand tables byte-matched (desktop
+   sidebar 18/28 + 12/16, app-bar 16/24, drawer 16/24 + 12/16
+   one-line), mobile drawers OPEN + typography green on both hosts
+   (the user-flagged standing surface). Nine side-by-side pairs
+   captured and compared (`71-ref-*` / `71-clone-*` ×7 desktop + ×2
+   mobile): **ZERO drift candidates** — dashboard (the full-width
+   assignments card + the violet anchor>button actions + the bordered
+   headers, post-AA), My Day, Grade Tracker, Practice Tests, Study
+   Groups, Events (band anatomy), Settings (the ref's black panel =
+   the documented AP-113 frozen-dark artifact; the 24-tile avatar grid
+   with ⭐/⚽ present on BOTH hosts), mobile dashboard, mobile drawer
+   byte-matched.
+6. **Lighthouse refreshed.** login a11y **100** (score 1.0, verified
+   on /login directly and via the / and /Dashboard unauth redirects —
+   all three postures render the login surface for a fresh profile).
+   Honest posture note: the s65 `65-dashboard-after.json` captured
+   finalDisplayedUrl `/` (pre-redirect), so the standing "dashboard
+   100×2" evidence measured the same unauth shell; the AUTHED
+   surfaces' a11y evidence is the axe sweep + accessibility spec pair
+   (green in chunk 1b this cycle) — recorded so the ledger stays
+   accurate.
+
+**Stage summary.** HEAD = the session_17 transcript commit (`2d04221`
++ this cycle's doc/evidence commit). Baselines unchanged: e2e
+**381/381** (113+109+42+59+58, 30 spec files), unit **844/844**. New
+lesson AP-116 (chunk-map census: enumerate + diff the spec directory
+against any re-derived chunk map before running; compressed map
+notation is not a file list). The reference remains UNCHANGED on every
+standing invariant — the clone holds measured parity across the full
+s71 pair set. Honest debt (standing): Batch R (RSC structural perf —
+the s65 CWV evidence still supports deferring: the clone's all-surface
+LCP is GOOD where the reference's mobile login LCP is POOR); the
+pre-existing sf-clock-date dark-sweep artifact; the other SectionCard
+consumers' ref header anatomy (a populated-account probe could settle
+it).

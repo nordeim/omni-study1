@@ -587,6 +587,45 @@ fixed dashboard captured (`70-clone-dashboard.png` vs `70-ref-dashboard.png`).
 | build (repo script, REAL_EXIT) | green |
 | Screenshots | +13 session-56 captures (settings tabs, analytics/gradetracker zero states, studygroups mobile, auth signup mobile, calendar) |
 
+### Cycle 22 (session-71) — the reset-workspace re-certification record (no new batch)
+
+Ran on a RESET workspace (fresh clone at the session_17 transcript
+`2d04221` = Batch AA + transcript). Full environment re-provision
+(deps, `.env`/`db/custom.db`, chromium-1243, the paramiko ssh shim
+rebuilt — this cycle as a full bidirectional pump: the buffered
+`stdout.read()` draft deadlocked git's upload-pack handshake, git
+waits for the ref advertisement while a buffering shim waits for
+channel EOF). Batch AA audited clean via the code-review-checklist
+skill (Standards + Spec axes on the `5fcbea6..e161e70` source diff:
+measured-value comments at every pin site, no v4 oklab traps, the
+opt-in prop defaulting to zero behavior change, the DRY 3-case action
+table). Gates re-certified cold:
+
+| Gate | Result |
+|------|--------|
+| lint / `tsc --noEmit` | clean |
+| Vitest unit | 844/844 |
+| build (repo script, REAL_EXIT) | green, fresh (`find src prisma -newer BUILD_ID` empty; bundled `.env` AUTH_SECRET empty-string posture) |
+| Playwright e2e (5-sub-run map, cold server + fresh DB per chunk) | **381/381**: 113 (nav+S8+mobile-nav) · 109 (S5+sweeps+theme+calc+dark) · 42 (S6/S7+s52) · 59 (S9/S17/tasks/resilience/s16/s14) · 58 (auth+auth-flows+s18–s26+greeting) — the s70 baseline byte-matched; chunk 1b's single first-pass failure = the calculator S15 keyboard cold-boot race (solo re-run green, clean chunk re-run) |
+| s71 invariant sweep | **ok:true** — 9/9 per host, brand tables byte-matched, mobile drawers + typography green on both |
+| Screenshot pairs (9: 7 desktop + 2 mobile) | ZERO drift candidates — the post-AA dashboard, My Day, Grade Tracker, Practice Tests, Study Groups, Events, Settings (the ref's black panel = the AP-113 frozen-dark artifact), mobile dashboard, mobile drawer byte-matched |
+| Lighthouse a11y | login 100 (score 1.0; verified on /login directly + via the unauth redirects); the AUTHED surfaces carried by the green axe sweep + accessibility spec pair (chunk 1b) |
+
+**New lesson AP-116 (the chunk-map census).** The first chunk-3 run
+reported 53 where the baseline demanded 58: the compressed map line
+"auth" in the s70 transcript meant BOTH `auth.spec.ts` AND
+`auth-flows.spec.ts`; the re-derived map silently under-covered 5
+tests. Rule: enumerate the spec directory and diff against any
+re-derived chunk map before running — a re-certification that
+under-covers looks green while specs never ran; when the arithmetic
+mismatches the baseline, bisect the map with per-file `--list`
+counts, never the baseline.
+
+Honest debt (standing, unchanged): Batch R (RSC structural perf — the
+s65 CWV evidence still supports deferring); the pre-existing
+sf-clock-date dark-sweep artifact; the other SectionCard consumers'
+ref header anatomy (a populated-account probe could settle it).
+
 ---
 
 ## 3. Verification (final)
