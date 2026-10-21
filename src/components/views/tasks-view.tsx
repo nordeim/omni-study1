@@ -60,8 +60,8 @@ import { useToast } from "@/components/ui/toast";
 import { mutations, useDataStore, type TaskPriority, type TaskRow } from "@/lib/data";
 import { cn } from "@/lib/utils";
 import {
-  dayBucketLabel,
   daysUntil,
+  formatDueDateShort,
   startOfDay,
 } from "@/lib/date";
 import {
@@ -158,12 +158,14 @@ export function TaskRowCard({
             <div className="mt-1 flex flex-wrap items-center gap-2">
               {due && (
                 <DuePill
-                  label={
-                    daysUntil(due, today) === 0 || daysUntil(due, today) === 1
-                      ? dayBucketLabel(due, today)
-                      : due.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" })
-                  }
+                  /* S76/AC8 (measured on the reference): the task pill is
+                   * ALWAYS the date form — "Oct 20", month-short + day, no
+                   * weekday, no Today/Tomorrow labels — with the leading
+                   * calendar glyph; red when due today/past, slate when
+                   * future. */
+                  label={formatDueDateShort(due)}
                   overdue={overdue}
+                  withIcon
                 />
               )}
               {task.repeat !== "none" && <RepeatPill label={task.repeat} />}

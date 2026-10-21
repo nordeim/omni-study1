@@ -346,7 +346,7 @@ test.describe("S9-I/J · Assignments rows + default filter; Exams badge", () => 
     await expect(trigger).toHaveText(/Active/);
   });
 
-  test("rows carry no subject span and no description paragraph", async ({ page }) => {
+  test("rows carry the measured S76 meta row: subject chip + priority + type (no description)", async ({ page }) => {
     await page.goto("/Assignments");
     await hydrated(page);
     const rows = page.locator('[aria-label="Assignment rows"] > *');
@@ -354,13 +354,19 @@ test.describe("S9-I/J · Assignments rows + default filter; Exams badge", () => 
     await expect(first).toBeVisible();
     const descCount = await page.locator("main p.line-clamp-2").count();
     expect(descCount).toBe(0);
-    // No subject-name text on the row (the reference renders only the
-    // title + due/priority/type pills + slider).
+    // S76/AC2 amendment: the "no subject span" assertion encoded the
+    // decode-era artifact — the populated re-measure (2026-10-21,
+    // ref-ac-remeasure-s76.mjs) showed the reference renders the accent
+    // subject chip (dot + name) in the meta row. The first seeded row is
+    // "Physics reading — ch. 12" (physics subject), so the chip reads
+    // "Physics" — "Mathematics" stays absent from THIS row.
+    await expect(first.getByText("Physics", { exact: true })).toBeVisible();
     await expect(first.getByText("Mathematics", { exact: true })).toHaveCount(0);
-    // The pills row holds exactly the due + priority + type pills.
+    // The meta row holds the subject chip (outer span + its dot span) +
+    // the priority + type pills.
     const pillsRow = first.locator(".mb-3.flex.flex-wrap").last();
     const pillCount = await pillsRow.locator("span").count();
-    expect(pillCount).toBe(2); // priority + type
+    expect(pillCount).toBe(4); // chip + dot + priority + type
   });
 
   test("exam 1-day bucket shows Tomorrow in the orange family", async ({ page }) => {

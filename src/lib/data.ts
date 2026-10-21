@@ -123,6 +123,9 @@ export type ExamRow = {
   type: string;
   duration: number;
   topics: string; // JSON string array
+  // S76/AC5: the ref card's 📍 row — null when unset (the API schema
+  // defaults "" but the Prisma column is nullable; the row type models both).
+  location: string | null;
   createdAt: string;
   updatedAt: string;
 };

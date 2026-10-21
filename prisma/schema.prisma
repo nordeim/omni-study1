@@ -177,6 +177,9 @@ model Exam {
   type      String   @default("test") // test | quiz | midterm | final | oral | practical
   duration  Int      @default(60) // minutes (5..6000)
   topics    String   @default("[]") // JSON string array
+  // S76/AC5 (measured on the reference): the 📍 card row + the dialog's
+  // Location input — nullable string, empty when unset.
+  location  String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)

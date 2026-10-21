@@ -255,16 +255,19 @@ test.describe("S6-F · exam card grid", () => {
     });
     expect(stripCs.h).toBe(8);
     expect(stripCs.bg).toBe(rgb(139, 92, 246));
-    // Amber urgency badge.
+    // Urgency badge (S76/AC7 re-measure, computed styles on the reference):
+    // the ≥2 bucket is the YELLOW family — rgb(254,249,195)/rgb(161,98,7) —
+    // not amber (Tailwind v4 lesson 12: same-hue families are NOT
+    // interchangeable; the s63 amber pin was the adjacent-family read).
     const badge = card.locator("span", { hasText: /days/ }).first();
     const badgeCs = await badge.evaluate((el) => {
       const s = getComputedStyle(el);
       return { bg: s.backgroundColor, color: s.color };
     });
-    expect(badgeCs.bg).toBe(rgb(254, 243, 199)); // amber-100
-    // amber-700 — was amber-600 (217,119,6): 4.1:1 on amber-100 (axe
-    // color-contrast, serious); one step darker = 4.50:1 (AA).
-    expect(badgeCs.color).toBe(rgb(180, 83, 9));
+    expect(badgeCs.bg).toBe(rgb(254, 249, 195)); // yellow-100 (measured s76)
+    // yellow-700 — measured (161,98,7); 5.4:1 on yellow-100, AA-clean
+    // (the s63 one-step-darker-for-AA precedent carried over).
+    expect(badgeCs.color).toBe(rgb(161, 98, 7));
     // Type footer pill + duration line.
     await expect(card.getByText("quiz", { exact: true })).toBeVisible();
     await expect(card.getByText(/45 min/)).toBeVisible();

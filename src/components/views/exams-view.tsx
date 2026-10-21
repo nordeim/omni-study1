@@ -1,17 +1,20 @@
 "use client";
 
 // ---------------------------------------------------------------------------
-// Exams (S6-F/S9-J): a 3-column card grid — h-2 subject color strip, amber
-// urgency badge ("Tomorrow" reads orange-100/orange-600), icon detail rows,
-// and a border-t type footer (date + time·duration ONLY).
+// Exams (S6-F/S9-J/S76-AC): a 3-column card grid — h-2 subject color strip,
+// the measured S76 anatomy: text-lg title + urgency pill ("Tomorrow" orange
+// at +1, "N days" yellow at ≥2 — the S9-J/S6-F pins), the accent subject
+// chip, the full weekday date ("Wednesday, Oct 28, 2026"), the time row
+// with the slate-400 "· N min" suffix, the 📍 location row (when set), the
+// "Topics to study:" chip block (when set), and a border-t type footer.
 // ---------------------------------------------------------------------------
 
 import * as React from "react";
 import {
-  BookOpen,
   CalendarIcon,
   Clock,
   GraduationCap,
+  MapPin,
   Pencil,
   Plus,
   Search,
@@ -36,7 +39,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useToast } from "@/components/ui/toast";
-import { EmptyState, SubjectChip } from "@/components/views/shared";
+import { EmptyState, SubjectTagChip } from "@/components/views/shared";
 import { mutations, useDataStore, type ExamInput, type ExamRow } from "@/lib/data";
 import { daysUntil } from "@/lib/date";
 import { apiSend, ApiError } from "@/lib/api";
@@ -50,9 +53,13 @@ function urgency(row: ExamRow): { text: string; className: string } {
   if (diff === 0) return { text: "Today", className: "bg-red-100 text-red-700 dark:bg-red-950 dark:text-red-300" };
   if (diff === 1)
     return { text: "Tomorrow", className: "bg-orange-100 text-orange-700 dark:bg-orange-950 dark:text-orange-300" };
+  // S76/AC7 (measured): the ≥2 bucket reads "N days" (no "in " prefix) on
+  // yellow-100/yellow-700 — rgb(254,249,195)/rgb(161,98,7) — the YELLOW
+  // family, not amber (Tailwind v4 lesson 12: same-hue families are not
+  // interchangeable). yellow-700 on yellow-100 = 5.4:1, AA-clean.
   return {
-    text: `in ${diff} days`,
-    className: "bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-300",
+    text: `${diff} days`,
+    className: "bg-yellow-100 text-yellow-700 dark:bg-yellow-950 dark:text-yellow-300",
   };
 }
 
@@ -79,6 +86,7 @@ export function ExamsView() {
     duration: 60,
     subjectId: "",
     topics: [] as string[],
+    location: "",
   });
   const [topicInput, setTopicInput] = React.useState("");
   const [busy, setBusy] = React.useState(false);
@@ -121,7 +129,7 @@ export function ExamsView() {
   const subjectOf = (id: string | null) => subjects.find((s) => s.id === id) ?? null;
 
   const openCreate = () => {
-    setForm({ title: "", date: "", type: "test", duration: 60, subjectId: "", topics: [] });
+    setForm({ title: "", date: "", type: "test", duration: 60, subjectId: "", topics: [], location: "" });
     setTopicInput("");
     setError("");
     setDialog({ open: true, editing: null });
@@ -142,6 +150,7 @@ export function ExamsView() {
       duration: row.duration,
       subjectId: row.subjectId ?? "",
       topics,
+      location: row.location ?? "",
     });
     setTopicInput("");
     setError("");
@@ -167,6 +176,7 @@ export function ExamsView() {
       duration: form.duration,
       subjectId: form.subjectId,
       topics: JSON.stringify(form.topics),
+      location: form.location,
     };
     try {
       if (dialog.editing) {
@@ -276,25 +286,36 @@ export function ExamsView() {
                 />
                 <div className="p-6">
                   <div className="flex items-start justify-between gap-2">
-                    <h2 className="font-semibold text-slate-800 dark:text-slate-100">
+                    {/* S76/AC9 (measured): text-lg 18px/600 — the ref's card title. */}
+                    <h2 className="text-lg font-semibold text-slate-800 dark:text-slate-100">
                       {exam.title}
                     </h2>
                     <span
                       className={cn(
-                        "shrink-0 rounded-full px-2.5 py-0.5 text-xs font-medium",
+                        "shrink-0 rounded-full px-2.5 py-1 text-xs font-semibold",
                         urgencyBadge.className,
                       )}
                     >
                       {urgencyBadge.text}
                     </span>
                   </div>
-                  <div className="mt-3 flex flex-col gap-1.5 text-sm text-slate-600 dark:text-slate-300">
+                  {/* S76/AC4 (measured): the accent subject chip between the
+                   * title row and the detail rows (the ref's mb-3 wrapper). */}
+                  {subject && (
+                    <div className="mb-3 mt-3">
+                      <SubjectTagChip name={subject.name} color={subject.color} />
+                    </div>
+                  )}
+                  <div className="flex flex-col gap-1.5 text-sm text-slate-600 dark:text-slate-300">
                     <p className="flex items-center gap-2">
                       <CalendarIcon className="size-4 text-slate-400" strokeWidth={2} />
+                      {/* S76/AC3 (measured): "Wednesday, Oct 28, 2026" —
+                       * weekday LONG + month SHORT + day + year. */}
                       {date.toLocaleDateString("en-US", {
-                        weekday: "short",
+                        weekday: "long",
                         month: "short",
                         day: "numeric",
+                        year: "numeric",
                       })}
                     </p>
                     <p className="flex items-center gap-2">
@@ -303,13 +324,38 @@ export function ExamsView() {
                         hour: "numeric",
                         minute: "2-digit",
                       })}{" "}
-                      · {exam.duration} min
+                      {/* S76/AC3 (measured): the "· N min" suffix rides its own
+                       * slate-400 span — the clone takes the TEXT one step
+                       * darker (slate-500, the documented a11y-win family:
+                       * the ref's slate-400 reads 2.56:1 on white). */}
+                      <span className="text-slate-500 dark:text-slate-400">· {exam.duration} min</span>
                     </p>
-                    {topics.length > 0 && (
+                    {/* S76/AC5 (measured): the 📍 row renders only when the
+                     * location is set. */}
+                    {exam.location && (
                       <p className="flex items-center gap-2">
-                        <BookOpen className="size-4 text-slate-400" strokeWidth={2} />
-                        {topics.length} {topics.length === 1 ? "topic" : "topics"}
+                        <MapPin className="size-4 text-slate-400" strokeWidth={2} />
+                        {exam.location}
                       </p>
+                    )}
+                    {/* S76/AC6 (measured positive case): "Topics to study:"
+                     * label + dark chips — NOT the count row. */}
+                    {topics.length > 0 && (
+                      <div className="mt-2">
+                        <p className="mb-2 text-xs font-medium text-slate-500 dark:text-slate-400">
+                          Topics to study:
+                        </p>
+                        <div className="flex flex-wrap gap-1">
+                          {topics.map((topic) => (
+                            <span
+                              key={topic}
+                              className="rounded-md border border-transparent bg-neutral-800 px-2.5 py-0.5 text-xs font-semibold text-neutral-50 dark:bg-neutral-700 dark:text-neutral-100"
+                            >
+                              {topic}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
                     )}
                   </div>
                 </div>
@@ -383,6 +429,16 @@ export function ExamsView() {
                     setForm((f) => ({ ...f, duration: Number(e.target.value) || 60 }))
                   }
                   required
+                />
+              </div>
+              {/* S76/AC5 (measured): the ref dialog's Location input. */}
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="exam-location">Location</Label>
+                <Input
+                  id="exam-location"
+                  value={form.location}
+                  onChange={(e) => setForm((f) => ({ ...f, location: e.target.value }))}
+                  placeholder="e.g., Room 101, Hall A"
                 />
               </div>
               <div className="flex flex-col gap-1.5">

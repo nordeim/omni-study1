@@ -7,6 +7,7 @@ import {
   formatHHMMRange,
   formatLongDate,
   formatMinutes,
+  formatDueDateShort,
   formatFocusHours,
   formatShortWithYear,
   formatTime12h,
@@ -170,6 +171,23 @@ describe("dayBucketLabel / daysUntil", () => {
     expect(daysUntil(addDays(today, 0), today)).toBe(0);
     expect(daysUntil(addDays(today, 7), today)).toBe(7);
     expect(daysUntil(addDays(today, -3), today)).toBe(-3);
+  });
+});
+
+describe("formatDueDateShort (AC8 — the ref task pill's date form)", () => {
+  // Measured on the reference (ref-ac-remeasure3-s76.mjs): the task row's
+  // due pill ALWAYS renders the date form — month-short + day, no weekday,
+  // no relative labels — for due-today ("Oct 20"), tomorrow ("Oct 22"),
+  // far-future ("Oct 28") and past ("Oct 4") rows alike.
+  it("renders month-short + day for every bucket", () => {
+    const today = new Date(2026, 9, 20);
+    expect(formatDueDateShort(today)).toBe("Oct 20");
+    expect(formatDueDateShort(addDays(today, 1))).toBe("Oct 21");
+    expect(formatDueDateShort(addDays(today, 8))).toBe("Oct 28");
+    expect(formatDueDateShort(addDays(today, -16))).toBe("Oct 4");
+    // Double-digit days and month rollovers.
+    expect(formatDueDateShort(new Date(2026, 10, 4))).toBe("Nov 4");
+    expect(formatDueDateShort(new Date(2026, 0, 9))).toBe("Jan 9");
   });
 });
 

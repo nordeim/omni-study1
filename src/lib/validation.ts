@@ -158,7 +158,7 @@ export const assignmentSchema = z.object({
   subjectId: nullableId,
   dueDate: optionalDate,
   type: z
-    .enum(["homework", "essay", "project", "reading", "lab", "presentation", "other"])
+    .enum(["homework", "essay", "project", "reading", "lab", "presentation", "other", "worksheet"])
     .optional()
     .default("homework"),
   progress: z.number().int().min(0).max(100).optional().default(0),
@@ -175,6 +175,10 @@ export const examSchema = z.object({
     .default("test"),
   duration: z.number().int().min(5).max(600).optional().default(60),
   topics: jsonArray.optional().default("[]"),
+  // S76/AC5 (measured on the reference): the Add Exam dialog carries a
+  // Location input ("e.g., Room 101, Hall A") and the card renders a
+  // map-pin row when set — the eventSchema location pattern.
+  location: z.string().max(200).optional().default(""),
 });
 
 export const eventSchema = z.object({

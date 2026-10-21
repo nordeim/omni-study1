@@ -97,6 +97,14 @@ describe("assignmentSchema", () => {
     expect(assignmentSchema.safeParse({ title: "P", progress: 101 }).success).toBe(false);
     expect(assignmentSchema.safeParse({ title: "P", progress: -1 }).success).toBe(false);
   });
+
+  it("accepts the seeded \"worksheet\" type (AC10 — the enum missed a seed value)", () => {
+    // The seed ships "Problem set 6" with type "worksheet" — outside the
+    // enum since the S6 era, so editing that row 400s. The row renders
+    // (the API only validates writes) and is pinned by S6-E; the enum
+    // catches up to the seed.
+    expect(assignmentSchema.safeParse({ title: "P", type: "worksheet" }).success).toBe(true);
+  });
 });
 
 describe("subjectSchema", () => {
@@ -140,6 +148,24 @@ describe("examSchema", () => {
     expect(examSchema.safeParse({ title: "M", date: "2026-10-13T09:00:00", duration: 4 }).success).toBe(false);
     expect(examSchema.safeParse({ title: "M", date: "2026-10-13T09:00:00", duration: 6000 }).success).toBe(false);
     expect(examSchema.safeParse({ title: "M", date: "2026-10-13T09:00:00", topics: "not-json" }).success).toBe(false);
+  });
+
+  it("carries the S76 location field (AC5 — the ref card's \ud83d\udccd row + dialog Location input)", () => {
+    // Measured on the reference (2026-10-21, ref-ac-remeasure-s76.mjs): the
+    // Add Exam dialog has a Location input (placeholder "e.g., Room 101,
+    // Hall A") and the card renders a map-pin row when it is set. The
+    // eventSchema location pattern: optional string, max 200, default "".
+    const parsed = examSchema.parse({ title: "Midterm", date: "2026-10-13T09:00:00" });
+    expect(parsed.location).toBe("");
+    const withLoc = examSchema.parse({
+      title: "Midterm",
+      date: "2026-10-13T09:00:00",
+      location: "Room 3B",
+    });
+    expect(withLoc.location).toBe("Room 3B");
+    expect(
+      examSchema.safeParse({ title: "M", date: "2026-10-13T09:00:00", location: "x".repeat(201) }).success,
+    ).toBe(false);
   });
 });
 

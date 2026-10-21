@@ -194,6 +194,13 @@ export function dayBucketLabel(date: Date, today: Date): string {
   return LONG_DATE_WITH_WEEKDAY.format(date);
 }
 
+/** "Oct 20" — the reference task-row due pill's date form (S76/AC8,
+ * measured on the live reference for due-today, tomorrow, far-future and
+ * past rows alike: month-short + day, no weekday, no relative labels). */
+export function formatDueDateShort(date: Date): string {
+  return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+}
+
 /** "09:00" → 540; rejects "9:5", "24:00", "09:60", "". */
 export function parseHHMM(value: string): number | null {
   const match = /^(\d{2}):(\d{2})$/.exec(value);

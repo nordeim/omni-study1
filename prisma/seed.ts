@@ -97,7 +97,10 @@ async function main(): Promise<void> {
     { title: "Calculus II Midterm", subjectId: math.id, date: at(1, 9), type: "midterm", duration: 90, topics: JSON.stringify(["Integration by parts", "Series"]) },
     { title: "Quiz — Integration", subjectId: math.id, date: at(4, 9), type: "quiz", duration: 45, topics: JSON.stringify(["u-substitution"]) },
     { title: "Chemistry Quiz 5", subjectId: chemistry.id, date: at(3, 10), type: "quiz", duration: 30, topics: JSON.stringify(["Equilibrium"]) },
-    { title: "Physics Final", subjectId: physics.id, date: at(12, 9), type: "final", duration: 120, topics: JSON.stringify(["Mechanics", "Thermo"]) },
+    // S76/AC5: one seeded location so the 📍 card row renders on a
+    // populated account (the FIRST card keeps no location — the S8 pin's
+    // no-map-pin assertion stays valid for it).
+    { title: "Physics Final", subjectId: physics.id, date: at(12, 9), type: "final", duration: 120, topics: JSON.stringify(["Mechanics", "Thermo"]), location: "Examination Hall A" },
   ];
   for (const e of examDefs) {
     await db.exam.create({ data: { ...e, userId: user.id } });

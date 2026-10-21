@@ -649,7 +649,7 @@ test.describe("S8-P · Search icons + exam card", () => {
     await expect(wrap.locator("svg.lucide-search")).toHaveCount(1);
   });
 
-  test("exam card renders date + time rows only (no location row)", async ({ page }) => {
+  test("exam card renders date + time rows only (no location row) — the SEEDED no-location card", async ({ page }) => {
     await page.goto("/Exams");
     await hydrated(page);
     await page.waitForSelector('[aria-label="Exam cards"]');
@@ -659,6 +659,13 @@ test.describe("S8-P · Search icons + exam card", () => {
     const footer = card.locator(".border-t");
     await expect(footer.locator("span.rounded-full")).toHaveCount(1);
     await expect(footer).not.toContainText(/topic/i);
+    // S76/AC5 rationale amendment: the "no location row" reading encoded a
+    // DATA ARTIFACT — the decode-era reference exams carried no locations.
+    // The s76 populated re-measure proved the reference DOES render a 📍
+    // row when the field is set (and its dialog carries a Location input),
+    // so this pin now asserts the SEEDED first card ("Calculus II
+    // Midterm", no location) only; the positive case is pinned by S8-AC4
+    // on the seeded "Physics Final" (location "Examination Hall A").
   });
 });
 
@@ -692,6 +699,10 @@ test.describe("S8-U3 · Assignments subject filter + status select", () => {
     await page.goto("/Assignments");
     await hydrated(page);
     const rows = page.locator('[aria-label="Assignment rows"] > *');
+    // AP-96: the --sf-primary gate resolves pre-paint — wait for an actual
+    // row before counting (the bare count raced the data load and flaked
+    // once in the s76 cycle).
+    await expect(rows.first()).toBeVisible();
     const before = await rows.count();
     expect(before).toBeGreaterThan(0);
     const filter = page.getByRole("combobox", { name: "Subject filter" });
@@ -757,5 +768,298 @@ test.describe("S8-Z · Study Groups right pane at zero", () => {
     expect(geo.icon).toContain("lucide-users");
     expect(geo.blockW).toBe(80);
     expect(geo.h3y - geo.paneTop).toBeLessThan(320); // top-anchored, not centered
+  });
+});
+
+// ---------------------------------------------------------------------------
+// S8-AC · Batch AC — the populated-row drift layer (session-76).
+//
+// Computed-style measured on the live reference 2026-10-20/21
+// (scripts/ref-ac-remeasure{,3,4}-s76.mjs — login → populate through the
+// ref's own UI → measure → residue-zero cleanup; the AP-118/119 probe
+// protocol). The S75 prose table carried three transcription errors these
+// pins correct: the assignment due pill is BLUE (not violet), the exam
+// date month is SHORT ("Wednesday, Oct 28, 2026" — not "October"), and the
+// ≥2-day exam bucket is the YELLOW family (not amber).
+// ---------------------------------------------------------------------------
+
+test.describe("S8-AC · the assignment row's measured S76 anatomy", () => {
+  test("AC1: the due pill rides the TITLE line — \"N days\" on blue-50/blue-600", async ({ page }) => {
+    await page.goto("/Assignments");
+    await hydrated(page);
+    // "Problem set 7 — integrals" is seeded due +2 → the far form "2 days".
+    const row = page.locator('[aria-label="Assignment rows"] > *', { hasText: "Problem set 7" }).first();
+    await expect(row).toBeVisible();
+    const due = row.locator("span", { hasText: /^2 days$/ }).first();
+    const geo = await due.evaluate((el) => {
+      const s = getComputedStyle(el);
+      const pill = el.getBoundingClientRect();
+      const title = el.closest("div")!.querySelector("h2")!;
+      const t = title.getBoundingClientRect();
+      return { bg: s.backgroundColor, color: s.color, fw: s.fontWeight, pillY: Math.round(pill.y), titleY: Math.round(t.y) };
+    });
+    expect(geo.bg).toBe(rgb(239, 246, 255)); // blue-50 (measured — NOT violet)
+    expect(geo.color).toBe(rgb(37, 99, 235)); // blue-600
+    expect(geo.fw).toBe("500");
+    // INLINE with the title: the pill's top sits within one line of the
+    // h2's top (the ref measured titleY 17 / pillY 19).
+    expect(Math.abs(geo.pillY - geo.titleY)).toBeLessThanOrEqual(8);
+    // The ref's pill carries NO icon (the task pill does — S8-AC6).
+    await expect(due.locator("svg")).toHaveCount(0);
+  });
+
+  test("AC1 honest labels: due-today reads \"Today\" amber; +1 reads \"Tomorrow\" blue (documented deviations)", async ({ page }) => {
+    // The ref's own mapping is quirky — its due-today slot renders
+    // "Tomorrow" (amber) and its +1 slot renders "1 days" (blue). The
+    // clone ships the honest labels in the SAME tint slots (the
+    // superset-not-clone-of-quirks doctrine; see the remediation plan's
+    // deviations ledger). Pin the behavior on API-created rows so the
+    // labels are deterministic regardless of seed age.
+    const stamp = Date.now();
+    const iso = (d: number) => {
+      const dt = new Date();
+      dt.setDate(dt.getDate() + d);
+      return `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, "0")}-${String(dt.getDate()).padStart(2, "0")}`;
+    };
+    const mk = async (title: string, dueDate: string) => {
+      const res = await page.request.post("/api/assignments", { data: { title, dueDate, priority: "medium", type: "homework" } });
+      expect(res.ok(), `create ${title}: ${res.status()}`).toBe(true);
+      return (await res.json()) as { id: string };
+    };
+    const today = await mk(`S76 Today pill ${stamp}`, iso(0));
+    const tmrw = await mk(`S76 Tomorrow pill ${stamp}`, iso(1));
+    const far = await mk(`S76 Far pill ${stamp}`, iso(5));
+    try {
+      await page.goto("/Assignments");
+      await hydrated(page);
+      const todayRow = page.locator('[aria-label="Assignment rows"] > *', { hasText: `S76 Today pill ${stamp}` });
+      const todayPill = todayRow.locator("span", { hasText: /^Today$/ });
+      await expect(todayPill).toBeVisible();
+      expect(await todayPill.evaluate((el) => getComputedStyle(el).backgroundColor)).toBe(rgb(255, 251, 235)); // amber-50 (the ref's tint for due-today data)
+      const tmrwRow = page.locator('[aria-label="Assignment rows"] > *', { hasText: `S76 Tomorrow pill ${stamp}` });
+      const tmrwPill = tmrwRow.locator("span", { hasText: /^Tomorrow$/ });
+      await expect(tmrwPill).toBeVisible();
+      expect(await tmrwPill.evaluate((el) => getComputedStyle(el).backgroundColor)).toBe(rgb(239, 246, 255)); // blue-50
+      const farRow = page.locator('[aria-label="Assignment rows"] > *', { hasText: `S76 Far pill ${stamp}` });
+      await expect(farRow.locator("span", { hasText: /^5 days$/ })).toBeVisible();
+    } finally {
+      await page.request.delete(`/api/assignments/${today.id}`);
+      await page.request.delete(`/api/assignments/${tmrw.id}`);
+      await page.request.delete(`/api/assignments/${far.id}`);
+    }
+  });
+
+  test("AC2: the meta row — accent subject chip, bell priority on yellow-50, slate type", async ({ page }) => {
+    await page.goto("/Assignments");
+    await hydrated(page);
+    // "Problem set 7 — integrals" → Mathematics (seed color #8b5cf6).
+    const row = page.locator('[aria-label="Assignment rows"] > *', { hasText: "Problem set 7" }).first();
+    const chip = row.locator("span", { hasText: "Mathematics" }).first();
+    const chipCs = await chip.evaluate((el) => {
+      const s = getComputedStyle(el);
+      return { bg: s.backgroundColor, color: s.color, borderColor: s.borderTopColor };
+    });
+    // The ref's inline rgba(139,92,246,…) — accent-aware here through the
+    // runtime triplet var (the raw-triplet pattern; violet accent default).
+    // Text: the ref's violet-500 reads 3.9:1 on the tint — the clone's
+    // a11y-win precedent takes the TEXT one step darker (violet-600,
+    // --sf-primary-strong), like the calendar's today fill.
+    expect(chipCs.bg).toBe("rgba(139, 92, 246, 0.08)");
+    expect(chipCs.color).toBe(rgb(124, 58, 237));
+    expect(chipCs.borderColor).toBe("rgba(139, 92, 246, 0.19)");
+    // The w-2 dot inside the chip.
+    const dot = chip.locator("span");
+    expect(await dot.evaluate((el) => getComputedStyle(el).backgroundColor)).toBe(rgb(139, 92, 246)); // seeded math color #8b5cf6
+    // Priority: the bell glyph + yellow-50 bg (yellow-700 text — the
+    // ref's yellow-500 reads 1.9:1 and fails AA; the documented
+    // one-step-darker a11y-win precedent).
+    const prio = row.locator("span", { hasText: /^high$/ });
+    await expect(prio.locator("svg.lucide-bell")).toHaveCount(1);
+    const prioCs = await prio.evaluate((el) => {
+      const s = getComputedStyle(el);
+      return { bg: s.backgroundColor, color: s.color };
+    });
+    expect(prioCs.bg).toBe(rgb(254, 252, 232)); // yellow-50 (measured)
+    expect(prioCs.color).toBe(rgb(161, 98, 7)); // yellow-700 (AA deviation, documented)
+    // Type pill: slate-100 bg / slate-600 text (the ref's slate-400 reads
+    // 2.56:1 — the documented a11y-win family, same as the brand subtitle).
+    const type = row.locator("span", { hasText: /^homework$/ });
+    const typeCs = await type.evaluate((el) => {
+      const s = getComputedStyle(el);
+      return { bg: s.backgroundColor, color: s.color };
+    });
+    expect(typeCs.bg).toBe(rgb(241, 245, 249)); // slate-100
+    expect(typeCs.color).toBe(rgb(71, 85, 105)); // slate-600 (AA deviation, documented)
+  });
+
+  test("AC2 superset: the Add Assignment dialog carries the Subject select", async ({ page }) => {
+    await page.goto("/Assignments");
+    await hydrated(page);
+    await page.getByRole("button", { name: "Add Assignment" }).click();
+    const dlg = page.getByRole("dialog");
+    await expect(dlg.getByLabel("Subject")).toBeVisible();
+    await dlg.getByLabel("Subject").click();
+    // Radix portals the listbox to the document body — page-level (the
+    // S8-U3 pin's own convention).
+    await expect(page.getByRole("option", { name: "Mathematics" })).toBeVisible();
+    await expect(page.getByRole("option", { name: "No subject" })).toBeVisible();
+    await page.keyboard.press("Escape");
+    await page.keyboard.press("Escape");
+  });
+});
+
+test.describe("S8-AC · the exam card's measured S76 anatomy", () => {
+  test("AC3/AC9: full weekday date with SHORT month, text-lg title, slate-400 minute suffix", async ({ page }) => {
+    await page.goto("/Exams");
+    await hydrated(page);
+    // "Quiz — Integration" is seeded at(4, 9) — four days out.
+    const card = page.locator('[aria-label="Exam cards"] > div', { hasText: "Quiz — Integration" }).first();
+    await expect(card).toBeVisible();
+    // AC9: the title is text-lg 18px/600 (measured on the ref).
+    const title = card.locator("h2").first();
+    const titleCs = await title.evaluate((el) => {
+      const s = getComputedStyle(el);
+      return { fs: s.fontSize, fw: s.fontWeight };
+    });
+    expect(titleCs.fs).toBe("18px");
+    expect(titleCs.fw).toBe("600");
+    // AC3: "Wednesday, Oct 28, 2026" — weekday LONG + month SHORT + year.
+    const expected = new Date();
+    expected.setDate(expected.getDate() + 4);
+    const dateRow = card.locator("p", { hasText: /, 20\d\d$/ }).first();
+    await expect(dateRow).toHaveText(
+      expected.toLocaleDateString("en-US", { weekday: "long", month: "short", day: "numeric", year: "numeric" }),
+    );
+    // The "· 45 min" suffix rides its own span — slate-500 in the clone
+    // (the ref's slate-400 reads 2.56:1 on white; the documented a11y-win
+    // family — one step darker for text, same as the brand subtitle).
+    const suffix = card.locator("span", { hasText: /· 45 min/ });
+    expect(await suffix.evaluate((el) => getComputedStyle(el).color)).toBe(rgb(100, 116, 139)); // slate-500
+  });
+
+  test("AC4: the accent subject chip renders between the title and the detail rows", async ({ page }) => {
+    await page.goto("/Exams");
+    await hydrated(page);
+    // "Quiz — Integration" → Mathematics.
+    const card = page.locator('[aria-label="Exam cards"] > div', { hasText: "Quiz — Integration" }).first();
+    const chip = card.locator("span", { hasText: "Mathematics" }).first();
+    await expect(chip).toBeVisible();
+    const chipCs = await chip.evaluate((el) => {
+      const s = getComputedStyle(el);
+      return { bg: s.backgroundColor, color: s.color };
+    });
+    expect(chipCs.bg).toBe("rgba(139, 92, 246, 0.08)");
+    // violet-600 (the AA one-step-darker text; see the AC2 pin's note).
+    expect(chipCs.color).toBe(rgb(124, 58, 237));
+    // Geometry: the chip sits BELOW the title row and ABOVE the date row.
+    const geo = await chip.evaluate((el) => {
+      const card = el.closest('[aria-label="Exam cards"] > div'.replace(" > div", ""))!;
+      const title = card.querySelector("h2")!;
+      const dateRow = [...card.querySelectorAll("p")].find((p) => /, 20\d\d/.test(p.textContent ?? ""))!;
+      return {
+        chipY: Math.round(el.getBoundingClientRect().y),
+        titleY: Math.round(title.getBoundingClientRect().y),
+        dateY: Math.round(dateRow.getBoundingClientRect().y),
+      };
+    });
+    expect(geo.chipY).toBeGreaterThan(geo.titleY);
+    expect(geo.chipY).toBeLessThan(geo.dateY);
+  });
+
+  test("AC5: the seeded Physics Final renders the 📍 row; the dialog carries the Location input", async ({ page }) => {
+    await page.goto("/Exams");
+    await hydrated(page);
+    // The seeded location card ("Examination Hall A").
+    const card = page.locator('[aria-label="Exam cards"] > div', { hasText: "Physics Final" }).first();
+    await expect(card).toBeVisible();
+    const locRow = card.locator("p", { hasText: "Examination Hall A" });
+    await expect(locRow).toBeVisible();
+    await expect(locRow.locator("svg.lucide-map-pin")).toHaveCount(1);
+    // The row matches the date row's chrome (slate-600 text + slate-400 icon).
+    const rowCs = await locRow.evaluate((el) => {
+      const s = getComputedStyle(el);
+      return { color: s.color, fs: s.fontSize };
+    });
+    expect(rowCs.color).toBe(rgb(71, 85, 105)); // slate-600
+    expect(rowCs.fs).toBe("14px");
+    // The dialog's Location field (the ref's measured placeholder).
+    await page.getByRole("button", { name: "Add Exam" }).click();
+    const dlg = page.getByRole("dialog");
+    const loc = dlg.getByLabel("Location");
+    await expect(loc).toBeVisible();
+    await expect(loc).toHaveAttribute("placeholder", "e.g., Room 101, Hall A");
+    await page.keyboard.press("Escape");
+  });
+
+  test("AC6: the topics block — \"Topics to study:\" label + dark chips (NOT the count row)", async ({ page }) => {
+    await page.goto("/Exams");
+    await hydrated(page);
+    // "Physics Final" ships topics ["Mechanics", "Thermo"].
+    const card = page.locator('[aria-label="Exam cards"] > div', { hasText: "Physics Final" }).first();
+    await expect(card.getByText("Topics to study:")).toBeVisible();
+    const labelCs = await card.locator("p", { hasText: "Topics to study:" }).evaluate((el) => {
+      const s = getComputedStyle(el);
+      return { fs: s.fontSize, fw: s.fontWeight, color: s.color };
+    });
+    expect(labelCs.fs).toBe("12px");
+    expect(labelCs.fw).toBe("500");
+    expect(labelCs.color).toBe(rgb(100, 116, 139)); // slate-500
+    const chip = card.locator("span", { hasText: /^Mechanics$/ });
+    const chipCs = await chip.evaluate((el) => {
+      const s = getComputedStyle(el);
+      return { bg: s.backgroundColor, color: s.color, radius: s.borderRadius, fw: s.fontWeight };
+    });
+    expect(chipCs.bg).toBe(rgb(38, 38, 38)); // neutral-800 (measured #262626)
+    expect(chipCs.color).toBe(rgb(250, 250, 250)); // neutral-50
+    expect(chipCs.radius).toBe("6px"); // rounded-md
+    expect(chipCs.fw).toBe("600");
+    // The invented count row ("2 topics") is gone.
+    await expect(card.getByText(/2 topics/)).toHaveCount(0);
+  });
+
+  test("AC7: the far urgency pill reads \"12 days\" in the yellow family", async ({ page }) => {
+    await page.goto("/Exams");
+    await hydrated(page);
+    // "Physics Final" is seeded at(12, 9) — twelve days out.
+    const card = page.locator('[aria-label="Exam cards"] > div', { hasText: "Physics Final" }).first();
+    const badge = card.locator("span", { hasText: /^12 days$/ });
+    await expect(badge).toBeVisible();
+    const cs = await badge.evaluate((el) => {
+      const s = getComputedStyle(el);
+      return { bg: s.backgroundColor, color: s.color, fw: s.fontWeight };
+    });
+    expect(cs.bg).toBe(rgb(254, 249, 195)); // yellow-100 (measured s76)
+    expect(cs.color).toBe(rgb(161, 98, 7)); // yellow-700 (measured)
+    expect(cs.fw).toBe("600"); // font-semibold (measured)
+  });
+});
+
+test.describe("S8-AC · the task pill's measured date form", () => {
+  test("AC8: the due pill always renders the calendar glyph + \"Oct N\" date form", async ({ page }) => {
+    await page.goto("/Tasks");
+    await hydrated(page);
+    // "Finish calculus problem set" is seeded due TODAY (20:00) — the red
+    // date form; "Outline history essay" is due +1 — the slate date form.
+    const shortDate = (offset: number) => {
+      const d = new Date();
+      d.setDate(d.getDate() + offset);
+      return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+    };
+    const todayRow = page.locator('[aria-label="Task rows"] > *', { hasText: "Finish calculus problem set" }).first();
+    const todayPill = todayRow.locator("span", { hasText: shortDate(0) }).first();
+    await expect(todayPill).toBeVisible();
+    await expect(todayPill.locator("svg.lucide-calendar")).toHaveCount(1);
+    expect(await todayPill.evaluate((el) => getComputedStyle(el).backgroundColor)).toBe(rgb(254, 226, 226)); // red-100
+    expect(await todayPill.evaluate((el) => getComputedStyle(el).color)).toBe(rgb(185, 28, 28)); // red-700 (AA deviation, documented)
+    const tmrwRow = page.locator('[aria-label="Task rows"] > *', { hasText: "Outline history essay" }).first();
+    const tmrwPill = tmrwRow.locator("span", { hasText: shortDate(1) }).first();
+    await expect(tmrwPill).toBeVisible();
+    await expect(tmrwPill.locator("svg.lucide-calendar")).toHaveCount(1);
+    expect(await tmrwPill.evaluate((el) => getComputedStyle(el).backgroundColor)).toBe(rgb(241, 245, 249)); // slate-100
+    // The relative labels are GONE from the row pills (the ref renders the
+    // date form for every bucket).
+    await expect(todayRow.getByText("Today", { exact: true })).toHaveCount(0);
+    await expect(tmrwRow.getByText("Tomorrow", { exact: true })).toHaveCount(0);
+    await expect(todayRow.getByText(/Wed, /)).toHaveCount(0);
   });
 });

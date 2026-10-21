@@ -1576,3 +1576,110 @@ Batch R stays deferred (strengthened CWV evidence). The reference
 remains UNCHANGED on every standing zero-state invariant; the
 populated S6-family surfaces are now MEASURED territory with a
 committed evidence trail.
+
+## Session 76 (continuation 27) — the Batch AC re-measure + the populated-row drift layer fixed
+
+**Context.** Ran on a RESET workspace (16th reset — fresh clone at
+`77a4326` = Session-75 + the session_21 transcript, the directive for
+this cycle). The directive: implement Batch AC TDD in the Batch AB
+rhythm, starting with the `Exam.location` schema→dialog→card chain and
+the assignment row anatomy; re-measure AC6/AC8 before pinning.
+
+**Work log.**
+
+1. **Workspace rebuilt from zero (16th reset).** Full provisioning:
+   bun install (489 pkgs), `.env` (`file:../db/custom.db` + empty
+   AUTH_SECRET), db push + seed, build, chromium-1243 restored
+   (`bunx playwright install chromium`). Baseline re-certified BEFORE
+   any change: lint ✓ tsc ✓ unit **844/844**; e2e cold across the
+   re-derived 5-chunk map **389/389** (113+109+50+59+58). Two
+   environment findings re-confirmed: a single-process FULL e2e run
+   trips the register limiter by design (18 local-IP registrations vs
+   the 10/IP/15-min budget — the chunked map exists precisely to
+   re-boot the limiter per chunk; the run failures were the 8
+   register-429s, not flaky specs), and the S12-B skip-link timeout
+   was a one-off flake (green in every chunked run after).
+2. **The s76 re-measure (the cycle's new evidence layer).** Four probe
+   iterations against the live reference (login → populate through the
+   ref's own UI → computed-style measure → residue-zero cleanup, the
+   AP-118/119 protocol — `scripts/ref-ac-remeasure{,3,4}-s76.mjs`):
+   settled BOTH S75 open questions and corrected THREE prose
+   transcription errors in the S75 table — AC8's task pill is the
+   DATE form for EVERY bucket ("Oct 20"/"Oct 22"/"Oct 28", calendar
+   glyph, red today/past + slate future — no relative labels); AC6's
+   topics positive case is the "Topics to study:" label + neutral-800
+   chips (#262626/#fafafa, rounded-md); AC1's assignment due pill is
+   BLUE (blue-50/blue-600 — the S75 "violet tint" was a misread);
+   AC3's month is SHORT ("Wednesday, Oct 28, 2026", not "October");
+   AC7's ≥2 bucket is the YELLOW family (yellow-100/yellow-700, not
+   amber — Tailwind v4 lesson 12 re-hit); NEW: AC9 the exam title is
+   text-lg 18px + the pill `px-2.5 py-1 font-semibold`; AC10 the seed
+   ships type "worksheet" outside the assignmentSchema enum (editing
+   "Problem set 6" 400s). The exam dialog anatomy fully measured
+   (title/duration/LOCATION "e.g., Room 101, Hall A"/TOPICS "Add a
+   topic..."/notes + subject/type combos + "Pick" popover). All probes
+   cleaned to FINAL-RESIDUE: 0.
+3. **Remediation plan written first** (docs/remediation-plan.md Cycle
+   26): the corrected evidence table + the 10-item TDD todo list + the
+   honest-deviations ledger (the ref's due-today slot reads "Tomorrow"
+   [its own off-by-one] and its +1 slot reads "1 days" — the clone
+   ships honest "Today" amber / "Tomorrow" blue in the same tint
+   slots, per the superset-not-clone-of-quirks doctrine).
+4. **Batch AC implemented TDD.** RED first: 3 unit pins
+   (examSchema.location default+bound; "worksheet" enum;
+   formatDueDateShort month-short+day) + 10 e2e pins (S8-AC blocks)
+   — the e2e pins ran 10/10 RED against the pre-change standalone
+   build. GREEN source: `prisma/schema.prisma` `Exam.location String?`
+   (+ db push, + one seeded location on "Physics Final" so the 📍 row
+   renders while the FIRST card keeps none — the amended S8 pin stays
+   valid); validation examSchema.location + the worksheet enum;
+   `formatDueDateShort` in date.ts; `SubjectTagChip` (the accent-aware
+   `sf-subject-chip` utility — 8% tint/19% border/strength text via
+   the raw-triplet pattern); `DuePill` withIcon; the assignment row
+   rebuilt (inline "N days" blue pill on the title line, meta row =
+   chip + bell priority yellow-50 + slate type, dialog Subject
+   select); the exam card rebuilt (text-lg title, full weekday date,
+   slate-500 "· N min" suffix, 📍 row, topics chip block, "N days"
+   yellow urgency); the task pill's date form; the seed location.
+5. **Three post-GREEN repairs, each caught by a standing gate:**
+   (a) the axe sweep flagged the chip's violet-500-on-tint text
+   (3.9:1) and the "· N min" slate-400 (2.56:1) — both fixed with the
+   documented one-step-darker text precedent (violet-600 / slate-500),
+   pins updated with the deviation comments; (b) TWO v4 lab()
+   serialization gaps closed by pinning yellow-50/yellow-950 +
+   neutral-50/100/700/800 (trap 10 — unpinned palette classes read
+   back lab()); (c) the S8-U3 row-count pin was a pre-existing AP-96
+   flake (bare count after a pre-paint-satisfiable gate) — hardened
+   with wait-for-row-first.
+6. **Full cold re-certification.** lint ✓ tsc ✓ unit **847/847** ✓
+   build REAL_EXIT=0 fresh. AP-116 census re-derived (parity-session8
+   43→53 chromium with the 10 S8-AC pins; all 30 spec files exactly
+   once): **123+109+50+59+58 = 399/399** cold, zero failures, first
+   pass on every chunk.
+7. **The s76 sweep** (`ref-resweep-s76.mjs`, the standing class
+   re-tagged): **ok:true** — 9/9 invariants both hosts, brand tables
+   byte-matched, mobile drawers green on BOTH (drawerOpened/barOk/
+   brandOk all true — the user-flagged surface; no Tailwind v4
+   mobile-nav bug, traps 4/7/9 verified live yet again).
+8. **Evidence.** Dev-server screenshots captured on :3000
+   (`76-clone-{dashboard,assignments,exams,tasks}.png`, the exam
+   dialog with the Location field, `76-clone-mobile-{dashboard,drawer,
+   assignments}.png` at 390×844) + the ref probe pairs
+   (`76-ref-*.png`) + the sweep's clone set — VLM-verified: the
+   inline pills, chips with dots, bell priorities, "Wednesday, Oct N,
+   2026" dates, the location row, the topics chips, the mobile drawer
+   all render as measured.
+9. **Docs.** README (badge 1246, counts 847/399, S74/S75 rows
+   backfilled + the S76 row); AGENTS/CLAUDE counts; remediation-plan
+   header refreshed + Batch AC → DONE + the Cycle-26 execution record;
+   this entry. `.env.example` verified current (the DATABASE_URL/
+   AUTH_SECRET/NEXT_PUBLIC_SITE_URL contract unchanged).
+
+**Stage summary.** HEAD = `77a4326` + this cycle's commit (Batch AC
+source + pins + probes + sweep + screenshots + docs + worklog).
+Baselines: e2e **399/399** (123+109+50+59+58, 30 spec files censused),
+unit **847/847**, lint/tsc clean, build fresh, s76 sweep ok:true.
+Batch AC DONE. Standing debt unchanged: Batch R (RSC structural perf —
+deferred on the strengthened S75 CWV evidence); the pre-existing
+sf-clock-date dark-sweep artifact (recorded for a future audit-tools
+cycle).

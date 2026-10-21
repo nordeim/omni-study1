@@ -7,7 +7,7 @@
 // ---------------------------------------------------------------------------
 
 import * as React from "react";
-import type { LucideIcon } from "lucide-react";
+import { CalendarIcon, type LucideIcon } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 
@@ -211,6 +211,25 @@ export function SubjectChip({ name, color }: { name?: string | null; color?: str
   );
 }
 
+/** S76/AC2+AC4 (measured on the reference): the accent-tinted subject tag —
+ * the violet pill with the w-2 dot the ref renders in the assignment meta
+ * row and on the exam card. Accent-aware through the sf-subject-chip
+ * utility (8% tint + 19% border + accent text); the dot keeps the
+ * subject's own color, falling back to the accent. */
+export function SubjectTagChip({ name, color }: { name?: string | null; color?: string | null }) {
+  if (!name) return null;
+  return (
+    <span className="sf-subject-chip inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-xs font-medium">
+      <span
+        aria-hidden
+        className="size-2 rounded-full"
+        style={{ backgroundColor: color ?? "rgb(var(--sf-primary))" }}
+      />
+      {name}
+    </span>
+  );
+}
+
 // ---- Task row primitives (S6) ------------------------------------------------------
 
 export const PRIORITY_BORDER: Record<string, string> = {
@@ -254,7 +273,17 @@ export function PriorityCheckbox({
   );
 }
 
-export function DuePill({ label, overdue }: { label: string; overdue?: boolean }) {
+export function DuePill({
+  label,
+  overdue,
+  withIcon = false,
+}: {
+  label: string;
+  overdue?: boolean;
+  /** S76/AC8 (measured): the ref's task due pill carries a leading
+   * calendar glyph — render it for the task-row form. */
+  withIcon?: boolean;
+}) {
   return (
     <span
       className={cn(
@@ -266,6 +295,7 @@ export function DuePill({ label, overdue }: { label: string; overdue?: boolean }
           : "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300",
       )}
     >
+      {withIcon && <CalendarIcon className="size-3" strokeWidth={2} aria-hidden />}
       {label}
     </span>
   );

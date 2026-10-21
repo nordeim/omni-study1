@@ -1,11 +1,13 @@
 # Omni-Study1 — Remediation Plan & Execution Record
 
-> **Status: COMPLETE.** Every batch below has been executed TDD-style
-> (spec-red → fix → spec-green) and verified: **834/834 Vitest unit**,
-> **298/298 Playwright e2e** (+1 auth setup), lint clean, `tsc --noEmit`
-> clean, production build green with the standalone asset contract intact.
-> This document is the durable record of what was broken, how it was
-> diagnosed, and which standing guard now pins each fix.
+> **Status: COMPLETE through Batch AC (session-76).** Every batch below has
+> been executed TDD-style (spec-red → fix → spec-green) and verified:
+> **847/847 Vitest unit**, **399/399 Playwright e2e** across the 5-chunk
+> cold map (123+109+50+59+58, 30 spec files censused exactly once; the
+> per-chunk count includes that chunk's auth setup), lint clean,
+> `tsc --noEmit` clean, production build green with the standalone asset
+> contract intact. This document is the durable record of what was broken,
+> how it was diagnosed, and which standing guard now pins each fix.
 
 ---
 
@@ -667,9 +669,9 @@ Assignment + Exam on the reference through its own UI, measured 7
 populated views, and cleaned to **RESIDUE ZERO**. Probe-protocol lessons
 (AP-118 + the popover-layering fix) are in the lessons table.
 
-**Batch AC — the populated-row drift layer, MEASURED, PENDING (the
-next cycle's TDD work, per the established probe→implement rhythm
-that produced Batch AB):**
+**Batch AC — the populated-row drift layer, MEASURED (s75) → IMPLEMENTED
+(s76, see the Cycle 26 record below; the established probe→implement
+rhythm that produced Batch AB):**
 
 | # | Surface | Ref (measured, `75-ref-populated-*.png`) | Clone today | Class |
 |---|---------|------------------------------------------|-------------|-------|
@@ -691,6 +693,109 @@ cards (Today's Progress N/M "tasks completed", Pending Tasks, Due
 Soon, Focus Time), the calendar month grid + day-detail task rows, and
 the My Day task row. The ref dashboard greeting renders the account's
 name — behavior matches (the clone shows the display name).
+
+### Cycle 26 (session-76) — the Batch AC re-measure (computed styles) + the execution plan
+
+The S75 Batch AC table carried three prose transcription errors that the
+s76 computed-style re-measure (`scripts/ref-ac-remeasure{,3,4}-s76.mjs`,
+login → populate → measure → residue-zero cleanup, the AP-118/119
+protocol) corrected, and it settled the two open questions (AC6 positive
+case, AC8 far-date form). The corrected, machine-read evidence:
+
+| # | Surface | Ref (computed-style measured 2026-10-20/21, `76-ref-*.png`) |
+|---|---------|---------------------------------------------------------------|
+| AC1 | Assignment due pill | INLINE with the title (titleY 17 / pillY 19); **blue-50 bg + blue-600 text** (the S75 table's "violet tint" was a misread), 12px/500, NO icon; copy "N days" (due +7 → "7 days", +1 → "1 days" — the ref's own quirk), due-today → amber-50/amber-600 "Tomorrow" (the ref's off-by-one slot), overdue unmeasurable through the UI (picker disables past dates) |
+| AC2 | Assignment meta row | subject chip: `inline-flex gap-1.5 rounded-full font-medium text-xs px-2 py-0.5`, bg `rgba(139,92,246,0.082)`, text + dot `rgb(139,92,246)` (w-2 h-2 rounded-full), border `rgba(139,92,246,0.19)`; priority pill: bell SVG + "Medium", **yellow-50 bg + yellow-500 text**, 12px/500; type pill: slate-100 bg, **slate-400 text** (clone keeps slate-600 — the documented a11y-win family), raw-lowercase data + `capitalize` display (matches the clone); progress "0%" violet-600 ✓ unchanged |
+| AC3 | Exam card date | **"Wednesday, Oct 28, 2026"** — weekday LONG + month SHORT (the S75 table's "October" was a transcription error; month is abbreviated), 14px/400 slate-600, calendar icon w-4 text-slate-400; the time row's "· N min" suffix is a separate **slate-400** span |
+| AC4 | Exam card subject chip | same violet chip anatomy as AC2, rendered between the title row and the date row (`mb-3` wrapper) |
+| AC5 | Exam card location | `flex items-center gap-2` row — map-pin SVG w-4 text-slate-400 + text 14px/400 slate-600 ("Room 3B"); the Add Exam dialog carries a Location input (placeholder "e.g., Room 101, Hall A") |
+| AC6 | Exam card topics (POSITIVE case measured) | label `Topics to study:` (12px/500 slate-500, mb-2) + chips: **neutral-800 bg (#262626) + neutral-50 text**, rounded-md, px-2.5 py-0.5, 12px/600 — the clone's "N topics" count row is the drift |
+| AC7 | Exam due pill copy + tint | "7 days" (no "in " prefix), **yellow-100 bg (rgb 254,249,195) + yellow-700 text (rgb 161,98,7)**, 12px/600, `px-2.5 py-1` — the clone's amber-100/amber-700 is the adjacent-hue family (Tailwind v4 lesson 12); "Tomorrow" (+1) stays orange (S9-J pinned) |
+| AC8 | Task due pill (all forms measured) | ALWAYS the date form "Oct 20" / "Oct 22" / "Oct 28" (month-short + day, NO weekday, NO relative labels), with a leading **lucide-calendar SVG** inside the pill; today/past → red-100/red-600, future (tomorrow AND beyond) → slate-100/slate-500; 12px/400 |
+| AC9 | NEW (found by the s76 fine dump) | the exam card title is **text-lg 18px/600 slate-800** (the clone renders 16px); the urgency pill is `px-2.5 py-1 font-semibold` (the clone: py-0.5 font-medium) |
+| AC10 | NEW (audit finding) | the seed ships assignment type "worksheet" ("Problem set 6") which is OUTSIDE the `assignmentSchema` enum — the row renders (pin S6-E) but editing it 400s; add "worksheet" to the enum |
+
+**Execution TODO (TDD — RED pins first, then GREEN source, in this order):**
+
+1. **AC5 schema chain** — `prisma/schema.prisma` `Exam.location String?` →
+   `bun run db:push` → `src/lib/validation.ts` examSchema
+   `location: z.string().max(200).optional().default("")` (the eventSchema
+   pattern) → `src/lib/data.ts` ExamRow `location: string` → dialog
+   Location field (placeholder "e.g., Room 101, Hall A") → card 📍 row
+   (MapPin w-4 slate-400 + slate-600 text, only when set) → seed ONE
+   location ("Physics Final" → "Examination Hall A"; the FIRST card keeps
+   none so the amended S8 pin stays valid). Unit test: validation accepts/
+   defaults location.
+2. **AC1/AC2 assignment row anatomy** — due pill moves INLINE with the
+   title (flex row), copy/tint per the measured table; meta row becomes
+   subject chip + bell priority + type. Honest-label decisions (documented
+   deviations): diff 0 → "Today" amber (the ref's "Tomorrow"-for-today is
+   its off-by-one quirk — superset, not clone-of-quirks), diff 1 →
+   "Tomorrow" blue (the ref's "1 days" is its own sloppiness), diff ≥ 2 →
+   "N days" blue (measured), overdue → "Overdue by Nd" red (unchanged
+   superset — unmeasurable on the ref). Priority yellow-500 → **yellow-700**
+   on yellow-50 (the ref's 1.9:1 fails AA; the documented a11y-win
+   precedent). Dialog gains the Subject select (functional parity — the
+   ref's dialog has one; without it the new chip is un-settable).
+3. **AC3/AC9 exam card** — date format `weekday:"long", month:"short",
+   day:"numeric", year:"numeric"`; "· N min" suffix as a slate-400 span;
+   title → `text-lg`; urgency pill → `px-2.5 py-1 font-semibold`.
+4. **AC4 subject chip component** — a shared `SubjectTagChip` (accent-aware:
+   `rgb(var(--sf-primary) / 0.08)` bg, `rgb(var(--sf-primary))` text +
+   border `rgb(var(--sf-primary) / 0.19)` — the Standing-Lesson-2 raw-triplet
+   pattern, never the `/NN` modifier) + dot w-2 h-2 (subject color fallback
+   accent); consumed by the assignment meta row + exam card.
+5. **AC6 topics block** — replace the count row with the label + neutral-800
+   chips (dark: neutral-700/neutral-100), only when topics parse non-empty.
+6. **AC7 urgency labeler** — "N days" (drop "in "), amber-100/amber-700 →
+   yellow-100/yellow-700 for the ≥2 bucket; update the S6-F pin's colors
+   (the "Quiz — Integration" +4 card) accordingly.
+7. **AC8 task pill** — new `formatDueDateShort` helper in `src/lib/date.ts`
+   ("Oct 20", month-short + day) + unit tests; `DuePill` gains the
+   `withIcon` CalendarIcon; `TaskRowCard` always uses the date form (the
+   dashboard's own "Due {label}" line keeps `dayBucketLabel` — different
+   surface, own pins).
+8. **AC10 enum fix** — "worksheet" joins the assignment type enum + unit
+   test (the seeded row becomes editable).
+9. **Pin amendments** — S9-I (pills row 2→3 spans, subject chip present),
+   S6-F (amber→yellow on the far badge), S8 (rationale: the "no location
+   row" pin encoded a data artifact — stays valid for the no-location
+   first card; ADD the positive location row + topics block assertions on
+   the seeded location card).
+10. **Doc hygiene** — README badge/anchors → 844 unit / 384 chromium specs
+    (+4 setup runs in the 5-chunk map = the documented 389/389 posture);
+    backfill the README remediation table's S74/S75 rows; refresh this
+    file's stale "Status: COMPLETE … 834/834, 298/298" header to the live
+    baselines.
+
+Honest deviations ledger (all pinned with comments): the 0/1-day
+assignment labels (honest copy vs the ref's quirk), priority yellow-700
+(AA), type slate-600 (AA), task-pill red-700/slate-600 (AA family),
+topic-chip dark-mode equivalents (the documented dark superset).
+
+**Cycle 26 execution record (session-76).** The plan above was executed
+in full, TDD: 3 unit pins (examSchema location default/bound, the
+"worksheet" enum catch-up, `formatDueDateShort`) RED-first; 10 e2e pins
+in the S8-AC blocks (assignment row anatomy ×4, exam card anatomy ×5,
+task pill ×1) RED 10/10 against the pre-change build → GREEN 10/10; the
+amended S6-F (amber→yellow badge), S9-I (meta row 2→4 spans + the chip
+present), and S8 (location-pin rationale) all green. Two a11y regressions
+caught by the standing axe sweep and fixed with the documented one-step-
+darker text precedent (chip text violet-500→violet-600, "· N min"
+slate-400→slate-500); two v4 lab() serialization gaps closed by pinning
+yellow-50/950 + neutral-50/100/700/800; one pre-existing AP-96 flake in
+the S8-U3 row-count pin hardened (wait-for-row before count). Gates:
+lint ✓ tsc ✓ unit **847/847** ✓ build REAL_EXIT=0 fresh; cold
+re-certification **399/399** (123+109+50+59+58, first pass every
+chunk); s76 sweep ok:true (9/9 invariants both hosts, brand tables
+byte-matched, mobile drawers green on both). Evidence:
+`docs/screenshots/76-*.png` (the dev-server captures + the probe pairs)
++ `scripts/ref-ac-remeasure{,3,4,5}-s76.mjs` + `scripts/capture-s76-clone.mjs`
++ `scripts/ref-resweep-s76.mjs`. **Batch AC: DONE.** Standing debt
+unchanged: Batch R (RSC structural perf — the deferral evidence
+strengthened in S75 stands).
+
+
 
 ## 3a. Verification (session-56 re-run, from a fresh clone)
 
