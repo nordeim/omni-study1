@@ -178,11 +178,13 @@
 
   /* S76/AC6: the exam topics chips — the neutral family (measured
    * bg #262626 / text #fafafa on the reference); unpinned these read
-   * back as lab() (trap 10). */
+   * back as lab() (trap 10). S77/AD: neutral-950 joins for the study-
+   * mode Exit/Wrong/Divider black buttons (measured rgb(10,10,10)). */
   --color-neutral-50: #fafafa;
   --color-neutral-100: #f5f5f5;
   --color-neutral-700: #404040;
   --color-neutral-800: #262626;
+  --color-neutral-950: #0a0a0a;
 
   --color-purple-100: #f3e8ff;
   --color-purple-500: #a855f7;
@@ -582,6 +584,65 @@
 
 @utility sf-print-exact {
   print-color-adjust: exact;
+}
+
+/* ---- S77/AD: the Quill note-editor surfaces (measured on the reference:
+ * toolbar strip slate-50 pad 8px, editor pad 24px, 16px text; the white
+ * rounded-2xl card + 1px slate-200 border ride the component classes).
+ * Scoped under .sf-note-editor (the card wrapper) — Quill's own snow
+ * stylesheet loads with the component chunk, so bare .ql-editor rules
+ * lose the cascade; the prefix wins on specificity regardless of order.
+ * Dark mode is the documented clone superset. ---- */
+.sf-note-editor .ql-toolbar.ql-snow {
+  background-color: #f8fafc; /* slate-50 (measured rgb(248,250,252)) */
+  padding: 8px;
+  border-bottom: 1px solid #e2e8f0;
+}
+.sf-note-editor .ql-editor {
+  padding: 24px; /* measured — the ref overrides Quill's default 12px 15px */
+  font-size: 16px;
+}
+.dark .sf-note-editor .ql-toolbar.ql-snow {
+  background-color: #1e293b; /* slate-800 */
+  border-bottom-color: #334155;
+}
+.dark .sf-note-editor .ql-editor {
+  color: #e2e8f0; /* slate-200 */
+}
+.dark .sf-note-editor .ql-toolbar.ql-snow .ql-picker-label,
+.dark .sf-note-editor .ql-toolbar.ql-snow button {
+  color: #cbd5e1;
+}
+.dark .sf-note-editor .ql-toolbar.ql-snow .ql-stroke {
+  stroke: #cbd5e1;
+}
+.dark .sf-note-editor .ql-toolbar.ql-snow .ql-fill {
+  fill: #cbd5e1;
+}
+.dark .sf-note-editor .ql-snow .ql-picker.ql-expanded .ql-picker-label {
+  border-color: #334155;
+  color: #e2e8f0;
+}
+.dark .sf-note-editor .ql-snow .ql-picker-options {
+  background-color: #1e293b;
+  border-color: #334155;
+  color: #e2e8f0;
+}
+/* The Divider button's insert — a quiet rule (custom hr blot). */
+.sf-note-editor .ql-editor hr {
+  border: none;
+  border-top: 1px solid #e2e8f0;
+  margin: 12px 0;
+}
+.dark .sf-note-editor .ql-editor hr {
+  border-top-color: #334155;
+}
+/* The editor fills its card: toolbar strip + scrollable body. The wrapper
+ * div IS the ql-container (Quill converts it) — flex-1 rides the component
+ * className; this guarantees the scroll containment. */
+.sf-note-editor .ql-container {
+  min-height: 0;
+  overflow: auto;
 }
 
 @utility sf-skip-link {

@@ -1683,3 +1683,103 @@ Batch AC DONE. Standing debt unchanged: Batch R (RSC structural perf —
 deferred on the strengthened S75 CWV evidence); the pre-existing
 sf-clock-date dark-sweep artifact (recorded for a future audit-tools
 cycle).
+
+## Session 77 (continuation 28) — the Batch AD probe + the Notes inline editor + the Flashcards study mode
+
+**Context.** Ran on a RESET workspace (17th reset — fresh clone at
+`08b2986` = Session-76 + the session_22 transcript, the directive for
+this cycle). The directive: the standing rhythm + the two remaining
+unmeasured populated surfaces (the S76 record's suggested next steps) —
+the Notes inline editor and the Flashcards study mode.
+
+**Work log.**
+
+1. **Workspace rebuilt from zero (17th reset).** Full provisioning: bun
+   install (489 pkgs), `.env` (`file:../db/custom.db` + empty
+   AUTH_SECRET), db push + seed, chromium-1243 restored, build. Baseline
+   re-certified BEFORE any change: lint ✓ tsc ✓ unit **847/847**; e2e
+   cold across the documented 5-chunk map **399/399** (123+109+50+59+58,
+   first pass every chunk — the earlier single nohup `bun install` died
+   silently; the foreground re-run was clean).
+2. **The Batch AD probe (the cycle's new evidence layer).** Seven probe
+   iterations against the live reference (login → drive the ref's own UI
+   → computed-style measure → residue-zero cleanup, the AP-118/119
+   protocol): v1 recon (entity discovery: Notebook/Note/FlashcardDeck/
+   Flashcard exist; the orphan Flashcard pre-existing, untouched) + the
+   first editor dump; v2 the editor-chain walk (the white rounded-2xl
+   card + the Quill snow structure + the Font/tag rows) — VLM
+   cross-checks exposed the ref's invisible-typed-text bug (white
+   rgb(250,250,250) on white — confirmed at the `<p>` level in v3);
+   v3 the SAVE FLOW (title + body + bold → the entity persists content
+   as HTML `"<p><strong>…</strong></p>"` — the toolbar is FUNCTIONAL);
+   v4 the tag flow (Add tag → Enter → `tags:["probe-tag"]`, editor pill
+   neutral-800/neutral-50 radius-6 12px; the list pill white-on-slate =
+   another invisible quirk; "Attach File" NOT in the DOM — a VLM
+   hallucination, corrected); v5-v7 the flashcards flow (Create Deck
+   dialog anatomy → select deck → Add Flashcard dialog (2 textareas +
+   difficulty) → Study → the study surface measured: IN-PAGE (no
+   overlay), black Exit Study, "1 / 2" slate-500 counter, the
+   gradient front + white 24px/500 text, the white 2px-violet-200 back
+   + 20px/400 slate-700 text, "Click card to flip" hint, the Wrong
+   (neutral-950/red-600) / Correct (green-500) rating pair, no
+   completion screen; the card grid rows + yellow-100/yellow-700
+   difficulty pill + the deck sidebar button anatomy). Every run
+   cleaned to FINAL-RESIDUE: 0.
+3. **Remediation plan written first** (docs/remediation-plan.md Cycle
+   27): the AD1-AD12 measured table + the 10-item TDD todo + the honest
+   deviations ledger.
+4. **Batch AD implemented TDD.** RED first: 7 unit pins
+   (`stripHtmlPreview` in the new src/lib/text.ts — the module did not
+   exist) + 10 e2e pins (the S7-AD blocks in parity-session7: Notes
+   editor ×7, study mode ×3) — **10/10 RED** against the pre-change
+   standalone build. GREEN source: `quill@2.0.3` (the ref's own engine)
+   behind a new `QuillEditor` client wrapper (dynamic import, the
+   measured 20-control snow toolbar, a custom `hr` blot, debounced
+   autosave, aria-labeled toolbar buttons); the notes editor chrome
+   (14px/700 title, Font row + black Divider button, tag authoring row
+   on the already-modeled Note.tags, gradient Save + autosave superset);
+   the list-row rework (violet-50/2px violet-200/p-3, 16px/600 title,
+   HTML-stripped 12px preview, readable tag pill, no notebook/date
+   line); the flashcards study rework (in-page, black Exit Study, "N / M"
+   counter, max-w-2xl, 24px/500 front + 20px/400 back, the flip hint,
+   the Wrong/Correct rating replacing Prev/Next — Correct marks
+   mastered). neutral-950 pinned (the v4 lab() trap 10).
+5. **Three post-GREEN repairs, each caught by a standing gate:**
+   (a) the axe sweep flagged the h1→h3 heading-order skip in the new
+   list rows — shipped the a11y-clean H2 with the ref's identical
+   computed styling (the ref's own H3 laxity, documented); (b) Quill's
+   snow stylesheet out-cascaded the bare `.ql-editor` pad-24 override —
+   scoped under `.sf-note-editor`; (c) pin calibrations (the
+   transition-race border alpha → settle-then-measure; the max-w-2xl
+   assertion → the button's computed maxWidth).
+6. **Full cold re-certification.** lint ✓ tsc ✓ unit **854/854** ✓
+   build REAL_EXIT=0 fresh. AP-116 census re-derived (parity-session7
+   grew 19→29 chromium): **123+119+50+59+58 = 409/409** cold, zero
+   failures, first pass every chunk.
+7. **The s77 sweep** (ref-resweep-s77.mjs, the standing class
+   re-tagged): **ok:true** — 9/9 invariants both hosts, brand tables
+   byte-matched, mobile drawers green on BOTH (drawerOpened/barOk/
+   brandOk all true — the user-flagged surface; no Tailwind v4
+   mobile-nav bug, traps 4/7/9 verified live yet again).
+8. **Evidence.** Dev-server screenshots captured on :3000
+   (`77-clone-{notes-editor,notes-tagged,flashcards-deck,flashcards-
+   study,flashcards-rating,mobile-notes,mobile-flashcards}.png`) + the
+   sweep's set + the probe pairs (`77-ref-*.png`) — VLM-verified: the
+   Quill toolbar renders in the white rounded card, the Font/tag rows,
+   the gradient Save, the readable dark note content, the in-page study
+   mode with the rating pair all render as measured.
+9. **Docs.** README (badge 1263, counts 854/409, the feature-table
+   rows, the S77 session row); AGENTS/CLAUDE counts; remediation-plan
+   header + the Cycle-27 execution record; this entry; the
+   docs/session_23.md transcript. `.env.example` verified current (the
+   DATABASE_URL/AUTH_SECRET/NEXT_PUBLIC_SITE_URL contract unchanged —
+   quill is a bundled dependency, no env surface).
+
+**Stage summary.** HEAD = `08b2986` + this cycle's commit (Batch AD
+source + pins + probes + sweep + screenshots + docs + worklog).
+Baselines: e2e **409/409** (123+119+50+59+58, 30 spec files censused),
+unit **854/854**, lint/tsc clean, build fresh, s77 sweep ok:true.
+Batch AD DONE. Standing debt unchanged: Batch R (RSC structural perf —
+deferred on the strengthened S75 CWV evidence); the pre-existing
+sf-clock-date dark-sweep artifact (recorded for a future audit-tools
+cycle).

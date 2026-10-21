@@ -395,3 +395,309 @@ test.describe("S7-P · Practice Tests bare empty state", () => {
     expect(cls).toContain("lucide-file-question");
   });
 });
+
+// ---------------------------------------------------------------------------
+// S7-AD · Batch AD (session-77) — the Notes inline editor + the Flashcards
+// study mode, computed-style measured on the reference 2026-10-21 (see
+// docs/remediation-plan.md Cycle 27). The ref ships a FUNCTIONAL Quill
+// rich-text editor (content persisted as HTML) and an in-page study pane
+// with a Wrong/Correct rating mechanic — both were missing entirely.
+// ---------------------------------------------------------------------------
+
+test.describe("S7-AD · the Notes rich-text editor (Batch AD)", () => {
+  test("AD1: the Quill editor renders inside the white rounded-2xl card with the 20-control toolbar", async ({ page }) => {
+    await page.goto("/Notes");
+    await hydrated(page);
+    await page.getByRole("button", { name: /Dot product intuition/ }).first().click();
+    const editor = page.locator(".ql-editor");
+    await expect(editor).toBeVisible();
+    // The card: white, rounded-2xl, 1px slate-200 border (measured w:772).
+    const cardCs = await editor.evaluate((el) => {
+      const card = el.closest("div[class*=rounded-2xl]");
+      if (!card) return null;
+      const s = getComputedStyle(card);
+      return { bg: s.backgroundColor, radius: s.borderRadius, border: `${s.borderTopWidth} ${s.borderTopColor}` };
+    });
+    expect(cardCs).toEqual({ bg: rgb(255, 255, 255), radius: "16px", border: "1px rgb(226, 232, 240)" });
+    // The toolbar: the full snow set — 3 pickers + 5 format groups (measured
+    // 20 controls on slate-50, pad 8px).
+    const toolbar = page.locator(".ql-toolbar");
+    await expect(toolbar).toBeVisible();
+    const tbCs = await toolbar.evaluate((el) => {
+      const s = getComputedStyle(el);
+      const controls = el.querySelectorAll("button, .ql-picker-label").length;
+      return { bg: s.backgroundColor, pad: s.paddingTop, controls };
+    });
+    expect(tbCs.bg).toBe(rgb(248, 250, 252)); // slate-50 strip
+    expect(tbCs.pad).toBe("8px");
+    expect(tbCs.controls).toBeGreaterThanOrEqual(20);
+    // The editor body: pad 24px, 16px text (measured).
+    const edCs = await editor.evaluate((el) => {
+      const s = getComputedStyle(el);
+      return { pad: s.padding, fontSize: s.fontSize };
+    });
+    expect(edCs.pad).toBe("24px");
+    expect(edCs.fontSize).toBe("16px");
+  });
+
+  test("AD1 superset: the toolbar bold actually formats (rich text is functional, like the ref)", async ({ page }) => {
+    await page.goto("/Notes");
+    await hydrated(page);
+    await page.getByRole("button", { name: /Dot product intuition/ }).first().click();
+    const editor = page.locator(".ql-editor");
+    await expect(editor).toBeVisible();
+    await editor.click();
+    await page.keyboard.type("Bold probe.");
+    await page.keyboard.press("Control+a");
+    await page.locator(".ql-toolbar button.ql-bold").click();
+    await page.keyboard.press("Control+End");
+    const hasStrong = await editor.evaluate((el) => el.querySelector("strong") !== null);
+    expect(hasStrong).toBe(true);
+  });
+
+  test("AD3: the title input is 14px/700 (text-sm, measured)", async ({ page }) => {
+    await page.goto("/Notes");
+    await hydrated(page);
+    await page.getByRole("button", { name: /Dot product intuition/ }).first().click();
+    const title = page.locator('input[placeholder="Note title..."]');
+    await expect(title).toBeVisible();
+    const cs = await title.evaluate((el) => ({
+      weight: getComputedStyle(el).fontWeight,
+      size: getComputedStyle(el).fontSize,
+    }));
+    expect(cs.weight).toBe("700");
+    expect(cs.size).toBe("14px");
+  });
+
+  test("AD5: the Font row — 'Font:' label 12px/500 slate-500 + the black Divider button", async ({ page }) => {
+    await page.goto("/Notes");
+    await hydrated(page);
+    await page.getByRole("button", { name: /Dot product intuition/ }).first().click();
+    const label = page.getByText("Font:", { exact: true });
+    await expect(label).toBeVisible();
+    const labelCs = await label.evaluate((el) => {
+      const s = getComputedStyle(el);
+      return { size: s.fontSize, weight: s.fontWeight, color: s.color };
+    });
+    expect(labelCs.size).toBe("12px");
+    expect(labelCs.weight).toBe("500");
+    expect(labelCs.color).toBe(rgb(100, 116, 139)); // slate-500
+    const divider = page.getByRole("button", { name: /Divider/i });
+    await expect(divider).toBeVisible();
+    const dCs = await divider.evaluate((el) => {
+      const s = getComputedStyle(el);
+      return { bg: s.backgroundColor, color: s.color, radius: s.borderRadius, size: s.fontSize };
+    });
+    expect(dCs.bg).toBe(rgb(10, 10, 10)); // neutral-950 black button
+    expect(dCs.color).toBe(rgb(250, 250, 250)); // neutral-50 text
+    expect(dCs.radius).toBe("6px");
+    expect(dCs.size).toBe("12px");
+  });
+
+  test("AD6: the seeded tag renders as a dark pill + the 'Add tag...' input exists", async ({ page }) => {
+    await page.goto("/Notes");
+    await hydrated(page);
+    await page.getByRole("button", { name: /Dot product intuition/ }).first().click();
+    // Seeded tag "calculus" → editor pill: neutral-800 bg + neutral-50 text,
+    // radius 6px, 12px (measured on the reference).
+    const pill = page.locator('[aria-label="Note tags"] span', { hasText: "calculus" });
+    await expect(pill).toBeVisible();
+    const cs = await pill.evaluate((el) => {
+      const s = getComputedStyle(el);
+      return { bg: s.backgroundColor, color: s.color, radius: s.borderRadius, size: s.fontSize };
+    });
+    expect(cs.bg).toBe(rgb(38, 38, 38)); // neutral-800
+    expect(cs.color).toBe(rgb(250, 250, 250)); // neutral-50
+    expect(cs.radius).toBe("6px");
+    expect(cs.size).toBe("12px");
+    const tagInput = page.locator('input[placeholder="Add tag..."]');
+    await expect(tagInput).toBeVisible();
+    const tCs = await tagInput.evaluate((el) => ({
+      size: getComputedStyle(el).fontSize,
+      h: Math.round(el.getBoundingClientRect().height),
+    }));
+    expect(tCs.size).toBe("14px");
+    expect(tCs.h).toBeLessThanOrEqual(32); // measured h:28
+  });
+
+  test("AD4: the Save button is a gradient button with white text (honest deviation: no yellow quirk)", async ({ page }) => {
+    await page.goto("/Notes");
+    await hydrated(page);
+    await page.getByRole("button", { name: /Dot product intuition/ }).first().click();
+    const save = page.getByRole("button", { name: "Save", exact: true });
+    await expect(save).toBeVisible();
+    const cs = await save.evaluate((el) => {
+      const s = getComputedStyle(el);
+      return { image: s.backgroundImage, color: s.color, radius: s.borderRadius };
+    });
+    expect(cs.image).toContain("linear-gradient");
+    expect(cs.color).toBe(rgb(255, 255, 255)); // the ref's yellow text is its platform quirk
+    expect(cs.radius).toBe("6px");
+  });
+
+  test("AD7: the list row — violet-50 + 2px violet-200 selected, 16px/600 title, 12px preview, tag pill", async ({ page }) => {
+    await page.goto("/Notes");
+    await hydrated(page);
+    const row = page.getByRole("button", { name: /Dot product intuition/ }).first();
+    await row.click();
+    // transition-colors races the class swap — the bg rounds clean mid-
+    // flight but the border alpha exposes it (measured rgba(…,0.97) at
+    // t≈150ms·0.97); settle before reading computed styles.
+    await page.waitForTimeout(300);
+    const cs = await row.evaluate((el) => {
+      const s = getComputedStyle(el);
+      return {
+        bg: s.backgroundColor,
+        border: `${s.borderTopWidth} ${s.borderTopColor}`,
+        radius: s.borderRadius,
+        pad: s.padding,
+      };
+    });
+    expect(cs.bg).toBe(rgb(245, 243, 255)); // violet-50
+    // transition-colors races the border-transparent → violet-200 fill
+    // (interpolated alpha — the family's toContain precedent, S7-A back).
+    expect(cs.border).toContain("2px");
+    expect(cs.border).toContain(rgb(221, 214, 254)); // violet-200
+    expect(cs.radius).toBe("12px");
+    expect(cs.pad).toBe("12px"); // p-3 (measured — the ref's row is tighter than the old p-4)
+    const h3 = row.locator("h2").first();
+    const h3Cs = await h3.evaluate((el) => {
+      const s = getComputedStyle(el);
+      return { size: s.fontSize, weight: s.fontWeight, color: s.color };
+    });
+    expect(h3Cs.size).toBe("16px");
+    expect(h3Cs.weight).toBe("600");
+    expect(h3Cs.color).toBe(rgb(30, 41, 59)); // slate-800
+    // The ref ships an H3 here (measured) — axe flags the h1→h3 skip, so the
+    // clone ships the heading-order-clean H2 with identical styling (the
+    // documented a11y-win precedent).
+    await expect(row.locator("h3")).toHaveCount(0);
+    const preview = row.locator("p").first();
+    const pCs = await preview.evaluate((el) => {
+      const s = getComputedStyle(el);
+      return { size: s.fontSize, color: s.color, text: (el.textContent || "").slice(0, 20) };
+    });
+    expect(pCs.size).toBe("12px");
+    expect(pCs.color).toBe(rgb(100, 116, 139)); // slate-500
+    expect(pCs.text).toBe("The dot product meas"); // HTML-stripped preview via stripHtmlPreview
+    // The tag pill in the row (readable text — honest deviation from the
+    // ref's invisible white-on-slate pill).
+    const pill = row.locator('span[data-note-tag="calculus"]');
+    await expect(pill).toBeVisible();
+  });
+});
+
+test.describe("S7-AD · the Flashcards study mode rework (Batch AD)", () => {
+  test("AD8/AD9: study renders IN-PAGE (no fixed overlay) with the black Exit Study + '1 / 4' counter", async ({ page }) => {
+    await page.goto("/Flashcards");
+    await hydrated(page);
+    await page.locator('[aria-label="Deck rows"] > *', { hasText: "Integration rules" }).first().click();
+    await page.locator('[aria-label="Deck detail"]').getByRole("button", { name: "Study" }).click();
+    const study = page.locator('[aria-label="Study mode"]');
+    await expect(study).toBeVisible();
+    // IN-PAGE: the container is not a fixed overlay (measured overlayFound:false).
+    const pos = await study.evaluate((el) => getComputedStyle(el).position);
+    expect(pos).not.toBe("fixed");
+    // Exit Study: neutral-950 bg + neutral-50 text + radius 6 (measured
+    // w:137 h:36, 14px/500).
+    const exit = study.getByRole("button", { name: "Exit Study" });
+    await expect(exit).toBeVisible();
+    const exitCs = await exit.evaluate((el) => {
+      const s = getComputedStyle(el);
+      return { bg: s.backgroundColor, color: s.color, radius: s.borderRadius, size: s.fontSize };
+    });
+    expect(exitCs.bg).toBe(rgb(10, 10, 10));
+    expect(exitCs.color).toBe(rgb(250, 250, 250));
+    expect(exitCs.radius).toBe("6px");
+    expect(exitCs.size).toBe("14px");
+    // Counter: "1 / 4" (spaces, no deck name), 16px/400 slate-500 (measured).
+    const counter = study.getByText(/^1 \/ 4$/);
+    await expect(counter).toBeVisible();
+    const cCs = await counter.evaluate((el) => {
+      const s = getComputedStyle(el);
+      return { size: s.fontSize, weight: s.fontWeight, color: s.color };
+    });
+    expect(cCs.size).toBe("16px");
+    expect(cCs.weight).toBe("400");
+    expect(cCs.color).toBe(rgb(100, 116, 139)); // slate-500
+    // The hint: "Click card to flip" 16px slate-400 (measured).
+    const hint = study.getByText("Click card to flip");
+    await expect(hint).toBeVisible();
+    expect(await hint.evaluate((el) => getComputedStyle(el).color)).toBe(rgb(148, 163, 184));
+  });
+
+  test("AD10: the study card is max-w-2xl with 24px/500 front text and 20px/400 slate-700 back", async ({ page }) => {
+    await page.goto("/Flashcards");
+    await hydrated(page);
+    await page.locator('[aria-label="Deck rows"] > *', { hasText: "Integration rules" }).first().click();
+    await page.locator('[aria-label="Deck detail"]').getByRole("button", { name: "Study" }).click();
+    const study = page.locator('[aria-label="Study mode"]');
+    const flip = study.locator("[data-flip-card]");
+    await expect(flip).toBeVisible();
+    const w = await flip.evaluate((el) => {
+      const btn = el.closest("button");
+      if (!btn) return { max: "none", w: 0 };
+      const s = getComputedStyle(btn);
+      return { max: s.maxWidth, w: Math.round(btn.getBoundingClientRect().width) };
+    });
+    // max-w-2xl (measured 672px on the ref at 1440 — the 1280 e2e viewport
+    // narrows the pane to ~580, so the CAP is the viewport-independent
+    // assertion; the old clone shipped max-w-lg = 512).
+    expect(w.max).toBe("672px");
+    expect(w.w).toBeGreaterThanOrEqual(512);
+    const front = flip.locator("[data-flip-front] p");
+    const frontCs = await front.evaluate((el) => {
+      const s = getComputedStyle(el);
+      return { size: s.fontSize, weight: s.fontWeight, color: s.color };
+    });
+    expect(frontCs.size).toBe("24px");
+    expect(frontCs.weight).toBe("500");
+    expect(frontCs.color).toBe(rgb(255, 255, 255));
+    await flip.click();
+    const back = flip.locator("[data-flip-back] p");
+    await expect(back).toBeVisible();
+    const backCs = await back.evaluate((el) => {
+      const s = getComputedStyle(el);
+      return { size: s.fontSize, weight: s.fontWeight, color: s.color };
+    });
+    expect(backCs.size).toBe("20px");
+    expect(backCs.weight).toBe("400");
+    expect(backCs.color).toBe(rgb(51, 65, 85)); // slate-700
+  });
+
+  test("AD11: the Wrong/Correct rating — Wrong neutral-950/red-600, Correct green-500; Correct advances; no Prev/Next", async ({ page }) => {
+    await page.goto("/Flashcards");
+    await hydrated(page);
+    await page.locator('[aria-label="Deck rows"] > *', { hasText: "Integration rules" }).first().click();
+    await page.locator('[aria-label="Deck detail"]').getByRole("button", { name: "Study" }).click();
+    const study = page.locator('[aria-label="Study mode"]');
+    // Prev/Next are gone — the rating IS the navigation (measured: the ref
+    // has no prev/next buttons).
+    await expect(study.getByRole("button", { name: "Previous card" })).toHaveCount(0);
+    await expect(study.getByRole("button", { name: "Next card" })).toHaveCount(0);
+    // Rating buttons only after the flip (measured).
+    await expect(study.getByRole("button", { name: "Wrong", exact: true })).toHaveCount(0);
+    await study.locator("[data-flip-card]").click();
+    const wrong = study.getByRole("button", { name: "Wrong", exact: true });
+    const correct = study.getByRole("button", { name: "Correct", exact: true });
+    await expect(wrong).toBeVisible();
+    await expect(correct).toBeVisible();
+    const wCs = await wrong.evaluate((el) => {
+      const s = getComputedStyle(el);
+      return { bg: s.backgroundColor, color: s.color, radius: s.borderRadius };
+    });
+    expect(wCs.bg).toBe(rgb(10, 10, 10)); // neutral-950
+    expect(wCs.color).toBe(rgb(220, 38, 38)); // red-600 text (measured)
+    expect(wCs.radius).toBe("6px");
+    const cCs = await correct.evaluate((el) => {
+      const s = getComputedStyle(el);
+      return { bg: s.backgroundColor, color: s.color, radius: s.borderRadius };
+    });
+    expect(cCs.bg).toBe(rgb(34, 197, 94)); // green-500
+    expect(cCs.color).toBe(rgb(255, 255, 255)); // honest deviation: no yellow quirk
+    expect(cCs.radius).toBe("6px");
+    // Correct advances the counter.
+    await correct.click();
+    await expect(study.getByText(/^2 \/ 4$/)).toBeVisible();
+  });
+});

@@ -1,9 +1,9 @@
 # Omni-Study1 — Remediation Plan & Execution Record
 
-> **Status: COMPLETE through Batch AC (session-76).** Every batch below has
+> **Status: COMPLETE through Batch AD (session-77).** Every batch below has
 > been executed TDD-style (spec-red → fix → spec-green) and verified:
-> **847/847 Vitest unit**, **399/399 Playwright e2e** across the 5-chunk
-> cold map (123+109+50+59+58, 30 spec files censused exactly once; the
+> **854/854 Vitest unit**, **409/409 Playwright e2e** across the 5-chunk
+> cold map (123+119+50+59+58, 30 spec files censused exactly once; the
 > per-chunk count includes that chunk's auth setup), lint clean,
 > `tsc --noEmit` clean, production build green with the standalone asset
 > contract intact. This document is the durable record of what was broken,
@@ -794,6 +794,146 @@ byte-matched, mobile drawers green on both). Evidence:
 + `scripts/ref-resweep-s76.mjs`. **Batch AC: DONE.** Standing debt
 unchanged: Batch R (RSC structural perf — the deferral evidence
 strengthened in S75 stands).
+
+### Cycle 27 (session-77) — the Batch AD probe (the Notes inline editor + the Flashcards study mode, measured)
+
+The two remaining unmeasured populated surfaces (named by the S76
+record) probed through the reference's own UI in seven iterations
+(`scripts/ref-ad-{probe,notes,notes2,notes3,flashcards,flashcards2,flashcards3}-s77.mjs`,
+the AP-118/119 protocol — every run cleaned to FINAL-RESIDUE: 0; the
+pre-existing orphan `Flashcard` on the ref account was never touched).
+All values below are machine-read computed styles + entity API state,
+cross-checked with screenshots + VLM (the DOM is the authority).
+
+| # | Surface | Ref (computed-style measured 2026-10-21, `77-ref-*.png`) | Clone today | Class |
+|---|---------|---------------------------------------------------------------|-------------|-------|
+| AD1 | Notes editor engine | **Quill rich-text** (`ql-editor ql-snow`), toolbar = the full snow set: 3 pickers (header/font/size ~98-108px) + B/I/U/S + 3 list + 2 indent + 3 pickers (color/background/align) + blockquote + code-block + link + image + clean = **20 controls**, toolbar strip bg slate-50 pad 8px; **toolbar FUNCTIONAL** (select-all + bold → `<strong>` in the saved entity); `content` persisted as **HTML** (`"<p><strong>Probe paragraph one.</strong></p>"`) | plain `<textarea>`, no toolbar, plain-text content | **E1 functional** |
+| AD2 | Notes editor card | `bg-white rounded-2xl border border-slate-200 overflow-hidden` (rgb 255/226,232,240, radius 16px) wrapping [toolbar strip + editor]; `.ql-editor` pad **24px**, 16px text, w:770; card w:772 h:556 in the `h-[calc(100vh-8rem)] gap-6` two-pane row | `sf-card mt-3 p-4` textarea | E2 |
+| AD3 | Notes title input | "Note title..." placeholder, **14px/700**, borderless, transparent (the ref's TYPED text is white-on-white — its own bug); title row = input + a black square icon button + the Save button | `text-xl` (20px)/700 Input | E3 |
+| AD4 | Notes Save | gradient button + floppy icon, computed text **rgb(255,255,0) yellow** (the ref's gradient-button text quirk family); **NO autosave** — typed-but-unsaved content is lost on navigation (the entity stays empty until Save is clicked) | autosave-on-blur only, no Save button | E4 |
+| AD5 | Notes Font row | "Font:" label **12px/500 slate-500** + a font picker + black **"Divider" button** (neutral-950 bg rgb(10,10,10), neutral-50 text, radius 6px, 12px, h:32, w:89) above the toolbar | absent | E5 |
+| AD6 | Notes tag authoring | "Add tag..." input (14px, **1px neutral-800 border**, h:28) + Enter → editor tag pill **neutral-800 bg + neutral-50 text, radius 6px, 12px, h:22** (visible); entity `tags: ["probe-tag"]`; the LIST row's tag pill is slate-200/50 bg + **white text (invisible — the ref's bug family again)** | tags parsed for the filter only — no authoring UI, no pills | E6 |
+| AD7 | Notes list row | selected: `bg-violet-50` (rgb 245,243,255) + **2px violet-200 border** (rgb 221,214,254) + rounded-xl + **p-3** (12px); title **H3 16px/600 slate-800**; preview **P 12px/400 slate-500**; + tag pill; **NO notebook/date line** (row = title + preview + tag only, h:72) | p-4, `border-sf-primary/30`, h2 text-sm/500, text-xs preview + a `notebook · date` line | E7 |
+| AD8 | FC study container | **IN-PAGE pane** (replaces the deck-detail region when studying; no fixed/overlay element exists — `overlayFound:false`) | `fixed inset-0 z-50 bg-black/40` overlay | E1 structural |
+| AD9 | FC study chrome | **"Exit Study" button**: neutral-950 bg, neutral-50 text, radius 6px, 14px/500, w:137 h:36; counter **"1 / 2"** (spaces, no deck name) 16px/400 **slate-500**; hint **"Click card to flip"** 16px/400 slate-400 below the card | round white X icon button; "Card 1 of 2 · {deck}" white/80; no hint | E2 |
+| AD10 | FC study card | container `w-full max-w-2xl` (**672px**) h:320; front face `absolute inset-0 bg-gradient-to-br from-violet-500 to-indigo-600 rounded-2xl p-8` (computed `linear-gradient(to right bottom, rgb(139,92,246), rgb(79,70,229))` — the clone's accent tokens resolve to the SAME stops ✓) + front text **24px/500 white**; back face `bg-white border-2 border-violet-200 rounded-2xl p-8` ✓ + back text **20px/400 slate-700**; flip = a state swap (no transform on the container) | max-w-lg (512px); front text text-xl/600; back text text-lg slate-800; **3D rotateY flip — deliberate superset flourish, KEEP** | E3 |
+| AD11 | FC rating flow | after the flip: **Wrong** (neutral-950 bg + **red-600 text** rgb(220,38,38), radius 6px, h:40) + **Correct** (green-500 bg rgb(34,197,94) + the yellow-text quirk, h:40); rating ADVANCES the counter; the last card STAYS displayed (no completion screen — headings:[]) | Prev/Next outline buttons only — **no rating mechanic at all** | **E4 functional** |
+| AD12 | FC deck extras (measured, matching or near) | deck sidebar button (selected): violet-50 + 2px violet-200 + p-4 + violet-500 swatch + "N cards" 12px slate-500; card rows: `bg-white rounded-xl border-slate-200 p-4 hover:shadow-md` + difficulty pill **yellow-100/yellow-700** 12px + front 16px/500 slate-800 + back 14px slate-500 + red-500 delete icon | card grid ✓ matches (font-medium 500 vs ref 400 on the pill — cosmetic); difficulty pill ✓ already yellow-100/yellow-700 (AC7 family); edit icon slate-400 (the ref's reads white — its invisible-icon quirk) | match / cosmetic |
+
+**Measured-and-MATCHING (no drift):** the front-face gradient stops
+(exact violet-500→indigo-600), the back-face anatomy (white + 2px
+violet-200 + rounded-2xl + p-8), the card grid rows + difficulty pill,
+the deck dialog (name/description/color, default #8b5cf6), the Add
+Flashcard dialog (two textareas + difficulty select), the zero-state
+chrome ("No decks yet" / "Select a deck" / "Create Deck"), the Notes
+left-pane chrome (search + All Notebooks/All Tags filters + New Note —
+pinned S5-L/S8-G), and the Notes entity field coverage the clone
+already models (title/content/tags/notebookId).
+
+**Execution TODO (TDD — RED pins first, then GREEN source, in this order):**
+
+1. **AD1 the Quill engine** — `bun add quill` (the same library the ref
+   ships — snow theme). A `QuillEditor` client wrapper (dynamic import
+   in `useEffect`, `quill/dist/quill.snow.css` imported in the view),
+   the measured 20-control toolbar array, a custom `hr` blot for the
+   Divider button, debounced onChange → PATCH (the autosave superset).
+   Content stays a string in the NoteRow contract — now HTML.
+2. **AD2/AD3/AD5/AD6 the editor chrome** — the card reworked to
+   `rounded-2xl border border-slate-200 bg-white overflow-hidden`
+   wrapping [toolbar strip + `.ql-editor` pad-6 (24px) text-base]; the
+   title input → `text-sm font-bold` (14px/700, placeholder unchanged —
+   S7-F pin stays valid); the Font row ("Font:" 12px/500 slate-500 +
+   font select + the black Divider button); the tag row ("Add tag..."
+   h-7 input + Enter → neutral-800/neutral-50 pills with remove ×);
+   noteSchema gains nothing (tags already string).
+3. **AD4 the Save button** — gradient + Save icon + **white text**
+   (honest deviation from the yellow quirk), immediate PATCH + toast;
+   autosave stays (superset — the ref loses unsaved content, the clone
+   never does).
+4. **AD7 the list row** — p-3, selected `bg-violet-50 border-2
+   border-violet-200`, title h3 `text-base font-semibold slate-800`,
+   preview `text-xs slate-500` via the new **`stripHtmlPreview`** helper
+   (`src/lib/text.ts` — unit pins RED first), the tag pill (readable
+   slate-600-on-slate-100 — honest deviation from the invisible ref
+   pill), drop the notebook·date line (match the ref's 3-line row).
+5. **AD8/AD9/AD10 the study rework** — in-page study pane replacing the
+   deck-detail region (keep `aria-label="Study mode"` + `data-flip-*`
+   so the S7-A pin stays green); "Exit Study" black button; counter
+   `"{i+1} / {n}"` text-base slate-500; card `max-w-2xl` + front
+   `text-2xl font-medium` + back `text-xl font-normal slate-700`; the
+   "Click card to flip" hint text-base slate-400; KEEP the 3D flip
+   (superset flourish — static states match the ref exactly).
+6. **AD11 the rating mechanic** — after the flip: Wrong (neutral-950 +
+   red-600 text) / Correct (green-500 + white text) buttons; Correct
+   marks the card `mastered` (the existing column) and advances; Wrong
+   advances without mastering; the last card stays displayed (match the
+   ref); Prev/Next REMOVED (the rating IS the navigation — no existing
+   pin covers them).
+7. **globals.css** — pin `neutral-950` (#0a0a0a) + `green-500`
+   (#22c554) (trap 10 — assert-on-means-pin); the `.sf-note-hr` style;
+   dark-mode overrides for the Quill surfaces (dark:bg-slate-900 card,
+   slate-800 toolbar strip, slate-200 editor text — the documented dark
+   superset).
+8. **Seed** — tags on ONE seeded note ("Dot product intuition" →
+   `["linear-algebra","vectors"]`) so the tag pill + editor pills render
+   on the populated account (the other notes keep none — the no-tag
+   rows stay valid).
+9. **e2e RED** — an `S7-AD` pin block (Notes editor ×6: Quill present +
+   toolbar count + card anatomy + title 14px/700 + Save + tag flow +
+   list-row anatomy + HTML-stripped preview; study ×5: in-page container
+   + Exit Study black + "1 / 2" counter + max-w-2xl/24px front +
+   Wrong/Correct + hint + no prev/next) run RED against the pre-change
+   standalone build, then GREEN.
+10. **Doc hygiene** — README badge + session row, AGENTS/CLAUDE counts,
+    this record's execution paragraph, worklog, `docs/session_23.md`.
+
+Honest deviations ledger (all pinned with comments): every text the ref
+renders white-on-white stays READABLE in the clone (title input, editor
+body, list tag pill — the ref's own bug family, documented); the Save
+and Correct button text ships white (the ref's yellow-on-gradient
+quirk); the 3D flip animation kept (superset flourish); the clone's
+autosave kept alongside Save (superset — the ref silently discards
+unsaved content); edit/delete card icons slate-400 (the ref's edit icon
+reads invisible-white).
+
+**Cycle 27 execution record (session-77).** The plan above was executed
+in full, TDD: 7 unit pins (`stripHtmlPreview` — tags stripped, block
+joins, entities decoded, length-capped ellipsis, plain-text passthrough)
+RED-first (the module did not exist); 10 e2e pins in the S7-AD blocks
+(Notes editor ×7, study mode ×3) run **10/10 RED against the pre-change
+standalone build** → GREEN 10/10 after the source landed. GREEN source:
+`quill@2.0.3` (the reference's own engine) mounted through a new
+`QuillEditor` client wrapper (dynamic import + the measured 20-control
+snow toolbar + a custom `hr` blot for the Divider button + debounced
+autosave + aria-labeled toolbar buttons — Quill ships them nameless);
+the notes editor chrome (14px/700 title, Font row + black Divider, tag
+row with neutral-800 pills on the already-modeled `Note.tags` JSON, the
+gradient Save with immediate PATCH + toast); the list row rework
+(violet-50 + 2px violet-200 + p-3 + 16px/600 title + the
+`stripHtmlPreview` 12px slate-500 preview + readable tag pill, no
+notebook/date line); the flashcards study rework (in-page pane, black
+Exit Study, "N / M" counter, max-w-2xl card, 24px/500 front + 20px/400
+slate-700 back, the flip hint, the Wrong/Correct rating pair — Correct
+marks `mastered` and advances; Prev/Next removed). Three post-GREEN
+repairs, each caught by a standing gate: (a) the axe sweep flagged the
+heading-order skip (h1→h3) — the rows ship the a11y-clean H2 with the
+ref's identical computed 16px/600 styling (the ref's own H3 is its
+laxity); (b) Quill's own snow stylesheet out-cascaded the bare
+`.ql-editor` pad-24 override — scoped under `.sf-note-editor` for
+specificity; (c) two pin calibration fixes (the border transition-race
+alpha — settle-then-measure; the max-w-2xl assertion moved to the
+button's computed maxWidth, viewport-independent). Gates: lint ✓ tsc ✓
+unit **854/854** ✓ build REAL_EXIT=0 fresh; cold re-certification
+**409/409** (123+119+50+59+58, first pass every chunk; parity-session7
+grew 19→29 chromium with the 10 S7-AD pins); s77 sweep ok:true (9/9
+invariants both hosts, brand tables byte-matched, mobile drawers green
+on both). Evidence: `docs/screenshots/77-*.png` (the probe pairs + the
+debug captures + VLM-verified clone surfaces) +
+`scripts/ref-ad-{probe,notes,notes2,notes3,flashcards,flashcards2,flashcards3}-s77.mjs`
++ `scripts/capture-s77-clone.mjs` + `scripts/ref-resweep-s77.mjs`.
+**Batch AD: DONE.** Standing debt unchanged: Batch R (RSC structural
+perf — the S75 deferral evidence stands) + the pre-existing
+`sf-clock-date` dark-sweep artifact (a future audit-tools cycle).
 
 
 

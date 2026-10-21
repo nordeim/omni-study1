@@ -1,24 +1,39 @@
 "use client";
 
 // ---------------------------------------------------------------------------
-// Notes (S8-G): TWO-PANE — a w-80 border-r left pane (the view h1 + icon
-// INSIDE, flanked by a 36px gradient dropdown: New note / New notebook; icon
-// search; notebook filter) and a BARE right pane holding the centered empty
-// state or the editor (editor keeps sf-card chrome).
+// Notes (S8-G + S77/AD): TWO-PANE — a w-80 border-r left pane (the view h1
+// + icon INSIDE, flanked by a 36px gradient dropdown: New note / New
+// notebook; icon search; notebook + tag filters) and a BARE right pane
+// holding the centered empty state or the editor.
+//
+// Session-77 Batch AD (computed-style measured 2026-10-21): the editor is
+// the reference's own anatomy — title row (14px/700 input + black actions
+// button + gradient Save), Font row ("Font:" label + typeface select + the
+// black Divider button), tag row (dark pills + "Add tag..." input), then the
+// white rounded-2xl card wrapping the FUNCTIONAL Quill snow editor (content
+// persisted as HTML). The list row: violet-50 + 2px violet-200 selected,
+// p-3, h3 16px/600 + 12px slate-500 preview + tag pill — no notebook/date
+// line (measured). Honest deviations: readable text everywhere (the ref
+// renders its typed title/editor text white-on-white — its own bug), Save
+// text white (the ref's yellow-on-gradient quirk), autosave KEPT alongside
+// Save (superset — the ref silently discards unsaved content).
 // ---------------------------------------------------------------------------
 
 import * as React from "react";
 import {
   BookOpen,
   FileText,
+  Minus,
   MoreVertical,
   Notebook,
   Pencil,
   Plus,
+  Save,
   Search,
   Trash2,
   Folder,
   Tag,
+  X,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -47,20 +62,36 @@ import {
 import { useToast } from "@/components/ui/toast";
 import { EmptyState } from "@/components/views/shared";
 import {
+  QuillEditor,
+  type EditorFont,
+  type QuillEditorHandle,
+} from "@/components/views/quill-editor";
+import {
   mutations,
   useDataStore,
   type NoteInput,
   type NoteRow,
   type NotebookRow,
 } from "@/lib/data";
-import { formatShortWithYear } from "@/lib/date";
 import { apiSend, ApiError } from "@/lib/api";
+import { stripHtmlPreview } from "@/lib/text";
 import { cn } from "@/lib/utils";
 
 type DialogState =
   | { open: false }
   | { open: true; kind: "note"; editing: NoteRow | null }
   | { open: true; kind: "notebook"; editing: NotebookRow | null };
+
+/** The NoteRow.tags JSON contract → a sorted unique list (safe parse). */
+function parseNoteTags(raw: string): string[] {
+  try {
+    const parsed: unknown = JSON.parse(raw || "[]");
+    if (!Array.isArray(parsed)) return [];
+    return parsed.filter((t): t is string => typeof t === "string" && t.length > 0);
+  } catch {
+    return [];
+  }
+}
 
 export function NotesView() {
   const notes = useDataStore((s) => s.notes);
@@ -80,6 +111,11 @@ export function NotesView() {
   const [name, setName] = React.useState("");
   const [busy, setBusy] = React.useState(false);
   const [error, setError] = React.useState("");
+  // S77/AD: the editor's measured chrome state — the Font row typeface and
+  // the tag-row draft.
+  const [font, setFont] = React.useState<EditorFont>("sans");
+  const [tagDraft, setTagDraft] = React.useState("");
+  const editorRef = React.useRef<QuillEditorHandle | null>(null);
 
   const allTags = React.useMemo(() => {
     const set = new Set<string>();
@@ -208,6 +244,44 @@ export function NotesView() {
     }
   };
 
+  // ---- S77/AD: the editor's tag row + Save ----
+  // parseNoteTags is a trivial JSON.parse — no memo (the React Compiler
+  // rejects the optional-chained dependency, and the cost is nil).
+  const selectedTags = selected ? parseNoteTags(selected.tags) : [];
+
+  const saveTags = (next: string[]) => {
+    void patchSelected({ tags: JSON.stringify(next) });
+  };
+
+  const addTag = () => {
+    const tag = tagDraft.trim().replace(/^#/, "");
+    setTagDraft("");
+    if (!tag || tag.length > 24 || selectedTags.includes(tag)) return;
+    saveTags([...selectedTags, tag]);
+  };
+
+  const removeTag = (tag: string) => {
+    saveTags(selectedTags.filter((t) => t !== tag));
+  };
+
+  // The Quill wrapper debounces its own change events (autosave superset);
+  // Save flushes immediately with the live editor content.
+  const onContentChange = (html: string) => {
+    if (!selected) return;
+    updateNote(selected.id, { content: html }).catch(() => {});
+  };
+
+  const saveNow = async () => {
+    if (!selected) return;
+    const html = editorRef.current?.getContent() ?? selected.content;
+    try {
+      await updateNote(selected.id, { content: html });
+      toast.success("Note saved.");
+    } catch (err: unknown) {
+      toast.error(err instanceof ApiError ? err.message : "Save failed.");
+    }
+  };
+
   return (
     <div className="flex h-[calc(100vh-8rem)] gap-6">
       {/* Left pane */}
@@ -298,31 +372,44 @@ export function NotesView() {
             </p>
           ) : (
             filtered.map((note) => {
-              const notebook = notebooks.find((nb) => nb.id === note.notebookId);
+              const tags = parseNoteTags(note.tags);
               return (
                 <button
                   key={note.id}
                   type="button"
                   onClick={() => setSelectedId(note.id)}
                   className={cn(
-                    "block w-full rounded-xl border-2 p-4 text-left outline-none transition-colors focus-visible:ring-2 focus-visible:ring-sf-primary/40",
+                    "block w-full rounded-xl border-2 p-3 text-left outline-none transition-colors focus-visible:ring-2 focus-visible:ring-sf-primary/40",
                     effectiveNoteId === note.id
-                      ? "border-sf-primary/30 bg-violet-50 dark:bg-slate-800"
+                      ? "border-violet-200 bg-violet-50 dark:border-violet-900 dark:bg-slate-800"
                       : "border-transparent bg-slate-50 hover:border-slate-200 dark:bg-slate-800/50 dark:hover:border-slate-700",
                   )}
                 >
-                  <div className="flex items-start justify-between gap-2">
-                    <h2 className="truncate text-sm font-medium text-slate-700 dark:text-slate-200">
-                      {note.title}
-                    </h2>
-                  </div>
+                  {/* S77/AD7 (measured): 16px/600 slate-800 title — the ref
+                      renders H3 here (its own heading-order laxity; axe flags
+                      h1→h3), so the clone ships the a11y-clean H2 with the
+                      identical computed styling. 12px slate-500 preview via
+                      stripHtmlPreview; tag pill after the preview; NO
+                      notebook/date line. */}
+                  <h2 className="truncate text-base font-semibold text-slate-800 dark:text-slate-100">
+                    {note.title}
+                  </h2>
                   <p className="mt-1 truncate text-xs text-slate-500 dark:text-slate-400">
-                    {note.content.replace(/[#*\n]/g, " ").slice(0, 60) || "Empty note"}
+                    {stripHtmlPreview(note.content) || "Empty note"}
                   </p>
-                  <p className="mt-1 text-xs text-slate-500">
-                    {notebook ? `${notebook.name} · ` : ""}
-                    {formatShortWithYear(new Date(note.updatedAt))}
-                  </p>
+                  {tags.length > 0 && (
+                    <p className="mt-1.5 flex flex-wrap gap-1">
+                      {tags.map((tag) => (
+                        <span
+                          key={tag}
+                          data-note-tag={tag}
+                          className="rounded bg-slate-100 px-1.5 py-0.5 text-xs text-slate-600 dark:bg-slate-700 dark:text-slate-300"
+                        >
+                          {tag}
+                        </span>
+                      ))}
+                    </p>
+                  )}
                 </button>
               );
             })
@@ -358,23 +445,24 @@ export function NotesView() {
             <p className="text-sm text-slate-500">Select a note from the list.</p>
           </div>
         ) : (
-          <>
-            <div className="flex min-h-0 flex-1 flex-col">
+          <div className="flex min-h-0 flex-1 flex-col">
+            {/* Title row (S77/AD3 measured): 14px/700 title + the black
+                square actions button + the gradient Save. */}
             <div className="flex items-center gap-2">
               <Input
                 aria-label="Note title"
                 placeholder="Note title..."
                 value={selected.title}
                 onChange={(e) => updateNote(selected.id, { title: e.target.value }).catch(() => {})}
-                className="border-none bg-transparent text-xl font-bold shadow-none focus-visible:ring-0 dark:bg-transparent"
+                className="h-9 flex-1 border-none bg-transparent text-sm font-bold shadow-none focus-visible:ring-0 dark:bg-transparent"
               />
-              <div className="flex shrink-0 items-center gap-1">
+              <div className="flex shrink-0 items-center gap-2">
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <button
                       type="button"
                       aria-label="Note actions"
-                      className="flex size-8 items-center justify-center rounded-lg text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
+                      className="flex size-9 items-center justify-center rounded-md bg-neutral-950 text-neutral-50 transition-opacity hover:opacity-90 focus-visible:ring-2 focus-visible:ring-sf-primary/40 focus-visible:outline-none dark:bg-neutral-800"
                     >
                       <MoreVertical className="size-4" strokeWidth={2} />
                     </button>
@@ -409,28 +497,96 @@ export function NotesView() {
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
+                {/* S77/AD4 (measured): the ref's explicit Save — gradient +
+                    floppy icon. Text stays WHITE (the ref's yellow-on-
+                    gradient is its platform quirk); autosave keeps running
+                    (superset — the ref discards unsaved content). */}
+                <Button
+                  type="button"
+                  variant="gradient"
+                  className="sf-gradient-shadow h-9 px-4"
+                  onClick={saveNow}
+                >
+                  <Save className="size-4" strokeWidth={2} />
+                  Save
+                </Button>
               </div>
             </div>
-            <p className="mt-1 text-xs text-slate-500">
-              Last updated {formatShortWithYear(new Date(selected.updatedAt))}
-            </p>
-            <div className="sf-card mt-3 flex min-h-0 flex-1 flex-col p-4">
-              <textarea
-                aria-label="Note content"
-                value={selected.content}
-                onChange={(e) => {
-                  // Local echo keeps typing smooth; persist on blur.
-                  useDataStore.getState().updateRow("notes", selected.id, {
-                    content: e.target.value,
-                  });
+
+            {/* Font row (S77/AD5 measured): "Font:" 12px/500 slate-500 +
+                typeface select + the black Divider button (h-8, 6px radius). */}
+            <div className="mt-2 flex flex-wrap items-center gap-2">
+              <span className="text-xs font-medium text-slate-500 dark:text-slate-400">Font:</span>
+              <Select value={font} onValueChange={(v) => setFont(v as EditorFont)}>
+                <SelectTrigger className="h-7 w-28 text-xs" aria-label="Editor font">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="sans">Sans</SelectItem>
+                  <SelectItem value="serif">Serif</SelectItem>
+                  <SelectItem value="mono">Mono</SelectItem>
+                </SelectContent>
+              </Select>
+              <button
+                type="button"
+                onClick={() => editorRef.current?.insertDivider()}
+                className="flex h-8 items-center gap-1 rounded-md bg-neutral-950 px-3 text-xs font-medium text-neutral-50 transition-opacity hover:opacity-90 focus-visible:ring-2 focus-visible:ring-sf-primary/40 focus-visible:outline-none dark:bg-neutral-800"
+              >
+                <Minus className="size-3" strokeWidth={2} />
+                Divider
+              </button>
+            </div>
+
+            {/* Tag row (S77/AD6 measured): dark pills (neutral-800 +
+                neutral-50, 6px radius, 12px) + the "Add tag..." input. */}
+            <div className="mt-2 flex flex-wrap items-center gap-2" aria-label="Note tags">
+              {selectedTags.map((tag) => (
+                <span
+                  key={tag}
+                  data-note-tag={tag}
+                  className="inline-flex h-6 items-center gap-1 rounded-md bg-neutral-800 px-2 text-xs text-neutral-50 dark:bg-neutral-700"
+                >
+                  {tag}
+                  <button
+                    type="button"
+                    aria-label={`Remove tag ${tag}`}
+                    onClick={() => removeTag(tag)}
+                    className="rounded-sm p-0.5 text-neutral-400 hover:text-neutral-50 focus-visible:ring-2 focus-visible:ring-sf-primary/40 focus-visible:outline-none"
+                  >
+                    <X className="size-3" strokeWidth={2} />
+                  </button>
+                </span>
+              ))}
+              <input
+                aria-label="Add tag"
+                placeholder="Add tag..."
+                value={tagDraft}
+                onChange={(e) => setTagDraft(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    addTag();
+                  }
                 }}
-                onBlur={(e) => patchSelected({ content: e.target.value })}
-                placeholder="Start writing…"
-                className="sf-scroll min-h-0 flex-1 resize-none border-none bg-transparent text-sm leading-relaxed text-slate-700 outline-none dark:text-slate-200"
+                className="h-7 w-32 rounded-md border border-neutral-800 bg-transparent px-2 text-sm text-slate-700 outline-none placeholder:text-slate-400 focus-visible:ring-2 focus-visible:ring-sf-primary/40 dark:border-neutral-700 dark:text-slate-200"
+              />
+            </div>
+
+            {/* The editor card (S77/AD2 measured): white rounded-2xl + 1px
+                slate-200 — wraps the Quill toolbar strip + editor body. The
+                sf-note-editor class scopes the measured Quill surface CSS
+                (wins the cascade over Quill's own snow stylesheet). */}
+            <div className="sf-note-editor mt-3 flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900">
+              <QuillEditor
+                key={selected.id}
+                ref={editorRef}
+                value={selected.content}
+                onChange={onContentChange}
+                font={font}
+                className="min-h-0 flex-1"
               />
             </div>
           </div>
-          </>
         )}
       </div>
 

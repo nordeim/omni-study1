@@ -1,23 +1,25 @@
 "use client";
 
 // ---------------------------------------------------------------------------
-// Flashcards (S7-A): TWO-PANEL — a w-80 deck sidebar (colored 40px icon
-// blocks, inline search) and a detail pane (AI Generate outline, Add Card +
-// Study gradients, lg:grid-cols-3 card grid with difficulty pills, 3D-flip
-// study mode with sRGB-exact gradient front). DECK_COLORS: red BEFORE pink.
+// Flashcards (S7-A + S77/AD): TWO-PANEL — a w-80 deck sidebar (colored 40px
+// icon blocks, inline search) and a detail pane (AI Generate outline, Add
+// Card + Study gradients, lg:grid-cols-3 card grid with difficulty pills).
+// Session-77 Batch AD (measured 2026-10-21): the study mode renders IN-PAGE
+// (not an overlay) — the black Exit Study button, the "N / M" counter, the
+// max-w-2xl card (24px/500 front, 20px/400 slate-700 back), the "Click card
+// to flip" hint, and the Wrong/Correct rating mechanic (the rating IS the
+// navigation; the 3D flip animation is a kept superset flourish).
+// DECK_COLORS: red BEFORE pink.
 // ---------------------------------------------------------------------------
 
 import * as React from "react";
 import {
-  ChevronLeft,
-  ChevronRight,
   Layers,
   Pencil,
   Plus,
   Search,
   Sparkles,
   Trash2,
-  X,
   Ellipsis,
 } from "lucide-react";
 
@@ -221,9 +223,17 @@ export function FlashcardsView() {
     setStudying(true);
   };
 
-  const step = (delta: number) => {
+  // S77/AD11 (measured): the rating IS the navigation — Correct marks the
+  // card mastered (the existing column) and advances; Wrong advances
+  // without mastering; the last card STAYS displayed (the ref has no
+  // completion screen — measured headings:[] on its final state).
+  const rate = (correct: boolean) => {
+    if (!studyCard) return;
+    if (correct) {
+      updateFlashcard(studyCard.id, { mastered: true }).catch(() => {});
+    }
     setFlipped(false);
-    setStudyIndex((i) => Math.min(Math.max(0, i + delta), Math.max(0, deckCards.length - 1)));
+    setStudyIndex((i) => Math.min(i + 1, Math.max(0, deckCards.length - 1)));
   };
 
   const studyCard = deckCards[studyIndex];
@@ -352,6 +362,94 @@ export function FlashcardsView() {
           <div className="flex flex-1 items-center justify-center">
             <p className="text-sm text-slate-400">Select a deck.</p>
           </div>
+        ) : studying && studyCard ? (
+          // ---------------------------------------------------------------
+          // S77/AD8 (measured): the study mode is an IN-PAGE pane that
+          // replaces the deck-detail content — NOT a fixed overlay (the
+          // reference renders no overlay element). Exit Study is the
+          // reference's black button (neutral-950 + neutral-50, 6px
+          // radius, 14px/500); the counter is "N / M" 16px/400 slate-500
+          // (no deck name); the card is max-w-2xl (672px) with 24px/500
+          // front text and 20px/400 slate-700 back text; the "Click card
+          // to flip" hint rides below. The 3D flip animation is a kept
+          // superset flourish (static states match the reference exactly).
+          // ---------------------------------------------------------------
+          <div
+            aria-label="Study mode"
+            className="flex min-h-0 flex-1 flex-col items-center gap-6 p-4"
+          >
+            <button
+              type="button"
+              onClick={() => setStudying(false)}
+              className="self-start rounded-md bg-neutral-950 px-4 py-2 text-sm font-medium text-neutral-50 transition-opacity hover:opacity-90 focus-visible:ring-2 focus-visible:ring-sf-primary/40 focus-visible:outline-none dark:bg-neutral-800"
+            >
+              Exit Study
+            </button>
+            <p className="text-base font-normal text-slate-500 dark:text-slate-400">
+              {studyIndex + 1} / {deckCards.length}
+            </p>
+            <button
+              type="button"
+              onClick={() => setFlipped((f) => !f)}
+              aria-label={flipped ? "Show question" : "Reveal answer"}
+              className="h-80 w-full max-w-2xl [perspective:1000px] outline-none focus-visible:ring-2 focus-visible:ring-sf-primary/40"
+            >
+              <div
+                data-flip-card
+                className="relative size-full [transform-style:preserve-3d] transition-transform duration-500"
+                style={{ transform: flipped ? "rotateY(180deg)" : "rotateY(0deg)" }}
+              >
+                <div
+                  data-flip-front
+                  className="sf-print-exact absolute inset-0 flex items-center justify-center rounded-2xl p-8 [backface-visibility:hidden]"
+                  style={{
+                    backgroundImage:
+                      "linear-gradient(to bottom right, rgb(var(--sf-primary)), rgb(var(--sf-primary-gradient-to)))",
+                  }}
+                >
+                  {/* S77/AD10 (measured): 24px/500 white front text. */}
+                  <p className="text-center text-2xl font-medium text-white">
+                    {studyCard.front}
+                  </p>
+                </div>
+                <div
+                  data-flip-back
+                  className="absolute inset-0 flex items-center justify-center rounded-2xl border-2 border-violet-200 bg-white p-8 [backface-visibility:hidden] [transform:rotateY(180deg)] dark:border-violet-800 dark:bg-slate-900"
+                >
+                  {/* S77/AD10 (measured): 20px/400 slate-700 back text. */}
+                  <p className="text-center text-xl font-normal text-slate-700 dark:text-slate-100">
+                    {studyCard.back}
+                  </p>
+                </div>
+              </div>
+            </button>
+            {/* S77/AD9 (measured): the hint, 16px slate-400. */}
+            <p className="text-base font-normal text-slate-400 dark:text-slate-500">
+              Click card to flip
+            </p>
+            {/* S77/AD11 (measured): the rating pair appears only after the
+                flip — Wrong (neutral-950 + red-600 text) and Correct
+                (green-500). Correct text stays WHITE (the ref's yellow
+                quirk); both advance. */}
+            {flipped && (
+              <div className="flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => rate(false)}
+                  className="h-10 rounded-md bg-neutral-950 px-8 text-sm font-medium text-red-600 transition-opacity hover:opacity-90 focus-visible:ring-2 focus-visible:ring-sf-primary/40 focus-visible:outline-none dark:bg-neutral-800 dark:text-red-400"
+                >
+                  Wrong
+                </button>
+                <button
+                  type="button"
+                  onClick={() => rate(true)}
+                  className="h-10 rounded-md bg-green-500 px-8 text-sm font-medium text-white transition-opacity hover:opacity-90 focus-visible:ring-2 focus-visible:ring-green-600/40 focus-visible:outline-none"
+                >
+                  Correct
+                </button>
+              </div>
+            )}
+          </div>
         ) : (
           <>
             <div className="flex flex-wrap items-start justify-between gap-3">
@@ -445,80 +543,6 @@ export function FlashcardsView() {
           </>
         )}
       </div>
-
-      {/* Study mode overlay — 3D flip */}
-      {studying && studyCard && (
-        <div className="fixed inset-0 z-50 flex flex-col items-center justify-center gap-6 bg-black/40 p-4" role="dialog" aria-label="Study mode">
-          <button
-            type="button"
-            aria-label="Exit study mode"
-            onClick={() => setStudying(false)}
-            className="absolute right-4 top-4 flex size-9 items-center justify-center rounded-full bg-white/90 text-slate-600 hover:bg-white"
-          >
-            <X className="size-4" strokeWidth={2} />
-          </button>
-          <div className="flex flex-col items-center gap-2 text-white">
-            <p className="text-sm text-white/80">
-              Card {studyIndex + 1} of {deckCards.length} · {selectedDeck?.name}
-            </p>
-          </div>
-          <button
-            type="button"
-            onClick={() => setFlipped((f) => !f)}
-            aria-label={flipped ? "Show question" : "Reveal answer"}
-            className="h-80 w-full max-w-lg [perspective:1000px] outline-none focus-visible:ring-2 focus-visible:ring-white/60"
-          >
-            <div
-              data-flip-card
-              className="relative size-full [transform-style:preserve-3d] transition-transform duration-500"
-              style={{ transform: flipped ? "rotateY(180deg)" : "rotateY(0deg)" }}
-            >
-              <div
-                data-flip-front
-                className="sf-print-exact absolute inset-0 flex items-center justify-center rounded-2xl p-8 [backface-visibility:hidden]"
-                style={{
-                  backgroundImage:
-                    "linear-gradient(to bottom right, rgb(var(--sf-primary)), rgb(var(--sf-primary-gradient-to)))",
-                }}
-              >
-                <p className="text-center text-xl font-semibold text-white">
-                  {studyCard.front}
-                </p>
-              </div>
-              <div
-                data-flip-back
-                className="absolute inset-0 flex items-center justify-center rounded-2xl border-2 border-violet-200 bg-white p-8 [backface-visibility:hidden] [transform:rotateY(180deg)] dark:border-violet-800 dark:bg-slate-900"
-              >
-                <p className="text-center text-lg text-slate-800 dark:text-slate-100">
-                  {studyCard.back}
-                </p>
-              </div>
-            </div>
-          </button>
-          <div className="flex items-center gap-3">
-            <Button
-              type="button"
-              variant="outline"
-              className="h-10 px-8"
-              aria-label="Previous card"
-              onClick={() => step(-1)}
-              disabled={studyIndex === 0}
-            >
-              <ChevronLeft className="size-4" strokeWidth={2} />
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              className="h-10 px-8"
-              aria-label="Next card"
-              onClick={() => step(1)}
-              disabled={studyIndex >= deckCards.length - 1}
-            >
-              <ChevronRight className="size-4" strokeWidth={2} />
-            </Button>
-          </div>
-        </div>
-      )}
 
       {/* Deck dialog */}
       <Dialog open={deckDialog.open} onOpenChange={(open) => !open && setDeckDialog({ open: false, editing: null })}>
