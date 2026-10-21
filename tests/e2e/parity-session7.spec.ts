@@ -701,3 +701,104 @@ test.describe("S7-AD · the Flashcards study mode rework (Batch AD)", () => {
     await expect(study.getByText(/^2 \/ 4$/)).toBeVisible();
   });
 });
+
+// ---------------------------------------------------------------------------
+// S78 · Batch AE (session-78) — the s78 code-audit hardening of the Batch AD
+// surfaces: the Save empty-overwrite guard (AE1), the surfaced autosave
+// failure (AE2), and the mid-study deck-switch index reset (AE4). See
+// docs/remediation-plan.md Cycle 28.
+// ---------------------------------------------------------------------------
+
+test.describe("S78 · Batch AE hardening (the s78 audit)", () => {
+  test("AE1: an immediate Save during the editor's load window never PATCHes empty content", async ({ page }) => {
+    await page.goto("/Notes");
+    await hydrated(page);
+
+    // Capture every note PATCH's body.
+    const patches: { url: string; body: string }[] = [];
+    await page.route(/\/api\/notes\//, async (route) => {
+      const req = route.request();
+      if (req.method() === "PATCH") {
+        patches.push({ url: req.url(), body: req.postData() ?? "" });
+      }
+      await route.continue();
+    });
+    // Delay every not-yet-loaded chunk — the next chunk request after the
+    // note click IS the Quill dynamic import, so the editor's load window
+    // becomes deterministic (~1.5s).
+    await page.route(/\/static\/chunks\/.+\.js$/, async (route) => {
+      await new Promise((r) => setTimeout(r, 1500));
+      await route.continue();
+    });
+
+    // Select the populated note, then click Save DURING the load window
+    // (before the Quill instance exists — the empty-overwrite scenario).
+    await page.getByRole("button", { name: /Dot product intuition/ }).first().click();
+    await page.getByRole("button", { name: "Save", exact: true }).click();
+
+    // The Save PATCH must have fired — carrying the ORIGINAL content (the
+    // `?? selected.content` fallback), never "" (the data-loss bug).
+    await page.waitForTimeout(400);
+    expect(patches.length).toBeGreaterThanOrEqual(1);
+    const savePatch = patches[0];
+    const payload = JSON.parse(savePatch.body) as { content?: string };
+    expect(payload.content).toBeTruthy();
+    expect(payload.content).toContain("dot product measures alignment");
+    for (const p of patches) {
+      const body = JSON.parse(p.body) as { content?: string };
+      expect(body.content).not.toBe("");
+    }
+
+    await page.unroute(/\/api\/notes\//);
+    await page.unroute(/\/static\/chunks\/.+\.js$/);
+  });
+
+  test("AE2: an aborted autosave PATCH surfaces exactly one failure toast per streak", async ({ page }) => {
+    await page.goto("/Notes");
+    await hydrated(page);
+    await page.getByRole("button", { name: /Dot product intuition/ }).first().click();
+    const editor = page.locator(".ql-editor");
+    await expect(editor).toBeVisible();
+
+    // Abort every note PATCH — the transport failure class (offline).
+    await page.route(/\/api\/notes\//, async (route) => {
+      if (route.request().method() === "PATCH") await route.abort("failed");
+      else await route.continue();
+    });
+
+    const toasts = page.getByRole("region", { name: "Notifications" }).locator("button");
+    // First burst: type → debounce (600ms) → the PATCH aborts → ONE toast.
+    await editor.click();
+    await page.keyboard.type("first burst");
+    await page.waitForTimeout(1100);
+    await expect(toasts).toHaveCount(1);
+    await expect(toasts.first()).toContainText(/offline|autosave/i);
+
+    // Second burst in the same failure streak: another debounce + abort,
+    // but NO second toast (once per streak — the dedup).
+    await page.keyboard.type(" more");
+    await page.waitForTimeout(1100);
+    await expect(toasts).toHaveCount(1);
+
+    await page.unroute(/\/api\/notes\//);
+  });
+
+  test("AE4: switching decks mid-study resets the study counter to the new deck's card 1", async ({ page }) => {
+    await page.goto("/Flashcards");
+    await hydrated(page);
+    // Integration rules (4 cards) → Study → flip → Correct → card 2.
+    await page.locator('[aria-label="Deck rows"] > *', { hasText: "Integration rules" }).first().click();
+    await page.locator('[aria-label="Deck detail"]').getByRole("button", { name: "Study" }).click();
+    const study = page.locator('[aria-label="Study mode"]');
+    await expect(study.getByText(/^1 \/ 4$/)).toBeVisible();
+    await study.locator("[data-flip-card]").click();
+    await study.getByRole("button", { name: "Correct", exact: true }).click();
+    await expect(study.getByText(/^2 \/ 4$/)).toBeVisible();
+
+    // Switch to Biology Chapter 5 (2 cards) mid-study: the sidebar stays
+    // interactive (measured) and the study continues with the NEW deck from
+    // card 1 — never a stale index into the wrong deck.
+    await page.locator('[aria-label="Deck rows"] > *', { hasText: "Biology Chapter 5" }).first().click();
+    await expect(study.getByText(/^1 \/ 2$/)).toBeVisible();
+  });
+});

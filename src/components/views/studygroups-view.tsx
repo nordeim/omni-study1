@@ -243,10 +243,14 @@ export function StudyGroupsView() {
 
   return (
     <div className="flex h-[calc(100vh-8rem)] gap-6">
-      {/* ---- left pane: groups list ---- */}
+      {/* ---- left pane: groups list — no shrink-0 (S78/AE13): the ref's own
+          aside SHRINKS at 390 (measured 222px + a 112px right pane,
+          scrollWidth 390); the clone's shrink-0 starved the right pane to
+          46px and its empty-state text overflowed to 393. At ≥sm the w-80
+          never shrinks — desktop identical. ---- */}
       <aside
         aria-label="Study groups pane"
-        className="flex w-80 shrink-0 flex-col border-r border-slate-100 pr-6 dark:border-slate-800"
+        className="flex w-80 flex-col border-r border-slate-100 pr-6 dark:border-slate-800"
       >
         <div className="flex items-center gap-2">
           <h1 className="flex flex-1 items-center gap-2 text-2xl font-bold text-slate-800 dark:text-slate-100">
@@ -342,7 +346,13 @@ export function StudyGroupsView() {
       </aside>
 
       {/* ---- right pane: detail ---- */}
-      <section className="flex min-w-0 flex-1 flex-col" aria-label="Study group detail pane">
+      {/* No min-w-0 (S78/AE13, the ref's own negotiation): with min-w-0 the
+          pane's flex floor collapsed to 0, the aside never shrank, and the
+          empty-state text overflowed (393). Restoring the content-driven
+          floor makes the row negotiate exactly like the ref (aside ~254 +
+          right ~112 at 390). Desktop: the pane grows far past its floor —
+          byte-identical. */}
+      <section className="flex flex-1 flex-col" aria-label="Study group detail pane">
         {!selected ? (
           groups.length === 0 ? (
             // S8-Z (re-measured s69): at zero the reference's right pane is

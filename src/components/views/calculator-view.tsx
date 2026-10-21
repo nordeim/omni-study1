@@ -259,7 +259,11 @@ export function CalculatorView() {
         </Button>
       </div>
       <div>
-        <TabsList aria-label="Calculator mode">
+        {/* max-w-full + overflow-x-auto (S78/AE11): the 4-mode bar measures
+            413px — the ref itself overflows to 429 at 390 (its own bug
+            family); the clone keeps the no-overflow contract by scrolling
+            the bar. At ≥sm it fits — identical rendering. */}
+        <TabsList aria-label="Calculator mode" className="max-w-full overflow-x-auto">
           <TabsTrigger value="basic" className="data-[state=inactive]:text-slate-600 dark:data-[state=inactive]:text-slate-400">Basic</TabsTrigger>
           <TabsTrigger value="scientific" className="data-[state=inactive]:text-slate-600 dark:data-[state=inactive]:text-slate-400">Scientific</TabsTrigger>
           <TabsTrigger value="gpa" className="data-[state=inactive]:text-slate-600 dark:data-[state=inactive]:text-slate-400">GPA Calculator</TabsTrigger>

@@ -214,7 +214,10 @@ export function ExamsView() {
             {counts.upcoming} upcoming · {counts.week} this week
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        {/* flex-wrap (S78/AE9): the search + filter + Add Exam row exceeds
+            390px unwrapped (measured 584) — at ≥sm it fits one line, so the
+            wrap never fires there. */}
+        <div className="flex flex-wrap items-center gap-2">
           <div className="relative">
             <Search
               aria-hidden

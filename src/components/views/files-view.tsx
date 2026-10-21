@@ -303,7 +303,9 @@ export function FilesView() {
         subtitle="Your study materials"
         icon={FolderOpen}
         actions={
-          <div className="flex items-center gap-2">
+          // flex-wrap (S78/AE10): the view-mode + New Folder + Upload row
+          // exceeds 390px unwrapped (measured 499). At ≥sm it fits.
+          <div className="flex flex-wrap items-center gap-2">
             <div
               role="group"
               aria-label="View mode"

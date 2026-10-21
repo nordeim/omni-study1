@@ -24,8 +24,10 @@ await lp.goto(BASE + "/login", { waitUntil: "load" });
 // disabled state is React-managed, so poll until the inputs' values are
 // reflected (fill, then wait, re-fill once if hydration raced us).
 await lp.waitForTimeout(2000);
-await lp.fill('input[id="email"]', DEMO_EMAIL);
-await lp.fill('input[id="password"]', DEMO_PASSWORD);
+// S78 fix: the S15 auth rework renamed the ids (email → auth-email) —
+// select by type, which survives id churn.
+await lp.fill('input[type="email"]', DEMO_EMAIL);
+await lp.fill('input[type="password"]', DEMO_PASSWORD);
 await lp.click('button[type="submit"]');
 await lp.waitForURL(/\/Dashboard/, { timeout: 20_000 });
 const cookies = await loginCtx.cookies(BASE);

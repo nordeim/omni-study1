@@ -275,3 +275,24 @@ test.describe("regression guard · light mode is byte-identical", () => {
     expect(timeColor).toBe("rgb(109, 40, 217)"); // --sf-primary-deep — S3-C light pin
   });
 });
+
+// S78/AE3 (the s78 code audit): the Quill snow theme pins the blank editor's
+// placeholder (.ql-blank::before) to rgba(0,0,0,0.6) — ~1.07:1 on the
+// slate-900 dark editor card, effectively invisible. The S77 dark block
+// never covered it because no sweep ever rendered a BLANK note in dark.
+test.describe("S78/AE3 · the dark-mode Quill placeholder", () => {
+  test("a blank note's placeholder reads slate-400 in dark mode", async ({ page }) => {
+    await gotoDark(page, "/Notes");
+    // Create a blank note through the real flow (the New note menu → dialog).
+    await page.getByRole("button", { name: "New note menu" }).click();
+    // exact: true — "New note" substring-matches "New Notebook" too.
+    await page.getByRole("menuitem", { name: "New Note", exact: true }).click();
+    await page.getByLabel("Name").fill("S78 dark placeholder probe");
+    await page.getByRole("dialog").getByRole("button", { name: "Save", exact: true }).click();
+    // The new note is selected and BLANK — the placeholder renders.
+    const editor = page.locator(".ql-editor.ql-blank");
+    await expect(editor).toBeVisible();
+    const phColor = await editor.evaluate((el) => getComputedStyle(el, "::before").color);
+    expect(phColor).toBe(SLATE_400); // not snow's rgba(0, 0, 0, 0.6)
+  });
+});

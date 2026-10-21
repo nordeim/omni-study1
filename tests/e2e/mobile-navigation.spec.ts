@@ -269,3 +269,79 @@ test.describe("lg breakpoint navigation", () => {
     await expect(main).toHaveCSS("margin-left", "260px");
   });
 });
+
+// S78/AE6 (measured on the reference at 390×844): the ref renders the Notes
+// list pane (w-80 @320px) and the Flashcards deck list (239px) SIDE BY SIDE
+// with their right panes — the clone hid both asides below md (the mobile-only
+// h2 + FAB pattern), so a 390px user could not browse or select existing
+// notes/decks at all. The fix renders the asides at ALL widths (the
+// StudyGroups pattern); the right panes keep min-w-0 so scrollWidth stays
+// ≤ 390 (the ref's own 416px overflow is its bug, not a clone goal).
+test.describe("S78 · mobile two-pane parity — the list panes render at 390", () => {
+  test("Notes renders the list pane and selects a note from it", async ({ page }) => {
+    await page.goto("/Notes");
+    await page.waitForFunction(
+      () => document.documentElement.style.getPropertyValue("--sf-primary") !== "",
+    );
+
+    const aside = page.getByRole("complementary", { name: "Notes list pane" });
+    await expect(aside).toBeVisible();
+    // The h1 lives in the now-visible list pane (the ref's own shape).
+    await expect(aside.getByRole("heading", { name: "Notes", exact: true })).toBeVisible();
+    await expect(aside.getByLabel("Search notes")).toBeVisible();
+    // A seeded note row is visible.
+    const row = aside.getByRole("button", { name: /Kinetics summary/ }).first();
+    await expect(row).toBeVisible();
+    // No horizontal overflow in the no-selection state (the state the ref
+    // itself measured 416px on — its own overflow bug; the clone's min-w-0
+    // keeps the squeezed right pane inside 390).
+    const scrollW = await page.evaluate(() => document.documentElement.scrollWidth);
+    expect(scrollW).toBeLessThanOrEqual(390);
+    // Tapping the row selects the note — the editor's title input mounts
+    // with the note's title (the browse+select capability the hidden pane
+    // previously made impossible at 390).
+    await row.tap();
+    await expect(page.getByLabel("Note title")).toHaveValue("Kinetics summary");
+  });
+
+  test("Flashcards renders the deck list and switches decks from it", async ({ page }) => {
+    await page.goto("/Flashcards");
+    await page.waitForFunction(
+      () => document.documentElement.style.getPropertyValue("--sf-primary") !== "",
+    );
+
+    const aside = page.getByRole("complementary", { name: "Deck list pane" });
+    await expect(aside).toBeVisible();
+    await expect(aside.getByRole("heading", { name: "Flashcards", exact: true })).toBeVisible();
+    // The auto-selected detail renders SOME seeded deck (the collection
+    // orders by createdAt — not pinned to a specific first deck) …
+    const detail = page.getByLabel("Deck detail");
+    await expect(
+      detail.getByRole("heading", { name: /^(Integration rules|Spanish Vocabulary|Biology Chapter 5)$/ }),
+    ).toBeVisible();
+    // … and the deck rows are visible; tapping one switches the detail.
+    await aside.getByRole("button", { name: /Biology Chapter 5/ }).first().tap();
+    await expect(detail.getByRole("heading", { name: "Biology Chapter 5" })).toBeVisible();
+    const scrollW = await page.evaluate(() => document.documentElement.scrollWidth);
+    expect(scrollW).toBeLessThanOrEqual(390);
+  });
+
+  // S78/AE9-13 (the standing mobile sweep's finding layer, encoded as an e2e
+  // guard): five header/toolbar rows overflowed 390px (Timetable 402, Exams
+  // 584, Files 499, Calculator 427, StudyGroups 393 — element-attributed by
+  // scripts/mobile-overflow-probe-s78.mjs). The ref itself overflows on
+  // Timetable (395) and Calculator (429) — its own bug family; the clone's
+  // no-overflow contract wins everywhere (flex-wrap / scrollable tabs /
+  // the ref's own shrinkable StudyGroups aside).
+  test("the five remediated views keep scrollWidth within 390 (S78/AE9-13)", async ({ page }) => {
+    for (const v of ["Timetable", "Exams", "Files", "Calculator", "StudyGroups"]) {
+      await page.goto(`/${v}`);
+      await page.waitForFunction(
+        () => document.documentElement.style.getPropertyValue("--sf-primary") !== "",
+      );
+      await page.waitForTimeout(900);
+      const scrollW = await page.evaluate(() => document.documentElement.scrollWidth);
+      expect(scrollW, `${v} overflowed`).toBeLessThanOrEqual(390);
+    }
+  });
+});

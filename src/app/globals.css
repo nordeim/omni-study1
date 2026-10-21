@@ -609,6 +609,12 @@
 .dark .sf-note-editor .ql-editor {
   color: #e2e8f0; /* slate-200 */
 }
+/* S78/AE3: snow pins the blank placeholder to rgba(0,0,0,.6) — ~1.07:1 on
+ * the slate-900 editor (invisible). slate-400 keeps it a quiet hint that
+ * actually reads in dark. */
+.dark .sf-note-editor .ql-editor.ql-blank::before {
+  color: #94a3b8; /* slate-400 */
+}
 .dark .sf-note-editor .ql-toolbar.ql-snow .ql-picker-label,
 .dark .sf-note-editor .ql-toolbar.ql-snow button {
   color: #cbd5e1;

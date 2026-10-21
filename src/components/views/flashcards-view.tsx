@@ -106,6 +106,18 @@ export function FlashcardsView() {
     [flashcards, effectiveDeckId],
   );
 
+  // S78/AE4: the sidebar stays interactive during study (measured), so a
+  // mid-study deck switch must RESET the study index + flip — the old deck's
+  // index must never leak into the new deck (out-of-range fell through to
+  // deck-detail with `studying` still latched; in-range showed card N of the
+  // WRONG deck). Reset-from-card-1 is the least-surprise reading of the
+  // ref's always-interactive sidebar (its own switch behavior is unmeasured).
+  const switchDeck = (id: string) => {
+    setSelectedDeckId(id);
+    setStudyIndex(0);
+    setFlipped(false);
+  };
+
 
   const openDeckDialog = (editing: FlashcardDeckRow | null) => {
     setDeckForm(
@@ -240,8 +252,13 @@ export function FlashcardsView() {
 
   return (
     <div className="flex h-[calc(100vh-8rem)] gap-6">
-      {/* Deck sidebar */}
-      <aside className="hidden w-80 shrink-0 flex-col border-r border-slate-100 pr-6 md:flex dark:border-slate-800">
+      {/* Deck sidebar — S78/AE6: visible at ALL widths (measured on the ref
+          at 390×844: the deck list renders beside a squeezed detail pane);
+          the aria-label matches the Notes pane convention. */}
+      <aside
+        aria-label="Deck list pane"
+        className="flex w-80 shrink-0 flex-col border-r border-slate-100 pr-6 dark:border-slate-800"
+      >
         <div className="flex items-center gap-3">
           <h1 className="flex flex-1 items-center gap-2 text-2xl font-bold text-slate-800 dark:text-slate-100">
             <Layers className="size-6 text-sf-primary" strokeWidth={2} />
@@ -279,9 +296,9 @@ export function FlashcardsView() {
                   key={deck.id}
                   role="button"
                   tabIndex={0}
-                  onClick={() => setSelectedDeckId(deck.id)}
+                  onClick={() => switchDeck(deck.id)}
                   onKeyDown={(e) => {
-                    if (e.key === "Enter" || e.key === " ") setSelectedDeckId(deck.id);
+                    if (e.key === "Enter" || e.key === " ") switchDeck(deck.id);
                   }}
                   className={cn(
                     "group flex w-full cursor-pointer items-center gap-3 rounded-xl border-2 p-4 text-left outline-none transition-colors focus-visible:ring-2 focus-visible:ring-sf-primary/40",

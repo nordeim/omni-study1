@@ -538,9 +538,13 @@ export const mutations = {
     await Promise.all([fetchAndSet("notebooks"), fetchAndSet("notes")]);
   },
 
-  createNote: async (input: NoteInput): Promise<void> => {
-    await apiSend("POST", PATHS.notes, input);
+  // Returns the created row's id — the notes view auto-selects the new note
+  // (S78/AE8: the create flow's setSelectedId(created) intent previously
+  // received void here, so a freshly created note was never selected).
+  createNote: async (input: NoteInput): Promise<string | null> => {
+    const row = await apiSend<NoteRow>("POST", PATHS.notes, input);
     await fetchAndSet("notes");
+    return row?.id ?? null;
   },
   updateNote: async (id: string, patch: Partial<NoteInput>): Promise<void> => {
     await apiSend("PATCH", `${PATHS.notes}/${id}`, patch);

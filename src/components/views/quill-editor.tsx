@@ -38,8 +38,11 @@ export type EditorFont = keyof typeof EDITOR_FONTS;
 export interface QuillEditorHandle {
   /** Insert a horizontal rule at the cursor (the Divider button). */
   insertDivider(): void;
-  /** The live editor HTML (the Save button's flush source). */
-  getContent(): string;
+  /** The live editor HTML (the Save button's flush source) — `null`
+   * until the dynamically-imported Quill instance exists, so a Save
+   * clicked in the load window falls back to the note's stored content
+   * (S78/AE1 — returning "" there let Save overwrite a populated note). */
+  getContent(): string | null;
 }
 
 interface QuillEditorProps {
@@ -94,6 +97,28 @@ function labelToolbarButtons(toolbar: Element | null) {
   }
 }
 
+/** Picker group names for the snow dropdown groups (S78/AE7). */
+const PICKER_LABELS: Record<string, string> = {
+  header: "Text style",
+  font: "Font",
+  size: "Text size",
+  color: "Text color",
+  background: "Background color",
+  align: "Alignment",
+};
+
+function labelToolbarPickers(toolbar: Element | null) {
+  if (!toolbar) return;
+  for (const picker of toolbar.querySelectorAll<HTMLElement>(".ql-picker")) {
+    const base = [...picker.classList].find((c) => /^ql-[a-z-]+$/.test(c) && c !== "ql-picker");
+    if (!base) continue;
+    const name = PICKER_LABELS[base.slice(3)];
+    if (!name) continue;
+    picker.setAttribute("role", "group");
+    picker.setAttribute("aria-label", name);
+  }
+}
+
 let blotRegistered = false;
 
 export const QuillEditor = React.forwardRef<QuillEditorHandle, QuillEditorProps>(
@@ -120,7 +145,9 @@ export const QuillEditor = React.forwardRef<QuillEditorHandle, QuillEditorProps>
           q.setSelection(index + 1);
         },
         getContent() {
-          return quillRef.current?.root.innerHTML ?? "";
+          // null (not "") while the Quill instance is still importing — the
+          // S78/AE1 guard: the caller's `?? stored` fallback must fire.
+          return quillRef.current?.root.innerHTML ?? null;
         },
       }),
       [],
@@ -155,6 +182,10 @@ export const QuillEditor = React.forwardRef<QuillEditorHandle, QuillEditorProps>
 
         // a11y-win: the snow theme ships nameless toolbar buttons.
         labelToolbarButtons(containerRef.current.parentElement?.querySelector(".ql-toolbar") ?? null);
+        // a11y-win (S78/AE7): the snow pickers (header/font/size/…)
+        // render label SPANS with no accessible name — label them from
+        // their ql-* classes ("Normal" reads as the value, not a name).
+        labelToolbarPickers(containerRef.current.parentElement?.querySelector(".ql-toolbar") ?? null);
 
         if (/<[a-z][^>]*>/i.test(initialRef.current)) {
           quill.clipboard.dangerouslyPasteHTML(initialRef.current, Quill.sources.SILENT);

@@ -202,7 +202,10 @@ export function TimetableView() {
             Manage your class schedule
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        {/* flex-wrap (S78/AE12): the All Weeks + Grid Builder + Add Class row
+            exceeds 390px unwrapped (measured 402; the ref itself reads 395 —
+            its own bug family). At ≥sm the row fits one line. */}
+        <div className="flex flex-wrap items-center gap-2">
           <Select
             value={weekType}
             onValueChange={(v) => setWeekType(v as "ALL" | "A" | "B")}

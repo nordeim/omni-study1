@@ -48,3 +48,41 @@ describe("stripHtmlPreview — the note list-row preview seam (S77/AD7)", () => 
     );
   });
 });
+
+// S78/AE5 (the s78 code audit): the entity decoder must cover the forms
+// Quill actually emits — numeric decimal/hex entities (&#8212; &#x2014;)
+// and the common named typography entities (&ldquo; &rsquo; &hellip;) —
+// and the cap must slice by CODE POINT, never by UTF-16 unit (an emoji
+// straddling the cap would otherwise render as a replacement character).
+describe("stripHtmlPreview — entity + surrogate hardening (S78/AE5)", () => {
+  it("decodes numeric decimal entities", () => {
+    expect(stripHtmlPreview("<p>a &#8212; b</p>")).toBe("a — b");
+  });
+
+  it("decodes numeric hex entities", () => {
+    expect(stripHtmlPreview("<p>x &#x2014; y</p>")).toBe("x — y");
+  });
+
+  it("decodes the common named typography entities Quill emits", () => {
+    expect(stripHtmlPreview("<p>&ldquo;quote&rdquo; it&rsquo;s &hellip; end</p>")).toBe(
+      "\u201Cquote\u201D it\u2019s \u2026 end",
+    );
+  });
+
+  it("caps by code point — an emoji straddling the cap never splits", () => {
+    // 55 ASCII chars + one 2-unit emoji (🎓) + trailing text: the cap at 56
+    // would slice the surrogate pair in half under a bare String.slice.
+    const text = `${"a".repeat(55)}🎓tail`;
+    const out = stripHtmlPreview(text, 56);
+    expect(out.endsWith("…")).toBe(true);
+    // No lone surrogate / replacement character may appear in the output.
+    expect(out).not.toContain("\uFFFD");
+    expect(out.includes("🎓")).toBe(false); // the emoji was pushed past the cap
+  });
+
+  it("keeps a cap-fitting emoji intact", () => {
+    const out = stripHtmlPreview(`${"a".repeat(54)}🎓`, 56);
+    expect(out.endsWith("🎓")).toBe(true);
+    expect(out).not.toContain("\uFFFD");
+  });
+});

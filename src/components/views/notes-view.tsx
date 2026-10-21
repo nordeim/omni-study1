@@ -116,6 +116,10 @@ export function NotesView() {
   const [font, setFont] = React.useState<EditorFont>("sans");
   const [tagDraft, setTagDraft] = React.useState("");
   const editorRef = React.useRef<QuillEditorHandle | null>(null);
+  // S78/AE2: one failure toast per autosave failure STREAK — the flag
+  // resets on the first successful PATCH, so a sustained-offline typing
+  // session toasts once instead of once per debounced burst.
+  const autosaveFailedRef = React.useRef(false);
 
   const allTags = React.useMemo(() => {
     const set = new Set<string>();
@@ -268,11 +272,27 @@ export function NotesView() {
   // Save flushes immediately with the live editor content.
   const onContentChange = (html: string) => {
     if (!selected) return;
-    updateNote(selected.id, { content: html }).catch(() => {});
+    updateNote(selected.id, { content: html })
+      .then(() => {
+        autosaveFailedRef.current = false;
+      })
+      .catch((err: unknown) => {
+        // S78/AE2: never swallow — a hung offline state must not let the
+        // user believe the autosave superset persisted. One toast per
+        // failure streak (the content stays in the editor as the retry
+        // affordance — the S13 doctrine).
+        if (!autosaveFailedRef.current) {
+          autosaveFailedRef.current = true;
+          toast.error(err instanceof ApiError ? err.message : "Autosave failed. Your note is still open — use Save to retry.");
+        }
+      });
   };
 
   const saveNow = async () => {
     if (!selected) return;
+    // getContent() is null during the Quill load window — the ?? fallback
+    // then carries the STORED content (S78/AE1: never PATCH "" over a
+    // populated note from a Save raced against the dynamic import).
     const html = editorRef.current?.getContent() ?? selected.content;
     try {
       await updateNote(selected.id, { content: html });
@@ -287,7 +307,7 @@ export function NotesView() {
       {/* Left pane */}
       <aside
         aria-label="Notes list pane"
-        className="hidden w-80 shrink-0 flex-col border-r border-slate-100 pr-6 md:flex dark:border-slate-800"
+        className="flex w-80 shrink-0 flex-col border-r border-slate-100 pr-6 dark:border-slate-800"
       >
         <div className="flex items-center gap-3">
           <h1 className="flex flex-1 items-center gap-2 text-2xl font-bold text-slate-800 dark:text-slate-100">
@@ -419,13 +439,10 @@ export function NotesView() {
 
       {/* Right pane — BARE (no card wrapper) */}
       <div className="flex min-w-0 flex-1 flex-col" aria-label="Note editor pane">
-        {/* Mobile-only heading — the h1 lives in the desktop-only left pane
-            (hidden md:flex), so the drawer flow still finds a "Notes" heading
-            at 390px (S52-F) in EVERY notes-present state. Level 2 keeps the
-            desktop h1 count pin intact. */}
-        {notes.length > 0 && (
-          <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-100 md:hidden">Notes</h2>
-        )}
+        {/* S78/AE6: the list pane now renders at ALL widths (measured on
+            the ref at 390×844: the w-80 list + a squeezed right pane) — the
+            h1 is reachable at every breakpoint, so the drawer-flow heading
+            contract holds without the mobile-only h2 it previously needed. */}
         {notes.length === 0 ? (
           <div className="sf-card flex flex-1 flex-col justify-center">
             <EmptyState

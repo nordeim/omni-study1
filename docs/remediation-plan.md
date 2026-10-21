@@ -1,6 +1,6 @@
 # Omni-Study1 — Remediation Plan & Execution Record
 
-> **Status: COMPLETE through Batch AD (session-77).** Every batch below has
+> **Status: COMPLETE through Batch AE (session-78).** Every batch below has
 > been executed TDD-style (spec-red → fix → spec-green) and verified:
 > **854/854 Vitest unit**, **409/409 Playwright e2e** across the 5-chunk
 > cold map (123+119+50+59+58, 30 spec files censused exactly once; the
@@ -932,6 +932,136 @@ debug captures + VLM-verified clone surfaces) +
 `scripts/ref-ad-{probe,notes,notes2,notes3,flashcards,flashcards2,flashcards3}-s77.mjs`
 + `scripts/capture-s77-clone.mjs` + `scripts/ref-resweep-s77.mjs`.
 **Batch AD: DONE.** Standing debt unchanged: Batch R (RSC structural
+perf — the S75 deferral evidence stands) + the pre-existing
+`sf-clock-date` dark-sweep artifact (a future audit-tools cycle).
+
+### Cycle 28 (session-78) — the Batch AD post-audit hardening + the mobile two-pane parity gap (measured)
+
+The standing rhythm on the received `2cce898` state: full cold
+re-certification FIRST (lint ✓ tsc ✓ unit **854/854** build ✓ e2e
+**409/409** cold across the 5-chunk map, first pass every chunk), then
+two independent evidence layers — (1) a Mode-C code audit of the Batch
+AD diff (security/XSS clean, React-clean, conventions clean) and (2)
+the s78 reference re-sweep (`scripts/ref-resweep-s78.mjs`: **ok:true**
+— 9/9 invariants both hosts, brand tables byte-matched, mobile drawers
+green on BOTH, no Tailwind v4 mobile-nav regression) plus a
+`agent-browser` walkthrough of the clone (login → dashboard → the
+drawer open/navigate/close cycle → the Notes Quill editor → the
+Flashcards study flip/rating flow; zero console errors) and a targeted
+**mobile two-pane probe** (`scripts/ref-mobile-{notes,twopane}-s78.mjs`
++ `scripts/sectionaction-probe-s78.mjs` — the DOM authority over two
+VLM hypotheses, both disproven: the "stat-card decorative circles"
+claim and the "Grade Tracker missing" claim).
+
+| # | Finding | Source | Class |
+|---|---------|--------|-------|
+| AE1 | **saveNow empty-overwrite window** — `QuillEditor.getContent()` returns `""` (not null) during the dynamic-import window, so `?? selected.content` never fires and a Save click there PATCHes `content:""` over a populated note (silent data loss; the loaded editor still shows the original text) | s78 code audit (M1) | **E1 data-loss** |
+| AE2 | **Silent autosave failures** — the debounced `onContentChange` routes `.catch(() => {})`; offline/429/413 (a toolbar-image data URI blows the 100k content cap) vanish with zero feedback while the user believes the autosave superset persisted | s78 code audit (M2) | E2 resilience |
+| AE3 | **Dark-mode Quill placeholder invisible** — snow pins `.ql-blank::before` to `rgba(0,0,0,0.6)` ≈ 1.07:1 on the slate-900 editor; the S77 dark block never covered it (sweeps never render a *blank* note) | s78 code audit (L5) | E2 dark-mode |
+| AE4 | **Mid-study deck switch keeps a stale `studyIndex`** — the sidebar stays interactive during study (measured), so switching decks mid-study keeps the old deck's index (out-of-range → the pane silently falls back to deck-detail with `studying` still true; in-range → card N of the WRONG deck) | s78 code audit (L6) | E1 correctness |
+| AE5 | **`stripHtmlPreview` edge cases** — the cap slice splits surrogate pairs (an emoji at char 59 renders as a replacement char); numeric entities (`&#8212;`, `&#x2014;`) and common named ones Quill emits (`&ldquo;` `&rsquo;` `&hellip;`) pass through undecoded | s78 code audit (L3, executed proof) | E2 polish |
+| AE6 | **Mobile two-pane functional SUBSET** — measured on the ref at 390×844: Notes renders the list pane (w-80 @320px + a 14px right sliver, its own 416px overflow) and Flashcards renders the deck list (239px + 112px); the CLONE hides both asides below `md` (the mobile-only h2 + FAB pattern), so a 390px user CANNOT browse or select existing notes/decks at all — a functional subset of the reference (Tasks correctly matches the ref's single-pane mobile shape; StudyGroups already renders its list at all widths) | s78 mobile parity probe | **E1 functional gap** |
+| AE7 | **Quill toolbar pickers unlabeled** — the S77 a11y-win labeled the 20 buttons; the 3 picker groups (header/font/size + color/background/align) render nameless label spans | s78 code audit (I) | E2 a11y-win |
+| AE8 | **A freshly created note is never auto-selected** — the create flow's `setSelectedId(created)` intent received `void` (`createNote: Promise<void>` discarded the POST's created row), so the editor pane stayed on "Select a note from the list." after every create | surfaced live by the AE3 pin | E1 correctness |
+| AE9 | **Exams mobile overflow (584px)** — the search + filter + Add Exam header row (`flex items-center gap-2`, nowrap children) blows past 390; the ref fits (390) | the standing mobile sweep re-run (audit-tools rot — the sweep had not run since the header grew) | E1 layout |
+| AE10 | **Files mobile overflow (499px)** — the view-mode + New Folder + Upload actions row exceeds 390; the ref fits | the standing mobile sweep re-run | E1 layout |
+| AE11 | **Calculator mobile overflow (427px)** — the 4-mode TabsList bar (413px intrinsic) overflows; the ref overflows identically (429 — its own bug family) | the standing mobile sweep re-run | E1 layout |
+| AE12 | **Timetable mobile overflow (402px)** — the All Weeks + Grid Builder + Add Class row; the ref overflows too (395 — its own bug family) | the standing mobile sweep re-run | E1 layout |
+| AE13 | **StudyGroups mobile overflow (393px)** — `shrink-0` on the aside + `min-w-0` on the right pane starved the pane to 46px and its empty-state text overflowed; the ref's own aside SHRINKS (222px aside + 112px pane, 390) | the standing mobile sweep re-run | E1 layout |
+
+**Verified non-gaps (documented, no churn):** the dashboard
+section-action inner-button radius (ref 6px on the button vs clone 6px
+on the anchor — both transparent, borderless, and hover-paint-free on
+BOTH hosts, so the delta is invisible in every state; the clone's
+anchor-side radius exists to clip its focus-ring superset); the
+Wrong-button ≈4.1:1 contrast (measured parity); `mastered` staying
+write-only UI state (the counter advance is the reference's own
+observable); the ref's mobile Notes 416px overflow (its own bug family
+— the clone's `min-w-0` keeps scrollWidth ≤ 390, the standing
+superset-quality contract).
+
+**Execution TODO (TDD — RED pins first, then GREEN source, in this order):**
+
+1. **AE5 unit pins RED** — `tests/text.test.ts` new cases: numeric +
+   named entity decoding, the surrogate-safe cap (an emoji straddling
+   the cap must not split), the plain-text passthrough family.
+2. **AE6 e2e pins RED** — `tests/e2e/mobile-navigation.spec.ts` new
+   S78 block at 390×844: `/Notes` renders the list pane VISIBLE (the
+   h1, the search input, a seeded note row) with scrollWidth ≤ 390,
+   and tapping a row selects the note (the editor's title input
+   appears); `/Flashcards` renders the deck list VISIBLE and tapping a
+   deck row switches the detail heading.
+3. **AE1/AE2/AE4 e2e pins RED** — `tests/e2e/parity-session7.spec.ts`
+   S78 block: (a) with the quill chunk route-delayed, an immediate
+   Save click must NOT PATCH `content:""` (the captured request body
+   carries the original HTML); (b) an aborted PATCH during typing
+   surfaces the autosave-failure toast (once per streak, not per
+   keystroke); (c) advancing to card 2 in deck A then switching to
+   deck B resets the counter to "1 / N" of deck B.
+4. **AE3 pin RED** — `tests/e2e/dark-mode.spec.ts`: dark PATCH → a
+   blank note's `.ql-editor.ql-blank::before` reads the slate-400
+   placeholder (not snow's rgba(0,0,0,.6)).
+5. **GREEN source** — `src/lib/text.ts` (entity map + code-point-aware
+   cap); `src/components/views/quill-editor.tsx`
+   (`getContent(): string | null` + picker-label a11y); the notes-view
+   (autosave toast-once-per-streak, the aside `flex` at all widths,
+   drop the now-redundant mobile-only h2, keep the FAB superset); the
+   flashcards-view (the `switchDeck` reset, the aside `flex`); the
+   globals.css dark placeholder rule; `src/lib/data.ts` (`createNote`
+   returns the created row's id — the AE8 auto-select fix). **The ≥md
+   rendering is byte-identical by construction** (`hidden md:flex` →
+   `flex` changes nothing at ≥md; the h2 was already `md:hidden`).
+6. **Full cold re-certification** — lint → tsc → unit → build → the
+   5-chunk e2e cold map (the new pins grow the census) → the s78 sweep
+   re-run → the S33 mobile sweep re-run (the no-overflow contract at
+   390 now covers the visible asides) → axe re-check.
+7. **Evidence + docs** — mobile before/after captures
+   (`78-{clone,ref}-mobile-{notes,flashcards,tasks,studygroups}.png`),
+   the README session row + counts, AGENTS/CLAUDE counts, this record,
+   the worklog Session-78 entry, the `docs/session_25.md` transcript.
+
+**Honest deviations ledger (this cycle):** the clone keeps
+`scrollWidth ≤ 390` at mobile (the ref's 416px overflow is its own
+bug); the clone keeps the mobile "New note" FAB (a superset quick-action
+that coexists with the now-visible list); deck switches mid-study RESET
+the study index (the ref's own mid-study switch behavior is unmeasured
+— reset-from-card-1 is the least-surprise reading of its always-interactive
+sidebar).
+
+**Cycle 28 execution record (session-78):** executed in the documented
+TDD order. RED first: 5 unit pins (`tests/text.test.ts` — the numeric/
+named entity family + the surrogate-safe cap: 3 failing) and 7 e2e pins
+(mobile-navigation +2 AE6 +1 AE9-13, parity-session7 +3 AE1/AE2/AE4,
+dark-mode +1 AE3 — **7/7 RED** against the pre-change standalone). GREEN
+source: `src/lib/text.ts` (the entity map + `Array.from` code-point cap);
+`quill-editor.tsx` (`getContent(): string | null` + the picker
+role=group/aria-label a11y); `notes-view.tsx` (the autosave
+toast-once-per-streak, the aside `flex` at all widths, the mobile-only
+h2 dropped); `flashcards-view.tsx` (the `switchDeck` reset, the aside
+`flex` + `aria-label="Deck list pane"`); `globals.css` (the
+`.dark .sf-note-editor .ql-editor.ql-blank::before` slate-400 rule);
+`data.ts` (`createNote` returns the created row's id — the AE8
+auto-select); the five overflow fixes (exams/timetable/files
+`flex-wrap` headers, calculator `max-w-full overflow-x-auto` tabs,
+studygroups shrinkable aside + content-floor right pane). Two
+pin-calibration repairs (the deck-order-agnostic heading — the
+collection orders by createdAt so Spanish Vocabulary leads the fresh
+seed; the exact:true menuitem — the substring lesson), one AE8 fix
+surfaced live by the AE3 pin, and one audit-tools repair
+(`capture-studyflow.mjs`'s login selectors — the S15 id rename rot).
+Post-fix full cold re-certification: lint ✓ tsc ✓ unit **859/859** ✓
+build REAL_EXIT=0 fresh; cold e2e **416/416** (126+122+50+60+58, first
+pass every chunk; the census grew 30→411 chromium with the 7 S78 pins +
+1 setup per chunk); the mobile sweep re-run: **findings []** — all 20
+views ≤ 390 (the five overflow views remediated); the s78 resweep
+re-run: ok:true (9/9 invariants both hosts, brand tables byte-matched,
+mobile drawers green on both). Evidence: `docs/screenshots/78-*.png`
+(the sweep's 9-view clone set + the mobile pairs + the S78 evidence
+captures — the mobile two-pane surfaces, the five overflow-fixed views,
+the hardened editor + study mode) + `scripts/ref-mobile-{notes,twopane,overflow}-s78.mjs`
++ `scripts/{vlm-verify,sectionaction-probe,mobile-overflow-probe}-s78.mjs`
++ `scripts/capture-s78-clone.mjs` + `scripts/ref-resweep-s78.mjs`.
+**Batch AE: DONE.** Standing debt unchanged: Batch R (RSC structural
 perf — the S75 deferral evidence stands) + the pre-existing
 `sf-clock-date` dark-sweep artifact (a future audit-tools cycle).
 

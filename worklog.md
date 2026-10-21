@@ -1783,3 +1783,95 @@ Batch AD DONE. Standing debt unchanged: Batch R (RSC structural perf —
 deferred on the strengthened S75 CWV evidence); the pre-existing
 sf-clock-date dark-sweep artifact (recorded for a future audit-tools
 cycle).
+
+## Session 78 (continuation 29) — the Batch AD post-audit hardening + the mobile two-pane parity fix (Batch AE)
+
+**Context.** Ran on a RESET workspace (19th reset — fresh clone at
+`d9b289e` = Session-77 + the session_23/session_24 transcripts, this
+cycle's directive). The directive: the standing rhythm — baseline
+re-certification, the Batch AD diff audit, the reference parity re-check
+(agent-browser + the sweep), the mobile navigation menu verification,
+and the Tailwind v4 watch.
+
+**Work log.**
+
+1. **Workspace rebuilt from zero.** Full provisioning: bun install
+   (497 pkgs), `.env` (`file:../db/custom.db` + empty AUTH_SECRET — the
+   documented dev posture), db push + seed, chromium-1243 restored,
+   build. Baseline re-certified BEFORE any change: lint ✓ tsc ✓ unit
+   **854/854**; e2e cold across the documented 5-chunk map **409/409**
+   (123+119+50+59+58, first pass every chunk).
+2. **The Batch AD code audit (Mode C).** Security/XSS clean (no
+   dangerouslySetInnerHTML of note content; Quill 2.0.3 sanitizes link
+   protocols; previews React-escaped), React-clean (no
+   set-state-in-effect; StrictMode-safe), conventions clean (all v4
+   traps respected). Findings: 2 Medium (the saveNow empty-overwrite
+   window — `getContent()` returned `""` during the dynamic-import
+   window so Save PATCHed `content:""` over a populated note; the
+   silent autosave `.catch(() => {})` swallow), 4 Low, 7 Informational.
+3. **The parity evidence layers.** The s78 reference re-sweep
+   (`scripts/ref-resweep-s78.mjs`, the s77 class re-tagged): **ok:true**
+   — 9/9 invariants both hosts, brand tables byte-matched, **mobile
+   drawers green on BOTH** (the user-flagged surface; no Tailwind v4
+   mobile-nav bug, traps 4/7/9 verified live yet again). An
+   agent-browser walkthrough of the clone (login → dashboard → drawer
+   open/navigate/close → the Quill editor → the study flip/rating flow;
+   zero console errors). A VLM pairwise pass raised two hypotheses —
+   both DISPROVEN by DOM probes (the "stat-card decorative circles"
+   claim: identical child structure both hosts; the "Grade Tracker
+   missing" claim: 20/20 labels byte-matched) — the AP-115 doctrine
+   (DOM probes are the authority) applied.
+4. **The mobile two-pane discovery (the cycle's headline).** A targeted
+   probe measured the reference at 390×844: the ref renders the Notes
+   list pane (w-80 @320px + a 14px right sliver, its own 416px overflow)
+   and the Flashcards deck list (239px + 112px) — the CLONE hid both
+   asides below md, so a 390px user could not browse or select existing
+   notes/decks at all (a functional SUBSET of the reference). Tasks
+   correctly matches the ref's single-pane mobile shape; StudyGroups
+   already rendered its list.
+5. **The standing mobile sweep re-run surfaced five MORE overflow
+   findings** (audit-tools rot — the sweep had not been re-run since the
+   header rows grew): Timetable 402 / Exams 584 / Files 499 / Calculator
+   427 / StudyGroups 393 — element-attributed by a new probe (the
+   nowrap header rows + the StudyGroups shrink-0/min-w-0 starvation);
+   the ref itself overflows on Timetable (395) + Calculator (429) — its
+   own bug family — while Exams/Files/StudyGroups are clone-only gaps.
+6. **Remediation plan written first** (docs/remediation-plan.md Cycle
+   28): the AE1-AE13 measured table + the 7-item TDD todo + the honest
+   deviations ledger.
+7. **Batch AE implemented TDD.** RED first: 5 unit pins
+   (`stripHtmlPreview` entity/surrogate hardening) + 7 e2e pins (the
+   AE6 mobile two-pane pair, the AE9-13 five-view overflow guard, the
+   AE1 save-race pin with the route-delayed quill chunk, the AE2
+   autosave-failure toast, the AE4 study-index reset, the AE3 dark
+   placeholder) — **7/7 RED** against the pre-change build. GREEN:
+   the asides render at ALL widths (≥md byte-identical by construction),
+   `getContent(): string | null`, the toast-once-per-streak autosave,
+   the `switchDeck` reset, the dark placeholder rule, the entity-cap
+   hardening, the five overflow fixes (flex-wrap / scrollable tabs /
+   the ref's own shrinkable StudyGroups negotiation), and AE8
+   (`createNote` returns the created id — the never-selected-note
+   papercut the AE3 pin surfaced live). Two pin calibrations (the
+   deck-order-agnostic heading; the exact:true menuitem) + one
+   audit-tools repair (the capture script's rotted login selectors).
+8. **Full cold re-certification.** lint ✓ tsc ✓ unit **859/859** ✓
+   build REAL_EXIT=0 fresh; cold e2e **416/416** (126+122+50+60+58,
+   first pass every chunk); the mobile sweep re-run: **findings []** —
+   all 20 views ≤ 390; the s78 resweep re-run: ok:true.
+9. **Evidence + docs.** The standard 31 refreshed
+   (`capture-studyflow.mjs`) + the S78 evidence set
+   (`capture-s78-clone.mjs`: the mobile two-pane surfaces, the
+   overflow-fixed five, the hardened editor + study mode — VLM-verified);
+   README (badge 1275, counts 859/416, the S78 session row);
+   AGENTS/CLAUDE counts; the remediation-plan Cycle 28 record; this
+   entry; the `docs/session_25.md` transcript. `.env.example` verified
+   current (no env surface changed this cycle).
+
+**Stage summary.** HEAD = `d9b289e` + this cycle's commit (Batch AE
+source + pins + probes + sweeps + screenshots + docs + worklog).
+Baselines: e2e **416/416** (126+122+50+60+58, 30 spec files censused),
+unit **859/859**, lint/tsc clean, build fresh, mobile sweep findings [],
+s78 resweep ok:true. Batch AE DONE. Standing debt unchanged: Batch R
+(RSC structural perf — deferred on the S75 CWV evidence); the
+pre-existing sf-clock-date dark-sweep artifact (a future audit-tools
+cycle).
