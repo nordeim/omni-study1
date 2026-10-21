@@ -202,6 +202,8 @@ export function NotesView() {
         } else {
           const created = await createNote({ title: name, content: "", notebookId: notebookFilter === "all" ? "" : notebookFilter });
           setSelectedId(created ?? null);
+          // S79/AF3: a freshly created note starts with a clean streak.
+          autosaveFailedRef.current = false;
         }
       } else {
         if (dialog.editing) {
@@ -280,12 +282,23 @@ export function NotesView() {
         // S78/AE2: never swallow — a hung offline state must not let the
         // user believe the autosave superset persisted. One toast per
         // failure streak (the content stays in the editor as the retry
-        // affordance — the S13 doctrine).
+        // affordance — the S13 doctrine). S79/AF3 (the s79 audit, F2):
+        // the streak flag resets on SELECTION CHANGE too — see
+        // selectNote — so the next note's first failure always toasts.
         if (!autosaveFailedRef.current) {
           autosaveFailedRef.current = true;
-          toast.error(err instanceof ApiError ? err.message : "Autosave failed. Your note is still open — use Save to retry.");
+          toast.error(err instanceof ApiError ? err.message : "Autosave failed — the note is still open; use Save to retry.");
         }
       });
+  };
+
+  // S79/AF3: every selection change resets the autosave streak flag — a
+  // different note's first failure must toast even while the previous
+  // note's streak is still failing (the pre-fix flag latched across the
+  // switch and silently swallowed the second note's failures).
+  const selectNote = (id: string) => {
+    setSelectedId(id);
+    autosaveFailedRef.current = false;
   };
 
   const saveNow = async () => {
@@ -397,7 +410,7 @@ export function NotesView() {
                 <button
                   key={note.id}
                   type="button"
-                  onClick={() => setSelectedId(note.id)}
+                  onClick={() => selectNote(note.id)}
                   className={cn(
                     "block w-full rounded-xl border-2 p-3 text-left outline-none transition-colors focus-visible:ring-2 focus-visible:ring-sf-primary/40",
                     effectiveNoteId === note.id
@@ -607,7 +620,11 @@ export function NotesView() {
         )}
       </div>
 
-      {/* Mobile create button (two-pane is md+) */}
+      {/* Mobile create FAB — the superset quick-action (S79/AF6: the
+          comment below described the pre-AE6 reality; the list pane now
+          renders at ALL widths and carries its own "New note menu" — the
+          FAB remains as the one-tap affordance over the squeezed mobile
+          editor pane). */}
       <Button
         type="button"
         variant="gradient"

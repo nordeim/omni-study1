@@ -296,3 +296,38 @@ test.describe("S78/AE3 · the dark-mode Quill placeholder", () => {
     expect(phColor).toBe(SLATE_400); // not snow's rgba(0, 0, 0, 0.6)
   });
 });
+
+// S79/AF5 (the standing dark-sweep artifact, closed): the sidebar clock
+// DATE read violet-950 (rgb(76,29,149)) on the dark chip — 1.78:1,
+// flagged unreadable on ALL 20 views by the standing dark sweep. The
+// theme system's own token comments name strong/strongDark as the
+// clock-date pair (theme.ts: "strong: 600 — clock date" / "strongDark:
+// 300 — dark-mode strong counterpart"), and the ref's dark mode is its
+// own half-broken family (its sidebar stays fully light-themed —
+// measured through its own Settings Theme→Dark), so the clone's full
+// dark theme remains the documented superset: the date moves to the
+// accent-aware 400 step (--sf-primary-avatar-from) — one step dimmer
+// than the time's 300, mirroring light's 700/600 hierarchy, ~5.8:1 on
+// the dark chip.
+test.describe("S79/AF5 · the dark-mode clock date reads the 400 step", () => {
+  test("the sidebar clock date computes violet-400 in dark (readable, accent-aware)", async ({ page }) => {
+    await gotoDark(page, "/Dashboard");
+    const date = page.locator(".sf-clock-date");
+    await expect(date).toBeVisible();
+    const dateColor = await date.evaluate((el) => getComputedStyle(el).color);
+    // The avatarFrom token under the default violet accent: violet-400.
+    expect(dateColor).toBe("rgb(167, 139, 250)");
+  });
+
+  test("light mode keeps the clock date at violet-600 (the regression guard)", async ({ page }) => {
+    await page.goto("/Dashboard");
+    await page.waitForFunction(
+      () => document.documentElement.style.getPropertyValue("--sf-primary") !== "",
+    );
+    const date = page.locator(".sf-clock-date");
+    await expect(date).toBeVisible();
+    const dateColor = await date.evaluate((el) => getComputedStyle(el).color);
+    // Unchanged: the light rule still resolves --sf-primary-strong.
+    expect(dateColor).toBe("rgb(124, 58, 237)");
+  });
+});

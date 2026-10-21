@@ -320,7 +320,11 @@ test.describe("S78 · mobile two-pane parity — the list panes render at 390", 
       detail.getByRole("heading", { name: /^(Integration rules|Spanish Vocabulary|Biology Chapter 5)$/ }),
     ).toBeVisible();
     // … and the deck rows are visible; tapping one switches the detail.
-    await aside.getByRole("button", { name: /Biology Chapter 5/ }).first().tap();
+    // S79/AF1 calibration: the row now also carries the mobile-only Study
+    // affordance at its right edge — tap the row's NAME (the select
+    // gesture; a center tap would land on the affordance).
+    const row = aside.getByRole("button", { name: /Biology Chapter 5/ }).first();
+    await row.locator("h2").tap();
     await expect(detail.getByRole("heading", { name: "Biology Chapter 5" })).toBeVisible();
     const scrollW = await page.evaluate(() => document.documentElement.scrollWidth);
     expect(scrollW).toBeLessThanOrEqual(390);
@@ -343,5 +347,70 @@ test.describe("S78 · mobile two-pane parity — the list panes render at 390", 
       const scrollW = await page.evaluate(() => document.documentElement.scrollWidth);
       expect(scrollW, `${v} overflowed`).toBeLessThanOrEqual(390);
     }
+  });
+});
+
+// S79/AF1 (measured on the reference at 390×844): the ref's Flashcards
+// study mode is a FULL VIEW REPLACEMENT — entering study swaps out the
+// entire two-pane layout (desktop innerText during study is exactly
+// "Exit Study N / M [card] Click card to flip"), and at 390 the study
+// pane renders FULL WIDTH (Exit x=16, scrollWidth 390, the deck list
+// ABSENT). The clone rendered the study pane inside the squeezed ~46px
+// right pane — the deck-detail toolbar's Study button sat at x=360..432
+// (clipped outside the viewport; a tap silently missed) and the study
+// chrome was unusable: a 390px user could not enter or use study mode.
+// The fix: study replaces the whole view (the ref's layout) + a
+// below-md IN-ROW Study affordance keeps the entry one tap away (the
+// ref's own mobile deck-detail is its overflow-bug family — reachable
+// only by panning to its 836px scrollWidth — so the clone's contained
+// squeeze + the in-row entry is the superset answer).
+test.describe("S79 · mobile Flashcards study mode (the full-replacement parity fix)", () => {
+  test("the in-row Study affordance enters the full-width study pane at 390; Exit restores the layout", async ({ page }) => {
+    await page.goto("/Flashcards");
+    await page.waitForFunction(
+      () => document.documentElement.style.getPropertyValue("--sf-primary") !== "",
+    );
+
+    // The 4-card deck's row carries the below-md Study affordance, fully
+    // inside the viewport (the deck-detail toolbar's Study button is
+    // clipped by the squeezed pane at 390 — the documented contained
+    // squeeze, so the ROW is the mobile entry). exact: true — the deck
+    // ROW's role=button accessible name absorbs the affordance's label
+    // (the substring-collision lesson).
+    const rowBtn = page.getByRole("button", { name: "Study Integration rules", exact: true });
+    await expect(rowBtn).toBeVisible();
+    const btnBox = await rowBtn.boundingBox();
+    expect(btnBox).not.toBeNull();
+    expect(btnBox!.x).toBeGreaterThanOrEqual(0);
+    expect(btnBox!.x + btnBox!.width).toBeLessThanOrEqual(390);
+
+    // Enter study: the study pane replaces the WHOLE view (the ref's
+    // measured mobile shape — the deck list is ABSENT during study).
+    await rowBtn.tap();
+    const study = page.locator('[aria-label="Study mode"]');
+    await expect(study).toBeVisible();
+    await expect(page.getByRole("complementary", { name: "Deck list pane" })).toHaveCount(0);
+    await expect(page.getByLabel("Deck detail")).toHaveCount(0);
+
+    // The Exit button is FULLY inside the viewport (the ref measured
+    // x=16; the pre-fix clone clipped it at x=347..419).
+    const exit = study.getByRole("button", { name: "Exit Study" });
+    await expect(exit).toBeVisible();
+    const exitBox = await exit.boundingBox();
+    expect(exitBox).not.toBeNull();
+    expect(exitBox!.x).toBeGreaterThanOrEqual(0);
+    expect(exitBox!.x + exitBox!.width).toBeLessThanOrEqual(390);
+
+    // No horizontal overflow in the study state (the ref measured 390).
+    const scrollW = await page.evaluate(() => document.documentElement.scrollWidth);
+    expect(scrollW).toBeLessThanOrEqual(390);
+
+    // The counter renders for the row's OWN deck (the ref's "1 / 4" shape).
+    await expect(study.getByText(/^1 \/ 4$/)).toBeVisible();
+
+    // Exit Study restores the two-pane layout (the deck list returns).
+    await exit.tap();
+    await expect(page.getByRole("complementary", { name: "Deck list pane" })).toBeVisible();
+    await expect(page.getByLabel("Deck detail")).toBeVisible();
   });
 });

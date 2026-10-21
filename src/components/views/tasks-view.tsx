@@ -616,7 +616,11 @@ export function TasksView() {
         aria-label="Task views"
         className="hidden w-64 shrink-0 flex-col overflow-y-auto sf-scroll border-r border-slate-100 pr-6 dark:border-slate-800 md:flex"
       >
-        <h2 className="pb-4 text-lg font-semibold text-slate-800 dark:text-slate-100">Lists</h2>
+        {/* No heading here (S79/AF2, measured on the ref at 768): the
+            reference's aside opens directly with the All Tasks/Important
+            rows + the "MY LISTS" divider — no "Lists" heading exists on
+            the ref (the scaffold h2 was clone-only drift that survived
+            until the mid-band/landscape sweeps re-ran). */}
         <div className="flex flex-col gap-1">
           <AsideRow
             icon={<List className="size-5 shrink-0" strokeWidth={2} />}
@@ -654,8 +658,18 @@ export function TasksView() {
 
       {/* ---- main pane ---- */}
       <section className="flex min-w-0 flex-1 flex-col">
+        {/* No sm:min-w-0 (S79/AF2b, unmasked by the Lists-h2 removal): with
+            it, the flex-1 title div collapsed to width 0 at the md band
+            (768: the search+filter+Add Task row consumed the whole line —
+            the truncate h1 went INVISIBLE; pre-existing, masked by the
+            aside h2 being the sweep's first visible heading). Dropping it
+            restores the min-content floor: the header WRAPS (the ref's own
+            title block wraps at 74px there — measured; the ref instead
+            overflows to 826, its own bug family) and the h1 stays visible
+            through the band. Desktop: the row fits one line and flex-grow
+            distributes identically — byte-identical. */}
         <div aria-label="Tasks header" className="flex flex-wrap items-center gap-3 pb-4">
-          <div className="w-full sm:w-auto sm:min-w-0 sm:flex-1">
+          <div className="w-full sm:w-auto sm:flex-1">
             <div className="flex items-baseline gap-2">
               <h1 className="truncate text-2xl font-bold text-slate-800 dark:text-slate-100">
                 {activeLabel}

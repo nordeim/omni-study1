@@ -780,10 +780,29 @@ test.describe("S78 · Batch AE hardening (the s78 audit)", () => {
     await page.waitForTimeout(1100);
     await expect(toasts).toHaveCount(1);
 
+    // S79/AF3 (the s79 audit, F2): switching notes resets the streak flag
+    // — note B's FIRST failure must get its own toast (the pre-fix flag
+    // latched across the switch and silently swallowed B's failure).
+    await page.getByRole("button", { name: /Kinetics summary/ }).first().click();
+    const editorB = page.locator(".ql-editor");
+    await expect(editorB).toBeVisible();
+    await editorB.click();
+    await page.keyboard.type("note b burst");
+    await page.waitForTimeout(1100);
+    await expect(toasts).toHaveCount(2);
+
     await page.unroute(/\/api\/notes\//);
   });
 
-  test("AE4: switching decks mid-study resets the study counter to the new deck's card 1", async ({ page }) => {
+  // S79/AF1 REWRITE: the s78 pin assumed the deck list stays interactive
+  // during study — the s79 reference re-measure showed the ref's study
+  // mode REPLACES the whole view (the deck list is ABSENT during study at
+  // BOTH viewports; the ref's innerText during study is exactly
+  // "Exit Study N / M [card] Click card to flip"). The switch semantics
+  // the old pin drove (a mid-study deck click) cannot happen on the ref's
+  // UI; the index-reset contract now lives in the exit → switch → Study
+  // path (startStudy always resets to card 1 of the newly selected deck).
+  test("AE4/S79: during study the deck list is absent; Study after switching decks starts the new deck at card 1", async ({ page }) => {
     await page.goto("/Flashcards");
     await hydrated(page);
     // Integration rules (4 cards) → Study → flip → Correct → card 2.
@@ -795,10 +814,56 @@ test.describe("S78 · Batch AE hardening (the s78 audit)", () => {
     await study.getByRole("button", { name: "Correct", exact: true }).click();
     await expect(study.getByText(/^2 \/ 4$/)).toBeVisible();
 
-    // Switch to Biology Chapter 5 (2 cards) mid-study: the sidebar stays
-    // interactive (measured) and the study continues with the NEW deck from
-    // card 1 — never a stale index into the wrong deck.
+    // During study the deck list is ABSENT (the ref's measured
+    // full-replacement shape — the whole two-pane layout swaps out).
+    await expect(page.locator('[aria-label="Deck list pane"]')).toHaveCount(0);
+    await expect(page.locator('[aria-label="Deck detail"]')).toHaveCount(0);
+
+    // Exit Study restores the two-pane layout…
+    await study.getByRole("button", { name: "Exit Study" }).click();
+    await expect(page.locator('[aria-label="Deck list pane"]')).toBeVisible();
+    await expect(page.locator('[aria-label="Deck detail"]')).toBeVisible();
+
+    // …and switching decks THEN studying starts the new deck from card 1
+    // — never the stale 2-of-4 index into the 2-card deck.
     await page.locator('[aria-label="Deck rows"] > *', { hasText: "Biology Chapter 5" }).first().click();
+    await page.locator('[aria-label="Deck detail"]').getByRole("button", { name: "Study" }).click();
     await expect(study.getByText(/^1 \/ 2$/)).toBeVisible();
+  });
+
+  // S79/AF1 (measured on the reference at 1280×800): the study column
+  // centers in the CONTENT area (not the squeezed right pane) — the Exit
+  // button anchors the `w-full max-w-2xl` column's LEFT edge and the
+  // counter rides the same justify-between row's RIGHT edge (the ref
+  // measured Exit x=434, counter x=1070, one row, y-aligned).
+  test("AF1: the study chrome centers in the content area with the Exit+counter on one justify-between row", async ({ page }) => {
+    await page.goto("/Flashcards");
+    await hydrated(page);
+    await page.locator('[aria-label="Deck rows"] > *', { hasText: "Integration rules" }).first().click();
+    await page.locator('[aria-label="Deck detail"]').getByRole("button", { name: "Study" }).click();
+    const study = page.locator('[aria-label="Study mode"]');
+    await expect(study).toBeVisible();
+
+    // The Exit + counter share ONE row: y-aligned, counter to the RIGHT
+    // of the Exit button (the ref's justify-between chrome).
+    const exit = study.getByRole("button", { name: "Exit Study" });
+    const counter = study.getByText(/^1 \/ 4$/);
+    await expect(exit).toBeVisible();
+    await expect(counter).toBeVisible();
+    const exitBox = await exit.boundingBox();
+    const counterBox = await counter.boundingBox();
+    expect(exitBox).not.toBeNull();
+    expect(counterBox).not.toBeNull();
+    expect(Math.abs(exitBox!.y - counterBox!.y)).toBeLessThan(12); // one row
+    expect(counterBox!.x).toBeGreaterThan(exitBox!.x + exitBox!.width); // counter right
+
+    // The study column centers in the viewport's content area (the shell
+    // sidebar owns the left 260px at 1280): the column's center ≈ the
+    // content area's center (770 ± 40px tolerance for the pane padding).
+    const flip = study.locator("[data-flip-card]");
+    const flipBox = await flip.boundingBox();
+    expect(flipBox).not.toBeNull();
+    const columnCenter = flipBox!.x + flipBox!.width / 2;
+    expect(Math.abs(columnCenter - 770)).toBeLessThan(40);
   });
 });

@@ -14,13 +14,14 @@
 
 import * as React from "react";
 import {
+  Ellipsis,
+  GraduationCap,
   Layers,
   Pencil,
   Plus,
   Search,
   Sparkles,
   Trash2,
-  Ellipsis,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -82,6 +83,7 @@ export function FlashcardsView() {
   const [cardDialog, setCardDialog] = React.useState<CardDialog>({ open: false, editing: null });
   const [cardForm, setCardForm] = React.useState({ front: "", back: "", difficulty: "medium" });
   const [studying, setStudying] = React.useState(false);
+  const [studyDeckId, setStudyDeckId] = React.useState<string | null>(null);
   const [studyIndex, setStudyIndex] = React.useState(0);
   const [flipped, setFlipped] = React.useState(false);
   const [generating, setGenerating] = React.useState(false);
@@ -106,18 +108,22 @@ export function FlashcardsView() {
     [flashcards, effectiveDeckId],
   );
 
-  // S78/AE4: the sidebar stays interactive during study (measured), so a
-  // mid-study deck switch must RESET the study index + flip — the old deck's
-  // index must never leak into the new deck (out-of-range fell through to
-  // deck-detail with `studying` still latched; in-range showed card N of the
-  // WRONG deck). Reset-from-card-1 is the least-surprise reading of the
-  // ref's always-interactive sidebar (its own switch behavior is unmeasured).
-  const switchDeck = (id: string) => {
+  // S79/AF1 (measured on the reference at BOTH viewports): entering study
+  // REPLACES the whole two-pane layout — the ref's innerText during study
+  // is exactly "Exit Study N / M [card] Click card to flip" (no h1, no deck
+  // list, no search), so a deck click can never happen mid-study on the
+  // ref's UI. The s78 switchDeck reset survives as the selectDeck contract
+  // (every deck selection lands in deck-detail from card 1), and the
+  // studyDeckId guard exits the study render when the deck under study no
+  // longer matches the effective selection (e.g. it was deleted externally
+  // — the s78 audit's F3 latch, killed structurally).
+  const selectDeck = (id: string) => {
     setSelectedDeckId(id);
+    setStudying(false);
+    setStudyDeckId(null);
     setStudyIndex(0);
     setFlipped(false);
   };
-
 
   const openDeckDialog = (editing: FlashcardDeckRow | null) => {
     setDeckForm(
@@ -229,7 +235,14 @@ export function FlashcardsView() {
     }
   };
 
-  const startStudy = () => {
+  const startStudy = (deckId?: string) => {
+    // S79/AF1: the study session binds to the deck it started from — the
+    // render guard (below) exits the study layout when that deck is no
+    // longer the effective selection. The optional id serves the mobile
+    // in-row affordance (the deck row's Study button selects + studies
+    // in one tap — effectiveDeckId is still the OLD deck in this tick).
+    const id = deckId ?? effectiveDeckId;
+    setStudyDeckId(id);
     setStudyIndex(0);
     setFlipped(false);
     setStudying(true);
@@ -250,11 +263,121 @@ export function FlashcardsView() {
 
   const studyCard = deckCards[studyIndex];
 
+  // ---------------------------------------------------------------------
+  // S79/AF1 (measured on the reference at BOTH viewports): the study mode
+  // is a FULL VIEW REPLACEMENT — entering study swaps out the ENTIRE
+  // two-pane layout (the ref's desktop innerText during study is exactly
+  // "Exit Study N / M [card] Click card to flip": no h1, no deck list, no
+  // search; the study column `w-full max-w-2xl` centers in the content
+  // area with Exit at x=434 @1280; the Exit button + counter share one
+  // `flex items-center justify-between` row, counter right-aligned). At
+  // 390×844 the study pane renders FULL WIDTH (Exit x=16, scrollWidth
+  // 390) — mobile study is clean and usable on the reference. The s77
+  // in-right-pane layout squeezed the study chrome into a ~46px pane at
+  // mobile (the Study entry button itself clipped at x=360..432 — a tap
+  // silently missed) and kept the deck list beside the pane at ≥md.
+  // The studyDeckId guard also exits this render when the deck under
+  // study no longer matches the effective selection (external deletion —
+  // the s78 audit's F3 latch, killed structurally).
+  // ---------------------------------------------------------------------
+  if (studying && studyCard && studyDeckId === effectiveDeckId) {
+    return (
+      <div
+        aria-label="Study mode"
+        className="flex min-h-[calc(100vh-8rem)] flex-col items-center justify-center p-4"
+      >
+        <div className="flex w-full max-w-2xl flex-col items-center gap-6">
+          {/* S79/AF1 (measured): the Exit button + counter share ONE
+              justify-between row — Exit anchors the column's left edge,
+              the counter rides the right (the ref measured Exit x=434,
+              counter x=1070 on 1280; y-aligned). */}
+          <div className="flex w-full items-center justify-between">
+            <button
+              type="button"
+              onClick={() => setStudying(false)}
+              className="rounded-md bg-neutral-950 px-4 py-2 text-sm font-medium text-neutral-50 transition-opacity hover:opacity-90 focus-visible:ring-2 focus-visible:ring-sf-primary/40 focus-visible:outline-none dark:bg-neutral-800"
+            >
+              Exit Study
+            </button>
+            <p className="text-base font-normal text-slate-500 dark:text-slate-400">
+              {studyIndex + 1} / {deckCards.length}
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => setFlipped((f) => !f)}
+            aria-label={flipped ? "Show question" : "Reveal answer"}
+            className="h-80 w-full max-w-2xl [perspective:1000px] outline-none focus-visible:ring-2 focus-visible:ring-sf-primary/40"
+          >
+            <div
+              data-flip-card
+              className="relative size-full [transform-style:preserve-3d] transition-transform duration-500"
+              style={{ transform: flipped ? "rotateY(180deg)" : "rotateY(0deg)" }}
+            >
+              <div
+                data-flip-front
+                className="sf-print-exact absolute inset-0 flex items-center justify-center rounded-2xl p-8 [backface-visibility:hidden]"
+                style={{
+                  backgroundImage:
+                    "linear-gradient(to bottom right, rgb(var(--sf-primary)), rgb(var(--sf-primary-gradient-to)))",
+                }}
+              >
+                {/* S77/AD10 (measured): 24px/500 white front text. */}
+                <p className="text-center text-2xl font-medium text-white">
+                  {studyCard.front}
+                </p>
+              </div>
+              <div
+                data-flip-back
+                className="absolute inset-0 flex items-center justify-center rounded-2xl border-2 border-violet-200 bg-white p-8 [backface-visibility:hidden] [transform:rotateY(180deg)] dark:border-violet-800 dark:bg-slate-900"
+              >
+                {/* S77/AD10 (measured): 20px/400 slate-700 back text. */}
+                <p className="text-center text-xl font-normal text-slate-700 dark:text-slate-100">
+                  {studyCard.back}
+                </p>
+              </div>
+            </div>
+          </button>
+          {/* S77/AD9 (measured): the hint, 16px slate-400. */}
+          <p className="text-base font-normal text-slate-400 dark:text-slate-500">
+            Click card to flip
+          </p>
+          {/* S77/AD11 (measured): the rating pair appears only after the
+              flip — Wrong (neutral-950 + red-600 text) and Correct
+              (green-500). Correct text stays WHITE (the ref's yellow
+              quirk); both advance. */}
+          {flipped && (
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={() => rate(false)}
+                className="h-10 rounded-md bg-neutral-950 px-8 text-sm font-medium text-red-600 transition-opacity hover:opacity-90 focus-visible:ring-2 focus-visible:ring-sf-primary/40 focus-visible:outline-none dark:bg-neutral-800 dark:text-red-400"
+              >
+                Wrong
+              </button>
+              <button
+                type="button"
+                onClick={() => rate(true)}
+                className="h-10 rounded-md bg-green-500 px-8 text-sm font-medium text-white transition-opacity hover:opacity-90 focus-visible:ring-2 focus-visible:ring-green-600/40 focus-visible:outline-none"
+              >
+                Correct
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex h-[calc(100vh-8rem)] gap-6">
       {/* Deck sidebar — S78/AE6: visible at ALL widths (measured on the ref
           at 390×844: the deck list renders beside a squeezed detail pane);
-          the aria-label matches the Notes pane convention. */}
+          the aria-label matches the Notes pane convention. shrink-0 (the
+          s78 shape): the w-80 list stays fixed-width — the ref's own
+          shrunk-aside state is inseparable from its 451/836px overflow bug,
+          so the clone keeps the contained squeeze + solves the mobile study
+          ENTRY with the in-row affordance instead. */}
       <aside
         aria-label="Deck list pane"
         className="flex w-80 shrink-0 flex-col border-r border-slate-100 pr-6 dark:border-slate-800"
@@ -296,9 +419,9 @@ export function FlashcardsView() {
                   key={deck.id}
                   role="button"
                   tabIndex={0}
-                  onClick={() => switchDeck(deck.id)}
+                  onClick={() => selectDeck(deck.id)}
                   onKeyDown={(e) => {
-                    if (e.key === "Enter" || e.key === " ") switchDeck(deck.id);
+                    if (e.key === "Enter" || e.key === " ") selectDeck(deck.id);
                   }}
                   className={cn(
                     "group flex w-full cursor-pointer items-center gap-3 rounded-xl border-2 p-4 text-left outline-none transition-colors focus-visible:ring-2 focus-visible:ring-sf-primary/40",
@@ -321,6 +444,30 @@ export function FlashcardsView() {
                       {count} {count === 1 ? "card" : "cards"}
                     </p>
                   </span>
+                  {/* S79/AF1 (the mobile study entry): below md the squeezed
+                      detail pane (~46px — the s78/AE6 contained shape, the
+                      ref's own mobile detail overflows to 451/836 and is
+                      reachable only by panning) puts the deck-detail
+                      toolbar's Study button outside the viewport. The
+                      in-row affordance keeps the study entry ONE TAP away
+                      at 390 — and study itself renders full-width (the
+                      ref's measured mobile study shape). Desktop never
+                      sees it (md:hidden) — byte-identical. */}
+                  {count > 0 && (
+                    <button
+                      type="button"
+                      aria-label={`Study ${deck.name}`}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        selectDeck(deck.id);
+                        startStudy(deck.id);
+                      }}
+                      className="flex h-9 shrink-0 items-center gap-1.5 rounded-lg bg-neutral-950 px-3 text-xs font-medium text-neutral-50 outline-none transition-opacity hover:opacity-90 focus-visible:ring-2 focus-visible:ring-sf-primary/40 focus-visible:outline-none md:hidden dark:bg-neutral-800"
+                    >
+                      <GraduationCap className="size-4" strokeWidth={2} />
+                      Study
+                    </button>
+                  )}
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <button
@@ -360,6 +507,16 @@ export function FlashcardsView() {
       </aside>
 
       {/* Detail pane */}
+      {/* Detail pane — min-w-0 (S79/AF7, the s78/AE6 contract restored):
+          the ref's own mobile Flashcards deck-detail overflows massively at
+          390 (its aside floor 299px + its right pane 112px → scrollWidth
+          451 empty / 836 with a card — its own bug family, the panning
+          state), so the clone keeps the squeezed-but-contained shape
+          (aside w-80 + this pane at the leftover ~46px, scrollWidth ≤ 390)
+          — the SAME documented parity decision the Notes view made in
+          s78. The mobile STUDY ENTRY is solved by the in-row affordance
+          (below): the deck-detail toolbar itself is desktop-first, like
+          the Notes editor chrome. */}
       <div className="sf-scroll flex min-w-0 flex-1 flex-col overflow-y-auto" aria-label="Deck detail">
         {decks.length === 0 ? (
           <div className="sf-card flex flex-1 flex-col justify-center">
@@ -378,94 +535,6 @@ export function FlashcardsView() {
         ) : !selectedDeck ? (
           <div className="flex flex-1 items-center justify-center">
             <p className="text-sm text-slate-400">Select a deck.</p>
-          </div>
-        ) : studying && studyCard ? (
-          // ---------------------------------------------------------------
-          // S77/AD8 (measured): the study mode is an IN-PAGE pane that
-          // replaces the deck-detail content — NOT a fixed overlay (the
-          // reference renders no overlay element). Exit Study is the
-          // reference's black button (neutral-950 + neutral-50, 6px
-          // radius, 14px/500); the counter is "N / M" 16px/400 slate-500
-          // (no deck name); the card is max-w-2xl (672px) with 24px/500
-          // front text and 20px/400 slate-700 back text; the "Click card
-          // to flip" hint rides below. The 3D flip animation is a kept
-          // superset flourish (static states match the reference exactly).
-          // ---------------------------------------------------------------
-          <div
-            aria-label="Study mode"
-            className="flex min-h-0 flex-1 flex-col items-center gap-6 p-4"
-          >
-            <button
-              type="button"
-              onClick={() => setStudying(false)}
-              className="self-start rounded-md bg-neutral-950 px-4 py-2 text-sm font-medium text-neutral-50 transition-opacity hover:opacity-90 focus-visible:ring-2 focus-visible:ring-sf-primary/40 focus-visible:outline-none dark:bg-neutral-800"
-            >
-              Exit Study
-            </button>
-            <p className="text-base font-normal text-slate-500 dark:text-slate-400">
-              {studyIndex + 1} / {deckCards.length}
-            </p>
-            <button
-              type="button"
-              onClick={() => setFlipped((f) => !f)}
-              aria-label={flipped ? "Show question" : "Reveal answer"}
-              className="h-80 w-full max-w-2xl [perspective:1000px] outline-none focus-visible:ring-2 focus-visible:ring-sf-primary/40"
-            >
-              <div
-                data-flip-card
-                className="relative size-full [transform-style:preserve-3d] transition-transform duration-500"
-                style={{ transform: flipped ? "rotateY(180deg)" : "rotateY(0deg)" }}
-              >
-                <div
-                  data-flip-front
-                  className="sf-print-exact absolute inset-0 flex items-center justify-center rounded-2xl p-8 [backface-visibility:hidden]"
-                  style={{
-                    backgroundImage:
-                      "linear-gradient(to bottom right, rgb(var(--sf-primary)), rgb(var(--sf-primary-gradient-to)))",
-                  }}
-                >
-                  {/* S77/AD10 (measured): 24px/500 white front text. */}
-                  <p className="text-center text-2xl font-medium text-white">
-                    {studyCard.front}
-                  </p>
-                </div>
-                <div
-                  data-flip-back
-                  className="absolute inset-0 flex items-center justify-center rounded-2xl border-2 border-violet-200 bg-white p-8 [backface-visibility:hidden] [transform:rotateY(180deg)] dark:border-violet-800 dark:bg-slate-900"
-                >
-                  {/* S77/AD10 (measured): 20px/400 slate-700 back text. */}
-                  <p className="text-center text-xl font-normal text-slate-700 dark:text-slate-100">
-                    {studyCard.back}
-                  </p>
-                </div>
-              </div>
-            </button>
-            {/* S77/AD9 (measured): the hint, 16px slate-400. */}
-            <p className="text-base font-normal text-slate-400 dark:text-slate-500">
-              Click card to flip
-            </p>
-            {/* S77/AD11 (measured): the rating pair appears only after the
-                flip — Wrong (neutral-950 + red-600 text) and Correct
-                (green-500). Correct text stays WHITE (the ref's yellow
-                quirk); both advance. */}
-            {flipped && (
-              <div className="flex items-center gap-3">
-                <button
-                  type="button"
-                  onClick={() => rate(false)}
-                  className="h-10 rounded-md bg-neutral-950 px-8 text-sm font-medium text-red-600 transition-opacity hover:opacity-90 focus-visible:ring-2 focus-visible:ring-sf-primary/40 focus-visible:outline-none dark:bg-neutral-800 dark:text-red-400"
-                >
-                  Wrong
-                </button>
-                <button
-                  type="button"
-                  onClick={() => rate(true)}
-                  className="h-10 rounded-md bg-green-500 px-8 text-sm font-medium text-white transition-opacity hover:opacity-90 focus-visible:ring-2 focus-visible:ring-green-600/40 focus-visible:outline-none"
-                >
-                  Correct
-                </button>
-              </div>
-            )}
           </div>
         ) : (
           <>
@@ -495,7 +564,7 @@ export function FlashcardsView() {
                   Add Card
                 </Button>
                 {deckCards.length > 0 && (
-                  <Button type="button" variant="gradient" className="sf-gradient-shadow h-9" onClick={startStudy}>
+                  <Button type="button" variant="gradient" className="sf-gradient-shadow h-9" onClick={() => startStudy()}>
                     Study
                   </Button>
                 )}

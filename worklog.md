@@ -1875,3 +1875,125 @@ s78 resweep ok:true. Batch AE DONE. Standing debt unchanged: Batch R
 (RSC structural perf — deferred on the S75 CWV evidence); the
 pre-existing sf-clock-date dark-sweep artifact (a future audit-tools
 cycle).
+
+## Session 79 (continuation 30) — the study-mode full-replacement parity fix + the mid-band/landscape sweep layer + the standing-artifact closure (Batch AF)
+
+The 20th workspace reset (a scaffold repo only) — cloned fresh at
+`6a7245e` (Session-78/Batch AE + the session_25/session_26 transcripts,
+this cycle's directive). Provisioned per the documented order (bun
+install 497 pkgs, `.env` at the dev posture `DATABASE_URL="file:../db/custom.db"`
+with the repo-root `db/`, db push + seed, chromium-1243 restored, build)
+while the operational docs were absorbed (AGENTS/CLAUDE for the gates
+and doctrines, README/PAD/SKILL for the inventory, the session_25/26
+transcripts + remediation-plan + worklog for the cycle shape,
+skills-catalog for the tooling — the `skills/` folder excluded from
+checking/testing/compilation per the standing contract).
+
+1. **Baseline re-certified cold, first.** lint ✓, tsc ✓, unit
+   **859/859**, build REAL_EXIT=0, cold e2e **416/416**
+   (126+122+50+60+58, first pass every chunk) — the received state
+   verified clean against the documented baseline.
+
+2. **Two evidence layers before any source change.** (a) A Mode-C
+   audit of the Batch AE diff (`2cce898..38510aa`, delegated deep-read):
+   0 Critical / 0 High / 2 Medium / 5 Low / 4 Informational — the two
+   Medium: the surrogate-cap unit pins are non-discriminating (a
+   regression to a bare UTF-16 slice would pass the suite) and the
+   autosave streak flag latches across note switches (note B's first
+   failure is silently swallowed). (b) The parity layers: the s79
+   reference re-sweep (the s78 class re-tagged) — **ok:true**, 9/9
+   invariants both hosts, brand tables byte-matched, mobile drawers
+   green on both (the user-flagged surface; no Tailwind v4 mobile-nav
+   bug, traps verified live yet again); an agent-browser walkthrough
+   (login → dashboard → the drawer open/navigate/close cycle → Notes →
+   Flashcards — zero console errors, zero page errors); the standing
+   rhythm re-run: mobile sweep findings [], **the mid-band (768×1024)
+   and landscape (844×390) sweeps re-run for the first time since the
+   AE overflow family — both flagged the SAME single finding** (the
+   Tasks aside's scaffold `<h2>Lists</h2>`: the ref renders NO heading
+   there, measured), and the dark sweep showed the standing
+   `sf-clock-date` artifact live on all 20 views (violet-950 @1.78:1).
+
+3. **The headline discovery (AF1).** A directed reference probe (the
+   ref account's decks were since reset — a probe deck + card created
+   to re-measure the populated state) found the ref's Flashcards study
+   mode is a **FULL VIEW REPLACEMENT at both viewports**: desktop
+   innerText during study is exactly "Exit Study 1 / 1 [card] Click
+   card to flip" (no h1, no deck list, no search), the study column
+   (`w-full max-w-2xl`) centers in the content area (Exit x=434 @1280,
+   counter x=1070 on the same justify-between row), and at 390×844 the
+   study pane renders FULL WIDTH (Exit x=16, scrollWidth 390, deck list
+   absent) — mobile study is clean and usable on the reference. The
+   clone rendered the study pane INSIDE the two-pane right pane: at 390
+   the Study button sat clipped at x=360..432 (an agent-browser tap
+   silently missed) and the study chrome was unusable — **a mobile
+   functional subset of the reference's working study surface.**
+
+4. **The second discovery (AF2/AF2b).** The clone's Tasks aside
+   rendered an extra `<h2>Lists</h2>` (original scaffold, survived every
+   parity batch — the mid-band sweep is the only standing probe that
+   reads the first visible heading through the band). Removing it
+   UNMASKED a pre-existing collapse: at 768 the Tasks h1's `sm:min-w-0`
+   flex container collapsed to width 0 when the actions row consumed
+   the full line (invisible heading; previously hidden behind the
+   "Lists" h2). Fixed by dropping `sm:min-w-0` — the header wraps (the
+   ref's own shape; the ref itself overflows to 826 there, its own bug
+   family), the h1 stays visible through the band, desktop
+   byte-identical.
+
+5. **The third discovery (AF5).** The `sf-clock-date` standing artifact
+   root-caused: the utility's `.dark &` rule resolved
+   `--sf-primary-soft-dark` = violet-950 for the sidebar clock date
+   (1.78:1, unreadable on all 20 views). The theme system's own token
+   comments name strong/strongDark as the clock-date pair; the ref's
+   dark mode is its own half-broken family (its sidebar stays fully
+   light-themed — measured through its own Settings Theme→Dark), so the
+   clone's full dark theme remains the documented superset and the fix
+   is a readability correction: the date moves to the accent-aware
+   `--sf-primary-avatar-from` (400) — one step dimmer than the time's
+   300, mirroring light's 700/600 hierarchy, ~5.8:1.
+
+6. **Remediation plan written first** (docs/remediation-plan.md Cycle
+   29: the AF1-AF7 measured table + the TDD todo + the honest-deviations
+   ledger, including the AF7 recalibration recorded when the planned
+   flex negotiation could not engage — the right pane's overflow-y-auto
+   collapses the CSS automatic min-size, and the aside's own content
+   floor exceeds any useful detail floor at 390).
+
+7. **Batch AF implemented TDD.** RED first: 2 unit pins + 6 e2e pin
+   behaviors — **6/6 RED** against the pre-change build. GREEN: the
+   study pane replaces the whole view when studying (the studyDeckId
+   guard kills the s78 audit's F3 deck-deletion latch structurally;
+   `selectDeck` lands every selection in deck-detail from card 1); the
+   below-md in-row Study affordance keeps the mobile entry one tap away
+   (the ref's own mobile deck-detail is its 451/836px overflow family);
+   the Tasks h2 removed + the h1 collapse fixed; the autosave streak
+   flag resets on selection change (+ the note-agnostic wording, + the
+   FAB comment); the discriminating surrogate-cap pin + the `&copy;`
+   deviation pin; the dark clock date reads violet-400. Three pin
+   calibrations out of the GREEN runs (the row-tap targets the h2; the
+   exact:true row-button locator; the AD10 max-w-2xl read site).
+
+8. **Full cold re-certification.** lint ✓ tsc ✓ unit **861/861** ✓
+   build REAL_EXIT=0 fresh; cold e2e **421/421** (127+124+50+62+58,
+   first pass every chunk; the census re-derived per-file); mobile,
+   mid-band, and landscape sweeps: **findings [] each**; the dark sweep:
+   **the sf-clock-date artifact CLEARED** (0 of 20 views); the s79
+   resweep: **ok:true**.
+
+9. **Evidence + docs.** The standard 31 refreshed + the S79 evidence
+   set (`capture-s79-clone.mjs`: the mobile study flow, the desktop
+   full-replacement study, the Tasks 768 aside, the dark clock chip) +
+   the reference probe set (the AF1 measurement basis); README (badge
+   1282, counts 861/421, the S79 session row); AGENTS/CLAUDE counts;
+   the remediation-plan Cycle 29 execution record; this entry; the
+   `docs/session_27.md` transcript. `.env.example` verified current
+   (no env surface changed this cycle).
+
+**Stage summary.** HEAD = `6a7245e` + this cycle's commit (Batch AF
+source + pins + probes + sweeps + screenshots + docs + worklog).
+Baselines: e2e **421/421** (127+124+50+62+58, 30 spec files censused),
+unit **861/861**, lint/tsc clean, build fresh, mobile + mid-band +
+landscape sweeps findings [], dark sweep artifact-free, s79 resweep
+ok:true. Batch AF DONE. Standing debt reduced to ONE item: Batch R (RSC
+structural perf — deferred on the S75 CWV evidence).

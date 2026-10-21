@@ -336,3 +336,33 @@ test.describe("S6-G · calendar grid + legend + day detail", () => {
     expect(cs.radius).toBe("8px");
   });
 });
+
+// S79/AF2 (measured on the reference at 768×1024): the ref's Tasks aside
+// carries NO heading — its only structure is the All Tasks/Important rows
+// + the "MY LISTS" divider label; the first visible heading on the ref is
+// the main-pane h1 "All Tasks". The clone's original-scaffold
+// <h2>Lists</h2> survived every parity batch (the desktop pins assert the
+// h1 later in DOM order; the copy sweep reads h1/subtitle/buttons; the
+// mobile sweep runs below md where the aside is hidden) until the
+// mid-band + landscape sweeps re-ran — BOTH flagged
+// 'expected "All Tasks", rendered "Lists"'.
+test.describe("S79 · Tasks aside heading parity (AF2)", () => {
+  test("the Task views aside renders no heading; the identity h1 is All Tasks", async ({ page }) => {
+    await page.goto("/Tasks");
+    await hydrated(page);
+    const panel = page.locator('[aria-label="Task views"]');
+    await expect(panel).toBeVisible();
+
+    // The ref's aside has NO heading element (measured: rows + divider
+    // label only) — the scaffold <h2>Lists</h2> was clone-only drift.
+    const headings = panel.locator("h1, h2, h3, h4, h5, h6");
+    await expect(headings).toHaveCount(0);
+
+    // The divider label survives (the ref's "MY LISTS" uppercase label).
+    await expect(panel.getByText("My Lists", { exact: true })).toBeVisible();
+
+    // The identity h1 still renders in the main pane (the sweep's
+    // expected first visible heading at every band).
+    await expect(page.getByRole("heading", { name: "All Tasks", exact: true })).toBeVisible();
+  });
+});

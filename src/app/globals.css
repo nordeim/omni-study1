@@ -532,7 +532,14 @@
 @utility sf-clock-date {
   color: rgb(var(--sf-primary-strong));
   .dark & {
-    color: rgb(var(--sf-primary-soft-dark));
+    /* S79/AF5 (the standing dark-sweep artifact, closed): the date read
+     * --sf-primary-soft-dark = violet-950 → 1.78:1 on the dark chip
+     * (unreadable on all 20 views). The theme system's own token comments
+     * name strong/strongDark as the clock-date pair; the 400 step
+     * (--sf-primary-avatar-from) keeps light's one-step hierarchy (the
+     * time's 300 is one step brighter than the date's 400, mirroring
+     * light's 700/600) at ~5.8:1 on the dark chip — accent-aware. */
+    color: rgb(var(--sf-primary-avatar-from));
   }
 }
 

@@ -1,9 +1,9 @@
 # Omni-Study1 — Remediation Plan & Execution Record
 
-> **Status: COMPLETE through Batch AE (session-78).** Every batch below has
+> **Status: COMPLETE through Batch AF (session-79).** Every batch below has
 > been executed TDD-style (spec-red → fix → spec-green) and verified:
-> **854/854 Vitest unit**, **409/409 Playwright e2e** across the 5-chunk
-> cold map (123+119+50+59+58, 30 spec files censused exactly once; the
+> **861/861 Vitest unit**, **421/421 Playwright e2e** across the 5-chunk
+> cold map (127+124+50+62+58, 30 spec files censused exactly once; the
 > per-chunk count includes that chunk's auth setup), lint clean,
 > `tsc --noEmit` clean, production build green with the standalone asset
 > contract intact. This document is the durable record of what was broken,
@@ -1064,6 +1064,236 @@ the hardened editor + study mode) + `scripts/ref-mobile-{notes,twopane,overflow}
 **Batch AE: DONE.** Standing debt unchanged: Batch R (RSC structural
 perf — the S75 deferral evidence stands) + the pre-existing
 `sf-clock-date` dark-sweep artifact (a future audit-tools cycle).
+
+### Cycle 29 (session-79) — the study-mode full-replacement parity fix + the mid-band/landscape sweep layer + the audit hardening (measured)
+
+The received state: Session-78/Batch AE at `6a7245e`, re-certified cold
+(lint ✓ tsc ✓ unit 859/859, cold e2e 416/416 first-pass every chunk).
+Two evidence layers ran before any source change:
+
+1. **Mode-C audit of the Batch AE diff** (the `2cce898..38510aa` source
+   surface): 0 Critical / 0 High / 2 Medium / 5 Low / 4 Informational.
+   The two Medium: **F1** the surrogate-cap unit pins are
+   non-discriminating (both chosen inputs produce identical output under
+   the old UTF-16 slice and the new code-point slice — a regression to a
+   bare `String.slice` passes the suite); **F2** `autosaveFailedRef` is
+   NOT reset on note switch (note A's failed streak silences note B's
+   first failure — a swallowed-failure sub-case inside AE2's own goal).
+   Lows: F3 the deck-deletion-mid-study `studying` latch, F4 the stale
+   `?? stored` fallback race (narrow, strictly better than pre-AE1), F5
+   the mobile FAB's stale comment, F6 entity-decoder HTML5 spec
+   deviations (cosmetic, no security surface), F7 the AE2 pin's toast
+   lifetime margin.
+
+2. **The parity layers**: the s79 reference re-sweep (the s78 class
+   re-tagged) — **ok:true**, 9/9 invariants both hosts, brand tables
+   byte-matched, mobile drawers green on both. An agent-browser
+   walkthrough (login → dashboard → the drawer cycle → Notes →
+   Flashcards) — zero console errors, zero page errors, the mobile
+   drawer open/navigate/close cycle green. The standing rhythm re-run:
+   mobile sweep **findings []** (20/20 clean), **mid-band sweep (768×1024)
+   + landscape sweep (844×390) — first re-run since the AE overflow
+   family, both flagging the same single finding** (the Tasks aside's
+   extra "Lists" h2), dark sweep: the `sf-clock-date` unreadable
+   artifact live on all 20 views (contrast 1.78) — the documented
+   standing debt, now scoped for closure.
+
+**The headline discovery (the AF1 family).** A directed probe of the
+reference's Flashcards at 390×844 (the account's decks were since reset;
+a probe deck + card were created to re-measure the populated state)
+found the reference's study mode is a **FULL VIEW REPLACEMENT** at BOTH
+viewports: entering study swaps out the ENTIRE two-pane layout — desktop
+innerText during study is exactly "Exit Study 1 / 1 [card] Click card to
+flip" (no "Flashcards" h1, no deck list, no search), the study column
+(`w-full max-w-2xl`, 672px) centers in the content area (Exit at x=434
+on 1280), and the Exit button + "N / M" counter share a
+`flex items-center justify-between mb-8` row (counter right-aligned at
+x=1070). At 390×844 the study pane renders FULL WIDTH (Exit x=16,
+scrollWidth 390, deck list absent) — mobile study is CLEAN and usable on
+the reference. The CLONE renders the study pane INSIDE the two-pane
+right pane: at ≥md the deck list stays beside it (structural drift vs
+the ref's replacement — invisible to the S7-AD pins, which assert the
+pane's internals), and at 390 the right pane squeezes to ~46px — the
+Study button itself sits at x=360..432 (clipped outside the viewport; an
+agent-browser tap silently misses) and even a forced study entry renders
+the Exit button at x=347..419 (out of viewport). **A 390px user cannot
+enter or use study mode on the clone — a functional SUBSET of the
+reference's working mobile study surface.**
+
+**The second discovery (AF2).** The mid-band sweep (768×1024) flagged
+`Tasks: expected "All Tasks", rendered "Lists"` — the clone's Tasks
+aside renders an `<h2>Lists</h2>` the REFERENCE DOES NOT HAVE (measured
+at 768: the ref's aside carries no heading at all — only the All
+Tasks/Important rows + the "MY LISTS" divider label; the first visible
+heading on the ref is the main-pane h1 "All Tasks"). The landscape sweep
+(844×390) flags the same finding. The h2 is original-scaffold code that
+survived every parity batch because the desktop pins assert the h1
+(later in DOM order), the copy sweep reads h1/subtitle/buttons, and the
+mobile sweep runs below md (the aside hidden) — the mid-band sweep is
+the ONLY standing probe that reads the first visible heading through the
+band, and it had not been re-run since the two-pane headers grew (the
+audit-tools rot lesson, re-learned).
+
+**The third discovery (AF5).** The `sf-clock-date` dark-sweep artifact,
+now root-caused: the utility's `.dark &` rule resolves
+`--sf-primary-soft-dark` = violet-950 (rgb(76,29,149)) for the sidebar
+clock date — 1.78:1 on the dark chip (unreadable on all 20 views). The
+theme system's own documented intent (theme.ts: "strong: 600 — clock
+date" / "strongDark: 300 — dark-mode strong counterpart") says the dark
+clock date belongs on the STRONG-dark family; the reference's dark mode
+is its own half-broken family (its sidebar stays fully light-themed —
+aside bg rgba(255,255,255,0.8), date violet-600, chip violet-50→indigo-50
+— measured through its own Settings UI Theme→Dark), so the clone's full
+dark theme remains the documented superset and the fix is a
+clone-side readability correction: the date moves to the accent-aware
+`--sf-primary-avatar-from` (400) in dark — one step dimmer than the
+time's 300, mirroring light's 700/600 one-step hierarchy, contrast ≈5.8
+on the dark chip.
+
+**The AF measured table:**
+
+| # | Finding (measured on the reference unless noted) | Clone state | Fix class |
+|---|---|---|---|
+| AF1 | FC study mode = FULL view replacement both viewports: desktop innerText "Exit Study N / M [card] Click card to flip" only; study column `w-full max-w-2xl` centered (Exit x=434 @1280); Exit+counter on one `justify-between mb-8` row (counter x=1070, 16px); mobile: Exit x=16, scrollW 390, deck list ABSENT | study pane inside the two-pane right pane; deck list beside at ≥md; at 390 the pane is ~46px — Study button x=360..432 clipped (tap misses), Exit x=347..419 out-of-viewport; mobile study impossible | **E1 structural + E2 functional** |
+| AF2 | Tasks aside @768: NO heading on the ref (first visible heading = the main h1 "All Tasks"); the ref's aside = rows + "MY LISTS" divider only | clone renders an extra `<h2>Lists</h2>` (original scaffold) — the first visible heading through the 768/844 bands reads "Lists"; flagged by BOTH the mid-band and landscape sweeps | **E3 visual drift** |
+| AF3 | (audit F2) note A's failed autosave streak silences note B's first failure — `autosaveFailedRef` never resets on selection change | the toast-once-per-streak flag latches across note switches | **E4 UX hardening** |
+| AF4 | (audit F1) the surrogate-cap pins are non-discriminating — the chosen inputs cut BEFORE or AFTER the pair under BOTH the old UTF-16 and new code-point slices | a future regression to `String.slice` passes the suite | **E5 test quality** |
+| AF5 | `sf-clock-date` dark: violet-950 @1.78:1 on all 20 views (the standing artifact); theme.ts's own token comments name `strong`/`strongDark` as the clock-date pair; ref's dark mode is its own broken family (sidebar stays light) | the `.dark &` rule uses `--sf-primary-soft-dark` | **E6 superset readability** |
+| AF6 | (audit F5) the Notes mobile FAB comment describes the pre-AE6 "two-pane is md+" reality | the FAB overlays the now-rendering list pane; comment stale | **papercut** |
+| AF7 | FC aside negotiation: the ref's Flashcards aside SHRINKS at 390 (measured 299px today, 239px in the s78 account state) — its right pane gets ~112px | the clone's aside is `w-80 shrink-0` (fixed 320px) → right pane ~46px; the deck-detail header buttons wrap but the Study button still clips | **E7 flex negotiation (the AE13 pattern)** |
+
+**TDD todo (RED → GREEN, in order):**
+
+1. Unit pins RED (tests/text.test.ts): the discriminating surrogate case
+   — 54×"a"+🎓+"tail"@max 56 must keep 🎓 whole (a bare UTF-16 slice
+   emits a lone surrogate); plus an entity-decoder named-form passthrough
+   pin (`&copy;` surfaces literally — the documented honest deviation,
+   pinned so the deviation is a CONTRACT, not an accident).
+2. E2E pins RED (the S79 block):
+   - mobile-navigation.spec.ts: at 390×844 the Study button is IN
+     VIEWPORT and tappable → the study pane renders FULL WIDTH (Exit
+     in-viewport, scrollWidth ≤ 390, the deck-list aside ABSENT) → Exit
+     Study restores the two-pane layout (the aside back).
+   - parity-session7.spec.ts (AF1 desktop): during study the deck-list
+     aside is ABSENT and the deck-detail pane is ABSENT (the full
+     replacement); the Exit+counter row reads on one justify-between row
+     (counter right-aligned); the AE4 pin REWRITTEN to the ref's actual
+     semantics — during study the deck list is gone; the switch leg
+     becomes exit → switch → Study → the new deck starts at card 1.
+   - parity-session7.spec.ts (AF3): the AE2 autosave pin gains a
+     note-switch leg — A fails (toast 1) → switch to B → B fails →
+     toast 2 fires (the streak flag reset).
+   - tasks spec (AF2): the Task-views aside carries NO heading (h2
+     count 0) and the "All Tasks" h1 still renders (any viewport).
+   - dark-mode.spec.ts (AF5): the dark clock date computes to the
+     accent-aware 400-step (rgb(167,139,250) under default violet) and
+     the light clock date is unchanged (violet-600).
+3. GREEN source, one site at a time, rebuilding between:
+   - flashcards-view.tsx (AF1+AF7): the `studying && studyCard &&
+     studyDeckId === effectiveDeckId` early-return renders the study
+     pane as the view's ONLY content (the ref's replacement), with the
+     Exit+counter `justify-between` row and the centered max-w-2xl
+     column; `startStudy` stores the study deck id; `selectDeck` (the
+     old switchDeck) exits study + resets; the aside drops `shrink-0`
+     and the right pane drops `min-w-0` (the ref's own negotiation, the
+     AE13 pattern) so the deck-detail header buttons fit at 390.
+   - tasks-view.tsx (AF2): remove the `<h2>Lists</h2>`.
+   - notes-view.tsx (AF3+AF6): the selection handler resets
+     `autosaveFailedRef`; the toast wording goes note-agnostic; the FAB
+     comment re-written to the post-AE6 reality.
+   - globals.css (AF5): the `.dark &` sf-clock-date rule resolves
+     `--sf-primary-avatar-from`.
+4. Full cold re-certification: lint → tsc → unit → build → the 5-chunk
+   cold e2e map (re-derived census) → the mobile + mid-band + landscape
+   sweeps (the Tasks finding must clear) → the dark sweep (the
+   clock-date unreadable must clear) → the s79 resweep (ok:true).
+5. Evidence: the S79 capture set (the mobile study flow at 390, the
+   desktop study replacement, the Tasks aside, the dark clock chip) +
+   the refreshed standard 31.
+6. Docs: README (counts + the S79 row), AGENTS/CLAUDE counts, this
+   record's execution appendix, worklog Session-79, the session_26
+   transcript successor, `.env.example` verified.
+
+
+**Cycle 29 execution record (session-79):** executed in the documented
+TDD order. RED first: 2 unit pins (`tests/text.test.ts` — the
+discriminating surrogate case 54×"a"+🎓+"tail"@56 [proven discriminating:
+the pre-AE5 bare-slice emits a lone U+D83C, the code-point cap keeps 🎓
+whole] + the `&copy;` literal-passthrough deviation pin) and 6 e2e pin
+behaviors (**6/6 RED** against the pre-change build: the mobile study
+full-width pin, the desktop study-chrome pin, the AE4/S79 rewrite [deck
+list absent during study], the AE2 note-switch toast leg, the Tasks
+aside no-heading pin, the dark clock-date pin). GREEN source:
+`flashcards-view.tsx` (the `studying && studyCard && studyDeckId ===
+effectiveDeckId` early-return renders the study pane as the view's ONLY
+content — the Exit+counter `justify-between` row, the centered max-w-2xl
+column; `startStudy(deckId?)` binds the session to its deck; `selectDeck`
+replaces switchDeck [every selection lands in deck-detail from card 1];
+the below-md in-row Study affordance `aria-label="Study {deck}"` for
+decks with cards — the mobile entry; the max-w-2xl restored on the card
+button [the AD10 pin's read site]); `tasks-view.tsx` (the `<h2>Lists</h2>`
+removed + the AF2b fix: the title div's `sm:min-w-0` dropped — the h1's
+width-0 collapse at the md band [pre-existing, unmasked by the h2
+removal] now resolves by wrapping, the ref's own shape, without the
+ref's 826px overflow); `notes-view.tsx` (`selectNote` resets
+`autosaveFailedRef` on every selection change + the create flow; the
+toast wording note-agnostic; the FAB comment rewritten);
+`globals.css` (the `.dark &` sf-clock-date rule resolves
+`--sf-primary-avatar-from` — violet-400, ~5.8:1 on the dark chip).
+Three pin calibrations came out of the GREEN runs: the AE6 Flashcards
+row-tap now targets the row's h2 (the in-row affordance absorbs the
+center-tap), the S79 row-button locator needs `exact: true` (the deck
+ROW's role=button accessible name absorbs the affordance's label — the
+substring-collision lesson re-hit), and the AD10 max-w-2xl class stays
+on the card button (the pin reads the closest button's computed
+max-width). Post-fix full cold re-certification: lint ✓ tsc ✓ unit
+**861/861** ✓ build REAL_EXIT=0 fresh; cold e2e **421/421**
+(127+124+50+62+58, first pass every chunk; the census re-derived with
+per-file --list — mobile-navigation 16, parity-session7 32,
+parity-session6 16, dark-mode 13); the mobile sweep re-run: **findings
+[]**; the mid-band sweep re-run: **findings []** (the Tasks finding
+cleared); the landscape sweep re-run: **findings []**; the dark sweep
+re-run: **the sf-clock-date unreadable artifact CLEARED** (0 of 20
+views; no other unreadable); the s79 resweep re-run: **ok:true** (9/9
+invariants both hosts, mobile drawers green on both). Evidence: the
+standard 31 refreshed + `docs/screenshots/79-*.png` (the mobile study
+flow ×4 [deck list → in-row entry → full-width study → rating → exit],
+the desktop deck-detail + full-replacement study, the Tasks 768 aside,
+the dark clock chip + dashboard) + the reference probe set
+(`79-ref-mobile-flashcards{,-seeded,-card,-study}.png` +
+`79-ref-desktop-flashcards-study.png` — the measured basis of the AF1
+family) + `scripts/ref-mobile-flashcards-{,seeded-,study-}s79.mjs` +
+`scripts/ref-resweep-s79.mjs` + `scripts/capture-s79-clone.mjs`.
+**Batch AF: DONE.** Standing debt: Batch R (RSC structural perf — the
+S75 deferral evidence stands) remains the only open item; the
+`sf-clock-date` artifact is CLOSED (this cycle).
+
+**Honest deviations (pre-declared):**
+
+- The ref's own mobile Flashcards deck-detail overflows massively at 390
+  (scrollWidth 836 with a card; 451 with the empty detail) — its own bug
+  family. The clone keeps the ≤390 no-overflow contract (the AE13
+  negotiation) instead of copying the overflow: the deck-detail is
+  cramped-but-usable on the clone where the ref's is broken.
+- The Notes view's mobile squeeze (list 320px + ~46px editor) stays the
+  documented s78 parity decision (the ref's own Notes mobile is equally
+  squeezed — its 416px overflow family); AF1 does not extend to Notes.
+- AF4's entity-decoder HTML5 deviations (`&#0;` passthrough,
+  surrogate-range numerics, unlisted named entities) are pinned as the
+  contract, not "fixed" to the HTML5 spec — the decoder covers what
+  Quill emits (the measured surface).
+- The study-mode 3D flip stays (the S77-kept superset flourish; static
+  states match the ref exactly).
+- **AF7 recalibrated during execution (the honest deviation):** the
+  planned AE13-style flex negotiation could NOT engage — the Flashcards
+  right pane's `overflow-y-auto` collapses the CSS automatic min-size
+  (`min-width:auto` → 0 when overflow ≠ visible), and the aside's own
+  content floor (294px: the unbreakable "Flashcards" h1 row) exceeds any
+  useful detail floor at 390. The executed design keeps the s78
+  contained-squeeze shape (aside 320 + detail ~46px, scrollWidth ≤ 390 —
+  the SAME documented parity decision the Notes view made) and solves the
+  mobile study ENTRY with a below-md in-row Study affordance on each deck
+  row (desktop never sees it — byte-identical).
 
 
 
