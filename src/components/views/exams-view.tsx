@@ -352,7 +352,10 @@ export function ExamsView() {
                           {topics.map((topic) => (
                             <span
                               key={topic}
-                              className="rounded-md border border-transparent bg-neutral-800 px-2.5 py-0.5 text-xs font-semibold text-neutral-50 dark:bg-neutral-700 dark:text-neutral-100"
+                              // S83/AJ5: the near-black topic chip carries
+                              // near-white text — an essential background
+                              // under the S12-C2 convention (it must print).
+                              className="rounded-md border border-transparent bg-neutral-800 px-2.5 py-0.5 text-xs font-semibold text-neutral-50 dark:bg-neutral-700 dark:text-neutral-100 sf-print-exact"
                             >
                               {topic}
                             </span>

@@ -527,6 +527,12 @@
      color-contrast, serious) — one step darker to --sf-primary-strong
      (violet-600, 5.70:1). The --sf-primary token itself is unchanged. */
   background-color: rgb(var(--sf-primary-strong));
+  /* S83/AJ5 (the s83 print findings): this utility is the ACTIVE-state
+     fill for white-text surfaces (the Calendar segmented tabs, the
+     Timetable today badge, the Settings theme tile, the selected day) —
+     an essential background under the S12-C2 convention: it must PRINT
+     or its white text goes invisible on the forced white body. */
+  print-color-adjust: exact;
   .dark & {
     background-color: rgb(var(--sf-primary-soft-dark) / 0.3);
   }

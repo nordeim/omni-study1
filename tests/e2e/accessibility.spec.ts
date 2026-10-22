@@ -269,6 +269,101 @@ test.describe("S12-C2 · essential backgrounds print (print-color-adjust: exact)
     });
     expect(cal).toBe("exact");
   });
+
+  // S83/AJ5 (the s83 standing-suite layer's print findings — five active-
+  // state white-text surfaces whose fills carry NO print-color-adjust):
+  // in print media the backgrounds drop and the white text goes invisible
+  // on the forced white body. All five A/B-verified on the received tree
+  // (changes stashed) — the received defect family, not a regression from
+  // this cycle. Each pin asserts the S12-C2 convention on its surface.
+  test("AJ5a: the Calendar segmented control's ACTIVE tab keeps its fill (sf-selected-tint prints)", async ({ page }) => {
+    await gotoMode(page, "/Calendar", "light");
+    await hydrated(page);
+    const adjust = await page.locator('main button[aria-pressed="true"]', { hasText: "Calendar" }).evaluate((el) => {
+      let node = el as HTMLElement | null;
+      while (node && node !== document.body) {
+        const cs = getComputedStyle(node);
+        if (cs.printColorAdjust === "exact") return "exact";
+        node = node.parentElement;
+      }
+      return getComputedStyle(el).printColorAdjust;
+    });
+    expect(adjust).toBe("exact");
+  });
+
+  test("AJ5b: the Timetable today badge keeps its fill (sf-selected-tint prints)", async ({ page }) => {
+    await gotoMode(page, "/Timetable", "light");
+    await hydrated(page);
+    await page.waitForTimeout(1200);
+    const adjust = await page.locator("main .sf-selected-tint").first().evaluate((el) => getComputedStyle(el).printColorAdjust);
+    expect(adjust).toBe("exact");
+  });
+
+  test("AJ5c: the Exams topic chips keep their near-black fill (white text prints readable)", async ({ page }) => {
+    await gotoMode(page, "/Exams", "light");
+    await hydrated(page);
+    await page.waitForTimeout(1200);
+    const adjust = await page.locator("main span.bg-neutral-800").first().evaluate((el) => getComputedStyle(el).printColorAdjust);
+    expect(adjust).toBe("exact");
+  });
+
+  test("AJ5d: the Calculator History toggle keeps its near-black pill (the S80/AG2 measured surface)", async ({ page }) => {
+    await gotoMode(page, "/Calculator", "light");
+    await hydrated(page);
+    const adjust = await page.getByRole("button", { name: "History", exact: true }).evaluate((el) => {
+      let node = el as HTMLElement | null;
+      while (node && node !== document.body) {
+        const cs = getComputedStyle(node);
+        if (cs.printColorAdjust === "exact") return "exact";
+        node = node.parentElement;
+      }
+      return getComputedStyle(el).printColorAdjust;
+    });
+    expect(adjust).toBe("exact");
+  });
+
+  test("AJ5e: the Settings ACTIVE theme tile keeps its fill (sf-selected-tint prints)", async ({ page }) => {
+    await gotoMode(page, "/Settings", "light");
+    await hydrated(page);
+    const adjust = await page.locator('main button[aria-pressed="true"]').first().evaluate((el) => getComputedStyle(el).printColorAdjust);
+    expect(adjust).toBe("exact");
+  });
+});
+
+// S83/AJ6 (the s83 standing-suite layer's focus finding, A/B-verified on
+// the received tree): the Dashboard SectionLink nests a focusable <button>
+// inside the focusable <a> — the anchor owns the focus-visible ring but
+// the BUTTON's own tab stop carries outline-none and no ring, so keyboard
+// focus lands on an indicator-less control.
+test.describe("S83/AJ6 · the SectionLink button tab stop carries its own focus indicator", () => {
+  test("the View All button shows a visible ring under keyboard focus", async ({ page }) => {
+    await gotoMode(page, "/Dashboard", "light");
+    await hydrated(page);
+    // REAL keyboard traversal (synthetic events do not set the keyboard
+    // focus modality, so :focus-visible would never match). The button
+    // sits deep in the tab order — bounded Tab presses with an
+    // activeElement poll.
+    let focused = false;
+    for (let i = 0; i < 45 && !focused; i += 1) {
+      await page.keyboard.press("Tab");
+      focused = await page.evaluate(() => {
+        const el = document.activeElement as HTMLElement | null;
+        return !!el && el.tagName === "BUTTON" && (el.textContent || "").includes("View All");
+      });
+    }
+    expect(focused).toBe(true);
+    const indicator = await page.evaluate(() => {
+      const el = document.activeElement as HTMLElement;
+      const cs = getComputedStyle(el);
+      return {
+        ring: cs.boxShadow !== "none",
+        outlineWidth: cs.outlineWidth !== "0px" && cs.outlineStyle !== "none",
+      };
+    });
+    // A visible indicator on the button's own tab stop: either the ring
+    // or the outline suffices — the assertion is "SOMETHING visible".
+    expect(indicator.ring || indicator.outlineWidth).toBe(true);
+  });
 });
 
 test.describe("S12-D · the timetable week table fits the printable width", () => {

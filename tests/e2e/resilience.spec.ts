@@ -235,4 +235,80 @@ test.describe("files upload edge cases", () => {
     expect(info.dlStatus).toBe(200);
     expect(info.dlHasBytes).toBe(true);
   });
+
+  // S83/AJ1 (the Mode-C audit's L3 — the AI1 lesson's follow-through):
+  // `folderDelegate.update` was the seventeenth hand-written PATCH write
+  // site, outside the sentKeysPatch convention (safe today ONLY because
+  // folderUpdateSchema carries no .default()s — the exact AH8 data-loss
+  // preconditions minus the defaults). The pin guards the contract at the
+  // LAST uncovered site: a folder rename (a partial PATCH that sends ONLY
+  // the name) must never clear its parentId, and an empty PATCH must be a
+  // 200 no-op that changes nothing (verified against Prisma 6.11: an
+  // empty data object is ACCEPTED as a no-op — updatedAt not bumped — so
+  // the short-circuit and the raw call agree).
+  test("AJ1: a folder rename preserves the parent and an empty PATCH is a no-op", async ({ page }) => {
+    await page.goto("/Files");
+    await expect(page.getByRole("heading", { name: "Files", exact: true })).toBeVisible();
+
+    const stamp = `resilience-AJ1-${Date.now()}`;
+    const info = await page.evaluate(async (stamp) => {
+      // A parent folder, then a child inside it.
+      const parent = await fetch("/api/files/folders", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "same-origin",
+        body: JSON.stringify({ name: `${stamp}-parent` }),
+      });
+      const parentRow = await parent.json();
+      const child = await fetch("/api/files/folders", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "same-origin",
+        body: JSON.stringify({ name: `${stamp}-child`, parentId: parentRow.id }),
+      });
+      const childRow = await child.json();
+      // The rename: a partial PATCH that sends ONLY the name key.
+      const rename = await fetch(`/api/files/folders/${childRow.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        credentials: "same-origin",
+        body: JSON.stringify({ name: `${stamp}-renamed` }),
+      });
+      const renamed = await rename.json();
+      // The empty PATCH: must answer 200 and change nothing.
+      const empty = await fetch(`/api/files/folders/${childRow.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        credentials: "same-origin",
+        body: JSON.stringify({}),
+      });
+      const emptyRow = await empty.json();
+      // The LIST round-trip: the child's parent survives the rename.
+      const tree = await fetch("/api/files/folders", { credentials: "same-origin" });
+      const rows = (await tree.json()) as Array<{ id: string; parentId: string | null }>;
+      const listed = rows.find((r) => r.id === childRow.id);
+      // Cleanup: delete the child, then the parent.
+      await fetch(`/api/files/folders/${childRow.id}`, { method: "DELETE", credentials: "same-origin" });
+      await fetch(`/api/files/folders/${parentRow.id}`, { method: "DELETE", credentials: "same-origin" });
+      return {
+        childStatus: child.status,
+        renameStatus: rename.status,
+        renamedName: renamed.name,
+        renamedParentPreserved: renamed.parentId === parentRow.id,
+        emptyStatus: empty.status,
+        emptyNameUnchanged: emptyRow.name === `${stamp}-renamed`,
+        emptyParentPreserved: emptyRow.parentId === parentRow.id,
+        listedParentPreserved: listed?.parentId === parentRow.id,
+      };
+    }, stamp);
+
+    expect(info.childStatus).toBe(201);
+    expect(info.renameStatus).toBe(200);
+    expect(info.renamedName).toBe(`${stamp}-renamed`);
+    expect(info.renamedParentPreserved).toBe(true);
+    expect(info.emptyStatus).toBe(200);
+    expect(info.emptyNameUnchanged).toBe(true);
+    expect(info.emptyParentPreserved).toBe(true);
+    expect(info.listedParentPreserved).toBe(true);
+  });
 });

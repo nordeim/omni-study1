@@ -9,9 +9,9 @@ High-signal instructions for coding agents working in this repo. Everything here
 | `bun install` | Install deps (Bun ≥ 1.3) |
 | `bun run dev` | Dev server on :3000 (Turbopack), logs tee'd to `dev.log` |
 | `bun run lint` / `bun run typecheck` | ESLint / `tsc --noEmit` — both must be clean |
-| `bun run test` | Vitest unit layer (864 tests; `*.test.ts` only — never picks up e2e specs) |
+| `bun run test` | Vitest unit layer (865 tests; `*.test.ts` only — never picks up e2e specs) |
 | `bun run build` | Production build → `.next/standalone` (**required before e2e**) |
-| `bun run test:e2e` | Playwright vs the standalone build on :3100 with `db/e2e.db` (448 tests across the 5-chunk cold map — 127+138+52+73+58, 30 spec files; a single-process full run trips the register rate-limiter budget by design, the chunked map re-boots the server per chunk). NOTE (S45, the day-boundary lesson): the global setup re-seeds every run, but the seed's IDEMPOTENT UPSERTS do NOT refresh day-relative dates on existing rows — a scratch `db/e2e.db` that ages across a UTC midnight keeps its original day-relative dates (today's tasks, the +1-day exam badge, the due-in pills, the import round-trip dates each read one day stale → 4 deterministic failures in parity-session6/parity-session9/s23-import). Delete `db/e2e.db` when a run crosses a day boundary — the global setup re-creates it fresh with current dates. NOTE (S46, TWO more aged-scratch-db classes + a build-input one): (1) ALWAYS run e2e COLD — `rm -f db/e2e.db` before every full run: the s23-import round-trip posts a FIXED-id envelope, so a second consecutive run against the aged db reads `created: 0, updated: 1` instead of `created: 1, updated: 0` and fails — not just across midnights, across ANY re-run; (2) the s22 negative-spawn spec reads the BUNDLED `.env` — Next's standalone output COPIES the repo-root `.env` into `.next/standalone/.env` at build time, so a REAL AUTH_SECRET in the dev `.env` leaks into the bundle and the guard CORRECTLY boots (the spec times out waiting for the exit) — keep the repo-root `.env`'s AUTH_SECRET EMPTY (the `.env.example` dev posture: `AUTH_SECRET=""` — dev falls back to the local constant with the boot warning) when building for e2e |
+| `bun run test:e2e` | Playwright vs the standalone build on :3100 with `db/e2e.db` (455 tests across the 5-chunk cold map — 127+138+53+79+58, 30 spec files; a single-process full run trips the register rate-limiter budget by design, the chunked map re-boots the server per chunk). NOTE (S45, the day-boundary lesson): the global setup re-seeds every run, but the seed's IDEMPOTENT UPSERTS do NOT refresh day-relative dates on existing rows — a scratch `db/e2e.db` that ages across a UTC midnight keeps its original day-relative dates (today's tasks, the +1-day exam badge, the due-in pills, the import round-trip dates each read one day stale → 4 deterministic failures in parity-session6/parity-session9/s23-import). Delete `db/e2e.db` when a run crosses a day boundary — the global setup re-creates it fresh with current dates. NOTE (S46, TWO more aged-scratch-db classes + a build-input one): (1) ALWAYS run e2e COLD — `rm -f db/e2e.db` before every full run: the s23-import round-trip posts a FIXED-id envelope, so a second consecutive run against the aged db reads `created: 0, updated: 1` instead of `created: 1, updated: 0` and fails — not just across midnights, across ANY re-run; (2) the s22 negative-spawn spec reads the BUNDLED `.env` — Next's standalone output COPIES the repo-root `.env` into `.next/standalone/.env` at build time, so a REAL AUTH_SECRET in the dev `.env` leaks into the bundle and the guard CORRECTLY boots (the spec times out waiting for the exit) — keep the repo-root `.env`'s AUTH_SECRET EMPTY (the `.env.example` dev posture: `AUTH_SECRET=""` — dev falls back to the local constant with the boot warning) when building for e2e |
 | `node scripts/capture-studyflow.mjs` | Refresh all 31 `docs/screenshots/` captures from the dev server (24 light + 7 dark) |
 | `node scripts/dark-sweep.mjs` | Dark-mode contrast audit over all 20 views (flashbulb/unreadable detector). S27: sets dark mode through the settings API (the real lifecycle) and SELF-VERIFIES the precondition — fails loudly (exit 1, no findings) if the dark class is not applied; the applied mode rides the JSON envelope. Never force the class directly (the session-10 approach silently rotted after S11) |
 | `node scripts/accent-dark-sweep.mjs` | Accent × dark-mode audit (S38-extended): all 7 accents × 20 desktop views × 20 MOBILE views at 390×844 + the drawer per accent (FAIL <2.2, WARN <3.2 for accent text; the mobile records also carry scrollWidth — >390 is a finding). The S38 shape is unit-pinned anti-phantom: every view recorded EXPLICITLY on both surfaces (clean views carry empty detector arrays), the per-accent `applied` self-verified readings + `mode: "dark"` + `mobileViewport` ride the envelope, and the seam's ALL-ACCENTS + ALL-VIEWS + drawer-present guards make every silently-skipped dimension a LOUD shape-error (the pre-S38 mobile pass swept only 6 views — MOBILE_VIEWS — and the omission-means-clean recording could not distinguish "clean because measured" from "clean because never rendered") |
@@ -186,6 +186,44 @@ Hover-parity probing must run in Playwright, not a touch-emulating browser — v
    `parseAuditStdout` shrink loop (`end > start + 1`) never tested the single-line slice, so the
    exact failure class it was written to tolerate still failed on one-line envelopes. When a
    parser tolerates N shapes, pin the N=1 boundary too.
+
+## Verified-behavior + tooling-interference lessons (S83, the Batch AJ findings)
+
+1. **A comment's causal claim is a hypothesis until probed** — the S82-era
+   short-circuit comments said "a Prisma update with an empty data object is
+   rejected"; probing the live standalone AND the client directly
+   (`db.user.update({data:{}})`) proved Prisma 6.11 ACCEPTS it as a no-op
+   (@updatedAt not bumped). The short-circuit was right; its REASON was
+   wrong. Probe the shipped contract before repeating a documented reason —
+   the same doctrine as probing a retired expectation (S81 lesson 4), aimed
+   at comments this time.
+2. **An execution record's "green in sequence" claim must be re-derivable
+   from the raw envelopes** — the S82 record claimed print + focus-order
+   green in the orchestrator sequence, but both carried REAL findings on the
+   exact S82 tree (A/B-verified with changes stashed; the audit scripts
+   unchanged since scaffolding). The S82 verification step re-checked ONE
+   stage's flake and took the rest at face value. Read every stage's raw
+   envelope, not the one that surprised you.
+3. **The Next.js dev overlay's `<nextjs-portal>` intercepts drawer-bottom
+   clicks** — the element is dev-mode-only (absent from production), but the
+   standing sweeps run against the dev server: any click whose target needs
+   the drawer's nav scroll lands under the portal's hit area and hangs the
+   sweep (six sweeps, identical crash, clean tree). The suppression
+   (`nextjs-portal { display:none !important }` via addInitScript) is a
+   no-op against production — audit tools must neutralize dev-mode-only
+   overlays before clicking through the DOM they shadow.
+4. **A nested focusable is its own tab stop** — wrapping a `<button>` in a
+   focusable `<a>` gives ONE visual control TWO tab stops, and the inner
+   element needs its OWN focus-visible indicator (the anchor's ring never
+   renders when the button holds focus). Enumerate tab stops per control,
+   not per component.
+5. **`print-color-adjust: exact` is per-SURFACE, not per-view** — the S12-C2
+   convention was pinned on the gradient CTAs/canvas/month-card, while five
+   OTHER white-text surfaces (segmented tabs, today badges, topic chips,
+   theme tiles) silently dropped their fills in print. When a print
+   contract exists, enumerate every white-text-on-fill surface — the fill
+   class utilities (`sf-selected-tint`) are the right fix point (one utility
+   covers its every consumer).
 
 
 ## Testing quirks

@@ -1,9 +1,9 @@
 # Omni-Study1 — Remediation Plan & Execution Record
 
-> **Status: COMPLETE through Batch AI (session-82).** Every batch below has
+> **Status: COMPLETE through Batch AJ (session-83).** Every batch below has
 > been executed TDD-style (spec-red → fix → spec-green) and verified:
-> **864/864 Vitest unit**, **448/448 Playwright e2e** across the 5-chunk
-> cold map (127+138+52+73+58, 30 spec files censused exactly once; the
+> **865/865 Vitest unit**, **455/455 Playwright e2e** across the 5-chunk
+> cold map (127+138+53+79+58, 30 spec files censused exactly once; the
 > per-chunk count includes that chunk's auth setup), lint clean,
 > `tsc --noEmit` clean, production build green with the standalone asset
 > contract intact. This document is the durable record of what was broken,
@@ -2072,3 +2072,240 @@ claim must be verified per write site (the sixteenth delegate was the
 hand-written exception the factory fix never reached); a tautological
 assertion is worse than a missing one; a tolerance fix's loop bounds
 must include the degenerate slice.
+
+---
+
+## Cycle-33 plan (Session-83 / Batch AJ) — the convention-closure + verified-behavior accuracy cycle
+
+**Received state**: `4e070d4` (Batch AI `4ec3db2` + the operator's
+session-log commits adding `docs/session_34.md`/`session_35.md`).
+Baseline re-certified cold BEFORE any work: lint ✓ tsc ✓ unit
+**864/864** ✓ build fresh; cold e2e **448/448** (127+138+52+73+58,
+first-pass every chunk). Evidence layers (all pre-change): the Mode-C
+audit of the Batch AI diff (`7144e71..4ec3db2`, Task 5-a) — **0
+Critical / 0 High / 0 Medium / 3 Low / 3 Info**, all six AI claims
+verified correct in source AND empirically (zod@4.6.5 default
+materialization re-confirmed; the write-site census re-derived —
+15 factory delegates + card delegate + `folderDelegate` +
+preferences + auth fixed-columns + import full-row); the s83
+reference re-sweep (ok:true — 9/9 invariants both hosts, brand tables
+byte-matched, 18 captures); agent-browser mobile-nav on BOTH hosts
+(reference 20 links / navigates / closes / its own 416 overflow; clone
+20 links + the superset skip-link at scrollWidth 390 — no Tailwind v4
+mobile-nav bug).
+
+**The cycle's empirical finding (probed live before planning)**: the
+S82-era comment claim "a Prisma update with an empty data object is
+rejected" is **FALSE on Prisma 6.11** — verified twice: an empty
+PATCH against the live standalone returned 200 with the row unchanged
+(`/api/settings/preferences` AND `/api/files/folders/[id]`), and a
+direct client-level `db.user.update({data:{}})` was accepted as a
+no-op with `@updatedAt` NOT bumped. The short-circuits' behavior is
+right; their documented REASON is wrong.
+
+- **AJ1 (LOW — the audit's L3, the AI1 lesson's follow-through)**:
+  `folderDelegate.update` — the seventeenth hand-written PATCH write
+  site (safe today ONLY because `folderUpdateSchema` carries no
+  `.default()`) — joins the `sentKeysPatch` convention: the helper is
+  exported from `entities.ts`, the folder writes route through it
+  (the parent-existence re-check preserved on the filtered writes),
+  and the empty patch short-circuits to the existing row. Pin
+  (resilience.spec.ts, +1): create a folder inside a parent → rename
+  it via PATCH → the LIST still shows the preserved `parentId`, AND
+  an empty `{}` PATCH answers 200 with the row unchanged —
+  green-on-arrival by design (no defaults today). Mutation proof:
+  add `.default(null)` to the schema's `parentId` (the exact AH8
+  class) — the OLD hand-filter form must fail the pin while the
+  routed form passes (the protective value proven, not asserted).
+- **AJ2 (accuracy — the verified-behavior fix)**: both short-circuit
+  comments corrected to the empirically verified truth (Prisma 6.11
+  accepts empty `data` as a no-op; the short-circuit exists to avoid
+  the pointless write and to normalize behavior across the three
+  write-site families). Sites: the factory (`entities.ts:155-156`)
+  and the card delegate (`entities.ts:360-362`).
+- **AJ3 (LOW — the audit's L2 + I1)**: the parser's
+  first-envelope-wins behavior for NDJSON-ish output pinned as a unit
+  test (stdout `{"a":1}\n{"b":2}` parses to the FIRST envelope; the
+  shape guard remains the backstop) and the provably-dead post-loop
+  `try` removed (its slice is byte-identical to the loop's first
+  iteration — `end = lines.length` tests `slice(start)` too). Mutation
+  proof: flip the loop to LAST-envelope-wins → the pin fails.
+- **AJ4 (LOW — the audit's L1, documentation)**: the AI2 heal
+  acceptance documented at the settlement effect (the honest gap: a
+  deterministic pin is not expressible from Playwright — passive-effect
+  interleaving is not controllable; the AH1a/AH2a/AH2b preservation
+  family remains the standing guard) and the preferences route's
+  defaults-free manual filter certified with a comment (the S82
+  checklist applied to the eighteenth site — an auditor never has to
+  re-derive its safety).
+
+Pin plan: +1 e2e pin in resilience.spec.ts (AJ1, the folder
+field-preservation family), +1 unit pin in suite-verdict.test.ts
+(AJ3, first-envelope-wins). Expected post-cycle census: unit 865,
+e2e 449 (chunk map 127+138+53+73+58 — resilience 7→8).
+
+### Cycle-33 mid-cycle amendment (the standing-suite verification layer's findings)
+
+The integration verification layer (the orchestrator run + standalone
+re-runs) surfaced TWO genuine defect families on the received tree —
+**both A/B-verified against the clean `4e070d4` tree (changes stashed)
+and both reproducing deterministically under fresh standalone runs**;
+the audit scripts themselves are unchanged since the initial
+scaffolding (`01cb829`), so the S82 execution record's "print,
+focus-order green in sequence" claim does NOT reproduce on the S82
+tree and is corrected by this record (the S82 raw-envelope
+verification evidently re-checked only settings-roundtrip's finding
+and took the rest at face value).
+
+- **AJ5 (MEDIUM — the print contract, S12-C2's own convention violated
+  on five surfaces)**: active-state white-text elements whose colored
+  surfaces carry NO `print-color-adjust: exact` — in print media the
+  backgrounds drop and the white text becomes invisible on the forced
+  white body. The five (identified by replicating the audit's exact
+  detection — beforeprint dispatch + normalized luminance +
+  essentialBg walk): the Calendar segmented control's ACTIVE tab
+  ("Calendar", white on the accent fill), the Timetable day badge
+  ("22", white on the accent circle), the Exams segmented control's
+  active option (near-white `rgb(250,250,250)` on `bg-neutral-800`),
+  the Calculator suite's ACTIVE tab ("History", white on the fill),
+  and the Settings 88px theme tile ("Light", white on the tile). The
+  fix shape is the repo's own S12-C2 convention: the essential
+  surfaces gain `print-color-adjust: exact` (the existing
+  `sf-print-exact` utility or the property inline where a utility
+  would be awkward). Pin family: +5 e2e pins in the S12-C2 describe
+  block (accessibility.spec.ts) — one per surface, each asserting the
+  computed `printColorAdjust === "exact"` on the surface under print
+  emulation (the existing CTA/canvas/month-card pins' exact pattern).
+  RED-able: all five fail on the current build.
+- **AJ6 (LOW — the focus contract, one indicator-less tab stop)**: the
+  Dashboard's `SectionLink` nests a focusable `<button>` inside the
+  focusable `<a>` — the anchor carries the `focus-visible:ring-2`
+  classes but the BUTTON's own tab stop carries `outline-none` and no
+  ring, so keyboard focus lands on an indicator-less control (the
+  focus-order audit's `no-indicator` finding, stop 25). Fix: the
+  nested button gains its own `focus-visible:ring-2
+  focus-visible:ring-sf-primary/40` (matching the anchor's ring
+  vocabulary). Pin: +1 e2e pin focusing the View All button via
+  keyboard and asserting a visible ring (computed box-shadow under
+  focus-visible). RED-able: fails on the current build.
+
+Census amendment: e2e 449 → 455 (+5 AJ5 pins in accessibility.spec.ts
+which rides chunk 4: 73 → 78; +1 AJ6 pin in accessibility.spec.ts too
+— chunk 4: 78 → 79); chunk map becomes 127+138+53+79+58 = 455. Unit
+stays 865.
+
+### Cycle-33 second amendment (the audit-tools rot instance — AJ7)
+
+The individual sweep re-runs exposed the S81 rot class again, in a new
+guise: the four drawer-navigation sweeps (mobile S33, midband S34,
+landscape S35, dark-mobile S36) and the two drawer-clicking accent
+sweeps (accent-midband S39, accent-landscape S40) CRASH or hang on
+the drawer's bottom-most link click — **the Next.js dev overlay's
+`<nextjs-portal>` intercepts pointer events at the drawer's scrolled
+bottom region** (the Settings link sits below the 844px fold; after
+the nav-scroll Playwright performs, the click point lands under the
+portal's hit area). Root-cause verified: the click fails with
+"nextjs-portal … intercepts pointer events" against a FRESH dev
+server, reproduces IDENTICALLY on the clean `4e070d4` tree (A/B — not
+this cycle's regression), and a CSS suppression
+(`nextjs-portal { display: none !important }` injected via
+addInitScript) makes the identical click succeed. The portal is a
+DEV-ONLY artifact — absent from the production build (the e2e
+mobile-navigation spec passes 127/127 against the standalone; the
+agent-browser standalone verification of the same drawer is green) —
+so the app itself is NOT defective; the SWEEP TOOLING is.
+
+- **AJ7 (tooling — the S81 lesson's follow-through)**: the six
+  drawer-clicking sweeps gain the portal-suppression init script
+  (dev-only, self-documented as a no-op against production). The
+  suppression changes nothing the sweeps measure — the portal is an
+  injected dev overlay, not app DOM. Verification: each patched sweep
+  completes with a parseable envelope; the mobile sweep's 20-view
+  drawer navigation goes end-to-end.
+
+### Cycle-33 third amendment (the security bump — AJ8)
+
+The dep-audit re-run surfaced the cycle's security headline: **next
+16.4.0 carries TWO CRITICAL unauthenticated RCE advisories
+(GHSA-2464-fhr4-w9xw — Image Optimization API RCE via SVG; GHSA-673q-
+mjm6-r5xr — `use cache` typed-arrays RCE) plus a Server-Actions DoS
+(GHSA-p3m5-59mp-jv5r), all runtime-reachable** (next ships in the
+standalone trace). The lockfile sat at 16.4.0 under the `^16.1.1`
+range; the stable patched line ends at **16.4.2**.
+
+- **AJ8 (CRITICAL — the dependency security bump)**: `next` raised to
+  `^16.4.2` through the package manager (`bun add next@^16.4.2` —
+  manifest + lockfile, never hand-edited). Patch-level bump within the
+  existing major pin (the repo's majors-by-design convention holds).
+  Verification: the full re-verification ladder — rebuild, fast gates,
+  the FULL cold e2e re-cert, and the standing audits re-run against
+  the rebuilt server (a Next patch can shift the standalone contract
+  the e2e boots). Expected dep-audit verdict post-bump: the next
+  advisories gone; braces (dev — eslint-config-next) and deepmerge-ts
+  (CLI — prisma) stay the documented non-production pair; **quill
+  2.0.3 is the LATEST upstream release** — the low-severity HTML-export
+  XSS advisory (GHSA-v3m3-f69x-jf25) has no fixed version available;
+  the app never invokes Quill's HTML-export API on untrusted input
+  (the editor persists the user's OWN content), recorded as tracked-
+  upstream, matching the audit's non-production classification.
+
+**Cycle-33 execution record (Session-83).** TDD throughout. The
+planned items: AJ1's e2e pin was green-on-arrival BY DESIGN (no
+defaults in `folderUpdateSchema` today) and its protective value was
+proven by the three-step mutation sequence — (1) pin green on the
+current build; (2) add `.default(null)` to the schema's `parentId`
+with the OLD hand-filter still in place → rebuild → the pin went RED
+at exactly the `renamedParentPreserved` assertion (the rename cleared
+the parent — the exact AH8 data-loss class detected); (3) keep the
+default AND route through `sentKeysPatch` → rebuild → the pin GREEN
+again (the routing defeats the class even with the default present);
+then the mutant was removed (the defaults-free final state). AJ3's
+first-envelope-wins unit pin was green-on-arrival (documents the
+current parser) and mutation-proven: flipping the parser to
+last-envelope-wins turned the pin red at its designed assertion;
+restored green. AJ2/AJ4 were comment-accuracy and certification
+changes (no behavior to pin — the empirical evidence for AJ2 is the
+live probe + the direct client check recorded in the plan).
+
+The standing-suite verification layer then expanded the cycle (the
+mid-cycle amendments above): the orchestrator's live run took stage 0
+plus stages 1–16 in sequence (killed at 17 — the environmental
+process-reaping cap), with stages 9–12 and 14–15 producing empty
+envelopes (the AJ7 dev-portal interception class + one mid-sweep
+dependency-reload abort). Individual re-runs against the fresh dev
+server: security 0/7, settings-roundtrip 0/5, connectivity 0/7,
+upload-edge 0/10, data-volume 0/10, ai-error 0/10, ai-a11y 0/4,
+print 5+5 findings (AJ5 — RED pins written, all 5 failing on the
+pre-fix build), focus-order 1 real anomaly (AJ6 — the RED pin failing
+identically), both A/B-verified against the clean `4e070d4` tree.
+GREEN: the `sf-selected-tint` utility gained `print-color-adjust:
+exact` (covering the Calendar segmented tabs, the Timetable today
+badge, the Settings theme tile, and the selected day), the Calculator
+History pill and the Exams topic chips gained `sf-print-exact`, and
+the SectionLink button gained its own focus-visible ring — all six
+pins GREEN, the print audit 0/0, the focus audit clean. AJ7: the six
+drawer-clicking sweeps patched with the portal-suppression init
+script — mobile 0/20 views, midband 0/20, landscape 0/20, dark-mobile
+0/20 (the accent-midband/landscape/dark-sweep re-runs below). AJ8:
+next bumped 16.4.0 → 16.4.2 through `bun add` with the FULL
+re-verification ladder — rebuild green, lint/tsc clean, unit 865/865,
+**full cold re-cert 455/455** (127+138+53+79+58 first-pass every
+chunk), every API audit re-run green under the patched server
+(security 0, settings-roundtrip 0, connectivity 0, upload-edge 0,
+data-volume 0, print 0/0, focus clean), dep-audit **GREEN — 0
+runtime-reachable** (the two critical RCE advisories and the DoS gone;
+braces/deepmerge-ts documented non-production; quill 2.0.3 is the
+latest upstream, its low advisory tracked with no fix available).
+
+**Batch AJ: DONE.** Standing debt unchanged: Batch R (RSC structural
+perf — deferred on the S75 CWV evidence), the s80 audit's L1 (the
+study zombie), L4's ~27 AG-pinned-hue consumer sites (uniform
+re-theme, no observable diverges), and I2's dedicated text token. The
+S83 lessons are recorded in AGENTS.md: a comment's causal claim is a
+hypothesis until probed (the Prisma empty-data disproval); an
+execution record's "green in sequence" claim must be re-derivable
+from the raw envelopes (the S82 print/focus-order correction); the
+dev overlay's portal intercepts drawer-bottom clicks (dev-only, but
+the sweeps live on the dev server — suppress it); a nested focusable
+is its own tab stop; print-color-adjust is per-SURFACE (fix at the
+fill-utility level).

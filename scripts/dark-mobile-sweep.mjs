@@ -230,6 +230,17 @@ const DRAWER_CHECKER = `(() => {
 const browser = await chromium.launch();
 const page = await browser.newPage({ viewport: VIEWPORT, hasTouch: true });
 
+// S83/AJ7: the Next.js dev overlay portal (dev-only — absent from the
+// production build) intercepts pointer events at the drawer's scrolled
+// bottom region and hangs the drawer-link clicks. Suppressed for the
+// sweep's lifetime; a no-op against production (the element never exists).
+await page.addInitScript(() => {
+  const style = document.createElement("style");
+  style.textContent = "nextjs-portal { display: none !important; }";
+  document.addEventListener("DOMContentLoaded", () => document.head.appendChild(style));
+});
+
+
 const consoleLog = [];
 let logCursor = 0;
 page.on("console", (msg) => {

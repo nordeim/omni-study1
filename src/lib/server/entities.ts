@@ -100,11 +100,13 @@ function datesOnWrite(data: Row, dateFields: readonly string[]): Row {
  * is not a meaningful write either way.
  *
  * The S81 lesson, generalized: EVERY partial-PATCH write site needs this
- * filter — the factory's fifteen delegates AND the hand-written
- * flashcard card delegate (Flashcard carries no userId; ownership rides
- * the deck join, which is why it was never routed through the factory).
+ * filter — the factory's fifteen delegates, the hand-written flashcard
+ * card delegate (Flashcard carries no userId; ownership rides the deck
+ * join, which is why it was never routed through the factory), AND the
+ * folder delegate (S83/AJ1 — the seventeenth site, routed through this
+ * helper so the convention admits no hand-written exceptions).
  */
-const sentKeysPatch = (
+export const sentKeysPatch = (
   input: unknown,
   parsed: Row,
 ): Row => {
@@ -153,7 +155,11 @@ function makeOwnedDelegate(config: OwnedConfig): EntityDelegate {
       const writes = sentKeysPatch(input, parsed);
       if (Object.keys(writes).length === 0) {
         // An empty patch is a no-op — short-circuit to the existing row
-        // (a Prisma update with an empty data object is rejected).
+        // (S83/AJ2, verified against Prisma 6.11: an update with an empty
+        // data object is ACCEPTED as a no-op — the row returns unchanged
+        // and @updatedAt is NOT bumped — so the short-circuit exists to
+        // avoid the pointless write and to normalize behavior across the
+        // three write-site families, not to dodge a client rejection).
         return normalize(existing);
       }
       const row = await model.update({
@@ -358,8 +364,9 @@ export const flashcardCardDelegate: EntityDelegate = {
       delete data.deckId;
     }
     if (Object.keys(data).length === 0) {
-      // An empty patch is a no-op (a Prisma update with an empty data
-      // object is rejected — the factory's own short-circuit).
+      // An empty patch is a no-op (S83/AJ2, verified against Prisma 6.11:
+      // an update with an empty data object is ACCEPTED as a no-op — the
+      // short-circuit avoids the pointless write, matching the factory).
       return card;
     }
     return db.flashcard.update({ where: { id }, data });

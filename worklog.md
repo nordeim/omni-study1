@@ -2268,3 +2268,183 @@ schema-validated-keys intersection (AI5), and the create-response
 metadata shape (AI6). Baselines: e2e **448/448**, unit **864/864**,
 lint/tsc/build clean, s82 resweep ok:true, mobile nav verified on both
 hosts. Standing debt unchanged: Batch R + the documented deferrals.
+
+---
+Task ID: 5-a
+Agent: general-purpose (Mode-C audit)
+Task: Read-only Mode-C audit of the Batch AI diff (7144e71..4ec3db2)
+
+Work Log:
+- Read the S81/S82 worklog entries + AGENTS.md's "Zod4 + certification-isolation
+  lessons (S81)" and "Coverage-claim + assertion-quality lessons (S82)" sections
+  first (the documented failure classes this audit hunts).
+- Extracted the full diff (src: 4 files / 225 lines; tests+scripts+vitest.config:
+  606 lines) and read every hunk; then read each changed source file IN FULL:
+  files/route.ts (139), entities.ts (377), notes-view.tsx (791),
+  suite-verdict.ts (parseAuditStdout + header), plus the surrounding context:
+  http.ts (route factories + parseWith/readJson), validation.ts (every schema),
+  files/[id] + files/folders/[id] + settings/preferences + flashcards cards/decks
+  routes, ai/generate-cards, import/data, lib/api.ts, data.ts mutation region,
+  files-view.tsx + flashcards-view.tsx consumer regions.
+- AI1/AI5 verified empirically (node -e, repo's zod@4.6.5, pure logic — no
+  build/test runs): flashcardSchema.partial().parse({mastered:true}) materializes
+  difficulty:"medium"; strip mode drops unknown sent keys; nullableId transforms
+  ""→null only when sent. Confirmed sentKeysPatch output = sent ∩ schema keys,
+  the deckId move-check re-base (data.deckId is sent-only — identical condition
+  to the old parsed.deckId since deckId carries no default), the empty-patch
+  short-circuit shapes (factory: normalize(existing); card: the full `card` row —
+  both consistent with their update paths, updatedAt correctly NOT bumped on a
+  no-op).
+- Write-site census (the "any OTHER site that bypasses it?" question): grep of
+  every db.*.update across src → factory (15 delegates) + card delegate +
+  files/folders/[id] folderDelegate (hand-written, safe — folderUpdateSchema has
+  NO .default() and its own !== undefined filter) + preferences (manual filter,
+  no defaults) + auth user/token updates (fixed columns) + import/data
+  (full-row RESTORE semantics — intended bypass, no zod partial). Every schema
+  with .default() enumerated against its update path: all land in
+  sentKeysPatch or a no-default manual filter. No .partial() parse exists
+  outside entities.ts.
+- AI6 consumer sweep: FILE_METADATA = every FileItem column except `data`;
+  all consumers verified (view GET/POST upload uses res.ok only, link create
+  discards the body via apiSend, resilience C3/AH13/AI6 + s14-hardening +
+  upload-edge audit read only record.id/status/error). Both create paths still
+  persist the full row (select affects the response only). Authz unchanged:
+  withUser on GET/POST, folder ownership 404-checked on both branches,
+  userId from session, link URL regex-validated (no javascript: href).
+- AI2 traced through every selectedIdRef write site (effect + selectNote +
+  create submit) and every guard consumer (onContentChange both branches,
+  saveNow both branches): the unconditional settle is a strict superset of the
+  S81 conditional clear — the delete-departs clear is preserved (dep → null)
+  and any stale clear is healed on the next dep change; handler writes can no
+  longer be permanently clobbered because every dep change re-syncs. createNote
+  adds the row to the store before setSelectedId, so no transient clear window.
+- AI3 verified by pure-logic old-vs-new loop repro over 6 shapes: single-line +
+  prose old=LOUD→new=parses (the fix); multi-line+prose unchanged; truncated
+  single line and stack traces stay LOUD both forms (anti-phantom preserved);
+  residual behavior change: two consecutive one-line JSON objects now returns
+  the first where the old form errored (classifyAudit's shape guard backstops).
+- Test quality per the S82 lessons: AI1a/b (response + LIST round-trip — not
+  response-echo-only), AI1c (UI path, waitForResponse-gated, no fixed sleeps),
+  AI4's sibling assertion is cross-element and algebraically genuine (the
+  tautology is gone), AI6 asserts dataAbsent + listed + download, AI3 pins the
+  N=1 boundary. Counts re-derived: parity-session7 45, resilience 7, 22 unit
+  files / 864 its (matches the new vitest header exactly), chunk arithmetic
+  127+138+52+73+58=448 with 30 spec files listed exactly once.
+- Findings triaged: 0 Critical / 0 High / 0 Medium / 3 Low / 3 Informational
+  (see the audit report for the ledger). Documented non-findings honored (not
+  re-reported): Batch R, the s80 L1 study zombie, the AG pinned-hue sites,
+  I2's text token, the deferred fixed-sleep class.
+
+Stage Summary:
+- 0 Critical / 0 High / 0 Medium / 3 Low / 3 Informational. The batch's six
+  claims all verified correct: AI1 (sentKeysPatch at both partial-PATCH write
+  sites, exhaustive write-site census, deckId re-base + empty-patch shapes
+  correct), AI2 (converging settlement — strict superset, clear semantics
+  preserved), AI3 (single-line seam fixed, anti-phantom guard intact), AI6
+  (FILE_METADATA complete for every consumer, both creates persist fully),
+  AI4 (the tautology genuinely replaced), AI5 (intersection is contract
+  hardening with identical observable behavior). The Lows: L1 AI2's heal
+  behavior is unpinned (AH1/AH2 re-runs prove preservation, not the heal);
+  L2 the parser bound now returns the first line alone for multi-envelope
+  stdout where the old form failed LOUD (shape-guard backstopped, contrived);
+  L3 a seventeenth hand-written write site (files/folders/[id] folderDelegate)
+  is safe today but outside the sentKeysPatch convention — a future .default()
+  there would silently reintroduce the AH8 class. Infos: the parser's
+  post-loop try is now dead-in-effect; AI5 has no pin (unverifiable through
+  the API — strip mode already drops unknown keys); the card delegate's
+  no-op short-circuit returns the pre-update snapshot (correct, consistent).
+  No code changes made (read-only audit).
+
+## Session 83 (continuation 35) — the convention closure + the verified-behavior accuracy + the print/focus remediation + the security bump (Batch AJ)
+
+**The cycle (Cycle 33).** The received state: `4e070d4` (Batch AI
+`4ec3db2` + the operator's session-log commits adding
+`docs/session_34.md`/`session_35.md`). The 25th workspace reset wiped
+the workspace (chromium-1243 re-provisioned — the standing gotcha);
+the repo re-cloned clean.
+
+1. **Baseline re-certified cold**: lint ✓ tsc ✓ unit 864/864, build
+   green, cold e2e 448/448 first-pass every chunk (127+138+52+73+58).
+2. **Three evidence layers** (before any source change): a Mode-C
+   audit of the Batch AI diff (Task 5-a, appended below) — 0 Critical
+   / 0 High / 0 Medium / 3 Low / 3 Info, all six AI claims verified
+   correct in source AND empirically. The Lows: L1 (the AI2 heal
+   unpinned), L2 (the parser's first-envelope-wins unpinned), L3 (the
+   folder delegate — a 17th hand-written PATCH site outside the
+   sentKeysPatch convention, safe today only because its schema
+   carries no defaults). Plus: the s83 reference re-sweep (ok:true —
+   9/9 invariants both hosts, 18 captures) and agent-browser
+   mobile-nav verification on BOTH hosts (ref 20 links + its own 416
+   overflow; clone 20 links + the superset skip-link at scrollWidth
+   390 — no Tailwind v4 mobile-nav bug).
+3. **The cycle's empirical discovery** (probed BEFORE planning): the
+   S82-era comment "a Prisma update with an empty data object is
+   rejected" is FALSE on Prisma 6.11 — empty PATCHes answer 200 with
+   the row unchanged, and a direct client-level
+   `db.user.update({data:{}})` is accepted as a no-op with
+   `@updatedAt` NOT bumped. Both short-circuit comments corrected.
+4. **Cycle-33 plan written into the remediation plan BEFORE any
+   source change**, then TDD: AJ1's pin green-on-arrival by design
+   with its protective value proven by the three-step mutation
+   (add `.default(null)` + the OLD hand-filter → RED at
+   `renamedParentPreserved` — the exact AH8 class detected; keep the
+   default + the sentKeysPatch routing → GREEN — the routing defeats
+   the class; then the mutant removed). AJ3's pin green-on-arrival,
+   mutation-proven (last-envelope-wins flips it red). GREEN: the
+   folder delegate routed through the exported `sentKeysPatch` (the
+   17th site joins the convention), the parser's dead post-loop try
+   removed, the AI2 heal acceptance + the preferences-route
+   defaults-free filter certified in comments.
+5. **The standing-suite layer expanded the cycle**: the orchestrator
+   took stages 0–16 in sequence (killed at 17 — the environmental
+   cap); stages 9–12/14–15 produced empty envelopes (the AJ7 dev-
+   portal class + one dependency-reload abort). Individual re-runs:
+   security 0/7, settings-roundtrip 0/5, connectivity 0/7,
+   upload-edge 0/10, data-volume 0/10, ai-error 0/10, ai-a11y 0/4 —
+   and TWO genuine received-tree defect families (both A/B-verified
+   against the clean `4e070d4` tree, correcting the S82 record's
+   "print, focus-order green in sequence" claim): **AJ5** — five
+   active-state white-text surfaces with no `print-color-adjust:
+   exact` (Calendar segmented tab, Timetable today badge, Exams topic
+   chips, Calculator History pill, Settings theme tile — print drops
+   the fills, the text goes invisible; +5 RED pins, fixed via the
+   `sf-selected-tint` utility + `sf-print-exact`, all GREEN, the
+   print audit 0/0 from 5/5) and **AJ6** — the Dashboard SectionLink's
+   nested button tab stop with no focus indicator (+1 RED pin with
+   REAL keyboard traversal, fixed with its own focus-visible ring,
+   the focus audit clean). **AJ7** — the Next.js dev overlay's
+   `<nextjs-portal>` intercepted drawer-bottom clicks (six sweeps,
+   identical crash on the clean tree); suppressed via an init-script
+   CSS rule (dev-only by construction) — mobile/midband/landscape/
+   dark-mobile all 0 findings / 20 views after the patch. **AJ8** —
+   the security headline: next 16.4.0 carried TWO CRITICAL
+   unauthenticated RCE advisories (GHSA-2464-fhr4-w9xw +
+   GHSA-673q-mjm6-r5xr, both runtime-reachable) + a Server-Actions
+   DoS; bumped to 16.4.2 via `bun add` with the FULL re-verification
+   ladder: rebuild green, lint/tsc clean, unit 865/865, **full cold
+   re-cert 455/455** (127+138+53+79+58 first-pass every chunk), every
+   API audit re-run green under the patched server, dep-audit **GREEN
+   — 0 runtime-reachable** (quill 2.0.3 is the latest upstream; its
+   low XSS advisory tracked, no fix available).
+6. **Docs chain**: README (badge 1320, counts 865/455, the S83
+   session row), AGENTS/CLAUDE counts + the S83 lessons section (the
+   comment-as-hypothesis, the raw-envelope re-derivability, the
+   dev-portal suppression, the nested focusable, the per-SURFACE
+   print contract), vitest.config.ts header, the remediation-plan
+   Cycle-33 plan + three amendments + execution record + header, this
+   worklog, docs/session_36.md. Evidence: the resweep set
+   `83-{ref|clone}-*.png` (18 captures) + the AJ surface captures
+   (`83-clone-aj-*.png`). `.env.example` verified current (no env
+   surface changed this cycle).
+
+**Stage summary.** Batch AJ DONE: the convention closure (AJ1 — the
+17th write site routed through sentKeysPatch, mutation-proven), the
+verified-behavior accuracy (AJ2 — the Prisma empty-data comment
+disproval), the parser documentation pin + dead-code removal (AJ3),
+the certification comments (AJ4), the print-fill family (AJ5 — five
+surfaces, five pins), the focus indicator (AJ6), the dev-portal sweep
+repair (AJ7), and the critical-RCE security bump (AJ8 — next 16.4.2).
+Baselines: e2e **455/455**, unit **865/865**, lint/tsc/build clean,
+dep-audit 0 runtime-reachable, print audit 0/0, s83 resweep ok:true,
+mobile nav verified on both hosts. Standing debt unchanged: Batch R +
+the documented deferrals.

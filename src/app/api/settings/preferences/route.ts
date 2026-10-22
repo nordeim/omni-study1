@@ -55,6 +55,18 @@ export const PATCH = withUser(async (user, request) => {
       data.notificationsEnabled = prefs.notificationsEnabled;
     }
 
+    // S83/AJ4 (the s83 audit's write-site census — the eighteenth site,
+    // certified): this hand-built `!== undefined` filter is the sent-keys
+    // filter inlined. It cannot use the shared sentKeysPatch helper
+    // because the alias mapping (client `name`/`displayName` → column
+    // `fullName`, etc.) breaks the sent-key ↔ parsed-key correspondence
+    // the helper's intersection requires. SAFE against the AH8 class
+    // because preferencesSchema carries NO create-time defaults — any
+    // `.default()` added to it would materialize here as a sent key and
+    // silently reset that column on every partial save. An empty data
+    // object is ACCEPTED by Prisma 6.11 as a no-op (verified), so a `{}`-
+    // body PATCH answers 200 with the user unchanged.
+
     const updated = await db.user.update({
       where: { id: user.id },
       data,

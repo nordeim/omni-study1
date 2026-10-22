@@ -213,6 +213,19 @@ describe("parseAuditStdout", () => {
     expect(r.ok).toBe(true);
     if (r.ok) expect((r.json as { ok: boolean }).ok).toBe(true);
   });
+
+  // S83/AJ3 (the Mode-C audit's L2): the FIRST-envelope-wins contract for
+  // NDJSON-ish output — with the `end > start` bound, stdout whose first
+  // `{`-opening line is itself a complete object followed by FURTHER JSON
+  // lines parses to that FIRST envelope (the pre-S82 form failed LOUD
+  // here). Pinned so a future "last envelope wins" or "join all lines"
+  // change cannot land silently; the AP-77 shape guard remains the
+  // backstop when the first object matches no known audit shape.
+  it("parses the FIRST envelope when multiple one-line objects are printed (NDJSON-ish output)", () => {
+    const r = parseAuditStdout(`{"ok": true, "checks": []}\n{"ok": false, "error": "later"}\n`);
+    expect(r.ok).toBe(true);
+    if (r.ok) expect((r.json as { ok: boolean }).ok).toBe(true);
+  });
 });
 
 // --- classifyAudit: the GREEN shapes (genuine fixtures) ---------------------

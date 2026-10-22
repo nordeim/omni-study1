@@ -201,6 +201,16 @@ export function NotesView() {
   // unconditional settle keeps the AH1 clear semantics exactly (null →
   // null) AND re-syncs the mirror on every dep change, so the dep-change
   // re-run heals any stale clear that landed after a newer handler write.
+  //
+  // S83/AJ4 (the s83 audit, L1 — the honest acceptance): the HEAL itself
+  // (a stale clear landing after a newer handler write, then healed by
+  // the dep-change re-run) has NO deterministic pin — passive-effect
+  // flush interleaving is not controllable from Playwright, and no unit
+  // seam exists for an in-component ref mirror. The standing guard is the
+  // PRESERVATION family (AH1a/AH2a/AH2b in parity-session7.spec.ts): the
+  // departed-clear, departed-Save, and streak semantics must stay green
+  // through any change here. A regression to a conditional settle would
+  // pass those pins silently — this comment is the contract's record.
   React.useEffect(() => {
     selectedIdRef.current = effectiveNoteId;
   }, [effectiveNoteId]);

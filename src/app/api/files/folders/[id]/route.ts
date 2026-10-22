@@ -12,6 +12,7 @@ import {
   parseWith,
   type EntityDelegate,
 } from "@/lib/server/http";
+import { sentKeysPatch } from "@/lib/server/entities";
 
 const folderUpdateSchema = z.object({
   name: z.string().min(1).max(200).optional(),
@@ -36,18 +37,30 @@ const folderDelegate: EntityDelegate = {
     });
     if (!existing) throw new NotFoundError();
     const parsed = parseWith(folderUpdateSchema, input);
-    if (parsed.parentId) {
+    // S83/AJ1: the sent-keys filter — the seventeenth write site joins the
+    // sentKeysPatch convention (the AI1 lesson: a fix's coverage claim must
+    // hold at EVERY write site; a hand-filtered `!== undefined` check reads
+    // a materialized zod default as a sent key, the exact AH8 data-loss
+    // class). Sent keys intersected with the schema-validated parsed keys.
+    const writes = sentKeysPatch(input, parsed) as {
+      name?: string;
+      parentId?: string | null;
+    };
+    if (writes.parentId) {
       const parent = await db.fileFolder.findFirst({
-        where: { id: parsed.parentId, userId },
+        where: { id: writes.parentId, userId },
         select: { id: true },
       });
       if (!parent) throw new NotFoundError("That folder does not exist.");
     }
-    // Only the provided keys move — an absent parentId never clears.
-    const data: { name?: string; parentId?: string | null } = {};
-    if (parsed.name !== undefined) data.name = parsed.name;
-    if (parsed.parentId !== undefined) data.parentId = parsed.parentId;
-    return db.fileFolder.update({ where: { id }, data });
+    if (Object.keys(writes).length === 0) {
+      // An empty patch is a no-op — short-circuit to the existing row
+      // (S83/AJ2, verified against Prisma 6.11: an update with an empty
+      // data object is ACCEPTED as a no-op; the short-circuit avoids the
+      // pointless write, matching the factory and the card delegate).
+      return existing;
+    }
+    return db.fileFolder.update({ where: { id }, data: writes });
   },
   remove: async (userId, id) => {
     const existing = await db.fileFolder.findFirst({

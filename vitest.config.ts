@@ -1,7 +1,7 @@
 import { defineConfig } from "vitest/config";
 import path from "node:path";
 
-// Unit-test layer for the pure domain seams — 22 files / 864 tests
+// Unit-test layer for the pure domain seams — 22 files / 865 tests
 // (re-anchored S79; S80/AG12 fixed the stale "834" header — AGENTS.md/
 // CLAUDE.md/README stay the authoritative count keepers): router, theme,
 // theme-cache, date, calculator, auth, validation, db-path,

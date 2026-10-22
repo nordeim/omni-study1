@@ -68,7 +68,10 @@ function SectionLink({ href, view, label, onNavigate }: { href: string; view: Vi
     >
       <button
         type="button"
-        className="inline-flex h-8 items-center justify-center gap-2 whitespace-nowrap px-3.5 text-xs font-medium text-sf-primary-strong transition-colors outline-none dark:text-sf-primary-strong-dark"
+        // S83/AJ6: the nested button is its OWN tab stop (a focusable
+        // inside a focusable) — it must carry its own focus-visible ring;
+        // the anchor's ring never renders when the button holds focus.
+        className="inline-flex h-8 items-center justify-center gap-2 whitespace-nowrap px-3.5 text-xs font-medium text-sf-primary-strong transition-colors outline-none focus-visible:ring-2 focus-visible:ring-sf-primary/40 dark:text-sf-primary-strong-dark"
       >
         {label}
         <ArrowRight className="size-4" strokeWidth={2} aria-hidden />

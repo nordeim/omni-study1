@@ -92,6 +92,13 @@ export function parseAuditStdout(stdout: string): ParsedAudit {
   // compact one-line envelope followed by prose still failed LOUD (the
   // same AH7 failure class, latent only because the preflight prints
   // multi-line envelopes).
+  // S83/AJ3: FIRST-envelope-wins — the first iteration (end =
+  // lines.length) tests the slice-to-end, and each shrink step tests a
+  // shorter suffix of it, so the first COMPLETE slice from the start
+  // line wins (NDJSON-ish output returns its first envelope; pinned in
+  // suite-verdict.test.ts). The old post-loop `try` (slice(start)) was
+  // byte-identical to the loop's FIRST iteration and could never
+  // succeed after the loop failed — dead code, removed.
   for (let end = lines.length; end > start; end--) {
     try {
       return { ok: true, json: JSON.parse(lines.slice(start, end).join("\n")) };
@@ -99,14 +106,10 @@ export function parseAuditStdout(stdout: string): ParsedAudit {
       // keep shrinking
     }
   }
-  try {
-    return { ok: true, json: JSON.parse(lines.slice(start).join("\n")) };
-  } catch (e) {
-    return {
-      ok: false,
-      error: `parse error: the audit output is not valid JSON (${e instanceof Error ? e.message : String(e)})`,
-    };
-  }
+  return {
+    ok: false,
+    error: `parse error: the audit output is not valid JSON (no complete envelope on any slice from the first "{" line)`,
+  };
 }
 
 // ---- the signature-strict non-gap exemptions (the S11 families) -----------------

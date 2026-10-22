@@ -258,7 +258,7 @@ export function CalculatorView() {
           // light text) in dark mode — it does NOT invert. The s72-era
           // dark:bg-slate-100 inversion was drift and a standing
           // dark-sweep flashbulb.
-          className="bg-slate-900 text-white hover:bg-slate-800 dark:bg-[#0a0a0a] dark:text-[#fafafa] dark:hover:bg-[#262626]"
+          className="bg-slate-900 text-white hover:bg-slate-800 dark:bg-[#0a0a0a] dark:text-[#fafafa] dark:hover:bg-[#262626] sf-print-exact"
         >
           <History className="size-4" strokeWidth={2} aria-hidden />
           History
