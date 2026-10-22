@@ -58,7 +58,6 @@ for (let i = 0; i < 200; i++) {
     userId: user.id,
     title: `${MARKER}note ${i}`,
     content: "Stress note body ".repeat(8),
-    pinned: i % 9 === 0,
     tags: JSON.stringify(["stress"]),
   });
 }

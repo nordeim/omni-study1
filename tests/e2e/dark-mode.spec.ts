@@ -471,3 +471,78 @@ test.describe("S80/AG · the dark-canvas flashbulb family", () => {
   });
 });
 
+
+// ---------------------------------------------------------------------------
+// S81 · Batch AH dark pins — the emerald-200 @theme pin (the success
+// toast's dark text — the last unpinned hue on a certified surface) + the
+// overdue-banner / error-toast / calculator-footer dark pairs. See
+// docs/remediation-plan.md Cycle 31 (AH3/AH4).
+//
+// Trap-10 (the standing Tailwind v4 lesson): an unpinned v4-oklch hue
+// serializes in computed styles as `lab(90.2247 -31.039 9.47084)` — the
+// AH3b RED. The pin declares the v3 hex `#a7f3d0` in @theme so the dark
+// text computes rgb(167, 243, 208) like every other certified hue.
+// ---------------------------------------------------------------------------
+
+test.describe("S81 · the dark toast/banner/footer pairs (AH3/AH4)", () => {
+  test("AH3a: the dashboard overdue banner keeps the house dark pair (red-950 icon block / red-300 title)", async ({ page }) => {
+    await gotoDark(page, "/Dashboard");
+    const banner = page.locator('[aria-label="Overdue alert"]');
+    await expect(banner).toBeVisible();
+    const iconBlock = banner.locator("div").first();
+    const title = banner.getByRole("heading");
+    const [iconCs, titleCs] = await Promise.all([
+      iconBlock.evaluate((el) => getComputedStyle(el).backgroundColor),
+      title.evaluate((el) => getComputedStyle(el).color),
+    ]);
+    expect(iconCs).toBe("rgb(69, 10, 10)"); // red-950 #450a0a
+    expect(titleCs).toBe("rgb(252, 165, 165)"); // red-300 #fca5a5
+  });
+
+  test("AH3b: the success toast's dark text computes the pinned emerald-200 hex", async ({ page }) => {
+    await gotoDark(page, "/Notes");
+    await page.getByRole("button", { name: /Dot product intuition/ }).first().click();
+    await expect(page.locator(".ql-editor")).toBeVisible();
+
+    await page.getByRole("button", { name: "Save", exact: true }).click();
+    const toast = page.getByRole("region", { name: "Notifications" }).locator("button").filter({ hasText: "Note saved." });
+    await expect(toast.first()).toBeVisible();
+    const color = await toast.first().evaluate((el) => getComputedStyle(el).color);
+    // emerald-200 #a7f3d0 (the @theme pin). Unpinned, the v4-oklch hue
+    // computes lab(90.2247 -31.039 9.47084) — the trap-10 RED.
+    expect(color).toBe("rgb(167, 243, 208)");
+  });
+
+  test("AH3c: the error toast's dark text keeps the pinned red-200 hex", async ({ page }) => {
+    await gotoDark(page, "/Notes");
+    await page.getByRole("button", { name: /Dot product intuition/ }).first().click();
+    await expect(page.locator(".ql-editor")).toBeVisible();
+
+    // Abort every note PATCH — the autosave failure toast fires.
+    await page.route(/\/api\/notes\//, async (route) => {
+      if (route.request().method() === "PATCH") await route.abort("failed");
+      else await route.continue();
+    });
+    const editor = page.locator(".ql-editor");
+    await editor.click();
+    await page.keyboard.type("dark probe");
+    const toast = page.getByRole("region", { name: "Notifications" }).locator("button").filter({ hasText: /offline|autosave|not saved/i });
+    await expect(toast.first()).toBeVisible();
+    const color = await toast.first().evaluate((el) => getComputedStyle(el).color);
+    expect(color).toBe("rgb(254, 202, 202)"); // red-200 #fecaca
+    await page.unroute(/\/api\/notes\//);
+  });
+
+  test("AH4a: the calculator footer's Backspace key keeps the dark slate pair", async ({ page }) => {
+    await gotoDark(page, "/Calculator");
+    const backspace = page.getByRole("button", { name: "Backspace" });
+    await expect(backspace).toBeVisible();
+    const cs = await backspace.evaluate((el) => {
+      const s = getComputedStyle(el);
+      return { bg: s.backgroundColor, border: s.borderColor, color: s.color };
+    });
+    expect(cs.bg).toBe("rgb(15, 23, 42)"); // slate-900 #0f172a
+    expect(cs.border).toBe("rgb(51, 65, 85)"); // slate-700 #334155
+    expect(cs.color).toBe("rgb(203, 213, 225)"); // slate-300 #cbd5e1
+  });
+});

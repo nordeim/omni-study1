@@ -24,7 +24,12 @@ async function login(page) {
   await page.fill("input[type=email]", "demo@studyflow.app");
   await page.fill("input[type=password]", "Demo1234!");
   await page.click("button[type=submit]");
-  await page.waitForFunction(() => document.querySelector("main") !== null, null, { timeout: 20000 });
+  // S81/AH10 (the audit-tools repair): the login wait must prove
+  // AUTHENTICATION, not main-element presence — the LOGIN PAGE itself has a
+  // <main>, so this wait resolved pre-auth and the next goto raced the
+  // login POST (ERR_ABORTED on the auth-gate bounce). The sweeps' pattern:
+  // wait for the post-login /Dashboard redirect.
+  await page.waitForURL(`${BASE}/Dashboard`, { timeout: 20000 });
 }
 
 const browser = await chromium.launch();
@@ -117,8 +122,16 @@ try {
     const res = await fetch("/api/files", { method: "POST", body: form, credentials: "same-origin" });
     return { status: res.status, body: await res.json() };
   }, `${PREFIX}ghost.bin`);
-  if (ghost.status === 400) ok("nonexistent folderId rejected", { error: ghost.body?.error });
-  else note("C5", "nonexistent folder upload", { finding: "expected 400", got: ghost });
+  // S81/AH13 (audit-tools repair): the shipped contract is 404 with the
+  // human message ("That folder does not exist." — the coherent design at
+  // all three folder-referencing sites: the referenced resource is absent,
+  // not the payload malformed). The audit's old 400 expectation predates
+  // that design. 400 with a message also passes (either rejects loudly).
+  if ((ghost.status === 404 || ghost.status === 400) && typeof ghost.body?.error === "string") {
+    ok("nonexistent folderId rejected (404 — the folder resource is absent)", { error: ghost.body?.error });
+  } else {
+    note("C5", "nonexistent folder upload", { finding: "expected 404 (or 400) with an error message", got: ghost });
+  }
 
   // C6 — multipart with no file field.
   const noFile = await page.evaluate(async () => {

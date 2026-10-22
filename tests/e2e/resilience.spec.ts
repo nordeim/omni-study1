@@ -150,4 +150,46 @@ test.describe("files upload edge cases", () => {
     expect(fallback).not.toBeNull();
     expect(fallback![1]).not.toMatch(/[^\x20-\x7e]/);
   });
+
+  // S81/AH13 (found by the repaired upload-edge audit's C8 probe): the files
+  // LIST must carry metadata only — the base64 `data` column belongs to the
+  // per-file download endpoint. Every stored ≤2 MiB file otherwise adds
+  // ~2.7 MiB of base64 to every list fetch (an unbounded payload as the
+  // library grows). The view's link-file distinction rides `url !== null`.
+  test("AH13: the file list omits the base64 data column while the per-file download serves it", async ({ page }) => {
+    await page.goto("/Files");
+    await expect(page.getByRole("heading", { name: "Files", exact: true })).toBeVisible();
+
+    const stamp = `resilience-AH13-${Date.now()}`;
+    const info = await page.evaluate(async (stamp) => {
+      const form = new FormData();
+      form.append("file", new File([new Uint8Array([0x53, 0x46])], `${stamp}.txt`, { type: "text/plain" }));
+      const up = await fetch("/api/files", { method: "POST", body: form, credentials: "same-origin" });
+      const record = await up.json();
+      // The LIST: metadata only — `data` must be absent (undefined), not
+      // merely empty. A present-but-null field would still be a contract
+      // smell; the stripped column is the design.
+      const list = await fetch("/api/files", { credentials: "same-origin" });
+      const rows = (await list.json()) as Array<{ id: string; name?: string; data?: unknown; url?: unknown }>;
+      const mine = rows.find((r) => r.id === record.id) ?? null;
+      // The per-file download still carries the bytes (the C3 contract).
+      const dl = await fetch(`/api/files/${record.id}`, { credentials: "same-origin" });
+      const dlBody = await dl.text();
+      // Cleanup: delete the row so the suite stays idempotent.
+      await fetch(`/api/files/${record.id}`, { method: "DELETE", credentials: "same-origin" });
+      return {
+        listed: !!mine,
+        dataAbsent: mine ? !("data" in mine) : false,
+        urlNull: mine ? mine.url === null : false,
+        dlStatus: dl.status,
+        dlHasBytes: dlBody.length > 0,
+      };
+    }, stamp);
+
+    expect(info.listed).toBe(true);
+    expect(info.dataAbsent).toBe(true);
+    expect(info.urlNull).toBe(true);
+    expect(info.dlStatus).toBe(200);
+    expect(info.dlHasBytes).toBe(true);
+  });
 });

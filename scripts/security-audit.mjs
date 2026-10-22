@@ -161,8 +161,12 @@ if (Object.values(noAuth).every((s) => s === 401)) {
 }
 
 // ---------------------------------------------------------------------------
-// C6 — registration user-enumeration shape (409 on existing email is the
-// documented UX trade-off; login stays uniform — re-verify both)
+// C6 — registration user-enumeration shape. S81/AH11 (audit-tools repair):
+// the register route's SHIPPED contract is uniform 200 for a VERIFIED
+// existing email (no code, no re-issue — the route's own anti-enumeration
+// design, documented in its comment); the audit's old 409 expectation was
+// the stale side of a latent contract rot (no e2e pin either way — the
+// route's design is the shipped truth). Login stays uniform 401.
 // ---------------------------------------------------------------------------
 const regExisting = await fetch(`${BASE}/api/auth/register`, {
   method: "POST",
@@ -179,10 +183,10 @@ const c6 = {
   loginNonexistent: loginWrong.status,
   loginMessage: (await loginWrong.json()).error,
 };
-if (c6.registerExisting === 409 && c6.loginNonexistent === 401 && /Invalid email or password/.test(c6.loginMessage ?? "")) {
-  ok("Login error stays uniform (no enumeration); register 409 is the documented trade-off", JSON.stringify(c6));
+if (c6.registerExisting === 200 && c6.loginNonexistent === 401 && /Invalid email or password/.test(c6.loginMessage ?? "")) {
+  ok("Login error stays uniform (no enumeration); register's verified-existing 200 is the anti-enumeration design (no code, no re-issue)", JSON.stringify(c6));
 } else {
-  note("C", "Auth error shapes diverge from the documented contract", { measured: JSON.stringify(c6) });
+  note("C", "Auth error shapes diverge from the shipped contract", { measured: JSON.stringify(c6) });
 }
 
 console.log(JSON.stringify({ findings, nonGaps }, null, 2));

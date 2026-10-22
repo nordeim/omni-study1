@@ -28,7 +28,12 @@ async function login(page) {
   await page.fill("input[type=email]", "demo@studyflow.app");
   await page.fill("input[type=password]", "Demo1234!");
   await page.click("button[type=submit]");
-  await page.waitForFunction(() => document.querySelector("main") !== null, null, { timeout: 20000 });
+  // S81/AH10 (the audit-tools repair): the login wait must prove
+  // AUTHENTICATION, not main-element presence — the LOGIN PAGE itself has a
+  // <main>, so this wait resolved pre-auth and the next goto raced the
+  // login POST (ERR_ABORTED on the auth-gate bounce). The sweeps' pattern:
+  // wait for the post-login /Dashboard redirect.
+  await page.waitForURL(`${BASE}/Dashboard`, { timeout: 20000 });
 }
 
 async function openView(page, title, path) {
@@ -60,13 +65,13 @@ await page.route(chatUrl, (route) => route.abort("failed"));
 let toastSeen = false;
 page.on("toast", () => (toastSeen = true)); // not supported — use DOM probe below.
 
-await page.fill("textarea[aria-label='Message the assistant']", "audit probe A1");
-await page.press("textarea[aria-label='Message the assistant']", "Enter");
+await page.fill("input[aria-label='Message the assistant']", "audit probe A1");
+await page.press("input[aria-label='Message the assistant']", "Enter");
 await page.waitForTimeout(2500);
 
 const afterAbort = await page.evaluate(() => {
   const msgs = [...document.querySelectorAll("main li")].map((li) => li.textContent.trim().slice(0, 40));
-  const composer = document.querySelector("textarea[aria-label='Message the assistant']");
+  const composer = document.querySelector("input[aria-label='Message the assistant']");
   const sendBtn = document.querySelector("button[aria-label='Send message']");
   const toasts = [...document.querySelectorAll("[data-slot=toast], [role=status], ol li")].map((t) => t.textContent.trim().slice(0, 70));
   return {
@@ -125,14 +130,14 @@ await page.route(chatUrl, async (route) => {
   // Never fulfill. Hold the route open.
   await new Promise(() => {});
 });
-await page.fill("textarea[aria-label='Message the assistant']", "audit probe A2");
-await page.press("textarea[aria-label='Message the assistant']", "Enter");
+await page.fill("input[aria-label='Message the assistant']", "audit probe A2");
+await page.press("input[aria-label='Message the assistant']", "Enter");
 // Wait 25 s: busy is expected to persist (the 120 s deadline has not fired).
 await page.waitForTimeout(25000);
 const hungState = await page.evaluate(() => {
   const sendBtn = document.querySelector("button[aria-label='Send message']");
   const thinking = [...document.querySelectorAll("main li")].some((li) => /Thinking/i.test(li.textContent || ""));
-  const composer = document.querySelector("textarea[aria-label='Message the assistant']");
+  const composer = document.querySelector("input[aria-label='Message the assistant']");
   return {
     sendDisabled: sendBtn ? sendBtn.disabled : null,
     thinkingShown: thinking,
@@ -161,11 +166,16 @@ await page.waitForTimeout(1500);
 await page.route(chatUrl, (route) =>
   route.fulfill({ status: 500, contentType: "application/json", body: JSON.stringify({ error: "Internal server error" }) }),
 );
-await page.fill("textarea[aria-label='Message the assistant']", "audit probe A3");
-await page.press("textarea[aria-label='Message the assistant']", "Enter");
+await page.fill("input[aria-label='Message the assistant']", "audit probe A3");
+await page.press("input[aria-label='Message the assistant']", "Enter");
 await page.waitForTimeout(1500);
 const errState = await page.evaluate(() => {
-  const toasts = [...document.querySelectorAll('[aria-label=Notifications] [role=status]')].map((t) => t.textContent.trim().slice(0, 70));
+  // S81/AH10 (audit-tools repair): the toaster's items are plain <button>
+  // elements inside the aria-live="Notifications" region — there is no
+  // [role=status] on the items (the REGION carries the live semantics).
+  // The old [role=status] probe matched nothing, so every 500-toast was
+  // reported as a false "no visible toast" finding.
+  const toasts = [...document.querySelectorAll('[aria-label=Notifications] button')].map((t) => t.textContent.trim().slice(0, 70));
   const sendBtn = document.querySelector("button[aria-label='Send message']");
   return { toastTexts: toasts, sendDisabled: sendBtn ? sendBtn.disabled : null };
 });
@@ -205,12 +215,15 @@ const solveRes2 = await page.evaluate(async () => {
 if (solveRes2.status === 400) ok("math solver rejects empty problem", solveRes2);
 else note("A4", "math solver empty problem", { finding: "expected 400", got: solveRes2 });
 
-// A4c: over-length problem (schema max 2000)
+// A4c: over-length problem (schema max 4000 — raised from 2000 when the
+// solver prompt outgrew the old cap; the audit's 2001-char probe now PASSES
+// validation and hits the real SDK. Send 4001 chars to test the actual
+// boundary.)
 const solveRes3 = await page.evaluate(async () => {
   const res = await fetch("/api/math/solve", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ problem: "9".repeat(2001) }),
+    body: JSON.stringify({ problem: "9".repeat(4001) }),
   });
   return { status: res.status, body: await res.json() };
 });

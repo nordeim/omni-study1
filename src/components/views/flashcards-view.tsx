@@ -428,6 +428,13 @@ export function FlashcardsView() {
                   tabIndex={0}
                   onClick={() => selectDeck(deck.id)}
                   onKeyDown={(e) => {
+                    // S81/AH6 (the departed-settlement cycle): the row's
+                    // keyboard path must never speak for its INNER
+                    // controls — Enter/Space on the options trigger (the
+                    // dropdown) bubbled here and selected the deck while
+                    // the menu opened. Only keydowns that ORIGINATE on the
+                    // row itself (e.target === e.currentTarget) select.
+                    if (e.target !== e.currentTarget) return;
                     if (e.key === "Enter" || e.key === " ") selectDeck(deck.id);
                   }}
                   className={cn(

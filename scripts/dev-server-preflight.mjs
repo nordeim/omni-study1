@@ -114,7 +114,11 @@ const { verdict, remedy } = classifyBootStability({
 console.log(JSON.stringify({ ...envelope, verdict, remedy }, null, 1));
 
 if (verdict === "green") {
-  console.log("DEV-SERVER PREFLIGHT: GREEN — hydrated and navigation-stable.");
+  // S81/AH7: the human GREEN line goes to STDERR — stdout must stay
+  // JSON-only (the orchestrator's parseAuditStdout parses stdout, and a
+  // trailing prose line after the envelope made the slice-to-end parse
+  // fail: the standing-suite aborted at stage 0 on its first-ever run).
+  console.error("DEV-SERVER PREFLIGHT: GREEN — hydrated and navigation-stable.");
   process.exit(0);
 }
 

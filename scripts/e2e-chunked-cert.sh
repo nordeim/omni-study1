@@ -1,11 +1,12 @@
 #!/usr/bin/env bash
-# Session-80 cold e2e certification — the 5-chunk map, re-derived post-Batch-AG
-# (census: 30 spec files exactly once; the S80 additions ride in-place —
-# dark-mode 13→20 with the AG dark flashbulb family [AG1-5, the AG5 light
-# guard, AG11a accent clock-date], parity-session7 32→34 with the AG6
-# note-switch ordering pin + the AG9 study-region pin, parity-session6
-# 16→17 with the AG7 768 h1 guard). Expected: 127 + 127 + 50 + 69 + 58 =
-# 431 (each chunk's count includes its auth setup). Per-chunk: fresh
+# Session-81 cold e2e certification — the 5-chunk map, re-derived post-Batch-AH
+# (census: 30 spec files exactly once; the S81 additions ride in-place —
+# parity-session7 34→42 with the AH departed-settlement family [AH1a/AH2a/
+# AH2b, the AH6 flashcards keyboard guard, the AH4b footer guard, the AH8
+# partial-PATCH data-loss family], dark-mode 20→24 with the AH3/AH4 dark
+# pairs [the emerald-200 @theme pin + its guard pins], resilience 5→6 with
+# the AH13 files-list metadata pin). Expected: 127 + 135 + 51 + 73 + 58 =
+# 444 (each chunk's count includes its auth setup). Per-chunk: fresh
 # db/e2e.db + stale-server kill (fresh in-memory limiter, register budget
 # stays <= 9/10 per chunk).
 set -uo pipefail

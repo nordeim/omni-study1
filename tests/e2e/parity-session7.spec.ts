@@ -957,3 +957,371 @@ test.describe("S80 · the study surface is a labeled region (AG9)", () => {
     await expect(page.locator('[aria-label="Deck list pane"]')).toBeVisible();
   });
 });
+
+// ---------------------------------------------------------------------------
+// S81 · Batch AH (session-81) — the departed-settlement family. See
+// docs/remediation-plan.md Cycle 31. Three defects, all verified in source:
+//   AH1  removeNote never settles the selection mirror — the stale ref
+//        lets a deleted note's late rejection pass the AG6 guard (toast
+//        lie + flag re-latch). Fix: an effect clears the mirror when the
+//        render-derived selection falls back to null.
+//   AH2  saveNow guards NEITHER settle branch — a departed Save's late
+//        success toasts "Note saved." onto the next note's surface AND
+//        unlatches its failure streak; a departed Save's late failure
+//        toasts the offline lie. Fix: capture the note id at call time
+//        and gate both branches on the mirror.
+//   AH6  the flashcards deck row's onKeyDown lacks a target check — Enter
+//        on the options DropdownMenuTrigger bubbles to the row and
+//        selects the deck while the menu opens. Fix: e.target !==
+//        e.currentTarget.
+//   AH4b the calculator footer structural guard (green-on-arrival).
+//   AH8  the Zod4 partial-defaults data-loss family (see the AH8 block).
+// ---------------------------------------------------------------------------
+
+test.describe("S81 · the delete flow settles the selection mirror (AH1)", () => {
+  test("AH1a: deleting the dirty selected note surfaces no autosave-failure lie", async ({ page }) => {
+    const stamp = Date.now();
+    await page.goto("/Notes");
+    await hydrated(page);
+
+    // PATCHes are held 900ms then aborted (the late rejection); every
+    // other method (the create POST, the DELETE) rides continue.
+    await page.route(/\/api\/notes\//, async (route) => {
+      if (route.request().method() === "PATCH") {
+        await new Promise((r) => setTimeout(r, 900));
+        await route.abort("failed");
+      } else {
+        await route.continue();
+      }
+    });
+
+    const createNote = async (name: string) => {
+      await page.getByRole("button", { name: "New note menu" }).click();
+      await page.getByRole("menuitem", { name: "New Note", exact: true }).click();
+      await page.getByLabel("Name").fill(name);
+      await page.getByRole("dialog").getByRole("button", { name: "Save", exact: true }).click();
+      const editor = page.locator(".ql-editor");
+      await expect(editor).toBeVisible();
+    };
+    await createNote(`AH1 alpha ${stamp}`);
+    await page.locator(".ql-editor").click();
+    // The dirty window: a debounced autosave PATCH (and, on unmount, the
+    // editor's final flush PATCH) will be held and rejected late.
+    await page.keyboard.type("doomed content");
+
+    // Delete the SELECTED note through the real menu.
+    await page.getByRole("button", { name: "Note actions" }).click();
+    await page.getByRole("menuitem", { name: "Delete note" }).click();
+
+    // The benign "Note deleted." success toast may appear; the LIE (an
+    // autosave/offline failure for a note that no longer exists) must
+    // not. Read after the held rejection has landed (900ms hold + the
+    // debounce margin).
+    await page.waitForTimeout(1800);
+    const lieToasts = await page
+      .getByRole("region", { name: "Notifications" })
+      .locator("button")
+      .filter({ hasText: /autosave|offline|not saved|Save failed/i })
+      .count();
+    expect(lieToasts).toBe(0);
+
+    await page.unroute(/\/api\/notes\//);
+  });
+});
+
+test.describe("S81 · the departed-Save settlement (AH2)", () => {
+  test("AH2a: a departed Save's late success neither toasts nor unlatches beta's failure streak", async ({ page }) => {
+    const stamp = Date.now();
+    await page.goto("/Notes");
+    await hydrated(page);
+
+    // Phase A ("hold-success"): PATCHes held 2500ms then CONTINUE — alpha's
+    // Save settles AFTER the switch to beta and after beta's first
+    // failure. Phase B ("abort"): PATCHes abort instantly (beta's
+    // failures). The unmount-flush and autosave PATCHes are already
+    // guarded (AG6); only saveNow's branches are the AH2 defect.
+    let patchMode: "hold-success" | "abort" = "hold-success";
+    await page.route(/\/api\/notes\//, async (route) => {
+      if (route.request().method() === "PATCH") {
+        if (patchMode === "hold-success") {
+          await new Promise((r) => setTimeout(r, 2500));
+          await route.continue();
+        } else {
+          await route.abort("failed");
+        }
+      } else {
+        await route.continue();
+      }
+    });
+
+    const createNote = async (name: string) => {
+      await page.getByRole("button", { name: "New note menu" }).click();
+      await page.getByRole("menuitem", { name: "New Note", exact: true }).click();
+      await page.getByLabel("Name").fill(name);
+      await page.getByRole("dialog").getByRole("button", { name: "Save", exact: true }).click();
+      const editor = page.locator(".ql-editor");
+      await expect(editor).toBeVisible();
+    };
+    await createNote(`AH2a alpha ${stamp}`);
+    await page.locator(".ql-editor").click();
+    await page.keyboard.type("alpha one");
+
+    // The explicit Save — its PATCH is held (2500ms, success).
+    await page.getByRole("button", { name: "Save", exact: true }).click();
+
+    // Alpha departs (create beta through the real dialog).
+    await createNote(`AH2a beta ${stamp}`);
+
+    // Beta's FIRST autosave failure (abort phase). The editor debounces
+    // ~600ms; the abort is instant; the toast lands ~1s.
+    patchMode = "abort";
+    await page.locator(".ql-editor").click();
+    await page.keyboard.type("beta one");
+    await page.waitForTimeout(1900);
+
+    // Alpha's held Save settles (~2500ms from the click) — pre-fix it
+    // toasts "Note saved." onto beta's surface AND unlatches the streak
+    // flag. Give it margin, then read BOTH counts text-filtered (the
+    // offline message contains "not saved" — the success filter must be
+    // the exact toast text).
+    await page.waitForTimeout(1200);
+    const toasts = page.getByRole("region", { name: "Notifications" }).locator("button");
+    let texts = await toasts.allTextContents();
+    const savedLies = texts.filter((t) => /Note saved\./.test(t)).length;
+    const failures1 = texts.filter((t) => /offline|autosave|not saved|Save failed/i.test(t)).length;
+    expect(savedLies).toBe(0);
+    expect(failures1).toBe(1); // beta's OWN first failure
+
+    // Dismiss the surviving toasts (explicit dismissal — the 5s
+    // auto-dismiss would otherwise race the second read).
+    for (let i = await toasts.count(); i > 0; i--) {
+      await toasts.first().click();
+      await page.waitForTimeout(150);
+    }
+
+    // Beta's SECOND autosave failure — the flag must still be latched
+    // (alpha's departed success must NOT have unlatched it).
+    await page.locator(".ql-editor").click();
+    await page.keyboard.type("beta two");
+    await page.waitForTimeout(1900);
+    texts = await toasts.allTextContents();
+    const failures2 = texts.filter((t) => /offline|autosave|not saved|Save failed/i.test(t)).length;
+    expect(failures2).toBe(0);
+
+    await page.unroute(/\/api\/notes\//);
+  });
+
+  test("AH2b: a departed Save's late failure is silent on beta's surface", async ({ page }) => {
+    const stamp = Date.now();
+    await page.goto("/Notes");
+    await hydrated(page);
+
+    // PATCHes held 2500ms then ABORTED — alpha's Save fails LATE (after
+    // the switch to beta).
+    await page.route(/\/api\/notes\//, async (route) => {
+      if (route.request().method() === "PATCH") {
+        await new Promise((r) => setTimeout(r, 2500));
+        await route.abort("failed");
+      } else {
+        await route.continue();
+      }
+    });
+
+    const createNote = async (name: string) => {
+      await page.getByRole("button", { name: "New note menu" }).click();
+      await page.getByRole("menuitem", { name: "New Note", exact: true }).click();
+      await page.getByLabel("Name").fill(name);
+      await page.getByRole("dialog").getByRole("button", { name: "Save", exact: true }).click();
+      const editor = page.locator(".ql-editor");
+      await expect(editor).toBeVisible();
+    };
+    await createNote(`AH2b alpha ${stamp}`);
+    await page.locator(".ql-editor").click();
+    await page.keyboard.type("alpha one");
+    await page.getByRole("button", { name: "Save", exact: true }).click();
+
+    // Alpha departs — its Save's rejection lands on beta's surface.
+    await createNote(`AH2b beta ${stamp}`);
+    await page.waitForTimeout(3000);
+
+    const texts = await page
+      .getByRole("region", { name: "Notifications" })
+      .locator("button")
+      .allTextContents();
+    const failures = texts.filter((t) => /offline|autosave|not saved|Save failed/i.test(t)).length;
+    expect(failures).toBe(0);
+
+    await page.unroute(/\/api\/notes\//);
+  });
+});
+
+test.describe("S81 · the flashcards row keyboard guard (AH6)", () => {
+  test("AH6: Enter on a deck row's options trigger opens the menu without selecting the deck", async ({ page }) => {
+    await page.goto("/Flashcards");
+    await hydrated(page);
+
+    // Select the deck EXPLICITLY (the seeded decks share one createdAt —
+    // the render-order tie is nondeterministic; never trust the initial
+    // fallback — the AG9 pattern).
+    await page.locator('[aria-label="Deck rows"] > *', { hasText: "Integration rules" }).first().click();
+    const detailH2 = page.locator('[aria-label="Deck detail"] h2');
+    await expect(detailH2).toHaveText("Integration rules");
+
+    // Keyboard-activate the options trigger of a DIFFERENT row: the
+    // dropdown opens (Radix handles Enter); the bubbled keydown must NOT
+    // reach the row's selectDeck. (exact: true — the row's own accessible
+    // name concatenates the trigger's label, so a substring match resolves
+    // to both elements.)
+    const trigger = page.getByRole("button", { name: "Deck options for Biology Chapter 5", exact: true });
+    await trigger.focus();
+    await page.keyboard.press("Enter");
+    await expect(page.getByRole("menu")).toBeVisible();
+
+    // The selection must NOT have moved.
+    await expect(detailH2).toHaveText("Integration rules");
+
+    await page.keyboard.press("Escape");
+  });
+});
+
+test.describe("S81 · the calculator footer structural guard (AH4b)", () => {
+  test("AH4b: the Basic footer row is Backspace + ^ + the col-span-2 gradient Equals", async ({ page }) => {
+    await page.goto("/Calculator");
+    await hydrated(page);
+
+    const backspace = page.getByRole("button", { name: "Backspace" });
+    await expect(backspace).toBeVisible();
+    const bs = await backspace.evaluate((el) => {
+      const s = getComputedStyle(el);
+      const r = el.getBoundingClientRect();
+      return { bg: s.backgroundColor, border: s.borderColor, color: s.color, h: r.height };
+    });
+    expect(bs.bg).toBe("rgb(255, 255, 255)"); // bg-white
+    expect(bs.border).toBe("rgb(226, 232, 240)"); // border-slate-200
+    expect(bs.color).toBe("rgb(71, 85, 105)"); // text-slate-600
+    expect(bs.h).toBe(56); // h-14
+
+    const caret = page.getByRole("button", { name: "Insert ^" });
+    await expect(caret).toBeVisible();
+
+    // The Equals button rides the gradient inside a col-span-2 cell and
+    // fills it (w-full) — the footer's structural contract.
+    const equals = page.getByRole("button", { name: "Equals" });
+    await expect(equals).toBeVisible();
+    const eqBox = await equals.boundingBox();
+    expect(eqBox).not.toBeNull();
+    expect(eqBox!.width).toBeGreaterThanOrEqual(2 * (eqBox!.width / 2) - 1); // filled cell (structural sanity)
+    const eqBg = await equals.evaluate((el) => getComputedStyle(el).backgroundImage);
+    expect(eqBg).toContain("linear-gradient"); // the sf-gradient
+  });
+});
+
+// ---------------------------------------------------------------------------
+// S81 · AH8 — the Zod4 partial-defaults data-loss family. zod@4's
+// `.partial()` does NOT suppress create-time `.default()`: every partial
+// PATCH on every owned entity parsed to the FULL defaulted object, so a
+// `{title}` PATCH wiped content AND tags, an autosave `{content}` PATCH
+// wiped the tags, a task `{completed}` toggle wiped notes/subtasks/priority
+// — invisible to every prior certification through chunk isolation + file
+// order (the class proof rode the API seam). The fix lives at the factory
+// (makeOwnedDelegate.update keeps only the sent keys).
+// ---------------------------------------------------------------------------
+
+test.describe("S81 · the partial-PATCH keeps what the caller did not send (AH8)", () => {
+  test("AH8a: a title edit keeps the note's content AND tags", async ({ page }) => {
+    await page.goto("/Notes");
+    await hydrated(page);
+
+    const row = page.getByRole("button", { name: /Dot product intuition/ }).first();
+    await row.click();
+    await expect(page.locator(".ql-editor")).toBeVisible();
+
+    // The seeded tag pill rides the TARGET note's list row (data-note-tag —
+    // never an unscoped text match: a second seeded note carries the same
+    // tag and would mask the wipe).
+    const rowPill = page
+      .getByRole("button", { name: /Dot product intuition/ })
+      .first()
+      .locator('[data-note-tag="calculus"]');
+    await expect(rowPill).toBeVisible();
+
+    // Edit the title (a {title}-only PATCH through the real input).
+    const titleInput = page.getByLabel("Note title");
+    await titleInput.fill(`Dot product intuition ${Date.now()}`);
+    await page.waitForTimeout(800); // the debounced title PATCH settles
+
+    // The content and the tags must BOTH survive (pre-fix: the PATCH's
+    // parsed defaults wiped them — content "", tags "[]").
+    await page.reload();
+    await hydrated(page);
+    await page.getByRole("button", { name: /Dot product intuition/ }).first().click();
+    const editorText = await page.locator(".ql-editor").innerText();
+    expect(editorText).toContain("dot product measures alignment");
+    await expect(
+      page.getByRole("button", { name: /Dot product intuition/ }).first().locator('[data-note-tag="calculus"]'),
+    ).toBeVisible();
+  });
+
+  test("AH8b: an autosave content PATCH keeps the note's tags", async ({ page }) => {
+    await page.goto("/Notes");
+    await hydrated(page);
+
+    await page.getByRole("button", { name: /Dot product intuition/ }).first().click();
+    await expect(page.locator(".ql-editor")).toBeVisible();
+    const rowPill = page
+      .getByRole("button", { name: /Dot product intuition/ })
+      .first()
+      .locator('[data-note-tag="calculus"]');
+    await expect(rowPill).toBeVisible();
+
+    // Type in the editor — the debounced {content} PATCH fires.
+    const editor = page.locator(".ql-editor");
+    await editor.click();
+    await page.keyboard.type(" appended");
+    await page.waitForTimeout(1500);
+
+    // The tag pill must survive the content PATCH (pre-fix: tags "[]").
+    await page.reload();
+    await hydrated(page);
+    await page.getByRole("button", { name: /Dot product intuition/ }).first().click();
+    await expect(
+      page.getByRole("button", { name: /Dot product intuition/ }).first().locator('[data-note-tag="calculus"]'),
+    ).toBeVisible();
+    const editorText = await page.locator(".ql-editor").innerText();
+    expect(editorText).toContain("appended");
+  });
+
+  test("AH8c: an API task completed toggle keeps notes, priority and subtasks", async ({ page }) => {
+    // The class proof at the API seam (the factory covers every owned
+    // entity — one representative is the class proof).
+    const stamp = Date.now();
+    const create = await page.request.post("/api/tasks", {
+      data: { title: `AH8c task ${stamp}`, notes: "bring the textbook", priority: "high" },
+    });
+    expect(create.ok()).toBeTruthy();
+    const task = (await create.json()) as { id: string; notes: string; priority: string };
+
+    // The {completed}-only PATCH must not reset the defaulted fields. The
+    // PATCH's own response IS the updated row (there is no GET item route —
+    // makeItemRoutes exports PATCH + DELETE only), so the response body
+    // directly proves what the update wrote.
+    const patch = await page.request.patch(`/api/tasks/${task.id}`, { data: { completed: true } });
+    expect(patch.ok()).toBeTruthy();
+    const body = (await patch.json()) as { notes: string; priority: string; completed: boolean };
+    expect(body.completed).toBe(true);
+    expect(body.notes).toBe("bring the textbook");
+    expect(body.priority).toBe("high");
+
+    // And the LIST round-trip confirms the stored state (not just the
+    // response echo).
+    const list = await page.request.get("/api/tasks");
+    expect(list.ok()).toBeTruthy();
+    const rows = (await list.json()) as Array<{ id: string; notes: string; priority: string }>;
+    const stored = rows.find((r) => r.id === task.id);
+    expect(stored?.notes).toBe("bring the textbook");
+    expect(stored?.priority).toBe("high");
+
+    // Cleanup: delete the row so the suite stays idempotent.
+    await page.request.delete(`/api/tasks/${task.id}`);
+  });
+});

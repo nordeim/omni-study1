@@ -279,6 +279,9 @@ export const THEME_BOOT_SCRIPT = `
     }
     var dark = mode === "dark" || (mode === "system" && window.matchMedia("(prefers-color-scheme: dark)").matches);
     if (dark) document.documentElement.classList.add("dark");
+    // S81/AH9: the boot script mirrors applyToDocument's doctrine attribute
+    // — the accent sweeps read dataset.accent as their mode proof.
+    document.documentElement.dataset.accent = accent;
     var TOKENS = {
       violet: ["primary","foreground","strong","strong-dark","deep","soft","soft-dark","softest","softest-adjacent","gradient-to","gradient-to-strong","avatar-from","avatar-to","empty-from","empty-to"],
       blue: ["primary","foreground","strong","strong-dark","deep","soft","soft-dark","softest","softest-adjacent","gradient-to","gradient-to-strong","avatar-from","avatar-to","empty-from","empty-to"],

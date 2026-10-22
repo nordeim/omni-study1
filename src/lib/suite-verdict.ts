@@ -81,6 +81,19 @@ export function parseAuditStdout(stdout: string): ParsedAudit {
       error: `parse error: no JSON envelope found in the audit output — a crashed audit is never green`,
     };
   }
+  // S81/AH7: tolerate trailing prose AFTER a complete envelope — shrink
+  // from the END until the joined slice parses (the preflight's human
+  // GREEN line followed the JSON on stdout and the slice-to-end parse
+  // failed, aborting the orchestrator at stage 0). A TRUNCATED envelope
+  // still fails LOUD on every shrink step (the anti-phantom guard is
+  // preserved — a crashed audit is never green).
+  for (let end = lines.length; end > start + 1; end--) {
+    try {
+      return { ok: true, json: JSON.parse(lines.slice(start, end).join("\n")) };
+    } catch {
+      // keep shrinking
+    }
+  }
   try {
     return { ok: true, json: JSON.parse(lines.slice(start).join("\n")) };
   } catch (e) {

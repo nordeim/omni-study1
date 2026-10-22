@@ -16,9 +16,26 @@ import { errorResponse, toErrorResponse, withUser } from "@/lib/server/http";
 export const MAX_UPLOAD_BYTES = 2 * 1024 * 1024; // 2 MiB
 
 export const GET = withUser(async (user) => {
+  // S81/AH13: the list carries METADATA only — the base64 `data` column
+  // belongs to the per-file download endpoint (`GET /api/files/[id]`). The
+  // view's link-file distinction reads `url !== null`; nothing client-side
+  // consumes the data column from the list. With the 2 MiB-per-file cap,
+  // including it would add ~2.7 MiB of base64 to EVERY list fetch — an
+  // unbounded payload as the library grows (the upload-edge audit's C8).
   const files = await db.fileItem.findMany({
     where: { userId: user.id },
     orderBy: { createdAt: "desc" },
+    select: {
+      id: true,
+      userId: true,
+      name: true,
+      mime: true,
+      size: true,
+      url: true,
+      folderId: true,
+      createdAt: true,
+      updatedAt: true,
+    },
   });
   return NextResponse.json(files);
 });

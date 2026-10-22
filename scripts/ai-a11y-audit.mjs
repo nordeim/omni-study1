@@ -39,7 +39,12 @@ async function login(page) {
   await page.fill("input[type=email]", "demo@studyflow.app");
   await page.fill("input[type=password]", "Demo1234!");
   await page.click("button[type=submit]");
-  await page.waitForFunction(() => document.querySelector("main") !== null, null, { timeout: 20000 });
+  // S81/AH10 (the audit-tools repair): the login wait must prove
+  // AUTHENTICATION, not main-element presence — the LOGIN PAGE itself has a
+  // <main>, so this wait resolved pre-auth and the next goto raced the
+  // login POST (ERR_ABORTED on the auth-gate bounce). The sweeps' pattern:
+  // wait for the post-login /Dashboard redirect.
+  await page.waitForURL(`${BASE}/Dashboard`, { timeout: 20000 });
 }
 
 async function openView(page, title, path) {
@@ -65,29 +70,64 @@ await login(page);
 // ---------------------------------------------------------------------------
 await openView(page, "AI Study Assistant", "AIAssistant");
 await page.waitForTimeout(1200);
+// S81/AH10 (the s81 audit-tools repair): the view renders the reply from the
+// PERSISTED transcript — the send() flow POSTs /api/ai/chat, then re-fetches
+// GET /api/ai/messages to render. The old probe mocked only the POST, so the
+// refresh hit the real API (which never saw the mocked turn) and the seed
+// reply never rendered — the probe timed out on every run. Both routes must
+// be fulfilled for the D1 seed to land.
+const seedReply = {
+  id: `probe-${Date.now()}`,
+  role: "assistant",
+  content: "D1 seed reply.",
+  surface: "assistant",
+  createdAt: new Date().toISOString(),
+};
 await page.route("**/api/ai/chat", (route) =>
   route.fulfill({
     status: 200,
     contentType: "application/json",
-    body: JSON.stringify({ message: { id: `probe-${Date.now()}`, role: "assistant", content: "D1 seed reply.", createdAt: new Date().toISOString() } }),
+    body: JSON.stringify({ message: seedReply }),
   }),
 );
-await page.fill("textarea[aria-label='Message the assistant']", "s14 a11y probe D1 seed");
+await page.route("**/api/ai/messages", (route) =>
+  route.fulfill({
+    status: 200,
+    contentType: "application/json",
+    body: JSON.stringify([seedReply]),
+  }),
+);
+await page.fill("input[aria-label='Message the assistant']", "s14 a11y probe D1 seed");
 await page.click("button[aria-label='Send message']");
-await page.waitForFunction(() => [...document.querySelectorAll("main li")].some((li) => li.textContent.includes("D1 seed reply.")), null, { timeout: 10000 });
+// S81/AH10: the transcript bubbles are <div>s inside the aria-live sf-scroll
+// pane — the <ul>/<li> markup the old wait targeted predates a refactor.
+await page.waitForFunction(() => {
+  const pane = [...document.querySelectorAll('main [aria-live]')].find(
+    (el) => (el.getAttribute("aria-label") || "") !== "Notifications",
+  );
+  return pane ? pane.textContent.includes("D1 seed reply.") : false;
+}, null, { timeout: 10000 });
 await page.unroute("**/api/ai/chat");
+await page.unroute("**/api/ai/messages");
 const d1 = await page.evaluate(() => {
   const liveRegions = [...document.querySelectorAll('[aria-live], [role="status"], [role="alert"]')];
-  const list = document.querySelector("main ul");
-  const composer = document.querySelector("textarea[aria-label='Message the assistant']");
-  // The live region may be the list itself OR its container (the S14 fix
-  // sits on the sf-scroll pane that wraps the <ul>) — resolve upward.
-  const liveAncestor = list ? (list.closest('[aria-live]') || null) : null;
+  // The transcript pane is the aria-live region in <main> that is NOT the
+  // Toaster (the Toaster carries aria-label="Notifications"). The bubbles
+  // are the whitespace-pre-wrap divs inside it.
+  const transcriptPane = [...document.querySelectorAll('main [aria-live]')].find(
+    (el) => (el.getAttribute("aria-label") || "") !== "Notifications",
+  ) || null;
+  const bubbles = transcriptPane
+    ? [...transcriptPane.querySelectorAll("div")].filter((el) => (el.className || "").includes("whitespace-pre-wrap"))
+    : [];
+  const composer = document.querySelector("input[aria-label='Message the assistant']");
+  // The live region may be the pane itself OR its container — resolve upward.
+  const liveAncestor = bubbles[0] ? (bubbles[0].closest('[aria-live]') || null) : null;
   return {
     liveRegionCount: liveRegions.length,
     liveRegionLabels: liveRegions.map((el) => el.getAttribute("aria-label") || el.getAttribute("role") || "unlabelled"),
-    transcriptIsLive: liveAncestor ? liveAncestor.getAttribute("aria-live") : (list ? null : "no-list"),
-    transcriptRole: list ? list.getAttribute("role") : null,
+    transcriptIsLive: liveAncestor ? liveAncestor.getAttribute("aria-live") : (transcriptPane ? "no-bubbles" : "no-pane"),
+    transcriptRole: transcriptPane ? transcriptPane.getAttribute("role") : null,
     composerLabel: composer ? composer.getAttribute("aria-label") : null,
   };
 });
@@ -95,7 +135,7 @@ const transcriptLive = [...(await page.evaluate(() => [...document.querySelector
 // The only aria-live region should be the Toaster (notifications) —
 // nothing covers the transcript
 const toasterLive = transcriptLive.filter((r) => (r.label || "").includes("Notification"));
-if ((d1.transcriptIsLive === null || d1.transcriptIsLive === "no-list") && toasterLive.length > 0) {
+if ((d1.transcriptIsLive === null || d1.transcriptIsLive === "no-pane") && toasterLive.length > 0) {
   note("D", "The AI transcript is not a live region — assistant replies land unannounced", {
     measured: JSON.stringify(d1),
     detail: "Screen-reader users send a message and hear ONLY the composer clearing (if that); the assistant's reply renders into a plain <ul> with no aria-live — no announcement, no polite ping. The 'Thinking…' indicator is equally silent (spinner + text inside the non-live list). WCAG 4.1.3 (Status Messages) asks for programmatic status announcements. Fix: aria-live='polite' on the transcript scroll container (the messages + Thinking indicator both land announced); keep it assertive-free (polite is the right interruption level for chat).",
@@ -113,19 +153,24 @@ await page.route("**/api/ai/chat", () => {
   /* hold the route — never fulfill (the S13 reload-between-probes lesson
      applies AFTER this probe: we reload below) */
 });
-await page.fill("textarea[aria-label='Message the assistant']", "s14 a11y probe D2");
+await page.fill("input[aria-label='Message the assistant']", "s14 a11y probe D2");
 await page.click("button[aria-label='Send message']");
 await page.waitForTimeout(1500);
 const d2 = await page.evaluate(() => {
-  const list = document.querySelector("main ul");
-  const items = [...(list?.querySelectorAll("li") || [])];
-  const thinking = items.find((li) => li.textContent.includes("Thinking"));
-  const composer = document.querySelector("textarea[aria-label='Message the assistant']");
+  // S81/AH10: same selector repair as D1 — the transcript pane (the aria-live
+  // region in <main> that is NOT the Toaster) and its div children.
+  const transcriptPane = [...document.querySelectorAll('main [aria-live]')].find(
+    (el) => (el.getAttribute("aria-label") || "") !== "Notifications",
+  ) || null;
+  const items = transcriptPane ? [...transcriptPane.querySelectorAll("div")] : [];
+  const thinking = items.find((el) => (el.textContent || "").includes("Thinking"));
+  const composer = document.querySelector("input[aria-label='Message the assistant']");
   const sendBtn = document.querySelector("button[aria-label='Send message']");
   return {
     thinkingPresent: !!thinking,
     thinkingAnnounced: thinking ? !!thinking.closest('[aria-live], [role="status"]') : null,
     thinkingHasLoadingAttrs: thinking ? thinking.getAttribute("aria-busy") || thinking.querySelector('[aria-label]')?.getAttribute("aria-label") : null,
+    paneAriaBusy: transcriptPane ? transcriptPane.getAttribute("aria-busy") : null,
     composerBusy: composer ? composer.getAttribute("aria-busy") : null,
     sendDisabled: sendBtn ? sendBtn.disabled : null,
     sendAriaBusy: sendBtn ? sendBtn.getAttribute("aria-busy") : null,
@@ -179,17 +224,26 @@ if (d3.liveOutsideToaster === 0) {
 await openView(page, "AI Study Assistant", "AIAssistant");
 await page.waitForTimeout(1000);
 const d4 = await page.evaluate(() => {
-  const composer = document.querySelector("textarea[aria-label='Message the assistant']") || document.querySelector("main textarea");
-  const quickActions = [...document.querySelectorAll('button[aria-pressed]')];
+  const composer = document.querySelector("input[aria-label='Message the assistant']") || document.querySelector("main textarea");
+  // S81/AH10: the quick actions were redesigned as click-to-fill buttons
+  // (onClick fills the composer — NOT toggles), so aria-pressed is gone BY
+  // DESIGN. The correct semantics probe: the quick-actions grid is labeled
+  // (aria-label="Quick actions") and each card exposes accessible text
+  // (the aria-level=2 heading span) + a focus-visible ring class.
+  const quickGrid = document.querySelector('div[aria-label="Quick actions"]');
+  const quickCards = quickGrid ? [...quickGrid.querySelectorAll("button")] : [];
   const sendBtn = document.querySelector("button[aria-label='Send message']") || document.querySelector("main button[type=submit]");
   return {
     composerLabelled: composer ? !!composer.getAttribute("aria-label") || !!composer.labels?.length : null,
     sendLabelled: sendBtn ? !!sendBtn.getAttribute("aria-label") : null,
-    quickActionPressedSemantics: quickActions.length,
+    quickGridLabelled: !!quickGrid,
+    quickCardCount: quickCards.length,
+    quickCardsLabelled: quickCards.every((b) => (b.textContent || "").trim().length > 0),
+    quickCardsFocusable: quickCards.every((b) => (b.className || "").includes("focus-visible:ring")),
   };
 });
-if (d4.composerLabelled && d4.sendLabelled && d4.quickActionPressedSemantics >= 6) {
-  ok("Composer, send button, and quick-action cards carry semantics (labels + aria-pressed)", JSON.stringify(d4));
+if (d4.composerLabelled && d4.sendLabelled && d4.quickGridLabelled && d4.quickCardCount >= 6 && d4.quickCardsLabelled && d4.quickCardsFocusable) {
+  ok("Composer, send button, and quick-action cards carry semantics (labels + accessible text + focus-visible)", JSON.stringify(d4));
 } else {
   note("D", "AI composer semantics incomplete", { measured: JSON.stringify(d4) });
 }

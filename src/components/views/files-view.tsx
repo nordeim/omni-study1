@@ -66,7 +66,10 @@ type FileItemRow = {
   name: string;
   mime: string;
   size: number;
-  data: string | null;
+  // S81/AH13: the LIST response carries metadata only — the base64 `data`
+  // column is absent (downloads go through the per-file endpoint). Kept
+  // optional for the POST-created row shape consumers may encounter.
+  data?: string | null;
   url: string | null;
   folderId: string | null;
   createdAt: string;
@@ -294,7 +297,10 @@ export function FilesView() {
     }
   };
 
-  const isLinkFile = (file: FileItemRow): boolean => file.url !== null && file.data === null;
+  // S81/AH13: url is set ONLY on link-files (stored uploads carry
+  // url: null) — the data column no longer rides the list, so the
+  // distinction is decided by url alone.
+  const isLinkFile = (file: FileItemRow): boolean => file.url !== null;
 
   return (
     <div className="flex flex-col gap-6">

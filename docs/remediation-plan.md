@@ -1,9 +1,9 @@
 # Omni-Study1 — Remediation Plan & Execution Record
 
-> **Status: COMPLETE through Batch AG (session-80).** Every batch below has
+> **Status: COMPLETE through Batch AH (session-81).** Every batch below has
 > been executed TDD-style (spec-red → fix → spec-green) and verified:
-> **861/861 Vitest unit**, **431/431 Playwright e2e** across the 5-chunk
-> cold map (127+127+50+69+58, 30 spec files censused exactly once; the
+> **863/863 Vitest unit**, **444/444 Playwright e2e** across the 5-chunk
+> cold map (127+135+51+73+58, 30 spec files censused exactly once; the
 > per-chunk count includes that chunk's auth setup), lint clean,
 > `tsc --noEmit` clean, production build green with the standalone asset
 > contract intact. This document is the durable record of what was broken,
@@ -1441,6 +1441,172 @@ final build, evidence `80-*.png` (ref dark anchors + clone before/after
 pairs), docs chain, conventional commit, SSH-wrapper push.
 
 
+### Cycle 31 (session-81) — the departed-settlement family + the standing-suite orchestrator seam + the Zod4 partial-defaults data-loss fix + the audit-tools rot repair (measured)
+
+The received state: Session-80/Batch AG at `8ea4642`, re-certified cold
+after the 22nd workspace reset (lint ✓ tsc ✓ unit 861/861, build green,
+cold e2e 431/431 first-pass every chunk on the 5-chunk map;
+chromium-1243 re-provisioned — the reset wiped it and every chromium
+test failed `browserType.launch` until `npx playwright install
+chromium`).
+
+Three evidence layers ran before any source change:
+
+1. **Mode-C audit of the Batch AG diff** (`790ea88`): 0 Critical / 0
+   High / 1 Medium / 6 Low / 6 Informational. The Medium (**M1**, the
+   cycle's headline): the selection-mirror invariant in notes-view.tsx
+   is enforced only by a comment — `selectedIdRef` writes live at
+   `selectNote`/`createNote`, but `removeNote` never settles the mirror.
+   Deleting the selected note leaves `selectedIdRef.current` holding
+   the DELETED id while the render-derived `effectiveNoteId` falls back
+   to null: the QuillEditor unmount-flush (final PATCH within the ≤600ms
+   dirty window, `onChangeRef` captured at render) fires against the
+   deleted row, and the late rejection then PASSES the stale-mirror
+   guard — toasting a lie onto whatever surface is mounted next and
+   re-latching the AF3 streak flag. Verified in source (the flush
+   closure and the guard's read site).
+2. **s81 reference re-sweep** (the s80 script re-tagged): ok:true — 9/9
+   invariants both hosts, brand tables byte-matched, mobile drawers
+   green on both.
+3. **agent-browser mobile-nav verification on BOTH hosts** (the
+   operator's explicit directive): reference drawer opens with 20
+   links, navigates, closes on navigate, scrollWidth 416 (its own
+   overflow on /Notes); clone drawer 20 links, navigates, closes,
+   scrollWidth 390 — **no Tailwind v4 mobile-nav bug**, consistent with
+   the standing record.
+
+**The Cycle-31 fix list (planned before any source change, per
+doctrine):**
+
+- **AH1** — notes-view.tsx: settle the selection mirror on delete. The
+  delete flow mutates the collection, not the selection, so no
+  event-handler write site exists — the settlement rides an effect that
+  clears `selectedIdRef.current` when `effectiveNoteId` becomes null (a
+  ref write in an effect — allowed by the lint contract).
+- **AH2** — notes-view.tsx `saveNow` + `onContentChange`: guard BOTH
+  settle branches against the departed note (the success toast and the
+  failure toast are both surface-lies when the saved/rejected note is
+  no longer the selected one; the AF3 flag must not re-latch after a
+  departed rejection).
+- **AH6** — flashcards-view.tsx: the deck row's `onKeyDown` fires
+  `selectDeck` for Enter/Space bubbled from CHILD controls — the
+  options DropdownMenuTrigger's keydown (open the menu) bubbles to the
+  row and selects the deck while the menu opens (a second
+  double-activation path the AG6 click-guard misses). Fix: the row
+  handler checks `e.target !== e.currentTarget` before acting.
+- **AH3** — globals.css: pin `--color-emerald-200: #a7f3d0` in
+  `@theme` (the success toast's dark-mode text, toast.tsx — the last
+  unpinned hue on a certified surface; trap-10: unpinned v4-oklch hues
+  serialize as `lab(90.2247 -31.039 9.47084)` and break the build).
+- **AH7** — scripts/dev-server-preflight.mjs: the GREEN human line goes
+  to STDERR (stdout stays JSON-only); suite-verdict.ts
+  `parseAuditStdout`: tolerate trailing prose AFTER a complete envelope
+  (shrink from the end until JSON parses — a partial/truncated
+  envelope still fails LOUD; the anti-phantom guard is preserved).
+- **AH8** (found mid-cycle, during the AH2a GREEN verification — the
+  combined-file run put dark-mode's Save-pin before AD6/AD7 and the
+  seeded note's tag pill vanished) — src/lib/server/entities.ts
+  `makeOwnedDelegate.update`: after parsing the partial schema, keep
+  ONLY the keys the caller actually sent (absent keys are not writes —
+  the preferences route's own `!== undefined` filter, applied at the
+  factory). One site covers every owned entity (notes, tasks,
+  assignments, exams, events, subjects, decks, cards, practice tests,
+  study groups, timetable, files); create-time defaults stay intact on
+  the create path; an empty patch short-circuits to the existing row.
+  Root cause: **zod@4's `.partial()` does not suppress create-time
+  `.default()`** — `noteSchema.partial().parse({title})` →
+  `{title, content: "", tags: "[]""}` (verified empirically): every
+  partial PATCH on every owned entity reset every defaulted field — a
+  title keystroke wiped the note's content AND tags, every autosave
+  wiped the tags, a task toggle wiped notes/subtasks/priority —
+  invisible to every prior certification through chunk isolation +
+  file order.
+- **AH9–AH12** (found mid-cycle, when the orchestrator's FIRST
+  end-to-end run finished 10/35 — the preflight seam fix had unmasked
+  four families of audit-tools rot that the never-runnable orchestrator
+  could never surface; every prior session ran the sweeps individually,
+  so the rot sat latent) — the repair batch:
+  - **AH9** — src/lib/theme.ts + the store's theme action: restore
+    `data-accent` on the document at BOTH application sites (the boot
+    script + the setTheme action). The S27 accent doctrine has ~16
+    sweeps reading `document.documentElement.dataset.accent`; a refactor
+    dropped the attribute from `applyToDocument` and every accent sweep
+    has been failing its precondition (`data-accent=undefined`) since.
+  - **AH10** — the 8 standing-suite stage audits' login waits: the
+    login page itself has a `<main>`, so `waitForFunction(main !==
+    null)` resolved PRE-AUTH and the first `page.goto` after login
+    raced the login POST (ERR_ABORTED on the auth-gate bounce) — the
+    audits crash at their first navigation. Fix: the sweeps'
+    `waitForURL(/Dashboard)` pattern (prove the redirect, not the
+    element). Same repair family: the AI audits' composer locator
+    (`textarea` → `input` — the composer was rebuilt on `<Input>`), the
+    ai-a11y transcript probes (`main ul/li` → the aria-live pane's div
+    bubbles — the transcript markup was refactored off lists), the
+    toast probes (`[role=status]` on items → the Toaster's buttons; the
+    items are plain buttons, the REGION carries the live semantics),
+    the a11y audit's D1 mock (fulfill BOTH `/api/ai/chat` POST and the
+    `/api/ai/messages` GET — the view renders the reply from the
+    persisted-transcript refresh, not the POST body), the A4c
+    over-length probe (schema max raised 2000 → 4000; send 4001), the
+    D4 quick-action probe (aria-pressed → the click-to-fill redesign's
+    accessible-text + focus-visible contract), the connectivity
+    banner probe (`[data-offline]` never existed — the amber
+    role=status pill is the real contract), and the settings B1 save
+    click (the display-name card's "Save name", not the study-fields'
+    "Save profile").
+  - **AH11** — scripts/security-audit.mjs: the register-duplicate
+    expectation moves to the SHIPPED contract (uniform 200 for verified
+    existing emails — the route's own anti-enumeration design,
+    documented in its comment; the 409 expectation was the stale side).
+  - **AH12** — the volume-sweep family's seeding: the `pinned` field
+    never existed on `Note` (Prisma reject on insert) — the
+    data-volume and accent-volume sweeps have been dead since the
+    schema landed. Field removed.
+  - **AH13** (found mid-cycle, from the repaired upload-edge audit's
+    C8 finding) — src/app/api/files/route.ts GET: strip the base64
+    `data` column from the LIST response (a `select` of the metadata
+    columns). The view never reads it (downloads go through the
+    per-file `/api/files/[id]` endpoint; its only list-side use is the
+    link-file null-check, which `url !== null` already decides); every
+    stored ≤2 MiB file otherwise adds ~2.7 MiB of base64 to EVERY list
+    fetch — an unbounded payload. Companion view fix: `isLinkFile`
+    reads `url !== null`; the audit's C5 probe moves to the shipped 404
+    contract ("That folder does not exist.").
+
+RED-first pins: AH1a (the delete flow — no /autosave|offline/i toast
+after deleting a dirty selected note under an aborted PATCH route),
+AH2a (the departed-Save success — no wrong-surface "Note saved." toast
+and B's second failure stays swallowed), AH2b (the departed-Save
+failure — silent on B's surface), AH6 (keyboard-opening the options
+dropdown of an unselected deck does not select it), AH3b (the success
+toast's dark text computes the v3 hex `rgb(167, 243, 208)` — the
+trap-10 RED), AH8a (a title edit keeps the note's content AND tags —
+the critical data-loss pin), AH8b (autosave keeps the tags), AH8c (an
+API-level task `completed` toggle keeps notes/subtasks/priority — the
+class proof for the whole owned-entity family), AH13 (the file list
+omits the base64 data column while the per-file download serves it).
+Hardening pins green-verified on arrival: AH3a (the overdue banner
+dark pair), AH3c (the error toast's dark red-200), AH4a (the
+calculator footer dark pair), AH4b (the footer light-mode structural
+guard), AH7 ×2 unit pins (the trailing-prose tolerance + the
+truncated-envelope LOUD failure) — expected 861 → 863 unit.
+
+Deferred with rationale: L4's ~27 pre-existing consumer sites of the
+AG-pinned hues (documented standing — the pins re-theme them uniformly
+and no observable diverges; a dedicated text-token cycle would touch
+27 surfaces for zero user-visible change), the study zombie (L1 — the
+AG record's effect+set-state precondition still holds).
+
+**Verification plan:** full cold re-cert (lint → tsc → unit 863 →
+build → cold 5-chunk e2e with re-derived census), the emerald-200
+mutation proof (un-pin → the lab() serialization reproduces → re-pin),
+the FULL standing-suite orchestrator run (the AH7 integration proof —
+stage 0 must pass and every stage must go green), the individual
+standing sweeps re-run, the s81 resweep re-run after the final build,
+evidence `81-*.png` (the resweep set + the AH surface captures), docs
+chain, conventional commit, SSH-wrapper push.
+
+
 
 
 ## 3a. Verification (session-56 re-run, from a fresh clone)
@@ -1623,3 +1789,105 @@ deferred on the S75 CWV evidence) — unchanged; the s80 audit's L1
 external-mutation precondition keeps it Low), L4 (the flip button's
 aria-label semantics — the ref's own button unmeasured), and I2's
 dedicated text token remain documented deferrals.
+
+**Cycle-31 execution record (Session-81).** TDD, RED first — 8
+mutation-target e2e pins + 3 data-loss pins went RED against the
+pre-change build at their DESIGNED assertions (AH1a: the "still open"
+lie toast after deleting a dirty selected note; AH2a: the wrong-surface
+"Note saved." toast + the unlatched streak re-toasting beta's second
+failure; AH2b: alpha's late Save-failure toast on beta's surface; AH6:
+the detail pane reading "Biology Chapter 5" after Enter on the options
+trigger; AH3b: `lab(90.2247 -31.039 9.47084)` — the unpinned
+emerald-200; AH8a/AH8b/AH8c: the data-loss assertions — the wiped
+content ("Empty note"), the vanished tag pill, `notes: ""`), while the
+hardening pins verified green-on-arrival (AH3a the overdue banner dark
+pair, AH3c the error toast's red-200, AH4a the calculator footer dark
+pair, AH4b the footer structural guard, AH7's truncated-envelope LOUD
+guard). GREEN source: the mirror-settlement effect in notes-view.tsx (a
+ref write in an effect — the delete flow mutates the collection, not
+the selection, so no event-handler write site exists), the saveNow
+mirror guards on BOTH settle branches, the flashcards row
+`e.target !== e.currentTarget` check, the `--color-emerald-200:
+#a7f3d0` @theme pin, the preflight GREEN line → stderr, the
+`parseAuditStdout` shrink-from-the-end trailing-prose tolerance, the
+AH8 factory fix, the AH9 data-accent restoration at both application
+sites, and the AH13 files-list metadata strip. Two mutation proofs:
+un-pinning emerald-200 reproduced the exact lab() serialization;
+removing the row's target check made the AH6 pin fail at the designed
+assertion. Pin-design lessons learned the hard way: the seeded decks
+share ONE createdAt (the seed's Promise.all batch — the deck-list tie
+order is nondeterministic, so the AH6 pin selects its deck explicitly);
+a second seeded note carries the same "calculus" tag (an unscoped text
+match masks the AH8 wipe — the pins scope to the target row's
+`data-note-tag`); and there is no GET item route on the tasks
+collection (the AH8c proof reads the PATCH's own response body + the
+list round-trip).
+
+Mid-cycle discoveries, root-caused and fixed the same session (the
+doctrine: amend the plan, pin first, fix at the source):
+
+1. **AH8 (CRITICAL)** — surfaced by the AH2a GREEN verification (the
+   combined-file run put dark-mode's Save-pin before AD6/AD7 and the
+   seeded note's tag pill vanished). zod@4's `.partial()` does NOT
+   suppress create-time `.default()` — every partial PATCH on every
+   owned entity reset every defaulted field. The fix at
+   `makeOwnedDelegate.update` (keep only the sent keys) covers all
+   sixteen delegates.
+2. **AH9–AH12** — surfaced when the orchestrator's FIRST end-to-end
+   run finished 10/35 (the preflight seam fix had unmasked four latent
+   audit-tools-rot families that the never-runnable orchestrator could
+   never surface; every prior session ran the sweeps individually).
+   data-accent restored at both theme sites; the 8 stage audits' racy
+   login waits replaced with the waitForURL(/Dashboard) proof; the
+   register-duplicate expectation moved to the shipped uniform-200
+   anti-enumeration contract; the dead `pinned` seeding field removed.
+3. **AH13** — surfaced by the repaired upload-edge audit's C8 probe:
+   the files LIST leaked the base64 data column (~2.7 MiB per stored
+   file on every list fetch). RED-pinned, fixed with a select, view
+   companion fix (`isLinkFile` reads `url !== null`).
+4. **The light-family checker's transparent-body fallback** — surfaced
+   when the accent-light sweep's live run (another never-live stage)
+   reported phantom unreadable entries: the glass rail's 0.8 alpha
+   fails the checker's > 0.85 walk, and the body fallback
+   `bodyBg || {white}` never fired because parse() returns a truthy
+   {0,0,0,a:0} for a transparent body — every glass-backed text
+   measured against phantom BLACK. The dark family's own fallback
+   (near-black) masked the same bug. Fixed across all 13 checker
+   embeddings: the fallback now fires on alpha ≤ 0.85.
+
+Full cold re-certification: lint ✓ tsc ✓ unit **863/863** ✓ build
+fresh; cold e2e **444/444** (127+135+51+73+58, first pass every chunk —
+the S12-B focus-poll ceiling bumped to 15s for the cold-hydration
+tail). The standing suite: the orchestrator's stage-0 preflight parse
+now PASSES (the AH7 integration proof — the suite had never been
+runnable before), and its first live run took stages 0–12 green in
+sequence (security, settings-roundtrip, connectivity, upload-edge,
+data-volume, forced-colors, print, focus-order, mobile, midband,
+landscape, dark-mobile — all findings []); the remaining stages were
+verified individually (the S78–S80 convention) — accent-light, dark,
+the 8-sweep volume family, the landscape seed sweep, the desktop +
+midband + landscape accent sweeps, cwv ×2, ai-error, ai-a11y,
+pre15-preflight, dep-audit — all green (the 23rd workspace reset's
+process-reaping environment kills long-lived daemons, so the
+17-minute accent-dark sweep and the single-run 45-minute full
+orchestration cannot complete in one process lifetime; the stage-0
+proof + the per-stage green runs are the cycle's verification record).
+The s81 resweep re-ran after the final build: ok:true (9/9 invariants
+both hosts, brand tables byte-matched, mobile drawers green on both).
+agent-browser mobile-nav verified on BOTH hosts (reference 20
+links/navigates/closes with its own 416 overflow on /Notes; clone 20
+links/navigates/closes at scrollWidth 390 — no Tailwind v4 mobile-nav
+bug). Evidence: the resweep set `81-{ref|clone}-*.png` (9 views × 2
+hosts + the mobile drawer/dashboard pairs) + the AH surface captures
+(`81-clone-ah*.png` — the toast/banner dark family, the calculator
+footer, the flashcards rows, the notes tag row).
+
+**Batch AH: DONE.** Standing debt: Batch R (RSC structural perf —
+deferred on the S75 CWV evidence) — unchanged; the s80 audit's L1 (the
+study zombie), L4's ~27 AG-pinned-hue consumer sites (uniform
+re-theme, no observable diverges), and I2's dedicated text token
+remain documented deferrals. The AH8 finding's process lesson is
+recorded in AGENTS.md's lessons list: zod `.partial()` does not
+suppress `.default()` — partial-PATCH endpoints must filter to sent
+keys; certification chunk isolation can hide cross-file state
+corruption — a combined-file run is what exposed it.

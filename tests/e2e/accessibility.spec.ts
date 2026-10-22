@@ -160,11 +160,13 @@ test.describe("S12-B · the skip-to-content link (WCAG 2.4.1)", () => {
     await page.keyboard.press("Enter");
     // Poll for the hash-target focus instead of a fixed sleep — a cold
     // server's late hydration re-mounts the shell after the fixed 400ms
-    // read and the focus had not landed yet.
+    // read and the focus had not landed yet. S81/AH5: the ceiling is
+    // 15s — the S81 cold re-cert's one chunk-4 flake rode the 10s window
+    // against a late-hydration tail on the shared cold server.
     await page.waitForFunction(
       () => document.activeElement?.tagName === "MAIN" && document.activeElement?.id === "main-content",
       null,
-      { timeout: 10_000 },
+      { timeout: 15_000 },
     );
     const landed = await page.evaluate(() => {
       const el = document.activeElement;

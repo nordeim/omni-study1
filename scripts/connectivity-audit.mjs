@@ -27,7 +27,12 @@ async function login(page) {
   await page.fill("input[type=email]", "demo@studyflow.app");
   await page.fill("input[type=password]", "Demo1234!");
   await page.click("button[type=submit]");
-  await page.waitForFunction(() => document.querySelector("main") !== null, null, { timeout: 20000 });
+  // S81/AH10 (the audit-tools repair): the login wait must prove
+  // AUTHENTICATION, not main-element presence — the LOGIN PAGE itself has a
+  // <main>, so this wait resolved pre-auth and the next goto raced the
+  // login POST (ERR_ABORTED on the auth-gate bounce). The sweeps' pattern:
+  // wait for the post-login /Dashboard redirect.
+  await page.waitForURL(`${BASE}/Dashboard`, { timeout: 20000 });
 }
 
 async function openView(page, title, path) {
@@ -58,7 +63,13 @@ await openView(page, "AI Study Assistant", "AIAssistant");
 // S14-A0 remediated: the banner mounts in the app shell and renders null
 // while online — verify absence online (byte-parity guard) and presence
 // during the A1 offline window below.
-const onlineBannerAbsent = await page.evaluate(() => !document.querySelector("[data-offline]"));
+// S81/AH10 (audit-tools repair): the banner is the amber role="status" pill
+// (connectivity-banner.tsx) — there is no [data-offline] attribute in the
+// implementation. Probe by the real contract: a role=status div whose text
+// mentions offline.
+const onlineBannerAbsent = await page.evaluate(() =>
+  ![...document.querySelectorAll('div[role="status"]')].some((el) => /offline/i.test(el.textContent || ""))
+);
 if (!onlineBannerAbsent) {
   note("A", "Offline banner visible while ONLINE (byte-parity break)", {
     measured: "document.querySelector([data-offline]) present while online",
@@ -70,22 +81,30 @@ if (!onlineBannerAbsent) {
 // ---------------------------------------------------------------------------
 // A1 — AI send while offline (real transport failure, not route abort)
 // ---------------------------------------------------------------------------
-await page.fill("textarea[aria-label='Message the assistant']", "connectivity probe A1 offline send");
+await page.fill("input[aria-label='Message the assistant']", "connectivity probe A1 offline send");
 await context.setOffline(true);
 await page.click("button[aria-label='Send message']");
 await page.waitForTimeout(2500);
 const a1 = await page.evaluate(() => {
-  const items = [...document.querySelectorAll("main li")];
-  const composer = document.querySelector("textarea[aria-label='Message the assistant']");
-  const toasts = [...document.querySelectorAll('[role="status"]')].map((t) => t.textContent.trim().slice(0, 90));
+  // S81/AH10: the transcript bubbles are divs (not li — the markup predates
+  // a refactor); the banner is the amber role=status pill; the app toasts
+  // are BUTTONS inside the aria-live Notifications region (role=status on
+  // the items never existed). The composer is an <Input>, not a textarea.
+  const items = [...document.querySelectorAll("main [aria-live] div")];
+  const composer = document.querySelector("input[aria-label='Message the assistant']");
+  const toasts = [
+    ...[...document.querySelectorAll('[aria-label=Notifications] button')].map((t) => t.textContent.trim().slice(0, 90)),
+    ...[...document.querySelectorAll('div[role="status"]')].map((t) => t.textContent.trim().slice(0, 90)),
+  ];
+  const banner = [...document.querySelectorAll('div[role="status"]')].find((el) => /offline/i.test(el.textContent || ""));
   return {
     transcriptItems: items.length,
-    transcriptHasProbe: items.some((li) => li.textContent.includes("connectivity probe A1")),
+    transcriptHasProbe: items.some((el) => (el.textContent || "").includes("connectivity probe A1")),
     composerValue: composer ? composer.value : null,
     sendEnabled: composer ? !document.querySelector("button[aria-label='Send message']").disabled : null,
     toasts,
-    offlineBannerVisible: !!document.querySelector("[data-offline]"),
-    offlineBannerText: document.querySelector("[data-offline]")?.textContent?.trim().slice(0, 60) ?? null,
+    offlineBannerVisible: !!banner,
+    offlineBannerText: banner ? banner.textContent.trim().slice(0, 60) : null,
   };
 });
 await page.screenshot({ path: `${OUT}/a1-ai-send-offline.png` });
@@ -125,7 +144,12 @@ if ((await dialogCreate.count()) > 0) {
   await page.waitForTimeout(2500);
 }
 const a2 = await page.evaluate(() => {
-  const toasts = [...document.querySelectorAll('[role="status"]')].map((t) => t.textContent.trim().slice(0, 120));
+  // S81/AH10: same toast-probe repair as A1 — the app toasts are buttons in
+  // the Notifications region; the ambient offline banner is role=status.
+  const toasts = [
+    ...[...document.querySelectorAll('[aria-label=Notifications] button')].map((t) => t.textContent.trim().slice(0, 120)),
+    ...[...document.querySelectorAll('div[role="status"]')].map((t) => t.textContent.trim().slice(0, 120)),
+  ];
   const rows = [...document.querySelectorAll("main h3, main p")].some((el) => el.textContent.includes("S14-A2 offline task probe"));
   const dialogStillOpen = !!document.querySelector('[role="dialog"]');
   return { toasts, rowVisible: rows, dialogStillOpen };
@@ -235,31 +259,55 @@ if (a4 && a4StaysCard && a4Announces && a4Recovered) {
 await openView(page, "AI Study Assistant", "AIAssistant");
 await page.waitForTimeout(800);
 await context.setOffline(true);
-await page.fill("textarea[aria-label='Message the assistant']", "connectivity probe A5 recovery");
+await page.fill("input[aria-label='Message the assistant']", "connectivity probe A5 recovery");
 await page.click("button[aria-label='Send message']");
 await page.waitForTimeout(2000);
 await context.setOffline(false);
-await page.fill("textarea[aria-label='Message the assistant']", "");
-await page.fill("textarea[aria-label='Message the assistant']", "connectivity probe A5 retry");
+await page.fill("input[aria-label='Message the assistant']", "");
+await page.fill("input[aria-label='Message the assistant']", "connectivity probe A5 retry");
 // route the real AI call to a canned reply so the probe is deterministic
+// S81/AH10: the view renders the reply from the PERSISTED transcript — the
+// send() flow POSTs /api/ai/chat then re-fetches GET /api/ai/messages — so
+// BOTH routes must be fulfilled (the POST-only mock never rendered). The
+// transcript wait also targets the div bubbles, not li.
+const a5Reply = {
+  id: `probe-${Date.now()}`,
+  role: "assistant",
+  content: "Probe reply for A5.",
+  surface: "assistant",
+  createdAt: new Date().toISOString(),
+};
 await page.route("**/api/ai/chat", (route) =>
   route.fulfill({
     status: 200,
     contentType: "application/json",
-    body: JSON.stringify({ message: { id: `probe-${Date.now()}`, role: "assistant", content: "Probe reply for A5.", createdAt: new Date().toISOString() } }),
+    body: JSON.stringify({ message: a5Reply }),
+  }),
+);
+await page.route("**/api/ai/messages", (route) =>
+  route.fulfill({
+    status: 200,
+    contentType: "application/json",
+    body: JSON.stringify([a5Reply]),
   }),
 );
 await page.click("button[aria-label='Send message']");
 let recovered = false;
 try {
   await page.waitForFunction(
-    () => [...document.querySelectorAll("main li")].some((li) => li.textContent.includes("Probe reply for A5.")),
+    () => {
+      const pane = [...document.querySelectorAll('main [aria-live]')].find(
+        (el) => (el.getAttribute("aria-label") || "") !== "Notifications",
+      );
+      return pane ? pane.textContent.includes("Probe reply for A5.") : false;
+    },
     null,
     { timeout: 8000 },
   );
   recovered = true;
 } catch {}
 await page.unroute("**/api/ai/chat");
+await page.unroute("**/api/ai/messages");
 if (recovered) {
   ok("Post-offline retry succeeds (composer usable immediately)", "recovered=true");
 } else {

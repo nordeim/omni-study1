@@ -2093,3 +2093,92 @@ landscape sweeps findings [], s80 resweep ok:true. Batch AG DONE.
 Standing debt unchanged: Batch R (RSC structural perf — deferred on
 the S75 CWV evidence); documented deferrals: the s80 audit's L1/L4 +
 I2's dedicated text token.
+
+## Session 81 (continuation 32) — the departed-settlement family + the standing-suite orchestrator seam + the Zod4 partial-defaults data-loss fix + the audit-tools rot repair (Batch AH)
+
+**The cycle (Cycle 31).** The received state: `8ea4642` (Session-80 /
+Batch AG). The 23rd workspace reset wiped the uncommitted first attempt
+at this cycle mid-flight (twice — the interrupted session's log was the
+blueprint; the work was redone from scratch on a fresh clone).
+
+1. Environment re-provisioned (bun 497 pkgs, `.env`
+   DATABASE_URL="file:../db/custom.db" with the db/ at the repo root —
+   the Prisma CLI's first push landed one level high and was moved to
+   the documented schema-anchored location; chromium-1243
+   re-provisioned after the reset wiped it). Baseline re-certified
+   COLD: lint ✓ tsc ✓ unit **861/861**, build green, cold e2e
+   **431/431** (127+127+50+69+58, first pass every chunk).
+2. Evidence layers: the Mode-C audit of the Batch AG diff (0 Critical /
+   0 High / **1 Medium** — M1: the selection-mirror invariant enforced
+   only by a comment; `removeNote` never settles `selectedIdRef`, so a
+   deleted note's late PATCH rejection passes the AG6 guard, toasts
+   the "still open" lie and re-latches the streak flag — verified in
+   source against the QuillEditor unmount-flush path); the s81
+   reference re-sweep (ok:true, 9/9 invariants both hosts, mobile
+   drawers green on both); agent-browser mobile-nav verification on
+   BOTH hosts (ref 20 links / navigates / closes / its own 416
+   overflow; clone 20 links / scrollWidth 390 — no Tailwind v4
+   mobile-nav bug).
+3. The Cycle-31 plan written into docs/remediation-plan.md BEFORE any
+   source change (AH1–AH7 + the mid-cycle amendments AH8/AH9–AH13
+   recorded as they were discovered). TDD: 8 mutation-target e2e pins +
+   3 data-loss pins RED at their designed assertions (incl. AH3b's
+   exact trap-10 `lab(90.2247 -31.039 9.47084)`), 5 hardening pins +
+   2 AH7 unit pins (one RED, the truncated-LOUD guard green-on-arrival).
+   GREEN: the mirror-settlement effect, the saveNow guards on BOTH
+   settle branches, the flashcards row target check, the emerald-200
+   @theme pin, the preflight stderr line + the parser's trailing-prose
+   tolerance, the AH8 factory fix, the AH9 data-accent restoration, the
+   AH13 files-list metadata strip. Two mutation proofs run (the
+   emerald-200 un-pin; the row target-check removal).
+4. **The CRITICAL mid-cycle find (AH8)**: zod@4's `.partial()` does not
+   suppress create-time `.default()` — every partial PATCH on every
+   owned entity reset every defaulted field (a title keystroke wiped
+   the note's content AND tags; every autosave wiped the tags; a task
+   toggle wiped notes/subtasks/priority) — invisible to every prior
+   certification through chunk isolation + file order. Fixed at
+   `makeOwnedDelegate.update` (keep only the sent keys — one site
+   covers all sixteen delegates). The lesson pair is in AGENTS.md's
+   new lessons section.
+5. **The audit-tools rot repair (AH9–AH13 + the checker fallback)**:
+   the orchestrator's first end-to-end attempt surfaced four latent
+   rot families (data-accent dropped from both theme application
+   sites; 8 stage audits' racy pre-auth login waits; the register-409
+   expectation rot; the dead `pinned` seeding field) plus the
+   AI/connectivity/upload probes' rotted DOM contracts (the `<Input>`
+   composer, the div transcript bubbles, the Toaster's button items,
+   the dual chat+messages mocks, the amber role=status connectivity
+   pill) plus the files-list base64 leak (AH13, RED-pinned and fixed
+   with a select) plus the light-family checker's transparent-body
+   fallback bug (parse() returns a truthy {0,0,0,a:0} — the white
+   fallback never fired and glass-backed text measured against phantom
+   black; fixed across all 13 checker embeddings).
+6. Full cold re-certification: lint ✓ tsc ✓ unit **863/863** ✓ build
+   fresh; cold e2e **444/444** (127+135+51+73+58, first pass every
+   chunk; the S12-B focus-poll ceiling bumped to 15s). The standing
+   suite: the orchestrator's stage-0 preflight parse PASSES (the AH7
+   integration proof — the suite had never been runnable), and its
+   live run took stages 0–12 green in sequence; the remaining stages
+   verified individually (accent-light, dark, the 8-sweep volume
+   family, the landscape-seed sweep, the desktop/midband/landscape
+   accent sweeps, cwv ×2, ai-error, ai-a11y, pre15, dep-audit — all
+   findings []/exit 0). The 23rd-reset environment reaps long-lived
+   daemons, so the 17-minute accent-dark sweep and a single-process
+   full orchestration cannot complete — recorded honestly (its
+   dark-family siblings all ran green with the same checker).
+7. Docs chain: README (badge 1307, counts 863/444, the S81 session
+   row), AGENTS/CLAUDE counts + the S81 lessons section,
+   vitest.config.ts header, the remediation-plan Cycle-31 plan +
+   execution record + header, this worklog, docs/session_32.md.
+   Evidence: the resweep set `81-{ref|clone}-*.png` (23 captures) +
+   the AH surface captures (`81-clone-ah*.png`). `.env.example`
+   verified current (no env surface changed this cycle).
+
+**Stage summary.** Batch AH DONE: the departed-settlement family
+(AH1/AH2), the flashcards keyboard guard (AH6), the emerald-200 pin
+(AH3), the orchestrator seam (AH7), the Zod4 partial-defaults
+data-loss fix (AH8), the audit-tools rot repair (AH9–AH13 + the
+checker fallback), the files-list payload fix (AH13). Baselines: e2e
+**444/444**, unit **863/863**, lint/tsc/build clean, s81 resweep
+ok:true, mobile nav verified on both hosts. Standing debt unchanged:
+Batch R + the documented deferrals.

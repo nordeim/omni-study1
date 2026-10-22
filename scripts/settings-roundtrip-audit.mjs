@@ -25,7 +25,12 @@ async function login(page) {
   await page.fill("input[type=email]", "demo@studyflow.app");
   await page.fill("input[type=password]", "Demo1234!");
   await page.click("button[type=submit]");
-  await page.waitForFunction(() => document.querySelector("main") !== null, null, { timeout: 20000 });
+  // S81/AH10 (the audit-tools repair): the login wait must prove
+  // AUTHENTICATION, not main-element presence — the LOGIN PAGE itself has a
+  // <main>, so this wait resolved pre-auth and the next goto raced the
+  // login POST (ERR_ABORTED on the auth-gate bounce). The sweeps' pattern:
+  // wait for the post-login /Dashboard redirect.
+  await page.waitForURL(`${BASE}/Dashboard`, { timeout: 20000 });
 }
 
 const ORIGINAL_NAME = "Demo Student";
@@ -45,7 +50,12 @@ await page.waitForFunction(() => document.body.textContent.includes("Display nam
 await page.waitForTimeout(800);
 const nameInput = page.locator("#display-name");
 await nameInput.fill("S14 Probe Name");
-await page.click("button:has-text('Save profile')");
+// S81/AH10 (audit-tools repair): the Profile tab has TWO save buttons —
+// the display-name card's "Save name" and the study-fields' "Save
+// profile". The old click hit the wrong one (the rename never landed and
+// the probe reported the API round-trip as broken). The display-name
+// card's own button is the one that PATCHes the name.
+await page.click("button:has-text('Save name')");
 await page.waitForTimeout(1500);
 const sidebarAfter = await page.evaluate(() => {
   const foot = document.querySelector("aside") || document.body;
@@ -185,13 +195,16 @@ const b5 = await page.evaluate(async () => {
   const me = await fetch("/api/auth/me", { credentials: "include" }).then((r) => r.json());
   return { mode: me.user?.themeMode, avatar: me.user?.avatarEmoji, name: me.user?.name };
 });
-// restore mode + avatar
+// restore mode + avatar + name — the documented RESTING STATE is
+// light/violet (every sweep's convention + the suite's stage-33 guard);
+// restoring "system" left the demo user off the resting state and the
+// NEXT stage's preconditions read the wrong mode (the S81/AH10 repair).
 await page.evaluate(async () => {
   await fetch("/api/settings/preferences", {
     method: "PATCH",
     credentials: "include",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ themeMode: "system", avatarEmoji: "", name: "Demo Student" }),
+    body: JSON.stringify({ themeMode: "light", avatarEmoji: "", name: "Demo Student" }),
   });
 });
 if (b5.mode === "dark" && b5.avatar === "📚" && b5.name === "S14 Probe Name") {

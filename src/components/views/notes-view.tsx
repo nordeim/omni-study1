@@ -181,6 +181,22 @@ export function NotesView() {
     selectedId && notes.some((n) => n.id === selectedId) ? selectedId : null;
   const selected = notes.find((n) => n.id === effectiveNoteId) ?? null;
 
+  // S81/AH1 (the s81 audit, M1): settle the selection mirror when the
+  // selected note DEPARTS the collection (delete removes it — the
+  // render-derived selection above falls back to null, but the mirror
+  // kept the deleted id, so the departed note's late PATCH rejection
+  // passed the AG6 guard, toasting the "still open" lie and re-latching
+  // the streak flag). The delete flow mutates the collection, not the
+  // selection — no event-handler write site exists, so the settlement
+  // rides an effect. A ref write in an effect is allowed by the lint
+  // contract (no set-state-in-effect); the guard below keeps it from
+  // fighting the handler-owned writes (it only ever CLEARS a stale id).
+  React.useEffect(() => {
+    if (effectiveNoteId === null && selectedIdRef.current !== null) {
+      selectedIdRef.current = null;
+    }
+  }, [effectiveNoteId]);
+
   const openNewNote = () => {
     setName("");
     setError("");
@@ -331,14 +347,23 @@ export function NotesView() {
     // then carries the STORED content (S78/AE1: never PATCH "" over a
     // populated note from a Save raced against the dynamic import).
     const html = editorRef.current?.getContent() ?? selected.content;
+    // S81/AH2 (the s81 audit, the departed-Save family): capture the note
+    // this Save belongs to — BOTH settle branches are gated on the
+    // selection mirror (a Save whose note the user already left must
+    // neither toast onto the next note's surface nor unlatch ITS failure
+    // streak: the late success branch toasting "Note saved." was a
+    // surface lie, and its flag reset re-armed the departed swallow).
+    const noteId = selected.id;
     try {
-      await updateNote(selected.id, { content: html });
+      await updateNote(noteId, { content: html });
+      if (selectedIdRef.current !== noteId) return;
       // S80/AG6 (the s80 audit, L2): a successful explicit Save breaks the
       // failure streak too — the next autosave failure must toast again
       // (pre-fix only an autosave success or a note switch reset it).
       autosaveFailedRef.current = false;
       toast.success("Note saved.");
     } catch (err: unknown) {
+      if (selectedIdRef.current !== noteId) return;
       toast.error(err instanceof ApiError ? err.message : "Save failed.");
     }
   };

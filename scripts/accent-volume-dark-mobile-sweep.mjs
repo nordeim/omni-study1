@@ -184,7 +184,13 @@ const CHECKER = `(() => {
       node = node.parentElement;
     }
     const bodyBg = parse(getComputedStyle(document.body).backgroundColor);
-    return bodyBg || { r: 9, g: 9, b: 11, a: 1 };
+    // S81/AH10 (audit-tools repair): the body fallback must fire on a
+    // TRANSPARENT body too — parse() returns a truthy {0,0,0,a:0} for
+    // rgba(0,0,0,0), so the bodyBg-or-fallback form NEVER fell back and every
+    // glass-backed (alpha 0.8 < 0.85) text measured against phantom
+    // BLACK — false unreadable detections across the LIGHT sweep family
+    // (the dark family's own fallback is near-black, masking the bug).
+    return bodyBg && bodyBg.a > 0.85 ? bodyBg : { r: 9, g: 9, b: 11, a: 1 };
   };
   const flashbulbs = [];
   const seen = new Set();
@@ -359,7 +365,6 @@ async function insertVolume(user) {
       userId: user.id,
       title: `${MARKER}note ${i}`,
       content: "Stress note body ".repeat(8),
-      pinned: i % 9 === 0,
       tags: JSON.stringify(["stress"]),
     });
   }

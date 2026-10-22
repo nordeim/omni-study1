@@ -187,6 +187,12 @@ export const useThemeStore = create<ThemeStore>((set, get) => ({
     const dark = resolveMode(mode, systemPrefersDark()) === "dark";
     const root = document.documentElement;
     root.classList.toggle("dark", dark);
+    // S81/AH9 (the audit-tools repair): restore the S27 doctrine attribute
+    // — ~16 standing accent sweeps read
+    // document.documentElement.dataset.accent as their mode proof, and a
+    // refactor that dropped it left every accent sweep failing its
+    // precondition (data-accent=undefined) silently.
+    root.dataset.accent = accent;
     const style = root.style;
     for (const [name, value] of Object.entries(accentCssVars(accent))) {
       style.setProperty(name, value);

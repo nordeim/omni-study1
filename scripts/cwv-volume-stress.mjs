@@ -193,9 +193,12 @@ async function loginClone(page) {
   await page.fill("input[type=email]", "demo@studyflow.app");
   await page.fill("input[type=password]", "Demo1234!");
   await page.click("button[type=submit]");
-  await page.waitForFunction(() => document.querySelector("main") !== null, null, {
-    timeout: 30000,
-  });
+  // S81/AH10 (the audit-tools repair): the login wait must prove
+  // AUTHENTICATION, not main-element presence — the LOGIN PAGE itself has a
+  // <main>, so this wait resolved pre-auth and the next goto raced the
+  // login POST (ERR_ABORTED on the auth-gate bounce). The sweeps' pattern:
+  // wait for the post-login /Dashboard redirect.
+  await page.waitForURL(`${BASE}/Dashboard`, { timeout: 30000 });
 }
 
 async function main() {
@@ -247,7 +250,6 @@ async function main() {
       userId: user.id,
       title: `${MARKER}note ${i}`,
       content: "Stress note body ".repeat(8),
-      pinned: i % 9 === 0,
       tags: JSON.stringify(["stress"]),
     });
   }

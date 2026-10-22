@@ -182,6 +182,25 @@ describe("parseAuditStdout", () => {
     expect(r.ok).toBe(false);
     if (!r.ok) expect(r.error).toMatch(/parse/i);
   });
+
+  // S81/AH7: the preflight prints a human GREEN line to STDOUT AFTER the
+  // JSON (the original scaffolding's seam bug — the orchestrator aborted at
+  // stage 0 because the slice-to-end parse failed). The parser must
+  // tolerate trailing prose after a COMPLETE envelope.
+  it("tolerates trailing human prose AFTER a complete JSON envelope (the preflight GREEN line)", () => {
+    const r = parseAuditStdout(`${JSON.stringify({ ok: true, checks: [] }, null, 1)}\nDEV SERVER PREFLIGHT: GREEN — dev server is warm and login works\n`);
+    expect(r.ok).toBe(true);
+    if (r.ok) expect((r.json as { ok: boolean }).ok).toBe(true);
+  });
+
+  // S81/AH7 guard: a TRUNCATED envelope still fails LOUD — the tolerance
+  // must never manufacture a green verdict from a partial payload (the
+  // anti-phantom contract).
+  it("is still a LOUD error on a truncated JSON envelope (no manufactured green)", () => {
+    const r = parseAuditStdout(`{"findings": [], "nonG`);
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.error).toMatch(/parse/i);
+  });
 });
 
 // --- classifyAudit: the GREEN shapes (genuine fixtures) ---------------------

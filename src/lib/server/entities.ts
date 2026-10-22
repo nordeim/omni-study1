@@ -114,9 +114,35 @@ function makeOwnedDelegate(config: OwnedConfig): EntityDelegate {
       const existing = await model.findFirst({ where: { id, userId } });
       if (!existing) throw new NotFoundError();
       const parsed = parseWith(updateSchema, input);
+      // S81/AH8 (CRITICAL, the Zod4 partial-defaults data-loss fix):
+      // zod@4's `.partial()` does NOT suppress create-time `.default()` —
+      // `noteSchema.partial().parse({title})` materializes
+      // `{title, content: "", tags: "[]"}` (verified empirically), so
+      // writing the parsed object reset EVERY defaulted field on every
+      // partial PATCH across every owned entity: a title keystroke wiped
+      // the note's content AND tags, every autosave wiped the tags, a
+      // task toggle wiped notes/subtasks/priority — invisible to every
+      // prior certification through chunk isolation + file order. Absent
+      // keys are NOT writes: keep only the keys the caller actually sent
+      // (the preferences route's own `!== undefined` filter, applied at
+      // the factory — one site covers all sixteen delegates). An
+      // explicitly-sent undefined is indistinguishable from an absent key
+      // and is not a meaningful write either way.
+      const sentKeys = Object.keys(input as Record<string, unknown>).filter(
+        (key) => (input as Record<string, unknown>)[key] !== undefined,
+      );
+      const writes: Record<string, unknown> = {};
+      for (const key of sentKeys) {
+        writes[key] = (parsed as Record<string, unknown>)[key];
+      }
+      if (Object.keys(writes).length === 0) {
+        // An empty patch is a no-op — short-circuit to the existing row
+        // (a Prisma update with an empty data object is rejected).
+        return normalize(existing);
+      }
       const row = await model.update({
         where: { id },
-        data: toWrite(parsed),
+        data: toWrite(writes as Row),
       });
       return normalize(row);
     },
