@@ -15,6 +15,22 @@ import { errorResponse, toErrorResponse, withUser } from "@/lib/server/http";
 
 export const MAX_UPLOAD_BYTES = 2 * 1024 * 1024; // 2 MiB
 
+// S82/AI6: the shared metadata select — the LIST (S81/AH13) and BOTH
+// create responses (S82/AI6) carry the same shape: the base64 `data`
+// column never rides a JSON response body; bytes go through the per-file
+// download endpoint (`GET /api/files/[id]`).
+const FILE_METADATA = {
+  id: true,
+  userId: true,
+  name: true,
+  mime: true,
+  size: true,
+  url: true,
+  folderId: true,
+  createdAt: true,
+  updatedAt: true,
+} as const;
+
 export const GET = withUser(async (user) => {
   // S81/AH13: the list carries METADATA only — the base64 `data` column
   // belongs to the per-file download endpoint (`GET /api/files/[id]`). The
@@ -25,17 +41,7 @@ export const GET = withUser(async (user) => {
   const files = await db.fileItem.findMany({
     where: { userId: user.id },
     orderBy: { createdAt: "desc" },
-    select: {
-      id: true,
-      userId: true,
-      name: true,
-      mime: true,
-      size: true,
-      url: true,
-      folderId: true,
-      createdAt: true,
-      updatedAt: true,
-    },
+    select: FILE_METADATA,
   });
   return NextResponse.json(files);
 });
@@ -73,6 +79,11 @@ export const POST = withUser(async (user, request: NextRequest) => {
         url,
         folderId,
       },
+      // S82/AI6: the create responses carry the SAME metadata shape as
+      // the LIST (the AH13 select) — the base64 `data` column never
+      // rides a JSON response body; bytes go through the per-file
+      // download endpoint. The view consumes only res.ok + refresh().
+      select: FILE_METADATA,
     });
     return NextResponse.json(link, { status: 201 });
   }
@@ -118,6 +129,10 @@ export const POST = withUser(async (user, request: NextRequest) => {
       url: null,
       folderId,
     },
+    // S82/AI6: the upload's 201 echoed the FULL row including the base64
+    // `data` column (a 2 MiB upload returned a ~2.7 MiB response body) —
+    // the create response now carries the LIST's metadata shape.
+    select: FILE_METADATA,
   });
 
   return NextResponse.json(created, { status: 201 });

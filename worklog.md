@@ -2182,3 +2182,89 @@ checker fallback), the files-list payload fix (AH13). Baselines: e2e
 **444/444**, unit **863/863**, lint/tsc/build clean, s81 resweep
 ok:true, mobile nav verified on both hosts. Standing debt unchanged:
 Batch R + the documented deferrals.
+
+## Session 82 (continuation 34) — the sixteenth delegate + the settlement self-heal + the parser single-line seam (Batch AI)
+
+**The cycle (Cycle 32).** The received state: `b7c662f` (Batch AH
+`7144e71` + the operator's session-log commit adding
+`docs/session_33.md`). The 24th workspace reset wiped the workspace
+(chromium-1243 re-provisioned — the standing gotcha); the repo
+re-cloned clean.
+
+1. **Baseline re-certified cold**: lint ✓ tsc ✓ unit 863/863, build
+   green, cold e2e 444/444 first-pass every chunk (127+135+51+73+58).
+2. **Three evidence layers** (before any source change): a Mode-C
+   audit of the Batch AH diff — 0 Critical / **1 High** / 0 Medium /
+   4 Low / 2 Info. The High (**H1/AI1**): the AH8 sent-keys filter
+   lived ONLY in `makeOwnedDelegate.update` — the sixteenth,
+   hand-written `flashcardCardDelegate` (Flashcard carries no userId;
+   ownership rides the deck join) still wrote the FULL parsed object,
+   so every study-mode "Correct" rating (`{mastered:true}`) silently
+   reverted a hard card's difficulty to "medium" and every card-edit
+   save (`{front,back,difficulty}`) silently un-mastered a mastered
+   card — verified empirically through the live delegate AND in
+   source at both UI call sites. The Lows: L1 (the AH1 settlement
+   effect's one-directional clear never heals a stale clear that lands
+   after a newer handler write — the next note's toasts swallowed),
+   L2 (the parser's shrink loop skips the single-line slice — the AH7
+   failure class latent), L3 (the AH4b pin's tautological `w ≥ w−1`
+   assertion), L4 (the new pins' fixed sleeps — deferred, matching the
+   file's standing patterns); the Infos: I1 (the upload POST's 201
+   echoes the base64 `data` column), I2 (the sent-keys filter's
+   unknown-key safety rests on Prisma's implicit skip-undefined).
+   Plus: the s82 reference re-sweep (ok:true — 9/9 invariants both
+   hosts, brand tables byte-matched, mobile drawers green on both) and
+   agent-browser mobile-nav verification on BOTH hosts (ref 20
+   links/navigates/closes with its own 416 overflow; clone 20 links +
+   the superset skip-link at scrollWidth 390 — no Tailwind v4
+   mobile-nav bug).
+3. **Cycle-32 plan written into the remediation plan BEFORE any
+   source change** (the doctrine), then TDD: 5 pins RED at their
+   designed assertions (AI1a/AI1b/AI1c — `Expected "hard" /
+   Received "medium"` and `Expected true / Received false`; AI3 the
+   single-line-envelope parse; AI6 `dataAbsent`) + the AI4 sibling
+   measurement green-on-arrival by design. GREEN: the shared
+   `sentKeysPatch` helper at BOTH write sites (factory + card
+   delegate, the deckId move-check re-based, the empty patch
+   short-circuited, sent keys intersected with parsed keys), the
+   unconditional settlement (AI2 — the AH1a/AH2a/AH2b family
+   re-verified green as the behavioral-preservation proof), the
+   parser's `end > start` bound, and the `FILE_METADATA` select on
+   both create responses. One mutation proof (AI4: col-span-2 →
+   col-span-1 turned the pin red at exactly the sibling assertion —
+   233px vs ≥464px); the RED-first pins are their own mutation
+   proofs.
+4. **Full cold re-cert**: lint ✓ tsc ✓ unit **864/864** ✓ build
+   fresh; cold e2e **448/448** (127+138+52+73+58 first-pass every
+   chunk; the census re-derived per AP-116 — 443 real specs + 5
+   chunk setups). The standing suite: the orchestrator's stage 0 +
+   stages 1–12 green in sequence; the settings-roundtrip stage's one
+   live finding re-ran GREEN standalone (the environmental save-wait
+   flake); the remaining stages verified individually (upload-edge
+   0/10, data-volume 0/10, ai-error 0/10 after a fresh limiter — the
+   documented 429 test-pollution class, ai-a11y 0/4, dark-sweep 20
+   views 0 dirty, accent-light + the volume family spot-checks green,
+   pre15 + dep GREEN, cwv-s16 clone all GOOD, cwv-volume-stress 0 on
+   the re-run — the first run's 2010ms-vs-2000ms Tasks longTaskTotal
+   was throttled-median noise, recorded honestly). The s82 resweep
+   re-ran after the final build: ok:true.
+5. **Docs chain**: README (badge 1312, counts 864/448, the S82
+   session row), AGENTS/CLAUDE counts (the AGENTS e2e row's stale
+   431/old-map caught and fixed too) + the S82 lessons section
+   (coverage-claim verification per write site; tautological
+   assertions; the degenerate slice), vitest.config.ts header, the
+   remediation-plan Cycle-32 plan + execution record + header, this
+   worklog, docs/session_34.md. Evidence: `82-{ref|clone}-*.png` (18
+   resweep captures) + `82-clone-ai*.png` (5 surface captures).
+   `.env.example` verified current (no env surface changed this
+   cycle).
+
+**Stage summary.** Batch AI DONE: the sixteenth delegate (AI1 — the
+flashcard card partial-PATCH data loss, the AH8 fix's one-site
+coverage claim corrected at the hand-written delegate), the settlement
+self-heal (AI2), the parser single-line seam (AI3), the AH4b tautology
+replaced with the mutation-proven sibling measurement (AI4), the
+schema-validated-keys intersection (AI5), and the create-response
+metadata shape (AI6). Baselines: e2e **448/448**, unit **864/864**,
+lint/tsc/build clean, s82 resweep ok:true, mobile nav verified on both
+hosts. Standing debt unchanged: Batch R + the documented deferrals.

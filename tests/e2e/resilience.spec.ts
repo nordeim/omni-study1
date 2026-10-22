@@ -192,4 +192,47 @@ test.describe("files upload edge cases", () => {
     expect(info.dlStatus).toBe(200);
     expect(info.dlHasBytes).toBe(true);
   });
+
+  // S82/AI6 (the Mode-C audit's I1): the upload POST's 201 response echoed
+  // the FULL row including the base64 `data` column — a 2 MiB upload
+  // returned a ~2.7 MiB response body (the LIST-side leak AH13 stripped;
+  // the create-side echo remained). The create response must carry the
+  // same metadata shape as the LIST; the view's FileItemRow.data? already
+  // anticipates rows without it, and the per-file download serves the bytes.
+  test("AI6: the upload POST response omits the base64 data column while the row lands in the list", async ({ page }) => {
+    await page.goto("/Files");
+    await expect(page.getByRole("heading", { name: "Files", exact: true })).toBeVisible();
+
+    const stamp = `resilience-AI6-${Date.now()}`;
+    const info = await page.evaluate(async (stamp) => {
+      const form = new FormData();
+      form.append("file", new File([new Uint8Array([0x41, 0x49, 0x36])], `${stamp}.txt`, { type: "text/plain" }));
+      const up = await fetch("/api/files", { method: "POST", body: form, credentials: "same-origin" });
+      const record = await up.json();
+      // The LIST round-trip: the row must still land (metadata shape) and
+      // the per-file download must still serve the uploaded bytes.
+      const list = await fetch("/api/files", { credentials: "same-origin" });
+      const rows = (await list.json()) as Array<{ id: string }>;
+      const listed = rows.some((r) => r.id === record.id);
+      const dl = await fetch(`/api/files/${record.id}`, { credentials: "same-origin" });
+      const dlBody = await dl.text();
+      // Cleanup: delete the row so the suite stays idempotent.
+      await fetch(`/api/files/${record.id}`, { method: "DELETE", credentials: "same-origin" });
+      return {
+        upStatus: up.status,
+        dataAbsent: !("data" in record),
+        urlNull: record.url === null,
+        listed,
+        dlStatus: dl.status,
+        dlHasBytes: dlBody.length > 0,
+      };
+    }, stamp);
+
+    expect(info.upStatus).toBe(201);
+    expect(info.dataAbsent).toBe(true);
+    expect(info.urlNull).toBe(true);
+    expect(info.listed).toBe(true);
+    expect(info.dlStatus).toBe(200);
+    expect(info.dlHasBytes).toBe(true);
+  });
 });

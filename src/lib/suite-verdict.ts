@@ -87,7 +87,12 @@ export function parseAuditStdout(stdout: string): ParsedAudit {
   // failed, aborting the orchestrator at stage 0). A TRUNCATED envelope
   // still fails LOUD on every shrink step (the anti-phantom guard is
   // preserved — a crashed audit is never green).
-  for (let end = lines.length; end > start + 1; end--) {
+  // S82/AI3: the loop bound is `end > start` — the S81 form
+  // (`end > start + 1`) never tested the SINGLE-LINE slice, so a
+  // compact one-line envelope followed by prose still failed LOUD (the
+  // same AH7 failure class, latent only because the preflight prints
+  // multi-line envelopes).
+  for (let end = lines.length; end > start; end--) {
     try {
       return { ok: true, json: JSON.parse(lines.slice(start, end).join("\n")) };
     } catch {

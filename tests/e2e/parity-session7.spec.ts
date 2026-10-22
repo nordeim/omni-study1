@@ -1205,12 +1205,17 @@ test.describe("S81 · the calculator footer structural guard (AH4b)", () => {
     await expect(caret).toBeVisible();
 
     // The Equals button rides the gradient inside a col-span-2 cell and
-    // fills it (w-full) — the footer's structural contract.
+    // fills it (w-full) — the footer's structural contract. S82/AI4: the
+    // original assertion here was a tautology (w ≥ 2·(w/2) − 1 reduces to
+    // w ≥ w − 1); the col-span-2 fill is now pinned against the Backspace
+    // SIBLING cell — a col-span-1 Equals measures ≈ one cell and fails.
     const equals = page.getByRole("button", { name: "Equals" });
     await expect(equals).toBeVisible();
     const eqBox = await equals.boundingBox();
     expect(eqBox).not.toBeNull();
-    expect(eqBox!.width).toBeGreaterThanOrEqual(2 * (eqBox!.width / 2) - 1); // filled cell (structural sanity)
+    const bsBox = await backspace.boundingBox();
+    expect(bsBox).not.toBeNull();
+    expect(eqBox!.width).toBeGreaterThanOrEqual(2 * bsBox!.width - 2); // the col-span-2 fill vs the single-cell sibling (gap-2 tolerant)
     const eqBg = await equals.evaluate((el) => getComputedStyle(el).backgroundImage);
     expect(eqBg).toContain("linear-gradient"); // the sf-gradient
   });
@@ -1323,5 +1328,134 @@ test.describe("S81 · the partial-PATCH keeps what the caller did not send (AH8)
 
     // Cleanup: delete the row so the suite stays idempotent.
     await page.request.delete(`/api/tasks/${task.id}`);
+  });
+});
+
+// S82 · Batch AI (session-82) — the sixteenth delegate. The AH8
+// sent-keys filter lives ONLY in makeOwnedDelegate.update; the
+// hand-written flashcardCardDelegate (Flashcard carries no userId —
+// ownership rides the deck join) still writes the FULL parsed object,
+// and flashcardSchema carries create-time defaults
+// (difficulty:"medium", mastered:false) that zod@4's .partial()
+// materializes on every partial PATCH:
+//   AI1a the study-rating payload {mastered:true} silently reverts a
+//        hard card's difficulty to "medium" (flashcards-view rate()).
+//   AI1b the edit-dialog payload {front,back,difficulty} silently
+//        un-masters a mastered card (mastered resets to false).
+//   AI1c the study-mode UI round-trip — Correct on a hard card keeps
+//        the card hard end-to-end (the full user path).
+// ---------------------------------------------------------------------------
+
+test.describe("S82 · the sixteenth delegate (the flashcard card partial-PATCH family)", () => {
+  test("AI1a: an API mastered-toggle PATCH keeps the card's difficulty (the study-rating payload)", async ({ page }) => {
+    const stamp = Date.now();
+    const deckRes = await page.request.post("/api/flashcards/decks", {
+      data: { name: `AI1a deck ${stamp}` },
+    });
+    expect(deckRes.ok()).toBeTruthy();
+    const deck = (await deckRes.json()) as { id: string };
+    const cardRes = await page.request.post("/api/flashcards/cards", {
+      data: { deckId: deck.id, front: "AI1a front", back: "AI1a back", difficulty: "hard" },
+    });
+    expect(cardRes.ok()).toBeTruthy();
+    const card = (await cardRes.json()) as { id: string; difficulty: string; mastered: boolean };
+    expect(card.difficulty).toBe("hard");
+
+    // The study-mode "Correct" rating sends EXACTLY {mastered:true} — a
+    // partial PATCH that must not touch difficulty. Pre-fix: the delegate
+    // wrote the FULL parsed object and the materialized default reset the
+    // hard card to "medium". The PATCH response IS the updated row.
+    const patch = await page.request.patch(`/api/flashcards/cards/${card.id}`, { data: { mastered: true } });
+    expect(patch.ok()).toBeTruthy();
+    const body = (await patch.json()) as { difficulty: string; mastered: boolean };
+    expect(body.mastered).toBe(true);
+    expect(body.difficulty).toBe("hard");
+
+    // LIST round-trip: the stored state, not the response echo.
+    const list = await page.request.get("/api/flashcards/cards");
+    expect(list.ok()).toBeTruthy();
+    const rows = (await list.json()) as Array<{ id: string; difficulty: string; mastered: boolean }>;
+    const stored = rows.find((r) => r.id === card.id);
+    expect(stored?.difficulty).toBe("hard");
+    expect(stored?.mastered).toBe(true);
+
+    // Cleanup: deleting the deck cascades its cards (onDelete: Cascade).
+    await page.request.delete(`/api/flashcards/decks/${deck.id}`);
+  });
+
+  test("AI1b: an API card-edit PATCH keeps the card's mastered flag (the edit-dialog payload)", async ({ page }) => {
+    const stamp = Date.now();
+    const deckRes = await page.request.post("/api/flashcards/decks", {
+      data: { name: `AI1b deck ${stamp}` },
+    });
+    expect(deckRes.ok()).toBeTruthy();
+    const deck = (await deckRes.json()) as { id: string };
+    const cardRes = await page.request.post("/api/flashcards/cards", {
+      data: { deckId: deck.id, front: "AI1b front", back: "AI1b back", difficulty: "easy", mastered: true },
+    });
+    expect(cardRes.ok()).toBeTruthy();
+    const card = (await cardRes.json()) as { id: string; difficulty: string; mastered: boolean };
+    expect(card.mastered).toBe(true);
+
+    // The card-edit dialog sends {front, back, difficulty} — a partial
+    // PATCH that must not touch mastered. Pre-fix: the materialized
+    // default reset a mastered card to false on every edit save.
+    const patch = await page.request.patch(`/api/flashcards/cards/${card.id}`, {
+      data: { front: "AI1b front edited", back: "AI1b back", difficulty: "hard" },
+    });
+    expect(patch.ok()).toBeTruthy();
+    const body = (await patch.json()) as { difficulty: string; mastered: boolean; front: string };
+    expect(body.front).toBe("AI1b front edited");
+    expect(body.difficulty).toBe("hard");
+    expect(body.mastered).toBe(true);
+
+    const list = await page.request.get("/api/flashcards/cards");
+    expect(list.ok()).toBeTruthy();
+    const rows = (await list.json()) as Array<{ id: string; difficulty: string; mastered: boolean }>;
+    const stored = rows.find((r) => r.id === card.id);
+    expect(stored?.difficulty).toBe("hard");
+    expect(stored?.mastered).toBe(true);
+
+    await page.request.delete(`/api/flashcards/decks/${deck.id}`);
+  });
+
+  test("AI1c: study-mode Correct keeps a hard card hard end-to-end (the UI rating path)", async ({ page }) => {
+    const stamp = Date.now();
+    const deckRes = await page.request.post("/api/flashcards/decks", {
+      data: { name: `AI1c deck ${stamp}` },
+    });
+    expect(deckRes.ok()).toBeTruthy();
+    const deck = (await deckRes.json()) as { id: string };
+    const cardRes = await page.request.post("/api/flashcards/cards", {
+      data: { deckId: deck.id, front: "AI1c front", back: "AI1c back", difficulty: "hard" },
+    });
+    expect(cardRes.ok()).toBeTruthy();
+    const card = (await cardRes.json()) as { id: string };
+
+    // UI: open Flashcards, select the dedicated deck, enter study mode.
+    await page.goto("/Flashcards");
+    await hydrated(page);
+    await page.locator('[aria-label="Deck rows"] > *', { hasText: `AI1c deck ${stamp}` }).first().click();
+    await page.locator('[aria-label="Deck detail"]').getByRole("button", { name: "Study" }).click();
+    const study = page.locator('[aria-label="Study mode"]');
+    await expect(study).toBeVisible();
+
+    // Rate Correct — the rating pair appears after the flip (AD11), so
+    // flip the card first; the UI then sends exactly {mastered:true}.
+    // Wait for the PATCH round-trip before reading the stored state.
+    await study.locator("[data-flip-card]").click();
+    const patchDone = page.waitForResponse(
+      (r) => r.url().includes(`/api/flashcards/cards/${card.id}`) && r.request().method() === "PATCH",
+    );
+    await study.getByRole("button", { name: "Correct" }).click();
+    const patch = await patchDone;
+    expect(patch.ok()).toBeTruthy();
+
+    // API read-back: the card is mastered AND still hard.
+    const patchBody = (await patch.json()) as { difficulty: string; mastered: boolean };
+    expect(patchBody.mastered).toBe(true);
+    expect(patchBody.difficulty).toBe("hard");
+
+    await page.request.delete(`/api/flashcards/decks/${deck.id}`);
   });
 });

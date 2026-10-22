@@ -189,12 +189,20 @@ export function NotesView() {
   // the streak flag). The delete flow mutates the collection, not the
   // selection — no event-handler write site exists, so the settlement
   // rides an effect. A ref write in an effect is allowed by the lint
-  // contract (no set-state-in-effect); the guard below keeps it from
-  // fighting the handler-owned writes (it only ever CLEARS a stale id).
+  // contract (no set-state-in-effect).
+  //
+  // S82/AI2 (the s82 audit, L1): settle UNCONDITIONALLY. The S81 form
+  // only ever CLEARED — a stale-closure clear (effectiveNoteId === null
+  // from the prior commit, flushed after a newer handler write set the
+  // ref to the just-clicked note) was never healed: the effect's
+  // condition never re-fires for a non-null id, so every guard then saw
+  // ref(null) !== selectedNote until the next selection change — the
+  // actively-edited note's toasts were silently swallowed. The
+  // unconditional settle keeps the AH1 clear semantics exactly (null →
+  // null) AND re-syncs the mirror on every dep change, so the dep-change
+  // re-run heals any stale clear that landed after a newer handler write.
   React.useEffect(() => {
-    if (effectiveNoteId === null && selectedIdRef.current !== null) {
-      selectedIdRef.current = null;
-    }
+    selectedIdRef.current = effectiveNoteId;
   }, [effectiveNoteId]);
 
   const openNewNote = () => {

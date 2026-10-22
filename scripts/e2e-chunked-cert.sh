@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
-# Session-81 cold e2e certification — the 5-chunk map, re-derived post-Batch-AH
-# (census: 30 spec files exactly once; the S81 additions ride in-place —
-# parity-session7 34→42 with the AH departed-settlement family [AH1a/AH2a/
-# AH2b, the AH6 flashcards keyboard guard, the AH4b footer guard, the AH8
-# partial-PATCH data-loss family], dark-mode 20→24 with the AH3/AH4 dark
-# pairs [the emerald-200 @theme pin + its guard pins], resilience 5→6 with
-# the AH13 files-list metadata pin). Expected: 127 + 135 + 51 + 73 + 58 =
-# 444 (each chunk's count includes its auth setup). Per-chunk: fresh
+# Session-82 cold e2e certification — the 5-chunk map, re-derived post-Batch-AI
+# (census: 30 spec files exactly once; the S82 additions ride in-place —
+# parity-session7 42→45 with the AI1 sixteenth-delegate family [AI1a/AI1b
+# API partial-PATCH preserves + the AI1c study-mode UI round-trip; the AH4b
+# tautology replaced with the sibling measurement], resilience 6→7 with the
+# AI6 upload-response metadata pin). Expected: 127 + 138 + 52 + 73 + 58 =
+# 448 (each chunk's count includes its auth setup; 443 real specs = the S81
+# 439 + the four S82 pins). Per-chunk: fresh
 # db/e2e.db + stale-server kill (fresh in-memory limiter, register budget
 # stays <= 9/10 per chunk).
 set -uo pipefail

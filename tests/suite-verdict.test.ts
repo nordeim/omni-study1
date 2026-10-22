@@ -201,6 +201,18 @@ describe("parseAuditStdout", () => {
     expect(r.ok).toBe(false);
     if (!r.ok) expect(r.error).toMatch(/parse/i);
   });
+
+  // S82/AI3: the SINGLE-LINE envelope shape — the shrink loop's bound
+  // (end > start + 1) never tested the single-line slice, so a compact
+  // JSON envelope followed by a prose line still failed LOUD (the exact
+  // AH7 failure class, latent only because the preflight prints
+  // multi-line envelopes). The bound must test every slice down to and
+  // including the single line.
+  it("tolerates trailing prose after a SINGLE-LINE JSON envelope (the skipped shrink slice)", () => {
+    const r = parseAuditStdout(`{"ok": true, "checks": []}\nDEV SERVER PREFLIGHT: GREEN — login works\n`);
+    expect(r.ok).toBe(true);
+    if (r.ok) expect((r.json as { ok: boolean }).ok).toBe(true);
+  });
 });
 
 // --- classifyAudit: the GREEN shapes (genuine fixtures) ---------------------

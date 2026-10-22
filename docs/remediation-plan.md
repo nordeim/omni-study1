@@ -1,9 +1,9 @@
 # Omni-Study1 — Remediation Plan & Execution Record
 
-> **Status: COMPLETE through Batch AH (session-81).** Every batch below has
+> **Status: COMPLETE through Batch AI (session-82).** Every batch below has
 > been executed TDD-style (spec-red → fix → spec-green) and verified:
-> **863/863 Vitest unit**, **444/444 Playwright e2e** across the 5-chunk
-> cold map (127+135+51+73+58, 30 spec files censused exactly once; the
+> **864/864 Vitest unit**, **448/448 Playwright e2e** across the 5-chunk
+> cold map (127+138+52+73+58, 30 spec files censused exactly once; the
 > per-chunk count includes that chunk's auth setup), lint clean,
 > `tsc --noEmit` clean, production build green with the standalone asset
 > contract intact. This document is the durable record of what was broken,
@@ -1891,3 +1891,184 @@ recorded in AGENTS.md's lessons list: zod `.partial()` does not
 suppress `.default()` — partial-PATCH endpoints must filter to sent
 keys; certification chunk isolation can hide cross-file state
 corruption — a combined-file run is what exposed it.
+
+### Cycle 32 (session-82) — the sixteenth delegate + the settlement self-heal + the parser single-line seam (measured)
+
+The received state: Session-81/Batch AH at `7144e71` (+ the operator's
+session-log commit `b7c662f` adding `docs/session_33.md`), re-certified
+cold after the 24th workspace reset (chromium-1243 re-provisioned —
+the reset gotcha again): lint ✓ tsc ✓ unit 863/863, build green, cold
+e2e 444/444 first-pass every chunk on the 5-chunk map (127+135+51+73+
+58).
+
+Three evidence layers ran before any source change:
+
+1. **Mode-C audit of the Batch AH diff** (`7144e71`): 0 Critical /
+   1 High / 0 Medium / 4 Low / 2 Informational.
+   - **H1 (the cycle's headline, AI1)**: the AH8 sent-keys filter
+     lives ONLY in `makeOwnedDelegate.update` — the sixteenth
+     delegate, `flashcardCardDelegate` (hand-written because
+     `Flashcard` carries no `userId` — its ownership rides the deck
+     join), still writes the FULL parsed object
+     (`const data: Row = { ...parsed }`). `flashcardSchema` carries
+     create-time defaults (`difficulty: "medium"`,
+     `mastered: false`), so every partial PATCH on a CARD
+     materializes them: study-mode "Correct" sends `{mastered:true}`
+     → a hard card's difficulty silently reverts to "medium"
+     (flashcards-view.tsx `rate()`); the card-edit dialog sends
+     `{front, back, difficulty}` → a mastered card silently
+     un-masters (`mastered` resets to false). Verified empirically
+     through the live delegate by the audit (UPDATE SET difficulty
+     = 'medium' on a `{mastered:true}` PATCH) and re-verified in
+     source + at both UI call sites. The AH8 commit's "one site
+     covers all sixteen delegates" claim was false for this one.
+   - **L1 (AI2)**: the AH1 settlement effect only CLEARS the mirror —
+     it never re-establishes it. In the post-paint/pre-effect window
+     a stale closure (effectiveNoteId === null from the prior commit)
+     can clear a freshly-set handler write (select B), and until the
+     next selection change every guard sees ref(null) ≠ B — the
+     note's toasts are silently swallowed (an AE2 doctrine miss).
+   - **L2 (AI3)**: `parseAuditStdout`'s shrink loop bound
+     `end > start + 1` skips the single-line slice — a single-line
+     JSON envelope followed by trailing prose still fails LOUD (the
+     exact AH7 failure class; latent because the preflight prints
+     multi-line envelopes and its GREEN line moved to stderr).
+   - **L3 (AI4)**: the AH4b calculator-footer pin contains a
+     tautological assertion — `w ≥ 2·(w/2) − 1` reduces to
+     `w ≥ w − 1`, always true; the Equals cell's fill contract is
+     unverified.
+   - **I1 (AI6)**: the upload POST's 201 response echoes the FULL row
+     including the base64 `data` column — a 2 MiB upload returns a
+     ~2.7 MiB response body (the LIST-side leak AH13 fixed; the
+     create-side echo remained).
+   - **I2 (AI5)**: the sent-keys filter's unknown-key safety rests on
+     Prisma's implicit skip-undefined semantics (`writes[key]` is
+     `undefined` for unknown sent keys) rather than an explicit
+     schema-validated-keys intersection.
+2. **s82 reference re-sweep** (the s81 script re-tagged): ok:true —
+   9/9 invariants both hosts, brand tables byte-matched, mobile
+   drawers green on both.
+3. **agent-browser mobile-nav verification on BOTH hosts** (the
+   operator's explicit directive): reference drawer opens with 20
+   links, navigates, closes on navigate, scrollWidth 416 (its own
+   overflow); clone drawer 20 links + the superset skip-link,
+   navigates, closes, scrollWidth 390 — **no Tailwind v4 mobile-nav
+   bug**, consistent with the standing record.
+
+**The Cycle-32 fix list (planned before any source change, per
+doctrine):**
+
+- **AI1 (HIGH)** — entities.ts: extract the AH8 sent-keys filter into
+  a shared helper (`sentKeysPatch(input, parsed)`) applied at BOTH
+  write sites — the factory's `makeOwnedDelegate.update` AND
+  `flashcardCardDelegate.update` (whose deckId move-check re-bases
+  onto the filtered writes: a deckId the caller did NOT send is not a
+  write). The helper intersects the sent keys with
+  `Object.keys(parsed)` (AI5 merged: `writes` only ever contains
+  schema-validated keys — the explicit contract, not Prisma's
+  implicit undefined-skip).
+- **AI2 (LOW)** — notes-view.tsx: the settlement effect settles
+  UNCONDITIONALLY (`selectedIdRef.current = effectiveNoteId`) — the
+  dep-change re-run heals a stale clear that landed after a newer
+  handler write (the one-directional clear's race window closes; the
+  AH1 clear semantics are preserved exactly when effectiveNoteId is
+  null). Standing guard: the AH1a/AH2a/AH2b pin family re-run green
+  (behavioral preservation) + this record (the race window itself is
+  not deterministically pinnable at e2e level — the honest gap).
+- **AI3 (LOW)** — suite-verdict.ts: the shrink loop bound becomes
+  `end > start` (the single-line slice is tested; the fallback stays
+  as belt-and-suspenders). Unit pin RED-first (a single-line envelope
+  + trailing prose currently fails to parse).
+- **AI4 (LOW)** — parity-session7.spec.ts AH4b: the tautological
+  assertion replaced with the sibling measurement (Equals width ≥
+  2 × Backspace width − 1 — the col-span-2 fill contract becomes
+  real). Mutation proof: col-span-2 → col-span-1 on the calculator
+  footer must turn the pin red.
+- **AI6 (LOW)** — files route POST: the 201 response carries the same
+  metadata shape as the LIST (base64 `data` stripped from the create
+  response; the view's `FileItemRow.data?` optionality already
+  anticipates rows without it). Pin: the upload response body has no
+  `data` key AND the row still lands in the LIST with its bytes
+  fetchable per-file (the AH13 download contract).
+
+Pin plan: +3 e2e pins in parity-session7.spec.ts (AI1a the API
+rating-preserve pin, AI1b the API edit-preserve pin, AI1c the
+study-mode UI round-trip pin), +1 e2e pin in resilience.spec.ts (AI6),
++1 unit pin in suite-verdict.test.ts (AI3); AI4 rides the existing
+AH4b test (assertion replacement). Expected post-cycle census: unit
+864, e2e 447 (chunk map 127 + 137 + 52 + 73 + 58 — parity-session7
+42→45 incl. the AH4b replacement, resilience 6→7).
+
+**Cycle-32 execution record (Session-82).** TDD, RED first — the AI1
+family (AI1a the API mastered-toggle pin, AI1b the API card-edit pin,
+AI1c the study-mode UI round-trip pin), the AI3 parser pin, and the
+AI6 upload-response pin ALL failed at their designed assertions against
+the pre-change build (AI1a/AI1c: `Expected "hard" / Received "medium"`;
+AI1b: `Expected true / Received false`; AI3: the single-line envelope +
+prose parse returning `ok:false`; AI6: `dataAbsent: expected true,
+received false`). AI1c needed one pin repair before its RED was clean
+(the rating pair renders only after the flip — AD11's measured gate;
+the pin now flips the card before clicking Correct and waits for the
+PATCH response). The AI4 assertion replacement was green-on-arrival BY
+DESIGN (the Equals cell IS col-span-2 on the shipped build) and was
+mutation-proven instead: col-span-2 → col-span-1 on the calculator
+footer turned the pin red at exactly the sibling assertion (Equals
+233px vs the required ≥ 464px = 2 × Backspace − 2) — the tautology it
+replaced would have passed that mutant. GREEN: the shared
+`sentKeysPatch` helper (the AH8 filter extracted; sent keys intersected
+with the parsed keys — schema-validated keys only, the explicit
+contract) applied at BOTH write sites (the factory's fifteen delegates
+AND `flashcardCardDelegate`, whose deckId move-check re-bases onto the
+filtered writes and whose empty patch now short-circuits to the
+existing card); the AH1 settlement effect settles unconditionally (the
+dep-change re-run heals a stale clear — the AH1a/AH2a/AH2b family
+re-verified green as the behavioral-preservation proof); the parser's
+shrink loop bound `end > start` (the single-line slice is tested); the
+upload POST's 201 (and the link-create's) response carries the LIST's
+metadata shape via the shared `FILE_METADATA` select.
+
+Full cold re-certification: lint ✓ tsc ✓ unit **864/864** ✓ build
+fresh; cold e2e **448/448** (127+138+52+73+58, first pass every chunk
+— the census re-derived per AP-116: 443 real specs + 5 chunk setups,
+the S81's 439 + the four S82 pins; the plan's pre-cycle estimate of
+447 double-subtracted the setups). The standing suite: the
+orchestrator's live run took stage 0 (the preflight parse — now
+single-line-envelope-proof too) plus stages 1–12 green in sequence
+(security, settings-roundtrip, connectivity, upload-edge, data-volume,
+forced-colors, print, focus-order, mobile, midband, landscape,
+dark-mobile); the settings-roundtrip stage's one live-run finding
+(`apiName:"Demo Student"` after the probe save) re-ran GREEN standalone
+— the environmental save-wait flake under 13-stage serial chromium
+load, the documented S81 class. The remaining stages verified
+individually: upload-edge 0 findings/10 non-gaps, data-volume 0/10,
+ai-error 0/10 (after a dev-server restart — the documented AI-budget
+429 test-pollution class), ai-a11y 0/4, dark-sweep 20 views 0 dirty
+entries, accent-light 0, the accent-volume family spot-checked green
+(dark + dark-mobile + light-midband), pre15-preflight GREEN, dep-audit
+GREEN (0 runtime-reachable), cwv-audit-s16 clone scenarios all GOOD
+(LCP 252–2436ms, CLS 0 — the two ref-dashboard timeouts are the
+reference's own, excluded by the classifier), cwv-volume-stress 0
+findings on the re-run (the first run's single finding — Tasks
+load-window longTaskTotal 2010ms vs the 2000ms budget — did not
+reproduce; a 0.5% throttled-2-run-median overage recorded honestly as
+noise). The accent-dark sweep (17 min) remains beyond this
+environment's process-reaping cap (its dark-family siblings ran
+green). The s82 resweep re-ran after the final build: ok:true (9/9
+invariants both hosts, brand tables byte-matched, mobile drawers green
+on both). agent-browser mobile-nav verified on BOTH hosts (reference
+20 links/navigates/closes with its own 416 overflow; clone 20 links +
+the superset skip-link at scrollWidth 390 — no Tailwind v4 mobile-nav
+bug). Evidence: the resweep set `82-{ref|clone}-*.png` (18 captures) +
+the AI surface captures (`82-clone-ai*.png` — the card grid, the study
+rating pair, the notes surface, the files surface, the calculator
+footer).
+
+**Batch AI: DONE.** Standing debt unchanged: Batch R (RSC structural
+perf — deferred on the S75 CWV evidence), the s80 audit's L1 (the
+study zombie), L4's ~27 AG-pinned-hue consumer sites (uniform
+re-theme, no observable diverges), and I2's dedicated text token. The
+S82 lessons are recorded in AGENTS.md: a fix's "covers all N sites"
+claim must be verified per write site (the sixteenth delegate was the
+hand-written exception the factory fix never reached); a tautological
+assertion is worse than a missing one; a tolerance fix's loop bounds
+must include the degenerate slice.

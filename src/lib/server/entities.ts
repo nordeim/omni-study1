@@ -85,6 +85,39 @@ function datesOnWrite(data: Row, dateFields: readonly string[]): Row {
   return out;
 }
 
+/**
+ * S82/AI1 (the AH8 sent-keys filter extracted, and extended to the
+ * sixteenth write site): zod@4's `.partial()` does NOT suppress
+ * create-time `.default()` — `noteSchema.partial().parse({title})`
+ * materializes `{title, content: "", tags: "[]"}` (verified empirically
+ * in S81), so writing the parsed object verbatim resets EVERY defaulted
+ * field on every partial PATCH. Absent keys are NOT writes: keep only
+ * the keys the caller actually sent, INTERSECTED with the keys the
+ * schema actually parsed (S82/AI5: `writes` then only ever contains
+ * schema-validated keys — an unknown sent key is dropped here by
+ * contract, not by Prisma's implicit skip-undefined semantics). An
+ * explicitly-sent undefined is indistinguishable from an absent key and
+ * is not a meaningful write either way.
+ *
+ * The S81 lesson, generalized: EVERY partial-PATCH write site needs this
+ * filter — the factory's fifteen delegates AND the hand-written
+ * flashcard card delegate (Flashcard carries no userId; ownership rides
+ * the deck join, which is why it was never routed through the factory).
+ */
+const sentKeysPatch = (
+  input: unknown,
+  parsed: Row,
+): Row => {
+  const source = (input ?? {}) as Row;
+  const writes: Row = {};
+  for (const key of Object.keys(source)) {
+    if (source[key] === undefined) continue;
+    if (!(key in parsed)) continue; // S82/AI5: schema-validated keys only
+    writes[key] = parsed[key];
+  }
+  return writes;
+};
+
 function makeOwnedDelegate(config: OwnedConfig): EntityDelegate {
   const { model, createSchema, updateSchema, fromRow, writeTransform } = config;
   const dateFields = config.dateFields ?? [];
@@ -114,27 +147,10 @@ function makeOwnedDelegate(config: OwnedConfig): EntityDelegate {
       const existing = await model.findFirst({ where: { id, userId } });
       if (!existing) throw new NotFoundError();
       const parsed = parseWith(updateSchema, input);
-      // S81/AH8 (CRITICAL, the Zod4 partial-defaults data-loss fix):
-      // zod@4's `.partial()` does NOT suppress create-time `.default()` —
-      // `noteSchema.partial().parse({title})` materializes
-      // `{title, content: "", tags: "[]"}` (verified empirically), so
-      // writing the parsed object reset EVERY defaulted field on every
-      // partial PATCH across every owned entity: a title keystroke wiped
-      // the note's content AND tags, every autosave wiped the tags, a
-      // task toggle wiped notes/subtasks/priority — invisible to every
-      // prior certification through chunk isolation + file order. Absent
-      // keys are NOT writes: keep only the keys the caller actually sent
-      // (the preferences route's own `!== undefined` filter, applied at
-      // the factory — one site covers all sixteen delegates). An
-      // explicitly-sent undefined is indistinguishable from an absent key
-      // and is not a meaningful write either way.
-      const sentKeys = Object.keys(input as Record<string, unknown>).filter(
-        (key) => (input as Record<string, unknown>)[key] !== undefined,
-      );
-      const writes: Record<string, unknown> = {};
-      for (const key of sentKeys) {
-        writes[key] = (parsed as Record<string, unknown>)[key];
-      }
+      // S81/AH8 → S82/AI1: the sent-keys filter (see sentKeysPatch) —
+      // one shared helper covers the factory's fifteen delegates and the
+      // flashcard card delegate below.
+      const writes = sentKeysPatch(input, parsed);
       if (Object.keys(writes).length === 0) {
         // An empty patch is a no-op — short-circuit to the existing row
         // (a Prisma update with an empty data object is rejected).
@@ -324,14 +340,27 @@ export const flashcardCardDelegate: EntityDelegate = {
     });
     if (!card) throw new NotFoundError();
     const parsed = parseWith(flashcardSchema.partial(), input);
-    const data: Row = { ...parsed };
-    if (typeof parsed.deckId === "string" && parsed.deckId !== card.deckId) {
+    // S82/AI1: the sixteenth write site — the SAME sent-keys filter as
+    // the factory (this delegate is hand-written because Flashcard
+    // carries no userId, which is also why the S81 factory fix missed
+    // it). Pre-fix: `{...parsed}` wrote the FULL defaulted object, so a
+    // study rating ({mastered:true}) reset a hard card's difficulty to
+    // "medium" and a card edit ({front,back,difficulty}) un-mastered a
+    // mastered card.
+    const data = sentKeysPatch(input, parsed) as Row & { deckId?: string };
+    if (typeof data.deckId === "string" && data.deckId !== card.deckId) {
       const deck = await db.flashcardDeck.findFirst({
-        where: { id: parsed.deckId, userId },
+        where: { id: data.deckId, userId },
       });
       if (!deck) throw new NotFoundError("That deck does not exist.");
     } else {
+      // Not sent, or a same-value re-send — not a write.
       delete data.deckId;
+    }
+    if (Object.keys(data).length === 0) {
+      // An empty patch is a no-op (a Prisma update with an empty data
+      // object is rejected — the factory's own short-circuit).
+      return card;
     }
     return db.flashcard.update({ where: { id }, data });
   },
