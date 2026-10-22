@@ -34,7 +34,12 @@ export type AccentToken = {
   softestAdjacent: string; // ADJACENT hue 50 — clock chip gradient END
   gradientTo: string; // ADJACENT hue 600 — brand chips + CTA end
   gradientToStrong: string; // ADJACENT hue 700 — CTA hover end (S5)
-  avatarFrom: string; // 400 — avatar gradient start
+  // S80 note (the s80 audit, I2): avatarFrom is a CROSS-CONSUMER token —
+  // the avatar gradient start (user-avatar, studygroups) AND the dark-mode
+  // clock-DATE text color (globals.css .sf-clock-date, S79/AF5). Retuning
+  // the 400 step for avatar aesthetics silently restyles the sidebar date
+  // on all 20 views; a dedicated text token is the deferred follow-up.
+  avatarFrom: string; // 400 — avatar gradient start + dark clock-date text
   avatarTo: string; // ADJACENT hue 500 — avatar gradient end + nav active stop 2
   emptyFrom: string; // 100 — empty-state block start
   emptyTo: string; // ADJACENT hue 100 — empty-state block end

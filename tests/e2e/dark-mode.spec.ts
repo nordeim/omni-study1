@@ -331,3 +331,143 @@ test.describe("S79/AF5 · the dark-mode clock date reads the 400 step", () => {
     expect(dateColor).toBe("rgb(124, 58, 237)");
   });
 });
+
+// S80/AG (the standing dark sweep's untracked flashbulb family — 7 entries,
+// measured on BOTH hosts): four surfaces where the clone's dark canvas
+// carried light islands the reference does not render in dark (AG1/AG2 —
+// the s69 "dark superset inverts the ramp" decisions, re-measured against
+// the live ref in dark: the ref does NOT re-theme these buttons, they stay
+// neutral-950 rgb(10,10,10) with light text), plus the un-themed pill
+// family (AG3/AG4 — the house dark-pill treatment, `dark:bg-*-950
+// dark:text-*-300`, the dashboard Today-pill/assignments/exams precedent),
+// plus the Tasks aside active row (AG5 — the ref KEEPS its violet-50 light
+// pill in dark, but the clone's own dark nav active surfaces all re-theme;
+// the pill moves to the sf-today-tint dark token pair for internal
+// consistency, the same doctrine that fixed the AF5 clock date).
+test.describe("S80/AG · the dark-canvas flashbulb family", () => {
+  // AG11a rides here too (the s80 audit, I3): the AF5 accent-awareness
+  // claim was unpinned — this block's afterEach restores the accent the
+  // calculator.spec.ts way (the S4/S11 leak lesson).
+  test.afterEach(async ({ page }) => {
+    await page.request.patch(PREFERENCES, { data: { accentColor: "violet" } });
+  });
+
+  test("AG1: the More Options button stays neutral-950 in dark (the ref's measured dark)", async ({ page }) => {
+    await gotoDark(page, "/MyDay");
+    const more = page.getByRole("button", { name: "More Options" });
+    await expect(more).toBeVisible();
+    const cs = await more.evaluate((el) => {
+      const s = getComputedStyle(el);
+      return { bg: s.backgroundColor, color: s.color };
+    });
+    // Reference dark (measured s80, agent-browser through its Settings
+    // Theme→Dark): bg rgb(10,10,10), text rgb(250,250,250) — the ref does
+    // NOT re-theme this button; the s69 clone inversion (dark:#f5f5f5)
+    // was drift, and a standing dark-sweep flashbulb.
+    expect(cs.bg).toBe("rgb(10, 10, 10)");
+    expect(cs.color).toBe("rgb(250, 250, 250)");
+  });
+
+  test("AG2: the Calculator History button is the ref's near-black pill in dark", async ({ page }) => {
+    await gotoDark(page, "/Calculator");
+    const history = page.getByRole("button", { name: "History" });
+    await expect(history).toBeVisible();
+    const cs = await history.evaluate((el) => {
+      const s = getComputedStyle(el);
+      return { bg: s.backgroundColor, color: s.color };
+    });
+    // Reference dark (measured s80): rgb(10,10,10) + rgb(250,250,250) —
+    // the clone's dark:bg-slate-100 inversion was drift.
+    expect(cs.bg).toBe("rgb(10, 10, 10)");
+    expect(cs.color).toBe("rgb(250, 250, 250)");
+  });
+
+  test("AG3: the Calculator AC key takes the house dark red pill (red-950 / red-300)", async ({ page }) => {
+    await gotoDark(page, "/Calculator");
+    const clear = page.getByRole("button", { name: "Clear" });
+    await expect(clear).toBeVisible();
+    const cs = await clear.evaluate((el) => {
+      const s = getComputedStyle(el);
+      return { bg: s.backgroundColor, color: s.color };
+    });
+    // The house dark-pill family (dashboard Today pill, assignments and
+    // exams urgency pills): -950 fill / -300 text. The ref's own dark
+    // Clear key (near-black + red-600 among its white digit keys) is its
+    // half-broken keypad family — the clone's dark keypad re-themes.
+    expect(cs.bg).toBe("rgb(69, 10, 10)"); // red-950 #450a0a
+    expect(cs.color).toBe("rgb(252, 165, 165)"); // red-300 #fca5a5
+  });
+
+  test("AG4: the GradeTracker score pills re-theme per the house dark ramp", async ({ page }) => {
+    await gotoDark(page, "/GradeTracker");
+    // Seeded rows (the AP-117 lesson: locate through the row's title, never
+    // bare pill text — single-grade subjects render the same value twice).
+    // The pill is addressed BY ITS TEXT ("92/100") — the row also carries a
+    // rounded-full SubjectChip (dark:bg-slate-800) that a class-based
+    // locator collides with (the first-draft bug).
+    const read = async (rowTitle: string, pillText: string) => {
+      const row = page.locator("main .sf-card").filter({ hasText: rowTitle });
+      const pill = row.getByText(pillText, { exact: true });
+      await expect(pill).toBeVisible();
+      return pill.evaluate((el) => {
+        const s = getComputedStyle(el);
+        return { bg: s.backgroundColor, color: s.color };
+      });
+    };
+    const eCs = await read("Problem set 6", "92/100");
+    expect(eCs.bg).toBe("rgb(2, 44, 34)"); // emerald-950
+    expect(eCs.color).toBe("rgb(110, 231, 183)"); // emerald-300
+    const sCs = await read("Quiz 4", "85/100");
+    expect(sCs.bg).toBe("rgb(8, 47, 73)"); // sky-950
+    expect(sCs.color).toBe("rgb(125, 211, 252)"); // sky-300
+    const aCs = await read("Kinetics quiz", "78/100");
+    expect(aCs.bg).toBe("rgb(69, 26, 3)"); // amber-950
+    expect(aCs.color).toBe("rgb(252, 211, 77)"); // amber-300
+  });
+
+  test("AG5: the Tasks aside active row re-themes to the accent-dark tint in dark", async ({ page }) => {
+    await gotoDark(page, "/Tasks");
+    const active = page.locator('aside button[aria-pressed="true"]').first();
+    await expect(active).toBeVisible();
+    const cs = await active.evaluate((el) => {
+      const s = getComputedStyle(el);
+      return { bg: s.backgroundColor, color: s.color };
+    });
+    // The sf-today-tint dark pattern: rgb(var(--sf-primary-soft-dark) / 0.3)
+    // serializes as legacy rgba (the raw-rgb() branch) + strong-dark text.
+    // Violet: softDark 76 29 149, strongDark 196 181 253.
+    expect(cs.bg).toBe("rgba(76, 29, 149, 0.3)");
+    expect(cs.color).toBe(STRONG_DARK);
+  });
+
+  test("AG5 guard: the Tasks aside active row keeps the exact light values", async ({ page }) => {
+    await setMode(page, "light");
+    await page.goto("/Tasks");
+    await page.waitForFunction(
+      () => !document.documentElement.classList.contains("dark") && !!document.querySelector('aside button[aria-pressed="true"]'),
+    );
+    const active = page.locator('aside button[aria-pressed="true"]').first();
+    const cs = await active.evaluate((el) => {
+      const s = getComputedStyle(el);
+      return { bg: s.backgroundColor, color: s.color };
+    });
+    // Byte-identical to the S6-A pin's measured values (the utility's light
+    // branch emits the same rgb() forms the inline style did).
+    expect(cs.bg).toBe("rgb(245, 243, 255)"); // violet-50 (softest)
+    expect(cs.color).toBe("rgb(109, 40, 217)"); // violet-700 (deep)
+  });
+
+  test("AG11a: the dark clock date is accent-aware (blue-400 under the blue accent)", async ({ page }) => {
+    const res = await page.request.patch(PREFERENCES, { data: { accentColor: "blue" } });
+    expect(res.ok()).toBeTruthy();
+    await gotoDark(page, "/Dashboard");
+    const date = page.locator(".sf-clock-date");
+    await expect(date).toBeVisible();
+    const dateColor = await date.evaluate((el) => getComputedStyle(el).color);
+    // The AF5 pin asserted violet-400 only (the s80 audit, I3): a
+    // regression hardcoding violet-400 passed it. The blue accent's
+    // avatarFrom token is blue-400 rgb(96,165,250).
+    expect(dateColor).toBe("rgb(96, 165, 250)");
+  });
+});
+

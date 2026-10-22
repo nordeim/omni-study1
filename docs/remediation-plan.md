@@ -1,9 +1,9 @@
 # Omni-Study1 — Remediation Plan & Execution Record
 
-> **Status: COMPLETE through Batch AF (session-79).** Every batch below has
+> **Status: COMPLETE through Batch AG (session-80).** Every batch below has
 > been executed TDD-style (spec-red → fix → spec-green) and verified:
-> **861/861 Vitest unit**, **421/421 Playwright e2e** across the 5-chunk
-> cold map (127+124+50+62+58, 30 spec files censused exactly once; the
+> **861/861 Vitest unit**, **431/431 Playwright e2e** across the 5-chunk
+> cold map (127+127+50+69+58, 30 spec files censused exactly once; the
 > per-chunk count includes that chunk's auth setup), lint clean,
 > `tsc --noEmit` clean, production build green with the standalone asset
 > contract intact. This document is the durable record of what was broken,
@@ -1295,6 +1295,152 @@ S75 deferral evidence stands) remains the only open item; the
   mobile study ENTRY with a below-md in-row Study affordance on each deck
   row (desktop never sees it — byte-identical).
 
+### Cycle 30 (session-80) — the dark-canvas flashbulb family + the Batch AF post-audit hardening (measured)
+
+The received state: Session-79/Batch AF at `23501d8`, re-certified cold
+after the 21st workspace reset (lint ✓ tsc ✓ unit 861/861, build
+REAL_EXIT=0, cold e2e 421/421 first-pass every chunk on the re-derived
+5-chunk map; chromium-1243 re-provisioned — the reset wiped
+`~/.cache/ms-playwright/chromium_headless_shell-1243` and every chromium
+test failed `browserType.launch` until `bunx playwright install chromium`).
+
+Three evidence layers ran before any source change:
+
+1. **Mode-C audit of the Batch AF diff** (`6a7245e..ed89609`):
+   0 Critical / 0 High / 2 Medium / 7 Low / 4 Informational. The two
+   Medium: **M1** the AF3 streak reset races an in-flight/flushed autosave
+   from the PREVIOUS note — `selectNote` resets the shared flag at switch
+   time, but note A's late PATCH rejection re-latches it, so note B's
+   first autosave failure is silently swallowed (the exact symptom AF3
+   set out to fix, resurfacing through ordering) and the toast text lies
+   ("the note is still open" — A is not); **M2** the AF2b 768px Tasks h1
+   collapse fix has NO e2e pin (the new AF2 pin asserts the aside
+   heading-count at the DEFAULT viewport — it passes pre-AF2b too; only
+   the manual mid-band sweep guards the fix). Lows: L1 the study-state
+   zombie (external card deletion empties `deckCards` mid-study → the
+   guard falls through silently, `studying` stays latched, refilled cards
+   auto-resurrect study), L2 `saveNow` success never resets the streak
+   flag, L3 study mode leaves the document with ZERO headings and the
+   `aria-label="Study mode"` sits on a generic div, L4 the flip button's
+   aria-label overrides the card text, L5 the in-row Study button's
+   keydown bubbles to the row's `selectDeck`, L6 the flashcards-view
+   header comment still describes the S77 in-pane study, L7 the AF2b
+   comment overclaims "byte-identical" (long labels now wrap — the h1's
+   `truncate` is dead at sm+). Infos: I1 the surrogate pin lacks an
+   exact-output assertion, I2 AF5 reuses the avatar-gradient token as
+   the clock-date text color (hidden coupling), I3 the AF5 pins
+   hardcode violet only (the accent-awareness claim is unpinned), I4 the
+   S78 mobile test's `.first()` locator silently depends on DOM order.
+
+2. **The s80 reference re-sweep** (the s79 class re-tagged):
+   **ok:true** — 9/9 invariants both hosts, brand tables byte-matched,
+   mobile drawers green on both (the user-flagged surface; no Tailwind v4
+   mobile-nav bug, traps 4/7/9 verified live yet again). The standing
+   rhythm: mobile + mid-band + landscape sweeps **findings []**.
+
+3. **The dark sweep — THE discovery of this cycle: 7 standing flashbulb
+   findings** (the detector's `green: hits === 0` classifier says the
+   received state's dark canvas is NOT clean, and never was through the
+   AE/AF certifications — the S79 narrative recorded only the *unreadable*
+   family ("no other unreadable") and called the sweep "artifact-free"
+   for the tracked clock-date artifact; the flashbulb entries below were
+   present but untracked). The live reference was then measured in DARK
+   mode through its own Settings UI (its Light control is a measured
+   no-op in the Light-from-dark direction — the account is stuck dark;
+   cold fresh-context login renders dark, the Light button's local
+   selected-state updates but the html class and the persisted value do
+   not, zero network calls — the ref's own broken family, symmetric with
+   the documented Dark/System no-op):
+
+   | ID | Surface | Clone dark (measured) | Reference dark (measured s80) | Class |
+   |----|---------|----------------------|-------------------------------|-------|
+   | AG1 | MyDay "More Options" (button.tsx neutral variant) | bg rgb(245,245,245) + #0a0a0a text — the s69 "dark superset inverts the ramp" | bg **rgb(10,10,10)** + rgb(250,250,250) text — the ref does NOT re-theme it | drift (fix to ref) |
+   | AG2 | Calculator History button ×2 (header + panel footer) | bg rgb(241,245,249) slate-100 (dark inversion) | bg **rgb(10,10,10)** + rgb(250,250,250) | drift (fix to ref) |
+   | AG3 | Calculator AC key | bg rgb(254,226,226) red-100, un-themed | Clear key: bg **rgb(10,10,10)** + red-600 text (but inside the ref's own white-digit keypad family) | gap (house style) |
+   | AG4 | GradeTracker score pills ×3 (emerald/sky/amber-100) | un-themed light pills | unmeasurable (the ref account has no grades) | gap (house style) |
+   | AG5 | Tasks aside ACTIVE row | inline `rgb(var(--sf-primary-softest))` — violet-50 light pill | **the SAME violet-50 pill** (the ref keeps it light in dark) | parity-correct but clone-internally inconsistent (the clone's own dark nav re-themes its active surfaces — re-theme per the AF5 clock precedent) |
+
+   The treatment doctrine: AG1/AG2 match the reference's measured dark
+   values exactly (parity); AG3/AG4 follow the clone's established house
+   dark-pill family (`dark:bg-*-950 dark:text-*-300` — the dashboard
+   Today pill / assignments / exams precedent) because those surfaces sit
+   inside the clone's superset dark theme where the ref's own dark is its
+   half-broken white-keypad family; AG5 re-themes to the token pair the
+   clone's own utilities already use (`sf-today-tint`'s dark branch:
+   `rgb(var(--sf-primary-soft-dark) / 0.3)` + `--sf-primary-strong-dark`)
+   because the clone's dark nav active surfaces already re-theme — the
+   Tasks aside pill is the internal outlier, exactly like the AF5 clock
+   date was.
+
+**The Cycle-30 TDD execution plan (written BEFORE any source change):**
+
+- **AG1** — button.tsx `neutral` variant: drop
+  `dark:bg-[#f5f5f5] dark:text-[#0a0a0a] dark:hover:bg-[#d4d4d4]` (the
+  button renders `#0a0a0a` in BOTH modes — byte-parity with the measured
+  ref in both). Light unchanged (the S9-R2 pin guards it). Update the
+  S9-R2 comment: the ref keeps neutral-950 in dark (measured s80).
+- **AG2** — calculator-view.tsx:255 + :389: replace the
+  `dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white` inversion
+  with the ref's measured dark: `dark:bg-[#0a0a0a] dark:text-[#fafafa]
+  dark:hover:bg-[#262626]`.
+- **AG3** — calculator-view.tsx:222 AC key: add
+  `dark:bg-red-950 dark:text-red-300 dark:hover:bg-red-900` (house pill
+  family; visually distinct from the slate-900 digit keys, unlike the
+  ref's own near-black-on-near-black Clear).
+- **AG4** — gradetracker-view.tsx `scoreBadgeClass`: add
+  `dark:bg-emerald-950 dark:text-emerald-300` / `dark:bg-sky-950
+  dark:text-sky-300` / `dark:bg-amber-950 dark:text-amber-300` /
+  `dark:bg-red-950 dark:text-red-300` per the house family.
+- **AG5** — tasks-view.tsx `AsideRow`: replace the active inline style
+  with a new `sf-aside-active` utility (globals.css): light =
+  `rgb(var(--sf-primary-softest))` + `rgb(var(--sf-primary-deep))`
+  (byte-identical computed values — the S6-A pin guards them); dark =
+  `rgb(var(--sf-primary-soft-dark) / 0.3)` +
+  `rgb(var(--sf-primary-strong-dark))` (the sf-today-tint dark pattern).
+- **AG6** — notes-view.tsx (M1 + L2): scope the autosave streak to the
+  note — the rejection latches/toasts ONLY if the failed note is still
+  the selected note (a `selectedIdRef` comparison); `saveNow` success
+  also resets the flag.
+- **AG7** — tests/e2e/parity-session6.spec.ts (M2): the 768×1024 Tasks
+  pin — viewport resize, h1 "All Tasks" boundingBox width > 40, no
+  horizontal overflow.
+- **AG8** — flashcards-view.tsx (L5): stopPropagation on the in-row
+  Study button's keydown (prophylactic structural fix — the
+  double-activation is currently benign with no distinguishing
+  observable, documented here rather than pinned).
+- **AG9** — flashcards-view.tsx (L3, the safe part): `role="region"` on
+  the study wrapper (validates the aria-label, adds a navigable
+  landmark; NO sr-only h1 — that would change the AF1-measured innerText
+  contract, recorded as the rejected option).
+- **AG10** — tests/text.test.ts (I1): the surrogate pin's exact-output
+  assertion (`"a".repeat(54) + "🎓" + "…"`, mutation-proven).
+- **AG11** — tests (I3 + I4): the accent-variant clock-date dark pin
+  (PATCH blue, assert blue-400 rgb(96,165,250)) + the S78 mobile
+  locator's `exact: true` hardening.
+- **AG12** — docs alignment: vitest.config.ts stale header (834 → 861),
+  flashcards-view header comment (L6), the AF2b comment softening (L7),
+  theme.ts avatarFrom cross-consumer note (I2).
+
+RED-first pins: AG1/AG2/AG3/AG4/AG5 dark computed-style pins + AG5 light
+regression guard, AG6 the note-switch ordering toast pin, AG7 the 768
+pin, AG9 the region pin — all expected RED on the pre-change build.
+AG10/AG11 are hardening pins (green-verified on arrival,
+mutation/discriminating-proven where feasible — the AF4 method).
+Deferred with rationale: L1 (the study zombie needs an effect +
+set-state-in-effect, which the repo's lint gate forbids — the
+external-mutation precondition keeps it Low; documented standing), L4
+(the flip aria-label semantics — the ref's own button is unmeasured and
+existing pins target the current name), I2's dedicated token (the
+cross-consumer note is the low-risk half).
+
+**Verification plan:** full cold re-cert (lint → tsc → unit → build →
+cold 5-chunk e2e with re-derived census), the dark sweep re-run
+(expected **findings []** — the cycle's headline), dark-mobile-sweep,
+mobile/mid-band/landscape re-runs, the s80 resweep re-run after the
+final build, evidence `80-*.png` (ref dark anchors + clone before/after
+pairs), docs chain, conventional commit, SSH-wrapper push.
+
+
 
 
 ## 3a. Verification (session-56 re-run, from a fresh clone)
@@ -1416,3 +1562,64 @@ auth+s18–s23 35/35 · s24–s26 18/18.
 | AP-117 | MEDIUM | The Batch-AB pin draft asserted `getByText("78%")` on the populated GradeTracker's Chemistry card and would strict-mode-violate at GREEN time: Chemistry has ONE seeded grade (78/100), so the card renders the SAME string in two roles (the big avg AND the Recent-Grades pill). The reference never hits this because its avg format is 1dp ("50.0%") while its pills are integer — the clone's integer convention (the measured Overall card) makes avg==pill collisions inherent for single-grade subjects | when a surface renders the same value in two roles, assert through a role hook (`data-testid="gt-subject-avg"`), never bare text; before pinning populated aggregates, check the SEED for coincidences (single-grade subjects, avg==grade); a RED run cannot catch this class — the failure only appears at GREEN when the surface finally renders | tests/e2e/parity-session5.spec.ts (S5-AB7) + scripts/capture-s73-populated.mjs |
 | AP-118 | HIGH | The s75 probe's residue scan reported ZERO while a probe-created exam SURVIVED on the reference: the CANDIDATES entity list (inherited verbatim from the s72 probe) had no `Exam` entry — the ref stores exams under `Exam` — so neither the delta scan nor the signature scan ever listed it. DELETIONS showed 4 objects against a measured UI showing 5 probe rows; that cross-check (lesson 8: verify state, not exit codes) is what caught it, and the follow-up cleanup deleted the exam (200) and re-verified ZERO across the extended list | a probe's cleanup candidate list must cover EVERY entity its UI session can write — derive it from the dialogs actually driven, not from a prior session's list; always cross-check the DELETIONS count against the rows the UI measurably gained before accepting a RESIDUE ZERO verdict | scripts/ref-populated-s6family5-s75.mjs + scripts/ref-exam-residue-cleanup-s75.mjs |
 | AP-119 | MEDIUM | The s75 probe's assignment/exam submits silently verified the WRONG dialog layer: Radix date-picker popovers are themselves modal `[role=dialog]` elements, so `[role=dialog]` `.last()` scoped the submit-click and the detach-wait to the popover (which never detached) while the form stayed open — the run then poisoned every later nav click and the failure looked like a nav-timeout | scope form dialogs by TITLE (`[role=dialog]:has-text("Add Assignment")`), close the popover first (Escape once → verify `[data-radix-popper-content-wrapper]` is gone), then submit and detach-wait the SCOPED form; verify closure of the layer you mean, never whichever dialog happens to be last | scripts/ref-populated-s6family4-s75.mjs (the failure) vs ref-populated-s6family5-s75.mjs (the fix; submits went false→true) |
+
+**Cycle-30 execution record (Session-80).** TDD, RED first: the 7
+mutation-target pins ran **7/7 RED** against the pre-change build
+(AG1-AG5's dark computed-style pins + AG6's note-switch ordering pin +
+AG9's region pin; the AG6 pin's first draft had a genuine lesson baked
+into it — a `toHaveCount(0)` on the toast locator RETRIED past the
+toast's 5s auto-dismiss and passed on the dismissal, hiding the very
+symptom it existed to catch; the executed pin reads the count
+INSTANTLY via `locator.count()`, and the retry-trap is documented at
+the pin). The guards verified green on arrival and the AG7 pin was
+**mutation-proven**: temporarily re-adding `sm:min-w-0` and rebuilding
+made the pin fail exactly as designed ("Expected: visible, Received:
+hidden" — the h1 collapses at 768) before the revert. GREEN source:
+the neutral variant drops its dark inversion (byte-parity with the
+measured ref in BOTH modes), the two Calculator History buttons take
+the ref's measured dark (`dark:bg-[#0a0a0a] dark:text-[#fafafa]
+dark:hover:bg-[#262626]`), the AC key + the GradeTracker score pills
+take the house dark-pill family with FIVE palette steps newly pinned
+in `@theme` (red-950, emerald-950, sky-950, amber-950, sky-300 — the
+AG3 first draft hit trap 10 head-on: `bg-red-950` serialized as
+`lab(13.003 29.04 16.7519)` until the pin landed; the AG4 first draft
+hit the SubjectChip locator collision — the row's rounded-full chip
+answered `span.rounded-full.first()`, the executed pin addresses the
+pill by its text), the Tasks aside active row moves to the new
+`sf-aside-active` utility (light byte-identical — the S6-A pins green;
+dark = the sf-today-tint token pair, serialized as legacy rgba), the
+autosave streak is scoped to the note (`selectedIdRef` mirrors the
+selection at its only two mutation sites; late rejections from
+departed notes are ignored; a successful explicit Save resets the
+streak — L2 folded in), the study wrapper gains `role="region"`, the
+in-row Study affordance stops keydown propagation, and the four
+hardening pins landed (the exact-output surrogate assertion, the
+768 h1 pin, the accent-aware clock-date pin, the S78 locator's
+structural scoping).
+
+Full cold re-certification: lint ✓ tsc ✓ unit **861/861** ✓ build
+REAL_EXIT=0 fresh; cold e2e **431/431** (127+127+50+69+58, first pass
+every chunk — the census re-derived: dark-mode 13→20, parity-session7
+32→34, parity-session6 16→17); the dark sweep re-run: **findings
+0/20 views — the first clean dark canvas in the sweep's history**
+(the cycle's headline); the dark-mobile sweep ok with zero findings;
+the mobile + mid-band + landscape sweeps re-run: **findings []**; the
+s80 resweep re-run after the final build: **ok:true** (9/9 invariants
+both hosts, brand tables byte-matched, mobile drawers green on both —
+no Tailwind v4 mobile-nav bug, the user-flagged surface verified live
+yet again). One environment lesson recorded for the next reset: the
+resweep's mid-run failures were a POISONED :3200 standalone — the
+port-owner survived a name-pattern kill (EADDRINUSE killed the new
+spawn; the old server served the half-replaced build's chunks as
+500s) — kill by PORT-OWNER PID (`ss -tlnp`), never by process-name
+grep (the AP-70 lesson re-earned). Evidence: `80-ref-dark-*` (the
+reference's dark anchors), `80-clone-dark-*-before/after` (the
+flashbulb family's before/after pairs), the standard 31 refreshed,
+`80-clone-mobile-*` + the resweep's sweep set.
+
+**Batch AG: DONE.** Standing debt: Batch R (RSC structural perf,
+deferred on the S75 CWV evidence) — unchanged; the s80 audit's L1
+(the study-state zombie — needs an effect the lint gate forbids;
+external-mutation precondition keeps it Low), L4 (the flip button's
+aria-label semantics — the ref's own button unmeasured), and I2's
+dedicated text token remain documented deferrals.

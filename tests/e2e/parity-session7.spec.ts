@@ -867,3 +867,93 @@ test.describe("S78 · Batch AE hardening (the s78 audit)", () => {
     expect(Math.abs(columnCenter - 770)).toBeLessThan(40);
   });
 });
+
+// S80/AG6 (the s80 audit, M1): the AF3 streak reset races an in-flight
+// autosave from the PREVIOUS note — a PATCH scheduled for note A whose
+// rejection lands AFTER the user switched to note B re-latches the shared
+// flag, silently swallowing note B's first autosave failure (the exact
+// symptom AF3 set out to fix, resurfacing through ordering) and toasting
+// a lie ("the note is still open" — A no longer is). The fix scopes the
+// streak to the note: a rejection for a note the user already left is
+// ignored. This pin drives the ordering with a DELAYED route (the PATCH
+// is held until after the switch), which the AF3 pin could not do (it
+// let note A's failure settle before switching).
+test.describe("S80 · the autosave streak is scoped to the note (AG6)", () => {
+  test("a late rejection from the departed note neither toasts nor swallows the next note's first failure", async ({ page }) => {
+    const stamp = Date.now();
+    await page.goto("/Notes");
+    await hydrated(page);
+
+    // Two fresh notes through the real dialog (no seed-row dependence).
+    const createNote = async (name: string) => {
+      await page.getByRole("button", { name: "New note menu" }).click();
+      await page.getByRole("menuitem", { name: "New Note", exact: true }).click();
+      await page.getByLabel("Name").fill(name);
+      await page.getByRole("dialog").getByRole("button", { name: "Save", exact: true }).click();
+      const editor = page.locator(".ql-editor");
+      await expect(editor).toBeVisible();
+    };
+    await createNote(`AG6 alpha ${stamp}`);
+    const editorA = page.locator(".ql-editor");
+    await editorA.click();
+
+    // Hold every note PATCH ~900ms before aborting — the rejection for
+    // note A lands AFTER the switch to note B (the M1 ordering).
+    await page.route(/\/api\/notes\//, async (route) => {
+      if (route.request().method() === "PATCH") {
+        await new Promise((r) => setTimeout(r, 900));
+        await route.abort("failed");
+      } else {
+        await route.continue();
+      }
+    });
+
+    // Type in A, then switch notes IMMEDIATELY (create B — the selection
+    // moves and A's editor unmounts, flushing A's dirty content as the
+    // in-flight PATCH). The route stays installed: it holds ONLY PATCHes;
+    // the create POST rides the continue() branch.
+    await page.keyboard.type("alpha content");
+    await createNote(`AG6 beta ${stamp}`);
+
+    // A's late rejection settles (~900ms) — the departed note must NOT
+    // toast (pre-fix: ONE toast appears here, latching the flag). The
+    // read is INSTANT (locator.count()) — a toHaveCount(0) would retry
+    // past the toast's 5s auto-dismiss and pass on the dismissal (the
+    // pin's first draft did exactly that and hid the M1 symptom).
+    const toasts = page.getByRole("region", { name: "Notifications" }).locator("button");
+    await page.waitForTimeout(1600);
+    const earlyCount = await toasts.count();
+    expect(earlyCount).toBe(0);
+
+    // Note B's FIRST autosave failure must get its own toast (pre-fix:
+    // the latched flag swallowed it — the count stays 0 forever).
+    const editorB = page.locator(".ql-editor");
+    await editorB.click();
+    await page.keyboard.type("beta content");
+    await page.waitForTimeout(1900);
+    await expect(toasts).toHaveCount(1);
+    await expect(toasts.first()).toContainText(/offline|autosave/i);
+
+    await page.unroute(/\/api\/notes\//);
+  });
+});
+
+// S80/AG9 (the s80 audit, L3 — the safe half): during study the wrapper
+// div carried aria-label="Study mode" with NO role — aria-label is not
+// permitted on a generic element, so it served tests, not assistive
+// tech. role="region" makes the label valid and the study surface a
+// navigable landmark. (The sr-only h1 option was REJECTED: it would
+// change the AF1-measured innerText contract "Exit Study N / M …".)
+test.describe("S80 · the study surface is a labeled region (AG9)", () => {
+  test("the study-mode wrapper exposes role=region with its Study mode name", async ({ page }) => {
+    await page.goto("/Flashcards");
+    await hydrated(page);
+    await page.locator('[aria-label="Deck rows"] > *', { hasText: "Integration rules" }).first().click();
+    await page.locator('[aria-label="Deck detail"]').getByRole("button", { name: "Study" }).click();
+    const study = page.getByRole("region", { name: "Study mode" });
+    await expect(study).toBeVisible();
+    await expect(study.getByText(/^1 \/ 4$/)).toBeVisible();
+    await study.getByRole("button", { name: "Exit Study" }).click();
+    await expect(page.locator('[aria-label="Deck list pane"]')).toBeVisible();
+  });
+});

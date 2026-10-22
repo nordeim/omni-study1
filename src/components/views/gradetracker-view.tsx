@@ -63,12 +63,18 @@ function percentOf(grade: GradeRow): number {
   return (grade.score / grade.maxScore) * 100;
 }
 
-/** The measured badge ramp: ≥90 emerald, ≥80 sky, ≥70 amber, else red. */
+/** The measured badge ramp: ≥90 emerald, ≥80 sky, ≥70 amber, else red.
+ *  S80/AG4: the dark halves follow the house dark-pill family
+ *  (`dark:bg-*-950 dark:text-*-300` — the dashboard Today-pill /
+ *  assignments / exams precedent) — the light pills were un-themed
+ *  flashbulbs on the dark canvas (the ref account has no grades, so its
+ *  dark rendering is unmeasurable; the clone's superset dark theme owns
+ *  the values). */
 function scoreBadgeClass(pct: number): string {
-  if (pct >= 90) return "bg-emerald-100 text-emerald-700";
-  if (pct >= 80) return "bg-sky-100 text-sky-700";
-  if (pct >= 70) return "bg-amber-100 text-amber-700";
-  return "bg-red-100 text-red-700";
+  if (pct >= 90) return "bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300";
+  if (pct >= 80) return "bg-sky-100 text-sky-700 dark:bg-sky-950 dark:text-sky-300";
+  if (pct >= 70) return "bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-300";
+  return "bg-red-100 text-red-700 dark:bg-red-950 dark:text-red-300";
 }
 
 /** The per-subject card's avg text ramp (Batch AB: the ref renders the avg

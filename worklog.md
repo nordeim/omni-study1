@@ -1997,3 +1997,99 @@ unit **861/861**, lint/tsc clean, build fresh, mobile + mid-band +
 landscape sweeps findings [], dark sweep artifact-free, s79 resweep
 ok:true. Batch AF DONE. Standing debt reduced to ONE item: Batch R (RSC
 structural perf — deferred on the S75 CWV evidence).
+
+## Session 80 (continuation 31) — the dark-canvas flashbulb family + the Batch AF post-audit hardening (Batch AG)
+
+**Context.** 21st workspace reset; cloned fresh at `23501d8`
+(Session-79/Batch AF + the session_27/session_28 transcripts).
+Provisioned per the documented order (bun 497 pkgs, `.env` dev posture
+`DATABASE_URL="file:../db/custom.db"` + empty AUTH_SECRET, db push +
+seed, chromium-1243 re-provisioned — the reset wiped
+`~/.cache/ms-playwright/chromium_headless_shell-1243` and every
+chromium test failed `browserType.launch` until
+`bunx playwright install chromium`, build). Baseline re-certified COLD
+first: lint ✓ tsc ✓ unit 861/861, build REAL_EXIT=0, cold e2e 421/421
+(127+124+50+62+58, first pass every chunk).
+
+**Work log.**
+
+1. Two evidence layers before any source change: (a) the Mode-C audit
+   of the Batch AF diff (`6a7245e..ed89609`) — 0 Critical / 0 High /
+   2 Medium / 7 Low / 4 Informational (M1 the AF3 streak-reset racing
+   an in-flight autosave from the PREVIOUS note; M2 the AF2b 768px
+   Tasks-h1 fix with NO e2e pin); (b) the s80 reference re-sweep (the
+   s79 class re-tagged) — ok:true, 9/9 invariants both hosts, brand
+   tables byte-matched, mobile drawers green on BOTH (the
+   user-flagged surface; no Tailwind v4 mobile-nav bug).
+2. The standing rhythm: mobile + mid-band + landscape sweeps findings
+   []. The dark sweep: **7 standing flashbulb findings** — the
+   detector's `green: hits === 0` classifier says the received state's
+   dark canvas was never clean through the AE/AF certifications (the
+   S79 narrative recorded only the *unreadable* family). Root-caused
+   each surface against the LIVE reference measured in dark mode
+   through its own Settings UI (the ref's Light control is a measured
+   no-op in the Light-from-dark direction — cold fresh-context logins
+   render dark, the account is stuck): the ref does NOT re-theme the
+   More Options button or the Calculator History toggle (both stay
+   neutral-950 + light text — the clone's s69/s72-era "invert the
+   ramp" inversions were drift); its Clear key is near-black + red-600
+   inside its own white-digit keypad family; its Tasks aside KEEPS the
+   violet-50 light pill (its own half-broken family — the clone's full
+   dark theme re-themes per the AF5 clock precedent).
+3. Wrote the Cycle-30 (Batch AG) plan into docs/remediation-plan.md
+   BEFORE any source change (AG1-AG12 measured table + TDD todo +
+   deferred-with-rationale ledger).
+4. TDD, RED first: 7 mutation-target pins **7/7 RED** against the
+   pre-change build (AG1-AG5 dark computed-style pins, AG6's
+   note-switch ordering pin — its first draft taught the toast-retry
+   trap: a `toHaveCount(0)` retries past the 5s auto-dismiss and hides
+   the symptom; the executed pin reads the count instantly — AG9's
+   region pin). GREEN source: the neutral variant + both Calculator
+   History buttons match the ref's measured dark; the AC key + the
+   GradeTracker score pills take the house dark-pill family (FIVE
+   palette steps newly pinned in `@theme` — the AG3 first draft hit
+   trap 10: `bg-red-950` serialized as lab() until pinned; the AG4
+   first draft hit the SubjectChip locator collision); the Tasks aside
+   active row moved from the inline style to the new `sf-aside-active`
+   utility (light byte-identical — S6-A pins green; dark = the
+   sf-today-tint token pair); the autosave streak scoped to the note
+   (`selectedIdRef`; late rejections from departed notes ignored;
+   successful Save resets the streak); `role="region"` on the study
+   wrapper; keydown stopPropagation on the in-row Study affordance.
+   Guards: AG7 mutation-proven (re-add `sm:min-w-0` → the pin fails
+   "Expected: visible, Received: hidden" → reverted), AG10/AG11
+   hardening pins green-verified.
+5. Full cold re-certification: lint ✓ tsc ✓ unit **861/861** ✓ build
+   fresh; cold e2e **431/431** (127+127+50+69+58, first pass every
+   chunk; census re-derived: dark-mode 13→20, parity-session7 32→34,
+   parity-session6 16→17); the dark sweep re-run: **findings 0/20
+   views — the first clean dark canvas in the sweep's history**; the
+   dark-mobile sweep ok; mobile + mid-band + landscape sweeps findings
+   []; the s80 resweep re-run after the final build: **ok:true**.
+   Environment lesson re-earned mid-verification: the resweep failures
+   were a POISONED :3200 standalone (the port-owner survived a
+   name-pattern kill; EADDRINUSE killed the new spawn; the old server
+   served the half-replaced build's chunks as 500s) — kill by
+   PORT-OWNER PID (`ss -tlnp`), never by process-name grep.
+6. Evidence: `80-ref-dark-*` anchors (myday/calculator/tasks/settings
+   + mobile), `80-clone-dark-*-before/after` pairs, the standard 31
+   refreshed, `80-clone-mobile-*` + the resweep sweep set; agent-browser
+   walkthroughs of BOTH hosts (the ref's mobile drawer navigation
+   round-trip + the clone's — 20 links, drawer closes on navigate,
+   scrollWidth 390 vs the ref's own 429 overflow family).
+7. Docs chain: README (badge 1292, counts 861/431, the S80 session
+   row), AGENTS/CLAUDE counts, the remediation-plan Cycle-30 record +
+   header, vitest.config.ts stale-header fix (834 → 861), the
+   flashcards-view header + the AF2b comment + the theme.ts
+   avatarFrom cross-consumer note (AG12); `.env.example` verified
+   current (no env surface changed this cycle).
+
+**Stage summary.** HEAD = `23501d8` + this cycle's commit (Batch AG
+source + pins + sweeps + screenshots + docs + worklog). Baselines:
+e2e **431/431** (127+127+50+69+58, 30 spec files censused), unit
+**861/861**, lint/tsc clean, build fresh, **dark sweep findings 0/20
+(first clean dark canvas)**, dark-mobile sweep ok, mobile + mid-band +
+landscape sweeps findings [], s80 resweep ok:true. Batch AG DONE.
+Standing debt unchanged: Batch R (RSC structural perf — deferred on
+the S75 CWV evidence); documented deferrals: the s80 audit's L1/L4 +
+I2's dedicated text token.

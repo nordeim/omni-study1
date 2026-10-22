@@ -667,7 +667,11 @@ export function TasksView() {
             title block wraps at 74px there — measured; the ref instead
             overflows to 826, its own bug family) and the h1 stays visible
             through the band. Desktop: the row fits one line and flex-grow
-            distributes identically — byte-identical. */}
+            distributes identically for TYPICAL labels. S80/AG7 note (the
+            s80 audit, L7): a long user-named list label now wraps the
+            header row instead of ellipsizing — the ref's own wrap shape
+            (the h1's truncate can never engage at sm+ under a wrapping
+            flex row; kept as harmless dead styling). */}
         <div aria-label="Tasks header" className="flex flex-wrap items-center gap-3 pb-4">
           <div className="w-full sm:w-auto sm:flex-1">
             <div className="flex items-baseline gap-2">
@@ -797,13 +801,14 @@ function AsideRow({
       aria-pressed={active}
       className={cn(
         "flex w-full items-center gap-2.5 rounded-xl px-3 py-2.5 text-left text-base transition-colors",
+        // S80/AG5: the active pair moved from the inline style to the
+        // sf-aside-active utility — light computed values are BYTE-IDENTICAL
+        // (the S6-A pins guard them; the utility emits the same rgb() forms),
+        // and the .dark & branch can now re-theme (an inline style beats any
+        // class specificity, so the dark override could never reach it).
+        active && "sf-aside-active",
         !active && "text-slate-600 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800/60",
       )}
-      style={
-        active
-          ? { backgroundColor: "rgb(var(--sf-primary-softest))", color: "rgb(var(--sf-primary-deep))" }
-          : undefined
-      }
     >
       {icon}
       <span className="flex-1 truncate font-medium">{label}</span>

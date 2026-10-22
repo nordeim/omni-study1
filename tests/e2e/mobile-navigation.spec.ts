@@ -323,7 +323,11 @@ test.describe("S78 · mobile two-pane parity — the list panes render at 390", 
     // S79/AF1 calibration: the row now also carries the mobile-only Study
     // affordance at its right edge — tap the row's NAME (the select
     // gesture; a center tap would land on the affordance).
-    const row = aside.getByRole("button", { name: /Biology Chapter 5/ }).first();
+    // S80/AG11b (the s80 audit, I4): the old `.first()` role locator
+    // matched BOTH the row and its affordance (the row's accessible name
+    // absorbs "Study Biology Chapter 5") and only DOM order saved it —
+    // the deck-rows child locator scopes to the ROW by structure.
+    const row = page.locator('[aria-label="Deck rows"] > *', { hasText: "Biology Chapter 5" }).first();
     await row.locator("h2").tap();
     await expect(detail.getByRole("heading", { name: "Biology Chapter 5" })).toBeVisible();
     const scrollW = await page.evaluate(() => document.documentElement.scrollWidth);

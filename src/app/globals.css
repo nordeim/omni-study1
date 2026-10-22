@@ -93,10 +93,12 @@
 
   --color-sky-50: #f0f9ff;
   --color-sky-100: #e0f2fe;
+  --color-sky-300: #7dd3fc; /* S80/AG4: the GradeTracker dark sky pill (trap 10 — pin asserted colors) */
   --color-sky-400: #38bdf8;
   --color-sky-500: #0ea5e9;
   --color-sky-600: #0284c7;
   --color-sky-700: #0369a1;
+  --color-sky-950: #082f49; /* S80/AG4 */
 
   --color-cyan-50: #ecfeff;
   --color-cyan-100: #cffafe;
@@ -122,6 +124,7 @@
   --color-emerald-600: #059669;
   --color-emerald-700: #047857;
   --color-emerald-900: #064e3b;
+  --color-emerald-950: #022c22; /* S80/AG4: the dark score pill — trap 10 */
 
   /* green-100 is the reference's measured FOCUS TIME tint — #dcfce7, NOT
      emerald-100 (S7 trap 12: same-hue families are not interchangeable). */
@@ -137,6 +140,7 @@
   --color-amber-600: #d97706;
   --color-amber-700: #b45309;
   --color-amber-900: #78350f;
+  --color-amber-950: #451a03; /* S80/AG4 */
 
   --color-orange-50: #fff7ed;
   --color-orange-100: #ffedd5;
@@ -154,6 +158,7 @@
   --color-red-600: #dc2626;
   --color-red-700: #b91c1c;
   --color-red-900: #7f1d1d;
+  --color-red-950: #450a0a; /* S80/AG3: the dark AC key — trap 10 (the house dark-pill family renders the stable v3 hex now) */
 
   --color-pink-50: #fdf2f8;
   --color-pink-100: #fce7f3;
@@ -483,6 +488,25 @@
   background-color: rgb(var(--sf-primary-softest));
   .dark & {
     background-color: rgb(var(--sf-primary-soft-dark) / 0.3);
+  }
+}
+
+@utility sf-aside-active {
+  /* S80/AG5: the Tasks aside's ACTIVE row — light keeps the exact
+     measured inline-style pair (softest fill + deep text, the S6-A pins);
+     dark re-themes to the sf-today-tint token pair (soft-dark at 30% +
+     strong-dark) because the clone's own dark nav active surfaces all
+     re-theme — the violet-50 light pill was the internal outlier and a
+     standing dark-sweep flashbulb. (The live ref KEEPS its violet-50
+     pill in dark — its own half-broken dark family; the clone's full
+     dark theme is the documented superset, the AF5 clock precedent.)
+     Replaces the inline style so the .dark & override can reach it —
+     inline styles beat any class specificity. */
+  background-color: rgb(var(--sf-primary-softest));
+  color: rgb(var(--sf-primary-deep));
+  .dark & {
+    background-color: rgb(var(--sf-primary-soft-dark) / 0.3);
+    color: rgb(var(--sf-primary-strong-dark));
   }
 }
 

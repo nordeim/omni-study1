@@ -1,14 +1,20 @@
 "use client";
 
 // ---------------------------------------------------------------------------
-// Flashcards (S7-A + S77/AD): TWO-PANEL — a w-80 deck sidebar (colored 40px
-// icon blocks, inline search) and a detail pane (AI Generate outline, Add
-// Card + Study gradients, lg:grid-cols-3 card grid with difficulty pills).
-// Session-77 Batch AD (measured 2026-10-21): the study mode renders IN-PAGE
-// (not an overlay) — the black Exit Study button, the "N / M" counter, the
-// max-w-2xl card (24px/500 front, 20px/400 slate-700 back), the "Click card
-// to flip" hint, and the Wrong/Correct rating mechanic (the rating IS the
-// navigation; the 3D flip animation is a kept superset flourish).
+// Flashcards (S7-A + S77/AD + S79/AF1): TWO-PANEL — a w-80 deck sidebar
+// (colored 40px icon blocks, inline search) and a detail pane (AI Generate
+// outline, Add Card + Study gradients, lg:grid-cols-3 card grid with
+// difficulty pills). Session-79 Batch AF (measured): the study mode is a
+// FULL VIEW REPLACEMENT — when `studying && studyCard && studyDeckId ===
+// effectiveDeckId` the study pane replaces the WHOLE layout (the ref's
+// measured shape at both viewports: the black Exit Study button, the
+// "N / M" counter, the max-w-2xl card (24px/500 front, 20px/400 slate-700
+// back), the "Click card to flip" hint, and the Wrong/Correct rating
+// mechanic — the rating IS the navigation; the 3D flip animation is a kept
+// superset flourish). Below md the deck rows carry an in-row Study
+// affordance (one tap to study at 390). S80/AG9: the wrapper is a labeled
+// region (role="region" — the aria-label is valid on it and the study
+// surface is a navigable landmark).
 // DECK_COLORS: red BEFORE pink.
 // ---------------------------------------------------------------------------
 
@@ -283,6 +289,7 @@ export function FlashcardsView() {
   if (studying && studyCard && studyDeckId === effectiveDeckId) {
     return (
       <div
+        role="region"
         aria-label="Study mode"
         className="flex min-h-[calc(100vh-8rem)] flex-col items-center justify-center p-4"
       >
@@ -462,6 +469,14 @@ export function FlashcardsView() {
                         selectDeck(deck.id);
                         startStudy(deck.id);
                       }}
+                      // S80/AG8 (the s80 audit, L5): Enter/Space on this
+                      // button fires keydown BEFORE the click activation,
+                      // and the bubbled keydown reached the row's own
+                      // onKeyDown (selectDeck) — the double-activation is
+                      // currently benign (same deck, idempotent order), but
+                      // the structural fix keeps the row's keyboard path
+                      // from ever speaking for its inner controls.
+                      onKeyDown={(e) => e.stopPropagation()}
                       className="flex h-9 shrink-0 items-center gap-1.5 rounded-lg bg-neutral-950 px-3 text-xs font-medium text-neutral-50 outline-none transition-opacity hover:opacity-90 focus-visible:ring-2 focus-visible:ring-sf-primary/40 focus-visible:outline-none md:hidden dark:bg-neutral-800"
                     >
                       <GraduationCap className="size-4" strokeWidth={2} />

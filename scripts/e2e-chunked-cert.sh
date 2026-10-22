@@ -1,12 +1,13 @@
 #!/usr/bin/env bash
-# Session-79 cold e2e certification — the 5-chunk map, re-derived post-Batch-AF
-# (census: 30 spec files exactly once; mobile-navigation 15→16 with the S79
-# mobile study pin, parity-session7 31→32 with the AF1 desktop study-chrome
-# pin (the AE4 rewrite + the AE2 switch leg ride in-place), parity-session6
-# 15→16 with the AF2 Tasks-aside pin, dark-mode 11→13 with the AF5 clock-date
-# pair). Expected: 127 + 124 + 50 + 62 + 58 = 421 (each chunk's count
-# includes its auth setup). Per-chunk: fresh db/e2e.db + stale-server kill
-# (fresh in-memory limiter, register budget stays <= 9/10 per chunk).
+# Session-80 cold e2e certification — the 5-chunk map, re-derived post-Batch-AG
+# (census: 30 spec files exactly once; the S80 additions ride in-place —
+# dark-mode 13→20 with the AG dark flashbulb family [AG1-5, the AG5 light
+# guard, AG11a accent clock-date], parity-session7 32→34 with the AG6
+# note-switch ordering pin + the AG9 study-region pin, parity-session6
+# 16→17 with the AG7 768 h1 guard). Expected: 127 + 127 + 50 + 69 + 58 =
+# 431 (each chunk's count includes its auth setup). Per-chunk: fresh
+# db/e2e.db + stale-server kill (fresh in-memory limiter, register budget
+# stays <= 9/10 per chunk).
 set -uo pipefail
 cd "$(dirname "$0")/.."
 

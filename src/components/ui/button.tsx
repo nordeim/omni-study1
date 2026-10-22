@@ -24,10 +24,14 @@ const buttonVariants = cva(
         link: "text-sf-primary-strong underline-offset-4 hover:underline",
         // S9-R2 (measured s69): the reference's More Options button is the
         // shadcn default shape on a neutral-950 fill (rgb(10,10,10), 6px
-        // radius) — the dark superset inverts the ramp. Arbitrary hexes on
-        // purpose: the neutral ramp is unpinned (v4 trap 10 — unpinned
-        // palette classes serialize as lab()).
-        neutral: "bg-[#0a0a0a] text-[#fafafa] shadow-sm hover:bg-[#262626] sf-print-exact dark:bg-[#f5f5f5] dark:text-[#0a0a0a] dark:hover:bg-[#d4d4d4]",
+        // radius) — arbitrary hexes on purpose: the neutral ramp is
+        // unpinned (v4 trap 10 — unpinned palette classes serialize as
+        // lab()). S80/AG1 (re-measured s80 on the live ref in DARK
+        // mode): the ref does NOT re-theme this button — dark keeps the
+        // SAME neutral-950 fill + light text. The s69 "dark superset
+        // inverts the ramp" (dark:#f5f5f5) was drift and a standing
+        // dark-sweep flashbulb; dropped.
+        neutral: "bg-[#0a0a0a] text-[#fafafa] shadow-sm hover:bg-[#262626] sf-print-exact",
       },
       size: {
         default: "h-9 px-4 py-2",

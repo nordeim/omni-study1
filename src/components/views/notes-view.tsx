@@ -120,6 +120,15 @@ export function NotesView() {
   // resets on the first successful PATCH, so a sustained-offline typing
   // session toasts once instead of once per debounced burst.
   const autosaveFailedRef = React.useRef(false);
+  // S80/AG6 (the s80 audit, M1): the streak is scoped to the note — this
+  // ref mirrors the CURRENT selection (updated at every selection change:
+  // selectNote + createNote, the only setSelectedId call sites) so a late
+  // rejection from a note the user already left is ignored instead of
+  // latching the flag and swallowing the NEXT note's first failure (the
+  // AF3 symptom resurfacing through ordering) or toasting a lie ("the
+  // note is still open" — it is not). Event-handler writes only, never
+  // render-time mutation (the react-hooks lint contract).
+  const selectedIdRef = React.useRef<string | null>(null);
 
   const allTags = React.useMemo(() => {
     const set = new Set<string>();
@@ -203,6 +212,8 @@ export function NotesView() {
           const created = await createNote({ title: name, content: "", notebookId: notebookFilter === "all" ? "" : notebookFilter });
           setSelectedId(created ?? null);
           // S79/AF3: a freshly created note starts with a clean streak.
+          // S80/AG6: …and owns the selection mirror from birth.
+          selectedIdRef.current = created ?? null;
           autosaveFailedRef.current = false;
         }
       } else {
@@ -274,9 +285,15 @@ export function NotesView() {
   // Save flushes immediately with the live editor content.
   const onContentChange = (html: string) => {
     if (!selected) return;
-    updateNote(selected.id, { content: html })
+    // S80/AG6: capture the note this PATCH belongs to — the rejection (or
+    // success) is only allowed to touch the streak if that note is STILL
+    // the selected one when the promise settles (a mid-flight switch or
+    // the unmount flush of a departed editor must not speak for the note
+    // the user is now editing).
+    const noteId = selected.id;
+    updateNote(noteId, { content: html })
       .then(() => {
-        autosaveFailedRef.current = false;
+        if (selectedIdRef.current === noteId) autosaveFailedRef.current = false;
       })
       .catch((err: unknown) => {
         // S78/AE2: never swallow — a hung offline state must not let the
@@ -285,6 +302,11 @@ export function NotesView() {
         // affordance — the S13 doctrine). S79/AF3 (the s79 audit, F2):
         // the streak flag resets on SELECTION CHANGE too — see
         // selectNote — so the next note's first failure always toasts.
+        // S80/AG6 (the s80 audit, M1): a rejection for a DEPARTED note is
+        // ignored outright — its editor (and the Save affordance with it)
+        // is gone; it must neither latch the flag (swallowing the next
+        // note's first failure) nor toast the "still open" lie.
+        if (selectedIdRef.current !== noteId) return;
         if (!autosaveFailedRef.current) {
           autosaveFailedRef.current = true;
           toast.error(err instanceof ApiError ? err.message : "Autosave failed — the note is still open; use Save to retry.");
@@ -296,8 +318,10 @@ export function NotesView() {
   // different note's first failure must toast even while the previous
   // note's streak is still failing (the pre-fix flag latched across the
   // switch and silently swallowed the second note's failures).
+  // S80/AG6: the selection mirror rides the same sites.
   const selectNote = (id: string) => {
     setSelectedId(id);
+    selectedIdRef.current = id;
     autosaveFailedRef.current = false;
   };
 
@@ -309,6 +333,10 @@ export function NotesView() {
     const html = editorRef.current?.getContent() ?? selected.content;
     try {
       await updateNote(selected.id, { content: html });
+      // S80/AG6 (the s80 audit, L2): a successful explicit Save breaks the
+      // failure streak too — the next autosave failure must toast again
+      // (pre-fix only an autosave success or a note switch reset it).
+      autosaveFailedRef.current = false;
       toast.success("Note saved.");
     } catch (err: unknown) {
       toast.error(err instanceof ApiError ? err.message : "Save failed.");

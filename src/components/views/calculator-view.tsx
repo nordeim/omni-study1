@@ -219,7 +219,8 @@ export function CalculatorView() {
         key.kind === "op" && "bg-sf-primary-soft text-sf-primary-strong hover:brightness-95 dark:bg-sf-primary-soft-dark/40 dark:text-sf-primary-strong-dark",
         key.kind === "fn" &&
           "border border-slate-200 bg-white text-sm text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800",
-        key.kind === "clear" && "bg-red-100 text-red-700 hover:bg-red-200",
+        key.kind === "clear" &&
+          "bg-red-100 text-red-700 hover:bg-red-200 dark:bg-red-950 dark:text-red-300 dark:hover:bg-red-900",
       )}
     >
       {key.kind === "clear" && (
@@ -252,7 +253,12 @@ export function CalculatorView() {
           aria-expanded={historyOpen}
           aria-controls={historyOpen ? "calc-history-panel" : undefined}
           onClick={() => setHistoryOpen((open) => !open)}
-          className="bg-slate-900 text-white hover:bg-slate-800 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white"
+          // S80/AG2 (re-measured s80 on the live ref in dark): the ref's
+          // History toggle stays the near-black pill (rgb(10,10,10) +
+          // light text) in dark mode — it does NOT invert. The s72-era
+          // dark:bg-slate-100 inversion was drift and a standing
+          // dark-sweep flashbulb.
+          className="bg-slate-900 text-white hover:bg-slate-800 dark:bg-[#0a0a0a] dark:text-[#fafafa] dark:hover:bg-[#262626]"
         >
           <History className="size-4" strokeWidth={2} aria-hidden />
           History
@@ -386,7 +392,9 @@ export function CalculatorView() {
             )}
           </div>
           <Button
-            className="mt-4 w-full bg-slate-900 text-white hover:bg-slate-800 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white"
+            // S80/AG2 (the panel-footer sibling of the header toggle —
+            // same measured-dark treatment, same drift removed).
+            className="mt-4 w-full bg-slate-900 text-white hover:bg-slate-800 dark:bg-[#0a0a0a] dark:text-[#fafafa] dark:hover:bg-[#262626]"
             onClick={() => void clearHistory()}
             disabled={clearing || history.length === 0}
           >

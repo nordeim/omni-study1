@@ -106,6 +106,11 @@ describe("stripHtmlPreview — the discriminating surrogate cap (S79/AF4)", () =
     // catch.
     expect(out.endsWith("…")).toBe(true);
     expect(out).not.toContain("\uFFFD");
+    // S80/AG10 (the s80 audit, I1): the exact output — an off-by-one
+    // regression to `slice(0, max)` (emoji kept whole, 57 code points,
+    // NO ellipsis logic change) or a cap drift passes the well-formedness
+    // loop above; only the byte-exact assertion catches it.
+    expect(out).toBe(`${"a".repeat(54)}🎓…`);
     // No lone surrogate in the output (the string is well-formed UTF-16).
     for (let i = 0; i < out.length; i++) {
       const c = out.charCodeAt(i);

@@ -366,3 +366,31 @@ test.describe("S79 · Tasks aside heading parity (AF2)", () => {
     await expect(page.getByRole("heading", { name: "All Tasks", exact: true })).toBeVisible();
   });
 });
+
+// S80/AG7 (the s80 audit, M2): the AF2b half of the fix — dropping
+// `sm:min-w-0` so the h1's automatic min-content floor keeps it non-zero-
+// width through the 768px band — had NO e2e pin (the AF2 pin above runs
+// at the DEFAULT viewport where the h1 was visible pre-fix too; only the
+// manual mid-band sweep guarded it). This pin closes that gap: a
+// regression re-adding `sm:min-w-0` (h1 collapses to width 0 at 768 and
+// goes invisible through the md band) now fails the certified suite.
+test.describe("S80 · the Tasks h1 survives the 768px band (AG7)", () => {
+  test("at 768×1024 the All Tasks h1 keeps a non-zero width and the view does not overflow", async ({ page }) => {
+    await page.setViewportSize({ width: 768, height: 1024 });
+    await page.goto("/Tasks");
+    await hydrated(page);
+    const h1 = page.getByRole("heading", { name: "All Tasks", exact: true });
+    await expect(h1).toBeVisible();
+    const box = await h1.boundingBox();
+    // The pre-AF2b collapse: the h1's box measured ~0 wide at 768 (the
+    // sm:min-w-0 dropped the flex child's automatic min-content floor).
+    expect(box?.width ?? 0).toBeGreaterThan(40);
+    // The ref's own 768 Tasks overflows to 826px (its own bug family);
+    // the clone keeps the no-overflow contract at every band.
+    const scrollW = await page.evaluate(() => document.documentElement.scrollWidth);
+    expect(scrollW).toBeLessThanOrEqual(768);
+    // The aside is the below-lg family's sibling here — still present at
+    // the md breakpoint (768 ≥ md), the two-pane shape the ref renders.
+    await expect(page.locator('[aria-label="Task views"]')).toBeVisible();
+  });
+});
