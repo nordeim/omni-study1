@@ -46,6 +46,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/components/ui/toast";
 import { apiGet, apiSend } from "@/lib/api";
+import { buildBreadcrumbChain } from "@/lib/folder-tree";
 import { EmptyState, Spinner, ViewHeader } from "@/components/views/shared";
 import { cn } from "@/lib/utils";
 
@@ -224,16 +225,14 @@ export function FilesView() {
     };
   }, []);
 
-  // Breadcrumb: walk parents from the current folder to the root.
-  const breadcrumb = React.useMemo(() => {
-    const chain: FileFolderRow[] = [];
-    let cursor = folders.find((f) => f.id === currentFolderId) ?? null;
-    while (cursor) {
-      chain.unshift(cursor);
-      cursor = folders.find((f) => f.id === cursor?.parentId) ?? null;
-    }
-    return chain;
-  }, [folders, currentFolderId]);
+  // Breadcrumb: walk parents from the current folder to the root (the
+  // pure seam — S84/AK1: the visited-set guard bounds the walk over ANY
+  // row set, so a cycled/pre-poisoned tree renders a bounded breadcrumb
+  // instead of wedging the renderer).
+  const breadcrumb = React.useMemo(
+    () => buildBreadcrumbChain(folders, currentFolderId),
+    [folders, currentFolderId],
+  );
 
   const visibleFolders = folders.filter((f) => (f.parentId ?? null) === currentFolderId);
   const visibleFiles = files.filter((f) => (f.folderId ?? null) === currentFolderId);

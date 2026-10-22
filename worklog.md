@@ -2448,3 +2448,103 @@ Baselines: e2e **455/455**, unit **865/865**, lint/tsc/build clean,
 dep-audit 0 runtime-reachable, print audit 0/0, s83 resweep ok:true,
 mobile nav verified on both hosts. Standing debt unchanged: Batch R +
 the documented deferrals.
+
+## Session-84 / Batch AK (Cycle 34) — the folder-tree integrity + the print-enumeration closure
+
+**Received state**: `b0d903b` (Batch AJ `f9eacd5` + the operator's
+session-log commit adding `docs/session_37.md` — both transcripts record
+the completed S83/BJ cycle; this is the next cycle). Workspace reset
+(26th), fresh clone, chromium-1243 re-provisioned, `.env` +
+`db/custom.db` + seed restored, production build green.
+
+**Baseline re-certified cold BEFORE any work**: lint ✓ tsc ✓ unit
+**865/865** ✓; cold e2e **455/455** (127+138+53+79+58, first-pass every
+chunk).
+
+**Evidence layers (all pre-change)**: the Mode-C audit of the Batch AJ
+diff (`4e070d4..f9eacd5`, delegated) — **0C/0H/0M/4L/5I**, all eight AJ
+claims verified; the s84 reference re-sweep re-tagged and run (ok:true —
+9/9 invariants both hosts, brand tables byte-matched, 18 captures); and
+agent-browser mobile-nav verification on BOTH hosts (reference 20 links /
+navigates / closes / its own 416 overflow; clone 20 links / navigates /
+closes / scrollWidth 390 — **no Tailwind v4 mobile-nav bug**).
+
+**The cycle's empirical headline (probed live before planning)**: the
+audit's L4 — the folder PATCH cycle hole — verified END-TO-END:
+`PATCH {parentId: <own id>}` answered **200** and persisted a
+self-referencing row; a two-step A→B→A cycle likewise; with the user
+inside the cycled folder, a folders refresh fed the cycle into the
+files-view breadcrumb `while` walk — **the renderer wedged permanently**
+(agent-browser `eval "1+1"` timed out, exit 124). One authenticated API
+call froze the tab. Probe rows deleted after the repro.
+
+**TDD execution** (plan written into the remediation plan BEFORE any
+source change; mid-cycle amendments recorded when discovered):
+
+- **AK1 (the headline)**: the four e2e pins written FIRST — verified RED
+  on the pre-fix build at their designed assertions (self-parent
+  200-with-self-reference-stored; the cycle's second PATCH 200 with the
+  cycle persisted). GREEN: the server-side folder-tree integrity guard
+  (self-parent → 400; the descendant-cycle walk — one userId-scoped
+  query, the ancestor chain walked in memory with a visited set that
+  also terminates on a pre-existing cycled/imported row set; the
+  bogus-parent 404 contract unchanged and now pinned — the audit's L3
+  coverage gap closed) + the client defense-in-depth (the breadcrumb walk
+  extracted to `src/lib/folder-tree.ts` with the visited-set guard —
+  EIGHT unit termination pins; MUTATION-PROVEN: the guard removed → the
+  test runner itself wedges, no verdict in 120 s). Resilience file 12/12.
+- **AK2**: the print-enumeration closure — the PT result circles + the
+  Math Solver remove chip gain `sf-print-exact`; the My Day gradient
+  block + the Flashcards deck swatch + the UserAvatar gain the inline
+  property. The honest mid-cycle discovery (the AK2a RED): the deck list
+  lives inside a print-hidden `<aside>` — its swatch never prints; AK2a
+  reframed to pin the REAL contract (the aside-hiding rule). Four pins,
+  three at the `printColorAdjust: "economy"` assertion on the pre-fix
+  build → all GREEN. Accessibility file 31/31.
+- **AK4**: the sentKeysPatch contract pinned at the unit seam — a
+  10-shape table, green-on-arrival BY DESIGN, MUTATION-PROVEN (the
+  AH8-class mutant failed 7/10 pins).
+- **AK3/AK5/AK6**: the cert-header census arithmetic corrected; the
+  "Prisma 6.11" comments re-labeled to the resolved runtime (6.19.3);
+  eslint-config-next aligned to ^16.4.2 via `bun add -D` (lint/tsc clean,
+  no rule churn).
+
+**Re-certification**: rebuild green; lint ✓ tsc ✓ unit **883/883**
+(865 + 8 folder-tree + 10 sentKeysPatch); full cold re-cert **463/463**
+(127+138+57+83+58; ONE chunk-4 skip-link flake — the documented S81
+late-hydration environmental class — chunk-4 cold re-run 83/83
+first-pass). The s84 resweep re-run on the final build: **ok:true**. The
+standing audits: security 0 (after the fresh-boot re-run — the first
+"limiter shape wrong" was the failed-restart stale-server artifact),
+print 0/0, focus clean (the dev-only NEXTJS-PORTAL artifact excepted),
+settings-roundtrip 0, connectivity 0, data-volume 0, ai-error 0 (fresh
+budget), ai-a11y 0. Mobile nav re-verified on the final build (20 links,
+navigates, closes, scrollWidth 390).
+
+**Operational lessons (recorded in AGENTS.md)**: two silent restart
+failures (kill-by-wrapper-PID leaves `next-server` serving; `bun
+server.js`'s bare command line defeats path-shaped greps) → the
+stale-server served replaced chunks → the fresh-login wedge-at-Splash
+red herring; the standing audits share the demo user's AI budget (the
+security audit's spam → the ai-error audit's 429-phantom findings —
+cleared on a fresh boot); the tool-result display eats `[m` sequences
+(`transition-[margin]` rendered as `transition-argin]` — the hex dump
+is the authority).
+
+**Docs chain**: README (badge 1346, counts 883/463, the Session-84 row),
+AGENTS/CLAUDE counts + the S84 lessons section, vitest.config.ts header,
+the remediation-plan header + Cycle-34 plan + amendments + execution
+record + DONE marker, this worklog, `docs/session_38.md`. Evidence:
+`s84-resweep` 18 captures + 8 AK-surface captures (`84-clone-ak-*.png`).
+`.env.example` verified current (no env surface changed this cycle).
+
+**Stage summary.** Batch AK DONE: the folder-tree integrity guard (the
+verified live self-DoS class closed at BOTH layers, 4 e2e pins + 8 unit
+pins + 2 mutation proofs), the print-enumeration closure (3 print-visible
+surfaces fixed + 2 print-hidden surfaces certified + the aside contract
+pinned), the sentKeysPatch contract pinned (10 shapes, mutation-proven),
+and the audit's hygiene findings (census arithmetic, comment accuracy,
+eslint-config alignment). Baselines: e2e **463/463**, unit **883/883**,
+lint/tsc/build clean, every standing audit green, s84 resweep ok:true,
+mobile nav verified on both hosts. Standing debt unchanged: Batch R, the
+study zombie, the ~27 hue consumers, I2's text token.

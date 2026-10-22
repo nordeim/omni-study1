@@ -64,7 +64,7 @@ export const PATCH = withUser(async (user, request) => {
     // because preferencesSchema carries NO create-time defaults — any
     // `.default()` added to it would materialize here as a sent key and
     // silently reset that column on every partial save. An empty data
-    // object is ACCEPTED by Prisma 6.11 as a no-op (verified), so a `{}`-
+    // object is ACCEPTED by the resolved Prisma runtime (6.19.3 at the S84 re-probe) as a no-op (verified), so a `{}`-
     // body PATCH answers 200 with the user unchanged.
 
     const updated = await db.user.update({

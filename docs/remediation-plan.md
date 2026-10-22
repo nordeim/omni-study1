@@ -1,9 +1,9 @@
 # Omni-Study1 — Remediation Plan & Execution Record
 
-> **Status: COMPLETE through Batch AJ (session-83).** Every batch below has
+> **Status: COMPLETE through Batch AK (session-84).** Every batch below has
 > been executed TDD-style (spec-red → fix → spec-green) and verified:
-> **865/865 Vitest unit**, **455/455 Playwright e2e** across the 5-chunk
-> cold map (127+138+53+79+58, 30 spec files censused exactly once; the
+> **883/883 Vitest unit**, **463/463 Playwright e2e** across the 5-chunk
+> cold map (127+138+57+83+58, 30 spec files censused exactly once; the
 > per-chunk count includes that chunk's auth setup), lint clean,
 > `tsc --noEmit` clean, production build green with the standalone asset
 > contract intact. This document is the durable record of what was broken,
@@ -2309,3 +2309,182 @@ dev overlay's portal intercepts drawer-bottom clicks (dev-only, but
 the sweeps live on the dev server — suppress it); a nested focusable
 is its own tab stop; print-color-adjust is per-SURFACE (fix at the
 fill-utility level).
+
+## Cycle-34 plan (Session-84 / Batch AK) — the folder-tree integrity + the print-enumeration closure cycle
+
+**Received state**: `b0d903b` (Batch AJ `f9eacd5` + the operator's
+session-log commit adding `docs/session_37.md`). Baseline re-certified
+cold BEFORE any work: lint ✓ tsc ✓ unit **865/865** ✓ build fresh; cold
+e2e **455/455** (127+138+53+79+58, first-pass every chunk; chromium-1243
+re-provisioned after the workspace reset). Evidence layers (all
+pre-change): the Mode-C audit of the Batch AJ diff (`4e070d4..f9eacd5`)
+— **0 Critical / 0 High / 0 Medium / 4 Low / 5 Info**, all eight AJ
+claims verified in source (several empirically); the s84 reference
+re-sweep (ok:true — 9/9 invariants both hosts, brand tables
+byte-matched, 18 captures); agent-browser mobile-nav on BOTH hosts
+(reference 20 links / navigates / closes / its own 416 overflow; clone
+20 links / navigates / closes / scrollWidth 390 — no Tailwind v4
+mobile-nav bug).
+
+**The cycle's empirical discovery (probed live before planning)**: the
+audit's L4 — the folder PATCH cycle hole — is a LIVE data-integrity +
+self-DoS defect, verified END-TO-END against the :3200 standalone:
+(1) `PATCH {parentId: <own id>}` answers **200** and persists a
+self-referencing row; (2) a two-step A→B→A cycle is likewise creatable
+(both PATCHes 200); (3) with the user INSIDE the cycled folder, any
+folders refresh (e.g., creating a subfolder) feeds the cycle into the
+files-view breadcrumb `while (cursor)` walk — the renderer wedges
+PERMANENTLY (agent-browser `eval "1+1"` times out, exit 124). One
+authenticated API call bricks the tab. (Probe rows deleted after the
+repro; the db is clean.)
+
+- **AK1 (HIGH — the audit's L4 + L3, the headline)**: the folder-tree
+  integrity guard, server-side + defense-in-depth.
+  - Server: `PATCH /api/files/folders/[id]` rejects `parentId === id`
+    AND descendant cycles — walk the candidate parent's ancestor chain
+    (visited-set bounded; the chain is per-user small) and reject if it
+    reaches the folder being moved. Error: `ValidationError` (the 400
+    class), message naming the constraint. The parent-existence check
+    and the 404 contract stay as-is.
+  - Client defense-in-depth: the breadcrumb walk moves to a pure seam
+    (`src/lib/folder-tree.ts` — `buildBreadcrumbChain`) with a
+    visited-set guard, so a PRE-EXISTING cycled row (a poisoned or
+    imported DB) can never wedge the tab; the view consumes the seam
+    (the repo convention: pure logic lives in `src/lib/*` with unit
+    tests).
+  - Pins (+4 e2e in resilience.spec.ts, extending the AJ1 family):
+    self-parent PATCH → 400 with the row unchanged (RED today: 200);
+    the A→B→A two-step cycle attempt → 400 with both rows unchanged
+    (RED today: the second PATCH is 200); a VALID re-parent into an
+    unrelated folder → 200 with parentId set + list intact; a bogus
+    parent → 404 (existing behavior, now pinned — the audit's L3).
+  - Unit pins (+2 in tests/folder-tree.test.ts): a linear chain
+    resolves root→leaf; a cycled row set resolves to a BOUNDED chain
+    (the visited set terminates the walk — the exact wedge class
+    proven live above, now impossible by construction).
+- **AK2 (LOW — the audit's L2, the S83 lesson-5 follow-through)**: the
+  print-enumeration closure — five residual white-text-on-fill surfaces
+  gain `print-color-adjust: exact` (the S12-C2 convention's own
+  enumeration completed): the Flashcards deck swatch (inline
+  `backgroundColor: deck.color` — the property goes inline in the same
+  style object), the Practice Tests result circles
+  (`bg-emerald-500`/`bg-red-500` — `sf-print-exact`), the My Day header
+  gradient block (inline gradient — inline property), the Math Solver
+  image-remove chip (`bg-slate-800` — `sf-print-exact`), and the
+  UserAvatar gradient (inline property; the avatar is sidebar/drawer-
+  resident and those are print-hidden, so the property is moot today
+  but future-proofs the convention at zero cost — no pin, documented
+  here). Pins: +4 e2e in the S12-C2 print block (accessibility.spec.ts)
+  — the four print-visible surfaces assert the computed
+  `printColorAdjust === "exact"` under print emulation (the AJ5 pins'
+  exact pattern). All four RED-able today.
+- **AK3 (trivial — the audit's L1)**: the cert-script census header's
+  arithmetic corrected (resilience went 7→8 with AJ1, not 8→9; the
+  real-spec decomposition is 443 + 7 = 450, not 444 + 6) — the
+  re-derivability doctrine applied to our own header.
+- **AK4 (LOW — the audit's I2)**: `sentKeysPatch` gets a direct unit
+  pin table (tests/sent-keys-patch.test.ts, ~10 shapes: the sent-key
+  intersection, the null-vs-undefined distinction, the empty object,
+  unknown-key dropping, the nullish transform) — the exported helper's
+  contract pinned at the unit seam instead of only via e2e
+  round-trips.
+- **AK5 (Info — the audit's I3)**: the three "verified against Prisma
+  6.11" comments re-labeled to the resolved runtime truth (the range
+  resolves 6.19.3 at probe time — the behavior re-verified on it).
+- **AK6 (Info — the audit's I4)**: `eslint-config-next` aligned with
+  the next bump via the package manager (`bun add -D
+  eslint-config-next@^16.4.2`), lint re-run green required; if the
+  newer config introduces rule churn beyond trivial fixes, revert and
+  document (dev-only coherence, never worth a gate fight).
+
+Considered, no action: I1 (the parser's static error message — no
+consumer asserts the detail; the S83 simplification stands) and I5
+(the AJ5 ancestor-walk assertions — harmless redundancy, inherited
+property reads are equivalent).
+
+Pin census: unit 865 → 877 (+2 folder-tree, +10 sentKeysPatch);
+e2e 455 → 463 (resilience 8→12 rides chunk 3: 53→57; accessibility
+79→83 rides chunk 4: 79→83). Expected post-cycle map:
+127+138+57+83+58 = 463.
+
+### Cycle-34 mid-cycle amendment (the AK2a discovery + the census correction)
+
+**The AK2a reframe.** The AK2a pin (the Flashcards deck swatch) went RED
+for an unexpected reason: the locator resolved but the element computed
+`hidden` under print emulation — the deck list lives inside an
+`<aside>`, and the S12 print design's `@media print { aside { display:
+none !important } }` rule hides it. The deck swatch NEVER PRINTS AT ALL
+— the same class as the sidebar avatar (print-hidden surface): the
+inline `printColorAdjust: "exact"` stays on the swatch as convention
+completeness, but there is no print-visible text to protect. AK2a is
+reframed to pin the REAL contract for that surface — the aside-hiding
+rule itself (the ancestor walk from the swatch asserts `display: none`
+under print media) — a genuine print-design pin, not a weakened one.
+The audit's L2 enumeration was source-level; the print-visibility
+correction is recorded here honestly: of the five residual surfaces,
+three print visibly (PT circles, My Day gradient, Math Solver chip —
+pinned on the exact convention), and two are print-hidden (deck
+swatch, avatar — property kept for completeness, hidden-ness pinned
+where a stable anchor exists).
+
+**The census correction.** The folder-tree seam landed with EIGHT unit
+pins (the planned two grew into the fuller termination table: linear,
+root-only, null root, missing root, self-cycle, mutual cycle, dangling
+parent, healthy-branch-into-cycle), and the sentKeysPatch table landed
+with TEN. Unit census: 865 → **883** (not the planned 877). e2e census
+unchanged from the plan: 455 → 463 (resilience 12 tests riding chunk 3:
+53 → 57; accessibility 31 riding chunk 4: 79 → 83; each chunk's count
+includes its auth-setup test).
+
+**Cycle-34 execution record (Session-84).** TDD throughout. AK1: the
+four e2e pins were written FIRST and verified RED on the pre-fix build
+at their designed assertions (self-parent 200 + parentId === own id
+stored; the A→B→A second PATCH 200 + cycle persisted — the exact
+wedge-class state), then GREEN under the guard (self-parent → 400 with
+the row unchanged; the cycle attempt → 400 with both rows unchanged;
+the valid re-parent and bogus-parent-404 branches pinned alongside —
+the audit's L3 coverage gap closed). The server guard: one
+userId-scoped findMany, the ancestor chain walked in memory with a
+visited set (terminates even on a pre-existing cycled row set); the
+self-parent rejection precedes the walk; the existence check became
+`parentById.has(...)` over the same rows (the 404 contract unchanged).
+The client defense-in-depth: the breadcrumb walk extracted to
+`src/lib/folder-tree.ts` (`buildBreadcrumbChain`) with the visited-set
+guard — unit-pinned with EIGHT termination cases, and MUTATION-PROVEN:
+with the guard condition removed, the test runner itself WEDGES (no
+verdict in 120 s — the infinite-loop class demonstrated at the unit
+seam, the same wedge the browser tab suffered); restored, 8/8 green.
+The full resilience file: 12/12 green on the fixed build.
+
+AK2: the four print pins written FIRST, verified RED (three at the
+`printColorAdjust: "economy"` assertion on the pre-fix build; AK2a at
+the unexpected print-hidden discovery — reframed per the amendment
+above). GREEN: `sf-print-exact` on the Practice Tests result circles
+and the Math Solver remove chip; inline `printColorAdjust: "exact"` on
+the My Day gradient block, the Flashcards deck swatch, and the avatar
+(convention completeness — both print-hidden surfaces). The
+accessibility file: 31/31 green.
+
+AK4: the sentKeysPatch table (10 shapes) green-on-arrival BY DESIGN
+(it documents the shipped helper) and MUTATION-PROVEN: the AH8-class
+mutant (the helper returns all parsed keys — a materialized default
+rides into the write) failed 7 of the 10 pins at their designed
+assertions; restored, 10/10 green.
+
+AK3: the cert header corrected (the S83 terms 8→9 and 444+6 replaced
+by 7→8 and 443+7=450, with the correction note inline). AK5: the five
+"Prisma 6.11" comments re-labeled to the resolved-runtime truth
+(6.19.3 at the S84 re-probe; the ^6.11.1 range). AK6:
+eslint-config-next aligned `^16.1.1` → `^16.4.2` via `bun add -D`
+(manifest + lockfile) — lint and tsc clean under the newer config (no
+rule churn, the feared gate fight did not materialize).
+
+**Batch AK: DONE.** Standing debt unchanged: Batch R (RSC structural
+perf — deferred on the S75 CWV evidence), the s80 audit's L1 (the study
+zombie), L4's ~27 AG-pinned-hue consumer sites (uniform re-theme, no
+observable diverges), and I2's dedicated text token. The S84 lessons are
+recorded in AGENTS.md (the kill-by-every-PID + port-verification
+discipline; the rebuild-invalidates-chunks wedge-at-Splash class; the
+print-enumeration must verify the surface PRINTS; the standing audits'
+shared AI budget — the 429-phantom-findings ordering class; the
+tool-rendered bracket-eating display artifact).

@@ -1,16 +1,19 @@
 #!/usr/bin/env bash
-# Session-83 cold e2e certification — the 5-chunk map, final post-Batch-AJ
-# (census: 30 spec files exactly once; the S83 additions ride in-place —
-# resilience 8→9 with the AJ1 folder field-preservation pin [rename preserves
-# parentId + empty PATCH no-op, the sentKeysPatch routing's guard] and
-# accessibility 73→79 with the AJ5 print-fill family [5 pins: the Calendar
-# segmented tab, the Timetable today badge, the Exams topic chips, the
-# Calculator History pill, the Settings theme tile] + the AJ6 SectionLink
-# focus-ring pin). Expected: 127 + 138 + 53 + 79 + 58 = 455 (each chunk's
-# count includes its auth setup; 450 real specs = the S82 444 + the six S83
-# pins). Per-chunk: fresh
+# Session-84 cold e2e certification — the 5-chunk map, final post-Batch-AK
+# (census: 30 spec files exactly once; the S84 additions ride in-place —
+# resilience 12 tests [the AJ1 folder pin + the AK1 guard family: self-parent
+# 400, A→B→A cycle 400, valid re-parent 200, bogus-parent 404] and
+# accessibility 83 [the AJ5 print family + AJ6 focus pin + the AK2 print-
+# enumeration closure: the Flashcards deck swatch, the Practice Tests result
+# circles, the My Day gradient block, the Math Solver remove chip]).
+# Expected: 127 + 138 + 57 + 83 + 58 = 463 (each chunk's count includes its
+# auth setup; 458 real specs = the S82 443 + the seven S83 pins + the eight
+# S84 pins). Per-chunk: fresh
 # db/e2e.db + stale-server kill (fresh in-memory limiter, register budget
 # stays <= 9/10 per chunk).
+# (S84/AK3 header correction, the audit's L1: the S83 header said
+# "resilience 8→9" and "444 + six S83 pins" — the empirical counts were
+# 7→8 and 443+7=450; corrected here so the census stays re-derivable.)
 set -uo pipefail
 cd "$(dirname "$0")/.."
 

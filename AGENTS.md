@@ -9,9 +9,9 @@ High-signal instructions for coding agents working in this repo. Everything here
 | `bun install` | Install deps (Bun ≥ 1.3) |
 | `bun run dev` | Dev server on :3000 (Turbopack), logs tee'd to `dev.log` |
 | `bun run lint` / `bun run typecheck` | ESLint / `tsc --noEmit` — both must be clean |
-| `bun run test` | Vitest unit layer (865 tests; `*.test.ts` only — never picks up e2e specs) |
+| `bun run test` | Vitest unit layer (883 tests; `*.test.ts` only — never picks up e2e specs) |
 | `bun run build` | Production build → `.next/standalone` (**required before e2e**) |
-| `bun run test:e2e` | Playwright vs the standalone build on :3100 with `db/e2e.db` (455 tests across the 5-chunk cold map — 127+138+53+79+58, 30 spec files; a single-process full run trips the register rate-limiter budget by design, the chunked map re-boots the server per chunk). NOTE (S45, the day-boundary lesson): the global setup re-seeds every run, but the seed's IDEMPOTENT UPSERTS do NOT refresh day-relative dates on existing rows — a scratch `db/e2e.db` that ages across a UTC midnight keeps its original day-relative dates (today's tasks, the +1-day exam badge, the due-in pills, the import round-trip dates each read one day stale → 4 deterministic failures in parity-session6/parity-session9/s23-import). Delete `db/e2e.db` when a run crosses a day boundary — the global setup re-creates it fresh with current dates. NOTE (S46, TWO more aged-scratch-db classes + a build-input one): (1) ALWAYS run e2e COLD — `rm -f db/e2e.db` before every full run: the s23-import round-trip posts a FIXED-id envelope, so a second consecutive run against the aged db reads `created: 0, updated: 1` instead of `created: 1, updated: 0` and fails — not just across midnights, across ANY re-run; (2) the s22 negative-spawn spec reads the BUNDLED `.env` — Next's standalone output COPIES the repo-root `.env` into `.next/standalone/.env` at build time, so a REAL AUTH_SECRET in the dev `.env` leaks into the bundle and the guard CORRECTLY boots (the spec times out waiting for the exit) — keep the repo-root `.env`'s AUTH_SECRET EMPTY (the `.env.example` dev posture: `AUTH_SECRET=""` — dev falls back to the local constant with the boot warning) when building for e2e |
+| `bun run test:e2e` | Playwright vs the standalone build on :3100 with `db/e2e.db` (463 tests across the 5-chunk cold map — 127+138+57+83+58, 30 spec files; a single-process full run trips the register rate-limiter budget by design, the chunked map re-boots the server per chunk). NOTE (S45, the day-boundary lesson): the global setup re-seeds every run, but the seed's IDEMPOTENT UPSERTS do NOT refresh day-relative dates on existing rows — a scratch `db/e2e.db` that ages across a UTC midnight keeps its original day-relative dates (today's tasks, the +1-day exam badge, the due-in pills, the import round-trip dates each read one day stale → 4 deterministic failures in parity-session6/parity-session9/s23-import). Delete `db/e2e.db` when a run crosses a day boundary — the global setup re-creates it fresh with current dates. NOTE (S46, TWO more aged-scratch-db classes + a build-input one): (1) ALWAYS run e2e COLD — `rm -f db/e2e.db` before every full run: the s23-import round-trip posts a FIXED-id envelope, so a second consecutive run against the aged db reads `created: 0, updated: 1` instead of `created: 1, updated: 0` and fails — not just across midnights, across ANY re-run; (2) the s22 negative-spawn spec reads the BUNDLED `.env` — Next's standalone output COPIES the repo-root `.env` into `.next/standalone/.env` at build time, so a REAL AUTH_SECRET in the dev `.env` leaks into the bundle and the guard CORRECTLY boots (the spec times out waiting for the exit) — keep the repo-root `.env`'s AUTH_SECRET EMPTY (the `.env.example` dev posture: `AUTH_SECRET=""` — dev falls back to the local constant with the boot warning) when building for e2e |
 | `node scripts/capture-studyflow.mjs` | Refresh all 31 `docs/screenshots/` captures from the dev server (24 light + 7 dark) |
 | `node scripts/dark-sweep.mjs` | Dark-mode contrast audit over all 20 views (flashbulb/unreadable detector). S27: sets dark mode through the settings API (the real lifecycle) and SELF-VERIFIES the precondition — fails loudly (exit 1, no findings) if the dark class is not applied; the applied mode rides the JSON envelope. Never force the class directly (the session-10 approach silently rotted after S11) |
 | `node scripts/accent-dark-sweep.mjs` | Accent × dark-mode audit (S38-extended): all 7 accents × 20 desktop views × 20 MOBILE views at 390×844 + the drawer per accent (FAIL <2.2, WARN <3.2 for accent text; the mobile records also carry scrollWidth — >390 is a finding). The S38 shape is unit-pinned anti-phantom: every view recorded EXPLICITLY on both surfaces (clean views carry empty detector arrays), the per-accent `applied` self-verified readings + `mode: "dark"` + `mobileViewport` ride the envelope, and the seam's ALL-ACCENTS + ALL-VIEWS + drawer-present guards make every silently-skipped dimension a LOUD shape-error (the pre-S38 mobile pass swept only 6 views — MOBILE_VIEWS — and the omission-means-clean recording could not distinguish "clean because measured" from "clean because never rendered") |
@@ -224,6 +224,47 @@ Hover-parity probing must run in Playwright, not a touch-emulating browser — v
    contract exists, enumerate every white-text-on-fill surface — the fill
    class utilities (`sf-selected-tint`) are the right fix point (one utility
    covers its every consumer).
+
+
+## Stale-server + print-enumeration lessons (S84, the Batch AK findings)
+
+1. **Kill a running server by EVERY matching PID — then verify the port is
+   actually free.** The dev server is TWO processes (`node …/next dev` +
+   `next-server`); killing the wrapper leaves the worker serving. The
+   :3200 standalone's command line is bare `bun server.js` — a path-shaped
+   grep (`\.next/standalone/server\.js`) never matches it. Two S84 restart
+   attempts failed this way (EADDRINUSE swallowed into a log file while the
+   STALE server kept answering health checks 200). Always: kill by PID,
+   `ss -tlnp | grep <port>` to confirm free, THEN start, and verify the
+   new PID's start time.
+2. **A rebuild invalidates a running standalone's chunks.** The running
+   server serves its loaded module graph, but the on-disk
+   `/_next/static/chunks/*` were replaced by `bun run build` — the served
+   HTML's chunk requests 500 (`net::ERR_ABORTED`), the shell wedges at
+   Splash ("This page couldn't load"), and a fresh login looks BROKEN on a
+   perfectly good build. Restart the standalone after EVERY rebuild (and
+   re-copy `.next/static` + `public` + `db` into `.next/standalone/`) —
+   the S9 stale-inode lesson's modern guise.
+3. **A print-contract enumeration must verify the surface PRINTS, not just
+   that it exists in source.** The Flashcards deck swatch (white initial
+   on `deck.color`) lives inside the deck-list `<aside>` — print-hidden by
+   the S12 design — so it never prints at all; same class as the sidebar
+   avatar. `print-color-adjust: exact` on such surfaces is convention
+   completeness only: pin the HIDING rule (the aside's `display:none`
+   under print media), not the fill contract.
+4. **Standing audits share the demo user's AI budget — order matters.**
+   The security audit's 22-request invalid-payload spam exhausts
+   `ai:<demo-user>` (20/15 min); the ai-error audit running right after
+   sees 429-instead-of-400 phantom findings ("limiter shape wrong",
+   "expected 400"). Restart the dev server (fresh in-memory limiter)
+   before re-running a budget-consuming audit — and treat any
+   limiter-shaped finding on a shared server as an ordering artifact
+   until reproduced on a fresh boot.
+5. **Tool-rendered output can eat bracket sequences.** `transition-[margin]`
+   displayed as `transition-argin]` through the whole tool-result pipeline
+   (`[m` parsed as an ANSI reset) — the source looked corrupted in every
+   grep/print view. The hex dump (`od -c` / python `.hex()`) is the
+   authority when a "garbage" class name contains `[m…`.
 
 
 ## Testing quirks

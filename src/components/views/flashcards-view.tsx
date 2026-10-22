@@ -446,7 +446,7 @@ export function FlashcardsView() {
                 >
                   <span
                     className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-white"
-                    style={{ backgroundColor: deck.color }}
+                    style={{ backgroundColor: deck.color, printColorAdjust: "exact" }}
                   >
                     <Layers className="size-5" strokeWidth={2} />
                   </span>

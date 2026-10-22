@@ -518,7 +518,7 @@ function QuestionRunner({
                   <span
                     aria-hidden
                     className={cn(
-                      "mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white",
+                      "sf-print-exact mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white",
                       ok ? "bg-emerald-500" : "bg-red-500",
                     )}
                   >

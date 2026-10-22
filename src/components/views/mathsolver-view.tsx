@@ -139,7 +139,7 @@ export function MathSolverView() {
                 type="button"
                 aria-label="Remove attached image"
                 onClick={() => setImage(null)}
-                className="absolute -right-2 -top-2 flex size-6 items-center justify-center rounded-full bg-slate-800 text-white shadow-md hover:bg-slate-700"
+                className="sf-print-exact absolute -right-2 -top-2 flex size-6 items-center justify-center rounded-full bg-slate-800 text-white shadow-md hover:bg-slate-700"
               >
                 <X className="size-3.5" strokeWidth={2} aria-hidden />
               </button>

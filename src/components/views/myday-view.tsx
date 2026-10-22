@@ -140,6 +140,7 @@ export function MyDayView() {
           style={{
             backgroundImage: "linear-gradient(to bottom right, #fbbf24, #f97316)",
             boxShadow: "0 10px 15px -3px rgb(245 158 11 / 0.3), 0 4px 6px -4px rgb(245 158 11 / 0.3)",
+            printColorAdjust: "exact",
           }}
         >
           <Sun className="size-7 text-white" strokeWidth={2} />

@@ -38,6 +38,10 @@ export function UserAvatar({ size = "sm", className }: UserAvatarProps) {
       style={{
         backgroundImage:
           "linear-gradient(to right, rgb(var(--sf-primary-avatar-from)), rgb(var(--sf-primary-avatar-to)))",
+        // S84/AK2: the S12-C2 convention on every white-text-on-fill
+        // container — the avatar's sidebar/drawer home is print-hidden
+        // today, so this is convention completeness, not a visible fix.
+        printColorAdjust: "exact",
       }}
     >
       {label}

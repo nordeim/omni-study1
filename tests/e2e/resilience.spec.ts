@@ -243,7 +243,7 @@ test.describe("files upload edge cases", () => {
   // preconditions minus the defaults). The pin guards the contract at the
   // LAST uncovered site: a folder rename (a partial PATCH that sends ONLY
   // the name) must never clear its parentId, and an empty PATCH must be a
-  // 200 no-op that changes nothing (verified against Prisma 6.11: an
+  // 200 no-op that changes nothing (verified against the resolved Prisma runtime (6.19.3 at the S84 re-probe; the ^6.11.1 range): an
   // empty data object is ACCEPTED as a no-op — updatedAt not bumped — so
   // the short-circuit and the raw call agree).
   test("AJ1: a folder rename preserves the parent and an empty PATCH is a no-op", async ({ page }) => {
@@ -310,5 +310,162 @@ test.describe("files upload edge cases", () => {
     expect(info.emptyNameUnchanged).toBe(true);
     expect(info.emptyParentPreserved).toBe(true);
     expect(info.listedParentPreserved).toBe(true);
+  });
+
+  test("AK1a: a folder cannot be re-parented into itself", async ({ page }) => {
+    await page.goto("/Files");
+    await expect(page.getByRole("heading", { name: "Files", exact: true })).toBeVisible();
+
+    const stamp = `resilience-AK1a-${Date.now()}`;
+    const info = await page.evaluate(async (stamp) => {
+      const mk = (name: string, parentId?: string) =>
+        fetch("/api/files/folders", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "same-origin",
+          body: JSON.stringify(parentId ? { name, parentId } : { name }),
+        });
+      const folder = await (await mk(`${stamp}-folder`)).json();
+      // Self-parenting: the folder becomes its own parent.
+      const self = await fetch(`/api/files/folders/${folder.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        credentials: "same-origin",
+        body: JSON.stringify({ parentId: folder.id }),
+      });
+      const selfBody = await self.json().catch(() => null);
+      const tree = await (await fetch("/api/files/folders", { credentials: "same-origin" })).json() as Array<{ id: string; parentId: string | null }>;
+      const listed = tree.find((r) => r.id === folder.id);
+      await fetch(`/api/files/folders/${folder.id}`, { method: "DELETE", credentials: "same-origin" });
+      return {
+        selfStatus: self.status,
+        selfParentUnchanged: listed?.parentId === null,
+        selfBodyHasError: typeof selfBody?.error === "string",
+      };
+    }, stamp);
+
+    // The guard: 400 + the row unchanged (RED pre-AK1: 200 + parentId === own id).
+    expect(info.selfStatus).toBe(400);
+    expect(info.selfParentUnchanged).toBe(true);
+    expect(info.selfBodyHasError).toBe(true);
+  });
+
+  test("AK1b: a two-step A→B→A cycle is rejected at the second step", async ({ page }) => {
+    await page.goto("/Files");
+    await expect(page.getByRole("heading", { name: "Files", exact: true })).toBeVisible();
+
+    const stamp = `resilience-AK1b-${Date.now()}`;
+    const info = await page.evaluate(async (stamp) => {
+      const mk = (name: string, parentId?: string) =>
+        fetch("/api/files/folders", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "same-origin",
+          body: JSON.stringify(parentId ? { name, parentId } : { name }),
+        });
+      const a = await (await mk(`${stamp}-a`)).json();
+      const b = await (await mk(`${stamp}-b`, a.id)).json();
+      // B lives inside A. Now move A under B — closing the A→B→A cycle.
+      const cycle = await fetch(`/api/files/folders/${a.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        credentials: "same-origin",
+        body: JSON.stringify({ parentId: b.id }),
+      });
+      await cycle.json().catch(() => null);
+      const tree = await (await fetch("/api/files/folders", { credentials: "same-origin" })).json() as Array<{ id: string; parentId: string | null }>;
+      const listedA = tree.find((r) => r.id === a.id);
+      const listedB = tree.find((r) => r.id === b.id);
+      await fetch(`/api/files/folders/${b.id}`, { method: "DELETE", credentials: "same-origin" });
+      await fetch(`/api/files/folders/${a.id}`, { method: "DELETE", credentials: "same-origin" });
+      return {
+        cycleStatus: cycle.status,
+        aParentUnchanged: listedA?.parentId === null,
+        bParentUnchanged: listedB?.parentId === a.id,
+      };
+    }, stamp);
+
+    // The guard: 400 + BOTH rows unchanged (RED pre-AK1: the second PATCH
+    // is 200 and the tree contains the cycle that wedges the Files view).
+    expect(info.cycleStatus).toBe(400);
+    expect(info.aParentUnchanged).toBe(true);
+    expect(info.bParentUnchanged).toBe(true);
+  });
+
+  test("AK1c: a valid re-parent into an unrelated folder succeeds", async ({ page }) => {
+    await page.goto("/Files");
+    await expect(page.getByRole("heading", { name: "Files", exact: true })).toBeVisible();
+
+    const stamp = `resilience-AK1c-${Date.now()}`;
+    const info = await page.evaluate(async (stamp) => {
+      const mk = (name: string) =>
+        fetch("/api/files/folders", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "same-origin",
+          body: JSON.stringify({ name }),
+        });
+      const target = await (await mk(`${stamp}-target`)).json();
+      const mover = await (await mk(`${stamp}-mover`)).json();
+      // The valid re-parent: mover (a root folder) moves into target (an
+      // unrelated root folder — no cycle, both exist, neither is itself).
+      const move = await fetch(`/api/files/folders/${mover.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        credentials: "same-origin",
+        body: JSON.stringify({ parentId: target.id }),
+      });
+      const moved = await move.json();
+      const tree = await (await fetch("/api/files/folders", { credentials: "same-origin" })).json() as Array<{ id: string; parentId: string | null }>;
+      const listed = tree.find((r) => r.id === mover.id);
+      await fetch(`/api/files/folders/${mover.id}`, { method: "DELETE", credentials: "same-origin" });
+      await fetch(`/api/files/folders/${target.id}`, { method: "DELETE", credentials: "same-origin" });
+      return {
+        moveStatus: move.status,
+        movedParentSet: moved.parentId === target.id,
+        listedParentSet: listed?.parentId === target.id,
+      };
+    }, stamp);
+
+    // The happy path the guard must NOT break.
+    expect(info.moveStatus).toBe(200);
+    expect(info.movedParentSet).toBe(true);
+    expect(info.listedParentSet).toBe(true);
+  });
+
+  test("AK1d: re-parenting into a nonexistent folder answers 404", async ({ page }) => {
+    await page.goto("/Files");
+    await expect(page.getByRole("heading", { name: "Files", exact: true })).toBeVisible();
+
+    const stamp = `resilience-AK1d-${Date.now()}`;
+    const info = await page.evaluate(async (stamp) => {
+      const folder = await (
+        await fetch("/api/files/folders", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "same-origin",
+          body: JSON.stringify({ name: `${stamp}-folder` }),
+        })
+      ).json();
+      const bogus = await fetch(`/api/files/folders/${folder.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        credentials: "same-origin",
+        body: JSON.stringify({ parentId: "nonexistent-parent-id" }),
+      });
+      await bogus.json().catch(() => null);
+      const tree = await (await fetch("/api/files/folders", { credentials: "same-origin" })).json() as Array<{ id: string; parentId: string | null }>;
+      const listed = tree.find((r) => r.id === folder.id);
+      await fetch(`/api/files/folders/${folder.id}`, { method: "DELETE", credentials: "same-origin" });
+      return {
+        bogusStatus: bogus.status,
+        parentUnchanged: listed?.parentId === null,
+      };
+    }, stamp);
+
+    // The existing 404 contract — pinned (the audit's L3: this branch had
+    // zero coverage before AK1).
+    expect(info.bogusStatus).toBe(404);
+    expect(info.parentUnchanged).toBe(true);
   });
 });

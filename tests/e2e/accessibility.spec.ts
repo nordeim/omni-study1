@@ -328,6 +328,78 @@ test.describe("S12-C2 · essential backgrounds print (print-color-adjust: exact)
     const adjust = await page.locator('main button[aria-pressed="true"]').first().evaluate((el) => getComputedStyle(el).printColorAdjust);
     expect(adjust).toBe("exact");
   });
+
+  // S84/AK2 (the s84 Mode-C audit's L2 — the S83 lesson-5 follow-through):
+  // the print-enumeration closure. Five MORE white-text-on-fill surfaces
+  // carry no print-color-adjust. The mid-cycle discovery (the AK2a RED):
+  // the Flashcards deck list lives inside an <aside> — print-hidden by the
+  // S12 print design — so its deck swatch never prints at all (the same
+  // class as the sidebar avatar: the inline property is convention
+  // completeness, not a visible fix). AK2a therefore pins the REAL print
+  // contract for that surface (the aside-hiding rule); the other three
+  // surfaces print visibly and pin the S12-C2 convention directly.
+  test("AK2a: the Flashcards deck list is print-hidden (the aside contract; its swatch never prints)", async ({ page }) => {
+    await gotoMode(page, "/Flashcards", "light");
+    await hydrated(page);
+    // The beforeEach already emulates print media — the deck-list aside is
+    // display:none, so its deck swatch (white initial on deck.color) cannot
+    // print invisible text because it cannot print at all. The inline
+    // printColorAdjust on the swatch stays as convention completeness for a
+    // future layout change. Walk UP from the swatch to its aside ancestor
+    // and pin the hiding rule itself.
+    const display = await page.locator("main span.h-10.w-10.text-white").first().evaluate((el) => {
+      let node: HTMLElement | SVGElement | null = el;
+      while (node && node !== document.body) {
+        if (node.tagName === "ASIDE") return getComputedStyle(node).display;
+        node = node.parentElement;
+      }
+      return "no-aside-ancestor";
+    });
+    expect(display).toBe("none");
+  });
+
+  test("AK2b: the Practice Tests result circles keep their green/red fills", async ({ page }) => {
+    await gotoMode(page, "/PracticeTests", "light");
+    await hydrated(page);
+    // Drive the real flow to the results screen: start the first test,
+    // walk to the last question, submit.
+    await page.getByRole("button", { name: "Start Test" }).first().click();
+    for (let guard = 0; guard < 20; guard++) {
+      const next = page.getByRole("button", { name: "Next", exact: true });
+      if (await next.count() === 0) break;
+      await next.click();
+    }
+    await page.getByRole("button", { name: "Submit test" }).click();
+    const circle = page.locator("main span.rounded-full.text-white").first();
+    await expect(circle).toBeVisible();
+    const adjust = await circle.evaluate((el) => getComputedStyle(el).printColorAdjust);
+    expect(adjust).toBe("exact");
+  });
+
+  test("AK2c: the My Day header gradient block keeps its amber fill (the white Sun prints readable)", async ({ page }) => {
+    await gotoMode(page, "/MyDay", "light");
+    await hydrated(page);
+    const adjust = await page.locator('[aria-label="My Day header block"]').evaluate((el) => getComputedStyle(el).printColorAdjust);
+    expect(adjust).toBe("exact");
+  });
+
+  test("AK2d: the Math Solver image-remove chip keeps its near-black fill", async ({ page }) => {
+    await gotoMode(page, "/MathSolver", "light");
+    await hydrated(page);
+    // Attach a real (tiny) image so the remove chip renders.
+    await page.locator('input[type="file"]').setInputFiles({
+      name: "ak2d-attach.png",
+      mimeType: "image/png",
+      buffer: Buffer.from(
+        "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==",
+        "base64",
+      ),
+    });
+    const chip = page.locator('button[aria-label="Remove attached image"]');
+    await expect(chip).toBeVisible();
+    const adjust = await chip.evaluate((el) => getComputedStyle(el).printColorAdjust);
+    expect(adjust).toBe("exact");
+  });
 });
 
 // S83/AJ6 (the s83 standing-suite layer's focus finding, A/B-verified on
