@@ -34,13 +34,13 @@ export type AccentToken = {
   softestAdjacent: string; // ADJACENT hue 50 — clock chip gradient END
   gradientTo: string; // ADJACENT hue 600 — brand chips + CTA end
   gradientToStrong: string; // ADJACENT hue 700 — CTA hover end (S5)
-  // S80 note (the s80 audit, I2): avatarFrom is a CROSS-CONSUMER token —
-  // the avatar gradient start (user-avatar, studygroups) AND the dark-mode
-  // clock-DATE text color (globals.css .sf-clock-date, S79/AF5). Retuning
-  // the 400 step for avatar aesthetics silently restyles the sidebar date
-  // on all 20 views; a dedicated text token is the deferred follow-up.
-  avatarFrom: string; // 400 — avatar gradient start + dark clock-date text
+  // S80 note (the s80 audit, I2) — CLOSED by S88/AO5: avatarFrom WAS a
+  // cross-consumer token (the avatar gradient start AND the dark clock-date
+  // text). The dedicated clockDateDark token now carries the text side; the
+  // two consumers can be retuned independently.
+  avatarFrom: string; // 400 — avatar gradient start
   avatarTo: string; // ADJACENT hue 500 — avatar gradient end + nav active stop 2
+  clockDateDark: string; // 400 — the dark clock-date text (dedicated, S88/AO5)
   emptyFrom: string; // 100 — empty-state block start
   emptyTo: string; // ADJACENT hue 100 — empty-state block end
 };
@@ -60,6 +60,7 @@ export const ACCENT_TOKENS: Record<Accent, AccentToken> = {
     gradientToStrong: "67 56 202", // indigo-700
     avatarFrom: "167 139 250", // violet-400
     avatarTo: "99 102 241", // indigo-500
+    clockDateDark: "167 139 250", // violet-400 — the dark clock-date text (S88/AO5)
     emptyFrom: "237 233 254", // violet-100
     emptyTo: "224 231 255", // indigo-100
   },
@@ -77,6 +78,7 @@ export const ACCENT_TOKENS: Record<Accent, AccentToken> = {
     gradientToStrong: "3 105 161", // sky-700
     avatarFrom: "96 165 250", // blue-400
     avatarTo: "14 165 233", // sky-500
+    clockDateDark: "96 165 250", // blue-400 (S88/AO5)
     emptyFrom: "219 234 254", // blue-100
     emptyTo: "224 242 254", // sky-100
   },
@@ -94,6 +96,7 @@ export const ACCENT_TOKENS: Record<Accent, AccentToken> = {
     gradientToStrong: "15 118 110", // teal-700
     avatarFrom: "52 211 153", // emerald-400
     avatarTo: "20 184 166", // teal-500
+    clockDateDark: "52 211 153", // emerald-400 (S88/AO5)
     emptyFrom: "209 250 229", // emerald-100
     emptyTo: "204 251 241", // teal-100
   },
@@ -111,6 +114,7 @@ export const ACCENT_TOKENS: Record<Accent, AccentToken> = {
     gradientToStrong: "194 65 12", // orange-700
     avatarFrom: "251 191 36", // amber-400
     avatarTo: "249 115 22", // orange-500
+    clockDateDark: "251 191 36", // amber-400 (S88/AO5)
     emptyFrom: "254 243 199", // amber-100
     emptyTo: "255 237 213", // orange-100
   },
@@ -128,6 +132,7 @@ export const ACCENT_TOKENS: Record<Accent, AccentToken> = {
     gradientToStrong: "190 18 60", // rose-700
     avatarFrom: "244 114 182", // pink-400
     avatarTo: "244 63 94", // rose-500
+    clockDateDark: "244 114 182", // pink-400 (S88/AO5)
     emptyFrom: "252 231 243", // pink-100
     emptyTo: "255 228 230", // rose-100
   },
@@ -145,6 +150,7 @@ export const ACCENT_TOKENS: Record<Accent, AccentToken> = {
     gradientToStrong: "194 65 12", // orange-700
     avatarFrom: "248 113 113", // red-400
     avatarTo: "249 115 22", // orange-500
+    clockDateDark: "248 113 113", // red-400 (S88/AO5)
     emptyFrom: "254 226 226", // red-100
     emptyTo: "255 237 213", // orange-100
   },
@@ -162,6 +168,7 @@ export const ACCENT_TOKENS: Record<Accent, AccentToken> = {
     gradientToStrong: "14 116 144", // cyan-700
     avatarFrom: "45 212 191", // teal-400
     avatarTo: "6 182 212", // cyan-500
+    clockDateDark: "45 212 191", // teal-400 (S88/AO5)
     emptyFrom: "204 251 241", // teal-100
     emptyTo: "207 250 254", // cyan-100
   },
@@ -202,6 +209,7 @@ export function accentCssVars(accent: Accent): Record<string, string> {
     "--sf-primary-gradient-to-strong": t.gradientToStrong,
     "--sf-primary-avatar-from": t.avatarFrom,
     "--sf-primary-avatar-to": t.avatarTo,
+    "--sf-primary-clock-date-dark": t.clockDateDark, // S88/AO5 — the dedicated dark clock-date text token
     "--sf-primary-empty-from": t.emptyFrom,
     "--sf-primary-empty-to": t.emptyTo,
   };
@@ -283,13 +291,13 @@ export const THEME_BOOT_SCRIPT = `
     // — the accent sweeps read dataset.accent as their mode proof.
     document.documentElement.dataset.accent = accent;
     var TOKENS = {
-      violet: ["primary","foreground","strong","strong-dark","deep","soft","soft-dark","softest","softest-adjacent","gradient-to","gradient-to-strong","avatar-from","avatar-to","empty-from","empty-to"],
-      blue: ["primary","foreground","strong","strong-dark","deep","soft","soft-dark","softest","softest-adjacent","gradient-to","gradient-to-strong","avatar-from","avatar-to","empty-from","empty-to"],
-      green: ["primary","foreground","strong","strong-dark","deep","soft","soft-dark","softest","softest-adjacent","gradient-to","gradient-to-strong","avatar-from","avatar-to","empty-from","empty-to"],
-      orange: ["primary","foreground","strong","strong-dark","deep","soft","soft-dark","softest","softest-adjacent","gradient-to","gradient-to-strong","avatar-from","avatar-to","empty-from","empty-to"],
-      pink: ["primary","foreground","strong","strong-dark","deep","soft","soft-dark","softest","softest-adjacent","gradient-to","gradient-to-strong","avatar-from","avatar-to","empty-from","empty-to"],
-      red: ["primary","foreground","strong","strong-dark","deep","soft","soft-dark","softest","softest-adjacent","gradient-to","gradient-to-strong","avatar-from","avatar-to","empty-from","empty-to"],
-      teal: ["primary","foreground","strong","strong-dark","deep","soft","soft-dark","softest","softest-adjacent","gradient-to","gradient-to-strong","avatar-from","avatar-to","empty-from","empty-to"]
+      violet: ["primary","foreground","strong","strong-dark","deep","soft","soft-dark","softest","softest-adjacent","gradient-to","gradient-to-strong","avatar-from","avatar-to","clock-date-dark","empty-from","empty-to"],
+      blue: ["primary","foreground","strong","strong-dark","deep","soft","soft-dark","softest","softest-adjacent","gradient-to","gradient-to-strong","avatar-from","avatar-to","clock-date-dark","empty-from","empty-to"],
+      green: ["primary","foreground","strong","strong-dark","deep","soft","soft-dark","softest","softest-adjacent","gradient-to","gradient-to-strong","avatar-from","avatar-to","clock-date-dark","empty-from","empty-to"],
+      orange: ["primary","foreground","strong","strong-dark","deep","soft","soft-dark","softest","softest-adjacent","gradient-to","gradient-to-strong","avatar-from","avatar-to","clock-date-dark","empty-from","empty-to"],
+      pink: ["primary","foreground","strong","strong-dark","deep","soft","soft-dark","softest","softest-adjacent","gradient-to","gradient-to-strong","avatar-from","avatar-to","clock-date-dark","empty-from","empty-to"],
+      red: ["primary","foreground","strong","strong-dark","deep","soft","soft-dark","softest","softest-adjacent","gradient-to","gradient-to-strong","avatar-from","avatar-to","clock-date-dark","empty-from","empty-to"],
+      teal: ["primary","foreground","strong","strong-dark","deep","soft","soft-dark","softest","softest-adjacent","gradient-to","gradient-to-strong","avatar-from","avatar-to","clock-date-dark","empty-from","empty-to"]
     };
     var VALUES = ${JSON.stringify(Object.fromEntries(ACCENTS.map((a) => [a, Object.values(ACCENT_TOKENS[a])])))};
     var st = document.documentElement.style;

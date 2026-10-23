@@ -9,9 +9,9 @@ High-signal instructions for coding agents working in this repo. Everything here
 | `bun install` | Install deps (Bun ≥ 1.3) |
 | `bun run dev` | Dev server on :3000 (Turbopack), logs tee'd to `dev.log` |
 | `bun run lint` / `bun run typecheck` | ESLint / `tsc --noEmit` — both must be clean |
-| `bun run test` | Vitest unit layer (907 tests; `*.test.ts` only — never picks up e2e specs) |
+| `bun run test` | Vitest unit layer (910 tests; `*.test.ts` only — never picks up e2e specs) |
 | `bun run build` | Production build → `.next/standalone` (**required before e2e**) |
-| `bun run test:e2e` | Playwright vs the standalone build on :3100 with `db/e2e.db` (468 tests across the 5-chunk cold map — 131+138+57+84+58, 30 spec files; a single-process full run trips the register rate-limiter budget by design, the chunked map re-boots the server per chunk). NOTE (S45, the day-boundary lesson): the global setup re-seeds every run, but the seed's IDEMPOTENT UPSERTS do NOT refresh day-relative dates on existing rows — a scratch `db/e2e.db` that ages across a UTC midnight keeps its original day-relative dates (today's tasks, the +1-day exam badge, the due-in pills, the import round-trip dates each read one day stale → 4 deterministic failures in parity-session6/parity-session9/s23-import). Delete `db/e2e.db` when a run crosses a day boundary — the global setup re-creates it fresh with current dates. NOTE (S46, TWO more aged-scratch-db classes + a build-input one): (1) ALWAYS run e2e COLD — `rm -f db/e2e.db` before every full run: the s23-import round-trip posts a FIXED-id envelope, so a second consecutive run against the aged db reads `created: 0, updated: 1` instead of `created: 1, updated: 0` and fails — not just across midnights, across ANY re-run; (2) the s22 negative-spawn spec reads the BUNDLED `.env` — Next's standalone output COPIES the repo-root `.env` into `.next/standalone/.env` at build time, so a REAL AUTH_SECRET in the dev `.env` leaks into the bundle and the guard CORRECTLY boots (the spec times out waiting for the exit) — keep the repo-root `.env`'s AUTH_SECRET EMPTY (the `.env.example` dev posture: `AUTH_SECRET=""` — dev falls back to the local constant with the boot warning) when building for e2e |
+| `bun run test:e2e` | Playwright vs the standalone build on :3100 with `db/e2e.db` (469 tests across the 5-chunk cold map — 131+139+57+84+58, 30 spec files; a single-process full run trips the register rate-limiter budget by design, the chunked map re-boots the server per chunk). NOTE (S45, the day-boundary lesson): the global setup re-seeds every run, but the seed's IDEMPOTENT UPSERTS do NOT refresh day-relative dates on existing rows — a scratch `db/e2e.db` that ages across a UTC midnight keeps its original day-relative dates (today's tasks, the +1-day exam badge, the due-in pills, the import round-trip dates each read one day stale → 4 deterministic failures in parity-session6/parity-session9/s23-import). Delete `db/e2e.db` when a run crosses a day boundary — the global setup re-creates it fresh with current dates. NOTE (S46, TWO more aged-scratch-db classes + a build-input one): (1) ALWAYS run e2e COLD — `rm -f db/e2e.db` before every full run: the s23-import round-trip posts a FIXED-id envelope, so a second consecutive run against the aged db reads `created: 0, updated: 1` instead of `created: 1, updated: 0` and fails — not just across midnights, across ANY re-run; (2) the s22 negative-spawn spec reads the BUNDLED `.env` — Next's standalone output COPIES the repo-root `.env` into `.next/standalone/.env` at build time, so a REAL AUTH_SECRET in the dev `.env` leaks into the bundle and the guard CORRECTLY boots (the spec times out waiting for the exit) — keep the repo-root `.env`'s AUTH_SECRET EMPTY (the `.env.example` dev posture: `AUTH_SECRET=""` — dev falls back to the local constant with the boot warning) when building for e2e |
 | `node scripts/capture-studyflow.mjs` | Refresh all 31 `docs/screenshots/` captures from the dev server (24 light + 7 dark) |
 | `node scripts/dark-sweep.mjs` | Dark-mode contrast audit over all 20 views (flashbulb/unreadable detector). S27: sets dark mode through the settings API (the real lifecycle) and SELF-VERIFIES the precondition — fails loudly (exit 1, no findings) if the dark class is not applied; the applied mode rides the JSON envelope. Never force the class directly (the session-10 approach silently rotted after S11) |
 | `node scripts/accent-dark-sweep.mjs` | Accent × dark-mode audit (S38-extended): all 7 accents × 20 desktop views × 20 MOBILE views at 390×844 + the drawer per accent (FAIL <2.2, WARN <3.2 for accent text; the mobile records also carry scrollWidth — >390 is a finding). The S38 shape is unit-pinned anti-phantom: every view recorded EXPLICITLY on both surfaces (clean views carry empty detector arrays), the per-accent `applied` self-verified readings + `mode: "dark"` + `mobileViewport` ride the envelope, and the seam's ALL-ACCENTS + ALL-VIEWS + drawer-present guards make every silently-skipped dimension a LOUD shape-error (the pre-S38 mobile pass swept only 6 views — MOBILE_VIEWS — and the omission-means-clean recording could not distinguish "clean because measured" from "clean because never rendered") |
@@ -370,6 +370,49 @@ Hover-parity probing must run in Playwright, not a touch-emulating browser — v
    keys, READ the key before interpreting the rendering (the S52
    shared-state contract applies across agent-browser sessions too),
    and restore the key after the probe.
+
+
+## Zombie-kill + noise-floor-budget lessons (S88, the Batch AO findings)
+
+1. **`npx next build` is NOT the repo's build command — the postbuild
+   static copy is load-bearing for e2e.** `bun run build` runs
+   `next build && cp -r .next/static .next/standalone/.next/ && cp -r
+   public .next/standalone/`; invoking `npx next build` directly skips
+   the copy, and the standalone server then boots GREEN (SSR HTML,
+   health 200) while every `/_next/static/chunks/*` answers 404 — the
+   client never hydrates, and e2e tests hang at hydration-waits
+   (45.1s timeouts, "element not found") with nothing pointing at the
+   missing assets. When a whole e2e family times out at once, curl one
+   static chunk BEFORE suspecting the source; and always build with the
+   package-manager script.
+2. **A performance budget sitting at the measurement's noise floor
+   flips verdicts run-to-run — the discriminator is a stash-A/B against
+   the RECEIVED tree, not a re-run-until-green.** The
+   cwv-volume-stress Tasks longTaskTotal budget (2000ms) measured
+   1978/2073 on the AN tree and 2250/2288/2098 on the AO tree — the
+   received tree breaches its OWN budget run-to-run, and no AO diff
+   touches the Tasks load path. Record the marginal class honestly (the
+   S82 precedent), keep the budget (never weaken a guardrail to make a
+   gate pass), and name the re-anchoring (more RUNS for a stabler
+   median, or a budget re-baseline) as future-cycle work.
+3. **The React-documented render-phase state adjustment is the
+   lint-compliant kill for latched-boolean zombies.** Three cycles
+   deferred the study-zombie fix because the obvious remedy is an
+   effect + setState (`react-hooks/set-state-in-effect` is a gate). The
+   documented alternative — setState DURING render of the same
+   component, guarded so the next render's state makes the condition
+   false — passes the repo's ESLint config verbatim (probe-first with a
+   scratch file before relying on it) and kills the zombie
+   structurally: the unlatch happens in the same render that observes
+   the precondition, so no later refresh can resurrect the session.
+4. **A cross-consumer token is closed by DEDUPLICATION at the seam, not
+   by careful consumers.** avatarFrom served the avatar gradient AND
+   the dark clock-date text; the fix adds the dedicated clockDateDark
+   token carrying the SAME value (computed colors byte-identical —
+   every existing pin stays green as the regression guard), updates the
+   count pin in place, and extends the boot script's TOKENS lists at
+   the SAME index (the VALUES `Object.values` insertion-order sync
+   contract). The two consumers can now be retuned independently.
 
 
 ## Testing quirks

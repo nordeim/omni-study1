@@ -13,7 +13,7 @@
 
 import type { ZodType } from "zod";
 
-import type { GroupMember } from "../group-members";
+import { normalizeMembers, type GroupMember } from "../group-members";
 import { db } from "../db";
 import {
   assignmentSchema,
@@ -186,20 +186,22 @@ function makeOwnedDelegate(config: OwnedConfig): EntityDelegate {
 // local twin that can silently drift from the client's shape.
 
 /** The API boundary carries members as an ARRAY; the column is a JSON
- *  string. Corrupt/absent JSON normalizes to [] (never throws to the view). */
-function membersFromRow(row: unknown): unknown {
+ *  string. Corrupt/absent JSON normalizes to [] (never throws to the view).
+ *  Exported for the S88/AO3 unit pins (the sentKeysPatch precedent — the
+ *  pure seam is directly pinnable; see tests/group-members.test.ts).
+ *
+ *  S88/AO3 — the server READ symmetry (the s88 audit's Info 1, the S87
+ *  lesson-4 question): the read now routes through the SAME normalizeMembers
+ *  the client seam applies — trim + blank-drop + shape validation. Pre-fix
+ *  this JSON.parsed the legacy column and returned the array VERBATIM, so
+ *  an API consumer reading a legacy pre-AM1 padded row saw padded values
+ *  until the row's first re-write; both boundaries of the boundary now
+ *  agree. The array-input tolerance (a non-string members value was wiped
+ *  to [] pre-fix) matches the client seam's alternate-boundary doctrine. */
+export function membersFromRow(row: unknown): unknown {
   if (typeof row !== "object" || row === null) return row;
   const record = row as { members?: unknown };
-  if (typeof record.members !== "string") {
-    record.members = [];
-    return record;
-  }
-  try {
-    const parsed: unknown = JSON.parse(record.members);
-    record.members = Array.isArray(parsed) ? parsed : [];
-  } catch {
-    record.members = [];
-  }
+  record.members = normalizeMembers(record.members);
   return record;
 }
 

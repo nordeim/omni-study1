@@ -254,6 +254,7 @@
   --sf-primary-gradient-to-strong: 67 56 202;
   --sf-primary-avatar-from: 167 139 250;
   --sf-primary-avatar-to: 99 102 241;
+  --sf-primary-clock-date-dark: 167 139 250; /* S88/AO5 — the dedicated dark clock-date text token (same 400-step value; the computed colors are byte-identical) */
   --sf-primary-empty-from: 237 233 254;
   --sf-primary-empty-to: 224 231 255;
 
@@ -567,10 +568,14 @@
      * --sf-primary-soft-dark = violet-950 → 1.78:1 on the dark chip
      * (unreadable on all 20 views). The theme system's own token comments
      * name strong/strongDark as the clock-date pair; the 400 step
-     * (--sf-primary-avatar-from) keeps light's one-step hierarchy (the
-     * time's 300 is one step brighter than the date's 400, mirroring
-     * light's 700/600) at ~5.8:1 on the dark chip — accent-aware. */
-    color: rgb(var(--sf-primary-avatar-from));
+     * keeps light's one-step hierarchy (the time's 300 is one step
+     * brighter than the date's 400, mirroring light's 700/600) at ~5.8:1
+     * on the dark chip — accent-aware. S88/AO5 (I2 closed): the text now
+     * reads its OWN dedicated token (--sf-primary-clock-date-dark, the
+     * same 400-step values) instead of borrowing the avatar gradient's
+     * start — retuning the avatar for aesthetics can no longer restyle
+     * the sidebar date on all 20 views. */
+    color: rgb(var(--sf-primary-clock-date-dark));
   }
 }
 

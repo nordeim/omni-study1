@@ -1,8 +1,12 @@
 import { defineConfig } from "vitest/config";
 import path from "node:path";
 
-// Unit-test layer for the pure domain seams — 25 files / 907 tests
-// (re-anchored S87: +the two AN4 read-side-trim pins in group-members
+// Unit-test layer for the pure domain seams — 25 files / 910 tests
+// (re-anchored S88: +the three AO3 read-symmetry pins in group-members
+// [a padded legacy row and a blank-padded legacy member normalize through
+// the exported membersFromRow seam — the API GET boundary no longer ships
+// legacy padded members verbatim; the s87 audit's Info 1, closed one layer
+// deeper]; re-anchored S87: +the two AN4 read-side-trim pins in group-members
 // [a padded member name/email returns trimmed through the seam — the
 // AM1 write-side symmetry; the s87 audit's I4]; re-anchored S86: +the five AM1 members-boundary pins in validation
 // [blank/padded member names and emails — the seam/server trim alignment;

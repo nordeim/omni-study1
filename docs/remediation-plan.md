@@ -3146,3 +3146,201 @@ S87 lessons are recorded in AGENTS.md (the summary-overclaim lesson;
 the same-batch hygiene-convention lesson; the whole-directory
 duplicate-frame census lesson; the read-side symmetry lesson; the
 agent-browser profile's persisted-localStorage lesson).
+
+## Cycle-38 plan (Session-88 / Batch AO) — the zombie kill + the token decoupling + the symmetry completion cycle
+
+The received state: Session-87/Batch AN at `db9acb4` + the operator's
+session-log commit `4402e4c` (adds only `docs/session_45.md`; src/
+untouched — verified by pull diff stat). Baselines re-certified BEFORE
+any work: lint ✓ tsc ✓ unit **907/907** ✓; full cold 5-chunk e2e
+**468/468** (131+138+57+84+58, first-pass every chunk, zero flakes,
+the S32 subshell recipe). The Mode-C audit of the Batch AN diff
+(`0493503..db9acb4`, delegated read-only): **0 Critical / 0 High /
+0 Medium / 2 Low / 5 Info** — all six AN claims verified; AN3's
+closure empirically exceeded (an independent whole-directory md5
+census over all 701 captures: **zero** duplicate pairs remain).
+
+The audit's two Lows + two of the four standing-debt items shape
+Batch AO (the TDD items RED-first; the hygiene items verified in
+place):
+
+- **AO1** (the audit's L1 — the AN2 class's fourth site): the worklog's
+  own AM **stage summary** (worklog.md:2609) still reads "5 unit + 1
+  e2e pins, both RED-first" — the exact overclaim AN2 corrected in
+  three OTHER records, 13 lines below the corrected AM1 bullet. Fix:
+  the accurate split phrasing ("3 RED unit pins + 2 green-by-design
+  regression guards + 1 RED e2e pin"), self-labeling S88/AO1.
+- **AO2** (the audit's L2 — the AM5/AN1 class in the file that never
+  got it): `parity-session7.spec.ts` has **zero** `finally` — its four
+  stamped-entity pins (AH8c task, AI1a/AI1b/AI1c deck+cards) clean up
+  on the happy path only, stranding rows on any RED iterate. Fix: the
+  AN1 pattern — everything after the stamped creation rides a
+  `try { … } finally { DELETE }` (the deck delete cascades its cards).
+  Cold-cert immune (db/e2e.db re-created per chunk); dev-iterate
+  hygiene only. Test-only change; the census is unchanged.
+- **AO3** (the audit's Info 1 — the AN4 symmetry stopped one layer
+  short): the API GET boundary still returns legacy padded members
+  verbatim (`entities.ts membersFromRow` JSON.parses and returns the
+  array untouched); only the client display seam normalizes. The S87
+  lesson-4 question ("which READ path still returns the old shape?")
+  names this exact path. Fix (TDD): export `membersFromRow` (the
+  sentKeysPatch precedent — the pure seam, unit-pinnable) and route it
+  through `normalizeMembers` — the SAME trim + blank-drop the client
+  applies. 2 RED-first unit pins in tests/group-members.test.ts (a
+  padded legacy row read; a blank-padded legacy member dropped).
+  e2e: the AM1 family covers the boundary behavior; the unit pins
+  carry the read proof (the three-tier doctrine).
+- **AO4** (the standing debt, s80's L1 — the study zombie, killed
+  structurally at last): mid-study external emptying of the deck's
+  cards makes the render guard fall through silently while `studying`
+  stays latched — a later refill auto-resurrects study mode the user
+  never re-entered. Deferred three cycles because the obvious fix is
+  an effect + setState (the repo's lint gate forbids
+  `react-hooks/set-state-in-effect`). The compliant fix verified
+  probe-first: the **React-documented render-phase state adjustment**
+  (setState during render of the same component, guarded to terminate
+  — an inline ESLint probe passes the repo's config verbatim): when
+  the deck under study is gone from the effective selection (the s78
+  F3 latch) or its cards are ALL gone (the s80 zombie), unlatch the
+  session at render. No effect; the two-pane render is byte-identical
+  (the guard already fell through). TDD: 1 RED-first e2e pin in
+  parity-session7.spec.ts — the deterministic repro drives the exact
+  external-deletion window the s80 auditor described: rate's own
+  refresh (PATCH ok → GET) carries the deletion between its two legs
+  via a `page.route` interception (the armed GET deletes the card,
+  then continues — the collection returns []; route released in the
+  finally per the S11/S13/S14 lessons); the deck-detail empty state
+  renders; then a UI Add Card refills the deck — pre-fix the latched
+  `studying` RESURRECTS study mode (the card grid never returns), the
+  RED discriminator; post-fix the card grid renders and study mode
+  never returns.
+- **AO5** (the standing debt, I2's dedicated-token half — the
+  cross-consumer coupling closed): `avatarFrom` serves the avatar
+  gradient AND the dark clock-date text (globals.css
+  `.sf-clock-date` → `--sf-primary-avatar-from`) — retuning the avatar
+  400-step for avatar aesthetics would silently restyle the sidebar
+  date on all 20 views. Fix: a dedicated `clockDateDark` token
+  (AccentToken + all 7 accents, carrying the SAME 400-step values —
+  computed colors byte-identical, every AF5 e2e pin stays green as a
+  regression guard), emitted as `--sf-primary-clock-date-dark`
+  (accentCssVars 15 → 16 entries; the S3-J count pin updated in place
+  with the justification), the `:root` default added, the boot
+  script's seven TOKENS name-lists extended at the SAME index
+  (`clock-date-dark`, matching the VALUES `Object.values` insertion
+  order — the boot-script sync contract), and `.sf-clock-date`'s dark
+  branch switched to the dedicated var. The S80 cross-consumer note
+  retires; the AF5 comments (globals.css + dark-mode.spec.ts) cite the
+  new token.
+- **AO6**: accepted-and-document — the fresh-user probe stranding
+  (the accepted S17 pattern; cold-cert re-creates the db), the frozen
+  historical capture scripts (already documented; re-running them
+  would resurrect the AN3-dropped duplicates — the freeze is the
+  record), AN6's residuals unchanged (the resweep credentials
+  convention, the capture-script sleeps).
+
+**Verification plan:** fast gates after each source change (lint →
+tsc → unit); the AO4 pin verified RED on the pre-change build BEFORE
+the fix, GREEN after; the AO3 pins RED-first at their designed
+assertions; the AO5 S3-J count assertion RED at 16 pre-token, GREEN
+post; rebuild + the parity-session7 family re-run; the final full
+cold re-cert on the remediated build (census: parity-session7 +1 →
+chunk 2 goes 138 → **139** → **469** total; unit 907 + 2 AO3 pins →
+**909**); the standing audits with the S84 ordering discipline
+(preflight, security single-run on a fresh boot, settings-roundtrip,
+connectivity, print 0/0, focus-order, data-volume, ai-error,
+ai-a11y); the s88 resweep (re-tagged from s87) on the final build;
+agent-browser mobile-nav verification on BOTH hosts (the S87 lesson 5:
+read the persisted sidebar keys BEFORE interpreting the rendering);
+the s88 evidence captures (the AO4 zombie surface + the AO5 clock
+chip in two accents, all distinct md5); docs chain (README badge +
+counts, AGENTS S88 lessons + counts, CLAUDE counts, vitest.config.ts
+header, the e2e-chunked-cert.sh census header, this plan's execution
+record, the worklog, docs/session_46.md); `.env.example` verified;
+conventional commit; SSH-wrapper push to main.
+
+### Cycle-38 execution record (Session-88 / Batch AO) — DONE
+
+Executed in the documented order (the plan above written BEFORE any
+source change; the pin-count drift in the plan's verification
+projection — "unit 907 + 2 AO3 pins → 909" — corrected here: the AO3
+family landed as 2 RED-first pins + 1 array-shape guard = 3 tests, so
+the unit baseline is **910/910**).
+
+- **AO4** (the headline, RED-first): the pin written and verified RED
+  on the pre-fix build at the designed discriminator — the refill never
+  returned the card grid because the latched `studying` resurrected
+  study mode ("1 / 1" restored on the refilled card, captured live in
+  the RED snapshot). GREEN after the render-phase structural kill in
+  flashcards-view.tsx (the React-documented render-phase state
+  adjustment — setState during render of the same component, guarded
+  to terminate; NO effect; an inline ESLint probe verified the repo's
+  gate accepts the pattern before relying on it). The mobile in-row
+  Study path re-checked (selectDeck + startStudy batch in one event —
+  no transient render risk).
+- **AO3** (RED-first at the designed assertions): `membersFromRow`
+  exported (the sentKeysPatch pure-seam precedent) and routed through
+  `normalizeMembers` in entities.ts; 2 RED pins (a padded legacy row
+  read returns trimmed; a blank-padded legacy member is dropped) + 1
+  array-shape guard. Unit layer green at 910/910.
+- **AO5**: the dedicated `clockDateDark` token (all 7 accents, the
+  SAME 400-step values) emitted as `--sf-primary-clock-date-dark`
+  (accentCssVars 15 → 16), the S3-J count pin RED at 16 pre-token /
+  GREEN post, the boot script's seven TOKENS lists extended at the
+  same index, the `:root` default + `.sf-clock-date`'s dark branch
+  switched in globals.css, the AF5 comments updated (globals.css +
+  dark-mode.spec.ts). Every AF5/AG11a pin green — computed colors
+  byte-identical through the accent path.
+- **AO2**: the four stamped pins in parity-session7.spec.ts (AH8c
+  task; AI1a/AI1b/AI1c decks) wrapped in try/finally — the stamped
+  rows delete on EVERY path (the deck delete cascades its cards).
+  Test-only; the cold-cert census rides the AO4 pin (+1).
+- **AO1**: the worklog's AM stage summary corrected to the accurate
+  pin split ("3 RED unit pins + 2 green-by-design regression guards +
+  1 RED e2e pin" — the AN2 class's fourth site), self-labeling
+  S88/AO1.
+- **AO6**: accepted-and-documented, no change.
+
+**Verification ledger:** fast gates after each source change (lint ✓
+tsc ✓ unit ✓ at every step; final: lint 0, tsc 0, unit **910/910**);
+production rebuild green (the S88 operational lesson recorded: a
+`npx next build` that bypassed the postbuild static-copy produced a
+standalone whose chunks 404'd — every e2e family hung at
+hydration-waits; diagnosed by curling one static chunk; the canonical
+`bun run build` + re-run verified the AO source was never broken —
+85/85 on the parity-session7 + theme-system + dark-mode family);
+full cold 5-chunk re-cert **469/469** (131+139+57+84+58, first-pass
+every chunk, zero flakes — chunk 2 carries the new AO4 pin at 139);
+the standing suite **34/35** (the one finding: cwv-volume-stress's
+Tasks longTaskTotal 2098–2288ms vs the 2000ms budget — the S82
+throttled-median noise-floor class, NOT a cycle regression: the
+stash-A/B against the received AN tree measured the SAME tree at 1978
+green / 2073 red, no AO diff touches the Tasks load path, and the
+db row counts were verified clean (no accumulation); recorded
+honestly, the budget unchanged, the re-anchoring named as
+future-cycle work); the s88 resweep (re-tagged from s87) **ok:true**
+(9/9 both hosts, brand tables byte-matched, probeCleanup ok, 18
+captures); agent-browser mobile-nav on BOTH hosts (reference 24
+labeled expanded / 20 icon-only collapsed with ZERO title/aria /
+navigates / closes / scrollWidth 416; clone 26 labeled [the superset
+skip-link] / 20 icon-only ALL with title+aria / navigates / closes /
+Escape / scrollWidth 390 — **no Tailwind v4 mobile-nav bug,
+re-confirmed for s88**; the persisted sidebar keys read BEFORE
+interpreting the rendering and restored after — the S87 lesson 5
+applied); the s88 evidence captures (4 frames — the AO4
+emptied/refilled pair + the AO5 clock chip in violet/teal dark — all
+md5-DISTINCT); `.env.example` verified current (no env surface
+changed this cycle).
+
+**Docs chain:** README (badge 1379, counts 910/469, the Session-88
+row), AGENTS/CLAUDE counts + the S88 lessons section (the
+standalone-static-copy lesson; the noise-floor-budget A/B
+discriminator; the render-phase zombie kill; the token
+deduplication), vitest.config.ts header (910), the
+e2e-chunked-cert.sh header (131+139+57+84+58=469), this execution
+record, the worklog, `docs/session_46.md`.
+
+**DONE** — Batch AO closed. New baselines: unit **910/910**, e2e
+**469/469**. Standing debt after AO: Batch R (RSC structural perf),
+the ~27 AG-pinned-hue consumers (L4, unchanged), the
+cwv-volume-stress budget re-anchoring (named this cycle — the S82
+noise-floor class, future-cycle candidate).

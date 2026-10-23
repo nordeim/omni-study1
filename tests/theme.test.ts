@@ -145,7 +145,13 @@ describe("accentCssVars", () => {
     // applyToDocument historically wrote only 6 of the tokens; the rest kept
     // the violet :root defaults, so non-violet accents left the clock violet.
     // S4-G extends the set with the gradient stops; S5 adds the gradient
-    // hover stop (15 vars total).
+    // hover stop; S88/AO5 adds the dedicated clock-date-dark text token
+    // (16 vars total — the I2 cross-consumer decoupling: avatarFrom served
+    // the avatar gradient AND the dark clock-date text; retuning the avatar
+    // 400-step would have silently restyled the sidebar date on all 20
+    // views. The dedicated token carries the SAME 400-step values, so every
+    // computed color is byte-identical — the AF5 e2e pins are the
+    // regression guards).
     for (const accent of ACCENTS) {
       const vars = accentCssVars(accent);
       const t = ACCENT_TOKENS[accent];
@@ -156,9 +162,11 @@ describe("accentCssVars", () => {
       expect(vars["--sf-primary-gradient-to-strong"]).toBe(t.gradientToStrong);
       expect(vars["--sf-primary-avatar-from"]).toBe(t.avatarFrom);
       expect(vars["--sf-primary-avatar-to"]).toBe(t.avatarTo);
+      expect(vars["--sf-primary-clock-date-dark"]).toBe(t.clockDateDark);
+      expect(vars["--sf-primary-clock-date-dark"]).toBe(t.avatarFrom); // the decoupling preserves the values
       expect(vars["--sf-primary-empty-from"]).toBe(t.emptyFrom);
       expect(vars["--sf-primary-empty-to"]).toBe(t.emptyTo);
-      expect(Object.keys(vars)).toHaveLength(15);
+      expect(Object.keys(vars)).toHaveLength(16);
     }
   });
 });

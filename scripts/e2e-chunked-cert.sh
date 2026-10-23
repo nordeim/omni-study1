@@ -1,5 +1,15 @@
 #!/usr/bin/env bash
-# Session-87 cold e2e certification — the 5-chunk map, final post-Batch-AN
+# Session-88 cold e2e certification — the 5-chunk map, final post-Batch-AO
+# (census 468 → 469: parity-session7 +1 [the S88/AO4 study-zombie pin: the
+# deterministic external-deletion window drives the exact s80 L1 — mid-study
+# the deck's cards empty through rate's own PATCH→GET refresh carrying a
+# deletion between its legs; the empty deck's guard fall-through renders;
+# a UI refill must NOT resurrect the latched study session — the pin was
+# RED on the pre-fix build at the designed discriminator (the card grid
+# never returns) and GREEN after the render-phase structural kill]. The
+# S87/AO2 wraps modify four stamped pins IN-PLACE (AH8c + AI1a/b/c — the
+# try/finally cleanup the AN1/AM5 convention established; dev-iterate
+# hygiene only, cold-cert immune). The S87 map beneath:)
 # (census UNCHANGED at 468: the S87/AN1 change modified the AM1 pin in-place
 # [the stamped-row cleanup — the id rides the evaluate's return, the finally
 # deletes it on the failing path; the AM5 convention applied to the pin AM5
@@ -15,9 +25,9 @@
 # 12 tests [the AJ1 folder pin + the AK1 guard family] and accessibility 84
 # [the AJ5 print family + AJ6 focus pin + the AK2 print-enumeration closure
 # + the AL2 chip]).
-# Expected: 131 + 138 + 57 + 84 + 58 = 468 (each chunk's count includes its
-# auth setup; 463 real specs = the S82 443 + the seven S83 pins + the eight
-# S84 pins + the four S85 pins + the one S86 pin). Per-chunk: fresh
+# Expected: 131 + 139 + 57 + 84 + 58 = 469 (each chunk's count includes its
+# auth setup; 464 real specs = the S82 443 + the seven S83 pins + the eight
+# S84 pins + the four S85 pins + the one S86 pin + the one S88 pin). Per-chunk: fresh
 # db/e2e.db + stale-server kill (fresh in-memory limiter, register budget
 # stays <= 9/10 per chunk).
 # (S84/AK3 header correction, the audit's L1: the S83 header said

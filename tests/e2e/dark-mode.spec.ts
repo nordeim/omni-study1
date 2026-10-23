@@ -306,9 +306,11 @@ test.describe("S78/AE3 · the dark-mode Quill placeholder", () => {
 // own half-broken family (its sidebar stays fully light-themed —
 // measured through its own Settings Theme→Dark), so the clone's full
 // dark theme remains the documented superset: the date moves to the
-// accent-aware 400 step (--sf-primary-avatar-from) — one step dimmer
-// than the time's 300, mirroring light's 700/600 hierarchy, ~5.8:1 on
-// the dark chip.
+// accent-aware 400 step — now its OWN dedicated token
+// (--sf-primary-clock-date-dark, S88/AO5 — the I2 decoupling; the
+// values are the same 400 step the avatar gradient start carries) —
+// one step dimmer than the time's 300, mirroring light's 700/600
+// hierarchy, ~5.8:1 on the dark chip.
 test.describe("S79/AF5 · the dark-mode clock date reads the 400 step", () => {
   test("the sidebar clock date computes violet-400 in dark (readable, accent-aware)", async ({ page }) => {
     await gotoDark(page, "/Dashboard");

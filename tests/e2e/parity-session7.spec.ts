@@ -1306,28 +1306,32 @@ test.describe("S81 · the partial-PATCH keeps what the caller did not send (AH8)
     expect(create.ok()).toBeTruthy();
     const task = (await create.json()) as { id: string; notes: string; priority: string };
 
-    // The {completed}-only PATCH must not reset the defaulted fields. The
-    // PATCH's own response IS the updated row (there is no GET item route —
-    // makeItemRoutes exports PATCH + DELETE only), so the response body
-    // directly proves what the update wrote.
-    const patch = await page.request.patch(`/api/tasks/${task.id}`, { data: { completed: true } });
-    expect(patch.ok()).toBeTruthy();
-    const body = (await patch.json()) as { notes: string; priority: string; completed: boolean };
-    expect(body.completed).toBe(true);
-    expect(body.notes).toBe("bring the textbook");
-    expect(body.priority).toBe("high");
+    // AN1-style cleanup (S88/AO2): the stamped row deletes on EVERY
+    // path, not just the happy one — a RED iterate strands no rows.
+    try {
+      // The {completed}-only PATCH must not reset the defaulted fields. The
+      // PATCH's own response IS the updated row (there is no GET item route —
+      // makeItemRoutes exports PATCH + DELETE only), so the response body
+      // directly proves what the update wrote.
+      const patch = await page.request.patch(`/api/tasks/${task.id}`, { data: { completed: true } });
+      expect(patch.ok()).toBeTruthy();
+      const body = (await patch.json()) as { notes: string; priority: string; completed: boolean };
+      expect(body.completed).toBe(true);
+      expect(body.notes).toBe("bring the textbook");
+      expect(body.priority).toBe("high");
 
-    // And the LIST round-trip confirms the stored state (not just the
-    // response echo).
-    const list = await page.request.get("/api/tasks");
-    expect(list.ok()).toBeTruthy();
-    const rows = (await list.json()) as Array<{ id: string; notes: string; priority: string }>;
-    const stored = rows.find((r) => r.id === task.id);
-    expect(stored?.notes).toBe("bring the textbook");
-    expect(stored?.priority).toBe("high");
-
-    // Cleanup: delete the row so the suite stays idempotent.
-    await page.request.delete(`/api/tasks/${task.id}`);
+      // And the LIST round-trip confirms the stored state (not just the
+      // response echo).
+      const list = await page.request.get("/api/tasks");
+      expect(list.ok()).toBeTruthy();
+      const rows = (await list.json()) as Array<{ id: string; notes: string; priority: string }>;
+      const stored = rows.find((r) => r.id === task.id);
+      expect(stored?.notes).toBe("bring the textbook");
+      expect(stored?.priority).toBe("high");
+    } finally {
+      // Cleanup: delete the row so the suite stays idempotent.
+      await page.request.delete(`/api/tasks/${task.id}`);
+    }
   });
 });
 
@@ -1361,26 +1365,30 @@ test.describe("S82 · the sixteenth delegate (the flashcard card partial-PATCH f
     const card = (await cardRes.json()) as { id: string; difficulty: string; mastered: boolean };
     expect(card.difficulty).toBe("hard");
 
-    // The study-mode "Correct" rating sends EXACTLY {mastered:true} — a
-    // partial PATCH that must not touch difficulty. Pre-fix: the delegate
-    // wrote the FULL parsed object and the materialized default reset the
-    // hard card to "medium". The PATCH response IS the updated row.
-    const patch = await page.request.patch(`/api/flashcards/cards/${card.id}`, { data: { mastered: true } });
-    expect(patch.ok()).toBeTruthy();
-    const body = (await patch.json()) as { difficulty: string; mastered: boolean };
-    expect(body.mastered).toBe(true);
-    expect(body.difficulty).toBe("hard");
+    // AN1-style cleanup (S88/AO2): the stamped deck (and its cascaded
+    // cards) deletes on EVERY path, not just the happy one.
+    try {
+      // The study-mode "Correct" rating sends EXACTLY {mastered:true} — a
+      // partial PATCH that must not touch difficulty. Pre-fix: the delegate
+      // wrote the FULL parsed object and the materialized default reset the
+      // hard card to "medium". The PATCH response IS the updated row.
+      const patch = await page.request.patch(`/api/flashcards/cards/${card.id}`, { data: { mastered: true } });
+      expect(patch.ok()).toBeTruthy();
+      const body = (await patch.json()) as { difficulty: string; mastered: boolean };
+      expect(body.mastered).toBe(true);
+      expect(body.difficulty).toBe("hard");
 
-    // LIST round-trip: the stored state, not the response echo.
-    const list = await page.request.get("/api/flashcards/cards");
-    expect(list.ok()).toBeTruthy();
-    const rows = (await list.json()) as Array<{ id: string; difficulty: string; mastered: boolean }>;
-    const stored = rows.find((r) => r.id === card.id);
-    expect(stored?.difficulty).toBe("hard");
-    expect(stored?.mastered).toBe(true);
-
-    // Cleanup: deleting the deck cascades its cards (onDelete: Cascade).
-    await page.request.delete(`/api/flashcards/decks/${deck.id}`);
+      // LIST round-trip: the stored state, not the response echo.
+      const list = await page.request.get("/api/flashcards/cards");
+      expect(list.ok()).toBeTruthy();
+      const rows = (await list.json()) as Array<{ id: string; difficulty: string; mastered: boolean }>;
+      const stored = rows.find((r) => r.id === card.id);
+      expect(stored?.difficulty).toBe("hard");
+      expect(stored?.mastered).toBe(true);
+    } finally {
+      // Cleanup: deleting the deck cascades its cards (onDelete: Cascade).
+      await page.request.delete(`/api/flashcards/decks/${deck.id}`);
+    }
   });
 
   test("AI1b: an API card-edit PATCH keeps the card's mastered flag (the edit-dialog payload)", async ({ page }) => {
@@ -1397,26 +1405,30 @@ test.describe("S82 · the sixteenth delegate (the flashcard card partial-PATCH f
     const card = (await cardRes.json()) as { id: string; difficulty: string; mastered: boolean };
     expect(card.mastered).toBe(true);
 
-    // The card-edit dialog sends {front, back, difficulty} — a partial
-    // PATCH that must not touch mastered. Pre-fix: the materialized
-    // default reset a mastered card to false on every edit save.
-    const patch = await page.request.patch(`/api/flashcards/cards/${card.id}`, {
-      data: { front: "AI1b front edited", back: "AI1b back", difficulty: "hard" },
-    });
-    expect(patch.ok()).toBeTruthy();
-    const body = (await patch.json()) as { difficulty: string; mastered: boolean; front: string };
-    expect(body.front).toBe("AI1b front edited");
-    expect(body.difficulty).toBe("hard");
-    expect(body.mastered).toBe(true);
+    // AN1-style cleanup (S88/AO2): the stamped deck (and its cascaded
+    // cards) deletes on EVERY path, not just the happy one.
+    try {
+      // The card-edit dialog sends {front, back, difficulty} — a partial
+      // PATCH that must not touch mastered. Pre-fix: the materialized
+      // default reset a mastered card to false on every edit save.
+      const patch = await page.request.patch(`/api/flashcards/cards/${card.id}`, {
+        data: { front: "AI1b front edited", back: "AI1b back", difficulty: "hard" },
+      });
+      expect(patch.ok()).toBeTruthy();
+      const body = (await patch.json()) as { difficulty: string; mastered: boolean; front: string };
+      expect(body.front).toBe("AI1b front edited");
+      expect(body.difficulty).toBe("hard");
+      expect(body.mastered).toBe(true);
 
-    const list = await page.request.get("/api/flashcards/cards");
-    expect(list.ok()).toBeTruthy();
-    const rows = (await list.json()) as Array<{ id: string; difficulty: string; mastered: boolean }>;
-    const stored = rows.find((r) => r.id === card.id);
-    expect(stored?.difficulty).toBe("hard");
-    expect(stored?.mastered).toBe(true);
-
-    await page.request.delete(`/api/flashcards/decks/${deck.id}`);
+      const list = await page.request.get("/api/flashcards/cards");
+      expect(list.ok()).toBeTruthy();
+      const rows = (await list.json()) as Array<{ id: string; difficulty: string; mastered: boolean }>;
+      const stored = rows.find((r) => r.id === card.id);
+      expect(stored?.difficulty).toBe("hard");
+      expect(stored?.mastered).toBe(true);
+    } finally {
+      await page.request.delete(`/api/flashcards/decks/${deck.id}`);
+    }
   });
 
   test("AI1c: study-mode Correct keeps a hard card hard end-to-end (the UI rating path)", async ({ page }) => {
@@ -1432,30 +1444,116 @@ test.describe("S82 · the sixteenth delegate (the flashcard card partial-PATCH f
     expect(cardRes.ok()).toBeTruthy();
     const card = (await cardRes.json()) as { id: string };
 
-    // UI: open Flashcards, select the dedicated deck, enter study mode.
-    await page.goto("/Flashcards");
-    await hydrated(page);
-    await page.locator('[aria-label="Deck rows"] > *', { hasText: `AI1c deck ${stamp}` }).first().click();
-    await page.locator('[aria-label="Deck detail"]').getByRole("button", { name: "Study" }).click();
-    const study = page.locator('[aria-label="Study mode"]');
-    await expect(study).toBeVisible();
+    // AN1-style cleanup (S88/AO2): the stamped deck (and its cascaded
+    // cards) deletes on EVERY path, not just the happy one.
+    try {
+      // UI: open Flashcards, select the dedicated deck, enter study mode.
+      await page.goto("/Flashcards");
+      await hydrated(page);
+      await page.locator('[aria-label="Deck rows"] > *', { hasText: `AI1c deck ${stamp}` }).first().click();
+      await page.locator('[aria-label="Deck detail"]').getByRole("button", { name: "Study" }).click();
+      const study = page.locator('[aria-label="Study mode"]');
+      await expect(study).toBeVisible();
 
-    // Rate Correct — the rating pair appears after the flip (AD11), so
-    // flip the card first; the UI then sends exactly {mastered:true}.
-    // Wait for the PATCH round-trip before reading the stored state.
-    await study.locator("[data-flip-card]").click();
-    const patchDone = page.waitForResponse(
-      (r) => r.url().includes(`/api/flashcards/cards/${card.id}`) && r.request().method() === "PATCH",
-    );
-    await study.getByRole("button", { name: "Correct" }).click();
-    const patch = await patchDone;
-    expect(patch.ok()).toBeTruthy();
+      // Rate Correct — the rating pair appears after the flip (AD11), so
+      // flip the card first; the UI then sends exactly {mastered:true}.
+      // Wait for the PATCH round-trip before reading the stored state.
+      await study.locator("[data-flip-card]").click();
+      const patchDone = page.waitForResponse(
+        (r) => r.url().includes(`/api/flashcards/cards/${card.id}`) && r.request().method() === "PATCH",
+      );
+      await study.getByRole("button", { name: "Correct" }).click();
+      const patch = await patchDone;
+      expect(patch.ok()).toBeTruthy();
 
-    // API read-back: the card is mastered AND still hard.
-    const patchBody = (await patch.json()) as { difficulty: string; mastered: boolean };
-    expect(patchBody.mastered).toBe(true);
-    expect(patchBody.difficulty).toBe("hard");
+      // API read-back: the card is mastered AND still hard.
+      const patchBody = (await patch.json()) as { difficulty: string; mastered: boolean };
+      expect(patchBody.mastered).toBe(true);
+      expect(patchBody.difficulty).toBe("hard");
+    } finally {
+      await page.request.delete(`/api/flashcards/decks/${deck.id}`);
+    }
+  });
+});
 
-    await page.request.delete(`/api/flashcards/decks/${deck.id}`);
+// S88 · Batch AO (session-88) — the study-zombie structural kill. The s80
+// audit's L1, deferred three cycles because the obvious fix is an effect +
+// setState (the repo's lint gate forbids react-hooks/set-state-in-effect):
+// mid-study external emptying of the deck's cards makes the render guard
+// fall through silently while `studying` stays latched — a later refill
+// auto-resurrects study mode the user never re-entered. The fix is the
+// React-documented render-phase state adjustment (setState during render of
+// the same component, guarded to terminate — no effect); this pin is its
+// RED-first proof, driving the exact external-deletion window the s80
+// auditor described.
+// ---------------------------------------------------------------------------
+
+test.describe("S88 · the study-zombie structural kill (Batch AO)", () => {
+  test("AO4: the session dies with the deck's last card — a refill never resurrects study", async ({ page }) => {
+    const stamp = Date.now();
+    const deckRes = await page.request.post("/api/flashcards/decks", {
+      data: { name: `AO4 deck ${stamp}` },
+    });
+    expect(deckRes.ok()).toBeTruthy();
+    const deck = (await deckRes.json()) as { id: string };
+    const cardRes = await page.request.post("/api/flashcards/cards", {
+      data: { deckId: deck.id, front: "AO4 front", back: "AO4 back", difficulty: "medium" },
+    });
+    expect(cardRes.ok()).toBeTruthy();
+    const card = (await cardRes.json()) as { id: string };
+
+    // AN1-style cleanup (S88/AO2): the stamped deck (and its cascaded cards)
+    // deletes on EVERY path; the route is released in the same finally (the
+    // S11/S13/S14 route-hygiene lessons — the handler never holds a route).
+    try {
+      await page.goto("/Flashcards");
+      await hydrated(page);
+      await page.locator('[aria-label="Deck rows"] > *', { hasText: `AO4 deck ${stamp}` }).first().click();
+      await page.locator('[aria-label="Deck detail"]').getByRole("button", { name: "Study" }).click();
+      const study = page.locator('[aria-label="Study mode"]');
+      await expect(study).toBeVisible();
+
+      // The deterministic external-deletion window: rate's refresh is
+      // PATCH → GET; the ARMED GET carries the deletion between its two
+      // legs (delete first, then continue — the collection returns []) so
+      // deckCards goes empty while the view stays mounted and studying.
+      let armed = true;
+      await page.route("**/api/flashcards/cards*", async (route) => {
+        if (armed && route.request().method() === "GET") {
+          armed = false;
+          await page.request.delete(`/api/flashcards/cards/${card.id}`);
+        }
+        await route.continue();
+      });
+
+      // Rate Correct on the (still-existing) card — the PATCH succeeds, and
+      // the refresh's GET lands AFTER the deletion.
+      await study.locator("[data-flip-card]").click();
+      await study.getByRole("button", { name: "Correct" }).click();
+
+      // The empty deck's two-pane state renders — the guard's own
+      // fall-through, identical pre/post-fix; this proves the store really
+      // went empty mid-study (the zombie precondition).
+      await expect(page.getByText("No cards in this deck")).toBeVisible();
+
+      // The refill: a UI Add Card while the view stays mounted. Pre-fix
+      // (the zombie): the latched `studying` resurrects study mode the user
+      // never re-entered — the card grid NEVER returns (the RED
+      // discriminator). Post-fix: the grid renders the new card and study
+      // mode stays gone.
+      await page.locator('[aria-label="Deck detail"]').getByRole("button", { name: "Add Card" }).first().click();
+      const dlg = page.getByRole("dialog");
+      await dlg.getByLabel("Front (question)").fill("AO4 refill front");
+      await dlg.getByLabel("Back (answer)").fill("AO4 refill back");
+      await dlg.getByRole("button", { name: "Add card" }).click();
+
+      const grid = page.locator('[aria-label="Card grid"]');
+      await expect(grid).toBeVisible();
+      await expect(grid).toContainText("AO4 refill front");
+      await expect(study).not.toBeVisible();
+    } finally {
+      await page.unroute("**/api/flashcards/cards*").catch(() => {});
+      await page.request.delete(`/api/flashcards/decks/${deck.id}`);
+    }
   });
 });
