@@ -411,7 +411,11 @@ test.describe("S12-C2 · essential backgrounds print (print-color-adjust: exact)
   // (The group-list aside is print-hidden by the S12 design, so the
   // selection click runs under screen media — the events/timetable/calendar
   // pin's pattern — before the print assertion.)
-  test("AL1: the Study Groups member avatar chip keeps its gradient fill", async ({ page }) => {
+  // AM3 (the s86 audit's I2): re-titled from "AL1:" — the title meant the
+  // s85 AUDIT's L1 finding, but the batch numbering calls this workstream
+  // AL2 (AL1 is the members resurrection); two meanings of "AL1" in one
+  // commit made the pin unfindable by its batch tag.
+  test("AL2: the Study Groups member avatar chip keeps its gradient fill", async ({ page }) => {
     await page.emulateMedia({ media: "screen" });
     await gotoMode(page, "/StudyGroups", "light");
     await hydrated(page);

@@ -1,9 +1,9 @@
 # Omni-Study1 — Remediation Plan & Execution Record
 
-> **Status: COMPLETE through Batch AL (session-85).** Every batch below has
+> **Status: COMPLETE through Batch AM (session-86).** Every batch below has
 > been executed TDD-style (spec-red → fix → spec-green) and verified:
-> **900/900 Vitest unit**, **467/467 Playwright e2e** across the 5-chunk
-> cold map (130+138+57+84+58, 30 spec files censused exactly once; the
+> **905/905 Vitest unit**, **468/468 Playwright e2e** across the 5-chunk
+> cold map (131+138+57+84+58, 30 spec files censused exactly once; the
 > per-chunk count includes that chunk's auth setup), lint clean,
 > `tsc --noEmit` clean, production build green with the standalone asset
 > contract intact. This document is the durable record of what was broken,
@@ -2651,8 +2651,11 @@ array shape item-by-item, tolerates the legacy JSON-string shape,
 malformed items drop never throw; 7 unit pins), the store's
 `StudyGroupRow.members` re-typed to `GroupMember[]` (the lying type
 corrected at the source of truth), and the view's `parseMembers` wired
-to the seam (all five consumer sites fixed through the one seam — the
-row count, the detail list, addMember, removeMember, the edit dialog).
+to the seam (all five consumer FLOWS fixed through the one seam — the
+row count, the detail list, addMember, removeMember, the edit dialog;
+S86/AM3 correction: the count is SIX call sites — the 435 empty-state
+conditional is the sixth — coverage itself was complete, the record's
+enumeration undercounted by one).
 The AL1 pin family green on the fixed build; the full
 parity-session8 + accessibility + resilience files 100/100.
 
@@ -2692,8 +2695,13 @@ precisely closed; restored, 12/12 green.
 deleted before the context closes; the envelope carries `probeCleanup`
 — verified `ok` on the final-build re-run). The I1 duplicate-frame
 class recorded here (future capture scripts drive an interaction or
-drop the duplicate frame; this cycle's capture script does not
-duplicate frames).
+drop the duplicate frame). S86/AM2 correction: that last clause was
+FALSE for this cycle's own script — `85-clone-al-studygroups-row.png`
+was byte-identical to `85-clone-al-studygroups-members.png` (zero
+interaction between the two captures; the s86 audit's L1). The
+redundant frame is dropped in Batch AM; the s86 capture script drives
+an interaction between its Study Groups frames — the exemplar this
+note demanded.
 
 **Re-certification**: rebuild green; lint ✓ tsc ✓ unit **900/900**
 (883 + 7 group-members + 8 wouldCreateCycle + 2 value-source); full
@@ -2718,3 +2726,213 @@ observable diverges), and I2's dedicated text token. The S85 lessons
 are recorded in AGENTS.md (the lying client type as the seam that knew;
 the presence-failure discovery signal; the agent-browser viewport
 persistence + the geometry-probe button-identity caveat).
+
+---
+
+## Cycle-36 plan (Session-86 / Batch AM) — the boundary-alignment + evidence-hygiene cycle
+
+**Received state**: `f725f28` (Batch AL `16f15d7` + the operator's
+session-log commit adding `docs/session_41.md`). Baseline re-certified
+cold BEFORE any work: lint ✓ tsc ✓ unit **900/900**; e2e **467/467**
+(130+138+57+84+58, first-pass every chunk, zero flakes). The s86
+resweep: **ok:true** (9/9 both hosts, brand tables byte-matched,
+probeCleanup ok — AL5 holding live). agent-browser mobile-nav on BOTH
+hosts: reference 24 labeled links expanded / 20 icon-only collapsed (no
+accessible names — the reference's own S52 contract) / navigates /
+closes / scrollWidth 416 (its own overflow); clone 26 labeled links
+expanded (the skip-link superset) / 20 icon-only collapsed ALL carrying
+`title` + `aria-label` / navigates / closes / scrollWidth 390 — **no
+Tailwind v4 mobile-nav bug, re-confirmed**.
+
+**The Mode-C audit of the Batch AL diff** (subagent, read-only):
+**0 Critical / 0 High / 0 Medium / 2 Low / 5 Info** — all five AL claims
+verified (the auditor re-ran the unit layer green, 900/900). The
+findings give Batch AM its shape:
+
+- **L1** — the s85 evidence pair `85-clone-al-studygroups-members.png`
+  / `85-clone-al-studygroups-row.png` is BYTE-IDENTICAL (md5 match) —
+  the capture script took two frames with zero interaction between
+  them, while the AL record claims "this cycle's capture script does
+  not duplicate frames."
+- **L2** — the members seam is stricter than the server schema:
+  `normalizeMembers` drops blank-after-trim names
+  (`!name.trim() → []`), but `studyGroupSchema.members[].name` is
+  length-based (`z.string().min(1)` ACCEPTS `" "`). A direct-API POST
+  with `{name: " ", email: "a@b.c"}` persists; the client seam drops
+  the member on read (invisible); the NEXT addMember/removeMember/
+  edit-save writes back the normalized array — **permanently deleting
+  the row**. A narrow silent-data-loss edge of the exact class AL1
+  closed (UI writes trim first — only direct-API writes can create
+  the row).
+- **I1** — "all five consumer sites" undercounts: there are SIX
+  `parseMembers` call sites (86, 215, 229, 313, 401, + the 435
+  empty-state conditional). Coverage itself complete — the count in
+  the record is off by one.
+- **I2** — the AL2 print pin's title reads "AL1: the Study Groups
+  member avatar chip…" (the s85 AUDIT's L1) — colliding with the
+  batch's own AL numbering (AL1 = the members resurrection).
+- **I3** — `GroupMember` duplicated: the local type in
+  `entities.ts:183` vs the exported interface in
+  `group-members.ts:15` (identical shape).
+- **I4** — AL1c's `waitForTimeout(800)` sleep-sync (flake surface)
+  and the stamped-row cleanup DELETEs on the happy path only (no
+  try/finally).
+- **I5** — (a) `void probeEmail;` unused-var suppression in the s85
+  resweep; (b) the PATCH route's two-pass folder scan
+  (`chain.some(...)` then `wouldCreateCycle` re-scans — negligible);
+  (c) the hardcoded reference-account password in the resweep scripts
+  (the s67+ standing convention, nothing credential-bearing logged).
+
+### The AM workstream (TDD; plan written BEFORE any source change)
+
+- **AM1 (headline, from L2)** — the members boundary alignment, fixed
+  at the SERVER schema: `studyGroupSchema.members[].name` →
+  `z.string().trim().min(1).max(100)` and `.email` →
+  `z.string().trim().email()`. Zod applies `.trim()` BEFORE the
+  subsequent checks, so `" "` trims to `""` → REJECTED (400), and
+  `"  Ari  "` is stored trimmed — the padded-name display nit fixed
+  at the source for every new write. The client seam stays verbatim
+  (defense-in-depth for legacy/corrupt rows); the divergence class is
+  closed because the server no longer persists what the seam would
+  drop. The UI path already trims (`addMember` uses
+  `memberName.trim()`) — no UI change. Pins FIRST (RED):
+  unit — blank name rejected / padded name parsed trimmed / padded
+  email parsed trimmed / valid-name + blank-email regression guards
+  (5 pins extending `tests/validation.test.ts`'s studyGroupSchema
+  block); e2e — one pin in `parity-session8.spec.ts`: a direct-API
+  POST with a blank member name answers **400** (RED now: 201) and
+  the group is not created. Each pin discriminates a single-token
+  removal (the trim elided → the blank/padded pins fail) — the pins
+  are their own mutation proof.
+- **AM2 (from L1)** — the duplicate evidence frame: drop the
+  byte-identical `85-clone-al-studygroups-row.png` (the redundant
+  copy; the members capture carries the identical bytes) and correct
+  the AL record's "does not duplicate frames" sentence to the truth.
+  The s86 capture script (written this cycle) drives an interaction
+  between its Study Groups frames — the exemplar the I1 class
+  demanded.
+- **AM3 (from I1 + I2)** — the record/pin accuracy: the AL record's
+  "all five consumer sites" corrected to six (the 435 empty-state
+  conditional enumerated); the accessibility pin re-titled
+  "AL2: the Study Groups member avatar chip keeps its gradient fill"
+  (matching its batch numbering).
+- **AM4 (from I3)** — the `GroupMember` type dedup:
+  `entities.ts` imports `import type { GroupMember } from
+  "@/lib/group-members"` and drops its local twin (tsc verifies the
+  shape identity; the seam module is pure/client-safe).
+- **AM5 (from I4)** — the AL1 pin hygiene: AL1c's
+  `waitForTimeout(800)` replaced by awaiting the "Study group
+  updated" toast (the documented success signal), and the three AL1
+  pins' stamped-row cleanup wrapped in try/finally (a failed
+  assertion mid-pin no longer strands the row in a dev iterate run —
+  the cold cert's per-chunk `rm -f db/e2e.db` already bounds the
+  certified runs).
+- **AM6 (from I5b + I5c — ACCEPTED, documented)** — the PATCH route's
+  two-pass scan: O(n) twice on a ≤50-node folder tree per PATCH,
+  negligible; a verdict-enum seam refactor would add API surface for
+  no observable win — accepted as-is. The resweep scripts' embedded
+  reference credentials: the s67+ standing convention (the scripts
+  are operator-local tooling, never committed to logs; nothing
+  credential-bearing reaches `console.log`) — recorded, unchanged.
+  I5a (`void probeEmail`) fixed in the s86 re-tag (the suppression
+  dropped, not carried forward).
+
+**Projected census**: unit 900 + 5 (AM1) = **905**; e2e 467 + 1
+(AM1's API pin rides chunk 1) = **468** (131+138+57+84+58).
+
+**Standing debt** (unchanged, the documented deferrals): Batch R (RSC
+structural perf — the S75 CWV evidence), the s80 audit's L1 (the study
+zombie), L4's ~27 AG-pinned-hue consumers, I2's dedicated text token.
+
+### Cycle-36 execution record (Session-86 / Batch AM)
+
+**AM1** (the headline): the pins written FIRST and verified RED at
+their designed assertions — the unit family (3 RED: blank-name
+rejected / padded-name parsed trimmed / padded-email parsed trimmed;
+2 regression guards green pre-fix) and the e2e API pin (RED at
+`expect(res.status).toBe(400)` — received 201, the blank name
+persisted). TWO mid-cycle pin corrections recorded honestly: (1) the
+first blank-name unit pin was GREEN for the wrong reason — its
+`"a@b.c"` email fails zod4's `.email()` (1-char TLDs are invalid), so
+the parse failed on the EMAIL, not the blank name; the pin's email
+corrected to `member@example.com` so the blank name is the only
+possible failure cause (the S82 tautology lesson's sibling — recorded
+as the S86 lesson 2); (2) the e2e pin's relative-URL fetch inside
+`page.evaluate` needs a loaded page (`about:blank` cannot resolve
+`/api/study-groups`) — a `goto("/StudyGroups") + hydrated(page)`
+preface added (recorded as the S86 lesson 4). GREEN: the schema fix
+(`z.string().trim().min(1).max(100)` + `z.string().trim().email()` —
+trim runs BEFORE the checks) with the rationale commented at the
+schema site; the seam's header comment updated to document the
+alignment (the drop below is defense-in-depth for legacy/corrupt rows
+only). The RED runs themselves are the mutation proof: the unfixed
+schema IS the trim-elided mutant, and each pin discriminates exactly
+one elision.
+
+**AM2**: the byte-identical `85-clone-al-studygroups-row.png` dropped;
+the AL record's false "does not duplicate frames" clause corrected in
+place with the S86/AM2 note. The s86 capture script
+(`scripts/capture-s86-evidence.mjs`) drives a REAL interaction (a
+group switch) between its consecutive Study Groups frames — all three
+new captures distinct md5 (verified: b1eb…/acd0…/b093…), the exemplar
+the I1 class demanded.
+
+**AM3**: the AL record's "all five consumer sites" corrected to
+five FLOWS / SIX call sites (the 435 empty-state conditional
+enumerated); the print pin re-titled `AL2: the Study Groups member
+avatar chip keeps its gradient fill` (from its colliding "AL1:"
+title) with the retitle rationale commented at the site.
+
+**AM4**: `entities.ts` now imports `import type { GroupMember } from
+"../group-members"` — the local twin dropped, one type for both sides
+of the boundary (tsc verifies the shape identity; the seam module is
+pure/client-safe).
+
+**AM5**: AL1c's `waitForTimeout(800)` replaced by
+`await expect(page.getByText("Study group updated")).toBeVisible()`
+(the save's own success signal); the AL1b/AL1c stamped-row cleanups
+wrapped in try/finally. The full family re-verified green (5/5 with
+the auth setup).
+
+**AM6**: accepted-and-documented (the PATCH route's two-pass scan —
+O(n) twice on a ≤50-node tree, negligible; the resweep scripts'
+embedded reference credentials — the s67+ standing convention).
+I5a (`void probeEmail`) fixed in the s86 re-tag (not carried
+forward).
+
+**Re-certification**: rebuild green; lint ✓ tsc ✓ unit **905/905**
+(900 + 5 AM1 pins); full cold re-cert **468/468**
+(131+138+57+84+58, first-pass every chunk — zero flakes). The s86
+resweep re-run earlier on the same AL-state build: ok:true
+(probeCleanup ok); the AM evidence captures on the final AM build
+(3 surfaces, all distinct). The standing audits: preflight GREEN;
+security 0 findings on a fresh-boot single re-run (the first
+finding — "AI-route limiter shape wrong, cutoffAt=1" — was the
+documented S84 ordering artifact: this session ran the audit
+back-to-back while diagnosing the reaped dev server; kill-by-PID +
+fresh boot + single re-run cleared it exactly per the playbook);
+settings-roundtrip 0; connectivity 0; print 0/0 (light + dark);
+focus-order ok; data-volume 0 findings (300/200/250 stress rows
+inserted + cleaned); ai-error 0 findings (10 nonGaps, fresh AI
+budget); ai-a11y 0 findings (4 nonGaps). Mobile nav verified on
+BOTH hosts pre-change (the reference drawer: 24 labeled links
+expanded, 20 icon-only collapsed via `sidebarOpen:false`, navigates,
+closes, scrollWidth 416; the clone: 26 labeled links, icon-only with
+`title`+`aria-label` via `sf-sidebar-collapsed`, navigates, closes,
+scrollWidth 390) — **no Tailwind v4 mobile-nav bug, re-confirmed**.
+
+**Operational note**: the S32 daemon recipe re-learned the hard way —
+the bare `setsid nohup … &` spawn form (no subshell) died within a
+call or two (the cold cert 12 minutes in, the :3200 standalone twice,
+the dev server mid-audit); the recipe's subshell form
+`( setsid cmd </dev/null >log 2>&1 & )` is load-bearing (the
+intermediate exits while the tool shell lives so the daemon reparents
+to PID 1). Recorded as the S86 lesson 3 in AGENTS.md.
+
+**Batch AM: DONE.** Standing debt unchanged: Batch R (RSC structural
+perf — deferred on the S75 CWV evidence), the s80 audit's L1 (the
+study zombie), L4's ~27 AG-pinned-hue consumer sites (uniform
+re-theme, no observable diverges), and I2's dedicated text token. The
+S86 lessons are recorded in AGENTS.md (the boundary-alignment lesson;
+the wrong-reason-green pin lesson; the daemon spawn-form lesson; the
+relative-URL-fetch lesson).

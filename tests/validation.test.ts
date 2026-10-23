@@ -257,6 +257,69 @@ describe("studyGroupSchema", () => {
       }).success,
     ).toBe(false);
   });
+
+  // AM1 (the s86 audit's L2): the server schema must agree with the
+  // client seam's blank-after-trim drop — a blank member name passes
+  // length-based min(1) and persists, the seam drops it on read, and
+  // the next member write permanently deletes the row. Trim runs BEFORE
+  // the checks, so blanks are rejected and padded values are stored
+  // trimmed (the boundary both sides now share).
+  it("AM1: rejects a blank member name (the seam/server alignment)", () => {
+    // The email must be unimpeachable (zod4 rejects 1-char TLDs like
+    // a@b.c) so the pin discriminates ONLY the blank name — a pin that
+    // fails for the wrong reason verifies nothing (the S82 lesson).
+    expect(
+      studyGroupSchema.safeParse({
+        name: "Crew",
+        members: [{ name: "   ", email: "member@example.com" }],
+      }).success,
+    ).toBe(false);
+  });
+
+  it("AM1: trims a padded member name before persisting", () => {
+    const parsed = studyGroupSchema.safeParse({
+      name: "Crew",
+      members: [{ name: "  Ari  ", email: "ari@example.com" }],
+    });
+    expect(parsed.success).toBe(true);
+    if (parsed.success) {
+      expect(parsed.data.members[0]?.name).toBe("Ari");
+    }
+  });
+
+  it("AM1: trims a padded member email before validating", () => {
+    const parsed = studyGroupSchema.safeParse({
+      name: "Crew",
+      members: [{ name: "Ari", email: "  ari@example.com " }],
+    });
+    expect(parsed.success).toBe(true);
+    if (parsed.success) {
+      expect(parsed.data.members[0]?.email).toBe("ari@example.com");
+    }
+  });
+
+  it("AM1: the valid baseline is unchanged (regression guard)", () => {
+    const parsed = studyGroupSchema.safeParse({
+      name: "Crew",
+      members: [{ name: "Ari", email: "ari@example.com" }],
+    });
+    expect(parsed.success).toBe(true);
+    if (parsed.success) {
+      expect(parsed.data.members[0]).toEqual({
+        name: "Ari",
+        email: "ari@example.com",
+      });
+    }
+  });
+
+  it("AM1: a blank member email stays rejected (regression guard)", () => {
+    expect(
+      studyGroupSchema.safeParse({
+        name: "Crew",
+        members: [{ name: "Ari", email: "   " }],
+      }).success,
+    ).toBe(false);
+  });
 });
 
 describe("preferencesSchema", () => {

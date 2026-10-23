@@ -521,26 +521,32 @@ test.describe("S85/AL1 · Study Group members render + survive mutation", () => 
     }, stamp);
     expect(info.status).toBe(201);
 
-    await page.goto("/StudyGroups");
-    await hydrated(page);
-    await page.getByRole("button", { name: new RegExp(`${stamp}-crew`) }).first().click();
-    const detail = page.locator('[aria-label="Study group detail pane"]');
-    await expect(detail.getByText("Ari", { exact: true })).toBeVisible();
-    await expect(detail.getByText("Sam", { exact: true })).toBeVisible();
+    try {
+      await page.goto("/StudyGroups");
+      await hydrated(page);
+      await page.getByRole("button", { name: new RegExp(`${stamp}-crew`) }).first().click();
+      const detail = page.locator('[aria-label="Study group detail pane"]');
+      await expect(detail.getByText("Ari", { exact: true })).toBeVisible();
+      await expect(detail.getByText("Sam", { exact: true })).toBeVisible();
 
-    // Add a third member through the REAL form.
-    await page.locator("#member-name").fill("Pia");
-    await page.locator("#member-email").fill("pia@example.com");
-    await page.getByRole("button", { name: "Add", exact: true }).click();
-    // The refetched list must carry ALL THREE (RED pre-fix: the wipe).
-    await expect(detail.getByText("Pia", { exact: true })).toBeVisible();
-    await expect(detail.getByText("Ari", { exact: true })).toBeVisible();
-    await expect(detail.getByText("Sam", { exact: true })).toBeVisible();
-    await expect(page.getByRole("button", { name: new RegExp(`${stamp}-crew`) }).first()).toContainText("3 members");
-
-    await page.evaluate(async (id) => {
-      await fetch(`/api/study-groups/${id}`, { method: "DELETE", credentials: "same-origin" });
-    }, info.id);
+      // Add a third member through the REAL form.
+      await page.locator("#member-name").fill("Pia");
+      await page.locator("#member-email").fill("pia@example.com");
+      await page.getByRole("button", { name: "Add", exact: true }).click();
+      // The refetched list must carry ALL THREE (RED pre-fix: the wipe).
+      await expect(detail.getByText("Pia", { exact: true })).toBeVisible();
+      await expect(detail.getByText("Ari", { exact: true })).toBeVisible();
+      await expect(detail.getByText("Sam", { exact: true })).toBeVisible();
+      await expect(page.getByRole("button", { name: new RegExp(`${stamp}-crew`) }).first()).toContainText("3 members");
+    } finally {
+      // AM5 (the s86 audit's I4): the stamped-row cleanup runs even when an
+      // assertion fails mid-pin — a stranded row only ever pollutes a dev
+      // iterate run (the cold cert re-creates db/e2e.db per chunk), but the
+      // hygiene is free.
+      await page.evaluate(async (id) => {
+        await fetch(`/api/study-groups/${id}`, { method: "DELETE", credentials: "same-origin" });
+      }, info.id);
+    }
   });
 
   test("AL1c: an edit-dialog save preserves the members", async ({ page }) => {
@@ -564,28 +570,68 @@ test.describe("S85/AL1 · Study Group members render + survive mutation", () => 
     }, stamp);
     expect(info.status).toBe(201);
 
+    try {
+      await page.goto("/StudyGroups");
+      await hydrated(page);
+      await page.getByRole("button", { name: new RegExp(`${stamp}-crew`) }).first().click();
+      // Open the edit dialog, rename, save.
+      await page.getByRole("button", { name: "Edit", exact: true }).click();
+      await page.locator("#group-name").fill(`${stamp}-renamed`);
+      await page.getByRole("button", { name: "Save changes" }).click();
+      // AM5 (the s86 audit's I4): await the SAVE's own success signal — the
+      // documented toast — instead of a sleep-sync (the flake surface).
+      await expect(page.getByText("Study group updated")).toBeVisible();
+
+      // The saved group still renders BOTH members (RED pre-fix: the save
+      // payload carried members: [] — the wipe).
+      await page.goto("/StudyGroups");
+      await hydrated(page);
+      await page.getByRole("button", { name: new RegExp(`${stamp}-renamed`) }).first().click();
+      const detail = page.locator('[aria-label="Study group detail pane"]');
+      await expect(detail.getByText("Ari", { exact: true })).toBeVisible();
+      await expect(detail.getByText("Sam", { exact: true })).toBeVisible();
+      await expect(page.getByRole("button", { name: new RegExp(`${stamp}-renamed`) }).first()).toContainText("2 members");
+    } finally {
+      // AM5: the cleanup always runs (see AL1b).
+      await page.evaluate(async (id) => {
+        await fetch(`/api/study-groups/${id}`, { method: "DELETE", credentials: "same-origin" });
+      }, info.id);
+    }
+  });
+});
+
+// S86/AM1 (the s86 audit's L2): the server schema and the client seam must
+// agree on blank-after-trim member names. Pre-fix, the length-based
+// min(1) ACCEPTED "   " at the API while normalizeMembers dropped it on
+// read — a direct-API write persisted an invisible member whose row the
+// next member write (addMember/removeMember/edit-save) permanently
+// deleted. The trimmed boundary rejects the write at the source.
+test.describe("S86/AM1 · the members boundary alignment", () => {
+  test("AM1: a blank member name is rejected at the API boundary", async ({ page }) => {
+    // The fetch below rides the page's own origin (relative URL) — a page
+    // must be loaded first (about:blank cannot resolve it).
     await page.goto("/StudyGroups");
     await hydrated(page);
-    await page.getByRole("button", { name: new RegExp(`${stamp}-crew`) }).first().click();
-    // Open the edit dialog, rename, save.
-    await page.getByRole("button", { name: "Edit", exact: true }).click();
-    await page.locator("#group-name").fill(`${stamp}-renamed`);
-    await page.getByRole("button", { name: "Save changes" }).click();
-    await page.waitForTimeout(800);
-
-    // The saved group still renders BOTH members (RED pre-fix: the save
-    // payload carried members: [] — the wipe).
+    const stamp = `s86-AM1-${Date.now()}`;
+    const res = await page.evaluate(async (stamp) => {
+      const r = await fetch("/api/study-groups", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "same-origin",
+        body: JSON.stringify({
+          name: `${stamp}-crew`,
+          members: [{ name: "   ", email: "member@example.com" }],
+        }),
+      });
+      return { status: r.status };
+    }, stamp);
+    // RED pre-fix: 201 — the blank name passed the length-based check and
+    // persisted (the silent-deletion edge the audit flagged).
+    expect(res.status).toBe(400);
+    // The group must not exist (the write rejected at the boundary).
     await page.goto("/StudyGroups");
     await hydrated(page);
-    await page.getByRole("button", { name: new RegExp(`${stamp}-renamed`) }).first().click();
-    const detail = page.locator('[aria-label="Study group detail pane"]');
-    await expect(detail.getByText("Ari", { exact: true })).toBeVisible();
-    await expect(detail.getByText("Sam", { exact: true })).toBeVisible();
-    await expect(page.getByRole("button", { name: new RegExp(`${stamp}-renamed`) }).first()).toContainText("2 members");
-
-    await page.evaluate(async (id) => {
-      await fetch(`/api/study-groups/${id}`, { method: "DELETE", credentials: "same-origin" });
-    }, info.id);
+    await expect(page.getByRole("button", { name: new RegExp(`${stamp}-crew`) })).toHaveCount(0);
   });
 });
 

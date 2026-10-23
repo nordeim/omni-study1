@@ -267,8 +267,13 @@ export const studyGroupSchema = z.object({
   members: z
     .array(
       z.object({
-        name: z.string().min(1).max(100),
-        email: z.string().email(),
+        // AM1 (the s86 audit's L2): trim BEFORE the checks — a blank name
+        // must be REJECTED here, not persisted for the client seam to drop
+        // on read (the silent next-write deletion edge), and padded values
+        // are stored trimmed. This keeps the server boundary in agreement
+        // with normalizeMembers' blank-after-trim drop.
+        name: z.string().trim().min(1).max(100),
+        email: z.string().trim().email(),
       }),
     )
     .max(50),

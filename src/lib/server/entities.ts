@@ -13,6 +13,7 @@
 
 import type { ZodType } from "zod";
 
+import type { GroupMember } from "../group-members";
 import { db } from "../db";
 import {
   assignmentSchema,
@@ -180,7 +181,9 @@ function makeOwnedDelegate(config: OwnedConfig): EntityDelegate {
 
 // ---- the members JSON column (study-groups) ----------------------------------------
 
-type GroupMember = { name: string; email: string };
+// GroupMember is the seam's exported interface (src/lib/group-members.ts) —
+// AM4 (the s86 audit's I3): one type for both sides of the boundary, not a
+// local twin that can silently drift from the client's shape.
 
 /** The API boundary carries members as an ARRAY; the column is a JSON
  *  string. Corrupt/absent JSON normalizes to [] (never throws to the view). */

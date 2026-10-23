@@ -1,15 +1,18 @@
 #!/usr/bin/env bash
-# Session-85 cold e2e certification — the 5-chunk map, final post-Batch-AL
-# (census: 30 spec files exactly once; the S85 additions ride in-place —
+# Session-86 cold e2e certification — the 5-chunk map, final post-Batch-AM
+# (census: 30 spec files exactly once; the S86 addition rides in-place —
+# parity-session8 +1 [the AM1 members-boundary API pin: a blank member
+# name is rejected at the API — the seam/server trim alignment, the s86
+# audit's L2]; the S85 additions beneath —
 # parity-session8 +3 [the AL1 members family: seeded members render,
 # add-member preserves, edit-save preserves] and accessibility +1 [the AL2
 # Study Groups member avatar chip print pin]; the S84 map beneath: resilience
 # 12 tests [the AJ1 folder pin + the AK1 guard family] and accessibility 84
 # [the AJ5 print family + AJ6 focus pin + the AK2 print-enumeration closure
 # + the AL2 chip]).
-# Expected: 130 + 138 + 57 + 84 + 58 = 467 (each chunk's count includes its
-# auth setup; 462 real specs = the S82 443 + the seven S83 pins + the eight
-# S84 pins + the four S85 pins). Per-chunk: fresh
+# Expected: 131 + 138 + 57 + 84 + 58 = 468 (each chunk's count includes its
+# auth setup; 463 real specs = the S82 443 + the seven S83 pins + the eight
+# S84 pins + the four S85 pins + the one S86 pin). Per-chunk: fresh
 # db/e2e.db + stale-server kill (fresh in-memory limiter, register budget
 # stays <= 9/10 per chunk).
 # (S84/AK3 header correction, the audit's L1: the S83 header said

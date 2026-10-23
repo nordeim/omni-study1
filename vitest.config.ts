@@ -1,8 +1,10 @@
 import { defineConfig } from "vitest/config";
 import path from "node:path";
 
-// Unit-test layer for the pure domain seams — 25 files / 900 tests
-// (re-anchored S85: +group-members [the S85/AL1 members seam — the API
+// Unit-test layer for the pure domain seams — 25 files / 905 tests
+// (re-anchored S86: +the five AM1 members-boundary pins in validation
+// [blank/padded member names and emails — the seam/server trim alignment;
+// the s86 audit's L2]; re-anchored S85: +group-members [the S85/AL1 members seam — the API
 // ships an ARRAY; the pre-seam JSON.parse-on-array "0 members" + wipe
 // defect], +the wouldCreateCycle pins in folder-tree [S85/AL3 — the
 // server PATCH guard's walk, unit-pinned; the guard-removal mutant WEDGES

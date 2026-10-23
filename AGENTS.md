@@ -9,9 +9,9 @@ High-signal instructions for coding agents working in this repo. Everything here
 | `bun install` | Install deps (Bun ≥ 1.3) |
 | `bun run dev` | Dev server on :3000 (Turbopack), logs tee'd to `dev.log` |
 | `bun run lint` / `bun run typecheck` | ESLint / `tsc --noEmit` — both must be clean |
-| `bun run test` | Vitest unit layer (900 tests; `*.test.ts` only — never picks up e2e specs) |
+| `bun run test` | Vitest unit layer (905 tests; `*.test.ts` only — never picks up e2e specs) |
 | `bun run build` | Production build → `.next/standalone` (**required before e2e**) |
-| `bun run test:e2e` | Playwright vs the standalone build on :3100 with `db/e2e.db` (467 tests across the 5-chunk cold map — 130+138+57+84+58, 30 spec files; a single-process full run trips the register rate-limiter budget by design, the chunked map re-boots the server per chunk). NOTE (S45, the day-boundary lesson): the global setup re-seeds every run, but the seed's IDEMPOTENT UPSERTS do NOT refresh day-relative dates on existing rows — a scratch `db/e2e.db` that ages across a UTC midnight keeps its original day-relative dates (today's tasks, the +1-day exam badge, the due-in pills, the import round-trip dates each read one day stale → 4 deterministic failures in parity-session6/parity-session9/s23-import). Delete `db/e2e.db` when a run crosses a day boundary — the global setup re-creates it fresh with current dates. NOTE (S46, TWO more aged-scratch-db classes + a build-input one): (1) ALWAYS run e2e COLD — `rm -f db/e2e.db` before every full run: the s23-import round-trip posts a FIXED-id envelope, so a second consecutive run against the aged db reads `created: 0, updated: 1` instead of `created: 1, updated: 0` and fails — not just across midnights, across ANY re-run; (2) the s22 negative-spawn spec reads the BUNDLED `.env` — Next's standalone output COPIES the repo-root `.env` into `.next/standalone/.env` at build time, so a REAL AUTH_SECRET in the dev `.env` leaks into the bundle and the guard CORRECTLY boots (the spec times out waiting for the exit) — keep the repo-root `.env`'s AUTH_SECRET EMPTY (the `.env.example` dev posture: `AUTH_SECRET=""` — dev falls back to the local constant with the boot warning) when building for e2e |
+| `bun run test:e2e` | Playwright vs the standalone build on :3100 with `db/e2e.db` (468 tests across the 5-chunk cold map — 131+138+57+84+58, 30 spec files; a single-process full run trips the register rate-limiter budget by design, the chunked map re-boots the server per chunk). NOTE (S45, the day-boundary lesson): the global setup re-seeds every run, but the seed's IDEMPOTENT UPSERTS do NOT refresh day-relative dates on existing rows — a scratch `db/e2e.db` that ages across a UTC midnight keeps its original day-relative dates (today's tasks, the +1-day exam badge, the due-in pills, the import round-trip dates each read one day stale → 4 deterministic failures in parity-session6/parity-session9/s23-import). Delete `db/e2e.db` when a run crosses a day boundary — the global setup re-creates it fresh with current dates. NOTE (S46, TWO more aged-scratch-db classes + a build-input one): (1) ALWAYS run e2e COLD — `rm -f db/e2e.db` before every full run: the s23-import round-trip posts a FIXED-id envelope, so a second consecutive run against the aged db reads `created: 0, updated: 1` instead of `created: 1, updated: 0` and fails — not just across midnights, across ANY re-run; (2) the s22 negative-spawn spec reads the BUNDLED `.env` — Next's standalone output COPIES the repo-root `.env` into `.next/standalone/.env` at build time, so a REAL AUTH_SECRET in the dev `.env` leaks into the bundle and the guard CORRECTLY boots (the spec times out waiting for the exit) — keep the repo-root `.env`'s AUTH_SECRET EMPTY (the `.env.example` dev posture: `AUTH_SECRET=""` — dev falls back to the local constant with the boot warning) when building for e2e |
 | `node scripts/capture-studyflow.mjs` | Refresh all 31 `docs/screenshots/` captures from the dev server (24 light + 7 dark) |
 | `node scripts/dark-sweep.mjs` | Dark-mode contrast audit over all 20 views (flashbulb/unreadable detector). S27: sets dark mode through the settings API (the real lifecycle) and SELF-VERIFIES the precondition — fails loudly (exit 1, no findings) if the dark class is not applied; the applied mode rides the JSON envelope. Never force the class directly (the session-10 approach silently rotted after S11) |
 | `node scripts/accent-dark-sweep.mjs` | Accent × dark-mode audit (S38-extended): all 7 accents × 20 desktop views × 20 MOBILE views at 390×844 + the drawer per accent (FAIL <2.2, WARN <3.2 for accent text; the mobile records also carry scrollWidth — >390 is a finding). The S38 shape is unit-pinned anti-phantom: every view recorded EXPLICITLY on both surfaces (clean views carry empty detector arrays), the per-accent `applied` self-verified readings + `mode: "dark"` + `mobileViewport` ride the envelope, and the seam's ALL-ACCENTS + ALL-VIEWS + drawer-present guards make every silently-skipped dimension a LOUD shape-error (the pre-S38 mobile pass swept only 6 views — MOBILE_VIEWS — and the omission-means-clean recording could not distinguish "clean because measured" from "clean because never rendered") |
@@ -295,6 +295,42 @@ Hover-parity probing must run in Playwright, not a touch-emulating browser — v
    honors (icon-only links, the S52 shared-state contract). Verify WHICH
    button a geometry-based probe resolved before drawing conclusions
    from its effects.
+
+
+## Boundary-alignment + pin-isolation lessons (S86, the Batch AM findings)
+
+1. **A defensive client seam stricter than the server schema is a
+   silent-deletion edge.** `normalizeMembers` dropped blank-after-trim
+   names while `studyGroupSchema` (length-based `min(1)`) accepted
+   them: a direct-API write persisted an invisible member, and the
+   next member write (addMember/removeMember/edit-save) wrote back the
+   normalized array — permanently deleting the row. When a client
+   validator drops what the server accepts, fix the SERVER boundary
+   (trim+reject at the schema) so the persistence layer never stores
+   what any consumer would drop; the client drop stays as
+   defense-in-depth for legacy rows only.
+2. **A pin green for the WRONG reason verifies nothing.** The first
+   AM1 blank-name pin passed because its `"a@b.c"` email failed zod4's
+   `.email()` (1-char TLDs are invalid) — the parse failed on the
+   email, not the blank name, so the pin discriminated nothing it
+   named. Every OTHER field in a pin's payload must be unimpeachable
+   so the named field is the only possible failure cause (the S82
+   tautology lesson's sibling: a pin that passes for an unstated
+   reason is as vacuous as one that always passes).
+3. **A daemon's spawn form is the first suspect when it dies.** The
+   S32 recipe's subshell — `( setsid cmd </dev/null >log 2>&1 & )` —
+   is load-bearing: the intermediate exits WHILE the tool shell lives
+   so the daemon reparents to PID 1 before the reaper walks the tree.
+   The bare `setsid nohup … &` form died within a call or two this
+   session (the cold cert 12 minutes in, the :3200 standalone twice,
+   the dev server mid-audit) before the recipe was re-read verbatim.
+   When a daemon dies, re-check the spawn FORM before suspecting the
+   server.
+4. **A relative-URL fetch inside `page.evaluate` needs a loaded
+   page.** `page.evaluate(() => fetch("/api/x"))` resolves the URL
+   against the page's origin — `about:blank` throws "Failed to parse
+   URL". `goto` a real route before the first evaluate (the AL1 pins
+   always did; the AM1 pin initially didn't).
 
 
 ## Testing quirks

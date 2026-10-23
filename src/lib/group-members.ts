@@ -2,15 +2,21 @@
 //
 // The API boundary ships `members` as an ARRAY (entities.ts membersFromRow:
 // "the API boundary carries members as an ARRAY; the column is a JSON
-// string"). The client's original parseMembers ran JSON.parse on that array
-// — the argument coerced to "[object Object]", threw, and the catch
-// returned [] — so every group rendered "0 members", addMember started from
-// [] and WIPED the existing members, and the edit-dialog save sent
-// members: [] (the wipe again). The store's type now tells the truth
-// (StudyGroupRow.members: GroupMember[]); this seam is the defensive
-// validator the view consumes — malformed items drop, never throw, and the
-// legacy JSON-STRING shape (a future/alternate boundary, or a stale cache)
-// is tolerated rather than trusted.
+// string"). The client's original parseMembers ran JSON.parse on that array — the argument coerced
+// to "[object Object]", threw, and the catch returned [] — so every group
+// rendered "0 members", addMember started from [] and WIPED the existing
+// members, and the edit-dialog save sent members: [] (the wipe again).
+// The store's type now tells the truth (StudyGroupRow.members:
+// GroupMember[]); this seam is the defensive validator the view consumes —
+// malformed items drop, never throw, and the legacy JSON-STRING shape (a
+// future/alternate boundary, or a stale cache) is tolerated rather than
+// trusted.
+//
+// S86/AM1: the server schema now AGREES with this seam's blank-after-trim
+// drop (studyGroupSchema members[].name/.email are .trim()-first — blank
+// writes are rejected at the API, padded values persist trimmed). The drop
+// below is defense-in-depth for legacy/corrupt rows only; it can no longer
+// silently delete a row the server would have persisted.
 
 export interface GroupMember {
   name: string;
