@@ -606,6 +606,11 @@ test.describe("S85/AL1 · Study Group members render + survive mutation", () => 
 // read — a direct-API write persisted an invisible member whose row the
 // next member write (addMember/removeMember/edit-save) permanently
 // deleted. The trimmed boundary rejects the write at the source.
+// S87/AN1 (the s87 audit's L2): the pin's own stamped-row cleanup — the
+// id rides the evaluate's return, the finally deletes it whenever the
+// write unexpectedly SUCCEEDED (the AM5 convention applied to the pin
+// AM5 itself shipped in the same batch: a RED pin must not strand its
+// row in a dev-iterate run).
 test.describe("S86/AM1 · the members boundary alignment", () => {
   test("AM1: a blank member name is rejected at the API boundary", async ({ page }) => {
     // The fetch below rides the page's own origin (relative URL) — a page
@@ -623,15 +628,26 @@ test.describe("S86/AM1 · the members boundary alignment", () => {
           members: [{ name: "   ", email: "member@example.com" }],
         }),
       });
-      return { status: r.status };
+      // The created id rides the return so the finally can clean up even
+      // on the failing path (201 = the boundary regressed).
+      const body = await r.json().catch(() => null);
+      return { status: r.status, id: body?.id ?? null };
     }, stamp);
-    // RED pre-fix: 201 — the blank name passed the length-based check and
-    // persisted (the silent-deletion edge the audit flagged).
-    expect(res.status).toBe(400);
-    // The group must not exist (the write rejected at the boundary).
-    await page.goto("/StudyGroups");
-    await hydrated(page);
-    await expect(page.getByRole("button", { name: new RegExp(`${stamp}-crew`) })).toHaveCount(0);
+    try {
+      // RED pre-fix: 201 — the blank name passed the length-based check and
+      // persisted (the silent-deletion edge the audit flagged).
+      expect(res.status).toBe(400);
+      // The group must not exist (the write rejected at the boundary).
+      await page.goto("/StudyGroups");
+      await hydrated(page);
+      await expect(page.getByRole("button", { name: new RegExp(`${stamp}-crew`) })).toHaveCount(0);
+    } finally {
+      if (res.id) {
+        await page.evaluate(async (id) => {
+          await fetch(`/api/study-groups/${id}`, { method: "DELETE", credentials: "same-origin" });
+        }, res.id).catch(() => {});
+      }
+    }
   });
 });
 

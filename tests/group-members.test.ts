@@ -61,3 +61,22 @@ describe("normalizeMembers", () => {
     expect(normalizeMembers(42)).toEqual([]);
   });
 });
+
+// S87/AN4 (the s87 audit's I4): the read-side trim symmetry. The AM1
+// fix trims at the SERVER boundary (writes), but legacy rows stored
+// pre-AM1 carry padded values that the seam returns verbatim — they
+// display padded until their first re-write. The seam now trims on
+// read too: both sides of the boundary share the same normalization.
+describe("normalizeMembers · the S87/AN4 read-side trim", () => {
+  it("AN4: trims a padded member name on read (the AM1 write-side symmetry)", () => {
+    expect(
+      normalizeMembers([{ name: "  Ari  ", email: "ari@example.com" }]),
+    ).toEqual([{ name: "Ari", email: "ari@example.com" }]);
+  });
+
+  it("AN4: trims a padded member email on read", () => {
+    expect(
+      normalizeMembers([{ name: "Ari", email: "  ari@example.com  " }]),
+    ).toEqual([{ name: "Ari", email: "ari@example.com" }]);
+  });
+});

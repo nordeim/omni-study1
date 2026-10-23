@@ -17,6 +17,11 @@
 // writes are rejected at the API, padded values persist trimmed). The drop
 // below is defense-in-depth for legacy/corrupt rows only; it can no longer
 // silently delete a row the server would have persisted.
+//
+// S87/AN4: the seam now trims on READ too (the AM1 write-side symmetry) —
+// legacy rows stored pre-AM1 with padded values display normalized
+// instead of waiting for their first re-write. Both sides of the boundary
+// share the same normalization.
 
 export interface GroupMember {
   name: string;
@@ -40,6 +45,6 @@ export function normalizeMembers(value: unknown): GroupMember[] {
     const { name, email } = item as Record<string, unknown>;
     if (typeof name !== "string" || typeof email !== "string") return [];
     if (!name.trim() || !email.trim()) return [];
-    return [{ name, email }];
+    return [{ name: name.trim(), email: email.trim() }];
   });
 }

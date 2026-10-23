@@ -1,8 +1,8 @@
 # Omni-Study1 — Remediation Plan & Execution Record
 
-> **Status: COMPLETE through Batch AM (session-86).** Every batch below has
+> **Status: COMPLETE through Batch AN (session-87).** Every batch below has
 > been executed TDD-style (spec-red → fix → spec-green) and verified:
-> **905/905 Vitest unit**, **468/468 Playwright e2e** across the 5-chunk
+> **907/907 Vitest unit**, **468/468 Playwright e2e** across the 5-chunk
 > cold map (131+138+57+84+58, 30 spec files censused exactly once; the
 > per-chunk count includes that chunk's auth setup), lint clean,
 > `tsc --noEmit` clean, production build green with the standalone asset
@@ -2763,7 +2763,12 @@ findings give Batch AM its shape:
   edit-save writes back the normalized array — **permanently deleting
   the row**. A narrow silent-data-loss edge of the exact class AL1
   closed (UI writes trim first — only direct-API writes can create
-  the row).
+  the row). [S87/AN5 annotation: the illustration's `a@b.c` email is
+  itself zod4-invalid (1-char TLD — the S86 lesson 2), so that exact
+  POST would have 400'd on the email; the finding's substance is
+  proven by the AM1 e2e RED run's VALID email
+  (`member@example.com` → 201 pre-fix). A future reader probing this
+  edge must use a valid email or the pin discriminates nothing.]
 - **I1** — "all five consumer sites" undercounts: there are SIX
   `parseMembers` call sites (86, 215, 229, 313, 401, + the 435
   empty-state conditional). Coverage itself complete — the count in
@@ -2936,3 +2941,208 @@ re-theme, no observable diverges), and I2's dedicated text token. The
 S86 lessons are recorded in AGENTS.md (the boundary-alignment lesson;
 the wrong-reason-green pin lesson; the daemon spawn-form lesson; the
 relative-URL-fetch lesson).
+
+---
+
+## Cycle-37 plan (Session-87 / Batch AN) — the pin-hygiene completion + the record-accuracy closure + the duplicate-evidence sweep
+
+**Received state**: `0493503` (Batch AM `75d5af6` + the operator's
+session-log commit adding `docs/session_43.md` and `skills/pdf-old-*`;
+src/ untouched by the operator commit — verified by diff stat).
+Workspace RESET (the 28th→29th reset; fresh clone), re-provisioned:
+bun install (497 pkgs), `.env` from `.env.example`
+(DATABASE_URL="file:../db/custom.db"), db push + seed, chromium-1243
+re-provisioned, production build green.
+
+**Baseline re-certified cold BEFORE any work**: lint ✓ tsc ✓ unit
+**905/905**; e2e **468/468** (131+138+57+84+58, first-pass every
+chunk, zero flakes). The s87 resweep (re-tagged from s86):
+**ok:true** (9/9 both hosts, brand tables byte-matched, probeCleanup
+ok, 18 captures). agent-browser mobile-nav on BOTH hosts: reference
+24 labeled links expanded / 20 icon-only collapsed via
+`sidebarOpen:"false"` (zero `title`/`aria-label` — the S52 contract
+re-confirmed live; the agent-browser profile's persisted
+`sidebarOpen:"false"` surfaced as the icon-only first open, re-set to
+"true" and re-verified — the S52 shared-state behavior live again);
+clone 26 labeled links (the skip-link superset) / 20 icon-only
+collapsed ALL with `title`+`aria-label` via `sf-sidebar-collapsed`;
+both navigate + close; the reference's own 416 overflow vs the clone's
+390 — **no Tailwind v4 mobile-nav bug, re-confirmed for s87**.
+
+**The Mode-C audit of the Batch AM diff** (`f725f28..75d5af6`,
+subagent, read-only): **0 Critical / 0 High / 0 Medium / 2 Low /
+5 Info** — all six AM claims verified (the auditor re-ran the unit
+layer green, 905/905; the AM1 schema verified empirically against
+zod4; the AM2 blob-hash census confirmed the s85 pair eliminated).
+The findings that shape Batch AN:
+
+- **L1** the "all RED-first" overclaim: the AM1 summary records
+  (README's Session-86 row, session_42's DONE bullet, the worklog's
+  AM1 bullet) say "5 unit pins + 1 e2e API pin, all RED-first" — but
+  pins 4-5 are self-labeled green-by-design regression guards (pin 5's
+  `"   "` email fails `.email()` regardless of trim). The cycle's own
+  accurate record exists (3 RED + 2 guards + 1 e2e RED) — the record
+  contradicts itself, the exact class AM3 was closing.
+- **L2** the new AM1 e2e pin lacks the try/finally cleanup AM5
+  established in the same file/batch: on its RED path (schema trim
+  removed → 201) the stamped group strands. The same-batch hygiene
+  inconsistency.
+- **I1** the plan's L2 illustration payload (`{name: " ", email:
+  "a@b.c"}`) is itself zod4-invalid — that exact POST would have been
+  400 pre-fix, not "persists" (the finding's substance is proven by
+  the e2e RED run's valid email).
+- **I3** four OLDER byte-identical screenshot pairs survive
+  (blob-hash census: `11-mobile-dashboard` ≡ `11-mobile-navigation`;
+  `77-ref-notes-after-save` ≡ `77-ref-notes-populated`;
+  `77-ref-flashcards-deck-created` ≡ `77-ref-flashcards-with-cards`;
+  `84-clone-ak-files-breadcrumb` ≡ `84-clone-ak-files-guard`) — the
+  AM2 duplicate-frame class persists in the older evidence. Verified:
+  no spec, standing audit, or doc references the session-numbered
+  names (only the historical capture scripts WRITE them).
+- **I4** `normalizeMembers` drops blanks but does not trim on read —
+  legacy padded rows (stored pre-AM1) display padded until their first
+  re-write. Optional read-side symmetry with the AM1 write-side trim.
+- **I5** the resweep scripts' embedded reference credentials — the
+  s67+ accepted convention (operator-local tooling), residual risk
+  recorded. **I2** the s86 capture script's fixed sleeps + the
+  trimmed-screenshot non-discrimination (HTML collapses whitespace —
+  the unit pins are the real proof; the script's header already says
+  "the visible surface").
+
+**The Batch AN items** (TDD where source changes):
+
+- **AN1 (from L2)** — the AM1 e2e pin's cleanup hygiene: the
+  evaluate returns the created id alongside the status, and a
+  `finally` deletes the stamped group when non-null (the AM5
+  convention applied to the pin AM5 itself shipped — the same-batch
+  inconsistency closed). Test-only change; the family re-verified
+  green.
+- **AN2 (from L1)** — the record-accuracy closure: the three AM1
+  summary records corrected to "3 RED unit pins + 2 green-by-design
+  regression guards + 1 RED e2e API pin" (README's Session-86 row,
+  session_42's DONE bullet, the worklog's AM1 bullet — one-line edits
+  each, the accurate phrasing the cycle's own execution record
+  already carries).
+- **AN3 (from I3)** — the duplicate-evidence sweep: each pair's md5
+  re-verified in-cycle, the SECOND name of each pair dropped (the
+  first retains the frame: `11-mobile-dashboard`,
+  `77-ref-notes-after-save`, `77-ref-flashcards-deck-created`,
+  `84-clone-ak-files-breadcrumb`), the drop recorded here. The
+  historical capture scripts that write the dropped names are frozen
+  session evidence, not standing tooling — no re-capture (re-running
+  them would falsify the session records they document).
+- **AN4 (from I4)** — the read-side trim symmetry: 2 unit pins
+  written FIRST and verified RED (a padded name / a padded email
+  return trimmed through `normalizeMembers` — the seam becomes fully
+  symmetric with the server's write-side trim; legacy padded rows
+  display normalized), then the one-line seam fix
+  (`return [{ name: name.trim(), email: email.trim() }]`). The clean
+  -values regression is already pinned (the first table entry).
+- **AN5 (from I1)** — the plan's L2 illustration annotated: the
+  Cycle-36 finding's example email `a@b.c` is zod4-invalid (1-char
+  TLD); the annotation points future readers at the e2e RED run's
+  valid email as the discriminating payload.
+- **AN6 (I5 + I2 — ACCEPTED, documented)** — the resweep credentials
+  stay embedded (the s67+ convention; the git-history exposure makes
+  source-only removal cosmetic — a real fix would rotate the
+  reference credential at the operator, out of scope for this repo);
+  the capture script's fixed sleeps and the trimmed-screenshot
+  non-discrimination stay (the header's "visible surface" claim is
+  accurate; the unit pins carry the proof).
+
+**Projected census**: unit 905 + 2 (AN4) = **907**; e2e unchanged
+**468** (131+138+57+84+58 — AN1 modifies a pin, adds none).
+
+**Standing debt** (unchanged, the documented deferrals): Batch R (RSC
+structural perf — the S75 CWV evidence), the s80 audit's L1 (the study
+zombie), L4's ~27 AG-pinned-hue consumers, I2's dedicated text token.
+
+### Cycle-37 execution record (Session-87 / Batch AN)
+
+**AN1**: the AM1 e2e pin's evaluate now returns
+`{ status, id: body?.id ?? null }` and the assertions ride a
+`try { … } finally { if (res.id) DELETE }` — the stamped group is
+deleted even on the failing path (the boundary regressed → 201 → the
+row strands no more). Test-only change; the full
+parity-session8 family re-verified green (58/58 incl. auth setup),
+and the final cold re-cert confirms the census unchanged.
+
+**AN2**: the three AM1 summary records corrected — README's
+Session-86 row ("all RED at their designed assertions pre-fix" →
+"3 RED unit pins + 2 green-by-design regression guards + 1 RED e2e
+API pin"), session_42's DONE bullet ("all RED-first" → the same
+accurate phrasing), the worklog's AM1 bullet ("written FIRST and
+verified RED at their designed assertions" → "3 unit pins verified
+RED + 2 green-by-design regression guards + the e2e API pin RED").
+The corrections are self-labeling (each cites S87/AN2) so the
+record-accuracy trail stays auditable.
+
+**AN3**: the four pairs re-verified byte-identical IN-CYCLE (md5:
+a293556c…/59017159…/b1edd3e4…/9726deb5…), then the second name of
+each dropped — `11-mobile-navigation.png`,
+`77-ref-notes-populated.png`, `77-ref-flashcards-with-cards.png`,
+`84-clone-ak-files-guard.png` (the first name retains each frame).
+Verified pre-drop: no spec, standing audit, or doc references the
+session-numbered names; the frozen historical capture scripts only
+WRITE them. The duplicate-frame census class is now closed across
+the whole capture directory, not just the current cycle's frames
+(the S87 lesson 3).
+
+**AN4**: the 2 unit pins written FIRST and verified RED at their
+designed assertions (a padded member name / a padded member email
+returned verbatim pre-fix), then the one-line seam fix
+(`return [{ name: name.trim(), email: email.trim() }]`) with the
+S87/AN4 header comment. GREEN: group-members 9/9 (7 original + 2
+new). The evidence posture recorded honestly in the capture
+script's header: HTML collapses leading/trailing whitespace and
+`initialFor` trims internally, so the screenshot documents the
+surface (the legacy padded row rendering clean through the seam)
+while the unit pins carry the behavioral proof — the accepted I2
+posture, now stated at the script site.
+
+**AN5**: the Cycle-36 L2 finding's illustration annotated in place —
+the `a@b.c` example email is zod4-invalid (the S86 lesson 2), the
+finding's substance proven by the AM1 e2e RED run's valid email; a
+future reader probing the edge is pointed at the valid payload.
+
+**AN6**: accepted-and-documented (the resweep credentials — the
+s67+ convention, the git-history exposure makes source-only removal
+cosmetic, a real fix would rotate the reference credential at the
+operator; the capture script's fixed sleeps + the screenshot
+non-discrimination — the header's "visible surface" claim is
+accurate).
+
+**Re-certification**: rebuild green; lint ✓ tsc ✓ unit **907/907**
+(905 + 2 AN4 pins); full cold re-cert **468/468**
+(131+138+57+84+58, first-pass every chunk, zero flakes — the census
+unchanged: AN1 modifies the AM1 pin in place, adds none). The s87
+resweep ran on the received AM-state build: ok:true (9/9 both hosts,
+probeCleanup ok). The standing audits: preflight GREEN; security 0
+findings on a fresh-boot single re-run (the first finding — the
+AI-route limiter shape, cutoffAt=1 — was the documented S84 ordering
+artifact, reproduced by the auditor's OWN triple back-to-back run
+this cycle; kill-by-PID + fresh boot + single re-run cleared it
+exactly per the playbook); settings-roundtrip 0; connectivity 0;
+print 0/0 (light + dark); focus-order 0; data-volume 0; ai-error 0
+(10 nonGaps, fresh budget); ai-a11y 0 (4 nonGaps). Mobile nav
+verified on BOTH hosts pre-change (the reference drawer: 24 labeled
+links expanded, 20 icon-only collapsed with ZERO title/aria via
+`sidebarOpen:"false"` — the S52 contract; the clone: 26 labeled
+links, icon-only with `title`+`aria-label` via
+`sf-sidebar-collapsed`, scrollWidth 390 vs the reference's own 416)
+— **no Tailwind v4 mobile-nav bug, re-confirmed for s87**.
+
+**Evidence**: the s87 resweep 18 captures + the 2 agent-browser
+collapsed-state captures + the 3 AN captures (all distinct md5:
+491e06cd/2894e691/ad814cae — the AM2 interaction convention upheld
+by the group switch; the AN4 legacy row inserted via Prisma and
+cleaned in the finally — 0 probe rows remaining, verified).
+
+**Batch AN: DONE.** Standing debt unchanged: Batch R (RSC structural
+perf — deferred on the S75 CWV evidence), the s80 audit's L1 (the
+study zombie), L4's ~27 AG-pinned-hue consumer sites (uniform
+re-theme, no observable diverges), and I2's dedicated text token. The
+S87 lessons are recorded in AGENTS.md (the summary-overclaim lesson;
+the same-batch hygiene-convention lesson; the whole-directory
+duplicate-frame census lesson; the read-side symmetry lesson; the
+agent-browser profile's persisted-localStorage lesson).

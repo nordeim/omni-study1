@@ -1,5 +1,10 @@
 #!/usr/bin/env bash
-# Session-86 cold e2e certification — the 5-chunk map, final post-Batch-AM
+# Session-87 cold e2e certification — the 5-chunk map, final post-Batch-AN
+# (census UNCHANGED at 468: the S87/AN1 change modified the AM1 pin in-place
+# [the stamped-row cleanup — the id rides the evaluate's return, the finally
+# deletes it on the failing path; the AM5 convention applied to the pin AM5
+# itself shipped], and the AN4 read-side-trim change is unit-pinned only
+# [group-members +2 — the seam is pure]. The S86 map beneath:)
 # (census: 30 spec files exactly once; the S86 addition rides in-place —
 # parity-session8 +1 [the AM1 members-boundary API pin: a blank member
 # name is rejected at the API — the seam/server trim alignment, the s86

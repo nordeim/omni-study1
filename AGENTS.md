@@ -9,7 +9,7 @@ High-signal instructions for coding agents working in this repo. Everything here
 | `bun install` | Install deps (Bun ≥ 1.3) |
 | `bun run dev` | Dev server on :3000 (Turbopack), logs tee'd to `dev.log` |
 | `bun run lint` / `bun run typecheck` | ESLint / `tsc --noEmit` — both must be clean |
-| `bun run test` | Vitest unit layer (905 tests; `*.test.ts` only — never picks up e2e specs) |
+| `bun run test` | Vitest unit layer (907 tests; `*.test.ts` only — never picks up e2e specs) |
 | `bun run build` | Production build → `.next/standalone` (**required before e2e**) |
 | `bun run test:e2e` | Playwright vs the standalone build on :3100 with `db/e2e.db` (468 tests across the 5-chunk cold map — 131+138+57+84+58, 30 spec files; a single-process full run trips the register rate-limiter budget by design, the chunked map re-boots the server per chunk). NOTE (S45, the day-boundary lesson): the global setup re-seeds every run, but the seed's IDEMPOTENT UPSERTS do NOT refresh day-relative dates on existing rows — a scratch `db/e2e.db` that ages across a UTC midnight keeps its original day-relative dates (today's tasks, the +1-day exam badge, the due-in pills, the import round-trip dates each read one day stale → 4 deterministic failures in parity-session6/parity-session9/s23-import). Delete `db/e2e.db` when a run crosses a day boundary — the global setup re-creates it fresh with current dates. NOTE (S46, TWO more aged-scratch-db classes + a build-input one): (1) ALWAYS run e2e COLD — `rm -f db/e2e.db` before every full run: the s23-import round-trip posts a FIXED-id envelope, so a second consecutive run against the aged db reads `created: 0, updated: 1` instead of `created: 1, updated: 0` and fails — not just across midnights, across ANY re-run; (2) the s22 negative-spawn spec reads the BUNDLED `.env` — Next's standalone output COPIES the repo-root `.env` into `.next/standalone/.env` at build time, so a REAL AUTH_SECRET in the dev `.env` leaks into the bundle and the guard CORRECTLY boots (the spec times out waiting for the exit) — keep the repo-root `.env`'s AUTH_SECRET EMPTY (the `.env.example` dev posture: `AUTH_SECRET=""` — dev falls back to the local constant with the boot warning) when building for e2e |
 | `node scripts/capture-studyflow.mjs` | Refresh all 31 `docs/screenshots/` captures from the dev server (24 light + 7 dark) |
@@ -331,6 +331,45 @@ Hover-parity probing must run in Playwright, not a touch-emulating browser — v
    against the page's origin — `about:blank` throws "Failed to parse
    URL". `goto` a real route before the first evaluate (the AL1 pins
    always did; the AM1 pin initially didn't).
+
+## Record-accuracy + read-side-symmetry lessons (S87, the Batch AN findings)
+
+1. **A summary record that overclaims its RED evidence contradicts the
+   execution record it summarizes.** The AM1 summaries said "all
+   RED-first" while the cycle's own execution record correctly said
+   "3 RED + 2 green-by-design regression guards" — the record-accuracy
+   class AM3 was closing, reintroduced by AM's own summary layer. When
+   a pin family mixes RED-first pins with green-by-design regression
+   guards, the SUMMARY must carry both counts verbatim (the accurate
+   phrasing already exists in the execution record — copy it, never
+   compress it to "all RED").
+2. **A pin shipped in the same batch as a hygiene convention must
+   follow that convention.** AM5 wrapped the AL1 pins' cleanups in
+   try/finally — and the AM1 e2e pin shipped in the same Batch AM
+   WITHOUT the cleanup (its RED path strands the stamped row). When a
+   batch establishes a test-hygiene rule, audit the batch's OWN new
+   pins against it before the commit (the rule and the pin rode in the
+   same diff).
+3. **A duplicate-frame census must cover the OLD evidence, not just
+   the current cycle's.** AM2 eliminated the s85 byte-identical pair
+   while four OLDER pairs survived (s11/s77/s84) — the same class,
+   outside the audit's diff window. An evidence-hygiene fix should
+   sweep the whole capture directory (a blob-hash census is cheap),
+   not only the frames the current audit happened to touch.
+4. **A write-side trim without a read-side trim leaves legacy rows
+   displaying pre-fix values.** The AM1 schema trims every NEW write,
+   but rows stored pre-fix keep their padded values until re-written —
+   the seam now trims on read too (the symmetry), so both sides of the
+   boundary normalize identically. When a boundary fix changes the
+   write path, ask which READ path still returns the old shape.
+5. **The agent-browser profile persists localStorage across sessions
+   — the reference's `sidebarOpen` survived a `close`/`open` cycle.**
+   The drawer's first open rendered ICON-ONLY because a previous
+   session's collapsed-state probe left `sidebarOpen:"false"` in the
+   persistent profile. When a probe's rendering depends on persisted
+   keys, READ the key before interpreting the rendering (the S52
+   shared-state contract applies across agent-browser sessions too),
+   and restore the key after the probe.
 
 
 ## Testing quirks

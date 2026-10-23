@@ -31,7 +31,7 @@ Final gates before commit: lint ✓ tsc ✓ unit 905/905 ✓ build ✓ (the 468/
 ## Session-86 / Batch AM — DONE and pushed to `main`
 
 **The cycle's headline fixes** (all TDD; the RED runs are the mutation proofs):
-- **AM1**: the members boundary alignment — the server schema now agrees with the client seam (blank-after-trim member names/emails rejected 400 at the API; padded values stored trimmed), closing the silent-deletion edge where a direct-API write persisted an invisible member whose row the next member write permanently deleted (5 unit pins + 1 e2e API pin, all RED-first; the wrong-reason-green pin correction recorded honestly).
+- **AM1**: the members boundary alignment — the server schema now agrees with the client seam (blank-after-trim member names/emails rejected 400 at the API; padded values stored trimmed), closing the silent-deletion edge where a direct-API write persisted an invisible member whose row the next member write permanently deleted (3 RED unit pins + 2 green-by-design regression guards + 1 RED e2e API pin — the S87/AN2 accuracy fix, the original summary overclaimed "all RED-first"; the wrong-reason-green pin correction recorded honestly).
 - **AM2**: the duplicate evidence frame dropped + the record's false claim corrected + the interaction-driving capture exemplar (all three s86 captures distinct md5).
 - **AM3**: the record/pin accuracy fixes (six call sites, the AL2 retitle).
 - **AM4**: the `GroupMember` type dedup (one type for both sides of the boundary).
