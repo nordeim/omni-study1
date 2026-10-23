@@ -15,6 +15,7 @@ import { create } from "zustand";
 import type { z } from "zod";
 
 import { apiGet, apiSend } from "./api";
+import type { GroupMember } from "./group-members";
 import {
   assignmentSchema,
   calculatorHistorySchema,
@@ -219,7 +220,11 @@ export type StudyGroupRow = {
   name: string;
   color: string;
   subjectId: string | null;
-  members: string; // JSON [{name,email}]
+  // The API boundary ships members as an ARRAY (entities.ts membersFromRow
+  // — the column is a JSON string). S85/AL1: this type claimed `string` for
+  // 84 sessions while the API shipped arrays — the lying type was the seam
+  // the members defect hid behind.
+  members: GroupMember[];
   createdAt: string;
   updatedAt: string;
 };

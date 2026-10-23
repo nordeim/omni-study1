@@ -70,4 +70,26 @@ describe("sentKeysPatch", () => {
   it("returns an empty write when parsed is empty (nothing validated)", () => {
     expect(sentKeysPatch({ name: "n" }, {})).toEqual({});
   });
+
+  // S85/AL4 (the s85 audit's L2 — the value-source pins): every shape above
+  // has source[k] === parsed[k], so a mutant writing SOURCE values instead
+  // of PARSED values survived all ten pins. The real-world divergence is
+  // the folder schema's "" → null transform: a re-root PATCH posts
+  // {parentId: ""}, the parsed object carries {parentId: null}, and the
+  // write must carry the PARSED value (the source substitution writes ""
+  // → an FK violation → 400 instead of the re-root 200). These two shapes
+  // pin the value source; the mutation proof (recorded in the execution
+  // log): the source-substitution mutant fails both.
+  it("writes the PARSED value when a transform diverges from the source (the '' → null re-root)", () => {
+    expect(sentKeysPatch({ parentId: "" }, { parentId: null })).toEqual({ parentId: null });
+  });
+
+  it("writes the parsed value on every diverging key (the coercion family)", () => {
+    // Trimmed/coerced parses: the write carries what the SCHEMA produced,
+    // never the raw input bytes.
+    expect(sentKeysPatch({ name: "  padded  ", color: "#8B5CF6" }, { name: "padded", color: "#8b5cf6" })).toEqual({
+      name: "padded",
+      color: "#8b5cf6",
+    });
+  });
 });

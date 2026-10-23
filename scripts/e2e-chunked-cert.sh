@@ -1,14 +1,15 @@
 #!/usr/bin/env bash
-# Session-84 cold e2e certification — the 5-chunk map, final post-Batch-AK
-# (census: 30 spec files exactly once; the S84 additions ride in-place —
-# resilience 12 tests [the AJ1 folder pin + the AK1 guard family: self-parent
-# 400, A→B→A cycle 400, valid re-parent 200, bogus-parent 404] and
-# accessibility 83 [the AJ5 print family + AJ6 focus pin + the AK2 print-
-# enumeration closure: the Flashcards deck swatch, the Practice Tests result
-# circles, the My Day gradient block, the Math Solver remove chip]).
-# Expected: 127 + 138 + 57 + 83 + 58 = 463 (each chunk's count includes its
-# auth setup; 458 real specs = the S82 443 + the seven S83 pins + the eight
-# S84 pins). Per-chunk: fresh
+# Session-85 cold e2e certification — the 5-chunk map, final post-Batch-AL
+# (census: 30 spec files exactly once; the S85 additions ride in-place —
+# parity-session8 +3 [the AL1 members family: seeded members render,
+# add-member preserves, edit-save preserves] and accessibility +1 [the AL2
+# Study Groups member avatar chip print pin]; the S84 map beneath: resilience
+# 12 tests [the AJ1 folder pin + the AK1 guard family] and accessibility 84
+# [the AJ5 print family + AJ6 focus pin + the AK2 print-enumeration closure
+# + the AL2 chip]).
+# Expected: 130 + 138 + 57 + 84 + 58 = 467 (each chunk's count includes its
+# auth setup; 462 real specs = the S82 443 + the seven S83 pins + the eight
+# S84 pins + the four S85 pins). Per-chunk: fresh
 # db/e2e.db + stale-server kill (fresh in-memory limiter, register budget
 # stays <= 9/10 per chunk).
 # (S84/AK3 header correction, the audit's L1: the S83 header said

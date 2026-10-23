@@ -40,28 +40,20 @@ import {
 } from "@/components/ui/select";
 import { useToast } from "@/components/ui/toast";
 import { mutations, useDataStore, type StudyGroupRow } from "@/lib/data";
+import { normalizeMembers, type GroupMember } from "@/lib/group-members";
 import { EmptyState, initialFor, Spinner, SubjectChip } from "@/components/views/shared";
 import { cn } from "@/lib/utils";
 
 // The measured swatch order: violet, blue, emerald, amber, red, pink (S7-B).
 const GROUP_COLORS = ["#8b5cf6", "#3b82f6", "#10b981", "#f59e0b", "#ef4444", "#ec4899"];
 
-type Member = { name: string; email: string };
+// S85/AL1: the members seam — the API ships an ARRAY (membersFromRow); the
+// original JSON.parse-on-array threw and returned [] (the "0 members" +
+// addMember/edit-save wipe defect). The pure seam validates every shape;
+// the store's StudyGroupRow.members type now tells the truth.
+type Member = GroupMember;
 
-function parseMembers(json: string): Member[] {
-  try {
-    const parsed: unknown = JSON.parse(json);
-    if (!Array.isArray(parsed)) return [];
-    return parsed.flatMap((item) => {
-      if (typeof item !== "object" || item === null) return [];
-      const { name, email } = item as Record<string, unknown>;
-      if (typeof name !== "string" || typeof email !== "string") return [];
-      return [{ name, email }];
-    });
-  } catch {
-    return [];
-  }
-}
+const parseMembers = (value: unknown): Member[] => normalizeMembers(value);
 
 function errorMessage(err: unknown, fallback: string): string {
   return err instanceof Error && err.message ? err.message : fallback;
@@ -416,6 +408,12 @@ export function StudyGroupsView() {
                       style={{
                         backgroundImage:
                           "linear-gradient(to right, rgb(var(--sf-primary-avatar-from)), rgb(var(--sf-primary-avatar-to)))",
+                        // S85/AL2 (the s85 audit's L1): the chip PRINTS (the
+                        // Members card lives in the detail <section>, not a
+                        // print-hidden <aside>) — keep the gradient so the
+                        // white initials stay readable on paper (the S12-C2
+                        // convention; the UserAvatar pattern).
+                        printColorAdjust: "exact",
                       }}
                     >
                       {initialFor(member.name, member.email)}

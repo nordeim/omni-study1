@@ -478,6 +478,117 @@ test.describe("S8-H · Study Groups two-pane", () => {
   });
 });
 
+// S85/AL1 (the cycle's live discovery — the e2e page-snapshot evidence): the
+// API boundary ships `members` as an ARRAY (membersFromRow, entities.ts) but
+// the client's parseMembers ran JSON.parse on it — the array coerces to
+// "[object Object]", throws, and the catch returned []. Every group rendered
+// "0 members" with an empty list; addMember started from [] and WIPED the
+// existing members; the edit-dialog save sent members: [] and wiped them
+// too. Invisible since the initial implementation: no pin covered the
+// surface. These pins walk the REAL flows through the shipped UI.
+test.describe("S85/AL1 · Study Group members render + survive mutation", () => {
+  test("AL1a: the seeded members render in the detail pane", async ({ page }) => {
+    await page.goto("/StudyGroups");
+    await hydrated(page);
+    await page.getByRole("button", { name: /Calc Crew/ }).first().click();
+    // The row's member count reflects the seeded members (RED pre-fix: "0 members").
+    await expect(page.getByRole("button", { name: /Calc Crew/ }).first()).toContainText("2 members");
+    const detail = page.locator('[aria-label="Study group detail pane"]');
+    await expect(detail.getByText("Ari", { exact: true })).toBeVisible();
+    await expect(detail.getByText("Sam", { exact: true })).toBeVisible();
+  });
+
+  test("AL1b: adding a member preserves the existing members", async ({ page }) => {
+    await page.goto("/StudyGroups");
+    await hydrated(page);
+    // A fresh stamped group via the API (the e2e DB persists across specs —
+    // never mutate the seeded demo rows; the AK1 convention).
+    const stamp = `s85-AL1b-${Date.now()}`;
+    const info = await page.evaluate(async (stamp) => {
+      const res = await fetch("/api/study-groups", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "same-origin",
+        body: JSON.stringify({
+          name: `${stamp}-crew`,
+          members: [
+            { name: "Ari", email: "ari@example.com" },
+            { name: "Sam", email: "sam@example.com" },
+          ],
+        }),
+      });
+      return { id: (await res.json()).id, status: res.status };
+    }, stamp);
+    expect(info.status).toBe(201);
+
+    await page.goto("/StudyGroups");
+    await hydrated(page);
+    await page.getByRole("button", { name: new RegExp(`${stamp}-crew`) }).first().click();
+    const detail = page.locator('[aria-label="Study group detail pane"]');
+    await expect(detail.getByText("Ari", { exact: true })).toBeVisible();
+    await expect(detail.getByText("Sam", { exact: true })).toBeVisible();
+
+    // Add a third member through the REAL form.
+    await page.locator("#member-name").fill("Pia");
+    await page.locator("#member-email").fill("pia@example.com");
+    await page.getByRole("button", { name: "Add", exact: true }).click();
+    // The refetched list must carry ALL THREE (RED pre-fix: the wipe).
+    await expect(detail.getByText("Pia", { exact: true })).toBeVisible();
+    await expect(detail.getByText("Ari", { exact: true })).toBeVisible();
+    await expect(detail.getByText("Sam", { exact: true })).toBeVisible();
+    await expect(page.getByRole("button", { name: new RegExp(`${stamp}-crew`) }).first()).toContainText("3 members");
+
+    await page.evaluate(async (id) => {
+      await fetch(`/api/study-groups/${id}`, { method: "DELETE", credentials: "same-origin" });
+    }, info.id);
+  });
+
+  test("AL1c: an edit-dialog save preserves the members", async ({ page }) => {
+    await page.goto("/StudyGroups");
+    await hydrated(page);
+    const stamp = `s85-AL1c-${Date.now()}`;
+    const info = await page.evaluate(async (stamp) => {
+      const res = await fetch("/api/study-groups", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "same-origin",
+        body: JSON.stringify({
+          name: `${stamp}-crew`,
+          members: [
+            { name: "Ari", email: "ari@example.com" },
+            { name: "Sam", email: "sam@example.com" },
+          ],
+        }),
+      });
+      return { id: (await res.json()).id, status: res.status };
+    }, stamp);
+    expect(info.status).toBe(201);
+
+    await page.goto("/StudyGroups");
+    await hydrated(page);
+    await page.getByRole("button", { name: new RegExp(`${stamp}-crew`) }).first().click();
+    // Open the edit dialog, rename, save.
+    await page.getByRole("button", { name: "Edit", exact: true }).click();
+    await page.locator("#group-name").fill(`${stamp}-renamed`);
+    await page.getByRole("button", { name: "Save changes" }).click();
+    await page.waitForTimeout(800);
+
+    // The saved group still renders BOTH members (RED pre-fix: the save
+    // payload carried members: [] — the wipe).
+    await page.goto("/StudyGroups");
+    await hydrated(page);
+    await page.getByRole("button", { name: new RegExp(`${stamp}-renamed`) }).first().click();
+    const detail = page.locator('[aria-label="Study group detail pane"]');
+    await expect(detail.getByText("Ari", { exact: true })).toBeVisible();
+    await expect(detail.getByText("Sam", { exact: true })).toBeVisible();
+    await expect(page.getByRole("button", { name: new RegExp(`${stamp}-renamed`) }).first()).toContainText("2 members");
+
+    await page.evaluate(async (id) => {
+      await fetch(`/api/study-groups/${id}`, { method: "DELETE", credentials: "same-origin" });
+    }, info.id);
+  });
+});
+
 test.describe("S8-I · Analytics additions", () => {
   test("chart cards carry per-card icons", async ({ page }) => {
     await page.goto("/Analytics");

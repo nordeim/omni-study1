@@ -1,9 +1,9 @@
 # Omni-Study1 — Remediation Plan & Execution Record
 
-> **Status: COMPLETE through Batch AK (session-84).** Every batch below has
+> **Status: COMPLETE through Batch AL (session-85).** Every batch below has
 > been executed TDD-style (spec-red → fix → spec-green) and verified:
-> **883/883 Vitest unit**, **463/463 Playwright e2e** across the 5-chunk
-> cold map (127+138+57+83+58, 30 spec files censused exactly once; the
+> **900/900 Vitest unit**, **467/467 Playwright e2e** across the 5-chunk
+> cold map (130+138+57+84+58, 30 spec files censused exactly once; the
 > per-chunk count includes that chunk's auth setup), lint clean,
 > `tsc --noEmit` clean, production build green with the standalone asset
 > contract intact. This document is the durable record of what was broken,
@@ -2488,3 +2488,233 @@ discipline; the rebuild-invalidates-chunks wedge-at-Splash class; the
 print-enumeration must verify the surface PRINTS; the standing audits'
 shared AI budget — the 429-phantom-findings ordering class; the
 tool-rendered bracket-eating display artifact).
+
+## Cycle-35 plan (Session-85 / Batch AL) — the print-closure completion + the server-walk seam + the value-source pin cycle
+
+**Received state**: `5383bb7` (Batch AK `86d11dd` + the operator's
+session-log commit adding `docs/session_39.md`). Baseline re-certified
+cold BEFORE any work: lint ✓ tsc ✓ unit **883/883** ✓ build fresh; cold
+e2e **463/463** (127+138+57+83+58, first-pass every chunk; chromium-1243
+re-provisioned after the 27th workspace reset). Evidence layers (all
+pre-change): the Mode-C audit of the Batch AK diff (`b0d903b..86d11dd`)
+— **0 Critical / 0 High / 0 Medium / 4 Low / 4 Info**, all nine AK
+claims verified (the unit seams re-run green by the auditor); the s85
+reference re-sweep (ok:true — 9/9 invariants both hosts, brand tables
+byte-matched, 18 captures); agent-browser mobile-nav verification on
+BOTH hosts — the reference drawer (20 LABELED links when the sidebar
+preference is expanded; ICON-ONLY links sharing the collapsed state,
+`sidebarOpen:false` — the S52 shared-state contract re-confirmed live;
+navigates; closes; its own documented scrollWidth 416 overflow) and the
+clone drawer (26 labeled links — the superset skip-link + 20 nav + 5
+content; icon-only with BOTH `title` AND `aria-label` when collapsed —
+the accessible-name superset over the reference's unnamed icons;
+navigates; closes; scrollWidth 390 — NO overflow) — **no Tailwind v4
+mobile-nav bug**; the collapsed-state captures saved
+(`85-ref-mobile-drawer-collapsed-state.png`,
+`85-clone-mobile-drawer-collapsed-state.png`).
+
+**The audit's findings give Batch AL its shape:**
+
+- **AL1 (LOW — the audit's L1, the AK2 closure completion)**: the
+  Study Groups member avatar chip — white initials on the inline avatar
+  gradient — is the ONE consumer of the avatar-gradient tokens AK2's
+  closure missed (`rg 'sf-primary-avatar-from' src/` → theme.ts,
+  user-avatar.tsx, and this site). It PRINTS (the Members card lives in
+  the detail `<section>`, not a print-hidden `<aside>`), so under print
+  the gradient drops and the initials render white-on-white. Fix: the
+  inline `printColorAdjust: "exact"` on the chip's style object (the
+  UserAvatar pattern). Pin (+1 e2e, accessibility.spec.ts AK2 block):
+  navigate /StudyGroups, click the seeded "Calc Crew" group, assert the
+  chip's computed `printColorAdjust === "exact"` under print emulation
+  (RED-able today — the computed value is "economy").
+- **AL2 (LOW — the audit's L4)**: the server's ancestor walk extracted
+  to the shared pure seam — `wouldCreateCycle(rows, folderId,
+  newParentId)` in `src/lib/folder-tree.ts` — consumed by the PATCH
+  delegate. This (a) deduplicates the two ancestor-walk
+  implementations (the client seam + the inline server walk), and (b)
+  pins the SERVER walk's termination property at the unit seam — the
+  audit's mutation-survival finding: removing the visited set from the
+  inline server walk passes the entire 463-test suite today. Unit pins
+  (+~8, mirroring the client's termination table): self-parent → true;
+  the A→B→A move → true; a PRE-EXISTING cycle NOT involving the moved
+  folder → false (allowed — the write is legal, the seam's client
+  sibling renders it bounded); a pre-existing cycle THROUGH the moved
+  folder's new ancestor chain → true; a dangling ancestor row → false;
+  a linear chain → false; an empty row set → false; the moved folder
+  absent from the rows → the chain still evaluated. The route keeps the
+  distinct self-parent message (the early check stays as the fast path)
+  and the 404 parent-existence contract byte-identical. MUTATION PROOF
+  required: removing the visited set from the seam must wedge/fail the
+  pins (the client-seam precedent).
+- **AL3 (LOW — the audit's L2)**: the sentKeysPatch value-source pin —
+  all ten AK4 shapes have `source[k] === parsed[k]`, so a mutant
+  writing `source[key]` instead of `parsed[key]` survives 10/10. The
+  real-world divergence is the folder schema's `"" → null` transform:
+  a re-root PATCH posts `{parentId: ""}`, parsed carries
+  `{parentId: null}`, and the write must carry the PARSED value (the
+  source substitution writes `""` → FK violation → 400 instead of the
+  re-root 200). Pins (+2): the transform shape and a differing-coerce
+  pair. MUTATION PROOF required: the source-substitution mutant must
+  fail the new pins.
+- **AL4 (Info — the audit's I1/I2 hygiene)**: the s85 resweep's
+  probe-user cleanup — a closing delete-account POST for the registered
+  `s85-resweep-*` user (the capture script's folder-probe cleanup
+  convention, applied to the sweep's own probe rows); the I1
+  duplicate-frame class recorded in the docs (future capture scripts
+  drive an interaction or drop the duplicate frame).
+
+Considered, no action: **L3** (the guard's read-then-write TOCTOU —
+accept-and-document: the window is same-user-only (the tree is
+userId-scoped), the client seam renders a cycled tree BOUNDED (no
+wedge), the cycle is recoverable via `PATCH {parentId: null}`, and the
+shipped UI has no re-parent affordance at all — only a hand-rolled
+API race can exploit it; a Prisma interactive transaction would
+serialize the window at the cost of route complexity the blast radius
+does not justify — the audit's own "accept-and-document" option);
+**I3** (the per-file count convention — the operational header is
+unaffected, a docs-note only); **I4** (the parent-check cost trade and
+the algebraically-redundant length assertion — both documented
+Info-level by the audit).
+
+Pin census: unit 883 → ~893 (+~8 wouldCreateCycle + 2 value-source);
+e2e 463 → 464 (accessibility 83 → 84 rides chunk 4). Expected
+post-cycle map: 127+138+57+84+58 = 464.
+
+### Cycle-35 mid-cycle amendment (the AL1 discovery — a live data-loss defect)
+
+**The empirical discovery.** While writing the AL1 print pin, the chip
+locator resolved NOTHING — the page snapshot showed the seeded "Calc Crew"
+rendering **"0 members"** with an empty Members list, while the e2e DB row
+carries `[{Ari},{Sam}]` (verified via Prisma directly) and the LIVE
+`:3200` API answers `members` as an **ARRAY** (the `membersFromRow`
+boundary contract, entities.ts — "the API boundary carries members as an
+ARRAY; the column is a JSON string"). The client's `parseMembers`
+(studygroups-view.tsx, byte-identical since the INITIAL implementation
+`7b1e78d`) calls `JSON.parse(json)` on that array — the argument coerces
+to `"[object Object]"`, throws, and the catch returns `[]`. The full
+blast radius, all live-verified shapes of the SAME seam:
+
+1. **Render**: every group renders "0 members" + "No members yet" — the
+   seeded members never appear (the e2e snapshot is the evidence).
+2. **addMember**: `[...parseMembers(selected.members), {new}]` →
+   `[...[], {new}]` — adding a member **WIPES every existing member**
+   and keeps only the new one (silent data loss through the shipped UI).
+3. **Edit-dialog save**: the payload's `members: []` — every group
+   edit-save **wipes the members**.
+4. **removeMember**: unreachable in practice (the list renders empty).
+
+Invisible for 84 sessions because no pin covers the members surface (the
+visual sweeps measure chrome/headings; the zero-state pins target the
+group LIST, not the member list). The store's own TYPE lies
+(`StudyGroupRow.members: string` — "JSON [{name,email}]") while the API
+ships an array: the type system flagged the seam and nobody read it.
+
+**The re-shaped batch (AL1 promoted to the headline):**
+
+- **AL1 (HIGH — the discovery)**: the Study Groups members seam fixed at
+  the boundary the API actually ships. `parseMembers` extracted to the
+  pure seam `src/lib/group-members.ts` (`normalizeMembers(value)` —
+  accepts the API's ARRAY shape, validates every item's name/email, and
+  tolerates the legacy JSON-STRING shape defensively; malformed items
+  drop, never throw), the store's `StudyGroupRow.members` re-typed to the
+  truth (`GroupMember[]`), and the view/dialog consumers aligned.
+  Pins: +3 e2e (the seeded members render with the "2 members" count;
+  add-member PRESERVES the existing members; the edit-dialog save
+  preserves them) + unit pins for the seam (~6 shapes incl. the string
+  legacy form and malformed items). TDD: the e2e pins written FIRST,
+  verified RED on the pre-fix build at their designed assertions.
+- **AL2 (LOW — the audit's L1)**: unchanged — the member-avatar-chip
+  print closure (the pin already written; its chip locator was the
+  discovery probe — post-AL1 the locator resolves and the pin goes RED
+  at the designed `printColorAdjust` assertion).
+- **AL3 / AL4 / AL5**: unchanged (the server-walk seam + value-source
+  pins + the resweep probe cleanup).
+
+Pin census updated: unit 883 → ~899 (+~6 group-members + ~8
+wouldCreateCycle + 2 value-source); e2e 463 → 467 (accessibility 83 → 84
+rides chunk 4; the AL1 family rides the chunk that owns StudyGroups
+probes — navigation/parity-session8 own the two-pane views; the members
+pins land in parity-session8.spec.ts). Expected post-cycle map to be
+re-derived from the chunk re-count after the pins land.
+
+**Cycle-35 execution record (Session-85).** TDD throughout.
+
+**AL1** (the headline): the three e2e pins written FIRST and verified RED
+on the pre-fix build at their designed assertions (AL1a at
+`toContainText("2 members")` — received "Calc Crew0 membersMathematics",
+the defect's signature; AL1b/AL1c at the members' `toBeVisible` — the
+detail pane rendered "No members yet" against a DB row carrying
+`[{Ari},{Sam}]`, verified via Prisma directly; the live :3200 API probe
+confirmed `members` answers an ARRAY). GREEN: the pure seam
+`src/lib/group-members.ts` (`normalizeMembers` — validates the API's
+array shape item-by-item, tolerates the legacy JSON-string shape,
+malformed items drop never throw; 7 unit pins), the store's
+`StudyGroupRow.members` re-typed to `GroupMember[]` (the lying type
+corrected at the source of truth), and the view's `parseMembers` wired
+to the seam (all five consumer sites fixed through the one seam — the
+row count, the detail list, addMember, removeMember, the edit dialog).
+The AL1 pin family green on the fixed build; the full
+parity-session8 + accessibility + resilience files 100/100.
+
+**AL2**: the member avatar chip's inline `printColorAdjust: "exact"`
+(the UserAvatar pattern; the chip prints inside the detail `<section>`).
+The pin (written during the plan phase, blocked pre-AL1 by the empty
+members list) went RED at the designed assertion post-AL1 (computed
+"economy") and GREEN under the property. Two mid-cycle pin corrections
+recorded honestly: the group-selection click runs under SCREEN media
+(the group-list aside is print-hidden — the click cannot happen under
+print emulation; the events/timetable/calendar pin's pattern), and the
+members' `getByText` needs `{ exact: true }` (the name "Ari"
+substring-matches "ari@example.com" case-insensitively — a strict-mode
+violation, not a defect).
+
+**AL3**: the server cycle-walk extracted to `wouldCreateCycle` in
+`src/lib/folder-tree.ts`, consumed by the PATCH delegate (the
+parent-existence check simplified to `chain.some(...)` over the same
+rows — the 404 contract byte-identical, re-verified by the AK1 family
+in the cold cert). EIGHT unit pins (the client table's mirror: the
+self-parent, the A→B→A descendant cycle, the valid re-parent, the
+PRE-EXISTING cycle not involving the moved folder [allowed — the write
+is legal, the client seam renders it bounded], the pre-existing cycle
+through the moved folder [rejected], the dangling ancestor, the empty
+row set, the moved-folder-absent chain). MUTATION-PROVEN: with the
+visited set removed, the test runner WEDGES (exit 124, no verdict in
+90 s — the infinite-loop class at the unit seam, the AK1 precedent);
+restored, 16/16 green.
+
+**AL4**: the two value-source pins added (the `"" → null` re-root
+transform shape and the coercion family). MUTATION-PROVEN: the
+source-substitution mutant (`writes[key] = source[key]`) failed exactly
+the TWO new pins while all ten AK4 shapes survived — the audit's gap
+precisely closed; restored, 12/12 green.
+
+**AL5**: the s85 resweep's closing delete-account POST (the probe user
+deleted before the context closes; the envelope carries `probeCleanup`
+— verified `ok` on the final-build re-run). The I1 duplicate-frame
+class recorded here (future capture scripts drive an interaction or
+drop the duplicate frame; this cycle's capture script does not
+duplicate frames).
+
+**Re-certification**: rebuild green; lint ✓ tsc ✓ unit **900/900**
+(883 + 7 group-members + 8 wouldCreateCycle + 2 value-source); full
+cold re-cert **467/467** (130+138+57+84+58, first-pass every chunk —
+zero flakes this cycle). The s85 resweep re-run on the final build:
+**ok:true** (9/9 both hosts, probeCleanup ok). The standing audits:
+security 0 (the first run's "limiter shape" finding was the documented
+S84 ordering artifact — the audit had run twice back-to-back; fresh
+boot + single re-run: 0 findings), print 0/0 (AL2 holds), focus-order
+0, settings-roundtrip 0, connectivity 0, data-volume 0, ai-error 0
+(fresh budget), ai-a11y 0. Mobile nav verified on BOTH hosts
+(reference: 20 labeled links expanded + the icon-only collapsed state
+via `sidebarOpen:false` — the S52 shared-state contract re-confirmed
+live; clone: 26 labeled links + icon-only with `title`+`aria-label`
+when collapsed; both navigate + close; the reference's own 416
+overflow vs the clone's 390) — **no Tailwind v4 mobile-nav bug**.
+
+**Batch AL: DONE.** Standing debt unchanged: Batch R (RSC structural
+perf — deferred on the S75 CWV evidence), the s80 audit's L1 (the study
+zombie), L4's ~27 AG-pinned-hue consumer sites (uniform re-theme, no
+observable diverges), and I2's dedicated text token. The S85 lessons
+are recorded in AGENTS.md (the lying client type as the seam that knew;
+the presence-failure discovery signal; the agent-browser viewport
+persistence + the geometry-probe button-identity caveat).

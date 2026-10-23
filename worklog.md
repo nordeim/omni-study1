@@ -2548,3 +2548,33 @@ eslint-config alignment). Baselines: e2e **463/463**, unit **883/883**,
 lint/tsc/build clean, every standing audit green, s84 resweep ok:true,
 mobile nav verified on both hosts. Standing debt unchanged: Batch R, the
 study zombie, the ~27 hue consumers, I2's text token.
+
+---
+
+## Session-85 — Batch AL (Cycle 35): the study-groups members resurrection + the lying-type seam closure + the server-walk seam
+
+**Received state**: `5383bb7` (Batch AK `86d11dd` + the operator's session-log commit adding `docs/session_39.md`). Provisioning: bun install (497 pkgs), `.env` from `.env.example` (DATABASE_URL="file:../db/custom.db"), db push + seed, chromium-1243 re-provisioned (the 27th workspace reset), production build green.
+
+**Baseline re-certified cold BEFORE any work**: lint ✓ tsc ✓ unit 883/883 ✓; e2e 463/463 (127+138+57+83+58, first-pass every chunk).
+
+**Evidence layers (all pre-change)**:
+- The Mode-C audit of the Batch AK diff (`b0d903b..86d11dd`): **0 Critical / 0 High / 0 Medium / 4 Low / 4 Info** — all nine AK claims verified (the auditor re-ran the unit seams green). The Lows: L1 the one avatar-gradient print surface AK2 missed (the Study Groups member chip), L2 the sentKeysPatch value-source mutation gap, L3 the folder-guard TOCTOU (accept-and-documented), L4 the server walk's unpinned termination.
+- The s85 reference re-sweep: **ok:true** (9/9 invariants both hosts, brand tables byte-matched, 18 captures).
+- agent-browser mobile-nav on BOTH hosts: the reference drawer (20 LABELED links with the sidebar expanded — the icon-only collapsed state re-confirmed live via `sidebarOpen:false`, the S52 shared-state contract) and the clone drawer (26 labeled links — the superset skip-link + 20 nav + 5 content; icon-only with `title`+`aria-label` when collapsed). Both navigate + close; the reference's own 416 overflow vs the clone's 390. **No Tailwind v4 mobile-nav bug.** Collapsed-state captures saved for both hosts.
+
+**The cycle's empirical discovery — AL1, the headline**: the Study Groups members surface has been DEAD since the initial implementation. The API ships `members` as an ARRAY (`membersFromRow`), the client's `parseMembers` ran `JSON.parse` on it (the array coerces to "[object Object]", throws, the catch returns []) — every group rendered "0 members", **addMember WIPED the existing members**, and every edit-dialog save sent `members: []` (the wipe again). Found live by the AL2 print pin's locator resolving NOTHING (a presence-failure; the page snapshot showed "0 members" against a DB row carrying [{Ari},{Sam}]). The store's own TYPE (`members: string`) had lied about the boundary for 84 sessions.
+
+**Implemented TDD RED→GREEN**:
+- **AL1**: the 3-pin e2e family (seeded-members-render / add-member-preserves / edit-save-preserves) verified RED at their designed assertions, then the pure `src/lib/group-members.ts` seam (`normalizeMembers`, 7 unit pins) + the store type corrected to `GroupMember[]` + the view wired through the seam.
+- **AL2**: the member chip's inline `printColorAdjust: "exact"` (+1 e2e pin under print emulation — RED at the designed assertion post-AL1, GREEN under the property).
+- **AL3**: the server cycle-walk extracted to `wouldCreateCycle` (src/lib/folder-tree.ts), consumed by the PATCH delegate — EIGHT unit pins, MUTATION-PROVEN (the guard-removal mutant WEDGES the runner, exit 124).
+- **AL4**: the sentKeysPatch value-source pins (+2) — MUTATION-PROVEN (the source-substitution mutant failed exactly the two new pins; the original ten survived).
+- **AL5**: the s85 resweep's probe-user cleanup (the closing delete-account POST; `probeCleanup: ok` verified on the final-build re-run).
+
+**Re-certification**: rebuild green; lint ✓ tsc ✓ unit **900/900** (883+7+8+2); full cold re-cert **467/467** (130+138+57+84+58, first-pass every chunk, zero flakes). The s85 resweep on the final build: ok:true. The standing audits: security 0 (the first run's limiter finding was the documented S84 ordering artifact — the audit had run twice back-to-back; fresh boot + single re-run: 0), print 0/0, focus-order 0, settings-roundtrip 0, connectivity 0, data-volume 0, ai-error 0 (fresh budget), ai-a11y 0. Mobile nav re-verified on the final build.
+
+**Operational lessons (recorded in AGENTS.md)**: a client type that disagrees with the API boundary hides live data loss (the type was the seam that knew); a pin failing at PRESENCE (not its assertion) is a discovery signal — read the page snapshot before reframing; agent-browser's `--viewport` flag does not persist across `open` calls (use `set viewport`), and a geometry-based "first button" probe at desktop width resolves the sidebar's collapse chevron, not the hamburger — its persisted state changes the drawer's rendering (the S52 shared-state behavior).
+
+**Docs chain**: README (badge 1367, counts 900/467, the Session-85 row), AGENTS/CLAUDE counts + the S85 lessons section, vitest.config.ts header, the e2e-chunked-cert.sh header (130+138+57+84+58=467), the remediation-plan header + Cycle-35 plan + the mid-cycle discovery amendment + execution record + DONE marker, this worklog, `docs/session_40.md`. Evidence: the s85 resweep 18 captures + 4 mobile-nav captures (both hosts, both sidebar states) + 6 AL-surface captures (`85-clone-al-*.png`). `.env.example` verified current (no env surface changed this cycle).
+
+**Stage summary.** Batch AL DONE: the members resurrection (a live data-loss defect closed at the pure seam + the corrected store type, 3 e2e + 7 unit pins), the print-closure completion (the one missed avatar-gradient surface, +1 pin), the server-walk seam (8 unit pins + the wedge mutation proof), the value-source pins (2 pins + the precise mutation proof), and the resweep probe cleanup. Baselines: e2e **467/467**, unit **900/900**, lint/tsc/build clean, every standing audit green, s85 resweep ok:true, mobile nav verified on both hosts. Standing debt unchanged: Batch R, the study zombie, the ~27 hue consumers, I2's text token.

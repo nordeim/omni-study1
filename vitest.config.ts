@@ -1,8 +1,14 @@
 import { defineConfig } from "vitest/config";
 import path from "node:path";
 
-// Unit-test layer for the pure domain seams — 24 files / 883 tests
-// (re-anchored S79; S80/AG12 fixed the stale "834" header — AGENTS.md/
+// Unit-test layer for the pure domain seams — 25 files / 900 tests
+// (re-anchored S85: +group-members [the S85/AL1 members seam — the API
+// ships an ARRAY; the pre-seam JSON.parse-on-array "0 members" + wipe
+// defect], +the wouldCreateCycle pins in folder-tree [S85/AL3 — the
+// server PATCH guard's walk, unit-pinned; the guard-removal mutant WEDGES
+// the runner], +the value-source pins in sent-keys-patch [S85/AL4 — the
+// source-substitution mutant failed exactly the two new pins];
+// re-anchored S79; S80/AG12 fixed the stale "834" header — AGENTS.md/
 // CLAUDE.md/README stay the authoritative count keepers): router, theme,
 // theme-cache, date, calculator, auth, validation, db-path,
 // site, api-timeout, api-offline, files (content-disposition),

@@ -400,6 +400,30 @@ test.describe("S12-C2 · essential backgrounds print (print-color-adjust: exact)
     const adjust = await chip.evaluate((el) => getComputedStyle(el).printColorAdjust);
     expect(adjust).toBe("exact");
   });
+
+  // S85/AL1 (the s85 Mode-C audit's L1 — the AK2 closure completion): the
+  // Study Groups member avatar chip is the one avatar-gradient consumer the
+  // AK2 enumeration missed. It PRINTS (the Members card lives in the detail
+  // <section>, not a print-hidden <aside>), so under print the inline
+  // gradient drops and the white initials render white-on-white — the exact
+  // S12-C2 class. The pin walks the REAL flow: select the seeded group so
+  // the detail pane renders, then assert the fill contract on the chip.
+  // (The group-list aside is print-hidden by the S12 design, so the
+  // selection click runs under screen media — the events/timetable/calendar
+  // pin's pattern — before the print assertion.)
+  test("AL1: the Study Groups member avatar chip keeps its gradient fill", async ({ page }) => {
+    await page.emulateMedia({ media: "screen" });
+    await gotoMode(page, "/StudyGroups", "light");
+    await hydrated(page);
+    // Select the seeded "Calc Crew" group — the detail pane (with its
+    // member chips) renders only after a group is selected.
+    await page.getByRole("button", { name: /Calc Crew/ }).first().click();
+    const chip = page.locator('section[aria-label="Study group detail pane"] span.rounded-full.text-white').first();
+    await expect(chip).toBeVisible();
+    await page.emulateMedia({ media: "print" });
+    const adjust = await chip.evaluate((el) => getComputedStyle(el).printColorAdjust);
+    expect(adjust).toBe("exact");
+  });
 });
 
 // S83/AJ6 (the s83 standing-suite layer's focus finding, A/B-verified on

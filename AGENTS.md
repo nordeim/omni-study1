@@ -9,9 +9,9 @@ High-signal instructions for coding agents working in this repo. Everything here
 | `bun install` | Install deps (Bun ≥ 1.3) |
 | `bun run dev` | Dev server on :3000 (Turbopack), logs tee'd to `dev.log` |
 | `bun run lint` / `bun run typecheck` | ESLint / `tsc --noEmit` — both must be clean |
-| `bun run test` | Vitest unit layer (883 tests; `*.test.ts` only — never picks up e2e specs) |
+| `bun run test` | Vitest unit layer (900 tests; `*.test.ts` only — never picks up e2e specs) |
 | `bun run build` | Production build → `.next/standalone` (**required before e2e**) |
-| `bun run test:e2e` | Playwright vs the standalone build on :3100 with `db/e2e.db` (463 tests across the 5-chunk cold map — 127+138+57+83+58, 30 spec files; a single-process full run trips the register rate-limiter budget by design, the chunked map re-boots the server per chunk). NOTE (S45, the day-boundary lesson): the global setup re-seeds every run, but the seed's IDEMPOTENT UPSERTS do NOT refresh day-relative dates on existing rows — a scratch `db/e2e.db` that ages across a UTC midnight keeps its original day-relative dates (today's tasks, the +1-day exam badge, the due-in pills, the import round-trip dates each read one day stale → 4 deterministic failures in parity-session6/parity-session9/s23-import). Delete `db/e2e.db` when a run crosses a day boundary — the global setup re-creates it fresh with current dates. NOTE (S46, TWO more aged-scratch-db classes + a build-input one): (1) ALWAYS run e2e COLD — `rm -f db/e2e.db` before every full run: the s23-import round-trip posts a FIXED-id envelope, so a second consecutive run against the aged db reads `created: 0, updated: 1` instead of `created: 1, updated: 0` and fails — not just across midnights, across ANY re-run; (2) the s22 negative-spawn spec reads the BUNDLED `.env` — Next's standalone output COPIES the repo-root `.env` into `.next/standalone/.env` at build time, so a REAL AUTH_SECRET in the dev `.env` leaks into the bundle and the guard CORRECTLY boots (the spec times out waiting for the exit) — keep the repo-root `.env`'s AUTH_SECRET EMPTY (the `.env.example` dev posture: `AUTH_SECRET=""` — dev falls back to the local constant with the boot warning) when building for e2e |
+| `bun run test:e2e` | Playwright vs the standalone build on :3100 with `db/e2e.db` (467 tests across the 5-chunk cold map — 130+138+57+84+58, 30 spec files; a single-process full run trips the register rate-limiter budget by design, the chunked map re-boots the server per chunk). NOTE (S45, the day-boundary lesson): the global setup re-seeds every run, but the seed's IDEMPOTENT UPSERTS do NOT refresh day-relative dates on existing rows — a scratch `db/e2e.db` that ages across a UTC midnight keeps its original day-relative dates (today's tasks, the +1-day exam badge, the due-in pills, the import round-trip dates each read one day stale → 4 deterministic failures in parity-session6/parity-session9/s23-import). Delete `db/e2e.db` when a run crosses a day boundary — the global setup re-creates it fresh with current dates. NOTE (S46, TWO more aged-scratch-db classes + a build-input one): (1) ALWAYS run e2e COLD — `rm -f db/e2e.db` before every full run: the s23-import round-trip posts a FIXED-id envelope, so a second consecutive run against the aged db reads `created: 0, updated: 1` instead of `created: 1, updated: 0` and fails — not just across midnights, across ANY re-run; (2) the s22 negative-spawn spec reads the BUNDLED `.env` — Next's standalone output COPIES the repo-root `.env` into `.next/standalone/.env` at build time, so a REAL AUTH_SECRET in the dev `.env` leaks into the bundle and the guard CORRECTLY boots (the spec times out waiting for the exit) — keep the repo-root `.env`'s AUTH_SECRET EMPTY (the `.env.example` dev posture: `AUTH_SECRET=""` — dev falls back to the local constant with the boot warning) when building for e2e |
 | `node scripts/capture-studyflow.mjs` | Refresh all 31 `docs/screenshots/` captures from the dev server (24 light + 7 dark) |
 | `node scripts/dark-sweep.mjs` | Dark-mode contrast audit over all 20 views (flashbulb/unreadable detector). S27: sets dark mode through the settings API (the real lifecycle) and SELF-VERIFIES the precondition — fails loudly (exit 1, no findings) if the dark class is not applied; the applied mode rides the JSON envelope. Never force the class directly (the session-10 approach silently rotted after S11) |
 | `node scripts/accent-dark-sweep.mjs` | Accent × dark-mode audit (S38-extended): all 7 accents × 20 desktop views × 20 MOBILE views at 390×844 + the drawer per accent (FAIL <2.2, WARN <3.2 for accent text; the mobile records also carry scrollWidth — >390 is a finding). The S38 shape is unit-pinned anti-phantom: every view recorded EXPLICITLY on both surfaces (clean views carry empty detector arrays), the per-accent `applied` self-verified readings + `mode: "dark"` + `mobileViewport` ride the envelope, and the seam's ALL-ACCENTS + ALL-VIEWS + drawer-present guards make every silently-skipped dimension a LOUD shape-error (the pre-S38 mobile pass swept only 6 views — MOBILE_VIEWS — and the omission-means-clean recording could not distinguish "clean because measured" from "clean because never rendered") |
@@ -265,6 +265,36 @@ Hover-parity probing must run in Playwright, not a touch-emulating browser — v
    (`[m` parsed as an ANSI reset) — the source looked corrupted in every
    grep/print view. The hex dump (`od -c` / python `.hex()`) is the
    authority when a "garbage" class name contains `[m…`.
+
+## Lying-type + probe-tooling lessons (S85, the Batch AL findings)
+
+1. **A client type that disagrees with the API boundary hides live data
+   loss.** The store typed `StudyGroupRow.members: string` ("JSON") for
+   84 sessions while the API shipped an ARRAY (the documented
+   `membersFromRow` boundary) — the client's JSON.parse-on-array threw
+   and returned [], every group rendered "0 members", addMember WIPED
+   the existing members, and the edit-dialog save wiped them too. The
+   runtime defect was invisible because no pin covered the surface; the
+   TYPE was the seam that knew. When a store type disagrees with the
+   API boundary's documented contract, that is exactly where an
+   unpinned data-loss class lives — fix the type AND pin the flow.
+2. **A pin that fails at PRESENCE (not at its assertion) is a discovery
+   signal.** The AL2 print pin's chip locator resolved nothing — not
+   "wrong fill," NOTHING. The AK2a precedent reframed such a RED as a
+   print-hidden surface; this time the surface should have rendered and
+   the empty members list was a live defect. Read the error-context
+   page snapshot before reframing a presence-failure: a locator that
+   finds nothing where CONTENT should be means the content is missing.
+3. **agent-browser viewport flags do not persist across `open` calls.**
+   `open <url> --viewport 390x844` applies only to that navigation;
+   a later `open` resets to the default. Use `agent-browser set viewport
+   390 844` for a persistent mobile viewport. And beware the
+   "first button at y<80, x<120" probe at DESKTOP width: that region is
+   the SIDEBAR's collapse chevron, not the mobile hamburger — clicking
+   it persists the collapsed state, which the reference's drawer then
+   honors (icon-only links, the S52 shared-state contract). Verify WHICH
+   button a geometry-based probe resolved before drawing conclusions
+   from its effects.
 
 
 ## Testing quirks

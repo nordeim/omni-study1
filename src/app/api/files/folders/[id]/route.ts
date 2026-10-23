@@ -6,6 +6,7 @@
 import { z } from "zod";
 
 import { db } from "@/lib/db";
+import { wouldCreateCycle } from "@/lib/folder-tree";
 import {
   makeItemRoutes,
   NotFoundError,
@@ -56,6 +57,10 @@ const folderDelegate: EntityDelegate = {
       // cycle — one userId-scoped query, the ancestor chain walked in
       // memory with a visited set (also terminates on a pre-existing
       // cycled row set from an imported DB).
+      // S85/AL3 (the s85 audit's L4): the walk lives in the shared pure
+      // seam now (wouldCreateCycle, src/lib/folder-tree.ts — unit-pinned
+      // against the pre-existing-cycle shapes; the inline twin's
+      // termination property was unpinned and mutation-surviving).
       if (writes.parentId === id) {
         throw new ValidationError("A folder cannot be its own parent.");
       }
@@ -63,20 +68,13 @@ const folderDelegate: EntityDelegate = {
         where: { userId },
         select: { id: true, parentId: true },
       });
-      const parentById = new Map(chain.map((row) => [row.id, row.parentId]));
-      if (!parentById.has(writes.parentId)) {
+      if (!chain.some((row) => row.id === writes.parentId)) {
         throw new NotFoundError("That folder does not exist.");
       }
-      let cursor: string | null = writes.parentId;
-      const seen = new Set<string>();
-      while (cursor && !seen.has(cursor)) {
-        if (cursor === id) {
-          throw new ValidationError(
-            "A folder cannot be moved inside its own subtree.",
-          );
-        }
-        seen.add(cursor);
-        cursor = parentById.get(cursor) ?? null;
+      if (wouldCreateCycle(chain, id, writes.parentId)) {
+        throw new ValidationError(
+          "A folder cannot be moved inside its own subtree.",
+        );
       }
     }
     if (Object.keys(writes).length === 0) {
