@@ -1277,6 +1277,18 @@ const S51_BUDGETS: ReadonlyArray<{ metric: string; limit: number; label: string 
   { metric: "longTaskTotal", limit: 2400, label: "the load-window sibling of the S13 B3 budget (S91/AR1 re-anchor: the documented same-tree healthy band 1821–2288ms made the original 2000 pin a coin flip)" },
 ];
 
+// S92/AS4: the metric → script-family map (the live script tags its
+// probe-computed findings S51-lcp / -cls / -fcp / -ttfb / -longtask /
+// -inp) — the dedupe key for the envelope-side entries that report a
+// finding the classifier also recomputes.
+const S51_FAMILY_BY_METRIC: Readonly<Record<string, string>> = {
+  lcp: "S51-lcp",
+  cls: "S51-cls",
+  fcp: "S51-fcp",
+  ttfb: "S51-ttfb",
+  longTaskTotal: "S51-longtask",
+};
+
 function classifyCwvVolumeStress(env: unknown): StageVerdict {
   if (!isRec(env)) return shapeErr("envelope is not an object");
   if (!isArr(env.findings)) {
@@ -1345,23 +1357,39 @@ function classifyCwvVolumeStress(env: unknown): StageVerdict {
 
   let breaches = 0;
   const breachNotes: string[] = [];
+  // S92/AS4 (the s91 audit's I2): the recomputed breaches are keyed by
+  // (family, view) so the env.findings pass below can skip the script-side
+  // S51-* entries that report the SAME real finding — the live tally
+  // double-counted those. The recompute stays the authority (the
+  // anti-phantom doctrine: a lying envelope cannot hide a breach); an
+  // envelope-only finding still surfaces.
+  const recomputedKeys = new Set<string>();
+  const familyKey = (family: string, view: string) => `${family}|${view}`;
   for (const view of VOLUME_VIEWS) {
     const vr = (env.views as Rec)[view] as Rec;
     for (const budget of S51_BUDGETS) {
       const value = vr[budget.metric] as number;
       if (value > budget.limit) {
         breaches += 1;
+        recomputedKeys.add(familyKey(S51_FAMILY_BY_METRIC[budget.metric], view));
         breachNotes.push(`${view} ${budget.metric}=${value} >${budget.limit} (${budget.label})`);
       }
     }
   }
   if (proxy.ms > 3000) {
     breaches += 1;
+    recomputedKeys.add(familyKey("S51-inp", "Tasks"));
     breachNotes.push(
       `INP proxy ${proxy.from}→${proxy.to} ${proxy.ms}ms >3000ms volume interaction budget (Dashboard→Tasks under the full throttle)`,
     );
   }
-  const findings = env.findings.length + breaches;
+  const envelopeOnlyFindings = (env.findings as unknown[]).filter((f) => {
+    if (!isRec(f)) return true; // a malformed entry still counts (loud)
+    const family = isStr(f.family) ? f.family : "";
+    const view = isStr(f.view) ? f.view : "";
+    return !recomputedKeys.has(familyKey(family, view));
+  }).length;
+  const findings = envelopeOnlyFindings + breaches;
   const noteBits = [
     "7 volume-affected views × 5 field metrics at 390×844 under the Lighthouse throttle (4x CPU + Slow-4G)",
     `against the standalone build (${env.target})`,
@@ -1369,6 +1397,9 @@ function classifyCwvVolumeStress(env: unknown): StageVerdict {
     `MODE ${env.mode}`,
     `INP proxy ${proxy.from}→${proxy.to} ${proxy.ms}ms`,
     `${breaches} budget breach(es)`,
+    ...(envelopeOnlyFindings > 0
+      ? [`${envelopeOnlyFindings} envelope-only finding(s) (deduped against the recomputed breaches — S92/AS4)`]
+      : []),
     ...breachNotes,
   ];
   return { green: findings === 0, findings, note: noteBits.join("; ") };

@@ -5259,13 +5259,18 @@ describe("classifyAudit accent-dark-landscape-seed-sweep (S50 — the dark × la
 // overhead would inflate every reading). The budget families, calibrated
 // against the recorded S16 seed readings (throttled dashboard LCP 2684ms /
 // FCP 588ms / CLS 0 / TTFB 8ms / longTasks 225ms / INP proxy 397ms):
-// LCP ≤ 4000 (the cwv POOR boundary — findings = POOR only, NI is the
-// documented S16 state), CLS ≤ 0.1 (the ADR-014 load-stability contract
-// extended to volume), FCP ≤ 1500 (the shell-paint volume-invariance),
-// TTFB ≤ 500 (the server sanity bound), longTaskTotal ≤ 2000 (the S13 B3
-// quiet-window 1500ms standing budget's load-window sibling), and the INP
-// proxy ≤ 3000 (Dashboard→Tasks under the full throttle — the 300-row list
-// mount is the heaviest interaction).
+// LCP ≤ 4400 (the S51-cycle 4000 → 4400 re-anchor — the parity-anchor
+// budget, the reference's own seed LCP under the same preset; findings =
+// POOR only, NI is the documented S16 state), CLS ≤ 0.1 (the ADR-014
+// load-stability contract extended to volume), FCP ≤ 1500 (the
+// shell-paint volume-invariance), TTFB ≤ 500 (the server sanity bound),
+// longTaskTotal ≤ 2400 (the S91/AR1 re-anchor: the documented same-tree
+// healthy band 1821–2288ms made the original 2000 pin a coin flip; the
+// S13 B3 quiet-window 1500ms standing budget's load-window sibling), and
+// the INP proxy ≤ 3000 (Dashboard→Tasks under the full throttle — the
+// 300-row list mount is the heaviest interaction). [S92/AS2: this fifth
+// live budget site re-anchored — the AR1 sync sweep's miss, the s91
+// audit's L1.]
 const S51_VIEWS = ["Dashboard", "My Day", "Tasks", "Calendar", "Events", "Notes", "Analytics"];
 
 type S51Rec = Record<string, unknown>;
@@ -5464,6 +5469,22 @@ describe("classifyAudit cwv-volume-stress (S51 — the CWV × volume stress, the
     expect(v.green).toBe(false);
     expect(v.findings).toBe(2);
     expect(v.note).toMatch(/2 budget breach/);
+  });
+
+  it("the live-tally dedupe (S92/AS4): an env.findings entry whose family+view matches a recomputed breach counts ONCE — the script-side S51-* findings stop double-counting, the anti-phantom recompute stays the authority, and an envelope-only finding still surfaces", () => {
+    const env = s51Envelope({ "My Day": { longTaskTotal: 2401 } }) as { findings: unknown[] };
+    // the live script shape: the probe pushes its own finding for the SAME
+    // breach the classifier recomputes (the s91 seam tallied both → 2).
+    env.findings = [{ family: "S51-longtask", view: "My Day", finding: "load-window longTaskTotal 2500ms > 2400ms", value: 2500, budget: 2400 }];
+    const v = classifyAudit("cwv-volume-stress", env);
+    expect(v.green).toBe(false);
+    expect(v.findings).toBe(1); // the s91 seam returned 2 here — the S92 dedupe
+    // an envelope-only finding (no recomputed counterpart) still counts alone
+    const env2 = s51Envelope() as { findings: unknown[] };
+    env2.findings = [{ family: "S51-other", view: "Dashboard", finding: "an envelope-only finding" }];
+    const v2 = classifyAudit("cwv-volume-stress", env2);
+    expect(v2.green).toBe(false);
+    expect(v2.findings).toBe(1);
   });
 
   it("the INP proxy family, boundary-exact: 3000 reads green and 3001 is a counted finding (the volume-stressed interaction budget — Dashboard→Tasks under the full throttle)", () => {

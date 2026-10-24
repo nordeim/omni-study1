@@ -220,7 +220,10 @@ export function CalculatorView() {
         key.kind === "fn" &&
           "border border-slate-200 bg-white text-sm text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800",
         key.kind === "clear" &&
-          "bg-red-100 text-red-700 hover:bg-red-200 dark:bg-red-950 dark:text-red-300 dark:hover:bg-red-900",
+          // S92/AS1: the AC key rides the sf-pill-red family; its own hover
+          // pair composes on top (hover 0,2,0 and dark:hover 0,3,0 both beat
+          // the utility's branches).
+          "sf-pill-red hover:bg-red-200 dark:hover:bg-red-900",
       )}
     >
       {key.kind === "clear" && (

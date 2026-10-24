@@ -36,7 +36,7 @@ function InlineStatus({ message }: { message: string }) {
   return (
     <div
       role="status"
-      className="rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-700 dark:border-emerald-900 dark:bg-emerald-950 dark:text-emerald-200"
+      className="sf-alert-emerald rounded-xl px-3 py-2 text-sm"
     >
       {message}
     </div>
@@ -502,7 +502,7 @@ export function LoginSurface() {
               <div className="mt-6 flex flex-col gap-4">
                 <div
                   role="alert"
-                  className="rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-700 dark:border-emerald-900 dark:bg-emerald-950 dark:text-emerald-200"
+                  className="sf-alert-emerald rounded-xl px-3 py-2 text-sm"
                 >
                   Please check your email for the password reset link. It may take a few minutes to arrive.
                 </div>

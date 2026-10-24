@@ -87,9 +87,11 @@
 
   --color-blue-50: #eff6ff;
   --color-blue-100: #dbeafe;
+  --color-blue-300: #93c5fd; /* S92/AS1: the assignments dark blue due pill — trap 2/10 (was unpinned) */
   --color-blue-400: #60a5fa;
   --color-blue-500: #3b82f6;
   --color-blue-600: #2563eb;
+  --color-blue-950: #172554; /* S92/AS1: the assignments dark blue due pill — trap 2/10 (was unpinned) */
 
   --color-sky-50: #f0f9ff;
   --color-sky-100: #e0f2fe;
@@ -145,10 +147,12 @@
 
   --color-orange-50: #fff7ed;
   --color-orange-100: #ffedd5;
+  --color-orange-300: #fdba74; /* S92/AS1: the exams Tomorrow dark badge — trap 2/10 (was unpinned) */
   --color-orange-400: #fb923c;
   --color-orange-500: #f97316;
   --color-orange-600: #ea580c;
   --color-orange-700: #c2410c;
+  --color-orange-950: #431407; /* S92/AS1: the exams Tomorrow dark badge — trap 2/10 (was unpinned) */
 
   --color-red-50: #fef2f2;
   --color-red-100: #fee2e2;
@@ -178,6 +182,7 @@
 
   --color-yellow-50: #fefce8;
   --color-yellow-100: #fef9c3;
+  --color-yellow-300: #fde047; /* S92/AS1: the exams/flashcards/assignments dark yellow pills — trap 2/10 (was unpinned) */
   --color-yellow-500: #eab308;
   --color-yellow-700: #a16207;
   --color-yellow-950: #422006;
@@ -509,6 +514,142 @@
   .dark & {
     background-color: rgb(var(--sf-primary-soft-dark) / 0.3);
     color: rgb(var(--sf-primary-strong-dark));
+  }
+}
+
+/* ---- S92/AS1: the hue-consumer token families (the s80-era L4 standing
+   debt closed). The AG cycle pinned five dark-pill palette steps for ITS
+   five surfaces; ~27 pre-existing consumer sites of the same hue families
+   kept raw class strings — the pins re-themed them uniformly with no
+   observable diverges, but every new consumer had to re-derive the family
+   by hand (and three drifted: the RUM rating badges and the PracticeTests
+   timer pill carried NO dark branch, the timer pill rode the WCAG-failing
+   red-600-on-red-100 pair the DuePill's Lighthouse-61 lesson already
+   fixed once). The families now live here, referencing the pinned palette
+   vars (the @theme pin stays the single source — never a literal hex).
+   Color-only by design: layout, rounding and typography stay site-local.
+   The consumer census + this contract are machine-guarded by
+   tests/hue-tokens.test.ts (the AP3 source-scan precedent — computed-style
+   pins cannot discriminate a utility from the raw classes; that is the
+   point: byte-identical rendering, centralized family). */
+
+@utility sf-pill-red {
+  /* The 100-step status pill: shared DuePill, exams Today badge, GradeTracker
+     red score pill, assignments overdue pill, dashboard missed-exam badge,
+     calculator AC key, RUM poor badge, PracticeTests timer red branch. */
+  background-color: var(--color-red-100);
+  color: var(--color-red-700);
+  .dark & {
+    background-color: var(--color-red-950);
+    color: var(--color-red-300);
+  }
+}
+
+@utility sf-pill-orange {
+  /* The exams Tomorrow badge (S9-J pinned). */
+  background-color: var(--color-orange-100);
+  color: var(--color-orange-700);
+  .dark & {
+    background-color: var(--color-orange-950);
+    color: var(--color-orange-300);
+  }
+}
+
+@utility sf-pill-yellow {
+  /* The exams This-Week badge + the flashcards difficulty pill. */
+  background-color: var(--color-yellow-100);
+  color: var(--color-yellow-700);
+  .dark & {
+    background-color: var(--color-yellow-950);
+    color: var(--color-yellow-300);
+  }
+}
+
+@utility sf-pill-emerald {
+  /* The GradeTracker >=90 score pill + the RUM good badge. */
+  background-color: var(--color-emerald-100);
+  color: var(--color-emerald-700);
+  .dark & {
+    background-color: var(--color-emerald-950);
+    color: var(--color-emerald-300);
+  }
+}
+
+@utility sf-pill-sky {
+  /* The GradeTracker >=80 score pill (S80/AG4). */
+  background-color: var(--color-sky-100);
+  color: var(--color-sky-700);
+  .dark & {
+    background-color: var(--color-sky-950);
+    color: var(--color-sky-300);
+  }
+}
+
+@utility sf-pill-amber {
+  /* The GradeTracker >=70 score pill + the RUM needs-improvement badge. */
+  background-color: var(--color-amber-100);
+  color: var(--color-amber-700);
+  .dark & {
+    background-color: var(--color-amber-950);
+    color: var(--color-amber-300);
+  }
+}
+
+@utility sf-pill-soft-amber {
+  /* The assignments soft amber due pill (the S6 measured family). */
+  background-color: var(--color-amber-50);
+  color: var(--color-amber-700);
+  .dark & {
+    background-color: var(--color-amber-950);
+    color: var(--color-amber-300);
+  }
+}
+
+@utility sf-pill-soft-yellow {
+  /* The assignments soft yellow type pill (the S6 measured family). */
+  background-color: var(--color-yellow-50);
+  color: var(--color-yellow-700);
+  .dark & {
+    background-color: var(--color-yellow-950);
+    color: var(--color-yellow-300);
+  }
+}
+
+@utility sf-pill-soft-blue {
+  /* The assignments blue due pills — the reference's own measured
+     blue-50/blue-600 light pair (S6-A pinned; blue-600, not 700). */
+  background-color: var(--color-blue-50);
+  color: var(--color-blue-600);
+  .dark & {
+    background-color: var(--color-blue-950);
+    color: var(--color-blue-300);
+  }
+}
+
+@utility sf-alert-red {
+  /* The bordered destructive alert box: toast destructive variant, the
+     login/export/assignments/events/exams/flashcards/notes/timetable error
+     alerts. */
+  border: 1px solid var(--color-red-200);
+  background-color: var(--color-red-50);
+  color: var(--color-red-700);
+  .dark & {
+    border-color: var(--color-red-900);
+    background-color: var(--color-red-950);
+    color: var(--color-red-200);
+  }
+}
+
+@utility sf-alert-emerald {
+  /* The bordered success notice: the login surface's success banners, the
+     export panel's success note, the toast success variant. */
+  border: 1px solid var(--color-emerald-200);
+  background-color: var(--color-emerald-50);
+  color: var(--color-emerald-700);
+  .dark & {
+    border-color: var(--color-emerald-900);
+    background-color: var(--color-emerald-950);
+    color: var(--color-emerald-200);
   }
 }
 

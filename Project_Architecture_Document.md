@@ -1,4 +1,4 @@
-# StudyFlow (Omni-Study) — Master Project Architecture Document (PAD) v1.2.0
+# StudyFlow (Omni-Study) — Master Project Architecture Document (PAD) v1.3.0
 
 **Classification:** Internal Engineering Reference
 **Status:** DEFINITIVE, PRODUCTION-LOCKED BLUEPRINT
@@ -8,6 +8,12 @@
 **Rule:** Every architectural decision in this document traces to a specific rationale. Nothing is here "because it's popular."
 
 ---
+
+#### Revision Block — v1.3.0 (Session-92 / Batch AS, Cycle 42)
+
+- `[SR]` Current test census anchor (the v1.2.0 convention, re-anchored): **916/916 Vitest unit** (26 files, `*.test.ts` only — +3 hue-token pins + the S51 tally-dedupe pin) + **470/470 Playwright e2e** across the 5-chunk cold map (131+140+57+84+58 = 465 real specs in 30 spec files + 5 auth setups; `scripts/e2e-chunked-cert.sh` is the census authority). The PAD carries the census at revision time ONLY — the live count-keepers each cycle are the README badge, AGENTS.md/CLAUDE.md, the `vitest.config.ts` header, and the cert-script header.
+- `[SR]` The hue-consumer token contract (S92/AS1 — the s80-era L4 standing debt closed): the semantic hue families (status pills `sf-pill-{red,orange,yellow,emerald,sky,amber}`, soft pills `sf-pill-soft-{amber,yellow,blue}`, alert boxes `sf-alert-{red,emerald}`) live as color-only utilities in `src/app/globals.css` referencing the @theme-pinned palette vars; five previously-unpinned palette steps carry the v3 hexes (orange-300 `#fdba74`, orange-950 `#431407`, yellow-300 `#fde047`, blue-300 `#93c5fd`, blue-950 `#172554`); the 29 canonical consumer sites ride the utilities (machine-guarded by `tests/hue-tokens.test.ts` — the palette contract, the utility contract, the quote-adjacency consumer sweep); the 4 divergent single-site variants (the login `bg-red-50/70` alert, the RUM panel's borderless red-600 alert, the connectivity banner's amber-800/60 pill, the dashboard overdue icon chip's bg-only pair) are documented site-local residuals; the RUM rating badges and the PracticeTests timer pill joined the family (closing their missing dark branches + the timer's WCAG red-600-on-red-100 pair).
+- `[SR]` The S51 live-tally dedupe (S92/AS4): `classifyCwvVolumeStress` counts recomputed breaches plus envelope-only findings — a script-side S51-* finding whose family+view matches a recomputed breach counts once (the green-iff-0 verdict unchanged by construction; the anti-phantom recompute stays the authority).
 
 #### Revision Block — v1.2.0 (Session-91 / Batch AR, Cycle 41)
 

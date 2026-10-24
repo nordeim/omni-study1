@@ -1,7 +1,7 @@
 import { defineConfig } from "vitest/config";
 import path from "node:path";
 
-// Unit-test layer for the pure domain seams — 25 files / 912 tests
+// Unit-test layer for the pure domain seams — 26 files / 916 tests
 // (re-anchored S90: +the AQ1 third-leg pin in theme [the seven
 // hand-maintained TOKENS lists must equal the ACCENT_TOKENS literals' OWN
 // key insertion order — the exact order the boot script's VALUES generator
@@ -90,7 +90,10 @@ import path from "node:path";
 // longTaskTotal <= 2400 budget families with boundary-exact pins (re-anchored
 // S91/AR1: the documented same-tree band 1821–2288ms made the 2000 pin a coin
 // flip — the S51 LCP class; the boundary pin now reads 2400/2401), and the
-// INP proxy <= 3000 budget.
+// INP proxy <= 3000 budget. S92/AS4 added the live-tally dedupe pin (a
+// script-side S51-* finding matching a recomputed breach counts once).
+// S92/AS1 added tests/hue-tokens.test.ts (+3: the pill/alert palette
+// contract, the utility contract, the consumer sweep).
 // Browser/E2E coverage lives in tests/e2e/*.spec.ts (Playwright — never
 // picked up by this config, which matches *.test.ts only; the standalone
 // server is booted by playwright.config.ts's webServer).

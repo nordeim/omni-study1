@@ -9,7 +9,7 @@ High-signal instructions for coding agents working in this repo. Everything here
 | `bun install` | Install deps (Bun ≥ 1.3) |
 | `bun run dev` | Dev server on :3000 (Turbopack), logs tee'd to `dev.log` |
 | `bun run lint` / `bun run typecheck` | ESLint / `tsc --noEmit` — both must be clean |
-| `bun run test` | Vitest unit layer (912 tests; `*.test.ts` only — never picks up e2e specs) |
+| `bun run test` | Vitest unit layer (916 tests; `*.test.ts` only — never picks up e2e specs) |
 | `bun run build` | Production build → `.next/standalone` (**required before e2e**) |
 | `bun run test:e2e` | Playwright vs the standalone build on :3100 with `db/e2e.db` (470 tests across the 5-chunk cold map — 131+140+57+84+58, 30 spec files; a single-process full run trips the register rate-limiter budget by design, the chunked map re-boots the server per chunk). NOTE (S45, the day-boundary lesson): the global setup re-seeds every run, but the seed's IDEMPOTENT UPSERTS do NOT refresh day-relative dates on existing rows — a scratch `db/e2e.db` that ages across a UTC midnight keeps its original day-relative dates (today's tasks, the +1-day exam badge, the due-in pills, the import round-trip dates each read one day stale → 4 deterministic failures in parity-session6/parity-session9/s23-import). Delete `db/e2e.db` when a run crosses a day boundary — the global setup re-creates it fresh with current dates. NOTE (S46, TWO more aged-scratch-db classes + a build-input one): (1) ALWAYS run e2e COLD — `rm -f db/e2e.db` before every full run: the s23-import round-trip posts a FIXED-id envelope, so a second consecutive run against the aged db reads `created: 0, updated: 1` instead of `created: 1, updated: 0` and fails — not just across midnights, across ANY re-run; (2) the s22 negative-spawn spec reads the BUNDLED `.env` — Next's standalone output COPIES the repo-root `.env` into `.next/standalone/.env` at build time, so a REAL AUTH_SECRET in the dev `.env` leaks into the bundle and the guard CORRECTLY boots (the spec times out waiting for the exit) — keep the repo-root `.env`'s AUTH_SECRET EMPTY (the `.env.example` dev posture: `AUTH_SECRET=""` — dev falls back to the local constant with the boot warning) when building for e2e |
 | `node scripts/capture-studyflow.mjs` | Refresh all 31 `docs/screenshots/` captures from the dev server (24 light + 7 dark) |
@@ -570,6 +570,55 @@ Hover-parity probing must run in Playwright, not a touch-emulating browser — v
    targeting another db). Evidence gates that only print are decoration;
    gates that exit non-zero are contracts.
 
+## Hue-consumer tokens + measurement-isolation + pin-discriminator lessons (S92, the Batch AS findings)
+
+1. **A source-scan pin must discriminate a CONSUMER from a MENTION — the
+   quote adjacency is the discriminator, never a bare substring.** The
+   AS1 consumer-sweep pin's first form (`toContain("sf-pill-red")`) passed
+   the live mutation proof for the WRONG reason: reverting a consumer to
+   raw classes left the file's COMMENT ("the family rides the sf-pill-red
+   utility") satisfying the substring. The mutation-proven form requires
+   a quote immediately BEFORE the class (`"sf-pill-red` — the whole value
+   or the first class of a composed string): prose mentions have a word
+   boundary, never a quote. Every source-scan pin needs its own
+   mutation proof BEFORE its first green is trusted (the S82 tautology
+   lesson's structural sibling — a pin that cannot fail its own mutant
+   is documentation, not a guard).
+2. **The centralized hue family makes drift a one-site fix instead of a
+   27-site re-derivation — but the divergent single-site variants stay
+   site-local ON PURPOSE.** The ~27 canonical consumers of the AG-pinned
+   hue families now ride `sf-pill-*` / `sf-alert-*` utilities
+   (color-only, `.dark &` branches, palette-var references so the @theme
+   pin stays the single source); the 4 divergent variants (the login
+   `bg-red-50/70` alert, the RUM panel's borderless red-600 alert, the
+   connectivity banner's amber-800/60 pill, the dashboard overdue icon
+   chip's bg-only pair) are documented residuals — a utility per
+   single-site variant would be speculative scaffolding. A NEW consumer
+   of these hue families rides the utility (the sweep pin enforces it);
+   a new FAMILY earns its own utility only at its second consumer.
+3. **A measurement protocol IS part of the budget's noise band — never
+   run the cwv stage concurrently with other spawns.** The S92
+   band-gathering triple read Tasks longTaskTotal 1865ms idle, then
+   2102–2411ms in the two runs that overlapped vitest worker spawns —
+   the 2411 reading would have "disconfirmed" the freshly re-anchored
+   2400 budget if the concurrency had gone unrecorded. The standing
+   suite's sequential design already enforces isolation; the lesson for
+   ad-hoc evidence runs: an idle machine is a precondition of the
+   measurement, and any concurrent spawn (a test suite, a lint, a build)
+   belongs in the record next to the reading it contaminated. The other
+   four S51 families (lcp 2464–3728 vs 4400 / cls 0 vs 0.1 / fcp
+   592–784 vs 1500 / ttfb 7–33 vs 500) sit FAR outside their bands —
+   no coin-flip classes there.
+4. **A latent dark-mode gap hides in the states a sweep never drives —
+   census the CONDITIONAL branches, not just the rendered views.** The
+   RUM rating badges (`/rum`, outside the 20-view dark sweep) and the
+   PracticeTests timer's red branch (a state that renders only in a
+   test's final 60 seconds) both carried NO dark half and the timer rode
+   the WCAG-failing red-600-on-red-100 pair (3.95:1) — the exact class
+   the DuePill's Lighthouse-61 lesson fixed once already. The census that
+   found them was a grep over the raw `dark:bg-*-950` family, not a
+   browser pass: rg finds the branches the user never renders.
+
 ## Testing quirks
 
 - E2E specs run against the **production standalone build** — rebuild after any component change or you will chase ghosts.
@@ -611,7 +660,7 @@ Hover-parity probing must run in Playwright, not a touch-emulating browser — v
 - TypeScript strict; `unknown` over `any`; early returns; no unused imports (lint is a gate).
 - Components: `"use client"` at top; views live in `src/components/views/*-view.tsx` and export `<Name>View`.
 - Dates: `src/lib/date.ts` (local-time semantics, Monday-first weeks). Icons: lucide-react, `strokeWidth={2}` in chrome.
-- Styling: shadcn-style primitives in `src/components/ui/*`; accent colors via `rgb(var(--sf-*))` inline styles or the `text-sf-primary-*`/`bg-sf-primary-*` utilities — never hardcode violet hexes in view code. Brand gradients end at the ADJACENT hue (`--sf-primary-gradient-to`, indigo-600 for violet) and the avatar uses the lighter `--sf-primary-avatar-from/to` pair (violet-400 → indigo-500, measured) — never route them through primary/strong. Primary CTAs use the Button `gradient` variant (`.sf-gradient` classes) — never solid violet. The green/orange accents are the EMERALD/AMBER families (session-5 — the reference's swatch faces).
+- Styling: shadcn-style primitives in `src/components/ui/*`; accent colors via `rgb(var(--sf-*))` inline styles or the `text-sf-primary-*`/`bg-sf-primary-*` utilities — never hardcode violet hexes in view code. Brand gradients end at the ADJACENT hue (`--sf-primary-gradient-to`, indigo-600 for violet) and the avatar uses the lighter `--sf-primary-avatar-from/to` pair (violet-400 → indigo-500, measured) — never route them through primary/strong. Primary CTAs use the Button `gradient` variant (`.sf-gradient` classes) — never solid violet. The green/orange accents are the EMERALD/AMBER families (session-5 — the reference's swatch faces). The semantic hue families (status pills, soft pills, alert boxes) ride the `sf-pill-*` / `sf-pill-soft-*` / `sf-alert-*` utilities (S92/AS1) — a new consumer of those families rides the utility (machine-guarded by tests/hue-tokens.test.ts); only single-site divergent variants stay site-local.
 - Errors: API handlers return `{ error }` JSON via `errorResponse()`; client shows `toast.error(err.message)`.
 - Commits: Conventional Commits, atomic units. Never commit `.env`, `db/*.db`, `dev.log`, or SSH keys (all gitignored — keep it that way).
 

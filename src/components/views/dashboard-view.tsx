@@ -347,7 +347,7 @@ export function DashboardView() {
                         {formatShortWithYear(new Date(exam.date))}
                       </p>
                     </div>
-                    <span className="shrink-0 rounded-full bg-red-100 px-2.5 py-0.5 text-xs font-medium text-red-700 dark:bg-red-950 dark:text-red-300">
+                    <span className="sf-pill-red shrink-0 rounded-full px-2.5 py-0.5 text-xs font-medium">
                       {label}
                     </span>
                   </li>

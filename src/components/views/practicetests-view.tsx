@@ -564,8 +564,14 @@ function QuestionRunner({
           <span
             className={cn(
               "inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-sm font-semibold tabular-nums",
+              // S92/AS1: the red branch rides sf-pill-red — two adjacent
+              // closures in one move: the missing dark branch (a latent
+              // flashbulb: the red state renders only in a test's last 60s,
+              // which no sweep drives) and the WCAG-failing red-600-on-red-100
+              // light pair (3.95:1 — the DuePill's Lighthouse-61 lesson fixed
+              // exactly this class once already; red-700 = 5.32:1).
               secondsLeft <= 60
-                ? "bg-red-100 text-red-600"
+                ? "sf-pill-red"
                 : "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300",
             )}
           >

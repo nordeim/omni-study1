@@ -183,21 +183,21 @@ export function AssignmentsView() {
     if (diff < 0)
       return {
         text: `Overdue by ${Math.abs(diff)}d`,
-        className: "bg-red-100 text-red-700 dark:bg-red-950 dark:text-red-300",
+        className: "sf-pill-red",
       };
     if (diff === 0)
       return {
         text: "Today",
-        className: "bg-amber-50 text-amber-700 dark:bg-amber-950 dark:text-amber-300",
+        className: "sf-pill-soft-amber",
       };
     if (diff === 1)
       return {
         text: "Tomorrow",
-        className: "bg-blue-50 text-blue-600 dark:bg-blue-950 dark:text-blue-300",
+        className: "sf-pill-soft-blue",
       };
     return {
       text: `${diff} days`,
-      className: "bg-blue-50 text-blue-600 dark:bg-blue-950 dark:text-blue-300",
+      className: "sf-pill-soft-blue",
     };
   };
 
@@ -317,7 +317,7 @@ export function AssignmentsView() {
                           // yellow-700 not the reference's yellow-500 — the
                           // ref's 1.9:1 fails AA at 12px; the documented
                           // a11y-win precedent (Lighthouse session 61 family).
-                          "bg-yellow-50 text-yellow-700 dark:bg-yellow-950 dark:text-yellow-300",
+                          "sf-pill-soft-yellow",
                         )}
                       >
                         <Bell className="size-3" strokeWidth={2} aria-hidden />
@@ -478,7 +478,7 @@ export function AssignmentsView() {
             {error && (
               <div
                 role="alert"
-                className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700 dark:border-red-900 dark:bg-red-950 dark:text-red-200"
+                className="sf-alert-red rounded-lg px-3 py-2 text-sm"
               >
                 {error}
               </div>

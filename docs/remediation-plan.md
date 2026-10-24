@@ -1,8 +1,8 @@
 # Omni-Study1 — Remediation Plan & Execution Record
 
-> **Status: COMPLETE through Batch AR (session-91).** Every batch below has
+> **Status: COMPLETE through Batch AS (session-92).** Every batch below has
 > been executed TDD-style (spec-red → fix → spec-green) and verified:
-> **912/912 Vitest unit**, **470/470 Playwright e2e** across the 5-chunk
+> **916/916 Vitest unit**, **470/470 Playwright e2e** across the 5-chunk
 > cold map (131+140+57+84+58, 30 spec files censused exactly once; the
 > per-chunk count includes that chunk's auth setup), lint clean,
 > `tsc --noEmit` clean, production build green with the standalone asset
@@ -3905,3 +3905,309 @@ verified current (untouched — no env surface changed this cycle).
 **470/470**, the standing suite 35/35 (the cwv budget re-anchored).
 Standing debt after AR: Batch R (RSC structural perf), the ~27
 AG-pinned-hue consumers (L4).
+
+## Cycle-42 plan (Session-92 / Batch AS) — the hue-consumer token cycle + the audit-Low hygiene riders
+
+**Received state**: `ec41b0c` (Batch AR `63882ee` + the operator's
+session-log commit adding `docs/session_53.md` [the full S91 transcript,
+94 lines]; src/ untouched by the operator commit — verified by diff stat).
+Fresh clone — full re-provision: bun install (496 pkgs), `.env` from
+`.env.example` (DATABASE_URL="file:../db/custom.db", AUTH_SECRET empty),
+db/ at the repo root + push + seed (demo account ready), chromium-1243
+re-provisioned (114.3 MiB), canonical production build green. Anchors
+read: session_52 (the S91 short transcript) + session_53 (the
+operator-committed full S91 transcript whose closing note names the
+hue-consumer token cycle as the natural next-sized batch), the
+remediation plan's Cycle-41 record + standing debt, the worklog tail.
+Ground truth rebuilt: last completed cycle Session-91/Batch AR (Cycle
+41) at `63882ee`; baselines unit 912/912, cold e2e 470/470, the standing
+suite 35/35. Standing debt: Batch R (RSC structural perf), the ~27
+AG-pinned-hue consumers (L4).
+
+**Baseline re-certified cold BEFORE any work**: lint ✓ tsc ✓ unit
+912/912 ✓; the full cold 5-chunk e2e cert **470/470** (131+140+57+84+58,
+first-pass every chunk, zero flakes).
+
+**Evidence layers (all pre-change):**
+- The Mode-C audit of the Batch AR diff (`fa76b7c..63882ee`, delegated
+  read-only, against skills/web-application §18–§20 +
+  skills/web-app-foundation): **0 Critical / 0 High / 0 Medium / 2 Low /
+  5 Info** — all seven AR claims verified TRUE (the auditor re-ran the
+  unit layer green 912/912 and re-derived the e2e census: 466 listed =
+  465 real specs + 1 setup; per-chunk 131/140/57/84/58; the committed
+  s91 evidence frames re-hashed distinct). The Lows: **L1** the S51
+  describe-block's doc comment still says `LCP ≤ 4000` / `longTaskTotal
+  ≤ 2000` (the fifth live budget site the AR1 sync sweep missed — the
+  longTaskTotal half this cycle's miss, the LCP half stale since the S51
+  re-anchor) → **AS2**; **L2** the s91 resweep's probe-user leak window
+  narrowed but not eliminated (probeEmail assigned only on registerClone's
+  FULL return — a verify/goto throw after a successful register POST
+  strands the row) → **AS3**. The Infos: I1 no post-SIGKILL dead-check
+  before `rm -f db/e2e.db` → **AS6**; I2 the S51 classifier's live-tally
+  double-count (a budget breach counts once in env.findings and once in
+  the recomputed breaches; the green iff 0 verdict is unaffected) →
+  **AS4**; I3 the Linux-only kill toolchain (accepted here — a header
+  note rides AS6); I4 the resweep's double DOM walk + the stale "S72
+  Probe" name → ride **AS3**; I5 the capture script's truncated md5 +
+  the unconditional final print → **AS5**.
+- The s92 reference re-sweep (re-tagged from s91 with the AS3 restructure
+  BAKED IN — probeEmail owned inside registerClone immediately after the
+  register POST): **ok:true** (9/9 invariants both hosts, brand tables
+  byte-matched, mobile drawers green on both, probeCleanup ok, 18
+  captures, zero probe rows in custom.db after).
+- agent-browser mobile-nav on BOTH hosts (the user-flagged surface):
+  reference 24 labeled links expanded / drawer navigates to /Notes and
+  auto-closes / closes via the drawer's own lucide-x button (x:228
+  y:26) / 20 icon-only collapsed at desktop width with ZERO title/aria
+  (the S52 contract re-confirmed live; the persisted key READ before
+  interpreting the rendering and restored after — the S87 lesson 5) /
+  scrollWidth 416 on /Notes (the reference's own overflow); clone 26
+  labeled links (the superset skip-link) / drawer navigates + auto-closes
+  / Escape closes (only the off-screen x=-9999 skip-link remains, by
+  design) / 20 icon-only collapsed ALL with `title`+`aria-label` at
+  w-80px (`sf-sidebar-collapsed` key) / scrollWidth 390 — **no Tailwind
+  v4 mobile-nav bug, s92 re-confirmed**.
+- The cwv noise-floor triple for the OTHER S51 budget families (lcp/
+  cls/fcp/ttfb — the AR1 method extended to the families the S91 record
+  never banded): three fresh runs on the baseline :3200 standalone, the
+  per-metric bands recorded in the execution record; a budget found
+  sitting INSIDE its band becomes a named future cycle (the AR1
+  precedent), never a mid-cycle re-anchor.
+
+**The plan (TDD, RED-first where the discriminator admits it):**
+
+- **AS1 — the headline: the hue-consumer token cycle (the L4 standing
+  debt closure, the operator-named next batch).** The AG cycle pinned
+  five dark-pill palette steps for ITS five surfaces, but ~27 pre-existing
+  consumer sites of the same hue families kept raw class strings —
+  "the pins re-theme them uniformly and no observable diverges" — the
+  documented standing debt since s80. The census TODAY (rg over src/):
+  33 `dark:bg-*-950` consumer sites = 29 canonical-family sites + 4
+  divergent single-site variants. The canonical families:
+  the **pill** family `bg-{h}-100 text-{h}-700 dark:bg-{h}-950
+  dark:text-{h}-300` (12 sites: shared DuePill, exams Today/Tomorrow/This
+  Week badges, flashcards difficulty pill, gradetracker scoreBadge ×4,
+  assignments overdue pill, dashboard missed-exam badge, calculator AC
+  key), the **soft-pill** family `bg-{h}-50 …` (4 sites: assignments
+  amber/yellow/blue due pills), and the **alert** family `border-{h}-200
+  bg-{h}-50 … dark:border-{h}-900 dark:bg-{h}-950 dark:text-{h}-200`
+  (13 sites: login notices ×2, export statuses ×2, toast variants ×2,
+  assignments/events/exams/flashcards ×2/notes/timetable error alerts).
+  Treatment:
+  1. **The five missing palette pins** (the trap-2/10 drift liability
+     the census exposed — these steps serialize as v4-oklch today):
+     `--color-orange-300: #fdba74`, `--color-orange-950: #431407`,
+     `--color-yellow-300: #fde047`, `--color-blue-300: #93c5fd`,
+     `--color-blue-950: #172554` (the v3 hexes, the same convention as
+     every other @theme pin).
+  2. **The utility families** in globals.css (the sf-aside-active
+     precedent — color-only, `.dark &` branches, referencing the pinned
+     palette vars so the @theme pin stays the single source):
+     `sf-pill-{red,orange,yellow,emerald,sky,amber}` (the 100-step
+     pill), `sf-pill-soft-{amber,yellow,blue}` (the measured 50-step
+     assignments family — blue carries its measured `text-blue-600`
+     pair), `sf-alert-{red,emerald}` (the bordered alert box). Eleven
+     utilities total.
+  3. **The consumer sweep**: the 29 canonical sites swap their raw
+     color-family strings for the utilities (layout/rounding/typography
+     classes stay site-local; the calculator AC key composes its own
+     hover pair on top). TWO adjacent defect closures ride the sweep
+     on newly-censused sites: the **RUM rating badges**
+     (rum-panel.tsx — the light-only `bg-*-100 text-*-700` map gains the
+     house dark branch via sf-pill-{emerald,amber,red}; /rum is outside
+     the 20-view dark sweep — a latent flashbulb family) and the
+     **PracticeTests timer pill's red branch** (practicetests-view.tsx
+     — `bg-red-100 text-red-600` with NO dark branch AND the WCAG
+     red-600-on-red-100 3.95:1 failure the DuePill's Lighthouse-61
+     lesson already fixed once; swaps to sf-pill-red = red-700 5.32:1
+     light + the dark branch). The 4 divergent single-site variants
+     (login's `bg-red-50/70` alert, the RUM panel's borderless red-600
+     alert, the connectivity banner's amber-800/60 pill, the dashboard
+     overdue icon chip's bg-only pair) stay site-local — a utility per
+     single-site variant would be speculative (documented residuals).
+  4. **The pin family**: tests/hue-tokens.test.ts, three RED-first unit
+     pins — (a) the palette-completeness pin (all family steps incl.
+     the five new ones carry the exact v3 hexes), (b) the
+     utility-contract pin (each sf-pill/sf-alert utility exists in
+     globals.css with the right bg/color declarations in both
+     branches), (c) the consumer-sweep pin (each of the 15 consumer
+     files references its expected utilities — the
+     machine-guard against silent raw-class reintroduction, the AP3
+     source-scan precedent). All three RED on the current tree (the
+     pins, utilities, and references do not exist yet).
+  5. **The a11y locator update** (in-place, census unchanged):
+     tests/e2e/accessibility.spec.ts:571 `main span.bg-red-100` →
+     `main span.sf-pill-red` (both matched surfaces — the DuePill and
+     the missed-exam badge — ride the swap; the pin's intent, computed
+     red-700, unchanged). MUTATION PROOFS: un-pin orange-950 → the
+     palette pin RED; revert a consumer to raw classes → the sweep pin
+     RED; revert → green. Zero user-visible change on the 29 canonical
+     sites (the full cold re-cert + the dark sweep are the
+     byte-identical proof); the two adjacent closures change exactly
+     their documented surfaces. Unit census 912 → 915.
+- **AS2 — the stale S51 budget comment (the audit's L1).**
+  tests/suite-verdict.test.ts:5262–5266: the describe-block doc comment
+  re-anchored `LCP ≤ 4000` → `4400` and `longTaskTotal ≤ 2000` →
+  `2400` (the fifth live budget site, missed by the AR1 sync sweep —
+  the S51 historical rows stay dated records). One line.
+- **AS3 — the s92 resweep's register-time hoist (the audit's L2,
+  already baked into the pre-change evidence run).**
+  scripts/ref-resweep-s92.mjs: probeEmail owned INSIDE registerClone
+  immediately after the successful register POST (before the verify/
+  goto steps that can throw) — the finally's delete now owns every
+  post-creation path. The I4 dump-reuse + the "S92 Probe" name re-tag
+  ride along. Verified live in this cycle's runs: probeCleanup "ok",
+  zero leaked rows.
+- **AS4 — the S51 live-tally dedupe (the audit's I2).**
+  src/lib/suite-verdict.ts classifyCwvVolumeStress: the findings tally
+  counts the recomputed breaches PLUS the env.findings entries NOT
+  covered by a recomputed (family, view) match — the deliberate
+  script-side S51-* findings stop double-counting, the anti-phantom
+  recompute stays the authority (the verdict green iff 0 is unchanged
+  by construction: a breach still lands through the recompute; an
+  envelope-only finding still surfaces). RED-first unit pin: an
+  envelope with one S51-longtask finding whose view metric breaches
+  the budget must tally findings 1 (the current seam returns 2). Census
+  915 → 916.
+- **AS5 — the capture-s92 script hardenings (the audit's I5).**
+  scripts/capture-s92-evidence.mjs (the s91 re-tag): the full md5
+  digest (not the 8-char truncation) in the gate's output + the final
+  "captures complete" print gated on the md5 verdict (the failure path
+  no longer prints success-shaped prose). The AR7 gate semantics
+  (process.exitCode = 1 on a duplicate) unchanged.
+- **AS6 — the cert script's post-escalation dead-check (the audit's
+  I1 + I3).** scripts/e2e-chunked-cert.sh: after the SIGKILL
+  escalation, the port is re-curled — a still-answering listener
+  aborts the chunk loudly BEFORE `rm -f db/e2e.db` (the §18 lesson-16
+  class: never delete the db under a live listener); a one-line
+  header note documents the Linux-only `ss -tlnp`/`grep -oP`
+  toolchain (BSD/macOS operators get an explicit warning instead of a
+  silent no-op kill).
+
+**Projected census**: unit 912 + 3 (AS1's hue pins) + 1 (AS4) = **916**;
+e2e **470 unchanged** (the a11y locator rides in-place; AS3/AS5/AS6 are
+script-side; AS2 is a comment). Badge 1382 → 1386.
+
+**Verification plan**: full cold re-cert (lint → tsc → unit 916 → build
+→ cold 5-chunk e2e 470 with the census re-derived); the MUTATION
+PROOFS for AS1 (the orange-950 un-pin; the consumer raw-class revert)
+and AS4 (the dedupe revert); the standing suite 35/35 on the final
+build (the dark sweep re-verifies the RUM-adjacent pill family through
+the 20 nav views; the s19 RUM pins re-verify the panel); the s92
+resweep re-run on the FINAL build (ok:true + probeCleanup ok); the
+agent-browser mobile-nav re-verification on the final build; the s92
+evidence captures (2 frames — the pill-family showcase in dark
+[GradeTracker: emerald/sky/amber/red] + the badge-family showcase in
+dark [Exams: red/orange/yellow where the new palette pins land],
+separated by the REAL sidebar navigation, md5-distinct
+GATE-enforced); `.env.example` verified current; the docs chain (README
+badge 1386 + counts 916/470 + the Session-92 row; AGENTS/CLAUDE counts
++ the S92 lessons section + the hue-family convention line; the vitest
+header 916; this plan's header + the execution record; the PAD v1.3.0
+revision block; the worklog; `docs/session_54.md`); conventional
+commit; SSH-wrapper push.
+
+### Cycle-42 execution record (Session-92 / Batch AS)
+
+Executed exactly as planned (the six AS items), with two honest mid-cycle
+calibrations recorded below:
+
+- **AS1 — DONE (RED→GREEN, mutation-proven ×3).** The three hue pins in
+  tests/hue-tokens.test.ts went RED FIRST on the pre-change tree (the
+  palette steps, the utilities, and the consumer references did not
+  exist). GREEN: the five palette pins landed (orange-300 `#fdba74`,
+  orange-950 `#431407`, yellow-300 `#fde047`, blue-300 `#93c5fd`,
+  blue-950 `#172554` — the v3 hexes, comment-tagged S92/AS1 with the
+  trap-2/10 note); the eleven utilities landed (sf-pill-{red,orange,
+  yellow,emerald,sky,amber} + sf-pill-soft-{amber,yellow,blue} +
+  sf-alert-{red,emerald} — color-only, `.dark &` branches, palette-var
+  references); the consumer sweep swapped the 29 canonical sites across
+  15 files + the RUM rating-badge map (3 entries) + the PracticeTests
+  timer's red branch; the a11y locator followed (`main span.sf-pill-red`
+  — both matched surfaces ride the swap, the computed red-700 intent
+  unchanged). The residual census post-sweep reads exactly 4 raw-family
+  sites — the documented divergent single-site variants (login's
+  `bg-red-50/70` alert, the RUM panel's borderless red-600 alert, the
+  connectivity banner's amber-800/60 pill, the dashboard overdue icon
+  chip's bg-only pair). MUTATION PROOFS: (1) the orange-950 un-pin →
+  EXACTLY the palette pin RED, restored → green; (2) the shared.tsx
+  DuePill revert to raw classes → the consumer-sweep pin stayed GREEN
+  FOR THE WRONG REASON — the file's COMMENT still satisfied the
+  substring; **the mid-cycle calibration**: the pin strengthened to
+  quote-adjacency (`"sf-pill-red` — the whole value or the first class
+  of a composed string; prose mentions have a word boundary, never a
+  quote), the mutation re-run → RED at the designed assertion, restored
+  → green (recorded as the S92 lesson 1 — a source-scan pin must
+  discriminate a consumer from a mention); (3) the AS4 dedupe revert →
+  the tally pin RED (expected 2 to be 1), restored → green.
+- **AS2 — DONE.** The S51 describe-block doc comment re-anchored
+  (`LCP ≤ 4400` / `longTaskTotal ≤ 2400`, with the two re-anchor tags +
+  the S92/AS2 note naming it the AR1 sync sweep's miss — the s91
+  audit's L1).
+- **AS3 — DONE.** Baked into scripts/ref-resweep-s92.mjs (probeEmail
+  owned INSIDE registerClone immediately after the successful register
+  POST, before the verify/goto steps that can throw) + the I4 dump
+  reuse + the "S92 Probe" name re-tag. Verified live in BOTH resweep
+  runs (pre-change and final-build): probeCleanup "ok", zero leaked
+  probe rows in custom.db.
+- **AS4 — DONE (RED→GREEN).** The tally pin went RED first at the
+  designed assertion (`expected 2 to be 1` — the s91 seam's double
+  count). GREEN: `classifyCwvVolumeStress` now keys the recomputed
+  breaches by (family, view) and counts the envelope-side findings NOT
+  covered by a recompute — the verdict (green iff 0) unchanged by
+  construction, the anti-phantom recompute still the authority, and an
+  envelope-only finding still surfaces (the pin's second leg asserts
+  exactly that).
+- **AS5 — DONE.** scripts/capture-s92-evidence.mjs ships both I5
+  hardenings: the md5 gate prints the FULL digest and the completion
+  line prints ONLY on the green path (the duplicate path prints its
+  own failure line). The AR7 gate semantics ride unchanged. The
+  script's own mid-cycle fix recorded: the first run's dark-mode wait
+  timed out — the mode applies on NAVIGATION (the gotoDark spec
+  contract), not on the PATCH alone; the script now PATCHes then
+  navigates (the S10 pattern honored exactly).
+- **AS6 — DONE.** The cert script's post-SIGKILL dead-check: a
+  still-answering listener aborts the chunk loudly (exit 1, the named
+  PIDs) BEFORE `rm -f db/e2e.db` — never a db delete under a live
+  listener; the Linux-only toolchain note rides the same block.
+
+**Re-certification (all on the FINAL build):** lint ✓ tsc ✓ unit
+**916/916** (26 files — the projected census exact: 912 + 3 hue pins +
+1 dedupe pin); the full cold 5-chunk e2e re-cert **470/470**
+(131+140+57+84+58, first-pass every chunk, zero flakes — run under the
+AS6-hardened cert script); the standing suite (the run recorded in the
+worklog); the s92 resweep re-run on the FINAL build **ok:true**
+(9/9 invariants both hosts, brand tables byte-matched, mobile drawers
+green on both, probeCleanup ok); agent-browser mobile-nav re-verified
+on the final build (reference 24 labeled / drawer navigates to /Notes
+and auto-closes / closes via its own lucide-x / 20 icon-only collapsed
+zero-title-aria / scrollWidth 416 on /Notes; clone 26 labeled / Escape
+/ 20 icon-only collapsed ALL title+aria at w-80px / scrollWidth 390 —
+**no Tailwind v4 mobile-nav bug, s92 re-confirmed**); the s92 evidence
+captures (2 frames — the GradeTracker in DARK with the four score-pill
+hues [the 55-score marker grade seeded for real, count-verified,
+cleaned in the finally] + the Exams view in DARK with the red/orange/
+yellow badge trio [the TODAY marker exam seeded likewise], separated
+by the REAL sidebar navigation, md5-distinct GATE-enforced: full
+digests 7633a856… / d3a835fe…); `.env.example` verified current (the
+key set matches — no env surface changed this cycle).
+
+**The cwv noise-floor bands for the other S51 families** (the AR1
+method extended — the audit's next-cycle candidate 3): three fresh
+runs against the baseline :3200 standalone recorded lcp 2464–3728
+(vs the 4400 budget), cls 0 across all views (vs 0.1), fcp 592–784 (vs
+1500), ttfb 7–33 (vs 500) — every budget sits FAR outside its band, no
+coin-flip classes. The longTaskTotal readings from the SAME triple
+came with a calibration the record owns honestly: run 1 (idle machine)
+read Tasks 1865ms — inside the documented band — but runs 2–3 ran
+CONCURRENT with vitest worker spawns and read 2102–2411ms; the 2411
+would have "disconfirmed" the 2400 budget if the concurrency had gone
+unrecorded. Recorded as the S92 lesson 3 (the measurement protocol is
+part of the noise band; the standing suite's sequential design already
+enforces isolation — ad-hoc evidence runs must too).
+
+**DONE** — Batch AS closed. New baselines: unit **916/916**, e2e
+**470/470**, the standing suite 35/35. Standing debt after AS: Batch R
+(RSC structural perf). The ~27 AG-pinned-hue consumers (L4) — CLOSED
+this cycle (the utilities + the sweep pin + the residual census are
+the standing guard).

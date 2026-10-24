@@ -291,7 +291,8 @@ export function DuePill({
         overdue
           // red-700 not the reference's red-600 — 5.32:1 on red-100 vs 3.95
           // (WCAG AA at the pill's 12px); Lighthouse session 61.
-          ? "bg-red-100 text-red-700 dark:bg-red-950 dark:text-red-300"
+          // S92/AS1: the family rides the sf-pill-red utility.
+          ? "sf-pill-red"
           : "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300",
       )}
     >

@@ -567,8 +567,10 @@ test.describe("E · the Lighthouse audit pins (dashboard, light)", () => {
     await page.goto("/Dashboard");
     await hydrated(page);
     // The seeded demo trips both red-100 pill surfaces: the Today's Tasks
-    // DuePills and the Upcoming Exams missed badge.
-    const badges = page.locator("main span.bg-red-100");
+    // DuePills and the Upcoming Exams missed badge. S92/AS1: the family now
+    // rides the sf-pill-red utility — the locator follows the class swap
+    // (the pin's intent, computed red-700, is unchanged).
+    const badges = page.locator("main span.sf-pill-red");
     await expect(badges.first()).toBeVisible();
     const count = await badges.count();
     expect(count).toBeGreaterThanOrEqual(1);

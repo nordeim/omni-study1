@@ -25,9 +25,13 @@ import { cn } from "@/lib/utils";
 const REFRESH_INTERVAL_MS = 30_000;
 
 const RATING_BADGE_CLASSES: Record<string, string> = {
-  good: "bg-emerald-100 text-emerald-700",
-  "needs-improvement": "bg-amber-100 text-amber-700",
-  poor: "bg-red-100 text-red-700",
+  // S92/AS1: the rating badges join the sf-pill family — the light-only
+  // strings had NO dark branch (a latent flashbulb family: /rum sits outside
+  // the 20-view dark sweep), and the house dark-pill family is the superset
+  // doctrine (the AG4 precedent).
+  good: "sf-pill-emerald",
+  "needs-improvement": "sf-pill-amber",
+  poor: "sf-pill-red",
 };
 
 const RATING_LABELS: Record<string, string> = {

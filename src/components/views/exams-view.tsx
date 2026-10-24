@@ -50,16 +50,17 @@ const EXAM_TYPES = ["test", "quiz", "midterm", "final", "oral", "practical"];
 function urgency(row: ExamRow): { text: string; className: string } {
   const diff = daysUntil(new Date(row.date), new Date());
   if (diff < 0) return { text: "Past", className: "bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400" };
-  if (diff === 0) return { text: "Today", className: "bg-red-100 text-red-700 dark:bg-red-950 dark:text-red-300" };
+  if (diff === 0) return { text: "Today", className: "sf-pill-red" };
   if (diff === 1)
-    return { text: "Tomorrow", className: "bg-orange-100 text-orange-700 dark:bg-orange-950 dark:text-orange-300" };
+    return { text: "Tomorrow", className: "sf-pill-orange" };
   // S76/AC7 (measured): the ≥2 bucket reads "N days" (no "in " prefix) on
   // yellow-100/yellow-700 — rgb(254,249,195)/rgb(161,98,7) — the YELLOW
   // family, not amber (Tailwind v4 lesson 12: same-hue families are not
   // interchangeable). yellow-700 on yellow-100 = 5.4:1, AA-clean.
+  // S92/AS1: the family rides the sf-pill-yellow utility.
   return {
     text: `${diff} days`,
-    className: "bg-yellow-100 text-yellow-700 dark:bg-yellow-950 dark:text-yellow-300",
+    className: "sf-pill-yellow",
   };
 }
 
@@ -525,7 +526,7 @@ export function ExamsView() {
             {error && (
               <div
                 role="alert"
-                className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700 dark:border-red-900 dark:bg-red-950 dark:text-red-200"
+                className="sf-alert-red rounded-lg px-3 py-2 text-sm"
               >
                 {error}
               </div>

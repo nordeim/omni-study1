@@ -66,6 +66,11 @@ for chunk in "${CHUNKS[@]}"; do
   # dead, SIGKILL escalation if the TERM did not land. A non-listening
   # leftover cannot wedge the cert (playwright reuses only a HEALTHY
   # listener; a bind race fails loudly with EADDRINUSE, never silently).
+  # S92/AS6 (the s91 audit's I1+I3): the post-escalation re-check — a
+  # STILL-answering listener aborts the chunk loudly BEFORE the db delete
+  # (never remove db/e2e.db under a live listener). NOTE (I3): the kill
+  # toolchain (`ss -tlnp` + `grep -oP`) is Linux/GNU-specific — on BSD/macOS
+  # the extraction silently no-ops; run the cert on Linux.
   port="${E2E_PORT:-3100}"
   pids=$(ss -tlnp 2>/dev/null | grep ":${port} " | grep -oP 'pid=\K[0-9]+' | sort -u)
   for p in $pids; do kill "$p" 2>/dev/null; done
@@ -74,6 +79,12 @@ for chunk in "${CHUNKS[@]}"; do
     # still listening after SIGTERM — escalate to SIGKILL on the port's PID
     for p in $pids; do kill -9 "$p" 2>/dev/null; done
     sleep 1
+    # S92/AS6: the post-escalation dead-check — a still-answering listener
+    # is a hard abort (the §18 lesson-16 class), never a silent db delete.
+    if curl -s -o /dev/null --max-time 2 "http://localhost:${port}/api/health"; then
+      echo "FATAL: :${port} still answers after the SIGKILL escalation — refusing to delete db/e2e.db under a live listener; kill PID(s) ${pids} manually and re-run"
+      exit 1
+    fi
   fi
   rm -f db/e2e.db
   echo "=== CHUNK $i: $(echo $chunk | wc -w) files ==="
