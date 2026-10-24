@@ -1496,16 +1496,21 @@ test.describe("S88 · the study-zombie structural kill (Batch AO)", () => {
     });
     expect(deckRes.ok()).toBeTruthy();
     const deck = (await deckRes.json()) as { id: string };
-    const cardRes = await page.request.post("/api/flashcards/cards", {
-      data: { deckId: deck.id, front: "AO4 front", back: "AO4 back", difficulty: "medium" },
-    });
-    expect(cardRes.ok()).toBeTruthy();
-    const card = (await cardRes.json()) as { id: string };
 
     // AN1-style cleanup (S88/AO2): the stamped deck (and its cascaded cards)
     // deletes on EVERY path; the route is released in the same finally (the
     // S11/S13/S14 route-hygiene lessons — the handler never holds a route).
+    // S90/AQ2: the card create rides INSIDE the try — a failed card-create
+    // (the s89 audit's I1: the stamped create sat before the try, so a 4xx
+    // aborted before the finally and leaked the deck into db/e2e.db) now
+    // cascades through the cleanup on every path.
     try {
+      const cardRes = await page.request.post("/api/flashcards/cards", {
+        data: { deckId: deck.id, front: "AO4 front", back: "AO4 back", difficulty: "medium" },
+      });
+      expect(cardRes.ok()).toBeTruthy();
+      const card = (await cardRes.json()) as { id: string };
+
       await page.goto("/Flashcards");
       await hydrated(page);
       await page.locator('[aria-label="Deck rows"] > *', { hasText: `AO4 deck ${stamp}` }).first().click();
@@ -1579,19 +1584,24 @@ test.describe("S89 · the partial-empty zombie variant (Batch AP)", () => {
     });
     expect(deckRes.ok()).toBeTruthy();
     const deck = (await deckRes.json()) as { id: string };
-    const cardIds: string[] = [];
-    for (let i = 0; i < 3; i++) {
-      const cardRes = await page.request.post("/api/flashcards/cards", {
-        data: { deckId: deck.id, front: `AP1 front ${i}`, back: `AP1 back ${i}`, difficulty: "medium" },
-      });
-      expect(cardRes.ok()).toBeTruthy();
-      cardIds.push(((await cardRes.json()) as { id: string }).id);
-    }
 
     // AN1-style cleanup (the AO2 convention): the stamped deck (and its
     // cascaded cards) deletes on EVERY path; the route is released in the
     // same finally (the S11/S13/S14 route-hygiene lessons).
+    // S90/AQ2: the 3-card create loop rides INSIDE the try — a failed
+    // card-create (the s89 audit's I1: the stamped creates sat before the
+    // try, so a 4xx aborted before the finally and leaked the deck) now
+    // cascades through the cleanup on every path.
     try {
+      const cardIds: string[] = [];
+      for (let i = 0; i < 3; i++) {
+        const cardRes = await page.request.post("/api/flashcards/cards", {
+          data: { deckId: deck.id, front: `AP1 front ${i}`, back: `AP1 back ${i}`, difficulty: "medium" },
+        });
+        expect(cardRes.ok()).toBeTruthy();
+        cardIds.push(((await cardRes.json()) as { id: string }).id);
+      }
+
       await page.goto("/Flashcards");
       await hydrated(page);
       await page.locator('[aria-label="Deck rows"] > *', { hasText: `AP1 deck ${stamp}` }).first().click();

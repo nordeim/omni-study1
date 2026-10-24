@@ -224,4 +224,45 @@ describe("THEME_BOOT_SCRIPT", () => {
       );
     }
   });
+
+  it("S90/AQ1 — the script TOKENS lists equal the ACCENT_TOKENS literals' own key insertion order (the Object.values ride — the third leg)", () => {
+    // The s90 audit's L3: the AP3 pin above pins script-names ↔
+    // accentCssVars key-order (accentCssVars reads the literal BY NAME, so
+    // its key order is fixed by the accentCssVars code, NOT the literal's
+    // line order) and length ↔ Object.values length — but it never pinned
+    // the ACCENT_TOKENS literal's OWN key insertion order, the exact order
+    // `Object.values(ACCENT_TOKENS[a])` (the boot script's VALUES
+    // generator, theme.ts) emits. A value-equal key REORDER inside a
+    // literal (e.g. emptyTo moved above emptyFrom) keeps BOTH existing
+    // assertions green while the pre-paint script pairs names with wrong
+    // values — the misalignment ships a visibly wrong accent with the
+    // "mechanical guard" green. This third leg closes the triangle
+    // transitively: accentCssVars keys == script names == literal
+    // insertion order == Object.values order. MUTATION-PROVEN live in the
+    // s90 cycle: reordering two adjacent keys in the violet literal turned
+    // EXACTLY this pin RED while the AP3 pin above stayed green — the
+    // blind spot demonstrated, then reverted to green.
+    const m = THEME_BOOT_SCRIPT.match(/var TOKENS = \{([\s\S]*?)\n    \};/);
+    expect(m, "the TOKENS literal is parseable").not.toBeNull();
+    const lists: Record<string, string[]> = {};
+    for (const line of m![1].split("\n")) {
+      const lm = line.match(/^\s*(\w+): \[(.*)\],?$/);
+      if (lm) lists[lm[1]] = lm[2].split(",").map((s) => s.trim().replace(/^"|"$/g, ""));
+    }
+    expect(Object.keys(lists).sort()).toEqual([...ACCENTS].sort());
+    for (const a of ACCENTS) {
+      // The vocabulary exception (verified against accentCssVars): the
+      // literal key `primaryFg` reads --sf-primary-foreground — the ONE
+      // key whose script name is not the mechanical kebab of the literal
+      // key. Every other key kebab-cases exactly (strongDark →
+      // strong-dark, softestAdjacent → softest-adjacent, …).
+      const literalKeys = Object.keys(ACCENT_TOKENS[a]).map((k) =>
+        k === "primaryFg" ? "foreground" : k.replace(/[A-Z]/g, (c) => "-" + c.toLowerCase()),
+      );
+      expect(
+        lists[a],
+        `${a}: the TOKENS list matches the ACCENT_TOKENS literal's own key insertion order (the Object.values ride)`,
+      ).toEqual(literalKeys);
+    }
+  });
 });

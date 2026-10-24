@@ -1,9 +1,9 @@
 # Omni-Study1 — Remediation Plan & Execution Record
 
-> **Status: COMPLETE through Batch AN (session-87).** Every batch below has
+> **Status: COMPLETE through Batch AQ (session-90).** Every batch below has
 > been executed TDD-style (spec-red → fix → spec-green) and verified:
-> **907/907 Vitest unit**, **468/468 Playwright e2e** across the 5-chunk
-> cold map (131+138+57+84+58, 30 spec files censused exactly once; the
+> **912/912 Vitest unit**, **470/470 Playwright e2e** across the 5-chunk
+> cold map (131+140+57+84+58, 30 spec files censused exactly once; the
 > per-chunk count includes that chunk's auth setup), lint clean,
 > `tsc --noEmit` clean, production build green with the standalone asset
 > contract intact. This document is the durable record of what was broken,
@@ -3524,3 +3524,191 @@ R (RSC structural perf), the ~27 AG-pinned-hue consumers (L4,
 unchanged), the cwv-volume-stress budget re-anchoring (the S82
 noise-floor class — this cycle measured green; the re-anchoring stays
 named as future-cycle work).
+
+---
+
+## Cycle 40 — Session-90 · Batch AQ (planned BEFORE any source change)
+
+**Received state:** `e5b7156` (Batch AP `f2e7e31` + the operator's
+session-log commit adding `docs/session_49.md` [the full S89 transcript,
+116 lines; src/ untouched — verified by diff stat]). The workspace was
+RESET (the 31st reset; fresh clone) — full re-provision: bun install (496
+pkgs), `.env` from `.env.example` (DATABASE_URL="file:../db/custom.db",
+AUTH_SECRET empty), db push + seed, chromium-1243 re-provisioned (114.3
+MiB), canonical production build green.
+
+**Evidence layers (all pre-change):**
+- Baseline re-certified cold BEFORE any work: lint ✓ tsc ✓ unit
+  911/911 ✓; the full cold 5-chunk e2e cert **470/470** (131+140+57+84+58,
+  first-pass every chunk, zero flakes).
+- The Mode-C audit of the Batch AP diff (`70bd199..f2e7e31`, delegated
+  read-only, against skills/web-app-foundation + the operator's
+  skills/web-application): **0 Critical / 0 High / 0 Medium / 3 Low /
+  4 Info** — all five AP claims verified TRUE (the auditor re-ran the unit
+  layer green 911/911, verified the AP1 unlatch/render-guard complement
+  arithmetic, the AP2 loader non-overwrite in the bundled @next/env source,
+  and independently reproduced the AP3 mutation proof out-of-repo). The
+  Lows/Infos drive this cycle:
+  - **L1** the README Session-89 row is GLUED onto the Session-88 row's
+    physical line (8 pipes, 12,349 bytes) with a stray blank line after —
+    the row is INVISIBLE in rendered GitHub markdown (the table breaks
+    before the Docs row). The AN2 record-accuracy class, shipped broken.
+  - **L2** the e2e census is stale at three sites: AGENTS.md (469,
+    131+139+57+84+58), CLAUDE.md (469 specs), the cert header's real-specs
+    line (464 — AP1's +1 never propagated; truth: 470 total / 465 real
+    specs).
+  - **L3** the AP3 pin's blind spot: it pins script-names ↔ accentCssVars
+    key-order and length ↔ Object.values length, but NOT the
+    ACCENT_TOKENS literal's own key insertion order — the exact order the
+    boot script's VALUES array is generated from. A value-equal key REORDER
+    inside a literal keeps both assertions green while the pre-paint script
+    pairs names with wrong values (the auditor probe-reproduced: reorder
+    emptyFrom/emptyTo in violet → pin green, VALUES misaligned).
+  - **I1** the AO4/AP1 pins create their stamped CARDS before the try —
+    a failed card-create aborts before the finally and leaks the stamped
+    deck into db/e2e.db (the operator-named I3 candidate, the AO2 family's
+    residual).
+  - **I3** the AP2 comment's loader attribution ("auto-loads the
+    repo-root .env") is imprecise: Next's loadEnvConfig(dir=.next/standalone)
+    loads the BUILD-TIME COPY (.next/standalone/.env); the mechanism and
+    the immunity hold either way.
+  - I2 (the resweep probe credentials — the operator's own reference
+    probe account, the pre-existing convention) and I4 (the index-based
+    study cursor — the deliberate AO4/AP1 scope) accepted-and-documented.
+- The s90 resweep (re-tagged from s89): **ok:true** (9/9 invariants both
+  hosts, brand tables byte-matched, probeCleanup ok, 18 captures).
+- agent-browser mobile-nav on BOTH hosts: reference 24 labeled links
+  expanded / 20 icon-only collapsed via `sidebarOpen:"false"` with ZERO
+  title/aria (the S52 contract re-confirmed live; the persisted key READ
+  before interpreting the rendering and restored after) / navigates to
+  /Notes / closes / scrollWidth 416 (the reference's own overflow); clone
+  26 labeled links (the superset skip-link) / 20 icon-only collapsed ALL
+  with `title`+`aria-label` (desktop sidebar w-20, `sf-sidebar-collapsed`)
+  / navigates / closes / Escape / scrollWidth 390 — **no Tailwind v4
+  mobile-nav bug, re-confirmed for s90**.
+
+**The plan (TDD, RED-first where the discriminator admits it):**
+- **AQ1 — the AP3 pin's third-leg closure (the audit's L3).** A NEW unit
+  pin in tests/theme.test.ts (a separate `it`, the same TOKENS parse):
+  for every accent, the parsed script TOKENS list must equal
+  `Object.keys(ACCENT_TOKENS[a])` mapped to kebab-case — the literal's OWN
+  insertion order, the order `Object.values` (the boot script's VALUES
+  generator) rides on. Together with the existing two legs this closes the
+  triangle transitively: accentCssVars keys == script names == literal
+  insertion order == Object.values order. Green-by-design + MUTATION-PROVEN
+  (reorder two adjacent keys in the violet literal → EXACTLY the new pin
+  RED, the existing AP3 pin stays green — the blind spot demonstrated live;
+  revert → green). Unit census 911 → 912.
+- **AQ2 — the AO4/AP1 stamped-create-outside-try hygiene (the audit's I1,
+  the operator-named candidate).** Both pins restructured: the try starts
+  immediately after the deck create (the finally's `deck.id` dependency
+  preserved); the card creates move INSIDE the try — a failed card-create
+  now cascades through the finally and the stamped deck deletes on every
+  path. In-place, test-only; the happy path byte-identical; census
+  unchanged (470).
+- **AQ3 — the README Session-89 row split (the audit's L1).** Line 352
+  (8 pipes, two rows glued) split into the Session-88 row + the Session-89
+  row; the stray blank line 353 dropped so the Docs row rejoins the table.
+  Docs-only.
+- **AQ4 — the count re-anchor trio (the audit's L2).** AGENTS.md →
+  "470 tests … 131+140+57+84+58"; CLAUDE.md → "470 specs"; the cert
+  header's real-specs line → "465 real specs = … + the one S88 pin + the
+  one S89 pin". Docs-only.
+- **AQ5 — the stale-header refresh (the record-accuracy class).** This
+  plan's own header (still "COMPLETE through Batch AN … 907/907 …
+  468/468") → Batch AP / 911→912 unit / 470 e2e post-cycle; README's File
+  Hierarchy + Testing section ("883"/"463", the S84-era numbers) → the
+  current counts. Rides the cycle's docs chain.
+- **AQ6 — the AP2 comment's loader attribution precision (the audit's
+  I3).** "auto-loads the repo-root .env (Next's loadEnvConfig)" → the
+  build-time standalone copy via the bundled @next/env (which never
+  overwrites an already-set key), Bun's cwd auto-load noted. Comment-only;
+  mechanism and immunity unchanged.
+
+**Re-certification contract:** canonical rebuild (`bun run build`); lint
+✓ tsc ✓ unit **912/912**; the full cold 5-chunk e2e re-cert **470/470**
+(131+140+57+84+58 — AQ2 is in-place, census unchanged); the standing
+suite 35/35; the s90 resweep re-run on the FINAL build; mobile-nav
+re-verified on the final build; evidence captures (md5-distinct, probe
+rows cleaned in the finally, demo surface restored); `.env.example`
+verified; docs chain (README badge 1381→1382 + counts 912/470 + the
+Session-90 row; AGENTS/CLAUDE counts + the S90 lessons; vitest.config.ts
+header 912; the cert header 465 real specs; this plan's header; the
+worklog; `docs/session_50.md`).
+
+### Cycle 40 — Session-90 · Batch AQ — execution record
+
+Executed exactly as planned (the six AQ items above), with one honest
+mid-cycle calibration:
+
+- **AQ1 — DONE, with the pin's own first-run discovery.** The new
+  third-leg pin (`tests/theme.test.ts` S90/AQ1) went RED on its FIRST run
+  — not a plan deviation but the discovery the strong form forces: the
+  literal key `primaryFg` reads `--sf-primary-foreground` (script name
+  `foreground`), the ONE vocabulary exception to the mechanical kebab
+  (verified against accentCssVars; every other key kebab-cases exactly).
+  The exception is mapped and comment-documented AT the assertion.
+  Green after the mapping; MUTATION-PROVEN live: the violet
+  `emptyTo`/`emptyFrom` key reorder (applied, run, reverted —
+  `git diff` clean) turned EXACTLY the new pin RED while the S89/AP3 pin
+  above stayed GREEN — the blind spot demonstrated empirically, the
+  triangle now closed transitively (accentCssVars keys == script names ==
+  literal insertion order == Object.values order). Unit 911 → 912.
+- **AQ2 — DONE.** Both the AO4 and AP1 pins restructured: the try opens
+  immediately after the deck create (the finally's `deck.id` dependency
+  preserved); the card creates ride INSIDE the try, so a failed
+  card-create now cascades through the finally's deck cleanup on every
+  path. Scope verified (`card`/`cardIds` consumed only inside the try);
+  lint/tsc clean; both pins re-run GREEN cold (3 passed incl. auth setup,
+  6.6s); census unchanged (470 — the change is in-place).
+- **AQ3 — DONE.** The README Session-89 row split at the glued junction
+  (`capture-s88-evidence.mjs` || Session-89` → two proper 4-pipe rows),
+  the stray blank line dropped — the Docs row rejoins the table; pipe
+  parity verified per row (4/4/4 across the Session-88/89/90 rows).
+- **AQ4 — DONE.** AGENTS.md → "470 tests … 131+140+57+84+58"; CLAUDE.md
+  → "470 specs"; the cert header's real-specs line → "465 real specs =
+  … + the one S88 pin + the one S89 pin".
+- **AQ5 — DONE.** This plan's header re-anchored (Batch AN 907/468 →
+  Batch AQ 912/470, the 131+140 map); README's File-Hierarchy and
+  Testing sections re-anchored (S84-era 883/463 → 912/470); the README
+  badge 1381 → 1382.
+- **AQ6 — DONE.** The s22-boot-guard comment's loader attribution made
+  precise: Next's loadEnvConfig (the bundled @next/env,
+  dir=.next/standalone) reads the BUILD-TIME COPY
+  (`.next/standalone/.env`, verified present with AUTH_SECRET), Bun's
+  cwd auto-load noted, the @next/env non-overwrite cited; mechanism and
+  immunity unchanged (comment-only).
+
+**Re-certification (all on the FINAL build):** canonical rebuild green;
+lint ✓ tsc ✓ unit **912/912** (25 files); the full cold 5-chunk e2e
+re-cert **470/470** (131+140+57+84+58, first-pass every chunk, zero
+flakes — the resilience family's expected `[ai/chat] generation failed`
+lines are its own error-path exercise); the standing suite **35/35
+GREEN** (cwv-volume-stress measured inside the 2000ms Tasks budget this
+run — the S82 noise-floor class documented, the budget unchanged); the
+s90 resweep re-run on the FINAL build **ok:true** (9/9 invariants both
+hosts, brand tables byte-matched, probeCleanup ok, 18 captures); mobile
+nav re-verified on the final build (clone 26 labeled / Escape closes /
+20 icon-only ALL with title+aria / scrollWidth 390 — the reference was
+verified pre-change: 24 labeled / 20 icon-only with ZERO title/aria /
+scrollWidth 416, the persisted key read first and restored; **no
+Tailwind v4 mobile-nav bug, re-confirmed for s90**); the s90 evidence
+captures (2 frames — the guarded token surface pair, teal-dark +
+orange-dark separated by the REAL Settings accent-switch interaction,
+md5 cb1cf5bf/a822a484, all DISTINCT; the probe surface restored in the
+finally); `.env.example` verified current (untouched — no env surface
+changed this cycle).
+
+**Operational note (recorded as the S90 lessons 5):** the standalone
+server RETITLES its process (`next-server (v1.x)`), so a command-line
+grep for `standalone/server.js` matches nothing after boot — a stale
+:3200 server survived the re-provision this cycle until killed by its
+LISTENING-PORT PID (`ss -tlnp`). The S84 kill lesson extended: verify
+the port dead by curl, not by the ps command line.
+
+**DONE** — Batch AQ closed. New baselines: unit **912/912**, e2e
+**470/470**, the standing suite 35/35. Standing debt after AQ (unchanged
+from AP): Batch R (RSC structural perf), the ~27 AG-pinned-hue
+consumers (L4), the cwv-volume-stress budget re-anchoring (the S82
+noise-floor class — this cycle measured green again; the re-anchoring
+stays named as future-cycle work).

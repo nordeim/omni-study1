@@ -9,9 +9,9 @@ High-signal instructions for coding agents working in this repo. Everything here
 | `bun install` | Install deps (Bun ≥ 1.3) |
 | `bun run dev` | Dev server on :3000 (Turbopack), logs tee'd to `dev.log` |
 | `bun run lint` / `bun run typecheck` | ESLint / `tsc --noEmit` — both must be clean |
-| `bun run test` | Vitest unit layer (911 tests; `*.test.ts` only — never picks up e2e specs) |
+| `bun run test` | Vitest unit layer (912 tests; `*.test.ts` only — never picks up e2e specs) |
 | `bun run build` | Production build → `.next/standalone` (**required before e2e**) |
-| `bun run test:e2e` | Playwright vs the standalone build on :3100 with `db/e2e.db` (469 tests across the 5-chunk cold map — 131+139+57+84+58, 30 spec files; a single-process full run trips the register rate-limiter budget by design, the chunked map re-boots the server per chunk). NOTE (S45, the day-boundary lesson): the global setup re-seeds every run, but the seed's IDEMPOTENT UPSERTS do NOT refresh day-relative dates on existing rows — a scratch `db/e2e.db` that ages across a UTC midnight keeps its original day-relative dates (today's tasks, the +1-day exam badge, the due-in pills, the import round-trip dates each read one day stale → 4 deterministic failures in parity-session6/parity-session9/s23-import). Delete `db/e2e.db` when a run crosses a day boundary — the global setup re-creates it fresh with current dates. NOTE (S46, TWO more aged-scratch-db classes + a build-input one): (1) ALWAYS run e2e COLD — `rm -f db/e2e.db` before every full run: the s23-import round-trip posts a FIXED-id envelope, so a second consecutive run against the aged db reads `created: 0, updated: 1` instead of `created: 1, updated: 0` and fails — not just across midnights, across ANY re-run; (2) the s22 negative-spawn spec reads the BUNDLED `.env` — Next's standalone output COPIES the repo-root `.env` into `.next/standalone/.env` at build time, so a REAL AUTH_SECRET in the dev `.env` leaks into the bundle and the guard CORRECTLY boots (the spec times out waiting for the exit) — keep the repo-root `.env`'s AUTH_SECRET EMPTY (the `.env.example` dev posture: `AUTH_SECRET=""` — dev falls back to the local constant with the boot warning) when building for e2e |
+| `bun run test:e2e` | Playwright vs the standalone build on :3100 with `db/e2e.db` (470 tests across the 5-chunk cold map — 131+140+57+84+58, 30 spec files; a single-process full run trips the register rate-limiter budget by design, the chunked map re-boots the server per chunk). NOTE (S45, the day-boundary lesson): the global setup re-seeds every run, but the seed's IDEMPOTENT UPSERTS do NOT refresh day-relative dates on existing rows — a scratch `db/e2e.db` that ages across a UTC midnight keeps its original day-relative dates (today's tasks, the +1-day exam badge, the due-in pills, the import round-trip dates each read one day stale → 4 deterministic failures in parity-session6/parity-session9/s23-import). Delete `db/e2e.db` when a run crosses a day boundary — the global setup re-creates it fresh with current dates. NOTE (S46, TWO more aged-scratch-db classes + a build-input one): (1) ALWAYS run e2e COLD — `rm -f db/e2e.db` before every full run: the s23-import round-trip posts a FIXED-id envelope, so a second consecutive run against the aged db reads `created: 0, updated: 1` instead of `created: 1, updated: 0` and fails — not just across midnights, across ANY re-run; (2) the s22 negative-spawn spec reads the BUNDLED `.env` — Next's standalone output COPIES the repo-root `.env` into `.next/standalone/.env` at build time, so a REAL AUTH_SECRET in the dev `.env` leaks into the bundle and the guard CORRECTLY boots (the spec times out waiting for the exit) — keep the repo-root `.env`'s AUTH_SECRET EMPTY (the `.env.example` dev posture: `AUTH_SECRET=""` — dev falls back to the local constant with the boot warning) when building for e2e |
 | `node scripts/capture-studyflow.mjs` | Refresh all 31 `docs/screenshots/` captures from the dev server (24 light + 7 dark) |
 | `node scripts/dark-sweep.mjs` | Dark-mode contrast audit over all 20 views (flashbulb/unreadable detector). S27: sets dark mode through the settings API (the real lifecycle) and SELF-VERIFIES the precondition — fails loudly (exit 1, no findings) if the dark class is not applied; the applied mode rides the JSON envelope. Never force the class directly (the session-10 approach silently rotted after S11) |
 | `node scripts/accent-dark-sweep.mjs` | Accent × dark-mode audit (S38-extended): all 7 accents × 20 desktop views × 20 MOBILE views at 390×844 + the drawer per accent (FAIL <2.2, WARN <3.2 for accent text; the mobile records also carry scrollWidth — >390 is a finding). The S38 shape is unit-pinned anti-phantom: every view recorded EXPLICITLY on both surfaces (clean views carry empty detector arrays), the per-accent `applied` self-verified readings + `mode: "dark"` + `mobileViewport` ride the envelope, and the seam's ALL-ACCENTS + ALL-VIEWS + drawer-present guards make every silently-skipped dimension a LOUD shape-error (the pre-S38 mobile pass swept only 6 views — MOBILE_VIEWS — and the omission-means-clean recording could not distinguish "clean because measured" from "clean because never rendered") |
@@ -454,6 +454,59 @@ Hover-parity probing must run in Playwright, not a touch-emulating browser — v
    RED). One string-level pin retires a whole class of future
    misalignment.
 
+
+## Third-leg pins + fixture-scope + rendered-doc lessons (S90, the Batch AQ findings)
+
+1. **A multi-site sync pin must pin EVERY site the generated data rides
+   — a two-leg pin leaves the third site's reorder free.** The AP3 pin
+   pinned script-names ↔ accentCssVars key order (accentCssVars reads the
+   literal BY NAME, so its key order is fixed by the accentCssVars CODE,
+   not the literal's line order) and length ↔ Object.values length — but
+   never the ACCENT_TOKENS literal's OWN key insertion order, the exact
+   order the boot script's VALUES generator (`Object.values`) emits. A
+   value-equal key REORDER inside a literal kept both legs green while
+   the pre-paint script paired names with wrong values (the auditor
+   probe-reproduced it). The AQ1 third leg closes the triangle
+   transitively: accentCssVars keys == script names == literal insertion
+   order == Object.values order. When pinning a hand-maintained ×
+   generated sync, enumerate EVERY site the data passes through and pin
+   each leg against its OWN source of order.
+2. **A "green-by-design" pin that goes RED on its first run is either a
+   pin bug or a REAL discovery — investigate before adjusting the pin.**
+   The AQ1 pin's first run failed at `primaryFg`: the ONE literal key
+   whose script name is not the mechanical kebab (it reads
+   `--sf-primary-foreground` → `foreground`, verified against
+   accentCssVars). The pin was right to fail — the vocabulary exception
+   is now mapped and comment-documented AT the assertion. Do not
+   "fix" a RED green-by-design pin into vagueness (dropping the
+   name-equality for a weaker length check would have re-opened the
+   blind spot); make the exception explicit and keep the strong form.
+3. **Stamped fixtures must be created INSIDE the try whose finally
+   cleans them — a setup failure outside the try leaks them.** The
+   AO4/AP1 pins created their stamped CARDS before the try: a failed
+   card-create (4xx) aborted before the finally, leaking the deck into
+   `db/e2e.db` despite the "deletes on EVERY path" comment. The AQ2
+   restructure moves the card creates inside the try (the DECK stays
+   before it — the finally's `deck.id` dependency). The convention for
+   future pins: the try opens immediately after the fixture the finally
+   references; everything else the test creates rides inside.
+4. **A docs table row glued onto its predecessor's physical line is
+   INVISIBLE in rendered markdown — count the pipes.** The Session-89
+   row was appended without a newline: one 12,349-byte line carrying 8
+   pipes (two 3-column rows), plus a stray blank line that broke the
+   table before the Docs row — GFM silently drops body cells beyond the
+   header's column count, so the row existed only in raw source. The
+   AQ3 fix split the line and dropped the blank. The class rule: append
+   session rows with a real newline and verify pipe parity per row
+   (4 pipes for the 3-column sessions table) after editing.
+5. **The standalone server RETITLES its process (`next-server (v1.x)`)
+   — a command-line grep for `standalone/server.js` will not find it.**
+   The S84 kill-by-matching-PID lesson has a sharper form: after the
+   standalone boots, `ps` shows the RETITLED name, so the cert script's
+   `server.js` grep matches nothing and a stale :3200 server survives
+   across rebuilds (S84 lesson 2's stale-chunk wedge class). Kill by the
+   LISTENING PORT's PID (`ss -tlnp | grep :3200`), then verify the port
+   dead by curl — the process title is not the command line.
 
 ## Testing quirks
 

@@ -1,8 +1,17 @@
 import { defineConfig } from "vitest/config";
 import path from "node:path";
 
-// Unit-test layer for the pure domain seams — 25 files / 911 tests
-// (re-anchored S89: +the AP3 boot-script sync pin in theme
+// Unit-test layer for the pure domain seams — 25 files / 912 tests
+// (re-anchored S90: +the AQ1 third-leg pin in theme [the seven
+// hand-maintained TOKENS lists must equal the ACCENT_TOKENS literals' OWN
+// key insertion order — the exact order the boot script's VALUES generator
+// rides; the AP3 pin's blind spot closed: a value-equal key reorder inside
+// a literal kept both AP3 assertions green while the pre-paint script
+// paired names with wrong values; MUTATION-PROVEN — the violet
+// emptyTo/emptyFrom reorder turned EXACTLY the new pin RED with AP3 green,
+// and the pin's own first run caught the primaryFg→foreground vocabulary
+// exception live];
+// re-anchored S89: +the AP3 boot-script sync pin in theme
 // [the seven hand-maintained TOKENS lists must equal the accentCssVars key
 // order and the Object.values length for every accent — the mechanical
 // guard the insertion-order sync contract never had; MUTATION-PROVEN];
