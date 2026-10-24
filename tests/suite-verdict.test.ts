@@ -10,6 +10,8 @@
 // The doctrine under test (AP-77): a missing key on a known audit shape is a
 // LOUD shape-error — NEVER a silent green, NEVER a silent zero. That guard is
 // the difference between a tool and a trap.
+import { readFileSync } from "node:fs";
+import path from "node:path";
 import { describe, expect, it } from "vitest";
 
 import {
@@ -5485,6 +5487,27 @@ describe("classifyAudit cwv-volume-stress (S51 — the CWV × volume stress, the
     const v2 = classifyAudit("cwv-volume-stress", env2);
     expect(v2.green).toBe(false);
     expect(v2.findings).toBe(1);
+  });
+
+  // S93/AT2 (the s92 audit's I4): S51_FAMILY_BY_METRIC has no runtime
+  // completeness guard — a future S51_BUDGETS metric without a map entry
+  // dedupes against "undefined|view" and nothing fails. The seam's
+  // literals are not exported, so this is the AP3 source-scan precedent
+  // (the hue-tokens style): parse both literals from the seam source and
+  // assert set inclusion. GREEN-by-design on the current seam;
+  // mutation-proven s93 (a map entry removed → RED at this pin).
+  it("the S51 dedupe map covers EVERY budget metric (a future metric without a family entry dedupes against undefined — nothing fails)", () => {
+    const seam = readFileSync(path.resolve(process.cwd(), "src/lib/suite-verdict.ts"), "utf8");
+    const budgetBlock = seam.match(/const S51_BUDGETS[^=]*=\s*\[([\s\S]*?)\];/)?.[1] ?? "";
+    const mapBlock = seam.match(/const S51_FAMILY_BY_METRIC[^=]*=\s*\{([\s\S]*?)\};/)?.[1] ?? "";
+    const metrics = [...budgetBlock.matchAll(/metric:\s*"([^"]+)"/g)].map((m) => m[1]);
+    const mapped = [...mapBlock.matchAll(/^\s*([A-Za-z]+):\s*"S51-/gm)].map((m) => m[1]);
+    expect(metrics.length, "the S51_BUDGETS literal parsed").toBeGreaterThanOrEqual(5);
+    const unmapped = metrics.filter((m) => !mapped.includes(m));
+    expect(
+      unmapped,
+      `S51_FAMILY_BY_METRIC is missing entries for: ${unmapped.join(", ")} — every budget metric needs its family tag or the dedupe silently stops working`,
+    ).toEqual([]);
   });
 
   it("the INP proxy family, boundary-exact: 3000 reads green and 3001 is a counted finding (the volume-stressed interaction budget — Dashboard→Tasks under the full throttle)", () => {

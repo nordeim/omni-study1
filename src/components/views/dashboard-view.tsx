@@ -397,7 +397,7 @@ export function DashboardView() {
                         : "No due date"}
                     </p>
                   </div>
-                  <span className="shrink-0 rounded-full bg-yellow-100 px-2 py-0.5 text-xs font-medium capitalize text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-300">
+                  <span className="sf-pill-yellow shrink-0 rounded-full px-2 py-0.5 text-xs font-medium capitalize">
                     {assignment.priority}
                   </span>
                 </li>

@@ -1,13 +1,19 @@
-# StudyFlow (Omni-Study) — Master Project Architecture Document (PAD) v1.3.0
+# StudyFlow (Omni-Study) — Master Project Architecture Document (PAD) v1.3.1
 
 **Classification:** Internal Engineering Reference
 **Status:** DEFINITIVE, PRODUCTION-LOCKED BLUEPRINT
 **Companion Documents:** `README.md` (user-facing), `AGENTS.md` (agent quick-reference), `CLAUDE.md` (agent operating conventions), `docs/Tailwind-V4-Validation-Report.md` (parity trap log)
-**Last Updated:** 2026-10-10
+**Last Updated:** 2026-10-24
 **Audience:** Senior Engineers, Tech Leads, DevOps, Onboarding Engineers, and AI Coding Agents
 **Rule:** Every architectural decision in this document traces to a specific rationale. Nothing is here "because it's popular."
 
 ---
+
+#### Revision Block — v1.3.1 (Session-93 / Batch AT, Cycle 43)
+
+- `[SR]` Current test census anchor (the v1.2.0 convention, re-anchored): **921/921 Vitest unit** (26 files, `*.test.ts` only — +5 S93 pins: the palette-uniqueness pin, the raw-family negative sweep + the residual-register anchoring [two its], the files-tile dark-half pin, the dashboard-pill consumer pin, the S51 dedupe-map completeness pin) + **470/470 Playwright e2e** across the 5-chunk cold map (131+140+57+84+58 = 465 real specs in 30 spec files + 5 auth setups; `scripts/e2e-chunked-cert.sh` is the census authority). The PAD carries the census at revision time ONLY — the live count-keepers each cycle are the README badge, AGENTS.md/CLAUDE.md, the `vitest.config.ts` header, and the cert-script header.
+- `[SR]` The hue-census completion (S93/AT1): the s92 residual register is now FILE:LINE-ANCHORED in `tests/hue-tokens.test.ts` and machine-guarded from BOTH directions — an unregistered raw `dark:bg-{family}-950` site fails the leg-4 negative sweep; a TREATED residual fails the register-anchor pin with the "update the register" remedy. The files-view folder tile carries the myday-sibling dark half (`dark:bg-amber-900/40 dark:text-amber-300`); the dashboard assignments priority pill rides `sf-pill-yellow` (light byte-identical, the dark 900/40 divergent step retired for the family's tested 950). The AGENTS convention line ("a new consumer rides the utility — machine-guarded") is now TRUE in both directions it claims.
+- `[SR]` The Batch R deferral re-validated on fresh machine evidence (S93/AT4): the isolated cwv triple (lcp 2424–3324 / cls 0 / fcp 588–764 / ttfb 6–36 / longTaskTotal 51–1938 / INP 1028–1176 — every budget far outside its band) + the eager-bundle anchor re-derived live (288 KB JS vs the reference's 634–1087 KB). Per-view code-splitting stays the ADR-014-rejected alternative; a staged RSC conversion stays a multi-cycle architectural overhaul breaking the ADR-001 SPA-parity contract. Batch R remains the documented standing deferral until a budget lands inside its band.
 
 #### Revision Block — v1.3.0 (Session-92 / Batch AS, Cycle 42)
 

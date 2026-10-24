@@ -519,12 +519,15 @@
 
 /* ---- S92/AS1: the hue-consumer token families (the s80-era L4 standing
    debt closed). The AG cycle pinned five dark-pill palette steps for ITS
-   five surfaces; ~27 pre-existing consumer sites of the same hue families
-   kept raw class strings — the pins re-themed them uniformly with no
-   observable diverges, but every new consumer had to re-derive the family
-   by hand (and three drifted: the RUM rating badges and the PracticeTests
-   timer pill carried NO dark branch, the timer pill rode the WCAG-failing
-   red-600-on-red-100 pair the DuePill's Lighthouse-61 lesson already
+   five surfaces; 29 canonical consumer sites of the same hue families
+   (the census: 12 pill + 4 soft-pill + 13 alert; the dashboard priority
+   pill joined at s93, the RUM badges + the PT timer were the adjacent
+   closures) kept raw class strings — the pins re-themed them uniformly
+   with no observable diverges, but every new consumer had to re-derive
+   the family by hand (and three drifted: the RUM rating badges and the
+   PracticeTests timer pill carried NO dark branch, the timer pill rode
+   the WCAG-failing red-600-on-red-100 pair the DuePill's Lighthouse-61
+   lesson already
    fixed once). The families now live here, referencing the pinned palette
    vars (the @theme pin stays the single source — never a literal hex).
    Color-only by design: layout, rounding and typography stay site-local.
@@ -556,7 +559,8 @@
 }
 
 @utility sf-pill-yellow {
-  /* The exams This-Week badge + the flashcards difficulty pill. */
+  /* The exams N-days (≥2 bucket) badge, the flashcards difficulty pill,
+     and the dashboard assignments priority pill (s93). */
   background-color: var(--color-yellow-100);
   color: var(--color-yellow-700);
   .dark & {

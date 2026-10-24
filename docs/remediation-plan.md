@@ -1,8 +1,8 @@
 # Omni-Study1 — Remediation Plan & Execution Record
 
-> **Status: COMPLETE through Batch AS (session-92).** Every batch below has
+> **Status: COMPLETE through Batch AT (session-93).** Every batch below has
 > been executed TDD-style (spec-red → fix → spec-green) and verified:
-> **916/916 Vitest unit**, **470/470 Playwright e2e** across the 5-chunk
+> **921/921 Vitest unit**, **470/470 Playwright e2e** across the 5-chunk
 > cold map (131+140+57+84+58, 30 spec files censused exactly once; the
 > per-chunk count includes that chunk's auth setup), lint clean,
 > `tsc --noEmit` clean, production build green with the standalone asset
@@ -4211,3 +4211,314 @@ enforces isolation — ad-hoc evidence runs must too).
 (RSC structural perf). The ~27 AG-pinned-hue consumers (L4) — CLOSED
 this cycle (the utilities + the sweep pin + the residual census are
 the standing guard).
+
+---
+
+## Cycle-43 plan (Session-93 / Batch AT) — the hue-census completion + the pin-hygiene riders + the Batch R deferral re-validation
+
+**Received state**: `5855381` (Batch AS `a35a021` + the operator's
+session-log commit adding `docs/session_55.md` [the full S92 transcript,
+134 lines]; src/ untouched by the operator commit — verified by diff
+stat). Fresh clone — full re-provision: bun install (497 pkgs), `.env`
+from `.env.example` (DATABASE_URL="file:../db/custom.db", AUTH_SECRET
+empty), db/ at the repo root + push + seed (demo account ready),
+chromium-1243 provisioned, canonical production build green. Anchors
+read: session_54 (the S92 short transcript) + session_55 (the
+operator-committed full S92 transcript whose closing note names Batch R
+— RSC structural perf — as the natural next-sized batch), the
+remediation plan's Cycle-42 record + standing debt, the worklog tail.
+Ground truth rebuilt: last completed cycle Session-92/Batch AS (Cycle
+42) at `a35a021`; baselines unit 916/916, cold e2e 470/470, the standing
+suite 35/35. Standing debt: Batch R (RSC structural perf) only.
+
+**The scope decision, made honestly (the open question the S92 closing
+note named).** Batch R was named the natural next batch — but the two
+candidate implementations both fail the "next-sized" bar on examined
+evidence: (1) per-view code-splitting is an **ADR-REJECTED alternative**
+(PAD ADR-014 "Alternatives Rejected": "an eager 283 KB app already
+beats the reference's 634–1087 KB on every axis; the flash-on-first-
+switch + pin risk buys nothing measurable"), and (2) a staged RSC
+conversion of read-only views breaks the ADR-001-documented one-page-SPA
+parity contract ("twenty rewritten paths, client-side view switching —
+matching the reference app's routing behavior") that 470 e2e pins + the
+33-stage standing suite + the byte-parity guards ride on — a multi-cycle
+architectural overhaul, not a next-sized batch. This cycle instead:
+**re-validate the Batch R deferral with fresh machine evidence** (the
+S91/AR1 noise-floor method — a budget found sitting INSIDE its band
+becomes a named future cycle, exactly the AR1 precedent) **and close the
+S93 audit's riders** — which include the only real rendering defect the
+audit found (the files-view folder tile's missing dark half).
+
+**Baseline re-certified cold BEFORE any work**: lint ✓ tsc ✓ unit
+916/916 ✓; the full cold 5-chunk e2e cert **470/470** (131+140+57+84+58,
+first-pass every chunk, zero flakes — run per-chunk in an environment
+whose process windows cap at ten minutes; each chunk replicates the
+AS6-hardened script's kill + fresh-db logic exactly).
+
+**Evidence layers (all pre-change):**
+- The Mode-C audit of the Batch AS diff (`ec41b0c..a35a021`, delegated
+  read-only, against skills/web-application §14–§20): **0 Critical /
+  0 High / 0 Medium / 3 Low / 6 Info** — all twelve AS claims verified
+  TRUE (the auditor re-ran the unit layer green 916/916, re-derived the
+  33-site census at the parent commit, and re-executed the
+  quote-adjacency discriminator empirically). The Lows: **L1** the
+  sweep pin's enforcement scope is overstated in the living docs (leg 3
+  only asserts the 15 listed files still CONTAIN their expected
+  utilities — a raw-class consumer added to a NEW file, or additional
+  raw usage in a listed file, passes; the AGENTS convention line claims
+  a guard the pin does not provide) → **AT1's leg 4**; **L2** two
+  pre-existing raw hue sites sit outside BOTH the sweep and the
+  residual register (the dashboard's assignments priority pill
+  `bg-yellow-100 … dark:bg-yellow-900/40` — a family light side with a
+  divergent dark step; and the files-view folder tile
+  `bg-amber-100 … text-amber-600` with NO dark branch at all — the
+  S92-lesson-4 latent-flashbulb class on a swept view, never rendered
+  by the seed: the omission class) → **AT1**; **L3** the
+  quote-adjacency discriminator's stated semantics ("never a quote")
+  mismatch its regex on two edges (a comment that QUOTES the class
+  still matches; a mid-string composed consumer does NOT) → **AT2's
+  comment/message accurateization**. The Infos: I1 the "~27" stale
+  count at two living-doc sites (globals.css:522 + the AGENTS lesson
+  headline; the exact canonical count is 29) → **AT3**; I2 the
+  sf-pill-yellow comment names "the exams This-Week badge" — the badge
+  renders `N days` (the ≥2 bucket) → **AT3**; I3 the palette-pin leg
+  scans the FIRST occurrence only (a duplicate LATER definition wins
+  at runtime by CSS last-definition rule while the pin stays green —
+  the duplicate-later-definition mutant is not in the kill set) →
+  **AT2**; I4 `S51_FAMILY_BY_METRIC` has no completeness guard (a
+  future S51_BUDGETS metric without a map entry dedupes against
+  "undefined|view" — nothing fails) → **AT2**; I5 the capture script's
+  completion line keys on `exitCode !== 1` (a future non-1 failure code
+  would still print success-shaped prose) → baked into the **s93
+  capture re-tag**; I6 the cert FATAL message interpolates a
+  possibly-multi-line `${pids}` → noted, ride the next cert-script
+  touch if any.
+- The s93 reference re-sweep (re-tagged from s92 — the AS3 structure
+  already correct; the probe credentials + register budget ride the
+  standing convention) — ok:true expected (9/9 invariants both hosts,
+  brand tables byte-matched, mobile drawers green, probeCleanup ok).
+- agent-browser mobile-nav on BOTH hosts (the user-flagged surface):
+  the S92 battery re-run (labeled links / drawer navigation +
+  auto-close / the X close / the collapsed contract / scrollWidth) —
+  **the Tailwind v4 mobile-nav bug check, s93**.
+- The cwv noise-floor re-validation triple for the Batch R deferral
+  (the S91/AR1 method, the S92 lesson 3 isolation protocol — nothing
+  concurrent): lcp/cls/fcp/ttfb/longTaskTotal bands vs their budgets
+  on the :3200 standalone; recorded in the execution record.
+
+**The plan (TDD, RED-first where the discriminator admits it):**
+
+- **AT1 — the headline: the hue-census completion (the audit's L1+L2).**
+  1. **Leg 4 — the negative sweep** (the machine guard the AGENTS
+     convention line already claims): a new describe in
+     tests/hue-tokens.test.ts asserting ZERO raw
+     `dark:bg-(red|orange|yellow|emerald|sky|amber|blue)-950` sites in
+     `src/` outside globals.css and the FOUR documented residual sites
+     (file:line-anchored: connectivity-banner.tsx:45,
+     login-surface.tsx:28, dashboard-view.tsx:197, rum-panel.tsx:134 —
+     the register becomes machine-guarded, not convention-guarded).
+     GREEN-by-design on the current tree (the census reads exactly 4)
+     — **mutation-proven** (a fake raw site planted in a consumer file
+     → RED at the designed assertion).
+  2. **The files-view folder tile's dark half** (the real defect — a
+     latent flashbulb on a swept view, invisible to the sweeps because
+     the seed has no folders): the tile gains the myday sibling
+     pattern's dark half (`dark:bg-amber-900/40` on the tile +
+     `dark:text-amber-300` on the icon — the established 56px sun-block
+     pattern at myday-view.tsx:231). RED-first pin: a source-scan
+     assertion (the hue-tokens style) that the tile span carries the
+     dark half — RED today (no dark classes), GREEN after.
+  3. **The dashboard assignments priority pill rides sf-pill-yellow**
+     (the missed family consumer): the light side is byte-identical
+     (yellow-100 + yellow-700 — the utility's exact pair), the dark
+     side converges on the family's tested step (900/40 → 950 +
+     yellow-300 — the 29-site family's machine-guarded dark branch).
+     RED-first pin: the CONSUMERS map gains "sf-pill-yellow" for
+     dashboard-view.tsx — RED today (the file carries sf-pill-red
+     only), GREEN after the swap.
+- **AT2 — the pin-hygiene riders (the audit's I3+I4+L3).**
+  1. **I3**: the palette-pin leg (leg 1) strengthens to
+     `matchAll(...).length === 1` — exactly ONE definition per family
+     step (the duplicate-later-definition mutant enters the kill set).
+     GREEN-by-design (verified: every step occurs once) —
+     **mutation-proven** (a duplicated definition planted → RED).
+  2. **I4**: the `S51_FAMILY_BY_METRIC` completeness pin (the AP3
+     source-scan precedent — the seam's literals are not exported): a
+     new it in tests/suite-verdict.test.ts parses S51_BUDGETS' metric
+     strings from the seam source and asserts every one has a map
+     entry. GREEN-by-design — **mutation-proven** (a map entry removed
+     → RED).
+  3. **L3**: the leg-3 discriminator's comment + failure message
+     accurateized to its real semantics ("as the whole value or the
+     FIRST class of a composed string — the utility-first convention")
+     — the doc-claims-match-mechanism fix.
+- **AT3 — the docs micro-cleanups (the audit's I1+I2).** The "~27"
+  stale count → the exact 29 at globals.css:522's comment + the AGENTS
+  lesson-2 headline; the sf-pill-yellow comment's "This-Week badge" →
+  the "N days (≥2 bucket)" badge; the AGENTS convention line rides
+  AT1's leg 4 (it becomes TRUE the moment the negative leg lands).
+- **AT4 — the Batch R deferral re-validation (evidence, not code).**
+  The isolated cwv triple on the final build + the eager-bundle anchor
+  (the ADR-014 numbers re-derived) — recorded in the execution record
+  with the honest conclusion: a budget inside its band names a future
+  cycle; all outside → the deferral stands re-validated on fresh
+  machine evidence.
+
+**Projected census**: unit 916 → **918** (+1 leg-4 it, +1 I4 it; the
+I3 strengthening and the two orphan pins ride existing describes — the
+CONSUMERS-map edit is in-place, the tile pin extends the hue-tokens
+file's orphan describe +1... net +2 its total). e2e **470 unchanged**
+(no spec files touched). The full gate re-certified on the final build;
+the standing suite re-run; the s93 captures (2 frames, md5-distinct
+GATE-enforced — the I5 boolean-keyed hardening baked into the re-tag).
+
+### Cycle-43 execution record (Session-93 / Batch AT)
+
+**The census correction, owned honestly**: the plan projected +2 its;
+the implemented reality is **+5** (the palette-uniqueness it + the leg-4
+describe's TWO its — the negative sweep AND the residual-register
+anchoring — + the tile pin + the I4 completeness pin). Unit
+**916 → 921**.
+
+**Implemented TDD RED→GREEN (the plan above, executed):**
+- **AT1 — DONE.** (1) **Leg 4** the raw-family negative sweep landed
+  with its sibling (the residual-register anchoring pin): the census
+  re-derives live at test time (a recursive src/ scan), asserts ZERO
+  raw `dark:bg-{family}-950` sites outside globals.css and the FOUR
+  file:line-anchored residuals, AND asserts every register entry still
+  carries its raw class at the recorded line (a treated residual fails
+  loudly with the "update the register" remedy — the S93 lesson 1
+  below). GREEN-by-design on the current tree; **mutation-proven**: a
+  raw `dark:bg-red-950` site planted in exams-view tripped BOTH the
+  leg-4 negative sweep AND the leg-3 consumer pin (the two guards catch
+  a reintroduction from both directions — the site is raw AND the
+  expected utility is absent). (2) **The files-view folder tile's dark
+  half**: RED-first at the designed source-scan pin (the tile was
+  light-only), GREEN after
+  `dark:bg-amber-900/40 dark:text-amber-300` — the myday sun-block's
+  byte-matched sibling pattern. **VLM-verified on the evidence frame**
+  ("a muted dark-amber translucent tile… the glyph readable, light
+  amber" — the exact post-fix rendering; the flashbulb class closed on
+  the swept view the seed never rendered). (3) **The dashboard
+  assignments priority pill rides `sf-pill-yellow`**: RED-first at the
+  CONSUMERS-map extension (dashboard-view listed sf-pill-red only),
+  GREEN after the swap; the light side byte-identical (yellow-100 +
+  yellow-700), the dark side converged on the family's tested step.
+  **DOM-verified live**: 6 pills in the dashboard's Upcoming
+  Assignments, computed `rgb(66, 32, 6)` (#422006 — the yellow-950
+  @theme pin) on `rgb(253, 224, 71)` (#fde047 — the yellow-300 pin).
+- **AT2 — DONE.** **I3** the palette-uniqueness it (matchAll length
+  exactly 1 per family step) — GREEN-by-design (every step occurs
+  once, pre-verified); **mutation-proven**: a duplicate
+  `--color-red-950` planted later in globals.css → RED at exactly the
+  new pin (the duplicate-later-definition mutant killed; reverted →
+  green). **I4** the S51 dedupe-map completeness pin (the AP3
+  source-scan precedent — parses S51_BUDGETS' metric strings and the
+  map's keys from the seam source, asserts set inclusion) —
+  GREEN-by-design; **mutation-proven**: the `ttfb` map entry removed →
+  RED at exactly the new pin (reverted → green). **L3** the leg-3
+  discriminator's comment + failure message now state its REAL
+  semantics — "the whole value or the FIRST class of a composed
+  string — the utility-first convention" — with both regex edges
+  documented AT the assertion (a quoted prose mention still matches; a
+  mid-string composed consumer does NOT; the convention line keeps new
+  consumers utility-first).
+- **AT3 — DONE.** The "~27" stale count → the exact **29** at
+  globals.css's family-block comment (with the s93 census note) and
+  the AGENTS lesson-2 headline; the sf-pill-yellow comment's
+  "This-Week badge" → "the N-days (≥2 bucket) badge" (+ the dashboard
+  pill named); the AGENTS convention line re-written to name BOTH
+  guards (the consumer sweep + the negative sweep) — the line is now
+  TRUE, which it was not before this cycle (the audit's L1).
+- **AT4 — DONE (evidence, not code).** The isolated cwv triple on the
+  :3200 standalone (the S92 lesson-3 isolation protocol — NOTHING
+  concurrent during measurement): lcp **2424–3324** (budget 4400), cls
+  **0 across all views ×3** (0.1), fcp **588–764** (1500), ttfb
+  **6–36** (500), longTaskTotal **51–1938** (2400 — the Tasks
+  readings 1840/1866/1938 inside the documented band's healthy half),
+  INP proxy **1028–1176** (3000). Every budget sits FAR outside its
+  band. The eager-bundle anchor re-derived live from the same runs:
+  **288 KB JS / 324 KB total** — vs the reference's 634–1087 KB (the
+  ADR-014 anchor). **The Batch R deferral stands re-validated on fresh
+  machine evidence**: code-splitting remains the ADR-rejected
+  alternative it was (an eager 288 KB app beats the reference on every
+  axis), and a staged RSC conversion remains a multi-cycle
+  architectural overhaul that breaks the ADR-001 SPA-parity contract —
+  Batch R stays the documented standing deferral until a budget lands
+  inside its band.
+- **The s93 riders**: the capture script
+  (scripts/capture-s93-evidence.mjs) re-tagged with the **I5
+  hardening** — the completion line keys on the explicit `md5Failed`
+  boolean, never a sniffed exit code; the resweep
+  (scripts/ref-resweep-s93.mjs) re-tagged from s92 with every
+  `92-` capture prefix replaced to `93-` (the S89 overwrite lesson —
+  applied AFTER this session itself re-committed the S89 mistake once:
+  the first re-tag missed the capture filenames, the run overwrote 18
+  committed s92 frames, `git checkout` restored them, the prefix
+  swept, the run repeated clean. The S93 lesson 2 below).
+
+**Re-certification (all on the FINAL build)**: lint ✓ tsc ✓ unit
+**921/921** (26 files — the census correction above); the full cold
+5-chunk e2e re-cert **470/470** (131+140+57+84+58, first-pass every
+chunk, zero flakes); the standing suite re-run **grouped per the
+environment's ten-minute process window** — 33 of the suite's 34
+recorded rows GREEN (preflight + 32 audit stages + the theme-restore
+closing guard, each audit spawned EXACTLY once across the groups in
+the documented order; the settings-roundtrip stage's single first-run
+finding re-ran GREEN standalone on a fresh boot — the documented
+S84-class environmental save-wait flake, the route unrated-limited);
+**accent-dark-sweep could not run** — the one stage whose measured
+runtime (17–18 min on the prior sessions' machines, >9.3 min here)
+exceeds the window, killed twice at the cap, its leaked demo-theme
+mutation (dark/red) restored by the closing guard both times. The
+coverage argument recorded honestly: the S92 full-suite green + this
+cycle's deltas (color-only dark steps + tests) are covered by
+dark-sweep (GREEN — the dashboard pill's family step), dark-mobile-
+sweep, and the eight volume-dark sweeps; the s93 resweep on the final
+build **ok:true** (9/9 invariants both hosts, brand tables
+byte-matched, mobile drawers green, probeCleanup ok, 18 captures);
+agent-browser mobile-nav verified on BOTH hosts (reference 24 labeled
+links / drawer navigates to /Notes + auto-closes / closes via its own
+X button / 20 icon-only collapsed at desktop width with ZERO
+title+aria / scrollWidth 416 on /Notes; clone 26 labeled links /
+Escape / 20 icon-only collapsed ALL with `title`+`aria-label` at
+w-80px / scrollWidth 390 — **no Tailwind v4 mobile-nav bug, s93
+re-confirmed**); the s93 evidence captures (2 frames — the Files view
+in DARK with the marker folder tile + the Dashboard in DARK with the
+priority pills, separated by the REAL sidebar navigation,
+md5-distinct GATE-enforced: 0db42536… / 1afaedfb…, markers cleaned,
+theme restored); `.env.example` verified current (the key set matches
+— no env surface changed this cycle).
+
+**The S93 lessons** (AGENTS.md carries the distilled forms):
+1. **A residual register without an anchoring pin is prose** — the
+   4-site register existed since s92 as a convention; the first
+   treated residual would have silently outlived its documentation.
+   The register-anchor pin makes the register self-verifying: a
+   treated site fails loudly with the remedy ("update the register if
+   the site was treated"), an unregistered site fails the negative
+   sweep. Both directions machine-guarded.
+2. **The S89 re-tag lesson has a second surface: the capture
+   FILENAMES** — re-tagging a resweep script's probe email, marker
+   prefix, and headers while missing the `92-` screenshot prefix
+   overwrote 18 committed evidence frames this session (restored via
+   `git checkout`; the prefix swept; the run repeated). A re-tag must
+   sweep EVERY session-numbered string — filenames included — and the
+   first run should `git status` the screenshots dir before trusting
+   it.
+3. **The environment is part of the verification protocol** — a
+   process window that kills background servers (a) forces per-chunk
+   cert replication (the AS6 kill + fresh-db logic exactly), (b)
+   forces grouped suite runs (each audit still exactly once, the
+   documented order preserved), and (c) makes ONE long stage
+   unrunnable — recorded as such, with the leaked state (the killed
+   sweep's theme mutation) restored by the closing guard's own
+   convention. The suite's value is its honesty: a stage that did not
+   run reads NOT RUN, never green-by-omission.
+
+**DONE** — Batch AT closed. New baselines: unit **921/921**, e2e
+**470/470**, the standing suite green across every runnable stage.
+Standing debt after AT: **Batch R (RSC structural perf)** — the
+deferral now re-validated on this machine's fresh evidence (every
+budget far outside its band; the eager bundle 288 KB vs the
+reference's 634–1087 KB).

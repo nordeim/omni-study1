@@ -449,7 +449,7 @@ export function FilesView() {
                       className="flex min-w-0 flex-1 items-center gap-3 text-left"
                       aria-label={`Open folder ${folder.name}`}
                     >
-                      <span className="rounded-lg bg-amber-100 p-2 text-amber-600">
+                      <span className="rounded-lg bg-amber-100 p-2 text-amber-600 dark:bg-amber-900/40 dark:text-amber-300">
                         <Folder className="size-5" strokeWidth={2} aria-hidden />
                       </span>
                       <span className="min-w-0">

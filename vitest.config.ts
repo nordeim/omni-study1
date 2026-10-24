@@ -1,7 +1,14 @@
 import { defineConfig } from "vitest/config";
 import path from "node:path";
 
-// Unit-test layer for the pure domain seams — 26 files / 916 tests
+// Unit-test layer for the pure domain seams — 26 files / 921 tests
+// (re-anchored S93: +5 — the palette-uniqueness pin [matchAll length
+// exactly 1 per family step, the duplicate-later-definition mutant
+// killed], the raw-family negative sweep + the residual-register
+// anchoring [both directions machine-guarded], the files-tile dark-half
+// pin + the dashboard-pill consumer pin [the two L2 orphan closures,
+// RED-first], and the S51 dedupe-map completeness pin [the AP3
+// source-scan precedent]; mutation-proven x3)
 // (re-anchored S90: +the AQ1 third-leg pin in theme [the seven
 // hand-maintained TOKENS lists must equal the ACCENT_TOKENS literals' OWN
 // key insertion order — the exact order the boot script's VALUES generator

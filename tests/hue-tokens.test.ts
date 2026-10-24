@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
 
@@ -74,6 +74,18 @@ describe("the hue-token palette contract (S92/AS1 leg 1)", () => {
       expect(line?.[1], `${step} must carry the v3 ${hex}`).toBe(hex);
     }
   });
+
+  // S93/AT2 (the s92 audit's I3): the leg above reads the FIRST
+  // occurrence — a duplicate LATER definition would win at runtime by
+  // the CSS last-definition rule while the pin stays green on the first
+  // match. Exactly one definition per step (the duplicate-later-
+  // definition mutant enters the kill set; mutation-proven s93).
+  it("defines every family palette step EXACTLY once (a duplicate later definition would win at runtime)", () => {
+    for (const step of Object.keys(FAMILY_STEPS)) {
+      const count = [...CSS.matchAll(new RegExp(`${step}:\\s*[^;\\s]+`, "g"))].length;
+      expect(count, `${step} must appear exactly once in globals.css (found ${count})`).toBe(1);
+    }
+  });
 });
 
 // The utility families: each utility's light branch + .dark & branch must
@@ -134,7 +146,7 @@ const CONSUMERS: Record<string, string[]> = {
   "src/components/views/flashcards-view.tsx": ["sf-pill-yellow", "sf-alert-red"],
   "src/components/views/gradetracker-view.tsx": ["sf-pill-emerald", "sf-pill-sky", "sf-pill-amber", "sf-pill-red"],
   "src/components/views/assignments-view.tsx": ["sf-pill-red", "sf-pill-soft-amber", "sf-pill-soft-blue", "sf-pill-soft-yellow", "sf-alert-red"],
-  "src/components/views/dashboard-view.tsx": ["sf-pill-red"],
+  "src/components/views/dashboard-view.tsx": ["sf-pill-red", "sf-pill-yellow"],
   "src/components/views/calculator-view.tsx": ["sf-pill-red"],
   "src/components/rum/rum-panel.tsx": ["sf-pill-emerald", "sf-pill-amber", "sf-pill-red"],
   "src/components/views/practicetests-view.tsx": ["sf-pill-red"],
@@ -147,19 +159,102 @@ const CONSUMERS: Record<string, string[]> = {
 };
 
 describe("the canonical consumer sites ride the utilities (S92/AS1 leg 3)", () => {
-  it("references the expected utility families per file (as QUOTED class strings — a comment mention is not a consumer; the mutation proof caught the substring form passing on prose)", () => {
+  it("references the expected utility families per file (as QUOTED class strings — the whole value or the FIRST class of a composed string; prose mentions have a word boundary, never a leading quote)", () => {
     for (const [file, utilities] of Object.entries(CONSUMERS)) {
       const src = readConsumer(file);
       for (const u of utilities) {
         // A real consumer carries the utility as a CLASS STRING — a quote
-        // immediately BEFORE it (the whole value "sf-pill-red" or the first
-        // class of a composed string "sf-pill-red hover:…"). Prose mentions
-        // ("the sf-pill-red utility") have a word boundary, never a quote.
+        // immediately BEFORE it. The discriminator's real semantics (the
+        // s93 audit's L3): it matches the utility as the WHOLE value or
+        // as the FIRST class of a composed string ("sf-pill-red px-2…")
+        // — the utility-first convention every consumer follows. Two
+        // known edges, documented here because the regex owns them: a
+        // comment that QUOTES the class ("the sf-pill-red utility")
+        // still matches, and a consumer composing the utility MID-string
+        // ("rounded-full sf-pill-red") does NOT — keep new consumers
+        // utility-first and the pin discriminates consumers from prose.
         expect(
           src,
           `${file} must USE ${u} in a class string (not just mention it)`,
         ).toMatch(new RegExp(`["']${u}["'\\s]`));
       }
     }
+  });
+});
+
+// The documented residual register (S93/AT1 leg 4): the four divergent
+// single-site variants the census left site-local BY DECISION. Each is
+// file:line-anchored — the register is machine-guarded, not
+// convention-guarded (the s93 audit's L1: the AGENTS convention line
+// claimed a negative guard the pins did not provide).
+const RESIDUALS: ReadonlyArray<{ file: string; line: number; why: string }> = [
+  { file: "src/components/layout/connectivity-banner.tsx", line: 45, why: "the amber-800/60 border pill (a translucent-border variant, no family)" },
+  { file: "src/components/auth/login-surface.tsx", line: 28, why: "the bg-red-50/70 translucent alert (the reference's measured login chrome)" },
+  { file: "src/components/views/dashboard-view.tsx", line: 197, why: "the overdue icon chip (bg-only pair — the icon carries its own text color)" },
+  { file: "src/components/rum/rum-panel.tsx", line: 134, why: "the borderless red-600 alert (the /rum owner panel's measured style)" },
+];
+
+function listSrcFiles(dir: string): string[] {
+  const out: string[] = [];
+  for (const entry of readdirSync(dir, { withFileTypes: true })) {
+    const p = path.join(dir, entry.name);
+    if (entry.isDirectory()) out.push(...listSrcFiles(p));
+    else if (/\.(tsx|ts)$/.test(entry.name)) out.push(p);
+  }
+  return out;
+}
+
+describe("the raw-family negative sweep (S93/AT1 leg 4)", () => {
+  it("carries ZERO raw dark:bg-*-950 family sites outside globals.css and the documented residuals (the machine guard behind the convention line)", () => {
+    const family = /dark:bg-(?:red|orange|yellow|emerald|sky|amber|blue)-950\b/;
+    const files = listSrcFiles(path.resolve(process.cwd(), "src")).filter(
+      (f) => !f.endsWith(path.join("app", "globals.css")),
+    );
+    expect(files.length, "the src file census ran").toBeGreaterThan(100);
+    const offenders: string[] = [];
+    for (const file of files) {
+      const src = readConsumer(file);
+      const rel = path.relative(process.cwd(), file);
+      src.split("\n").forEach((lineText, i) => {
+        if (!family.test(lineText)) return;
+        const residual = RESIDUALS.find(
+          (r) => r.file === rel && r.line === i + 1,
+        );
+        if (!residual) offenders.push(`${rel}:${i + 1}`);
+      });
+    }
+    expect(
+      offenders,
+      `raw family sites outside the register (either ride the sf-pill/sf-alert utilities or extend the residual register): ${offenders.join(", ")}`,
+    ).toEqual([]);
+  });
+
+  it("the residual register itself stays anchored (every documented site still carries its raw class at the recorded line)", () => {
+    const family = /dark:bg-(?:red|orange|yellow|emerald|sky|amber|blue)-950\b/;
+    for (const r of RESIDUALS) {
+      const lineText = readConsumer(r.file).split("\n")[r.line - 1] ?? "";
+      expect(
+        family.test(lineText),
+        `${r.file}:${r.line} no longer carries its raw family class — ${r.why}; update the register if the site was treated`,
+      ).toBe(true);
+    }
+  });
+});
+
+// S93/AT1.2 (the s93 audit's L2): the files-view folder tile's dark half.
+// The tile is the myday 56px sun-block's sibling (bg-amber-100 +
+// dark:bg-amber-900/40 + the amber-300 icon) — a latent flashbulb class
+// on a swept view the seed never rendered (no seeded folders), found by
+// the s93 audit's census. RED-first: the tile shipped light-only before
+// this cycle.
+describe("the files-view folder tile's dark half (S93/AT1.2)", () => {
+  it("carries the myday sibling pattern's dark branch on the tile and the amber-300 icon", () => {
+    const src = readConsumer("src/components/views/files-view.tsx");
+    // The tile span: bg-amber-100 + the dark half…
+    expect(src).toMatch(/["']rounded-lg bg-amber-100 p-2 text-amber-600 dark:bg-amber-900\/40 dark:text-amber-300["']/);
+    // …the sibling pattern byte-matched at myday-view's sun block.
+    const myday = readConsumer("src/components/views/myday-view.tsx");
+    expect(myday).toMatch(/bg-amber-100 dark:bg-amber-900\/40/);
+    expect(myday).toMatch(/text-amber-600 dark:text-amber-300/);
   });
 });
