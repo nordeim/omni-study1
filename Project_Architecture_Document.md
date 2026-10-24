@@ -1,13 +1,20 @@
-# StudyFlow (Omni-Study) — Master Project Architecture Document (PAD) v1.3.2
+# StudyFlow (Omni-Study) — Master Project Architecture Document (PAD) v1.3.3
 
 **Classification:** Internal Engineering Reference
 **Status:** DEFINITIVE, PRODUCTION-LOCKED BLUEPRINT
 **Companion Documents:** `README.md` (user-facing), `AGENTS.md` (agent quick-reference), `CLAUDE.md` (agent operating conventions), `docs/Tailwind-V4-Validation-Report.md` (parity trap log)
-**Last Updated:** 2026-10-24
+**Last Updated:** 2026-10-25
 **Audience:** Senior Engineers, Tech Leads, DevOps, Onboarding Engineers, and AI Coding Agents
 **Rule:** Every architectural decision in this document traces to a specific rationale. Nothing is here "because it's popular."
 
 ---
+
+#### Revision Block — v1.3.3 (Session-95 / Batch AV, Cycle 45)
+
+- `[SR]` Current test census anchor (the v1.2.0 convention, re-anchored): **923/923 Vitest unit** (26 files, `*.test.ts` only — census UNCHANGED: the AV1 uniqueness-guard completion modifies the S93/AT2 pin IN-PLACE, the AR1 boundary-pin precedent) + **474/474 Playwright e2e** across the 5-chunk cold map (131+141+57+87+58 = 469 real specs in 30 spec files + 5 auth setups; `scripts/e2e-chunked-cert.sh` is the census authority — its header's inner decomposition corrected this cycle, 465-era → 469 + the four S94 pins). The PAD carries the census at revision time ONLY — the live count-keepers each cycle are the README badge, AGENTS.md/CLAUDE.md, the `vitest.config.ts` header, and the cert-script header.
+- `[SR]` The uniqueness-guard completion (S95/AV1, the s94 audit's L1): the duplicate-later-definition guard in `tests/hue-tokens.test.ts` now covers the union of every first-occurrence-read record — `FAMILY_STEPS` + `AU_STEPS` (the amber-200/800 steps join the kill set; a later duplicate would win at runtime by the CSS last-definition rule while the leg-5 palette pin stayed green on the first match). The blind spot was demonstrated live (a planted later duplicate left all 923 pins green on the pre-change tree) and the extended guard mutation-proven (the plant then tripped EXACTLY the extended pin with the leg-5 palette pin green).
+- `[SR]` **Batch R (RSC structural perf) CLOSED — rejected-by-ADR, zero standing debt.** The closure grounds (each machine-verified): per-view code-splitting is the ADR-014-REJECTED alternative (an eager 288 KB app already beats the reference's 634–1087 KB on every axis — re-derived constant across this cycle's fresh isolated triple); a staged RSC conversion breaks the ADR-001 one-page-SPA parity contract that 474 e2e pins + the standing suite ride on; lcp 2444–2784 / cls 0 / fcp 648–732 / ttfb 5–64 / INP 1019–1274 all sit far outside their bands. The Tasks longTaskTotal reading set on THIS machine (2064/2418/2844 vs the 2400 pin — the 2844 carried settling load) is recorded as the cross-machine noise-band widening of the AR1 noise-band-adjacent budget: the metric's dominant cost is the 300-row list MOUNT (not bundle eval), so bundle-splitting would not move it. **The reopen trigger is operational, not documentary:** any budget landing inside its band on the certifying machine — which the standing suite's cwv + cwv-volume-stress stages machine-check every cycle.
+- `[SR]` The re-tag-completeness hardenings (S95/AV2+AV4, the s94 audit's L2+L3): the capture script's md5-gate failure branch carries `process.exitCode = 1` again (the S91/AR7 semantics the s94 re-tag dropped — the s95 re-tag inherits it); the cert-script header's derived decomposition is re-derivable (469 = the S82 443 + seven S83 + eight S84 + four S85 + one S86 + one S88 + one S89 + four S94). The living AGENTS lesson-2 line re-anchored to the 3-site residual register (the banner TREATED at S94/AU2 — the register's first TREATED entry); the historical revision blocks keep their at-revision truth.
 
 #### Revision Block — v1.3.2 (Session-94 / Batch AU, Cycle 44)
 

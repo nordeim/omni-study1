@@ -80,8 +80,13 @@ describe("the hue-token palette contract (S92/AS1 leg 1)", () => {
   // the CSS last-definition rule while the pin stays green on the first
   // match. Exactly one definition per step (the duplicate-later-
   // definition mutant enters the kill set; mutation-proven s93).
-  it("defines every family palette step EXACTLY once (a duplicate later definition would win at runtime)", () => {
-    for (const step of Object.keys(FAMILY_STEPS)) {
+  // S95/AV1 (the s94 audit's L1): the guard covers EVERY
+  // first-occurrence-read record — the AU steps (amber-200/800) joined
+  // after a planted later duplicate left all 923 pins green (the blind
+  // spot demonstrated live on the pre-change tree); mutation-proven s95.
+  it("defines every guarded palette step EXACTLY once (a duplicate later definition would win at runtime)", () => {
+    const GUARDED_STEPS = { ...FAMILY_STEPS, ...AU_STEPS };
+    for (const step of Object.keys(GUARDED_STEPS)) {
       const count = [...CSS.matchAll(new RegExp(`${step}:\\s*[^;\\s]+`, "g"))].length;
       expect(count, `${step} must appear exactly once in globals.css (found ${count})`).toBe(1);
     }

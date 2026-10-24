@@ -589,14 +589,17 @@ Hover-parity probing must run in Playwright, not a touch-emulating browser — v
    site-local ON PURPOSE.** The 29 canonical consumers of the AG-pinned
    hue families now ride `sf-pill-*` / `sf-alert-*` utilities
    (color-only, `.dark &` branches, palette-var references so the @theme
-   pin stays the single source); the 4 divergent variants (the login
+   pin stays the single source); the 3 divergent variants (the login
    `bg-red-50/70` alert, the RUM panel's borderless red-600 alert, the
-   connectivity banner's amber-800/60 pill, the dashboard overdue icon
-   chip's bg-only pair) are documented residuals — file:line-anchored in
-   the residual register and machine-guarded by the S93/AT1 negative
-   sweep (a raw `dark:bg-*-950` family site outside the register fails
-   the pin) — a utility per single-site variant would be speculative
-   scaffolding. A NEW consumer of these hue families rides the utility
+   dashboard overdue icon chip's bg-only pair) are documented residuals —
+   file:line-anchored in the residual register and machine-guarded by
+   the S93/AT1 negative sweep (a raw `dark:bg-*-950` family site outside
+   the register fails the pin) — a utility per single-site variant would
+   be speculative scaffolding. The register's first TREATED entry: the
+   connectivity banner (S94/AU2 — it rides `sf-connectivity-pill` now,
+   its entry removed in the same change; treatment and register-update
+   ride one commit or the anchor pin fails on the stale row). A NEW
+   consumer of these hue families rides the utility
    (the sweep pin + the negative sweep enforce it); a new FAMILY earns
    its own utility only at its second consumer.
 3. **A measurement protocol IS part of the budget's noise band — never
@@ -691,6 +694,60 @@ Hover-parity probing must run in Playwright, not a touch-emulating browser — v
    merging two same-numbered sessions — would have produced two
    Session-93 rows and a session_56 collision; the labels are cheap, the
    audit trail is not.
+
+## Guard-coverage + re-tag-completeness + rejected-by-ADR-closure lessons (S95, the Batch AV findings)
+
+1. **A uniqueness guard must cover every record its sibling pins read
+   FIRST-occurrence on.** The S93/AT2 duplicate-later-definition guard
+   looped `FAMILY_STEPS` while the S94 leg-5 palette pin read the
+   AU_STEPS pair through `CSS.match` (first occurrence) — so a later
+   duplicate `--color-amber-200` would win at runtime while every pin
+   stayed green (the s94 audit's L1, demonstrated live: the plant left
+   all 923 green). The fix is the IN-PLACE loop extension to the union
+   of every first-occurrence-read record (the AR1 boundary-pin
+   precedent) — one guard, no near-duplicate its, and the mutation
+   proof re-runs against the extended pin.
+2. **A re-tag must carry the gate's exit-code semantics AND the derived
+   decomposition, not just the headline sum.** The s94 capture re-tag
+   kept the boolean md5 gate but dropped `process.exitCode = 1` (the
+   s93 shape, the S91/AR7 semantics — an exit-code-checking wrapper saw
+   success on a duplicate-frame run); the cert header re-tag updated
+   470 → 474 but left the 470-era "465 real specs" parenthetical stale
+   (474 − 5 setups = 469). Diff a re-tag against its source's FAILURE
+   branches and DERIVED numbers — the parts nobody re-reads are the
+   parts a re-tag silently rots.
+3. **Standing debt that is REJECTED-BY-ADR is not debt — close it, with
+   an operational reopen trigger.** Batch R (RSC structural perf) sat on
+   the standing-debt list through three cycles of re-validation while
+   both candidate implementations were architecturally rejected
+   (per-view code-splitting = ADR-014-REJECTED; a staged RSC conversion
+   breaks the ADR-001 SPA-parity contract that 474 e2e pins + the
+   standing suite ride on) and the eager bundle beat the reference on
+   every axis (288 KB vs 634–1087 KB). Keeping rejected work listed as
+   debt misrepresents it as pending. The closure names its reopen
+   trigger — a budget landing inside its band — which the standing
+   suite's cwv + cwv-volume-stress stages already machine-check every
+   cycle: the guard is operational, not documentary.
+4. **A machine's noise band is part of the closure evidence — record
+   the reading set, not just the verdict.** The Batch R closure's fresh
+   triple read Tasks longTaskTotal 2064/2418/2844 on THIS machine (the
+   2844 carried settling load) vs the prior machine's documented
+   1821–2288 band: the 2400 pin straddles here. The honest record: the
+   straddling budget is the AR1 noise-band-adjacent class by design,
+   the dominant cost of that metric is the 300-row list MOUNT (not
+   bundle eval — bundle-splitting would not move it), and a budget
+   straddling on one machine does not reopen rejected-by-ADR structural
+   work. What DOES reopen it: a budget landing inside its band on the
+   certifying machine with the isolation protocol honored.
+5. **Re-anchor the LIVING convention prose; the historical revision
+   blocks stay as history.** The AGENTS lesson-2 still claimed "the 4
+   divergent variants … the connectivity banner … are documented
+   residuals" in present tense while the machine-guarded register held
+   3 (the banner TREATED at S94/AU2). The fix targets the living
+   statement only — the PAD v1.3.0 block and the cycle records carry
+   the 4-variant list as what was true at their revision (over-scrubbing
+   history would falsify the record the register's own treatment
+   direction depends on).
 
 ## Testing quirks
 

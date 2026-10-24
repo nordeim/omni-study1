@@ -1,6 +1,6 @@
 # Omni-Study1 — Remediation Plan & Execution Record
 
-> **Status: COMPLETE through Batch AU (session-94).** Every batch below has
+> **Status: COMPLETE through Batch AV (session-95) — ZERO standing debt.** Every batch below has
 > been executed TDD-style (spec-red → fix → spec-green) and verified:
 > **923/923 Vitest unit**, **474/474 Playwright e2e** across the 5-chunk
 > cold map (131+141+57+87+58, 30 spec files censused exactly once; the
@@ -4645,3 +4645,216 @@ band). The hue-palette trap-10 liability: **CLOSED** (every consumed
 step of every hue family now carries the v3 hex; the connectivity
 banner — the last unpinned consumer — rides the utility; the residual
 register holds 3 site-local sites, two of them now dark-guarded).
+
+## Cycle-45 plan (Session-95 / Batch AV) — the uniqueness-guard completion + the Batch R standing-debt closure + the audit-Low hygiene riders
+
+**Received state**: `cd56520` (Batch AU `f67d35f` + the operator's
+session-log commit adding `docs/session_58.md` [the full S92-era
+transcript of the interrupted session; src/ untouched — diff-stat
+verified]). Fresh clone, full re-provision (bun install 497 pkgs,
+`.env` from `.env.example`, db push + seed, chromium-1243, canonical
+build), baseline re-certified cold BEFORE any work: lint ✓ tsc ✓ unit
+**923/923**, the cold 5-chunk e2e cert **474/474** (131+141+57+87+58;
+chunk 4 green on the cold re-run after one first-run skip-link failure
+root-caused as the documented environmental focus-timing flake — green
+standalone AND green cold re-run; every other chunk first-pass).
+
+**Pre-change evidence (the s95 Mode-C audit of the Batch AU diff
+`9fd1609..f67d35f`, delegated read-only)**: **0 Critical / 0 High /
+0 Medium / 4 Low / 2 Info** — all six AU claims verified TRUE (the
+auditor re-ran the unit layer green 923/923, re-derived the e2e census
+131+141+57+87+58 = 474 by per-chunk `--list`, and verified the residual
+register's 3 anchors live at their recorded lines). The riders that
+size this cycle:
+
+- **L1** — the AU_STEPS palette pins (amber-200 `#fde68a` /
+  amber-800 `#92400e`) are NOT covered by the S93/AT2
+  duplicate-later-definition uniqueness guard: the guard's loop iterates
+  `FAMILY_STEPS` only, and the S94 leg-5 palette pin reads the FIRST
+  occurrence (`CSS.match`). A later duplicate amber-200/800 definition
+  would win at runtime (the CSS last-definition rule) while every pin
+  stays green — the exact mutant class the S93 hardening was built to
+  kill. → **AV1**.
+- **L2** — `scripts/capture-s94-evidence.mjs` dropped
+  `process.exitCode = 1` from the md5-gate failure branch (the
+  S91/AR7 gate semantics; the s93 shape still carries it) — an
+  exit-code-checking wrapper sees success on a duplicate-frame run. →
+  **AV2** (restored; the s95 re-tag carries it forward).
+- **L3** — the cert-script Expected line's inner decomposition is
+  stale: "465 real specs" (correct at the 470 census) — the live truth
+  is 474 − 5 setups = **469** real specs = the S82 443 + seven S83 +
+  eight S84 + four S85 + one S86 + one S88 + one S89 + **four S94**
+  pins. → **AV4a**.
+- **L4** — the LIVING AGENTS lesson-2 line still claims "the 4
+  divergent variants (… the connectivity banner's amber-800/60 pill …)
+  are documented residuals" in present tense — the machine-guarded
+  register holds **3** (the banner TREATED at S94/AU2); the historical
+  records (the PAD v1.3.0 block, the cycle records) stay as history per
+  the audit's I2 convention. → **AV4b**.
+
+**The scope decision (the open question, resolved on examined
+evidence)**: Batch R (RSC structural perf) — the only standing debt —
+is formally CLOSED this cycle, not executed. The grounds, each
+machine-verified twice already (S93/AT4 and the S94 receipt) and
+re-validated fresh this cycle (**AV3**): every cwv budget sits FAR
+outside its band (the isolated triple: lcp 2424–3324 vs 4400 / cls 0 vs
+0.1 / fcp 588–764 vs 1500 / ttfb 6–36 vs 500 / longTaskTotal 51–1938 vs
+2400 / INP 1028–1176 vs 3000), the eager bundle (288 KB JS) beats the
+reference's own 634–1087 KB on every axis, per-view code-splitting is
+the ADR-014-REJECTED alternative, and a staged RSC conversion breaks
+the ADR-001 one-page-SPA parity contract that 474 e2e pins + the
+standing suite ride on. Keeping rejected-by-ADR work on the
+standing-debt list misrepresents it as pending. The closure's reopen
+trigger: any budget landing inside its band — which the standing
+suite's cwv + cwv-volume-stress stages already machine-check every
+cycle (the guard is operational, not documentary).
+
+**The implementation (TDD, in-place boundary-pin style where marked)**:
+
+- **AV1 — the uniqueness-guard completion (headline, in-place, census
+  unchanged)**: (a) the blind spot demonstrated LIVE on the pre-change
+  tree — a duplicate-later-definition `--color-amber-200` planted in
+  globals.css leaves all 923 unit pins GREEN (the mutant invisible —
+  the gap proven the AT2 way); (b) the guard's loop extended to the
+  union of every first-occurrence-read record (`FAMILY_STEPS` +
+  `AU_STEPS`) — one uniqueness guard for the whole palette contract, no
+  near-duplicate its; (c) mutation proof — the planted duplicate now
+  RED at exactly the extended pin (the leg-5 palette pin stays green —
+  it reads the first occurrence, which is the point); restored → all
+  green.
+- **AV2 — the capture-gate exit-code restore**: `process.exitCode = 1`
+  back in the md5-gate failure branch (the s93 shape byte-matched); the
+  s95 re-tag inherits it. No census change (scripts).
+- **AV3 — the Batch R closure (evidence + docs, no source change)**:
+  the fresh isolated cwv re-validation triple (nothing concurrent — the
+  S92 lesson-3 protocol) + the eager-bundle anchor re-derived + the
+  standing-debt line in this plan closed as REJECTED-BY-ADR with the
+  operational reopen trigger named; the PAD v1.3.3 revision block
+  records the closure.
+- **AV4 — the docs hygiene**: AV4a the cert header's inner
+  decomposition (465 → 469 + the four S94 pins); AV4b the living AGENTS
+  lesson-2 re-anchored to the 3-site register (the banner → "treated
+  S94/AU2, rides sf-connectivity-pill").
+- **AV5 — the s95 riders**: `scripts/ref-resweep-s95.mjs` (the re-tag:
+  probe prefix, filename prefix `95-`, header) and
+  `scripts/capture-s95-evidence.mjs` (the re-tag + the AV2 gate +
+  the s93 I5 boolean completion line). The s95 evidence frames: the
+  connectivity banner live in dark on a THIRD view (the amber-200/800
+  steps the extended guard now protects, rendered) + the Tasks view
+  (the longTaskTotal heaviest surface — the Batch R closure's own
+  anchor), separated by the REAL sidebar navigation, md5-distinct
+  GATE-enforced.
+
+**Census projection**: unit **923 → 923** (AV1 is the in-place AR1
+boundary-pin precedent; no new `it`s), e2e **474 → 474** (no spec
+changes). Docs chain: README (the Session-95 row), AGENTS (the living
+lesson re-anchor + the S95 lessons section), CLAUDE (the seam tail),
+vitest.config.ts header (unchanged census, the S95 note), this plan
+(header + Cycle-45 record), the PAD v1.3.3 block, the worklog,
+`docs/session_59.md`.
+
+### Cycle-45 — Session-95 · Batch AV — execution record
+
+**AV1 — DONE (in-place, census unchanged).** (a) The blind spot
+demonstrated LIVE on the pre-change tree: a duplicate-later-definition
+`--color-amber-200: #deadbe` planted at the @theme tail left all 923
+unit pins GREEN — the mutant wins at runtime (the CSS
+last-definition rule) while every pin stays green, exactly the s94
+audit's L1. (b) The S93/AT2 uniqueness pin's loop extended to
+`GUARDED_STEPS = { ...FAMILY_STEPS, ...AU_STEPS }` — the union of every
+first-occurrence-read record; the describe comment extended with the
+S95/AV1 note. (c) Mutation proof: the planted duplicate tripped
+EXACTLY the extended pin (`--color-amber-200 must appear exactly once
+in globals.css (found 2): expected 2 to be 1`) with the leg-5 palette
+pin GREEN (it reads the first occurrence — which is the point);
+restored → all 923 green. src/app/globals.css byte-identical before
+and after (the plant removed); the standalone build unchanged.
+
+**AV2 — DONE.** `process.exitCode = 1` restored in
+scripts/capture-s94-evidence.mjs's md5-gate failure branch (the s93
+shape byte-matched, the S91/AR7 semantics; the S95/AV2 comment at the
+branch). The s95 re-tag (capture-s95-evidence.mjs) carries it; its own
+run completed with the gate satisfied (2 frames md5-distinct, exit 0).
+
+**AV3 — DONE (evidence + docs, no source change).** The fresh isolated
+cwv evidence (the S92 lesson-3 protocol — nothing concurrent, the
+:3200 standalone, quiescence waited): lcp 2444–2784 (4400) / cls 0
+(0.1) / fcp 648–732 (1500) / ttfb 5–64 (500) / INP proxy 1019–1274
+(3000) — every one far outside its band; the eager-bundle anchor
+constant across every run: 288 KB JS / 324 KB total vs the reference's
+634–1087 KB. The Tasks longTaskTotal reading set on THIS machine:
+2064 / 2418 / 2844 across the isolated triple + 2329 in the standing
+suite's own cwv-volume-stress stage — three of four inside the 2400
+pin, one boundary-straddling (+18ms), one settling-load-contaminated
+(the 2844 ran while the 15-min load average still carried the e2e
+cert; the S92 lesson-3 class re-confirmed). The honest closure record:
+the straddling budget is the AR1 noise-band-adjacent class BY DESIGN;
+the prior machine's documented same-tree band was 1821–2288; the
+cross-machine band widening is recorded, NOT treated as a regression
+(src/ byte-identical to the AU receipt; the metric's dominant cost is
+the 300-row list MOUNT, not bundle eval — bundle-splitting would not
+move it). **Batch R CLOSED — rejected-by-ADR**: per-view
+code-splitting = the ADR-014-REJECTED alternative; a staged RSC
+conversion breaks the ADR-001 one-page-SPA parity contract that 474
+e2e pins + the standing suite ride on. The reopen trigger is
+OPERATIONAL, not documentary: any budget landing inside its band on
+the certifying machine — which the standing suite's cwv +
+cwv-volume-stress stages machine-check every cycle. The remediation
+plan's standing-debt line closed to ZERO; the PAD v1.3.3 revision
+block records the closure.
+
+**AV4 — DONE.** AV4a: the cert-script header's Expected line inner
+decomposition corrected — "469 real specs = the S82 443 + the seven
+S83 pins + the eight S84 pins + the four S85 pins + the one S86 pin +
+the one S88 pin + the one S89 pin + the four S94 pins [A0c + AU3a/b/c]"
+(the S95/AV4a note at the line). AV4b: the LIVING AGENTS lesson-2
+re-anchored — "the 3 divergent variants (the login bg-red-50/70
+alert, the RUM panel's borderless red-600 alert, the dashboard
+overdue icon chip's bg-only pair)" + the register's first TREATED
+entry named (the connectivity banner, S94/AU2 — treatment and
+register-update ride one commit); the historical revision blocks
+(the PAD v1.3.0, the cycle records) keep their at-revision truth per
+the audit's I2 convention.
+
+**AV5 — DONE.** scripts/ref-resweep-s95.mjs (the re-tag: probe prefix
+`s95-resweep-`, probe name "S95 Probe", filename prefix `95-`, the
+header's provenance note "from the s94 tag") — the run ok:true
+(refChecks 9/9, cloneChecks 9/9, failed: [], the brand tables
+byte-matched both hosts, the mobile drawers green on both,
+probeCleanup ok, 18 captures). scripts/capture-s95-evidence.mjs (the
+re-tag + the AV2 exit-code gate + the s93 I5 boolean completion line)
+— the frames retargeted to this cycle's guarded surfaces: the offline
+banner live in dark on Notes (a THIRD banner view: the amber-200/800
+steps the extended guard now protects, rendered) and on Tasks (the
+Batch R closure's anchor surface), separated by the REAL sidebar
+navigation, md5-distinct GATE-enforced:
+668c90d1b22873d6db7978d095837286 / 76097eb1bade3fbf57a2163e8be6730c,
+exit 0, the demo surface restored (offline off, violet/light).
+
+**Re-certification (all on the FINAL tree — src/ untouched by this
+cycle, the canonical build byte-identical to the baseline cert's):**
+lint ✓ tsc ✓ unit **923/923** (26 files — the census unchanged, the
+projection exact); the cold 5-chunk e2e cert **474/474** stands as the
+final cert (no spec file changed; the census projection exact); **the
+standing suite 35/35 GREEN — every stage including accent-dark-sweep**
+(the stage the S93 ten-minute window could not run, run here through
+the full background runner: 280 view renderings desktop+mobile, 0
+findings) **and cwv-volume-stress** (the coin-flip stage landed green:
+Tasks ltt 2329 inside 2400, findings 0; the dev daemon on :3000 per
+the setsid recipe + the :3200 standalone, zero concurrent spawns); the
+s95 resweep ok:true; agent-browser mobile-nav verified on BOTH hosts
+(reference 24 labeled / drawer navigates to /Notes and auto-closes /
+the drawer's own lucide-x at x:228 y:26 / 20 icon-only collapsed ZERO
+title/aria / scrollWidth 416 on /Notes; clone 26 labeled [the superset
+skip-link] / Escape / 20 icon-only collapsed ALL title+aria at w-80px
+/ scrollWidth 390 — **no Tailwind v4 mobile-nav bug, s95
+re-confirmed**); the s95 evidence captures (2 frames, md5-distinct
+GATE-enforced, exit 0); `.env.example` verified current (the env
+surface unchanged).
+
+**DONE** — Batch AV closed. New baselines: unit **923/923**, e2e
+**474/474**, the standing suite **35/35**. Standing debt after AV:
+**ZERO** — the remediation plan is complete; the natural next cycle
+(Session-96) is the standing rhythm itself: audit the AV diff, ride
+the riders the audit finds, re-certify cold, and keep the operational
+reopen triggers machine-checked (anchor it on `docs/session_59.md`).

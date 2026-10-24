@@ -92,8 +92,11 @@ try {
   const distinct = new Set(frames).size === frames.length;
   if (!distinct) {
     // The failure path prints its OWN line — no success-shaped prose on a
-    // failed gate.
+    // failed gate. S95/AV2 (the s94 audit's L2): process.exitCode = 1
+    // restored — the S91/AR7 gate semantics the s93 shape carries (an
+    // exit-code-checking wrapper must see the failure).
     console.log(`S94 AU frames DUPLICATE: ${frames.join(" ")} — the md5 gate FAILS this run`);
+    process.exitCode = 1;
     md5Failed = true;
   } else {
     console.log(`S94 AU frames: ${frames.join(" ")} — all DISTINCT`);

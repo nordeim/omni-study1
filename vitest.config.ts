@@ -2,6 +2,15 @@ import { defineConfig } from "vitest/config";
 import path from "node:path";
 
 // Unit-test layer for the pure domain seams — 26 files / 923 tests
+// (re-anchored S95: census UNCHANGED — the AV1 uniqueness-guard completion
+// modifies the S93/AT2 pin IN-PLACE [the AR1 boundary-pin precedent]: the
+// duplicate-later-definition guard's loop now covers the union of every
+// first-occurrence-read record — FAMILY_STEPS + AU_STEPS — after the s94
+// audit's L1 found the amber-200/800 steps outside the guard's kill set;
+// the blind spot demonstrated live [a planted later duplicate left all
+// 923 green], mutation-proven [the plant then tripped EXACTLY the extended
+// pin with the leg-5 palette pin green — it reads the first occurrence])
+// — the S94 +2 beneath:
 // (re-anchored S94: +2 — the AU1 leg-5 pair in hue-tokens [the connectivity
 // banner's amber-200/amber-800 @theme pins — the LAST unpinned steps of
 // the amber family, the trap-10 drift liability the S14 offline banner

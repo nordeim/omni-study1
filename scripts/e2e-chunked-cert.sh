@@ -45,9 +45,11 @@
 # [the AJ5 print family + AJ6 focus pin + the AK2 print-enumeration closure
 # + the AL2 chip]).
 # Expected: 131 + 141 + 57 + 87 + 58 = 474 (each chunk's count includes its
-# auth setup; 465 real specs = the S82 443 + the seven S83 pins + the eight
+# auth setup; 469 real specs = the S82 443 + the seven S83 pins + the eight
 # S84 pins + the four S85 pins + the one S86 pin + the one S88 pin + the one
-# S89 pin). Per-chunk: fresh
+# S89 pin + the four S94 pins [A0c + AU3a/b/c] — S95/AV4a, the s94 audit's
+# L3: the AU re-tag updated the sum but left the 470-era "465" stale).
+# Per-chunk: fresh
 # db/e2e.db + stale-server kill (fresh in-memory limiter, register budget
 # stays <= 9/10 per chunk).
 # (S84/AK3 header correction, the audit's L1: the S83 header said
