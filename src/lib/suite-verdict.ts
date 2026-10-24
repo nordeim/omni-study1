@@ -1274,7 +1274,7 @@ const S51_BUDGETS: ReadonlyArray<{ metric: string; limit: number; label: string 
   { metric: "cls", limit: 0.1, label: "the ADR-014 load-stability contract at volume" },
   { metric: "fcp", limit: 1500, label: "the shell-paint volume-invariance" },
   { metric: "ttfb", limit: 500, label: "the server sanity bound" },
-  { metric: "longTaskTotal", limit: 2000, label: "the load-window sibling of the S13 B3 budget" },
+  { metric: "longTaskTotal", limit: 2400, label: "the load-window sibling of the S13 B3 budget (S91/AR1 re-anchor: the documented same-tree healthy band 1821–2288ms made the original 2000 pin a coin flip)" },
 ];
 
 function classifyCwvVolumeStress(env: unknown): StageVerdict {

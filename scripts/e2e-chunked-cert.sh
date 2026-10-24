@@ -56,10 +56,25 @@ declare -a CHUNKS=(
 
 i=1
 for chunk in "${CHUNKS[@]}"; do
-  # stale-server kill (AP-70/AP-95: kill by exact match, never blanket pkill)
-  pids=$(ps aux | grep -E "\.next/standalone/server\.js" | grep -v grep | awk '{print $2}')
+  # stale-server kill (AP-70/AP-95: kill by exact match, never blanket pkill).
+  # S91/AR2 (the s90 audit's M1): the standalone server RETITLES its process
+  # to `next-server (v1.x)` after boot, so the old command-line grep matched
+  # NOTHING for an already-booted server (the S90 lesson 5's own incident) —
+  # and in practice it was a BLANKET match that also killed unrelated
+  # standalone servers (a parallel :3200 verification host). The listening-
+  # port kill replaces it entirely: PID by the E2E port only, curl-verified
+  # dead, SIGKILL escalation if the TERM did not land. A non-listening
+  # leftover cannot wedge the cert (playwright reuses only a HEALTHY
+  # listener; a bind race fails loudly with EADDRINUSE, never silently).
+  port="${E2E_PORT:-3100}"
+  pids=$(ss -tlnp 2>/dev/null | grep ":${port} " | grep -oP 'pid=\K[0-9]+' | sort -u)
   for p in $pids; do kill "$p" 2>/dev/null; done
   sleep 1
+  if curl -s -o /dev/null --max-time 2 "http://localhost:${port}/api/health"; then
+    # still listening after SIGTERM — escalate to SIGKILL on the port's PID
+    for p in $pids; do kill -9 "$p" 2>/dev/null; done
+    sleep 1
+  fi
   rm -f db/e2e.db
   echo "=== CHUNK $i: $(echo $chunk | wc -w) files ==="
   bunx playwright test $chunk --reporter=list 2>&1 | grep -E "^ *[0-9]+ (passed|failed)|passed|failed" | tail -3

@@ -5449,13 +5449,14 @@ describe("classifyAudit cwv-volume-stress (S51 — the CWV × volume stress, the
     expect(over.note).toMatch(/ttfb=501/);
   });
 
-  it("the longTaskTotal budget family, boundary-exact: 2000 reads green (the S13 B3 quiet-window 1500ms standing budget's load-window sibling) and 2001 is a counted finding", () => {
-    const at = classifyAudit("cwv-volume-stress", s51Envelope({ "My Day": { longTaskTotal: 2000 } }));
+  it("the longTaskTotal budget family, boundary-exact: 2400 reads green (the S91/AR1 re-anchor: the load-window sibling of the S13 B3 quiet-window 1500ms budget — the documented same-tree healthy band is 1821–2288ms across 7+ readings on 3+ tree states [S82/S88/S89/S90/S91; the S88 stash A/B measured the SAME tree 1978 green / 2073 red], so the original 2000 pin sat INSIDE the noise band and the verdict was a coin flip on machine-load conditions — the exact S51 LCP class; 2400 sits 112ms above the max documented reading, OUTSIDE the band, and a genuine +400ms regression on the worst-case healthy baseline still lands beyond it) and 2401 is a counted finding", () => {
+    const at = classifyAudit("cwv-volume-stress", s51Envelope({ "My Day": { longTaskTotal: 2400 } }));
     expect(at.green).toBe(true);
-    const over = classifyAudit("cwv-volume-stress", s51Envelope({ "My Day": { longTaskTotal: 2001 } }));
+    const over = classifyAudit("cwv-volume-stress", s51Envelope({ "My Day": { longTaskTotal: 2401 } }));
     expect(over.green).toBe(false);
     expect(over.findings).toBe(1);
-    expect(over.note).toMatch(/longTaskTotal=2001/);
+    expect(over.note).toMatch(/longTaskTotal=2401/);
+    expect(over.note).toMatch(/>2400/);
   });
 
   it("the multi-breach counting: TWO views breaching the SAME family read findings=2 (each breach counted independently)", () => {

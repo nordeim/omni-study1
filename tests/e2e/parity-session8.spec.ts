@@ -999,10 +999,17 @@ test.describe("S8-AC · the assignment row's measured S76 anatomy", () => {
       expect(res.ok(), `create ${title}: ${res.status()}`).toBe(true);
       return (await res.json()) as { id: string };
     };
-    const today = await mk(`S76 Today pill ${stamp}`, iso(0));
-    const tmrw = await mk(`S76 Tomorrow pill ${stamp}`, iso(1));
-    const far = await mk(`S76 Far pill ${stamp}`, iso(5));
+    const today = { id: "" } as { id: string };
+    const tmrw = { id: "" } as { id: string };
+    const far = { id: "" } as { id: string };
+    // S91/AR3 (the s90 audit's L1, the AQ2 convention): the stamped creates
+    // ride INSIDE the try whose finally deletes them — a failed 2nd/3rd
+    // create (the expect inside mk throws) cascades through the finally and
+    // the earlier rows still clean up on every path.
     try {
+      today.id = (await mk(`S76 Today pill ${stamp}`, iso(0))).id;
+      tmrw.id = (await mk(`S76 Tomorrow pill ${stamp}`, iso(1))).id;
+      far.id = (await mk(`S76 Far pill ${stamp}`, iso(5))).id;
       await page.goto("/Assignments");
       await hydrated(page);
       const todayRow = page.locator('[aria-label="Assignment rows"] > *', { hasText: `S76 Today pill ${stamp}` });

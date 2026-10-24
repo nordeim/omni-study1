@@ -58,8 +58,19 @@
 //   CLS ≤ 0.1      — the ADR-014 load-stability contract at volume
 //   FCP ≤ 1500ms   — the shell-paint volume-invariance (the pre-warm)
 //   TTFB ≤ 500ms   — the server sanity bound
-//   longTaskTotal ≤ 2000ms — the S13 B3 quiet-window 1500ms standing
-//                    budget's load-window sibling
+//   longTaskTotal ≤ 2400ms — the S13 B3 quiet-window 1500ms standing
+//                    budget's load-window sibling. S91/AR1 re-anchor (the
+//                    S47/S51 in-suite-correction precedent, the identical
+//                    coin-flip class): the documented same-tree healthy band
+//                    is 1821–2288ms across 7+ readings on 3+ tree states
+//                    (S82/S88/S89/S90/S91 — the S88 stash A/B measured the
+//                    SAME tree 1978 green / 2073 red; the S91 fresh triple
+//                    measured 1821/1836/1849), so the original 2000 pin sat
+//                    INSIDE the noise band and the verdict was a coin flip
+//                    on machine-load conditions. 2400 sits 112ms above the
+//                    max documented reading — OUTSIDE the band — while a
+//                    genuine +400ms regression on the worst-case healthy
+//                    baseline still lands beyond it.
 //   INP proxy ≤ 3000ms — the volume-stressed interaction bound
 //
 // Verdict JSON to stdout; exit 0 on completion (findings ride the JSON —
@@ -90,7 +101,7 @@ const VIEWS = [
 
 // The budget families (mirrors the seam — single source is the classifier;
 // these drive the probe-computed findings array).
-const BUDGETS = { lcp: 4400, cls: 0.1, fcp: 1500, ttfb: 500, longTaskTotal: 2000, inp: 3000 };
+const BUDGETS = { lcp: 4400, cls: 0.1, fcp: 1500, ttfb: 500, longTaskTotal: 2400, inp: 3000 };
 
 const prisma = new PrismaClient({ datasources: { db: { url: "file:../db/custom.db" } } });
 

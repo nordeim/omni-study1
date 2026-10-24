@@ -87,7 +87,9 @@ import path from "node:path";
 // with the volume-EXACT + throttle + ALL-VIEWS guards, the LCP <= 4400
 // parity anchor (the reference's own seed dashboard measures 4416-4432ms
 // under the same preset) / CLS <= 0.1 / FCP <= 1500 / TTFB <= 500 /
-// longTaskTotal <= 2000 budget families with boundary-exact pins, and the
+// longTaskTotal <= 2400 budget families with boundary-exact pins (re-anchored
+// S91/AR1: the documented same-tree band 1821–2288ms made the 2000 pin a coin
+// flip — the S51 LCP class; the boundary pin now reads 2400/2401), and the
 // INP proxy <= 3000 budget.
 // Browser/E2E coverage lives in tests/e2e/*.spec.ts (Playwright — never
 // picked up by this config, which matches *.test.ts only; the standalone
