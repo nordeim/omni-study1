@@ -1557,3 +1557,97 @@ test.describe("S88 · the study-zombie structural kill (Batch AO)", () => {
     }
   });
 });
+
+// ---------------------------------------------------------------------------
+// S89 · Batch AP (session-89) — the partial-empty zombie variant (the s88
+// audit's L1, AO4's coverage gap): the unlatch condition covered ONLY the
+// all-gone case (`deckCards.length === 0`), but a PARTIAL external deletion
+// (`0 < deckCards.length <= studyIndex`) leaves `studyCard === undefined`
+// — the study pane's render guard falls through to two-pane while
+// `studying` stays latched, and a later refill (UI Add Card, AI Generate's
+// N-card batch) passively resurrects study mode the user never re-entered.
+// This pin drives the same rate-refresh deletion window as the AO4 pin,
+// with a 2-of-3 deletion so the surviving set is non-empty while the
+// advanced study index runs past it.
+// ---------------------------------------------------------------------------
+
+test.describe("S89 · the partial-empty zombie variant (Batch AP)", () => {
+  test("AP1: the session dies when the study index runs past the remaining cards — a refill never resurrects study", async ({ page }) => {
+    const stamp = Date.now();
+    const deckRes = await page.request.post("/api/flashcards/decks", {
+      data: { name: `AP1 deck ${stamp}` },
+    });
+    expect(deckRes.ok()).toBeTruthy();
+    const deck = (await deckRes.json()) as { id: string };
+    const cardIds: string[] = [];
+    for (let i = 0; i < 3; i++) {
+      const cardRes = await page.request.post("/api/flashcards/cards", {
+        data: { deckId: deck.id, front: `AP1 front ${i}`, back: `AP1 back ${i}`, difficulty: "medium" },
+      });
+      expect(cardRes.ok()).toBeTruthy();
+      cardIds.push(((await cardRes.json()) as { id: string }).id);
+    }
+
+    // AN1-style cleanup (the AO2 convention): the stamped deck (and its
+    // cascaded cards) deletes on EVERY path; the route is released in the
+    // same finally (the S11/S13/S14 route-hygiene lessons).
+    try {
+      await page.goto("/Flashcards");
+      await hydrated(page);
+      await page.locator('[aria-label="Deck rows"] > *', { hasText: `AP1 deck ${stamp}` }).first().click();
+      await page.locator('[aria-label="Deck detail"]').getByRole("button", { name: "Study" }).click();
+      const study = page.locator('[aria-label="Study mode"]');
+      await expect(study).toBeVisible();
+
+      // The deterministic PARTIAL-deletion window: rate's refresh is
+      // PATCH → GET; the ARMED GET carries the 2-of-3 deletion between its
+      // two legs (delete two, then continue — the collection returns the
+      // ONE surviving card while studyIndex has advanced to 1, past the
+      // surviving set: deckCards[1] === undefined, the partial-empty state).
+      let armed = true;
+      await page.route("**/api/flashcards/cards*", async (route) => {
+        if (armed && route.request().method() === "GET") {
+          armed = false;
+          await page.request.delete(`/api/flashcards/cards/${cardIds[1]}`);
+          await page.request.delete(`/api/flashcards/cards/${cardIds[2]}`);
+        }
+        await route.continue();
+      });
+
+      // Rate Correct on the FIRST (still-existing) card — the PATCH
+      // succeeds, and the refresh's GET lands AFTER the two deletions;
+      // the surviving set is [card0] while studyIndex has advanced to 1.
+      await study.locator("[data-flip-card]").click();
+      await study.getByRole("button", { name: "Correct" }).click();
+
+      // The partial-empty state falls through to the two-pane (the
+      // surviving card renders in the card grid) WITHOUT the deck going
+      // empty — the zombie precondition: `studying` stays latched behind
+      // the two-pane render (identical pre/post-fix; this proves the
+      // store really went PARTIALLY empty mid-study).
+      const grid = page.locator('[aria-label="Card grid"]');
+      await expect(grid).toBeVisible();
+      await expect(grid).toContainText("AP1 front 0");
+      await expect(study).not.toBeVisible();
+
+      // The refill: a UI Add Card while the view stays mounted. Pre-fix
+      // (the partial zombie): the latched `studying` + the refilled index
+      // (deckCards[1] === the NEW card) resurrects study mode the user
+      // never re-entered — the card grid NEVER returns (the RED
+      // discriminator, the AO4 family). Post-fix: the grid renders the
+      // new card and study mode stays gone.
+      await page.locator('[aria-label="Deck detail"]').getByRole("button", { name: "Add Card" }).first().click();
+      const dlg = page.getByRole("dialog");
+      await dlg.getByLabel("Front (question)").fill("AP1 refill front");
+      await dlg.getByLabel("Back (answer)").fill("AP1 refill back");
+      await dlg.getByRole("button", { name: "Add card" }).click();
+
+      await expect(grid).toBeVisible();
+      await expect(grid).toContainText("AP1 refill front");
+      await expect(study).not.toBeVisible();
+    } finally {
+      await page.unroute("**/api/flashcards/cards*").catch(() => {});
+      await page.request.delete(`/api/flashcards/decks/${deck.id}`);
+    }
+  });
+});

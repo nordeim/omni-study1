@@ -9,7 +9,7 @@ High-signal instructions for coding agents working in this repo. Everything here
 | `bun install` | Install deps (Bun ≥ 1.3) |
 | `bun run dev` | Dev server on :3000 (Turbopack), logs tee'd to `dev.log` |
 | `bun run lint` / `bun run typecheck` | ESLint / `tsc --noEmit` — both must be clean |
-| `bun run test` | Vitest unit layer (910 tests; `*.test.ts` only — never picks up e2e specs) |
+| `bun run test` | Vitest unit layer (911 tests; `*.test.ts` only — never picks up e2e specs) |
 | `bun run build` | Production build → `.next/standalone` (**required before e2e**) |
 | `bun run test:e2e` | Playwright vs the standalone build on :3100 with `db/e2e.db` (469 tests across the 5-chunk cold map — 131+139+57+84+58, 30 spec files; a single-process full run trips the register rate-limiter budget by design, the chunked map re-boots the server per chunk). NOTE (S45, the day-boundary lesson): the global setup re-seeds every run, but the seed's IDEMPOTENT UPSERTS do NOT refresh day-relative dates on existing rows — a scratch `db/e2e.db` that ages across a UTC midnight keeps its original day-relative dates (today's tasks, the +1-day exam badge, the due-in pills, the import round-trip dates each read one day stale → 4 deterministic failures in parity-session6/parity-session9/s23-import). Delete `db/e2e.db` when a run crosses a day boundary — the global setup re-creates it fresh with current dates. NOTE (S46, TWO more aged-scratch-db classes + a build-input one): (1) ALWAYS run e2e COLD — `rm -f db/e2e.db` before every full run: the s23-import round-trip posts a FIXED-id envelope, so a second consecutive run against the aged db reads `created: 0, updated: 1` instead of `created: 1, updated: 0` and fails — not just across midnights, across ANY re-run; (2) the s22 negative-spawn spec reads the BUNDLED `.env` — Next's standalone output COPIES the repo-root `.env` into `.next/standalone/.env` at build time, so a REAL AUTH_SECRET in the dev `.env` leaks into the bundle and the guard CORRECTLY boots (the spec times out waiting for the exit) — keep the repo-root `.env`'s AUTH_SECRET EMPTY (the `.env.example` dev posture: `AUTH_SECRET=""` — dev falls back to the local constant with the boot warning) when building for e2e |
 | `node scripts/capture-studyflow.mjs` | Refresh all 31 `docs/screenshots/` captures from the dev server (24 light + 7 dark) |
@@ -413,6 +413,46 @@ Hover-parity probing must run in Playwright, not a touch-emulating browser — v
    count pin in place, and extends the boot script's TOKENS lists at
    the SAME index (the VALUES `Object.values` insertion-order sync
    contract). The two consumers can now be retuned independently.
+
+
+## Variant-coverage + env-immunity + mechanical-sync lessons (S89, the Batch AP findings)
+
+1. **A negative boot-guard spawn must set the variable EMPTY, not rely
+   on its ABSENCE — the standalone server auto-loads the repo-root
+   `.env`.** The s22 spec's negative spawn omitted AUTH_SECRET from an
+   explicit env object, but Next's loadEnvConfig reads the workspace
+   `.env` through the spawn: a repo carrying a REAL secret (a legal
+   production posture — `.env.example`'s own guidance!) leaked through
+   and the guard saw a valid boot — the spec hung at its 20s exit-wait
+   with nothing pointing at the leak. Dotenv-class loaders do NOT
+   overwrite an already-set variable, so `AUTH_SECRET: ""` survives
+   the `.env` load and the guard's documented missing/empty semantics
+   fire — the negative case is now environment-immune. When a spec
+   spawns the app with a deliberately-absent variable, ask what the
+   app's own config loading will inject behind the spawn's back.
+2. **A structural zombie kill must make the unlatch condition a
+   SUPERSET of the render condition it guards.** AO4's unlatch read
+   `deckCards.length === 0` while the study pane's render guard read
+   `studyCard` (the indexed card) — two conditions that differ in
+   shape. The partial external deletion (0 < length <= studyIndex)
+   fell in the gap: no card at the index, deck non-empty, `studying`
+   latched behind a fall-through render. The kill reads `!studyCard`
+   now — the same value the render branch decides on, so every input
+   that falls through the render branch also unlatches the session.
+   When killing a latched-state zombie, enumerate the render guard's
+   fall-through inputs and make the unlatch decide on the SAME
+   expression, not a sibling approximation.
+3. **A hand-maintained list × generated-data sync contract needs a
+   machine pin at the STRING level — value equality hides index
+   slips.** The boot script's seven TOKENS name-lists ride the
+   `Object.values(ACCENT_TOKENS[a])` insertion-order contract with no
+   guard; every accent's clockDateDark === avatarFrom today, so an
+   index slip between value-equal neighbors would stay green forever.
+   The AP3 pin parses the lists out of the script string and asserts
+   they equal the accentCssVars key order AND the Object.values
+   length for every accent — MUTATION-PROVEN (dropping one name goes
+   RED). One string-level pin retires a whole class of future
+   misalignment.
 
 
 ## Testing quirks

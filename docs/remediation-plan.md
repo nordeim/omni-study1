@@ -3263,7 +3263,9 @@ conventional commit; SSH-wrapper push to main.
 Executed in the documented order (the plan above written BEFORE any
 source change; the pin-count drift in the plan's verification
 projection — "unit 907 + 2 AO3 pins → 909" — corrected here: the AO3
-family landed as 2 RED-first pins + 1 array-shape guard = 3 tests, so
+family landed as 2 RED-first pins + 1 error-semantics guard family
+(the array-tolerance assertion rides inside the first RED pin —
+reclassified S89/AP4, the AN2 class's fifth site) = 3 tests, so
 the unit baseline is **910/910**).
 
 - **AO4** (the headline, RED-first): the pin written and verified RED
@@ -3281,7 +3283,9 @@ the unit baseline is **910/910**).
   exported (the sentKeysPatch pure-seam precedent) and routed through
   `normalizeMembers` in entities.ts; 2 RED pins (a padded legacy row
   read returns trimmed; a blank-padded legacy member is dropped) + 1
-  array-shape guard. Unit layer green at 910/910.
+  error-semantics guard family (corrupt JSON → [], a non-row value
+  passes verbatim, null/absent → [] — the third `it`'s actual
+  content; reclassified S89/AP4). Unit layer green at 910/910.
 - **AO5**: the dedicated `clockDateDark` token (all 7 accents, the
   SAME 400-step values) emitted as `--sf-primary-clock-date-dark`
   (accentCssVars 15 → 16), the S3-J count pin RED at 16 pre-token /
@@ -3344,3 +3348,179 @@ record, the worklog, `docs/session_46.md`.
 the ~27 AG-pinned-hue consumers (L4, unchanged), the
 cwv-volume-stress budget re-anchoring (named this cycle — the S82
 noise-floor class, future-cycle candidate).
+
+## Cycle-39 plan (Session-89 / Batch AP) — the partial-empty zombie variant + the spec environment-immunity + the boot-list mechanical pin
+
+Written BEFORE any source change (the standing discipline). Ground
+truth: Batch AO closed at `8e3b9d0` (+ operator commits `9846a69`/
+`70bd199` — docs/skills only, src/ untouched, verified by diff stat);
+baselines unit 910/910, cold e2e 469/469 (131+139+57+84+58), the
+standing suite 34/35 (the cwv noise-floor finding documented, budget
+unchanged). Baseline re-certified cold in-cycle BEFORE any work: lint
+0 / tsc 0 / unit 910/910 / 5-chunk cold cert — chunk 5's first-pass
+1-failed root-caused as a PROVISIONING deviation (see AP2), the
+re-run green at 58/58 → 469/469 confirmed.
+
+Evidence layers (pre-change): the Mode-C audit of the Batch AO diff
+(`4402e4c..8e3b9d0`, delegated read-only): **0C/0H/0M/1L/4I** — all
+six AO claims verified TRUE; the s89 resweep (re-tagged from s88)
+**ok:true** (9/9 both hosts, brand tables byte-matched, probeCleanup
+ok, 18 captures); agent-browser mobile-nav on BOTH hosts (reference
+24 labeled expanded / 20 icon-only collapsed with ZERO title/aria /
+navigates / closes / scrollWidth 416; clone 26 labeled incl. the
+off-screen skip-link / 20 icon-only ALL with title+aria / navigates /
+closes / Escape / scrollWidth 390 — **no Tailwind v4 mobile-nav bug,
+re-confirmed for s89**; the persisted sidebar keys READ before
+interpreting the rendering and restored after).
+
+The Batch AP workstream (TDD):
+
+- **AP1 (the headline, RED-first)** — the partial-empty zombie
+  variant (the AO-audit's L1): AO4's unlatch condition covers ONLY
+  the all-gone case (`deckCards.length === 0`), but a PARTIAL
+  external deletion (`0 < deckCards.length <= studyIndex`) leaves
+  `studyCard === undefined` → the study pane's render guard falls
+  through to two-pane while `studying` stays latched → any refill
+  (UI Add Card, AI Generate's N-card batch) passively resurrects
+  study mode the user never re-entered. The pin (parity-session7,
+  after the AO4 pin): a 3-card study session; the rate-refresh GET
+  carries a 2-card deletion between its legs; then the UI refill —
+  the RED discriminator is the same family as AO4's (the card grid
+  never returns; "Study mode" resurrects on the refilled deck). The
+  fix: the unlatch condition reads `!studyCard` — the session is
+  over when NO card remains at the study index (subsuming the
+  all-gone case: `deckCards[studyIndex]` is undefined when the deck
+  is empty). Comment updated to name both variants.
+- **AP2** — the s22-boot-guard spec's environment immunity (a live
+  in-cycle discovery, this workspace): the negative spawn omits
+  AUTH_SECRET from its EXPLICIT env, but the standalone server's
+  own `.env` auto-load (Next's loadEnvConfig) read the workspace
+  `.env`'s REAL secret through the spawn → the guard saw a valid
+  production secret and booted → the spec hung at its 20s exit-wait.
+  The fix: the spawn sets `AUTH_SECRET: ""` explicitly — the boot
+  guard's documented semantics exit on missing/empty/dev-fallback,
+  and Dotenv-class loaders do NOT overwrite an already-set variable,
+  so the empty value survives the `.env` load and the guard fires
+  regardless of the workspace `.env`'s state. RED demonstrated on
+  the real-secret `.env` (the 20s hang, this cycle's chunk-5
+  first-pass failure); GREEN on the same environment after the
+  explicit-empty spawn; the workspace `.env` restored to the
+  historical empty posture afterward (provisioning alignment, not a
+  code change). In-place spec modification — census unchanged.
+- **AP3** — the boot-script TOKENS×VALUES mechanical pin (the
+  AO-audit's I2): the seven hand-maintained TOKENS name-lists ride
+  the `Object.values(ACCENT_TOKENS[a])` insertion-order sync
+  contract with NO machine guard (AO5 extended all seven at the same
+  index by hand; a value-equal misalignment would stay green
+  forever). The pin (unit layer, theme.test.ts, green-by-design —
+  the current state IS synced): for every accent, the parsed TOKENS
+  list equals the accentCssVars key sequence's `--sf-primary(-...)`
+  suffixes AND its length equals `Object.values`'s — any future
+  token add/drop that misses any of the three sites goes RED.
+- **AP4** — the record-accuracy fifth site (the AO-audit's I1, the
+  AN2 class): the AO3 records say "1 array-shape guard" while the
+  third test family is the error-semantics guards (the
+  array-tolerance assertion rides inside the first RED pin).
+  Corrected here (this plan) + the worklog's AO3 bullet + the
+  remediation-plan Cycle-38 record, each self-labeling S89/AP4.
+- **AP5** — accepted-and-documented (the AO-audit's I4:
+  theme.test.ts's clockDateDark-equals-avatarFrom pin is the
+  byte-identical design's own regression guard, already
+  comment-declared; the retune cycle that changes the value must
+  update that line — noted here as the memo, no code change).
+
+Verification projection: unit 910 + 1 (AP3) = **911/911**; cold cert
+469 + 1 (AP1 rides chunk 2: 139 → 140) = **470/470**; the standing
+suite with the S84 ordering discipline; the s89 resweep on the final
+build; agent-browser mobile-nav re-verified on the final build; the
+s89 evidence captures (the AP1 partial-empty surface pair — the
+mid-study partial deletion + the refilled grid with study mode NOT
+resurrected); docs chain (README badge + counts, AGENTS S89 lessons
++ counts, CLAUDE counts, vitest.config.ts header, the
+e2e-chunked-cert.sh census header, this plan's execution record, the
+worklog, docs/session_48.md); `.env.example` verified; conventional
+commit; SSH-wrapper push to main.
+
+### Cycle-39 execution record (Session-89 / Batch AP) — DONE
+
+Executed in the documented order (the plan above written BEFORE any
+source change).
+
+- **AP1** (the headline, RED-first): the pin written and verified RED
+  on the pre-fix build at the designed discriminator — the RED page
+  snapshot captured `region "Study mode"` resurrected at counter
+  "2 / 2" ON THE REFILLED CARD (the partial-empty zombie: the
+  surviving set [card0] non-empty, studyIndex advanced to 1 past it,
+  `studying` latched behind the two-pane render, and the UI Add Card
+  refill passively resurrected the session the user never re-entered).
+  GREEN after the one-line condition fix in flashcards-view.tsx: the
+  unlatch now reads `!studyCard` — the SAME expression the study
+  pane's render branch decides on (subsuming the all-gone case
+  AO4 covered; the normal path keeps studyCard defined via rate's
+  clamp); the comment names both variants (s80 all-gone + s89
+  partial). The AO4 all-gone pin re-verified green beside it.
+- **AP2** (RED-first on the failing environment): the s22-boot-guard
+  negative spawn demonstrated RED on a real-secret workspace `.env`
+  (the 20s exit-wait hang — the standalone server's own `.env`
+  auto-load leaked the secret through the absent-variable spawn; the
+  same failure the cycle's chunk-5 first pass caught), then GREEN on
+  the SAME environment after the explicit `AUTH_SECRET: ""` (308ms)
+  plus green on the historical empty-secret posture (3.1s) —
+  environment-immune both ways; the workspace `.env` restored to the
+  empty posture afterward (provisioning alignment, not a code
+  change). In-place spec modification — census unchanged.
+- **AP3** (green-by-design + MUTATION-PROVEN): the unit pin parses
+  the seven TOKENS lists out of the THEME_BOOT_SCRIPT string and
+  asserts, for every accent, list === the accentCssVars key-order
+  suffixes AND length === Object.values' — the mechanical guard the
+  hand-maintained insertion-order contract never had; the mutation
+  check (dropping "clock-date-dark" from the violet list) failed
+  exactly the new pin, the restore passed 15/15.
+- **AP4**: the AO3 record classification corrected at the two
+  sites (the worklog's AO3 bullet + the Cycle-38 record above) —
+  "1 array-shape guard" → "1 error-semantics guard family (the
+  array-tolerance assertion rides inside the first RED pin)",
+  each self-labeling S89/AP4 (the AN2 class's fifth site).
+- **AP5**: accepted-and-documented, no change (the I4 memo rides in
+  the plan above).
+
+**Verification ledger:** fast gates after each source change (lint ✓
+tsc ✓ unit ✓ at every step; final: lint 0, tsc 0, unit **911/911**
+— 910 + the AP3 pin); canonical rebuild green (the S88 operational
+lesson held: `bun run build` with the postbuild static copy); full
+cold 5-chunk re-cert **470/470** (131+140+57+84+58, first-pass every
+chunk, zero flakes — chunk 2 carries the AP1 pin at 140; chunk 5
+first-pass green with AP2's immunity live); the standing suite
+**35/35 GREEN** (preflight GREEN; every sweep family green; cwv
+included this cycle — the Tasks longTaskTotal measured inside the
+2000ms budget on the noise floor's good side, the same tree that
+measured 1978–2288 run-to-run in S88; the budget unchanged, the
+guardrail never weakened); the s89 resweep re-run on the FINAL build
+**ok:true** (9/9 both hosts, brand tables byte-matched, probeCleanup
+ok, 18 captures — the capture-prefix re-tag completed honestly after
+the first run overwrote the 88-* history: git-restored and re-run);
+agent-browser mobile-nav on BOTH hosts (reference 24 labeled expanded
+/ 20 icon-only collapsed with ZERO title/aria / navigates / closes /
+scrollWidth 416; clone 26 labeled [the superset skip-link] / 20
+icon-only ALL with title+aria / navigates / closes / Escape /
+scrollWidth 390 — **no Tailwind v4 mobile-nav bug, re-confirmed for
+s89**; re-verified on the final build); the s89 evidence captures (2
+frames — the partial-empty surface pair, md5 6182d281/c75e6e9b, all
+DISTINCT; the probe deck cleaned in the finally, the demo surface
+restored); `.env.example` verified current (git-tracked, keys match,
+no env surface changed this cycle).
+
+**Docs chain:** README (badge 1381, counts 911/470, the Session-89
+row), AGENTS/CLAUDE counts + the S89 lessons section (the
+negative-spawn .env-leak immunity lesson; the unlatch-vs-render
+condition-shape lesson; the mechanical string-level sync-pin lesson),
+vitest.config.ts header (911), the e2e-chunked-cert.sh header
+(131+140+57+84+58=470), this execution record, the worklog,
+`docs/session_48.md`.
+
+**DONE** — Batch AP closed. New baselines: unit **911/911**, e2e
+**470/470**, the standing suite 35/35. Standing debt after AP: Batch
+R (RSC structural perf), the ~27 AG-pinned-hue consumers (L4,
+unchanged), the cwv-volume-stress budget re-anchoring (the S82
+noise-floor class — this cycle measured green; the re-anchoring stays
+named as future-cycle work).

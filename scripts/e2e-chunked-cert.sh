@@ -1,5 +1,14 @@
 #!/usr/bin/env bash
-# Session-88 cold e2e certification — the 5-chunk map, final post-Batch-AO
+# Session-89 cold e2e certification — the 5-chunk map, final post-Batch-AP
+# (census 469 → 470: parity-session7 +1 [the S89/AP1 partial-empty zombie pin:
+# the same rate-refresh external-deletion window as AO4 but a 2-of-3
+# deletion — the surviving set is non-empty while the advanced study index
+# runs past it; the unlatch condition now reads !studyCard, subsuming the
+# all-gone case and the partial deletion. The AP2 s22-boot-guard change
+# modifies the negative spawn IN-PLACE (the explicit-empty AUTH_SECRET —
+# environment immunity against a real-secret workspace .env leaking
+# through Next's standalone auto-load); census unchanged for it. The
+# S88 map beneath:])
 # (census 468 → 469: parity-session7 +1 [the S88/AO4 study-zombie pin: the
 # deterministic external-deletion window drives the exact s80 L1 — mid-study
 # the deck's cards empty through rate's own PATCH→GET refresh carrying a
@@ -25,7 +34,7 @@
 # 12 tests [the AJ1 folder pin + the AK1 guard family] and accessibility 84
 # [the AJ5 print family + AJ6 focus pin + the AK2 print-enumeration closure
 # + the AL2 chip]).
-# Expected: 131 + 139 + 57 + 84 + 58 = 469 (each chunk's count includes its
+# Expected: 131 + 140 + 57 + 84 + 58 = 470 (each chunk's count includes its
 # auth setup; 464 real specs = the S82 443 + the seven S83 pins + the eight
 # S84 pins + the four S85 pins + the one S86 pin + the one S88 pin). Per-chunk: fresh
 # db/e2e.db + stale-server kill (fresh in-memory limiter, register budget

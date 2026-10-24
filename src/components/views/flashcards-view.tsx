@@ -269,20 +269,25 @@ export function FlashcardsView() {
 
   const studyCard = deckCards[studyIndex];
 
-  // S88/AO4 — the study-zombie structural kill (the s80 audit's deferred
-  // L1, closed WITHOUT the forbidden effect): the React-documented
+  // S88/AO4 + S89/AP1 — the study-zombie structural kill (the s80 audit's
+  // deferred L1, closed WITHOUT the forbidden effect): the React-documented
   // render-phase state adjustment — setState during render of THIS
   // component, guarded to terminate (the next render's `studying` is false,
   // so the condition never re-fires; an inline ESLint probe verified the
   // repo's gate accepts the pattern). When the deck under study is no
   // longer the effective selection (external deck deletion — the s78 F3
-  // latch) or its cards are ALL gone (external emptying — the s80 zombie:
-  // the render guard below falls through silently but `studying` stayed
+  // latch) or NO card remains at the study index (external emptying — the
+  // s80 zombie, ALL cards gone — OR a PARTIAL external deletion leaving
+  // 0 < length <= studyIndex, the s88 audit's L1 / S89·AP1 variant: the
+  // render guard below falls through silently but `studying` stayed
   // latched, and a later refill auto-resurrected study mode the user never
   // re-entered), the session is OVER: unlatch it NOW, at render, so no
-  // future refresh can resurrect it. The two-pane render itself is
-  // byte-identical pre/post-fix — the guard already fell through.
-  if (studying && studyDeckId !== null && (studyDeckId !== effectiveDeckId || deckCards.length === 0)) {
+  // future refresh can resurrect it. `!studyCard` subsumes the all-gone
+  // case (deckCards[studyIndex] is undefined on an empty deck); the normal
+  // path keeps studyCard defined (rate's clamp bounds studyIndex). The
+  // two-pane render itself is byte-identical pre/post-fix — the guard
+  // already fell through.
+  if (studying && studyDeckId !== null && (studyDeckId !== effectiveDeckId || !studyCard)) {
     setStudying(false);
     setStudyDeckId(null);
     setStudyIndex(0);

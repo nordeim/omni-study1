@@ -4,6 +4,7 @@ import {
   ACCENT_TOKENS,
   AVATAR_EMOJIS,
   NAV_ACTIVE_GRADIENT_STOPS,
+  THEME_BOOT_SCRIPT,
   accentCssVars,
   isAccent,
   isThemeMode,
@@ -188,5 +189,39 @@ describe("AVATAR_EMOJIS", () => {
     expect(AVATAR_EMOJIS[0]).toBe("🎓");
     expect(AVATAR_EMOJIS[6]).toBe("⭐");
     expect(AVATAR_EMOJIS[19]).toBe("⚽");
+  });
+});
+
+describe("THEME_BOOT_SCRIPT", () => {
+  it("S89/AP3 — the seven hand-maintained TOKENS lists stay index-synced with accentCssVars and Object.values (the insertion-order contract)", () => {
+    // The boot script cannot import this module (it is an inline string),
+    // so its seven TOKENS name-lists ride the Object.values(ACCENT_TOKENS[a])
+    // insertion-order sync contract BY HAND — AO5 extended all seven at
+    // the same index manually; a value-equal misalignment would stay green
+    // forever (the s88 audit's I2: every accent's clockDateDark === avatarFrom
+    // today, so an index slip between those two never shows). This pin is
+    // the mechanical guard the contract never had: for every accent, the
+    // parsed TOKENS list must equal the accentCssVars key sequence's
+    // --sf-primary(-...) suffixes AND its length must equal Object.values'
+    // — any future token add/drop that misses ANY of the three sites (the
+    // AccentToken interface, accentCssVars, the script's lists) goes RED
+    // here. Green-by-design: the current state IS synced (verified live).
+    const m = THEME_BOOT_SCRIPT.match(/var TOKENS = \{([\s\S]*?)\n    \};/);
+    expect(m, "the TOKENS literal is parseable").not.toBeNull();
+    const lists: Record<string, string[]> = {};
+    for (const line of m![1].split("\n")) {
+      const lm = line.match(/^\s*(\w+): \[(.*)\],?$/);
+      if (lm) lists[lm[1]] = lm[2].split(",").map((s) => s.trim().replace(/^"|"$/g, ""));
+    }
+    expect(Object.keys(lists).sort()).toEqual([...ACCENTS].sort());
+    for (const a of ACCENTS) {
+      const cssVarSuffixes = Object.keys(accentCssVars(a)).map((k) =>
+        k === "--sf-primary" ? "primary" : k.replace("--sf-primary-", ""),
+      );
+      expect(lists[a], `${a}: the TOKENS list matches the accentCssVars key order`).toEqual(cssVarSuffixes);
+      expect(lists[a].length, `${a}: the TOKENS list length matches Object.values`).toBe(
+        Object.values(ACCENT_TOKENS[a]).length,
+      );
+    }
   });
 });

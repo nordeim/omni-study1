@@ -1,8 +1,12 @@
 import { defineConfig } from "vitest/config";
 import path from "node:path";
 
-// Unit-test layer for the pure domain seams — 25 files / 910 tests
-// (re-anchored S88: +the three AO3 read-symmetry pins in group-members
+// Unit-test layer for the pure domain seams — 25 files / 911 tests
+// (re-anchored S89: +the AP3 boot-script sync pin in theme
+// [the seven hand-maintained TOKENS lists must equal the accentCssVars key
+// order and the Object.values length for every accent — the mechanical
+// guard the insertion-order sync contract never had; MUTATION-PROVEN];
+// re-anchored S88: +the three AO3 read-symmetry pins in group-members
 // [a padded legacy row and a blank-padded legacy member normalize through
 // the exported membersFromRow seam — the API GET boundary no longer ships
 // legacy padded members verbatim; the s87 audit's Info 1, closed one layer

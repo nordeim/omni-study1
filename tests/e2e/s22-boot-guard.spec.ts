@@ -45,7 +45,19 @@ test.describe("S22 the AUTH_SECRET production boot guard", () => {
         // request/db touch, but a resolvable URL keeps this spawn's ONLY
         // variable the missing secret.
         DATABASE_URL: "file:../db/e2e.db",
-        // AUTH_SECRET deliberately ABSENT.
+        // S89/AP2 — AUTH_SECRET EXPLICITLY EMPTY, not merely absent. The
+        // standalone server auto-loads the repo-root .env (Next's
+        // loadEnvConfig); a workspace .env carrying a REAL secret (a legal
+        // production posture — .env.example's own guidance) leaked through
+        // the absent-variable spawn and the guard saw a valid boot: the
+        // spec hung at its 20s exit-wait (live in the s89 cycle's chunk-5
+        // first pass). Dotenv-class loaders do NOT overwrite an
+        // already-set variable, so the explicit "" survives the .env load
+        // — and the guard's documented semantics (missing/empty/dev
+        // fallback → exit with the actionable message) fire regardless of
+        // the workspace .env's state. The negative case is now
+        // environment-immune.
+        AUTH_SECRET: "",
       },
       stdio: ["ignore", "pipe", "pipe"],
     });
