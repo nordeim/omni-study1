@@ -1,7 +1,13 @@
 import { defineConfig } from "vitest/config";
 import path from "node:path";
 
-// Unit-test layer for the pure domain seams — 26 files / 921 tests
+// Unit-test layer for the pure domain seams — 26 files / 923 tests
+// (re-anchored S94: +2 — the AU1 leg-5 pair in hue-tokens [the connectivity
+// banner's amber-200/amber-800 @theme pins — the LAST unpinned steps of
+// the amber family, the trap-10 drift liability the S14 offline banner
+// rode; and the sf-connectivity-pill utility contract + the banner
+// consumer — the residual register's first TREATED entry, the register
+// updated in the same change]) — the S93 +5 beneath:
 // (re-anchored S93: +5 — the palette-uniqueness pin [matchAll length
 // exactly 1 per family step, the duplicate-later-definition mutant
 // killed], the raw-family negative sweep + the residual-register

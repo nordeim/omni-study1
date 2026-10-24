@@ -55,6 +55,30 @@ test.describe("connectivity banner (S14-A0)", () => {
       await context.setOffline(false);
     }
   });
+
+  test("A0c: the offline banner computes the pinned amber hexes (S94/AU1 — the trap-10 closure)", async ({ page, context }) => {
+    await page.goto("/Dashboard");
+    await expect(page.getByRole("heading", { name: /^Good (morning|afternoon|evening)/ })).toBeVisible();
+
+    await context.setOffline(true);
+    const banner = page.getByRole("status").filter({ hasText: /offline/i });
+    await expect(banner).toBeVisible({ timeout: 5000 });
+    const cs = await banner.evaluate((el) => {
+      const s = getComputedStyle(el);
+      return { bg: s.backgroundColor, color: s.color, border: s.borderColor };
+    });
+    // The S94/AU1 pins: amber-200 #fde68a (border) and amber-800 #92400e
+    // (ink) were UNPINN @theme steps — the banner serialized both through
+    // v4-oklch and drifted 1–3 units/channel (trap-10, the AH3b class; the
+    // amber-100 bg was already pinned and stays byte-identical). The exact
+    // v3 hexes are what the @theme pin restores; the dark pair rides AU3a.
+    expect(cs.border).toBe("rgb(253, 230, 138)"); // amber-200 #fde68a
+    expect(cs.bg).toBe("rgb(254, 243, 199)"); // amber-100 #fef3c7 (pinned)
+    expect(cs.color).toBe("rgb(146, 64, 14)"); // amber-800 #92400e
+
+    await context.setOffline(false);
+    await expect(banner).toHaveCount(0, { timeout: 5000 });
+  });
 });
 
 test.describe("settings display-name guard (S14-B3)", () => {

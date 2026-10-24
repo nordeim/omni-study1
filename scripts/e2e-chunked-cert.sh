@@ -1,5 +1,15 @@
 #!/usr/bin/env bash
-# Session-89 cold e2e certification — the 5-chunk map, final post-Batch-AP
+# Session-89 cold e2e certification — the 5-chunk map, final post-Batch-AU
+# (census 470 → 474: s14-hardening +1 [the S94/AU1 A0c pin — the offline
+# banner's light amber pair computes the pinned v3 hexes; trap-10 closed,
+# the RED demonstrated live against the pre-change build — the unpinned
+# amber-200 border serialized lab(91.7203…)] and dark-mode +3 [the
+# S94/AU3 pins: AU3a the banner's dark amber pair incl. the
+# raw-rgb()/0.6 border serialization, AU3b the RUM panel error alert's
+# dark pair, AU3c the events dialog error banner's sf-alert-red dark
+# pair]. The S89-era map beneath: [the header tag was stale at
+# post-Batch-AP through the S90–S93 cycles — the parallel AT session
+# updated only the Expected line it needed; re-tagged here honestly])
 # (census 469 → 470: parity-session7 +1 [the S89/AP1 partial-empty zombie pin:
 # the same rate-refresh external-deletion window as AO4 but a 2-of-3
 # deletion — the surviving set is non-empty while the advanced study index
@@ -34,7 +44,7 @@
 # 12 tests [the AJ1 folder pin + the AK1 guard family] and accessibility 84
 # [the AJ5 print family + AJ6 focus pin + the AK2 print-enumeration closure
 # + the AL2 chip]).
-# Expected: 131 + 140 + 57 + 84 + 58 = 470 (each chunk's count includes its
+# Expected: 131 + 141 + 57 + 87 + 58 = 474 (each chunk's count includes its
 # auth setup; 465 real specs = the S82 443 + the seven S83 pins + the eight
 # S84 pins + the four S85 pins + the one S86 pin + the one S88 pin + the one
 # S89 pin). Per-chunk: fresh

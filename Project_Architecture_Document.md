@@ -1,4 +1,4 @@
-# StudyFlow (Omni-Study) — Master Project Architecture Document (PAD) v1.3.1
+# StudyFlow (Omni-Study) — Master Project Architecture Document (PAD) v1.3.2
 
 **Classification:** Internal Engineering Reference
 **Status:** DEFINITIVE, PRODUCTION-LOCKED BLUEPRINT
@@ -8,6 +8,12 @@
 **Rule:** Every architectural decision in this document traces to a specific rationale. Nothing is here "because it's popular."
 
 ---
+
+#### Revision Block — v1.3.2 (Session-94 / Batch AU, Cycle 44)
+
+- `[SR]` Current test census anchor (the v1.2.0 convention, re-anchored): **923/923 Vitest unit** (26 files, `*.test.ts` only — +2 the AU1 leg-5 pair in hue-tokens) + **474/474 Playwright e2e** across the 5-chunk cold map (131+141+57+87+58 = 469 real specs in 30 spec files + 5 auth setups; `scripts/e2e-chunked-cert.sh` is the census authority). The PAD carries the census at revision time ONLY — the live count-keepers each cycle are the README badge, AGENTS.md/CLAUDE.md, the `vitest.config.ts` header, and the cert-script header.
+- `[SR]` The connectivity trap-10 closure (S94/AU1+AU2): amber-200 `#fde68a` and amber-800 `#92400e` pinned in @theme (the LAST unpinned steps of the amber family — every consumed step of every hue family now carries the v3 hex); the S14 offline banner's pill rides the `sf-connectivity-pill` utility (color-only, palette-var references, the `.dark &` branch's alpha border through the raw-rgb() convention — `rgb(146 64 14 / 0.6)` computes legacy rgba, never color-mix); the light pair is byte-identical by construction (amber-100/950 were already pinned). The utility is the PIN'S CARRIER (not consumer-deduplication — the S92 lesson 2 bar is untouched): the pinned pair needs a home referencing the @theme vars, and the alpha border needs the raw-rgb() serialization. Machine-guarded by the hue-tokens leg-5 pair + the A0c/AU3a computed-value e2e pins (mutation-proven: the 1-unit pin flips turned exactly the new pins RED with AG4 green).
+- `[SR]` The residual register's first TREATED entry (S94/AU2): the connectivity banner's register row removed IN THE SAME CHANGE as the treatment — the register's second direction (every documented site still carries its raw class) fails loudly on a stale row, so treatment and register-update ride one commit. The register now holds 3 site-local residuals (the login soft alert, the dashboard overdue chip, the RUM borderless alert) — the two error-surface residuals carry numeric dark-computed-value guards (AU3b/c: a characterization guard, not a re-point — residual ≠ unguarded).
 
 #### Revision Block — v1.3.1 (Session-93 / Batch AT, Cycle 43)
 

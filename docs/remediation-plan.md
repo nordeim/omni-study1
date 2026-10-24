@@ -1,9 +1,9 @@
 # Omni-Study1 — Remediation Plan & Execution Record
 
-> **Status: COMPLETE through Batch AT (session-93).** Every batch below has
+> **Status: COMPLETE through Batch AU (session-94).** Every batch below has
 > been executed TDD-style (spec-red → fix → spec-green) and verified:
-> **921/921 Vitest unit**, **470/470 Playwright e2e** across the 5-chunk
-> cold map (131+140+57+84+58, 30 spec files censused exactly once; the
+> **923/923 Vitest unit**, **474/474 Playwright e2e** across the 5-chunk
+> cold map (131+141+57+87+58, 30 spec files censused exactly once; the
 > per-chunk count includes that chunk's auth setup), lint clean,
 > `tsc --noEmit` clean, production build green with the standalone asset
 > contract intact. This document is the durable record of what was broken,
@@ -4522,3 +4522,126 @@ Standing debt after AT: **Batch R (RSC structural perf)** — the
 deferral now re-validated on this machine's fresh evidence (every
 budget far outside its band; the eager bundle 288 KB vs the
 reference's 634–1087 KB).
+
+---
+
+## Cycle-44 plan (Session-94 / Batch AU) — the connectivity trap-10 closure + the residual-census dark guards
+
+**Received state**: `9fd1609` (Batch AT — a PARALLEL Session-93 push
+discovered at this session's first push attempt: the interrupted S93
+session's uncommitted AT work was lost to the workspace reset, executed
+cleanly as this cycle's design earlier in the session, then re-scoped
+onto the parallel base at push time — the census arithmetic composing:
+their 921 + this cycle's 2 = 923 unit, their 470 + this cycle's 4 = 474
+e2e). Re-provisioned fresh at `5855381` (the 18th workspace reset),
+provisioned, baselined (lint ✓ tsc ✓ unit 916/916, cold e2e 470/470,
+the standing suite 35/35 on the clean re-run), the AT cycle designed and
+RED-demonstrated — then the parallel push discovered and the work
+re-executed on the new base with the S94/AU labels.
+
+**The pre-change evidence on the AT base**: their leg-4 residual
+register verified (the connectivity banner registered at line 45 as "a
+translucent-border variant, no family"); the AT receipt's counts
+confirmed locally (unit 921/921); **the finding that sizes this cycle**:
+the banner (a certified S14 surface) rode `border-amber-200`/
+`text-amber-800`/`dark:border-amber-800/60`/`dark:text-amber-200` on
+UNPINN @theme steps — amber-200/amber-800 were the only unpinned steps
+of the amber family (trap-10; the drift demonstrated RED live against
+the pre-change build earlier in this session: the border computed
+`lab(91.7203 -0.505269 49.9084)` vs the v3 `rgb(253, 230, 138)`).
+
+**The plan (TDD — the RED demonstrations carried from the session's
+first execution against the identical pre-change tree state):**
+
+- **AU1** — the amber-200 `#fde68a` + amber-800 `#92400e` @theme pins
+  (the amber family completes) + the `sf-connectivity-pill` utility
+  (color-only, palette-var references, border inside, `.dark &` with
+  the raw-rgb()/0.6 alpha border — legacy rgba serialization, never
+  color-mix; the utility as the PIN'S CARRIER, not
+  consumer-deduplication — site-local raw classes were the drift
+  liability itself).
+- **AU2** — the banner re-point (utility first in the class string,
+  layout site-local) + their residual register updated IN THE SAME
+  CHANGE (the banner entry removed — the register's first TREATED
+  site; its second direction would fail on the stale row).
+- **AU3** — three numeric dark guards in dark-mode.spec.ts (the AH3
+  precedent): AU3a the banner's dark pair (the trap-10 dark
+  discriminator); AU3b the RUM panel error alert's dark pair
+  (green-by-design, the register's borderless residual guarded); AU3c
+  the events dialog's sf-alert-red dark pair (green-by-design, the
+  family's first computed-value dark pin).
+- **AU4** — the hue-tokens leg-5 pair (+2 unit pins, 921 → 923): the
+  AU_STEPS palette pin + the sf-connectivity-pill utility/consumer
+  contract.
+- **A0c** — the s14-hardening light-pair pin (the trap-10 light
+  discriminator).
+- **Census projection**: unit 921 → **923**; e2e 470 → **474**
+  (chunk 2 +1 → 141 [A0c]; chunk 4 +3 → 87 [AU3a/b/c];
+  131+141+57+87+58). The residual register: 4 → 3 (the banner treated).
+- **Mutation proof**: flip the two new @theme pins 1 unit in one pass →
+  A0c + AU3a + the leg-5 palette pin RED; AG4 + the leg-4 register pins
+  GREEN (untouched steps / no source change); restore → all GREEN.
+- **Re-certification (all on the FINAL build)**: lint ✓ tsc ✓ unit
+  923/923; the cold 5-chunk e2e re-cert 474/474 first-pass every chunk;
+  the standing suite 35/35 (fresh daemon, warmed routes, zero
+  interference); the s94 resweep (re-tagged from s93) ok:true on both
+  hosts; agent-browser mobile-nav on both hosts; the s94 evidence
+  captures (2 md5-distinct frames: the offline banner live in dark on
+  the Dashboard + the GradeTracker, separated by the REAL sidebar
+  navigation); `.env.example` verified current; the docs chain; the
+  conventional commit; the SSH-wrapper push.
+
+### Cycle-44 execution record (Session-94 / Batch AU)
+
+- **AU1 — DONE.** The two @theme pins landed (the S94/AU1 comment
+  tags); the sf-connectivity-pill utility landed after sf-alert-emerald
+  (color-only, palette-var references, the border INSIDE, the `.dark &`
+  branch with the raw-rgb() alpha border).
+- **AU2 — DONE.** The banner re-pointed (`sf-connectivity-pill` first
+  in the class string; the layout classes site-local) AND their
+  RESIDUALS register updated in the same change — the banner's entry
+  removed with the S94/AU2 note (the register's first TREATED site;
+  their leg-4's both directions re-run green: the negative sweep now
+  counts the banner's raw classes as ABSENT — correct, they are — and
+  the anchor pin no longer expects them).
+- **AU3 — DONE.** AU3a RED→GREEN (the dark discriminator; the
+  raw-rgb()/0.6 border asserts the legacy rgba serialization); AU3b
+  green-by-design (the route-announcer locator collision calibrated
+  away by text-scoping — the auth.spec precedent); AU3c green-by-design
+  (the dialog flow drives the real submit-failure path).
+- **AU4 — DONE.** The leg-5 pair (the AU_STEPS palette pin + the
+  utility/consumer contract) — the file now carries 9 tests (their 7 +
+  these 2), all green.
+- **A0c — DONE (RED→GREEN).** The light-pair pin; the RED carried from
+  the session's first demonstration against the identical pre-change
+  tree state (the lab() drift), GREEN after the pins.
+- **MUTATION PROOF — DONE (re-run on the merged tree).** Both pins
+  flipped 1 unit, rebuilt: A0c RED (rgb(253, 230, 139)), AU3a RED, the
+  leg-5 palette pin RED, **AG4 GREEN** + their leg-4 register pins
+  GREEN; restored → all green.
+
+**Re-certification (all on the FINAL merged build):** lint ✓ tsc ✓ unit
+**923/923** (26 files); the full cold 5-chunk e2e re-cert **474/474**
+(131+141+57+87+58, first-pass every chunk); the standing suite
+**35/35 GREEN** (the clean-run protocol: a FRESH daemon, pre-warmed
+routes, zero concurrent spawns — the first run's lone
+`settings-roundtrip` failure root-caused as the cold-daemon transient,
+green in the independent re-run); the s94 resweep (re-tagged from s93)
+**ok:true** on both hosts; agent-browser mobile-nav verified on BOTH
+hosts (reference 24 labeled / drawer navigates + auto-closes / the
+drawer's own lucide-x at x:228 y:26 / 20 icon-only collapsed ZERO
+title/aria / scrollWidth 416; clone 26 labeled [the superset skip-link]
+/ Escape / 20 icon-only ALL title+aria at w=80px / scrollWidth 390 —
+**no Tailwind v4 mobile-nav bug, s94 re-confirmed**); the s94 evidence
+captures (2 frames — the offline banner live in dark on the Dashboard
+and the GradeTracker, separated by the REAL sidebar navigation,
+md5-distinct GATE-enforced); `.env.example` verified current.
+
+**DONE** — Batch AU closed. New baselines: unit **923/923**, e2e
+**474/474**, the standing suite 35/35. Standing debt after AU: **Batch R
+(RSC structural perf)** — the only remaining documented deferral (the
+parallel AT's fresh re-validation stands: every budget far outside its
+band). The hue-palette trap-10 liability: **CLOSED** (every consumed
+step of every hue family now carries the v3 hex; the connectivity
+banner — the last unpinned consumer — rides the utility; the residual
+register holds 3 site-local sites, two of them now dark-guarded).

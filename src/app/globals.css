@@ -137,11 +137,13 @@
 
   --color-amber-50: #fffbeb;
   --color-amber-100: #fef3c7;
+  --color-amber-200: #fde68a; /* S94/AU1 (was unpinned) — trap 10: the connectivity banner's light border / dark ink */
   --color-amber-300: #fcd34d;
   --color-amber-400: #fbbf24;
   --color-amber-500: #f59e0b;
   --color-amber-600: #d97706;
   --color-amber-700: #b45309;
+  --color-amber-800: #92400e; /* S94/AU1 (was unpinned) — the banner's light ink / the dark border's base */
   --color-amber-900: #78350f;
   --color-amber-950: #451a03; /* S80/AG4 */
 
@@ -654,6 +656,30 @@
     border-color: var(--color-emerald-900);
     background-color: var(--color-emerald-950);
     color: var(--color-emerald-200);
+  }
+}
+
+@utility sf-connectivity-pill {
+  /* S94/AU1: the S14 offline banner's amber pill — the residual register's
+     first TREATED entry (the s93 register's own note: "update the register
+     if the site was treated"). The trap-10 closure's carrier: amber-200/
+     amber-800 were the last unpinned steps of the amber family, so the
+     banner's light border+ink and dark ink+border serialized through
+     v4-oklch and drifted 1–3 units/channel from the v3 hexes. The utility
+     exists because the pinned pair needs a home that references the @theme
+     vars (the single-source contract) and the alpha border needs the
+     raw-rgb() convention — site-local raw classes were the drift liability
+     itself. Color-only by design: the pill's layout (fixed bottom-center,
+     rounded-full, shadow) stays site-local. The dark border rides
+     rgb(146 64 14 / 0.6) so the alpha serializes as legacy rgba — never
+     color-mix(in oklab) — the sf-today-cell-tint precedent. */
+  border: 1px solid var(--color-amber-200);
+  background-color: var(--color-amber-100);
+  color: var(--color-amber-800);
+  .dark & {
+    border-color: rgb(146 64 14 / 0.6);
+    background-color: var(--color-amber-950);
+    color: var(--color-amber-200);
   }
 }
 

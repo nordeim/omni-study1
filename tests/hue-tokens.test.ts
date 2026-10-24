@@ -182,13 +182,16 @@ describe("the canonical consumer sites ride the utilities (S92/AS1 leg 3)", () =
   });
 });
 
-// The documented residual register (S93/AT1 leg 4): the four divergent
+// The documented residual register (S93/AT1 leg 4): the divergent
 // single-site variants the census left site-local BY DECISION. Each is
 // file:line-anchored — the register is machine-guarded, not
 // convention-guarded (the s93 audit's L1: the AGENTS convention line
 // claimed a negative guard the pins did not provide).
+// S94/AU2: the connectivity banner entry REMOVED — the register's first
+// TREATED site (the trap-10 closure: the banner rides
+// sf-connectivity-pill now; the raw amber classes are gone, so the
+// register's second direction would fail on the stale entry).
 const RESIDUALS: ReadonlyArray<{ file: string; line: number; why: string }> = [
-  { file: "src/components/layout/connectivity-banner.tsx", line: 45, why: "the amber-800/60 border pill (a translucent-border variant, no family)" },
   { file: "src/components/auth/login-surface.tsx", line: 28, why: "the bg-red-50/70 translucent alert (the reference's measured login chrome)" },
   { file: "src/components/views/dashboard-view.tsx", line: 197, why: "the overdue icon chip (bg-only pair — the icon carries its own text color)" },
   { file: "src/components/rum/rum-panel.tsx", line: 134, why: "the borderless red-600 alert (the /rum owner panel's measured style)" },
@@ -256,5 +259,53 @@ describe("the files-view folder tile's dark half (S93/AT1.2)", () => {
     const myday = readConsumer("src/components/views/myday-view.tsx");
     expect(myday).toMatch(/bg-amber-100 dark:bg-amber-900\/40/);
     expect(myday).toMatch(/text-amber-600 dark:text-amber-300/);
+  });
+});
+
+// The S94/AU1 leg — the connectivity trap-10 closure (the residual
+// register's first TREATED site): the banner rode UNPINN amber-200/
+// amber-800 — the LAST unpinned steps of the amber family (50/100/300/
+// 400/500/600/700/900/950 all carried the v3 hexes) — so both branches
+// serialized through v4-oklch and drifted 1–3 units/channel (trap-10,
+// the AH3b class; demonstrated RED live: the border computed
+// lab(91.7203 -0.505269 49.9084) vs the v3 rgb(253, 230, 138)). The
+// pins + the utility close the drift; the dark border rides the
+// raw-rgb() convention (legacy rgba serialization, never
+// color-mix(in oklab) — the sf-today-cell-tint precedent).
+const AU_STEPS: Record<string, string> = {
+  "--color-amber-200": "#fde68a", // S94/AU1 (was unpinned) — the banner's light border / dark ink
+  "--color-amber-800": "#92400e", // S94/AU1 (was unpinned) — the banner's light ink / the dark border's base
+};
+
+describe("the connectivity amber pins (S94/AU1 leg 5)", () => {
+  it("pins the banner's amber-200/800 steps to the v3 hexes in @theme", () => {
+    for (const [step, hex] of Object.entries(AU_STEPS)) {
+      const line = CSS.match(new RegExp(`${step}:\\s*([^;\\s]+)`));
+      expect(line, `${step} missing from @theme`).not.toBeNull();
+      expect(line?.[1], `${step} must carry the v3 ${hex}`).toBe(hex);
+    }
+  });
+
+  it("carries the sf-connectivity-pill utility with the pinned-var declarations in both branches, and the banner rides it", () => {
+    const block = utilityBlock("sf-connectivity-pill");
+    expect(block.length, "@utility sf-connectivity-pill missing from globals.css").toBeGreaterThan(0);
+    // Light: border amber-200 / bg amber-100 / ink amber-800 — palette-var
+    // references (the @theme pin stays the single source, never a literal).
+    expect(block, "light border").toContain("border: 1px solid var(--color-amber-200)");
+    expect(block, "light bg").toContain("background-color: var(--color-amber-100)");
+    expect(block, "light ink").toContain("color: var(--color-amber-800)");
+    // Dark: the raw-rgb() alpha border (amber-800 #92400e at /60 — legacy
+    // rgba serialization, never color-mix) + the pinned bg/ink pair.
+    expect(block, "dark branch").toMatch(/\.dark &/);
+    const dark = block.split(/\.dark &/)[1] ?? "";
+    expect(dark, "dark border").toContain("border-color: rgb(146 64 14 / 0.6)");
+    expect(dark, "dark bg").toContain("background-color: var(--color-amber-950)");
+    expect(dark, "dark ink").toContain("color: var(--color-amber-200)");
+    // The consumer: the banner rides the utility as a QUOTED class string,
+    // utility-FIRST (the leg-3 discriminator's documented convention).
+    const banner = readConsumer("src/components/layout/connectivity-banner.tsx");
+    expect(banner, "the banner must USE sf-connectivity-pill in a class string (not just mention it)").toMatch(
+      /["']sf-connectivity-pill["'\s]/,
+    );
   });
 });

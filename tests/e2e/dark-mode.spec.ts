@@ -548,3 +548,103 @@ test.describe("S81 · the dark toast/banner/footer pairs (AH3/AH4)", () => {
     expect(cs.color).toBe("rgb(203, 213, 225)"); // slate-300 #cbd5e1
   });
 });
+
+// ---------------------------------------------------------------------------
+// S94 · Batch AU dark pins — the connectivity trap-10 closure (the
+// amber-200/amber-800 @theme pins + the sf-connectivity-pill utility —
+// the s93 residual register's first TREATED site) + the residual
+// census's dark guards. See docs/remediation-plan.md Cycle 44 (AU1–AU4).
+//
+// Trap-10 (the standing Tailwind v4 lesson, the AH3b class): the banner
+// rode UNPINN amber-200/amber-800 — both branches serialized through
+// v4-oklch and drifted 1–3 units/channel (demonstrated RED live against
+// the pre-change build earlier in this session: the ink computed
+// lab(91.7203 -0.505269 49.9084)). AU3a is the dark discriminator: the
+// pinned pair computes the v3 hexes now (the dark border through the
+// raw-rgb() convention serializes as legacy rgba — never color-mix).
+// AU3b/c are the AH3-precedent characterization guards for the register's
+// remaining site-local residuals: they pin the CURRENT correct dark
+// values (all steps already pinned) against silent drift — green by
+// design on the pre-change tree, like the AG5 guard.
+// ---------------------------------------------------------------------------
+
+test.describe("S94 · the connectivity banner + the residual dark guards (AU3)", () => {
+  test("AU3a: the offline banner computes the pinned dark amber pair (amber-950 / amber-200 / the rgba border)", async ({ page, context }) => {
+    await gotoDark(page, "/Dashboard");
+    await expect(page.getByRole("heading", { name: /^Good (morning|afternoon|evening)/ })).toBeVisible();
+
+    await context.setOffline(true);
+    const banner = page.getByRole("status").filter({ hasText: /offline/i });
+    await expect(banner).toBeVisible({ timeout: 5000 });
+    const cs = await banner.evaluate((el) => {
+      const s = getComputedStyle(el);
+      return { bg: s.backgroundColor, color: s.color, border: s.borderColor };
+    });
+    // amber-950 #451a03 (pinned S80/AG4), amber-200 #fde68a (pinned
+    // S94/AU1 — unpinned, the v4-oklch step computed lab() drift), the
+    // amber-800/60 border at the raw-rgb() convention: rgb(146 64 14 /
+    // 0.6) serializes as legacy rgba — never color-mix(in oklab).
+    expect(cs.bg).toBe("rgb(69, 26, 3)"); // amber-950 #451a03
+    expect(cs.color).toBe("rgb(253, 230, 138)"); // amber-200 #fde68a
+    expect(cs.border).toBe("rgba(146, 64, 14, 0.6)"); // amber-800 #92400e at /60
+
+    await context.setOffline(false);
+    await expect(banner).toHaveCount(0, { timeout: 5000 });
+  });
+
+  test("AU3b: the RUM panel's error alert keeps the house dark pair (red-950 / red-300)", async ({ page }) => {
+    // The mount-fetch abort drives the panel's role=alert error surface —
+    // the residual register's borderless red-600/red-300 variant,
+    // numerically guarded here (every step it reads is already @theme-
+    // pinned; the register keeps the site site-local BY DECISION).
+    await page.route("**/api/rum", async (route) => {
+      if (route.request().method() === "GET") await route.abort("failed");
+      else await route.continue();
+    });
+    try {
+      await gotoDark(page, "/rum");
+      // Scoped by text: Next's __next-route-announcer__ ALSO carries
+      // role=alert (the strict-mode collision auth.spec documented).
+      const alert = page.getByRole("alert").filter({ hasText: /offline|load the|diagnostics/i });
+      await expect(alert).toBeVisible({ timeout: 10000 });
+      const cs = await alert.evaluate((el) => {
+        const s = getComputedStyle(el);
+        return { bg: s.backgroundColor, color: s.color };
+      });
+      expect(cs.bg).toBe("rgb(69, 10, 10)"); // red-950 #450a0a
+      expect(cs.color).toBe("rgb(252, 165, 165)"); // red-300 #fca5a5
+    } finally {
+      await page.unroute("**/api/rum");
+    }
+  });
+
+  test("AU3c: the events dialog's error banner keeps the sf-alert-red dark pair (red-950 / red-200 / red-900 border)", async ({ page }) => {
+    // The create-submit failure renders the dialog's role=alert banner —
+    // the sf-alert-red family's dark values numerically guarded (the
+    // family's first computed-value dark pin; the source-scan unit pin
+    // cannot see the rendered pair).
+    await page.route("**/api/events", async (route) => {
+      if (route.request().method() === "POST") await route.abort("failed");
+      else await route.continue();
+    });
+    try {
+      await gotoDark(page, "/Events");
+      await page.getByRole("button", { name: "New Event" }).first().click();
+      const dialog = page.getByRole("dialog");
+      await expect(dialog).toBeVisible();
+      await dialog.locator("#event-title").fill("s94 au3c probe");
+      await dialog.getByRole("button", { name: "Create event" }).click();
+      const banner = dialog.getByRole("alert");
+      await expect(banner).toBeVisible({ timeout: 8000 });
+      const cs = await banner.evaluate((el) => {
+        const s = getComputedStyle(el);
+        return { bg: s.backgroundColor, color: s.color, border: s.borderColor };
+      });
+      expect(cs.bg).toBe("rgb(69, 10, 10)"); // red-950 #450a0a
+      expect(cs.color).toBe("rgb(254, 202, 202)"); // red-200 #fecaca
+      expect(cs.border).toBe("rgb(127, 29, 29)"); // red-900 #7f1d1d
+    } finally {
+      await page.unroute("**/api/events");
+    }
+  });
+});
