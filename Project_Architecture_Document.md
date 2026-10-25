@@ -1,4 +1,4 @@
-# StudyFlow (Omni-Study) — Master Project Architecture Document (PAD) v1.3.7
+# StudyFlow (Omni-Study) — Master Project Architecture Document (PAD) v1.3.8
 
 **Classification:** Internal Engineering Reference
 **Status:** DEFINITIVE, PRODUCTION-LOCKED BLUEPRINT
@@ -8,6 +8,13 @@
 **Rule:** Every architectural decision in this document traces to a specific rationale. Nothing is here "because it's popular."
 
 ---
+
+#### Revision Block — v1.3.8 (Session-100 / Batch BA, Cycle 50)
+
+- `[SR]` Current test census anchor (the v1.2.0 convention, re-anchored): **936/936 Vitest unit** (28 files, `*.test.ts` only — census UNCHANGED: the honest-zero-cycle touched documentation + scripts only, src/ untouched) + **474/474 Playwright e2e** across the 5-chunk cold map (131+141+57+87+58 = 469 real specs in 30 spec files + 5 auth setups; `scripts/e2e-chunked-cert.sh` is the census authority). The PAD carries the census at revision time ONLY — the live count-keepers each cycle are the README badge (1410), AGENTS.md/CLAUDE.md, the `vitest.config.ts` header, and the cert-script header.
+- `[SR]` The census-count register note (S100/BA1, the s99 audit's I1): the AZ2 widening's measured counts (213 playwright importers / 94 Usage-line carriers) describe the PRE-rider tree — the AZ5 riders created two more playwright importers that joined the guarded class after the measurement. The final-tree re-derivation at S100: **215 importers / 96 carriers / 0 stale / 119 usage-line-free** (the frozen historical era). The threshold-form pins (>200 />40) absorb growth BY DESIGN; an exact-count pin was explicitly REJECTED as contradicting the silent-absorption intent (the register note is the honest instrument — the S99 lesson-1 genus: a census is a claim about a tree).
+- `[SR]` The s100 evidence-frame rotation (S100/BA2): two CONSUMERS-map surfaces NO prior evidence frame covered, both already e2e-pinned — the Calculator dark (the sf-pill-red AC key, the AG3-pinned surface, zero state dependency) and the Events dark with the create-dialog's error banner live (the sf-alert-red family, the AU3c-pinned surface, driven deterministically by the route-aborted POST — the route unrouted in the finally, zero persistent rows). Both md5-DISTINCT GATE-enforced, first-pass, exit 0. The s100 resweep ok:true (9/9 both hosts, brand tables byte-matched, probeCleanup ok, exit 0); agent-browser mobile-nav re-verified on BOTH hosts (reference 24 viewport-labeled / clone 26 superset incl. the skip-link; all close paths; **no Tailwind v4 mobile-nav bug, s100 re-confirmed**). Zero standing debt unchanged.
+- `[SR]` The Mode-C audit of the Batch AZ diff: **0C/0H/0M/0L/1I** — all six AZ claims verified TRUE with the full shape-true mutation matrix replicated live (every plant tripped exactly its owning pin; the strip-disabled mutation failed both comment-immunity pins). The clean-audit doctrine recorded in AGENTS (the S100 lessons): a verified plateau is itself the deliverable — ride the rotation, do not manufacture a headline.
 
 #### Revision Block — v1.3.7 (Session-99 / Batch AZ, Cycle 49)
 

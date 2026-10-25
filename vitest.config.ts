@@ -2,6 +2,17 @@ import { defineConfig } from "vitest/config";
 import path from "node:path";
 
 // Unit-test layer for the pure domain seams — 28 files / 936 tests
+// (re-anchored S100/BA — the honest-zero-cycle: census UNCHANGED at
+// 936. The BA cycle touched documentation + scripts only: the AZ2
+// record's dated register note [the final-tree playwright-class counts
+// 215 importers / 96 Usage-line carriers — the two s99 riders joined
+// the guarded class after the 213/94 widening measurement; the
+// threshold-form pins absorb growth by design, an exact-count pin
+// explicitly rejected as contradicting the silent-absorption intent]
+// and the s100 riders [ref-resweep-s100.mjs + capture-s100-evidence.mjs
+// — the evidence-frame rotation onto the Calculator dark AC key + the
+// Events dialog error banner, both already e2e-pinned surfaces]. No
+// new pins; src/ untouched.)
 // (re-anchored S99: +2 — the AZ riders: the AZ1 normalization pin in
 // hue-tokens [the inline-comment plant shape normalizes under the AY3
 // strip to a conventional duplicate — the shape-true mutation matrix

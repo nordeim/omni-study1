@@ -1,6 +1,6 @@
 # Omni-Study1 — Remediation Plan & Execution Record
 
-> **Status: COMPLETE through Batch AZ (session-99) — ZERO standing debt.** Every batch below has
+> **Status: COMPLETE through Batch BA (session-100) — ZERO standing debt.** Every batch below has
 > been executed TDD-style (spec-red → fix → spec-green) and verified:
 > **936/936 Vitest unit**, **474/474 Playwright e2e** across the 5-chunk
 > cold map (131+141+57+87+58, 30 spec files censused exactly once; the
@@ -5733,6 +5733,20 @@ designed; both frames GREEN first-pass).
   playwright-class census ran (>200 carriers — the import-shape regex
   drift guard). The lineage sanity legs stay (the re-tag lineage
   census still proves itself).
+  [S100/BA1 register note, the s99 audit's I1, appended per the AZ4
+  latent-register precedent: the 213/94 counts above describe the
+  PRE-rider tree — the widening was measured BEFORE the AZ5 riders
+  created ref-resweep-s99.mjs + capture-s99-evidence.mjs, two
+  playwright importers that joined the guarded class after the
+  measurement. The final-tree re-derivation at S100: **215 importers /
+  96 Usage-line carriers / 0 stale / 119 usage-line-free** (the frozen
+  historical era). The threshold-form pins (>200 />40) absorb growth
+  BY DESIGN — the widening's own doctrine is that a future script of
+  any name joins the guard automatically — so no pin change is
+  warranted; an exact-count pin would contradict that intent. The
+  register exists so the next audit's re-derivation has a scoped
+  expectation instead of a silent drift (the S99 lesson-1 genus: a
+  census is a claim about a tree).]
 - **AZ3 — DONE.** capture-s98's line-3 prose reworded — the literal
   `Usage: bun` string is gone from the file (the sweep description
   keeps its meaning); the rotation-sweep grep
@@ -5792,3 +5806,193 @@ current (the env surface unchanged this cycle).
 machine-checked every cycle). The natural next cycle (Session-100)
 remains the standing rhythm: audit the AZ diff, ride the riders the
 audit finds, re-certify cold (anchor it on `docs/session_67.md`).
+
+## Cycle-50 plan (Session-100 / Batch BA) — the audit-rider cycle at the plateau: the census-count register note + the s100 evidence-frame rotation
+
+**Received state**: `675b4b8` (Batch AZ `b23e99f` + the operator's
+session-log commit adding `docs/session_68.md` [the S99 raw transcript —
+audited clean: one file, 102 insertions, no source changes, no key
+material]). The 24th workspace reset — fresh clone, full re-provision
+(bun install 497 pkgs, `.env` from `.env.example` with
+DATABASE_URL="file:../db/custom.db", the `db/` folder at the repo root +
+push + seed, chromium-1243, the canonical build) and baseline
+re-certified cold BEFORE any work: lint ✓ tsc ✓ unit **936/936**
+(28 files), the cold 5-chunk e2e re-cert **474/474**
+(131+141+57+87+58 — every chunk first-pass, zero flakes).
+
+**Pre-change evidence — the Mode-C audit of the AZ diff**
+(`62e55c3..b23e99f` + the operator's `675b4b8`): **0C/0H/0M/0L/1I**,
+all six AZ claims verified TRUE (the unit layer re-run green 936/936;
+the FULL shape-true mutation matrix replicated live in-repo [Plant B
+the inline-comment form → exactly the dupe check; Plant C the wildcard
+form → exactly the reconciliation pin; Plant D the prose comment →
+NOTHING; the strip-disabled mutation → BOTH the AZ1 and AY3
+comment-immunity pins fail]; the AZ2 census re-derived live on the
+final tree [215 importers, 96 Usage-line carriers, 0 stale] AND the
+blind-spot plant replicated live [a planted bun line in z-probe-s70.mjs
+tripping exactly the widened pin, the file named in the failure
+message, restored → green]; the AZ3 rotation-sweep grep ZERO hits; the
+resweep-s99 gate wiring [the AW2 seam import + the exit wiring] + the
+capture-s99 AX3 shape [catch/thrown/md5Failed/finally-restore/gated
+completion] read in full; the 20 committed 99-*.png frames
+md5-distinct; the operator commit clean; no key material; src/
+untouched by AZ; the docs chain aligned [README badge 1410 + the
+Session-99 row pipe parity, AGENTS/CLAUDE/vitest-header/PAD v1.3.7 all
+carrying 936]; git hygiene clean [.env/db/*.db/dev.log ignored,
+db/ empty in the index]).
+
+**The finding that sizes this cycle:**
+
+- **I1 — the census-count register: the AZ2 record's counts (213
+  importers / 94 Usage-line carriers) describe the pre-rider tree.**
+  The widening was implemented and measured BEFORE the AZ5 riders
+  created `ref-resweep-s99.mjs` + `capture-s99-evidence.mjs` — two
+  playwright importers that joined the guarded class after the
+  measurement. The final-tree re-derivation: **215 importers / 96
+  carriers / 0 stale / 119 usage-line-free (the frozen historical
+  era)**. The pins are sound — the threshold form (>200 />40) absorbs
+  growth BY DESIGN (the AZ2 doctrine: "a future script of any name
+  joins the guard automatically"), so no pin change is warranted; this
+  is record-scoping only (the S99 lesson-1 genus: a census is a claim
+  about a tree). The close: a dated S100 register note appended to the
+  AZ2 execution record (the AZ4 latent-register precedent) so the next
+  audit's re-derivation has a scoped expectation instead of a silent
+  drift.
+
+**The riders (TDD where a guard is touched; documentation + scripts
+otherwise):**
+
+- **BA1 — the census-count register note (the audit's I1).** A dated
+  S100 note appended to the AZ2 record above: the final-tree counts
+  (215 importers / 96 carriers), the growth mechanism (the two s100
+  riders of AZ5 joining the class post-widening), and the
+  threshold-absorbs-growth doctrine restated. No pin change (an
+  exact-count pin would CONTRADICT the silent-absorption design intent
+  and create conscious-update friction on every future re-tag — the
+  register note is the honest instrument).
+- **BA2 — the s100 riders.** `scripts/ref-resweep-s100.mjs` (the
+  7-location re-tag sweep from s99: provenance, usage line, probe
+  email `s100-resweep-`, probe name "S100 Probe", the three capture
+  path prefixes; the AW2 gate import + the AX2 node-runner constraint +
+  the AY2-honest crash scope carried verbatim) and
+  `scripts/capture-s100-evidence.mjs` — the evidence-frame rotation onto
+  two CONSUMERS-map surfaces NO prior evidence frame has covered, both
+  ALREADY e2e-pinned (the rotation's pattern: visual evidence of
+  machine-guarded surfaces): **Frame 1 the Calculator dark** — the
+  sf-pill-red AC key (calculator-view.tsx, the AG3-pinned surface, zero
+  state dependency, fully deterministic); **Frame 2 the Events dark
+  with the create-dialog's error banner live** — the sf-alert-red
+  family (events-view.tsx, the AU3c-pinned surface, driven
+  deterministically by the route-aborted POST → the role=alert banner
+  renders, the route unrouted in the finally, zero persistent rows);
+  both md5-DISTINCT GATE-enforced (the AR7/s93-I5 shape), the AX3
+  catch + the S4 finally-restore (theme back to violet/light) on every
+  path, first-pass, exit 0.
+- **BA3 — the honest-zero-cycle acknowledgment.** The unit census
+  projection is **936 UNCHANGED** and e2e **474 UNCHANGED** (BA1 is
+  documentation-only; BA2 touches scripts/ only; src/ untouched). The
+  audit found no guard gap to close — the projection is exact by
+  construction, and the cycle's honest deliverable is the verified
+  audit + the rotation + the register note.
+
+**Re-certification ladder on the FINAL tree (the standing rhythm):**
+lint ✓ tsc ✓ unit 936/936 (28 files); the canonical build; the cold
+5-chunk e2e 474/474; the standing suite 35/35 through the full-suite
+runner (the settings-roundtrip flake re-run standalone per the S84
+doctrine if it first-runs red); the s100 resweep ok:true with the
+exit-code gate live (9/9 both hosts, brand tables byte-matched,
+probeCleanup ok); agent-browser mobile-nav on BOTH hosts (the
+user-flagged standing surface: reference `sidebarOpen` read-then-
+restored, clone `sf-sidebar-collapsed` read-and-removed — the full
+close-path matrix, the Tailwind-v4-bug check); the s100 evidence
+captures (2 md5-distinct frames); `.env.example` verified current; the
+docs chain (README badge + the Session-100 row, AGENTS 936 + the S100
+lessons, CLAUDE 936 + the seam tail, the vitest header, this plan +
+the Cycle-50 execution record, the PAD v1.3.8 revision block, the
+worklog, `docs/session_69.md`); conventional commit; the wrapper push
+to main.
+
+### Cycle-50 — Session-100 · Batch BA — execution record
+
+Executed exactly as planned (the three BA items above), zero mid-cycle
+corrections — the surfaces were verified in source BEFORE the gates
+were written (the S98 lesson-4 applied prospectively: the calculator
+AC key's aria-label "Clear: AC" and the events dialog's role=alert
+banner both confirmed in calculator-view.tsx / events-view.tsx before
+the capture legs were designed; both frames GREEN first-pass).
+
+- **BA1 — DONE.** The dated S100 register note appended to the AZ2
+  execution record above (visible there): the final-tree counts
+  **215 playwright importers / 96 Usage-line carriers / 0 stale / 119
+  usage-line-free** (the frozen historical era), the growth mechanism
+  (the two s99 riders joining the guarded class post-widening), the
+  threshold-absorbs-growth doctrine restated, and the explicit
+  rejection of an exact-count pin (it would contradict the
+  silent-absorption design intent — the widening's own doctrine — and
+  manufacture conscious-update friction on every future re-tag).
+- **BA2 — DONE.** `scripts/ref-resweep-s100.mjs` (the 7-location
+  re-tag sweep from s99 — provenance, usage, probe email
+  `s100-resweep-`, probe name "S100 Probe", the three capture path
+  prefixes; the AW2 gate import + the AX2 node-runner constraint + the
+  AY2-honest crash scope carried verbatim; syntax-checked; the
+  live run: **ok:true, exit 0** — 9/9 invariants both hosts, the
+  brand tables byte-matched, probeCleanup ok, 18 captures) and
+  `scripts/capture-s100-evidence.mjs` (Frame 1: the Calculator dark —
+  the sf-pill-red AC key [aria-label "Clear: AC", located the way the
+  AG3 spec does], the CONSUMERS map's calculator-view entry, zero
+  state dependency; Frame 2: the Events dark with the create-dialog's
+  error banner LIVE — the sf-alert-red family, the AU3c-pinned
+  surface, driven deterministically by the route-aborted POST on
+  **/api/events [the route unrouted in the finally via the
+  eventsRouteInstalled ownership flag — the S11/S14 leak lessons];
+  zero persistent rows: the abort never reaches the server; both
+  md5-DISTINCT GATE-enforced:
+  97892003fb914d2c56eb10d8dee5bc8b /
+  727571fc6ed0e6e3ef9c7e8305b7dad2, exit 0, first-pass, the demo
+  surface restored violet/light in the finally).
+- **BA3 — DONE.** The honest-zero-cycle acknowledgment: the unit
+  census **936 UNCHANGED** and e2e **474 UNCHANGED** — the projections
+  exact BY CONSTRUCTION (BA1 documentation-only; BA2 scripts-only;
+  src/ untouched; verified on the final tree).
+
+**Re-certification (all on the FINAL tree — src/ untouched by the BA
+work, but the standing rhythm re-runs the full ladder anyway):** lint
+✓ tsc ✓ unit **936/936** (28 files — the zero-cycle projection
+exact); the canonical build green; the full cold 5-chunk e2e re-cert
+**474/474** (131+141+57+87+58 — every chunk first-pass, zero flakes);
+the standing suite — **GREEN 35/35 FIRST-PASS** (all stages spawned
+exactly once through the full-suite runner, the raw envelopes under
+/tmp/standing-suite/; even the settings-roundtrip stage — the
+documented S84-class environmental save-wait flake — ran GREEN on its
+first run this window, no re-run needed, a first since the flake was
+documented; the theme-restore closing guard green [demo light/violet
+intact]); the s100 resweep ok:true with the exit-code gate live (9/9
+both hosts, the brand tables byte-matched, probeCleanup ok, 18
+captures, exit 0); agent-browser mobile-nav verified on BOTH hosts
+(reference: `sidebarOpen` read-then-restored ["true" = expanded — the
+S98-settled semantics], 24 labeled visible links with the drawer open
+[20 nav in the 288px panel + 4 page-behind through the translucent
+backdrop — the S97–S99 viewport instrument, its scope pinned in the
+S100 lessons after a drawer-panel-scoped first read of 20; the
+instrument rule: pin the count's scope when the count is the
+contract] / drawer navigates to /Notes and auto-closes / closes via
+the drawer's own X at x:228 y:26 / 20 icon-only collapsed ZERO
+title-aria / scrollWidth 416 on /Notes — the reference's own overflow
+defect; clone: `sf-sidebar-collapsed` read-and-removed [null
+default], 26 labeled [the superset skip-link "Skip to main content"
+at x:-9999] / drawer navigates to /Notes and auto-closes [the dialog
+UNMOUNTS] / Escape closes / 20 icon-only collapsed ALL title+aria /
+scrollWidth 390 / the hamburger aria-labeled "Open navigation menu" —
+**no Tailwind v4 mobile-nav bug, s100 re-confirmed**); the s100
+evidence captures (2 md5-distinct GATE-enforced frames, exit 0,
+first-pass); `.env.example` verified current (the env surface
+unchanged this cycle — src/ reads AUTH_SECRET, DATABASE_URL,
+NEXT_PUBLIC_SITE_URL, NODE_ENV, all covered).
+
+**DONE** — Batch BA closed. Baselines unchanged: unit **936/936**,
+e2e **474/474**, the standing suite **35/35 first-pass**. Standing
+debt after BA: **ZERO** (the Batch R closure's operational reopen
+triggers stay machine-checked every cycle). The natural next cycle
+(Session-101) remains the standing rhythm: audit the BA diff, ride
+the riders the audit finds, re-certify cold (anchor it on
+`docs/session_69.md`).
