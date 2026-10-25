@@ -1,4 +1,4 @@
-# StudyFlow (Omni-Study) — Master Project Architecture Document (PAD) v1.3.4
+# StudyFlow (Omni-Study) — Master Project Architecture Document (PAD) v1.3.5
 
 **Classification:** Internal Engineering Reference
 **Status:** DEFINITIVE, PRODUCTION-LOCKED BLUEPRINT
@@ -8,6 +8,14 @@
 **Rule:** Every architectural decision in this document traces to a specific rationale. Nothing is here "because it's popular."
 
 ---
+
+#### Revision Block — v1.3.5 (Session-97 / Batch AX, Cycle 47)
+
+- `[SR]` Current test census anchor (the v1.2.0 convention, re-anchored): **931/931 Vitest unit** (27 files, `*.test.ts` only; the AX1 +1 beneath — the widened pin modifies the AW1 pin IN-PLACE, the AR1/AV1 precedent) + **474/474 Playwright e2e** across the 5-chunk cold map (131+141+57+87+58 = 469 real specs in 30 spec files + 5 auth setups; `scripts/e2e-chunked-cert.sh` is the census authority). The PAD carries the census at revision time ONLY — the live count-keepers each cycle are the README badge (1405), AGENTS.md/CLAUDE.md, the `vitest.config.ts` header, and the cert-script header.
+- `[SR]` The @utility census hardening (S97/AX1, the s96 audit's L1): the AW1 completeness pin's header regex demanded exactly one conventional shape, so a shape-variant duplicate (`@utility sf-pill-red{`) or an unconventional name escaped BOTH the census and the dupe guard (demonstrated live — all 930 pins green). The regex widened IN-PLACE to `/@utility\s+([A-Za-z0-9_-]+)\s*\{/g` + hoisted to its own describe, and the NEW token-reconciliation pin (the `@utility` token count must equal the matched-header count) makes any unparseable header form fail LOUDLY instead of silently falling out of the census. The two-plant mutation matrix proves each pin's OWN discriminator.
+- `[SR]` The runner convention, corrected empirically (S97/AX2, the s96 audit's L2): the resweep/capture script class runs under **node ≥ 23.6** (type-stripping for the `.ts` seam import) — **NOT bun**: under bun 1.3.14 playwright-core's APIRequestContext crashes in `_parseSetCookieHeader` on the verify-email flow (the same script passes under node; both observed live the same cycle — the bun crash doubled as an unplanned live failure-path proof of the AW2 exit gate). The usage lines document the constraint; the dep-audit bun-precedent does NOT generalize across script classes.
+- `[SR]` The capture-class exit ownership (S97/AX3, the s96 audit's I3): `capture-s96-evidence.mjs` and every successor re-tag carry a catch that prints a script-owned failure line and sets `process.exitCode = 1` — every failure path gate-owned (observed live both ways: the unhandled-rejection spew before, the script-owned line after), the completion line keyed on the explicit booleans (`md5Failed` + `thrown`).
+- `[SR]` The riders: AX4 the Cycle-46 plan paragraph's "top-level throw" imprecision fixed ("in-try"); AX5 the reference probe-credential rotation checklist documented in AGENTS (the `grep -l sepnetflix scripts/` sweep list); AX6 the s97 re-tags (resweep ok:true, exit 0, 9/9 both hosts, probeCleanup ok, 18 captures; 2 md5-distinct evidence frames). Zero standing debt unchanged (the Batch R reopen triggers stay machine-checked).
 
 #### Revision Block — v1.3.4 (Session-96 / Batch AW, Cycle 46)
 

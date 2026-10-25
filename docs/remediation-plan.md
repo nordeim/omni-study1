@@ -1,8 +1,8 @@
 # Omni-Study1 — Remediation Plan & Execution Record
 
-> **Status: COMPLETE through Batch AW (session-96) — ZERO standing debt.** Every batch below has
+> **Status: COMPLETE through Batch AX (session-97) — ZERO standing debt.** Every batch below has
 > been executed TDD-style (spec-red → fix → spec-green) and verified:
-> **930/930 Vitest unit**, **474/474 Playwright e2e** across the 5-chunk
+> **931/931 Vitest unit**, **474/474 Playwright e2e** across the 5-chunk
 > cold map (131+141+57+87+58, 30 spec files censused exactly once; the
 > per-chunk count includes that chunk's auth setup), lint clean,
 > `tsc --noEmit` clean, production build green with the standalone asset
@@ -4962,7 +4962,7 @@ AS6-hardened port-kill + fresh-db logic exactly).
   imported by the s96 resweep re-tag: `process.exitCode =
   resweepExitCode({ ...resultEnvelope, probeCleanup })` after the
   envelope print. Mutation proof at the seam (the `||`→`&&` flip trips
-  the cleanup-leg pins) AND live at the wiring (a planted top-level
+  the cleanup-leg pins) AND live at the wiring (a planted in-try
   throw → the catch envelope → exit 1 observed at the shell; the green
   run exits 0). Census 924 → 925. The architecture follows the
   suite-verdict precedent exactly: a script-behavior contract pinned at
@@ -5128,3 +5128,239 @@ md5-distinct GATE-enforced, exit 0); `.env.example` verified current
 machine-checked every cycle). The natural next cycle (Session-97)
 remains the standing rhythm: audit the AW diff, ride the riders the
 audit finds, re-certify cold (anchor it on `docs/session_61.md`).
+
+---
+
+## Cycle-47 plan (Session-97 / Batch AX) — the audit-rider cycle: the @utility census hardening + the runner-convention reconciliation + the capture-exit ownership
+
+**Received state**: `5074408` (Batch AW `c9e41e6` + the operator's
+session-log commit adding `docs/session_62.md` [the S96 raw
+transcript — audited clean: one file, 99 insertions, no source
+changes, no key material]). The 21st workspace reset — fresh clone,
+full re-provision (bun install 497 pkgs, `.env` from `.env.example`
+with DATABASE_URL="file:../db/custom.db", the `db/` folder at the
+repo root + push + seed, chromium-1243, the canonical production
+build). Anchors read: session_61 (the S96 stub whose closing line
+names the standing rhythm the natural next cycle), session_62 (the
+operator's S96 transcript, incl. its maintenance-plateau note), the
+Cycle-46 record + the zero standing debt, the worklog tail. Ground
+truth: last completed cycle Session-96/Batch AW (Cycle 46) at
+`c9e41e6`; baselines unit 930/930, cold e2e 474/474, the standing
+suite 35/35. Standing debt: ZERO.
+
+**Baseline re-certified cold BEFORE any work**: lint ✓ tsc ✓ unit
+930/930 ✓ (27 files); the full cold 5-chunk e2e re-cert **474/474**
+(131+141+57+87+58 — **every chunk first-pass, zero flakes** — run
+per-chunk through a per-chunk runner replicating the cert script's
+AS6-hardened port-kill + fresh-db logic exactly).
+
+**Evidence layers (all pre-change):**
+- The Mode-C audit of the Batch AW diff (`d578839..c9e41e6` + the
+  operator's `5074408`, delegated read-only): **0 Critical / 0 High /
+  0 Medium / 2 Low / 4 Info** — all five AW claims verified TRUE (the
+  auditor re-ran the unit layer green 930/930, re-derived the 38/38
+  @utility census coverage, replicated BOTH blind-spot plants
+  out-of-repo — the AW1 later-duplicate AND the AW2 `&&`→`||` seam
+  flip tripping exactly the 4 failure-leg pins — verified the re-tag
+  sweep completeness (every functional string re-tagged, zero
+  92/95-era files touched), the probe-delete AR4/AS3 keying, both
+  hosts targeted, and the committed 96-*.png census: 20 frames = 18
+  resweep + 2 evidence). The findings that size this cycle: **L1** the
+  AW1 completeness pin's header regex `/@utility ([a-z0-9-]+) \{/g`
+  guards only the conventional shape — a duplicate written with
+  variant spacing (`@utility sf-pill-red{`) or an unconventional name
+  (uppercase/underscore) is invisible to BOTH the census and the
+  duplicate guard (current coverage measured 38/38 — latent,
+  future-only). **L2** `ref-resweep-s96.mjs:20` says `Usage: node` while
+  importing the `.ts` seam — works on node ≥ 23.6 (type stripping,
+  verified live on v24) but contradicts the repo's documented
+  bun-precedent for exactly this script class (the dep-audit row:
+  "plain node cannot import the seam"); on node < 23.6 the run dies
+  with ERR_UNKNOWN_FILE_EXTENSION. The Infos: **I1** the reference
+  probe credentials are hardcoded across ~10 committed scripts (the
+  long-standing dedicated probe-account convention — rotation needs a
+  sweep checklist, not a one-file edit); **I2** the completeness pin
+  nests under the sf-pill family describe though it guards the whole
+  file (discoverability); **I3** `capture-s96-evidence.mjs` owns its
+  exit code only on the md5 branch — a mid-run throw exits 1 via
+  node's unhandled-rejection semantics rather than a script-owned
+  gate (fail-safe but not gate-owned, unlike the resweep class);
+  **I4** the Cycle-46 PLAN paragraph says "a planted top-level throw →
+  the catch envelope" — imprecise (a true top-level throw BYPASSES the
+  catch envelope; the execution record at :5046 says "in-try" correctly).
+
+**The work (TDD; census projection: unit 930 → 931, e2e 474
+unchanged):**
+
+- **AX1** (headline — the L1+I2 closure) the @utility census hardening:
+  (a) the blind spot demonstrated LIVE on the pre-change tree — a
+  planted shape-variant duplicate `@utility sf-pill-red{` (no space
+  before the brace, orange content) leaves ALL 930 pins GREEN (the
+  census regex does not match it, so no dupe is counted); (b) the
+  existing AW1 pin widened IN-PLACE to `/@utility\s+([A-Za-z0-9_-]+)\s*\{/g`
+  and hoisted to its own describe ("the @utility census") — the widened
+  form now counts the variant-shape header, so that plant trips the
+  dupe check; (c) a NEW token-reconciliation pin: the count of
+  `@utility` tokens in globals.css must EQUAL the matched-header count
+  — its own discriminator is a header form even the widened regex
+  cannot parse (e.g. `@utility sf-pill-red /* dup */ {`): the token is
+  counted, the header is not, so the escape fails LOUDLY instead of
+  silently falling out of the census; (d) the two-plant mutation
+  matrix: the variant-shape duplicate trips EXACTLY the widened dupe
+  check (the reconciliation pin stays green — both counts include it),
+  the unparseable-form plant trips EXACTLY the reconciliation pin (the
+  dupe check stays green — the header never matched), and the leg-2
+  first-occurrence contract pins stay green through both (which is the
+  point); restored → all green.
+- **AX2** (L2) the runner-convention reconciliation — corrected
+  empirically mid-cycle: the audit offered two closes (re-tag to bun,
+  OR document the node constraint); the bun-first re-tag was tried and
+  FALSIFIED live — under bun 1.3.14 playwright-core's APIRequestContext
+  crashes in `_parseSetCookieHeader` during the verify-email POST (the
+  same script passes under node; the crash also served as an unplanned
+  live failure-path proof of the AW2 exit gate — exit 1 observed on the
+  real envelope, probeCleanup "delete answered 401"). The shipped fix:
+  the usage line stays `node scripts/ref-resweep-sNN.mjs` with the
+  constraint stated (node ≥ 23.6 type-stripping for the `.ts` seam
+  import; bun documented as INCOMPATIBLE with this script class), and
+  the S97 lessons record the bun finding; the s97 re-tag carries the
+  corrected line.
+- **AX3** (I3) the capture-class exit ownership: `capture-s96-evidence.mjs`
+  gains a catch that prints a script-owned failure line and sets
+  `process.exitCode = 1` (mirroring the md5Failed shape) — BEFORE the
+  fix a planted mid-run throw exits 1 via unhandled-rejection spew
+  with no script-owned message; AFTER it the failure is gate-owned
+  (observed live both ways); the s97 re-tag inherits the shape.
+- **AX4** (I4) the one-word docs fix: the Cycle-46 plan paragraph's
+  "top-level throw" → "in-try throw" (the execution record already
+  says it correctly).
+- **AX5** (I1) the probe-credential rotation checklist documented (the
+  sweep list `grep -l sepnetflix scripts/` → every committed re-tag
+  script + the standing drawer probe), so a future rotation is a
+  checklist run, not an archaeology dig. Documentation only — the
+  dedicated reference probe account stays the accepted posture.
+- **AX6** the s97 riders: `scripts/ref-resweep-s97.mjs` (from the s96
+  tag, carrying the AW2 exit-code gate + the AX2 usage fix) and
+  `scripts/capture-s97-evidence.mjs` (from the s96 tag, carrying the
+  AX3 catch) — the re-tag sweep EVERY s96-numbered string incl.
+  capture filename prefixes (the S93 lesson), zero 96-era files
+  overwritten.
+
+**Verification protocol (the standing rhythm)**: rebuild + full cold
+re-cert (lint → tsc → unit → build → the 5-chunk cold e2e); the
+standing suite 35/35; the s97 resweep ok:true with the exit-code gate
+live (exit 0); agent-browser mobile-nav on BOTH hosts; the s97
+evidence captures (2 frames, md5-distinct GATE-enforced); `.env.example`
+verified current; the docs chain (README badge + counts + the
+Session-97 row, AGENTS/CLAUDE counts + the S97 lessons, the
+vitest.config.ts header, the remediation-plan header AW → AX + this
+plan + the execution record, the PAD revision block, the worklog, the
+session_63 stub); conventional commit; wrapper push to main.
+
+### Cycle-47 — Session-97 · Batch AX — execution record
+
+Executed exactly as planned (the six AX items above), with TWO
+mid-cycle corrections owned here per the AT/AW precedent: the AX2
+runner-convention close was falsified live and shipped the other way
+(the audit's own alternative), and the AX1 plan paragraph's
+reconciliation-pin RED condition was corrected to the two-plant matrix
+before execution (the plan-side text amended in the same edit).
+
+- **AX1 — DONE.** (a) The blind spot demonstrated LIVE on the
+  pre-change tree: a shape-variant duplicate `@utility sf-pill-red{`
+  (no space before the brace, orange content) planted at the
+  globals.css tail left ALL 930 pins GREEN (the census regex demanded
+  exactly one space + a lowercase-dash name — the variant matched
+  nothing, so no dupe was counted). (b) The AW1 pin widened IN-PLACE to
+  `/@utility\s+([A-Za-z0-9_-]+)\s*\{/g` and hoisted to its own describe
+  ("the @utility census (S96/AW1 + S97/AX1)"). (c) The NEW
+  token-reconciliation pin: the `@utility` token count
+  (`/@utility(?![a-zA-Z0-9_-])/g`) must EQUAL the matched-header count.
+  (d) The two-plant mutation matrix, each plant tripping EXACTLY its
+  own pin: Plant A (the variant-shape duplicate) tripped ONLY the
+  widened dupe check (1 failed / 930 passed — the reconciliation pin
+  green, both counts include the variant); Plant B (the unparseable
+  form `@utility sf-pill-red /* dup */ {`) tripped ONLY the
+  reconciliation pin (1 failed / 930 passed — the dupe check green, the
+  header never matched); the leg-2 first-occurrence contract pins
+  green through both (which is the point); restored → all green. Clean
+  tree: **931/931** (the widened pin modified in-place; +1 the
+  reconciliation pin — the plan's projection exact).
+- **AX2 — DONE, corrected empirically mid-cycle.** The audit offered
+  two closes (re-tag the usage line to bun, OR document the node
+  constraint). The bun-first re-tag was shipped, then FALSIFIED live:
+  `bun scripts/ref-resweep-s97.mjs` crashed in playwright-core's
+  `_parseSetCookieHeader` during the verify-email POST (the AW2 gate
+  caught it — exit 1 on the real envelope, probeCleanup "delete
+  answered 401": an unplanned live failure-path proof of the s96
+  gate); `node scripts/ref-resweep-s97.mjs` on the SAME tree passed
+  (ok:true, exit 0). The shipped fix: the usage lines of both re-tag
+  scripts + the capture script say `node` with the constraint stated
+  (node ≥ 23.6 type-stripping for the `.ts` seam import; bun 1.3.14
+  documented INCOMPATIBLE for this script class), the S97 lesson-1
+  records the falsification, and the dep-audit bun-precedent is
+  explicitly scoped to its own script class.
+- **AX3 — DONE.** The catch added to `capture-s96-evidence.mjs` (+
+  the `thrown` completion-gate boolean, the completion line keyed on
+  both explicit booleans). Observed live BOTH ways through a planted
+  mid-run throw (at the try top — no frames written): BEFORE the fix,
+  exit 1 via node's unhandled-rejection spew, zero script-owned lines
+  (grep-verified), the completion line correctly absent; AFTER, exit 1
+  with the script-owned `S96 AW surface captures FAILED: …` line and
+  the completion line absent. The s97 re-tag carries the shape.
+- **AX4 — DONE.** The Cycle-46 plan paragraph's "a planted top-level
+  throw → the catch envelope" corrected to "in-try throw" (the
+  execution record already said it correctly; a true top-level throw
+  bypasses the catch envelope — the plan-side imprecision healed
+  in-place, the AW3 precedent).
+- **AX5 — DONE.** The probe-credential rotation checklist documented
+  as the S97 lesson-4 (the sweep list `grep -l sepnetflix scripts/` →
+  every committed re-tag script + the standing drawer probe — update
+  all hits in one pass). Documentation only; the dedicated
+  probe-account posture unchanged.
+- **AX6 — DONE.** `scripts/ref-resweep-s97.mjs` (from the s96 tag,
+  carrying the AW2 gate + the corrected usage line; the re-tag swept
+  every functional s96 string — usage, probe email `s97-resweep-`,
+  probe name "S97 Probe", all three capture path prefixes `97-`; the
+  remaining 96-tags are historical prose only, the S93-lesson
+  convention) and `scripts/capture-s97-evidence.mjs` (the AX frames:
+  the Assignments view dark — the CONSUMERS map's densest view, the
+  SOFT subfamily live [sf-pill-soft-yellow priority pills +
+  sf-pill-soft-blue due pills] — and the Exams view dark through the
+  REAL sidebar navigation [the orange "Tomorrow" + yellow "N days"
+  urgency trio], md5-distinct GATE-enforced:
+  d498800d3b9a8096e747560b03d6f16e /
+  8e0b23c01e34644c7ed6583b8db8a0ae, exit 0). The resweep itself:
+  **ok:true, exit 0** — refChecks 9/9, cloneChecks 9/9, failed [],
+  the brand tables byte-matched on both hosts, mobile drawers green on
+  both, probeCleanup "ok", 18 captures.
+
+**Re-certification (all on the FINAL tree — src/ untouched by the AX
+work, but the standing rhythm re-runs the full ladder anyway):** lint
+✓ tsc ✓ unit **931/931** (27 files); the canonical build green; the
+full cold 5-chunk e2e re-cert **474/474** (131+141+57+87+58 — every
+chunk first-pass, zero flakes); the standing suite **35/35 GREEN**
+(the S31 preflight + the 33 standing audits + the theme-restore
+closing guard — demo light/violet intact, the mid-suite-crash guard
+green); the s97 resweep ok:true with the exit-code gate live; agent-
+browser mobile-nav verified on BOTH hosts (reference 24 labeled in
+the expanded drawer [20 nav + 4 content] / drawer navigates to /Notes
+and auto-closes / closes via the drawer's own X at x:228 y:26 / 20
+icon-only collapsed [the persisted `sidebarOpen:"true"` read BEFORE
+interpreting, restored after] with ZERO title/aria / scrollWidth 416
+on /Notes — the reference's own overflow defect; clone 26 labeled
+[the superset skip-link "Skip to main content" off-screen at
+x:-9999 + 20 nav + 5 content] / drawer navigates + auto-closes /
+Escape closes / 20 icon-only collapsed ALL with title+aria [the
+clone's key `sf-sidebar-collapsed` read and removed after] /
+scrollWidth 390 — **no Tailwind v4 mobile-nav bug, s97
+re-confirmed**); the s97 evidence captures (2 frames, md5-distinct
+GATE-enforced, exit 0); `.env.example` verified current (the env
+surface unchanged this cycle).
+
+**DONE** — Batch AX closed. New baselines: unit **931/931**, e2e
+**474/474**, the standing suite **35/35**. Standing debt after AX:
+**ZERO** (the Batch R closure's operational reopen triggers stay
+machine-checked every cycle). The natural next cycle (Session-98)
+remains the standing rhythm: audit the AX diff, ride the riders the
+audit finds, re-certify cold (anchor it on `docs/session_63.md`).

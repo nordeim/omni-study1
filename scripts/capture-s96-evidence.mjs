@@ -41,6 +41,7 @@ const browser = await chromium.launch();
 const context = await browser.newContext({ viewport: { width: 1280, height: 800 } });
 const page = await context.newPage();
 let md5Failed = false; // the s93 I5 shape: the explicit completion gate
+let thrown = false; // S97/AX3: the catch path's completion-gate boolean
 
 try {
   const demo = await prisma.user.findUnique({ where: { email: "demo@studyflow.app" } });
@@ -110,6 +111,15 @@ try {
   } else {
     console.log(`S96 AW frames: ${frames.join(" ")} — all DISTINCT`);
   }
+} catch (err) {
+  // S97/AX3 (the s96 audit's I3): the failure path is gate-OWNED — a
+  // mid-run throw exits 1 through this catch with a script-owned failure
+  // line, not through node's unhandled-rejection spew. The md5Failed
+  // shape generalized: every failure path sets process.exitCode = 1, and
+  // the completion line below keys on the explicit booleans.
+  console.error(`S96 AW surface captures FAILED: ${err?.message ?? err}`);
+  process.exitCode = 1;
+  thrown = true;
 } finally {
   // The S4 restore lesson: the shared demo surface is restored (accent
   // violet, mode LIGHT) on EVERY path.
@@ -118,5 +128,6 @@ try {
   await browser.close().catch(() => {});
   await prisma.$disconnect().catch(() => {});
 }
-// The s93 I5 shape: the completion line is gated on the explicit boolean.
-if (!md5Failed) console.log("S96 AW surface captures complete");
+// The s93 I5 shape: the completion line is gated on the explicit boolean
+// (S97/AX3: both of them — no success-shaped prose on any failed path).
+if (!md5Failed && !thrown) console.log("S96 AW surface captures complete");

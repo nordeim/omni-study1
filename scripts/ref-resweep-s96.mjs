@@ -18,6 +18,13 @@
 // line, S3-I) are measured via TreeWalker node dumps on BOTH hosts and must
 // match the s67 committed truth table byte-for-byte.
 // Usage: node scripts/ref-resweep-s96.mjs   (clone :3200 standalone first)
+// S97/AX2 (the s96 audit's L2, corrected empirically): NODE, with the
+// version constraint stated — the ../src/lib/resweep-gate.ts seam import
+// needs node >= 23.6 (type stripping). NOT bun: under bun 1.3.14
+// playwright-core's APIRequestContext crashes in _parseSetCookieHeader
+// during the verify-email POST (the same script passes under node —
+// demonstrated live at s97; the bun-first re-tag was tried and reverted
+// the same cycle).
 import { chromium } from "playwright";
 import { mkdirSync } from "node:fs";
 import { resweepExitCode } from "../src/lib/resweep-gate.ts";

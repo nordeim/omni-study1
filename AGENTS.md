@@ -9,7 +9,7 @@ High-signal instructions for coding agents working in this repo. Everything here
 | `bun install` | Install deps (Bun ≥ 1.3) |
 | `bun run dev` | Dev server on :3000 (Turbopack), logs tee'd to `dev.log` |
 | `bun run lint` / `bun run typecheck` | ESLint / `tsc --noEmit` — both must be clean |
-| `bun run test` | Vitest unit layer (930 tests; `*.test.ts` only — never picks up e2e specs) |
+| `bun run test` | Vitest unit layer (931 tests; `*.test.ts` only — never picks up e2e specs) |
 | `bun run build` | Production build → `.next/standalone` (**required before e2e**) |
 | `bun run test:e2e` | Playwright vs the standalone build on :3100 with `db/e2e.db` (474 tests across the 5-chunk cold map — 131+141+57+87+58, 30 spec files; a single-process full run trips the register rate-limiter budget by design, the chunked map re-boots the server per chunk). NOTE (S45, the day-boundary lesson): the global setup re-seeds every run, but the seed's IDEMPOTENT UPSERTS do NOT refresh day-relative dates on existing rows — a scratch `db/e2e.db` that ages across a UTC midnight keeps its original day-relative dates (today's tasks, the +1-day exam badge, the due-in pills, the import round-trip dates each read one day stale → 4 deterministic failures in parity-session6/parity-session9/s23-import). Delete `db/e2e.db` when a run crosses a day boundary — the global setup re-creates it fresh with current dates. NOTE (S46, TWO more aged-scratch-db classes + a build-input one): (1) ALWAYS run e2e COLD — `rm -f db/e2e.db` before every full run: the s23-import round-trip posts a FIXED-id envelope, so a second consecutive run against the aged db reads `created: 0, updated: 1` instead of `created: 1, updated: 0` and fails — not just across midnights, across ANY re-run; (2) the s22 negative-spawn spec reads the BUNDLED `.env` — Next's standalone output COPIES the repo-root `.env` into `.next/standalone/.env` at build time, so a REAL AUTH_SECRET in the dev `.env` leaks into the bundle and the guard CORRECTLY boots (the spec times out waiting for the exit) — keep the repo-root `.env`'s AUTH_SECRET EMPTY (the `.env.example` dev posture: `AUTH_SECRET=""` — dev falls back to the local constant with the boot warning) when building for e2e |
 | `node scripts/capture-studyflow.mjs` | Refresh all 31 `docs/screenshots/` captures from the dev server (24 light + 7 dark) |
@@ -786,6 +786,51 @@ Hover-parity probing must run in Playwright, not a touch-emulating browser — v
    `sidebarOpen`; the clone's is `sf-sidebar-collapsed` (this session's
    own first-attempt miss: the reference's key is inert on the clone).
    The dual-host mobile-nav protocol now records both key names.
+
+## S97 lessons (Batch AX — the audit-rider cycle: census hardening + runner reconciliation + capture-exit ownership)
+
+1. **An audit's recommended fix can itself be wrong — falsify it live
+   before shipping it.** The s96 audit's L2 offered two closes for the
+   resweep runner convention (re-tag the usage line to bun, OR document
+   the node constraint). The bun-first re-tag was tried live and
+   FALSIFIED: under bun 1.3.14, playwright-core's APIRequestContext
+   crashes in `_parseSetCookieHeader` during the verify-email POST — the
+   SAME script passes under node (both directions observed the same
+   cycle; the bun crash doubled as an unplanned live failure-path proof
+   of the AW2 exit gate: exit 1 on the real envelope, probeCleanup
+   "delete answered 401"). The shipped fix documents the node ≥ 23.6
+   type-stripping constraint and marks bun INCOMPATIBLE for this script
+   class. A recommendation is a hypothesis; the live run is the
+   authority.
+2. **A census guard's regex IS the contract — its blind spots are SHAPE
+   blind spots.** The AW1 completeness pin demanded exactly one
+   conventional header shape (`@utility name {`), so a duplicate written
+   `@utility sf-pill-red{` (no space before the brace) escaped BOTH the
+   census and the dupe guard — demonstrated live: all 930 pins green
+   while the CSS cascade would let the later block win at runtime. The
+   widened regex (`/@utility\s+([A-Za-z0-9_-]+)\s*\{/g`) + the NEW
+   token-reconciliation pin (the `@utility` token count must equal the
+   matched-header count) close the class: every header shape counts, and
+   any token the regex cannot parse fails LOUDLY instead of silently
+   falling out of the census. The two-plant mutation matrix proves each
+   pin's OWN discriminator (the variant-shape plant trips exactly the
+   widened dupe check; the unparseable-form plant trips exactly the
+   reconciliation pin).
+3. **Every failure path a script can take should be GATE-OWNED, not
+   runtime-owned.** The capture class's mid-run throws exited 1 through
+   node's unhandled-rejection semantics — fail-safe, but with a raw
+   stack spew and no script-owned failure line. The AX3 catch
+   generalizes the md5Failed shape: the failure prints its own line,
+   sets `process.exitCode = 1`, and the completion line keys on the
+   explicit booleans (both observed live, before and after the fix).
+4. **The reference probe account's credentials are hardcoded across
+   every committed re-tag script** (the dedicated probe-account posture,
+   standing since the s7x era). Rotating that account is a sweep-list
+   run, not a one-file edit: `grep -l sepnetflix scripts/` → every
+   `ref-resweep-sNN.mjs` re-tag + the standing drawer probe — update all
+   hits in one pass, or the next resweep registers with a dead account.
+   Documented here (AX5) so a future rotation is a checklist, not
+   archaeology.
 
 ## Testing quirks
 

@@ -1,7 +1,17 @@
 import { defineConfig } from "vitest/config";
 import path from "node:path";
 
-// Unit-test layer for the pure domain seams — 27 files / 930 tests
+// Unit-test layer for the pure domain seams — 27 files / 931 tests
+// (re-anchored S97: +1 — the AX1 @utility census hardening in hue-tokens:
+// the AW1 completeness pin's header regex widened IN-PLACE to every header
+// shape + hoisted to its own describe, and the NEW token-reconciliation
+// pin [the @utility token count must equal the matched-header count — an
+// unparseable header form fails LOUDLY, never silently out of the census];
+// the shape-variant blind spot demonstrated live (a planted
+// `@utility sf-pill-red{` left all 930 green), the two-plant mutation
+// matrix proving each pin's OWN discriminator: the variant-shape plant
+// trips exactly the widened dupe check, the unparseable-form plant trips
+// exactly the reconciliation pin)
 // (re-anchored S96: +7 — the AW1 @utility-block uniqueness pin in
 // hue-tokens [the completeness form: EVERY @utility header in globals.css
 // exactly once — the duplicate-later-block blind spot demonstrated live

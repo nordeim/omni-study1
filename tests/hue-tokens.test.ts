@@ -124,25 +124,6 @@ function utilityBlock(name: string): string {
 }
 
 describe("the sf-pill/sf-alert utility families (S92/AS1 leg 2)", () => {
-  // S96/AW1 (the s95 audit's L1): utilityBlock() above reads the FIRST
-  // occurrence — a duplicate LATER @utility block would win at runtime by
-  // the CSS cascade while every leg-2 contract pin stays green on the
-  // first match (the blind spot demonstrated live on the pre-change tree:
-  // a planted later duplicate left all 923 pins green). The completeness
-  // form below guards EVERY @utility block in the file (all 38+, not just
-  // the UTILITY_CONTRACT names — a new utility joins the kill set for
-  // free); mutation-proven s96 (the plant tripped EXACTLY this pin with
-  // the leg-2 contract pins green).
-  it("defines every @utility block EXACTLY once (a duplicate later definition would win at runtime)", () => {
-    const headers = [...CSS.matchAll(/@utility ([a-z0-9-]+) \{/g)].map((m) => m[1]);
-    expect(headers.length, "the @utility census ran (globals.css carries its utility families)").toBeGreaterThan(30);
-    const dupes = headers.filter((h, i) => headers.indexOf(h) !== i);
-    expect(
-      dupes,
-      `duplicate @utility blocks (a later definition wins at runtime — collapse them to one): ${[...new Set(dupes)].join(", ")}`,
-    ).toEqual([]);
-  });
-
   it("carries every utility with the pinned-var declarations in both branches", () => {
     for (const [name, c] of Object.entries(UTILITY_CONTRACT)) {
       const block = utilityBlock(name);
@@ -158,6 +139,41 @@ describe("the sf-pill/sf-alert utility families (S92/AS1 leg 2)", () => {
         expect(dark, `${name} dark border`).toContain(`border-color: var(--color-${c.darkBorder})`);
       }
     }
+  });
+});
+
+// The @utility census — hoisted out of the family describe by S97/AX1
+// (the s96 audit's L2-adjacent I-finding: the completeness guard owns the
+// WHOLE file, not the pill/alert families). S96/AW1 guarded every
+// conventionally-shaped header; S97/AX1 (the s96 audit's L1) closes the
+// shape-variant escape: the original regex `/@utility ([a-z0-9-]+) \{/g`
+// demanded exactly one space and a lowercase-dash name, so a duplicate
+// written `@utility sf-pill-red{` (no space) or `@utility SF_PILL {`
+// (uppercase/underscore) was invisible to BOTH the census and the dupe
+// guard — demonstrated LIVE on the pre-change tree: the planted variant
+// left all 930 pins green while the CSS cascade would let it win at
+// runtime. The widened form below counts every header shape, and the
+// token-reconciliation pin catches any `@utility` token the header regex
+// still misses (a header that falls out of the census fails LOUDLY, never
+// silently).
+describe("the @utility census (S96/AW1 + S97/AX1)", () => {
+  it("defines every @utility block EXACTLY once — widened to every header shape (a shape-variant duplicate would win at runtime)", () => {
+    const headers = [...CSS.matchAll(/@utility\s+([A-Za-z0-9_-]+)\s*\{/g)].map((m) => m[1]);
+    expect(headers.length, "the @utility census ran (globals.css carries its utility families)").toBeGreaterThan(30);
+    const dupes = headers.filter((h, i) => headers.indexOf(h) !== i);
+    expect(
+      dupes,
+      `duplicate @utility blocks (a later definition wins at runtime — collapse them to one): ${[...new Set(dupes)].join(", ")}`,
+    ).toEqual([]);
+  });
+
+  it("reconciles the @utility token count against the matched-header census (an unmatchable header shape must fail LOUDLY, never fall out of the census)", () => {
+    const tokens = [...CSS.matchAll(/@utility(?![a-zA-Z0-9_-])/g)].length;
+    const headers = [...CSS.matchAll(/@utility\s+([A-Za-z0-9_-]+)\s*\{/g)].length;
+    expect(
+      tokens,
+      `the @utility token count (${tokens}) must equal the matched-header count (${headers}) — a header the census regex cannot match escapes BOTH the dupe guard and the census; write it in the conventional form or widen the regex`,
+    ).toBe(headers);
   });
 });
 
