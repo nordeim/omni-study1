@@ -26,7 +26,7 @@
 // script's cleanup owns ONLY the state restoration (offline off, the demo
 // surface back to violet/light) — the S4 restore lesson on EVERY path.
 //
-// Usage: bun scripts/capture-s95-evidence.mjs
+// Usage: node scripts/capture-s95-evidence.mjs
 //        (clone :3200 standalone first — the S86 daemon recipe)
 import { chromium } from "playwright";
 import { mkdirSync } from "node:fs";

@@ -1,4 +1,4 @@
-# StudyFlow (Omni-Study) — Master Project Architecture Document (PAD) v1.3.5
+# StudyFlow (Omni-Study) — Master Project Architecture Document (PAD) v1.3.6
 
 **Classification:** Internal Engineering Reference
 **Status:** DEFINITIVE, PRODUCTION-LOCKED BLUEPRINT
@@ -8,6 +8,14 @@
 **Rule:** Every architectural decision in this document traces to a specific rationale. Nothing is here "because it's popular."
 
 ---
+
+#### Revision Block — v1.3.6 (Session-98 / Batch AY, Cycle 48)
+
+- `[SR]` Current test census anchor (the v1.2.0 convention, re-anchored): **934/934 Vitest unit** (28 files, `*.test.ts` only; the AY riders +3 — the NEW tests/script-conventions.test.ts carrying the re-tag script-class runner-convention census [2 pins: the convention + its class-census sanity leg] and the AY3 comment-immunity strip-helper pin in hue-tokens, with both census counts re-anchored IN-PLACE onto the comment-stripped CSS, the AR1/AV1/AX1 precedent) + **474/474 Playwright e2e** across the 5-chunk cold map (131+141+57+87+58 = 469 real specs in 30 spec files + 5 auth setups; `scripts/e2e-chunked-cert.sh` is the census authority). The PAD carries the census at revision time ONLY — the live count-keepers each cycle are the README badge (1408), AGENTS.md/CLAUDE.md, the `vitest.config.ts` header, and the cert-script header.
+- `[SR]` The capture-lineage runner-convention reconciliation (S98/AY1, the s97 audit's L1): the AX2 node-runner convention had been swept only into the resweep lineage and the s97 capture — TEN capture scripts (s87–s96) still said `Usage: bun`, the AX commit itself having modified capture-s96 without fixing its own contradictory usage line. The close: the ten lines swept to node (the four DATABASE_URL-prefixed lines keep their prefix) AND the new `tests/script-conventions.test.ts` census pin — every `// Usage:` line in the capture-evidence / ref-resweep lineages documents the node runner, never bun; files without a Usage line are the pre-s87 historical era, out of scope by design. The class is now self-guarding: a future re-tag copied from a stale template fails the unit layer.
+- `[SR]` The census comment-immunity (S98/AY3, the s97 audit's I2): the AX1 token-reconciliation pin counted `@utility` tokens ANYWHERE in globals.css — a future prose comment would inflate the token census into a loud FALSE failure (demonstrated live: 39 tokens vs 38 headers). Both census counts now run on comment-stripped CSS (the block form `/* … */` — the only comment form the file carries) — the CORRECT semantics, not a workaround: a commented-out `@utility` block is not real CSS and does not win at runtime. The three-plant mutation matrix: the shape-variant duplicate trips exactly the dupe check, the unparseable form trips exactly the reconciliation pin, the comment trips NOTHING.
+- `[SR]` The honest bun-scope re-scope (S98/AY2, the s97 audit's I1): capture-s97's header had scoped the bun crash to "this flow's page.request calls" — the live evidence was the RESWEEP's verify-email POST (a Set-Cookie response); the capture flow's own requests are untested under bun. The header now names the exact repro; the s98 re-tag inherits the corrected wording. Scope every falsification claim to the run that produced it.
+- `[SR]` The riders: AY4 the latent-shape register documented (I3 the wildcard-utility form fails loudly with the "widen the regex" instruction — by-design; I4 the capture finally-restore is best-effort while the context lives — the S4 lesson's boundary); AY5 the s98 re-tags (resweep ok:true, exit 0, 9/9 both hosts, probeCleanup ok, 18 captures; 2 md5-distinct evidence frames — the GradeTracker dark [the four-family view] + the Flashcards dark [the sf-pill-yellow difficulty pills, a surface no prior evidence frame covered]). Zero standing debt unchanged (the Batch R reopen triggers stay machine-checked).
 
 #### Revision Block — v1.3.5 (Session-97 / Batch AX, Cycle 47)
 

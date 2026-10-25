@@ -29,9 +29,12 @@
 // Usage: node scripts/capture-s97-evidence.mjs
 //        (clone :3200 standalone first — the S86 daemon recipe; node
 //        >= 23.6 for uniformity with the resweep class — NOT bun: the
-//        S97/AX2 finding, playwright-core's APIRequestContext crashes
-//        under bun 1.3.14 in _parseSetCookieHeader on this flow's
-//        page.request calls)
+//        S97/AX2 finding observed on the RESWEEP's verify-email POST [a
+//        Set-Cookie response], playwright-core's APIRequestContext
+//        crashing in _parseSetCookieHeader under bun 1.3.14; this
+//        capture flow's own requests are untested under bun — node is
+//        the uniform class convention. S98/AY2, the s97 audit's I1: the
+//        honest re-scope of the crash claim to the observed evidence)
 import { chromium } from "playwright";
 import { mkdirSync } from "node:fs";
 import { createHash } from "node:crypto";

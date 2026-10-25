@@ -22,7 +22,7 @@
 // Settings accent switch) — both frames must be md5-DISTINCT (printed at
 // the end).
 //
-// Usage: DATABASE_URL="file:../db/custom.db" bun scripts/capture-s90-evidence.mjs
+// Usage: DATABASE_URL="file:../db/custom.db" node scripts/capture-s90-evidence.mjs
 //        (clone :3200 standalone first — the S86 daemon recipe)
 import { chromium } from "playwright";
 import { mkdirSync } from "node:fs";

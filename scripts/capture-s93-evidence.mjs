@@ -22,7 +22,7 @@
 // duplicate, DATABASE_URL pinned INSIDE the script (the §18 env-pinning
 // convention — a wrong env fails loud, not silently).
 //
-// Usage: bun scripts/capture-s93-evidence.mjs
+// Usage: node scripts/capture-s93-evidence.mjs
 //        (clone :3200 standalone first — the S86 daemon recipe)
 import { chromium } from "playwright";
 import { mkdirSync } from "node:fs";

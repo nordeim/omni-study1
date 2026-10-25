@@ -1,8 +1,8 @@
 # Omni-Study1 — Remediation Plan & Execution Record
 
-> **Status: COMPLETE through Batch AX (session-97) — ZERO standing debt.** Every batch below has
+> **Status: COMPLETE through Batch AY (session-98) — ZERO standing debt.** Every batch below has
 > been executed TDD-style (spec-red → fix → spec-green) and verified:
-> **931/931 Vitest unit**, **474/474 Playwright e2e** across the 5-chunk
+> **934/934 Vitest unit**, **474/474 Playwright e2e** across the 5-chunk
 > cold map (131+141+57+87+58, 30 spec files censused exactly once; the
 > per-chunk count includes that chunk's auth setup), lint clean,
 > `tsc --noEmit` clean, production build green with the standalone asset
@@ -5364,3 +5364,215 @@ surface unchanged this cycle).
 machine-checked every cycle). The natural next cycle (Session-98)
 remains the standing rhythm: audit the AX diff, ride the riders the
 audit finds, re-certify cold (anchor it on `docs/session_63.md`).
+
+## Cycle-48 plan (Session-98 / Batch AY) — the audit-rider cycle: the capture-lineage runner-convention reconciliation + the census comment-immunity + the honest bun-scope
+
+**Received state**: `9909192` (Batch AX `530c68c` + the operator's
+session-log commit adding `docs/session_64.md` [the S97 raw
+transcript — audited clean: one file, 103 insertions, no source
+changes, no key material]). The 22nd workspace reset — fresh clone,
+full re-provision (bun install 497 pkgs, `.env` from `.env.example`
+with DATABASE_URL="file:../db/custom.db", the `db/` folder at the
+repo root + push + seed, chromium-1243, the canonical production
+build). Anchors read: session_63 (the S97 transcript whose closing
+line names the standing rhythm the natural next cycle), session_64
+(the operator's S97 transcript, incl. its maintenance-plateau note),
+the Cycle-47 record + the zero standing debt, the worklog tail.
+Ground truth: last completed cycle Session-97/Batch AX (Cycle 47) at
+`530c68c`; baselines unit 931/931, cold e2e 474/474, the standing
+suite 35/35. Standing debt: ZERO.
+
+**Baseline re-certified cold BEFORE any work**: lint ✓ tsc ✓ unit
+931/931 ✓ (27 files); the full cold 5-chunk e2e re-cert **474/474**
+(131+141+57+87+58 — **every chunk first-pass, zero flakes** — run
+per-chunk through a per-chunk runner replicating the cert script's
+AS6-hardened port-kill + fresh-db logic exactly).
+
+**Evidence layers (all pre-change):**
+- The Mode-C audit of the Batch AX diff (`5074408..530c68c` + the
+  operator's `9909192`): **0 Critical / 0 High / 0 Medium / 1 Low /
+  4 Info** — all six AX claims verified TRUE (the unit layer re-run
+  green 931/931; the widened census coverage 38/38 re-derived; BOTH
+  mutation plants replicated live in-repo [the Plant A shape-variant
+  duplicate tripping exactly the widened dupe check while the
+  reconciliation pin stayed green; the Plant B unparseable form
+  tripping exactly the token-reconciliation pin while the dupe check
+  stayed green]; the re-tag sweep completeness [the 7-line functional
+  diff, prose-only residue]; the AX3 catch + the AX4 plan fix + the
+  AX5 rotation checklist all located; the 20 committed 97-*.png
+  frames). The finding that sized the cycle:
+  **L1** the capture lineage s87–s96 (TEN scripts — four carrying the
+  `DATABASE_URL=…` prefix, six bare) still documents `Usage: bun` —
+  the AX2 node convention was swept only into the resweep lineage and
+  the s97 capture; the AX commit itself modified capture-s96 (the
+  AX3 catch) without fixing that file's own contradictory usage line
+  (the exact doc-consistency genus the AX2 L2 closed).
+  The Infos: **I1** capture-s97's header scopes the bun crash to
+  "this flow's page.request calls" — the live evidence was the
+  resweep's verify-email POST (a Set-Cookie response); the capture
+  flow's own requests are untested under bun; **I2** the
+  token-reconciliation pin counts `@utility` inside CSS comments — a
+  future prose comment inflates the token census into a loud FALSE
+  failure (latent-only: 38/38 all real headers, zero prose today);
+  **I3** the widened header regex cannot match a wildcard utility
+  (`@utility tab-* {`) — token-counted, header-unmatched → the
+  reconciliation pin fails loudly with the "widen the regex"
+  instruction (by-design: the error message IS the affordance);
+  **I4** the capture finally-restore is best-effort
+  (`.catch(() => {})`) — a browser-crash throw leaves the shared demo
+  surface dark (pre-existing shape, latent: the context must be alive
+  for the PATCH to fire — the S4 lesson's boundary).
+
+**The work (TDD; census projection: unit 931 → 933, e2e 474
+unchanged):**
+- **AY1** (headline — the L1 closure) the capture-lineage
+  runner-convention reconciliation: (a) the RED-first convention pin
+  in a NEW `tests/script-conventions.test.ts` — every `// Usage:`
+  line in the re-tag script class (`capture-s*-evidence.mjs` +
+  `ref-resweep-s*.mjs`) documents the node runner (contains
+  `node scripts/`, never `bun scripts/`; files without a Usage line
+  are the pre-s87 historical era, out of scope) — demonstrated live
+  RED on exactly the ten stale files; (b) the sweep — the ten usage
+  lines swapped `bun` → `node` (the four DATABASE_URL-prefixed lines
+  keep their prefix; the six bare lines keep their shape), the class
+  verified node-safe (zero bun-specific APIs — the s97 import shape);
+  (c) GREEN + the mutation check (a planted `bun` usage line trips
+  exactly the new pin).
+- **AY2** (I1) the capture-s97 bun-scope honest re-scope: the
+  header's "on this flow's page.request calls" reworded to the exact
+  live evidence (the resweep's verify-email POST — a Set-Cookie
+  response; the capture flow itself untested under bun — node is the
+  uniform class convention). Comment-only; the s98 capture re-tag
+  inherits the corrected wording.
+- **AY3** (I2) the census comment-immunity: (a) the blind spot
+  demonstrated live — a planted prose comment containing `@utility`
+  trips the CURRENT reconciliation pin (39 tokens vs 38 headers — a
+  loud FALSE failure); (b) the fix: a `stripCssComments()` helper
+  (the block form `/* … */` — the only comment form globals.css
+  carries: zero `//` lines, 66 block comments) applied to both census
+  counts IN-PLACE; (c) the NEW helper-discrimination pin (a comment
+  is stripped; a real header survives — tokens === headers on the
+  sample); (d) the mutation matrix re-proven: Plants A + B still trip
+  exactly their own pins; the comment plant no longer trips anything.
+- **AY4** (I3+I4 — documented, no action) the latent-shape register:
+  I3 the wildcard-utility form fails loudly with the instruction
+  (by-design); I4 the best-effort finally boundary documented (the
+  S4 lesson holds while the context is alive). Recorded here; no
+  code change.
+- **AY5** the s98 riders: `scripts/ref-resweep-s98.mjs` (the 7-line
+  re-tag sweep from s97 — provenance line, usage line, probe email
+  `s98-resweep-`, probe name "S98 Probe", the three capture path
+  prefixes `98-`) + `scripts/capture-s98-evidence.mjs` (Frame 1: the
+  GradeTracker view in DARK — the CONSUMERS map's four-family view
+  [emerald/sky/amber/red], the s96-proven `[class*='sf-pill-'] >= 4`
+  gate, a surface the s97 frames did not cover; Frame 2: the
+  Flashcards view in DARK through the REAL study mode — the seeded
+  "Integration rules" deck's study card renders the sf-pill-yellow
+  difficulty pill, a surface NO prior evidence frame covered; both
+  md5-DISTINCT GATE-enforced, the AX3 catch shape carried, the
+  AY2-honest header).
+
+**Verification protocol (the standing rhythm)**: rebuild + the full
+cold 5-chunk e2e re-cert; the standing suite 35/35; the s98 resweep
+(ok:true, exit 0, both hosts, probeCleanup ok); agent-browser
+mobile-nav on BOTH hosts; the docs chain (README badge + counts +
+the Session-98 row, AGENTS/CLAUDE counts + the S98 lessons, the
+vitest.config.ts header, the remediation-plan header AX → AY + this
+plan + the execution record, the PAD v1.3.6, the worklog, the
+session_65 stub); conventional commit; wrapper push to main.
+
+### Cycle-48 — Session-98 · Batch AY — execution record
+
+Executed exactly as planned (the five AY items above), with TWO
+mid-cycle corrections owned here per the AT/AW precedent: (1) the
+census projection said +2, the reality is **+3** (the AY1 convention
+pin rides with its own class-census sanity leg — the AT doctrine
+that a scanning pin must prove its census ran; owned, not trimmed);
+(2) the s98 capture's leg-2 first draft gated on the Flashcards
+STUDY pane — the wrong surface (the study card carries no pill
+family; the difficulty pills live on the deck-detail card grid) —
+the AX3 catch caught it live (exit 1, the script-owned FAILED line,
+no frames written, the finally restoring the demo surface) and the
+leg was re-designed against the real DOM before any frame was
+accepted (the S98 lesson-4).
+
+- **AY1 — DONE.** (a) The RED-first convention pin written in the NEW
+  `tests/script-conventions.test.ts` — demonstrated live RED on
+  exactly the TEN stale files (the s87–s90 DATABASE_URL-prefixed
+  lines + the s91–s96 bare lines, each named in the failure
+  message); (b) the sweep — all ten usage lines swapped `bun` →
+  `node` (the prefixes preserved), the class verified node-safe
+  (zero bun-specific APIs, the s97 import shape); (c) GREEN + the
+  mutation check (a planted `bun` usage line in capture-s91 tripped
+  exactly the convention pin; restored → green).
+- **AY2 — DONE.** capture-s97's header re-scoped to the exact live
+  evidence (the RESWEEP's verify-email POST — a Set-Cookie response;
+  the capture flow's own requests untested under bun — node is the
+  uniform class convention); the s98 re-tag inherited the corrected
+  wording.
+- **AY3 — DONE.** (a) The blind spot demonstrated live — a planted
+  prose comment containing `@utility` tripped the CURRENT
+  reconciliation pin (39 tokens vs 38 headers — a loud FALSE
+  failure); (b) the `stripCssComments()` helper (the block form —
+  the only comment form globals.css carries: zero `//` lines) applied
+  to BOTH census counts IN-PLACE; (c) the NEW helper-discrimination
+  pin; (d) the three-plant mutation matrix re-proven: Plant A
+  (shape-variant duplicate) trips exactly the dupe check, Plant B
+  (unparseable form) trips exactly the reconciliation pin, Plant C
+  (the comment) trips NOTHING.
+- **AY4 — DONE (documented, no action).** I3 the wildcard-utility
+  form fails loudly with the "widen the regex" instruction —
+  by-design; I4 the capture finally-restore is best-effort while the
+  context lives — the S4 lesson's boundary, latent-only.
+- **AY5 — DONE.** `scripts/ref-resweep-s98.mjs` (the 7-line re-tag
+  sweep from s97 — provenance, usage, probe email `s98-resweep-`,
+  probe name "S98 Probe", the three capture prefixes; the AW2 gate
+  import + the AX2 constraint carried; syntax-checked) and
+  `scripts/capture-s98-evidence.mjs` (Frame 1: the GradeTracker dark
+  [the four-family view — emerald/sky/amber/red — the s96-proven
+  `[class*='sf-pill-'] >= 4` gate]; Frame 2: the Flashcards dark
+  [the seeded "Integration rules" deck's card grid rendering the
+  sf-pill-yellow difficulty pills — a surface NO prior evidence
+  frame covered; the deck-detail render-derived fallback verified in
+  source before the gate was written]).
+
+**Re-certification (all on the FINAL tree — src/ untouched by the AY
+work, but the standing rhythm re-runs the full ladder anyway):** lint
+✓ tsc ✓ unit **934/934** (28 files — the plan's +2 projection
+corrected to +3, owned above); the canonical build green; the full
+cold 5-chunk e2e re-cert **474/474** (131+141+57+87+58 — every
+chunk first-pass, zero flakes); the standing suite — all 35 stages
+spawned EXACTLY once through the full-suite runner (a setsid daemon
+through the environment's process window, the raw envelopes under
+/tmp/standing-suite/): **34/35 green with the single settings-roundtrip
+first-run finding re-run GREEN standalone** (exit 0, 0 findings — the
+documented S84-class environmental save-wait flake, the S97 precedent
+verbatim) — and **accent-dark-sweep RAN GREEN this cycle** (0
+violations across all 7 accents — the one stage the S97 window
+could not fit, covered here); the theme-restore closing guard green
+(demo light/violet intact); the s98 resweep ok:true with the
+exit-code gate live (9/9 both hosts, the brand tables byte-matched,
+probeCleanup ok, 18 captures, exit 0); agent-browser mobile-nav
+verified on BOTH hosts (reference: `sidebarOpen` read-then-restored
+["true" = expanded — the semantics settled empirically this cycle],
+24 labeled in the expanded drawer / drawer navigates to /Notes and
+auto-closes / closes via the drawer's own X / the collapsed state
+[`"false"`] renders 20 icon-only with ZERO title/aria / scrollWidth
+416 on /Notes — the reference's own overflow defect; clone:
+`sf-sidebar-collapsed` read-and-removed [null default], 26 labeled
+[the superset skip-link at x:-9999 + 20 nav + 5 content] / drawer
+navigates + auto-closes / Escape closes / the collapsed state
+renders 20 icon-only ALL with title+aria / scrollWidth 390 / the
+hamburger aria-labeled "Open navigation menu" — **no Tailwind v4
+mobile-nav bug, s98 re-confirmed**); the s98 evidence captures (2
+md5-distinct GATE-enforced frames, exit 0); `.env.example` verified
+current (the env surface unchanged this cycle).
+
+**DONE** — Batch AY closed. New baselines: unit **934/934**, e2e
+**474/474**, the standing suite **35/35** (the documented flake
+re-run green standalone; accent-dark-sweep covered). Standing debt
+after AY: **ZERO** (the Batch R closure's operational reopen triggers
+stay machine-checked every cycle). The natural next cycle
+(Session-99) remains the standing rhythm: audit the AY diff, ride
+the riders the audit finds, re-certify cold (anchor it on
+`docs/session_65.md`).

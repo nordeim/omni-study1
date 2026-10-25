@@ -17,6 +17,20 @@ const CSS = readFileSync(
   "utf8",
 );
 
+// S98/AY3 (the s97 audit's I2): the census counts REAL CSS only — block
+// comments are stripped before both counts, so a prose "@utility" mention
+// (e.g. a future `/* the @utility census note */`) cannot inflate the token
+// census into a loud false failure. globals.css carries ONLY the block form
+// (zero `//` lines — CSS does not define them), so the block strip is the
+// complete comment grammar here. A commented-out `@utility` block is not
+// real CSS either — it does not win at runtime — so stripping it from the
+// census is the CORRECT semantics, not a workaround.
+function stripCssComments(css: string): string {
+  return css.replace(/\/\*[\s\S]*?\*\//g, "");
+}
+
+const CSS_NO_COMMENTS = stripCssComments(CSS);
+
 function readConsumer(rel: string): string {
   return readFileSync(path.resolve(process.cwd(), rel), "utf8");
 }
@@ -156,9 +170,9 @@ describe("the sf-pill/sf-alert utility families (S92/AS1 leg 2)", () => {
 // token-reconciliation pin catches any `@utility` token the header regex
 // still misses (a header that falls out of the census fails LOUDLY, never
 // silently).
-describe("the @utility census (S96/AW1 + S97/AX1)", () => {
+describe("the @utility census (S96/AW1 + S97/AX1 + S98/AY3)", () => {
   it("defines every @utility block EXACTLY once — widened to every header shape (a shape-variant duplicate would win at runtime)", () => {
-    const headers = [...CSS.matchAll(/@utility\s+([A-Za-z0-9_-]+)\s*\{/g)].map((m) => m[1]);
+    const headers = [...CSS_NO_COMMENTS.matchAll(/@utility\s+([A-Za-z0-9_-]+)\s*\{/g)].map((m) => m[1]);
     expect(headers.length, "the @utility census ran (globals.css carries its utility families)").toBeGreaterThan(30);
     const dupes = headers.filter((h, i) => headers.indexOf(h) !== i);
     expect(
@@ -168,11 +182,25 @@ describe("the @utility census (S96/AW1 + S97/AX1)", () => {
   });
 
   it("reconciles the @utility token count against the matched-header census (an unmatchable header shape must fail LOUDLY, never fall out of the census)", () => {
-    const tokens = [...CSS.matchAll(/@utility(?![a-zA-Z0-9_-])/g)].length;
-    const headers = [...CSS.matchAll(/@utility\s+([A-Za-z0-9_-]+)\s*\{/g)].length;
+    const tokens = [...CSS_NO_COMMENTS.matchAll(/@utility(?![a-zA-Z0-9_-])/g)].length;
+    const headers = [...CSS_NO_COMMENTS.matchAll(/@utility\s+([A-Za-z0-9_-]+)\s*\{/g)].length;
     expect(
       tokens,
       `the @utility token count (${tokens}) must equal the matched-header count (${headers}) — a header the census regex cannot match escapes BOTH the dupe guard and the census; write it in the conventional form or widen the regex`,
+    ).toBe(headers);
+  });
+
+  it("strips block comments before the census — a prose @utility mention is not a header (S98/AY3, the s97 audit's I2)", () => {
+    const sample =
+      "/* the @utility census note: prose mention */\n@utility sf-pill-red {\n  color: red;\n}\n";
+    const stripped = stripCssComments(sample);
+    expect(stripped, "the block comment is removed entirely").not.toContain("the @utility census note");
+    expect(stripped, "the real header survives the strip").toContain("@utility sf-pill-red {");
+    const tokens = [...stripped.matchAll(/@utility(?![a-zA-Z0-9_-])/g)].length;
+    const headers = [...stripped.matchAll(/@utility\s+([A-Za-z0-9_-]+)\s*\{/g)].length;
+    expect(
+      tokens,
+      "the comment's @utility mention no longer inflates the token census (1 === 1)",
     ).toBe(headers);
   });
 });

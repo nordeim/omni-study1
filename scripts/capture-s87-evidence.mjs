@@ -16,7 +16,7 @@
 // (the AM2 convention): the desktop pair by a group switch, the mobile
 // frame by its viewport journey.
 //
-// Usage: DATABASE_URL="file:../db/custom.db" bun scripts/capture-s87-evidence.mjs
+// Usage: DATABASE_URL="file:../db/custom.db" node scripts/capture-s87-evidence.mjs
 //        (clone :3200 standalone first — the S86 daemon recipe)
 import { chromium } from "playwright";
 import { mkdirSync } from "node:fs";

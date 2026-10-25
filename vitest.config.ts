@@ -1,7 +1,19 @@
 import { defineConfig } from "vitest/config";
 import path from "node:path";
 
-// Unit-test layer for the pure domain seams — 27 files / 931 tests
+// Unit-test layer for the pure domain seams — 28 files / 934 tests
+// (re-anchored S98: +3 — the AY riders: the NEW
+// tests/script-conventions.test.ts (+2: the re-tag script-class
+// runner-convention census [every Usage line in the capture/resweep
+// lineages documents the node runner — the ten stale bun lines
+// swept, the class self-guarding] + its class-census sanity leg)
+// and the AY3 census comment-immunity in hue-tokens (+1: the strip
+// helper's discrimination pin; both census counts re-anchored
+// IN-PLACE onto the comment-stripped CSS — a prose @utility mention
+// can no longer inflate the token census into a loud false failure;
+// the three-plant mutation matrix: the variant-shape plant trips
+// exactly the widened dupe check, the unparseable-form plant trips
+// exactly the reconciliation pin, the comment plant trips NOTHING)
 // (re-anchored S97: +1 — the AX1 @utility census hardening in hue-tokens:
 // the AW1 completeness pin's header regex widened IN-PLACE to every header
 // shape + hoisted to its own describe, and the NEW token-reconciliation
