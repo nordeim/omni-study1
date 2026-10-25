@@ -1,8 +1,8 @@
 # Omni-Study1 — Remediation Plan & Execution Record
 
-> **Status: COMPLETE through Batch AY (session-98) — ZERO standing debt.** Every batch below has
+> **Status: COMPLETE through Batch AZ (session-99) — ZERO standing debt.** Every batch below has
 > been executed TDD-style (spec-red → fix → spec-green) and verified:
-> **934/934 Vitest unit**, **474/474 Playwright e2e** across the 5-chunk
+> **936/936 Vitest unit**, **474/474 Playwright e2e** across the 5-chunk
 > cold map (131+141+57+87+58, 30 spec files censused exactly once; the
 > per-chunk count includes that chunk's auth setup), lint clean,
 > `tsc --noEmit` clean, production build green with the standalone asset
@@ -5519,7 +5519,14 @@ accepted (the S98 lesson-4).
   pin; (d) the three-plant mutation matrix re-proven: Plant A
   (shape-variant duplicate) trips exactly the dupe check, Plant B
   (unparseable form) trips exactly the reconciliation pin, Plant C
-  (the comment) trips NOTHING.
+  (the comment) trips NOTHING. [S99/AZ1 correction, the s98 audit's
+  L1, healed in place per the AX4 precedent: under the AY3 strip the
+  S97 inline-comment plant shape (`@utility sf-pill-red /* dup */ {`)
+  NORMALIZES to a conventional duplicate and trips the DUPE check —
+  replicated live at S99 on the final tree; the reconciliation pin's
+  live discriminator is the wildcard/unmatchable-NAME form (the
+  AY4/I3 by-design case). The shape-true matrix is now
+  machine-checked by the S99/AZ1 normalization pin.]
 - **AY4 — DONE (documented, no action).** I3 the wildcard-utility
   form fails loudly with the "widen the regex" instruction —
   by-design; I4 the capture finally-restore is best-effort while the
@@ -5576,3 +5583,212 @@ stay machine-checked every cycle). The natural next cycle
 (Session-99) remains the standing rhythm: audit the AY diff, ride
 the riders the audit finds, re-certify cold (anchor it on
 `docs/session_65.md`).
+
+---
+
+## Cycle-49 plan (Session-99 / Batch AZ) — the audit-rider cycle: the mutation-record shape-true re-scope + the playwright-class census widening + the header-prose trap removal
+
+**Received state**: `62e55c3` (Batch AY `5968b15` + the operator's
+session-log commit adding `docs/session_66.md` [the S98 raw transcript —
+audited clean: one file, 123 insertions, no source changes, no key
+material]). The 23rd workspace reset — fresh clone, full re-provision,
+baseline re-certified cold BEFORE any work: lint ✓ tsc ✓ unit
+**934/934** (28 files), the cold 5-chunk e2e **474/474**
+(131+141+57+87+58 — every chunk first-pass, zero flakes).
+
+**Pre-change evidence — the Mode-C audit of the AY diff**
+(`9909192..5968b15` + the operator's `62e55c3`): **0C/0H/0M/1L/2I**,
+all six AY claims verified TRUE (the unit layer green 934/934; the
+ten-line sweep verified in the diff AND the class census re-run —
+242 scripts, every Usage line says node; BOTH mutation plants
+replicated live in-repo [the planted bun usage line tripping exactly
+the AY1 convention pin; Plant C the comment tripping NOTHING]; the
+38/38 census re-derived live from the comment-stripped CSS; the
+resweep-s98 gate wiring + the capture-s98 AX3 shape read in full; the
+20 committed 98-*.png frames md5-distinct; the operator commit clean;
+no key material; src/ untouched).
+
+**The findings that size this cycle:**
+
+- **L1 — the Cycle-48 execution record's Plant B claim does not
+  replicate verbatim on the final tree.** The record says "Plant B
+  (unparseable form) trips exactly the reconciliation pin" — live
+  replication with the S97-documented shape
+  (`@utility sf-pill-red /* dup */ {`) trips the DUPE check instead:
+  AY3's comment-stripping REMOVES the inline comment first, the line
+  normalizes to a conventional header, and the census sees a
+  DUPLICATE. The reconciliation pin's LIVE discriminator is the
+  wildcard/unmatchable-name form (`@utility sf-pill-* {` — replicated
+  live: trips exactly the reconciliation pin; the AY4/I3 documented
+  by-design case). The pins themselves are all sound — every guard
+  has a working discriminator — this is record accuracy only. The
+  genus is the repo's own S98 lesson-3: "scope every claim to the run
+  that produced it" — the mutation-matrix record describes the
+  PRE-AY3 discriminator mapping and was not re-scoped when the
+  stripping changed where the plants land.
+- **I1 — the convention pin's census scope excludes ~52 other
+  scripts that also carry `Usage: node` lines** (the z-probe,
+  ref-ad, capture-s7X-populated, ref-mobile lineages — frozen
+  historical classes, all consistent today, none guarded). The true
+  class the AX2 convention governs is "scripts that import
+  playwright" (the runner crash is a playwright-core behavior); the
+  lineage-scoped census is a proxy that happens to cover the
+  re-tagged ACTIVE class.
+- **I2 — capture-s98's header prose contains the literal
+  `Usage: bun`** (line 3, describing the AY1 sweep) — the convention
+  pin cannot trip on it (it matches line-prefix), but a text-based
+  sweep (grep) gets a false-positive hit, exactly as this audit's own
+  rotation-checklist sweep did.
+
+**The riders (TDD, RED before each fix, the mutation check after):**
+
+- **AZ1 — the headline: the mutation-record shape-true re-scope +
+  the normalization pin (the audit's L1).** (a) The Cycle-48
+  execution record's Plant B sentence healed IN-PLACE with a dated
+  S99 correction (the AX4 plan-fix precedent): the inline-comment
+  plant trips the dupe check under the strip; the reconciliation
+  pin's live discriminator is the wildcard form. (b) The NEW
+  normalization pin in hue-tokens.test.ts (+1): a planted
+  inline-comment form normalizes under `stripCssComments` to a
+  conventional duplicate — the dupe check's discriminator — making
+  the shape-true mapping machine-checked, not just re-worded. (c)
+  The mutation matrix re-run recorded with the shape-true
+  discriminators (A → dupe; the inline-comment form → dupe [NEW];
+  the wildcard form → reconciliation; the comment → NOTHING).
+- **AZ2 — the playwright-class census widening (the audit's I1).**
+  The AY1 pin's class census widened IN-PLACE from the two re-tag
+  lineages to EVERY script that imports playwright (`from
+  "playwright"` / `from "playwright-core"`) — the true class the AX2
+  runner convention governs. The lineage sanity legs stay (they
+  prove the re-tag lineage census ran); a NEW sanity leg proves the
+  playwright-class census ran (>60 carriers — the 242-file
+  directory's playwright importers). The mutation check: a planted
+  bun usage line in a playwright-importing script OUTSIDE the two
+  lineages (e.g. z-probe-s70.mjs) must trip the widened pin.
+- **AZ3 — the header-prose trap removal (the audit's I2).**
+  capture-s98's line-3 prose reworded so the literal `Usage: bun`
+  no longer appears (the sweep description keeps its meaning; the
+  grep-based rotation sweep no longer false-positives). One line,
+  zero behavior.
+- **AZ4 — the latent-register documentation (no action beyond the
+  plan).** The frozen-historical-era doctrine recorded: scripts
+  without playwright imports may document any runner (none
+  currently do); the widened census guards the crash-relevant
+  class.
+- **AZ5 — the s99 riders.** `scripts/ref-resweep-s99.mjs` (the
+  7-line re-tag sweep from s98, the AW2 gate + the AX2 constraint +
+  the AY2-honest crash scope carried) +
+  `scripts/capture-s99-evidence.mjs` (Frame 1: the Dashboard dark —
+  the sf-pill-red/sf-pill-yellow task pills on the seeded My Day
+  surface, the app's HOME view, a surface NO prior evidence frame
+  covered; Frame 2: the RUM panel's status pills
+  [sf-pill-emerald/sf-pill-amber/sf-pill-red] — the diagnostics
+  surface, reached through the REAL navigation; both md5-DISTINCT
+  GATE-enforced, the AX3 catch shape, the S4 finally-restore).
+
+**Unit projection**: 934 + 2 = **936** (the AZ1 normalization pin in
+hue-tokens; the AZ2 playwright-class sanity leg in
+script-conventions — the widened class census modifies the existing
+pin in place). e2e census unchanged: **474/474**. The full
+re-certification ladder runs on the FINAL tree per the standing
+rhythm.
+
+---
+
+### Cycle-49 — Session-99 · Batch AZ — execution record
+
+Executed exactly as planned (the five AZ items above), zero mid-cycle
+corrections this time — the surfaces were verified in source BEFORE the
+gates were written (the S98 lesson-4 applied prospectively: the
+dashboard pills and the RUM rating trio both confirmed in
+dashboard-view.tsx / rum-panel.tsx before the capture legs were
+designed; both frames GREEN first-pass).
+
+- **AZ1 — DONE.** (a) The Cycle-48 record's Plant B sentence healed
+  IN-PLACE with the dated S99 correction (the AX4 precedent — visible
+  above in the AY3 bullet); (b) the NEW normalization pin in
+  hue-tokens (+1): a planted inline-comment form
+  (`@utility sf-pill-red /* dup */ {`) normalizes under
+  `stripCssComments` to a conventional duplicate — the census CAN
+  match it, so the dupe check owns the plant shape (headers for
+  sf-pill-red = 2) while tokens and headers stay reconciled; (c) the
+  mutation proof: stripCssComments disabled → the AZ1 pin AND the AY3
+  comment-immunity pin both fail (the normalization pin's own
+  discriminator is the strip's presence); (d) the shape-true matrix
+  re-run live on the final tree: the variant-shape plant trips exactly
+  the dupe check; the inline-comment plant trips exactly the dupe
+  check (the normalization — the S98 record's stale claim, now
+  corrected); the wildcard form (`@utility sf-pill-* {`) trips exactly
+  the reconciliation pin (the AY4/I3 by-design case — its live
+  discriminator); a prose comment trips NOTHING.
+- **AZ2 — DONE.** The AY1 pin's class census widened IN-PLACE from the
+  two-lineage proxy to `playwrightCarryingScripts()` — every .mjs in
+  scripts/ importing playwright (the mechanical class discriminator;
+  213 importers, 94 Usage-line carriers, 49 previously unguarded). The
+  blind spot demonstrated live BEFORE the widening: a planted bun line
+  in z-probe-s70.mjs (a playwright importer outside the lineages) left
+  the CURRENT pin GREEN (2/2); after the widening the SAME plant
+  tripped exactly the widened convention pin (naming the file in the
+  failure message); restored → green. The NEW sanity leg pins the
+  playwright-class census ran (>200 carriers — the import-shape regex
+  drift guard). The lineage sanity legs stay (the re-tag lineage
+  census still proves itself).
+- **AZ3 — DONE.** capture-s98's line-3 prose reworded — the literal
+  `Usage: bun` string is gone from the file (the sweep description
+  keeps its meaning); the rotation-sweep grep
+  (`grep -l "Usage: bun" scripts/`) now returns ZERO hits across the
+  whole directory.
+- **AZ4 — DONE (documented, no action beyond the plan).** The
+  frozen-historical-era doctrine recorded in the pin's scope-honesty
+  comment: scripts that import NO playwright may document any runner
+  (none currently do).
+- **AZ5 — DONE.** `scripts/ref-resweep-s99.mjs` (the 7-line re-tag
+  sweep from s98 — provenance, usage, probe email `s99-resweep-`,
+  probe name "S99 Probe", the three capture path prefixes; the AW2
+  gate import + the AX2 constraint + the AY2-honest crash scope
+  carried; syntax-checked) and `scripts/capture-s99-evidence.mjs`
+  (Frame 1: the Dashboard dark — the seeded sf-pill-red exam-urgency +
+  sf-pill-yellow priority pills on the app's HOME view, a surface NO
+  prior evidence frame covered; Frame 2: the RUM panel at /rum — the
+  emerald/amber/red rating-badge trio driven the s19-deterministic way
+  [an API-POSTed batch: LCP poor / CLS needs-improvement / TTFB
+  good], the probe rows deleted by sessionId in the finally — the
+  persistent-custom.db restore; both md5-DISTINCT GATE-enforced:
+  384f6cf3bcb746d876baafb6ac290b7d /
+  67d9c58256818d0d4d358732330101eb, exit 0, first-pass).
+
+**Re-certification (all on the FINAL tree — src/ untouched by the AZ
+work, but the standing rhythm re-runs the full ladder anyway):** lint
+✓ tsc ✓ unit **936/936** (28 files — the plan's +2 projection exact);
+the canonical build green; the full cold 5-chunk e2e re-cert
+**474/474** (131+141+57+87+58 — every chunk first-pass, zero flakes);
+the standing suite — all 35 stages spawned EXACTLY once through the
+full-suite runner (the setsid daemon through the environment's process
+window, the raw envelopes under /tmp/standing-suite/): **34/35 green
+with the single settings-roundtrip first-run finding re-run GREEN
+standalone** (exit 0, 0 findings — the documented S84-class
+environmental save-wait flake, the S97/S98 precedent verbatim); the
+theme-restore closing guard green (demo light/violet intact); the s99
+resweep
+ok:true with the exit-code gate live (9/9 both hosts, the brand tables
+byte-matched, probeCleanup ok, 18 captures, exit 0); agent-browser
+mobile-nav verified on BOTH hosts (reference: `sidebarOpen`
+read-then-restored ["true" = expanded — the S98-settled semantics], 24
+labeled expanded / drawer navigates to /Notes and auto-closes / closes
+via the drawer's own X / 20 icon-only collapsed ZERO title/aria /
+scrollWidth 416 on /Notes — the reference's own overflow defect; clone:
+`sf-sidebar-collapsed` read-and-removed [null default], 26 labeled
+[the superset skip-link at x:-9999 + 20 nav + 5 content] / drawer
+navigates + auto-closes / Escape closes / 20 icon-only collapsed ALL
+with title+aria / scrollWidth 390 / the hamburger aria-labeled "Open
+navigation menu" — **no Tailwind v4 mobile-nav bug, s99
+re-confirmed**); the s99 evidence captures (2 md5-distinct
+GATE-enforced frames, exit 0, first-pass); `.env.example` verified
+current (the env surface unchanged this cycle).
+
+**DONE** — Batch AZ closed. New baselines: unit **936/936**, e2e
+**474/474**, the standing suite **35/35**. Standing debt after AZ:
+**ZERO** (the Batch R closure's operational reopen triggers stay
+machine-checked every cycle). The natural next cycle (Session-100)
+remains the standing rhythm: audit the AZ diff, ride the riders the
+audit finds, re-certify cold (anchor it on `docs/session_67.md`).

@@ -203,6 +203,32 @@ describe("the @utility census (S96/AW1 + S97/AX1 + S98/AY3)", () => {
       "the comment's @utility mention no longer inflates the token census (1 === 1)",
     ).toBe(headers);
   });
+
+  it("an inline-comment header form NORMALIZES under the strip — the census sees the conventional duplicate (the dupe check's discriminator), not an unmatchable form (S99/AZ1, the s98 audit's L1)", () => {
+    // The S97-era Plant B shape (`@utility sf-pill-red /* dup */ {`) carried
+    // an inline comment. Under the AY3 strip the comment is removed FIRST,
+    // so the line normalizes to the conventional header shape — a
+    // duplicate of it trips the DUPE check, NOT the reconciliation pin
+    // (verified live at S99: the S98 record's Plant B sentence described
+    // the PRE-strip mapping). The reconciliation pin's live discriminator
+    // is the wildcard/unmatchable-NAME form (the AY4/I3 by-design case).
+    // The shape-true matrix this pin machine-checks: A (shape-variant
+    // duplicate) → dupe; the inline-comment form → dupe (normalization);
+    // the wildcard form → reconciliation; a prose comment → NOTHING.
+    const sample =
+      "@utility sf-pill-red {\n  color: red;\n}\n@utility sf-pill-red /* dup */ {\n  color: orange;\n}\n";
+    const stripped = stripCssComments(sample);
+    const headers = [...stripped.matchAll(/@utility\s+([A-Za-z0-9_-]+)\s*\{/g)].map((m) => m[1]);
+    expect(
+      headers.filter((h) => h === "sf-pill-red").length,
+      "the inline-comment form normalizes to a conventional header the census CAN match (the dupe check owns this plant shape)",
+    ).toBe(2);
+    const tokens = [...stripped.matchAll(/@utility(?![a-zA-Z0-9_-])/g)].length;
+    expect(
+      tokens,
+      "tokens and headers stay reconciled through the normalization (the reconciliation pin does NOT own this shape — if this fails, the strip stopped stripping)",
+    ).toBe(headers.length);
+  });
 });
 
 // The consumer sweep: each canonical site references its utilities (the

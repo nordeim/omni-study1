@@ -1,4 +1,4 @@
-# StudyFlow (Omni-Study) — Master Project Architecture Document (PAD) v1.3.6
+# StudyFlow (Omni-Study) — Master Project Architecture Document (PAD) v1.3.7
 
 **Classification:** Internal Engineering Reference
 **Status:** DEFINITIVE, PRODUCTION-LOCKED BLUEPRINT
@@ -8,6 +8,13 @@
 **Rule:** Every architectural decision in this document traces to a specific rationale. Nothing is here "because it's popular."
 
 ---
+
+#### Revision Block — v1.3.7 (Session-99 / Batch AZ, Cycle 49)
+
+- `[SR]` Current test census anchor (the v1.2.0 convention, re-anchored): **936/936 Vitest unit** (28 files, `*.test.ts` only; the AZ riders +2 — the AZ1 normalization pin in hue-tokens [the inline-comment plant shape normalizes under the AY3 strip to a conventional duplicate — the shape-true mutation matrix machine-checked] and the AZ2 playwright-class sanity leg in script-conventions [the convention census widened from the two-lineage proxy to every playwright-importing script]) + **474/474 Playwright e2e** across the 5-chunk cold map (131+141+57+87+58 = 469 real specs in 30 spec files + 5 auth setups; `scripts/e2e-chunked-cert.sh` is the census authority). The PAD carries the census at revision time ONLY — the live count-keepers each cycle are the README badge (1410), AGENTS.md/CLAUDE.md, the `vitest.config.ts` header, and the cert-script header.
+- `[SR]` The mutation-record shape-true re-scope (S99/AZ1, the s98 audit's L1): the Cycle-48 record's Plant B claim ("the unparseable form trips exactly the reconciliation pin") did not replicate verbatim on the final tree — under the AY3 comment-strip the S97 inline-comment plant shape (`@utility sf-pill-red /* dup */ {`) NORMALIZES to a conventional duplicate and trips the DUPE check; the reconciliation pin's live discriminator is the wildcard/unmatchable-NAME form (the AY4/I3 by-design case). The record healed in place with a dated correction (the AX4 precedent) and the shape-true matrix is now machine-checked by the NEW normalization pin. The doctrine: a guard fix that changes normalization semantics re-maps the mutation matrix — re-run the plants on the FINAL tree.
+- `[SR]` The playwright-class census widening (S99/AZ2, the s98 audit's I1): the AY1 convention census guarded the two re-tag lineages — a NAMING-CONVENTION proxy for the true class. The AX2 runner convention governs every script that imports playwright (the crash is a playwright-core behavior): 213 importers, 94 Usage-line carriers, 49 previously unguarded. The widened census uses the import statement as the mechanical class discriminator; the blind spot was demonstrated live (a planted bun line in z-probe-s70.mjs left the lineage-scoped pin GREEN, the widened pin caught it). The frozen-historical-era doctrine: scripts that import NO playwright may document any runner.
+- `[SR]` The riders: AZ3 the header-prose trap removal (capture-s98's literal `Usage: bun` string reworded — the rotation-sweep grep now returns ZERO hits); AZ4 the latent-register documentation; AZ5 the s99 re-tags (resweep ok:true, exit 0, 9/9 both hosts, probeCleanup ok, 18 captures; 2 md5-distinct evidence frames — the Dashboard dark [the seeded sf-pill-red/sf-pill-yellow pills on the app's HOME view, no prior evidence coverage] + the RUM panel [the emerald/amber/red rating trio, driven the s19-deterministic API-POSTed way, the probe rows deleted in the finally — the persistent-DB restore]). Zero standing debt unchanged (the Batch R reopen triggers stay machine-checked).
 
 #### Revision Block — v1.3.6 (Session-98 / Batch AY, Cycle 48)
 

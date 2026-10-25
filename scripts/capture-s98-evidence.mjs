@@ -1,6 +1,6 @@
 // S98 · Batch AY surface evidence captures — the capture-lineage
 // runner-convention reconciliation + the census comment-immunity (the
-// AY1 headline: the ten stale `Usage: bun` lines swept to node across the
+// AY1 headline: the ten stale bun usage lines swept to node across the
 // capture s87–s96 lineage, the whole re-tag script class now guarded by
 // the tests/script-conventions.test.ts census pin; the AY3 fix: the
 // census counts run on comment-stripped CSS — a prose `@utility` mention

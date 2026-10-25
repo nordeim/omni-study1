@@ -1,7 +1,20 @@
 import { defineConfig } from "vitest/config";
 import path from "node:path";
 
-// Unit-test layer for the pure domain seams — 28 files / 934 tests
+// Unit-test layer for the pure domain seams — 28 files / 936 tests
+// (re-anchored S99: +2 — the AZ riders: the AZ1 normalization pin in
+// hue-tokens [the inline-comment plant shape normalizes under the AY3
+// strip to a conventional duplicate — the shape-true mutation matrix
+// machine-checked: the variant-shape plant AND the inline-comment plant
+// both trip the dupe check, the wildcard form trips the reconciliation
+// pin, a prose comment trips NOTHING; the strip-disabled mutation fails
+// BOTH comment-immunity pins] and the AZ2 playwright-class census
+// widening in script-conventions [the AY1 convention pin's class widened
+// IN-PLACE from the two-lineage proxy to every playwright-importing
+// script — 213 importers, 94 Usage-line carriers; the blind spot
+// demonstrated live on a planted z-probe-s70.mjs bun line that left the
+// lineage-scoped pin GREEN, the widened pin catching it, restored green;
+// the new sanity leg proves the playwright-class census ran])
 // (re-anchored S98: +3 — the AY riders: the NEW
 // tests/script-conventions.test.ts (+2: the re-tag script-class
 // runner-convention census [every Usage line in the capture/resweep

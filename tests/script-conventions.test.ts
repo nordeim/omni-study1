@@ -15,15 +15,37 @@ import { describe, expect, it } from "vitest";
 // hand-edited usage line) fails the unit layer BEFORE it misleads the
 // next operator into a bun crash.
 //
+// S99/AZ2 (the s98 audit's I1): the census widened from the two-lineage
+// PROXY to the TRUE class the AX2 convention governs — every script that
+// imports playwright (the runner crash is a playwright-core behavior;
+// 213 importers, 129 outside the lineages, 94 carrying Usage lines — the
+// blind spot was demonstrated live: a planted bun line in z-probe-s70.mjs
+// left the lineage-scoped pin GREEN). The lineage sanity legs stay (they
+// prove the re-tag lineage census ran); the new sanity leg proves the
+// playwright-class census ran.
+//
 // Scope honesty (the S93 machine-guard doctrine): files WITHOUT a Usage
 // line are the pre-s87 historical era (39 capture scripts) — out of scope
-// by design; the pin guards every line that EXISTS.
+// by design; the pin guards every line that EXISTS. Scripts that import
+// NO playwright may document any runner (none currently do — the frozen
+// historical-era doctrine, S99/AZ4).
 
 const SCRIPTS_DIR = path.resolve(process.cwd(), "scripts");
 
 function reTagScriptClass(): string[] {
   return readdirSync(SCRIPTS_DIR).filter(
     (f) => /^capture-s\d+-evidence\.mjs$/.test(f) || /^ref-resweep-s\d+\.mjs$/.test(f),
+  );
+}
+
+// S99/AZ2: the TRUE convention class — every script importing playwright
+// (the runner crash is a playwright-core behavior, so the convention
+// governs every playwright carrier, not just the re-tag lineages).
+function playwrightCarryingScripts(): string[] {
+  return readdirSync(SCRIPTS_DIR).filter(
+    (f) =>
+      f.endsWith(".mjs") &&
+      /from\s+["']playwright(-core)?["']/.test(readFileSync(path.join(SCRIPTS_DIR, f), "utf8")),
   );
 }
 
@@ -41,10 +63,18 @@ describe("the re-tag script-class runner convention (S98/AY1)", () => {
     expect(resweeps, "the ref-resweep lineage census ran").toBeGreaterThan(25);
   });
 
-  it("every Usage line in the class documents the node runner — never bun (the S97/AX2 class convention)", () => {
+  it("censused the playwright-carrying class — the TRUE convention class (S99/AZ2, the s98 audit's I1)", () => {
+    const carriers = playwrightCarryingScripts().length;
+    expect(
+      carriers,
+      "the playwright-class census ran (213 importers at S99; a count below this threshold means the import-shape regex stopped matching — widen it)",
+    ).toBeGreaterThan(200);
+  });
+
+  it("every Usage line in the playwright-carrying class documents the node runner — never bun (the S97/AX2 convention, widened S99/AZ2 from the lineage proxy to the true class)", () => {
     const stale: string[] = [];
     const documented: string[] = [];
-    for (const file of reTagScriptClass()) {
+    for (const file of playwrightCarryingScripts()) {
       const line = usageLine(file);
       if (line === undefined) continue; // the pre-s87 historical era carries no usage line
       documented.push(file);
@@ -55,7 +85,7 @@ describe("the re-tag script-class runner convention (S98/AY1)", () => {
     expect(
       documented.length,
       "the convention census found documented scripts (the Usage-line carriers)",
-    ).toBeGreaterThan(30);
+    ).toBeGreaterThan(40);
     expect(
       stale,
       `scripts whose Usage line still names bun (or names no runner) — the S97/AX2 class convention is node ≥ 23.6; fix the usage line: ${stale.join(" | ")}`,
