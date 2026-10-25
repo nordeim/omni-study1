@@ -1,8 +1,8 @@
 # Omni-Study1 — Remediation Plan & Execution Record
 
-> **Status: COMPLETE through Batch AV (session-95) — ZERO standing debt.** Every batch below has
+> **Status: COMPLETE through Batch AW (session-96) — ZERO standing debt.** Every batch below has
 > been executed TDD-style (spec-red → fix → spec-green) and verified:
-> **923/923 Vitest unit**, **474/474 Playwright e2e** across the 5-chunk
+> **930/930 Vitest unit**, **474/474 Playwright e2e** across the 5-chunk
 > cold map (131+141+57+87+58, 30 spec files censused exactly once; the
 > per-chunk count includes that chunk's auth setup), lint clean,
 > `tsc --noEmit` clean, production build green with the standalone asset
@@ -4696,14 +4696,24 @@ size this cycle:
 evidence)**: Batch R (RSC structural perf) — the only standing debt —
 is formally CLOSED this cycle, not executed. The grounds, each
 machine-verified twice already (S93/AT4 and the S94 receipt) and
-re-validated fresh this cycle (**AV3**): every cwv budget sits FAR
-outside its band (the isolated triple: lcp 2424–3324 vs 4400 / cls 0 vs
-0.1 / fcp 588–764 vs 1500 / ttfb 6–36 vs 500 / longTaskTotal 51–1938 vs
-2400 / INP 1028–1176 vs 3000), the eager bundle (288 KB JS) beats the
+re-validated fresh this cycle (**AV3** — the isolated triple below,
+recorded honestly; the S93/AT4-era numbers an earlier draft of this
+plan quoted here were re-anchored to the fresh set by S96/AW3, the s95
+audit's M1): every cwv budget sits FAR outside its band on the
+dominant metrics (lcp 2444–2784 vs 4400 / cls 0 vs 0.1 / fcp 648–732
+vs 1500 / ttfb 5–64 vs 500 / INP 1019–1274 vs 3000), with the one
+honestly straddling budget recorded as evidence — the Tasks
+longTaskTotal 2064/2418/2844 across the triple vs the 2400 pin (the
+AR1 noise-band-adjacent class; the cross-machine band widening
+documented, NOT treated as a regression — src/ byte-identical to the
+AU receipt; the metric's dominant cost is the 300-row list MOUNT, not
+bundle eval — bundle-splitting would not move it); the eager bundle (288 KB JS) beats the
 reference's own 634–1087 KB on every axis, per-view code-splitting is
 the ADR-014-REJECTED alternative, and a staged RSC conversion breaks
 the ADR-001 one-page-SPA parity contract that 474 e2e pins + the
-standing suite ride on. Keeping rejected-by-ADR work on the
+standing suite ride on. The closure does NOT ride on the straddling
+budget — it rides the architectural grounds + the far-outside dominant
+budgets + the constant bundle anchor. Keeping rejected-by-ADR work on the
 standing-debt list misrepresents it as pending. The closure's reopen
 trigger: any budget landing inside its band — which the standing
 suite's cwv + cwv-volume-stress stages already machine-check every
@@ -4858,3 +4868,263 @@ surface unchanged).
 (Session-96) is the standing rhythm itself: audit the AV diff, ride
 the riders the audit finds, re-certify cold, and keep the operational
 reopen triggers machine-checked (anchor it on `docs/session_59.md`).
+
+---
+
+## Cycle-46 plan (Session-96 / Batch AW) — the @utility-block uniqueness guard + the resweep exit-gate seam + the record-accuracy riders
+
+**Received state**: `d578839` (Batch AV `bec4de6` + the operator's
+session-log commit adding `docs/session_60.md` [the S95 transcript] and
+curating `skills/` — the case-variant duplicate removal, verified clean
+by the audit: every deleted folder has a byte-identical surviving twin,
+zero dangling references outside skills/, no gate impact). The 20th
+workspace reset — fresh clone, full re-provision (bun install 496 pkgs,
+`.env` from `.env.example` with DATABASE_URL="file:../db/custom.db", the
+`db/` folder at the repo root + push + seed, chromium-1243, the canonical
+production build). Anchors read: session_59 (the S95 stub whose closing
+line names the standing rhythm the natural next cycle), session_60 (the
+operator's S95 transcript), the Cycle-45 record + the zero standing debt,
+the worklog tail. Ground truth: last completed cycle Session-95/Batch AV
+(Cycle 45) at `bec4de6`; baselines unit 923/923, cold e2e 474/474, the
+standing suite 35/35. Standing debt: ZERO.
+
+**Baseline re-certified cold BEFORE any work**: lint ✓ tsc ✓ unit
+923/923 ✓ (26 files); the full cold 5-chunk e2e re-cert **474/474**
+(131+141+57+87+58 — **every chunk first-pass, zero flakes** — run
+per-chunk through a per-chunk runner replicating the cert script's
+AS6-hardened port-kill + fresh-db logic exactly).
+
+**Evidence layers (all pre-change):**
+- The Mode-C audit of the Batch AV diff (`cd56520..bec4de6`, delegated
+  read-only, against the operator-updated
+  skills/web-application/SKILL.md v1.2.0 discipline):
+  **0 Critical / 0 High / 1 Medium / 5 Low / 7 Info** — all six AV
+  claims verified TRUE (the auditor re-derived the @theme step census
+  [145 steps, all unique], the @utility census [38 blocks, all unique],
+  the committed PNG digests [both md5s match], and the cert header
+  arithmetic [443+7+8+4+1+1+1+4 = 469; 474−5 = 469]). The findings that
+  size this cycle: **M1** the Cycle-45 PLAN paragraph's closure-grounds
+  parenthetical quotes the S93/AT4-era reading set (lcp 2424–3324 /
+  longTaskTotal 51–1938) as "re-validated fresh this cycle" — the fresh
+  S95 triple (lcp 2444–2784 / longTaskTotal 2064/2418/2844) lives only
+  in the execution record; the plan-side sentence claims "every cwv
+  budget sits FAR outside its band" while the fresh set shows the Tasks
+  longTaskTotal straddling — the evidentiary record contradicts itself
+  within one commit. **L1** the leg-2 `utilityBlock()` reads the FIRST
+  occurrence (`CSS.match`) — a planted duplicate LATER `@utility` block
+  would win at runtime (the CSS cascade) while every pin stays green:
+  the exact mutant class AV1's guard was just extended to kill, still
+  alive on the utility-block record (38 blocks currently all unique —
+  latent). **L2** ref-resweep-s95.mjs has NO exit-code semantics: a
+  FAILED sweep (ok:false) or a failed probe cleanup exits 0 — the
+  s93/s94/s95 re-tag class never carried the gate, contradicting the
+  S95 lesson-2 the same commit added to AGENTS. **L3** README:108 File
+  Hierarchy "916 tests" (stale vs 923). **L4** CLAUDE.md's S94 unit
+  seam additions are wedged mid-sentence inside the E2E bullet while
+  the unit tail sequences S92→S93→S95 (the S94 step missing from its
+  own bullet). **L5** README session rows 66–70 out of file order +
+  rows missing for sessions 16, 57–60, 72 (undocumented skips). The
+  Infos: the 33→35 suite arithmetic IS stated at README:322 but not in
+  AGENTS.md:50; PAD's TOC numbers 1–12 against headings 1–6, 8–13 (no
+  §7 — off-by-one); the PAD §8.1/§8.4 floors are at-revision history
+  per the v1.2.0 convention; AGENTS:758's quirk line understates the
+  ALWAYS-COLD mandate at AGENTS:14; the probe-credential convention
+  (standing); the v1.3.3 census phrasing quirk (inherited).
+- The operator skills-commit analysis: the d578839 skills/ deletions
+  are deduplication (every deleted folder has a byte-identical
+  case-variant twin that survives); the three modified skills files are
+  the operator's own v1.2.0 curation; zero stale references; skills/
+  remains excluded from every gate (tsconfig/eslint/vitest verified).
+
+**The plan (TDD, RED-first where the discriminator admits it):**
+- **AW1 — the headline, the @utility-block uniqueness guard (the
+  audit's L1, the AV1 completion-of-the-completion).** (a) The blind
+  spot demonstrated LIVE on the pre-change tree: a duplicate later
+  `@utility sf-pill-red` block planted at the globals.css tail leaves
+  all 923 unit pins GREEN (the leg-2 contract reads the FIRST
+  occurrence — the mutant wins at runtime by the CSS cascade while
+  every pin stays green). (b) A NEW pin in tests/hue-tokens.test.ts
+  (the leg-2 describe, a separate `it`): the @utility header census —
+  every `@utility <name> {` header in globals.css must appear EXACTLY
+  once (headers.length === unique names; the completeness form, ALL 38
+  blocks guarded, not just the UTILITY_CONTRACT names — a new utility
+  joins the kill set for free). (c) Mutation proof: the planted
+  duplicate trips EXACTLY the new pin (the message names sf-pill-red,
+  found 2) with the leg-2 contract pins GREEN (first-occurrence reads —
+  which is the point); restored → all green. Unit census 923 → 924.
+- **AW2 — the resweep exit-gate pure seam (the audit's L2, the
+  suite-verdict precedent).** A NEW pure seam `src/lib/resweep-gate.ts`
+  (`resweepExitCode(envelope)`: 0 only when `ok` AND
+  `probeCleanup === "ok"`; 1 otherwise — the catch-path envelope
+  `{ ok: false, error }` included), unit-pinned RED-first by
+  `tests/resweep-gate.test.ts` (the green shape, the ok:false shape,
+  the failed-cleanup shape, the not-run shape, the catch shape), and
+  imported by the s96 resweep re-tag: `process.exitCode =
+  resweepExitCode({ ...resultEnvelope, probeCleanup })` after the
+  envelope print. Mutation proof at the seam (the `||`→`&&` flip trips
+  the cleanup-leg pins) AND live at the wiring (a planted top-level
+  throw → the catch envelope → exit 1 observed at the shell; the green
+  run exits 0). Census 924 → 925. The architecture follows the
+  suite-verdict precedent exactly: a script-behavior contract pinned at
+  a pure src/lib seam (scripts import it; tests pin it; the re-tag
+  class structurally carries the gate from here).
+- **AW3 — the Cycle-45 plan paragraph re-anchor (the audit's M1,
+  pure docs).** The closure-grounds parenthetical re-anchored from the
+  S93/AT4-era numbers to the fresh S95 triple (lcp 2444–2784 / cls 0 /
+  fcp 648–732 / ttfb 5–64 / longTaskTotal 2064/2418/2844 — honestly
+  recorded as the straddling budget the closure does NOT ride on) —
+  the plan-side sentence now matches the execution record's own
+  evidence.
+- **AW4 — the record-accuracy bundle (the audit's L3/L4/L5 + the
+  free Infos).** AW4a README:108 "916 tests" → 923. AW4b the CLAUDE.md
+  S94 wedge relocated from the E2E bullet into the unit seam tail
+  between S93 and S95 (the broken sentence healed). AW4c the README
+  session rows 66–70 reordered (66, 67, 68, 69, 70) + the missing-row
+  note (sessions 16, 57–60, 72 carry no row by operator convention —
+  the note makes the skips documented instead of apparent defects).
+  AW4d the PAD TOC renumbered to the real headings (1–6, 8–13; §7 was
+  never issued — the gap preserved so every internal §-reference and
+  anchor stays stable, the note at the TOC). AW4e AGENTS.md:50 the
+  suite line gains the explicit arithmetic ("the S31 preflight + the
+  33 standing audits + the theme-restore closing guard — the 35/35
+  verdict"). AW4f AGENTS.md:758 the quirk line re-anchored to the
+  ALWAYS-COLD mandate (the per-spec stamping technique stays).
+- **AW5 — the s96 riders.** scripts/ref-resweep-s96.mjs (the re-tag:
+  probe prefix `s96-resweep-`, filename prefix `96-`, the header's
+  provenance note — AND the AW2 gate import) and
+  scripts/capture-s96-evidence.mjs (the re-tag carrying the AV2
+  exit-code gate + the s93 I5 boolean completion line); the s96
+  evidence frames retargeted to this cycle's guarded surfaces — the
+  sf-pill-yellow dashboard assignments priority pill and the
+  sf-alert-red events dialog surface, separated by the REAL sidebar
+  navigation, md5-distinct GATE-enforced.
+
+**Re-certification contract:** canonical rebuild (`bun run build` —
+src/ touched by AW2's seam); lint ✓ tsc ✓ unit **925/925** (27 files);
+the full cold 5-chunk e2e re-cert **474/474** (131+141+57+87+58 — no
+spec file changed, but src/ touched, so the cert re-runs on the fresh
+build per the AU precedent); the standing suite 35/35; the s96 resweep
+re-run on the FINAL build ok:true; mobile-nav re-verified on the final
+build on BOTH hosts; evidence captures (md5-distinct, GATE-enforced,
+probe rows cleaned, demo surface restored); `.env.example` verified;
+docs chain (README badge 1397→1399 + counts 925/474 + the Session-96
+row; AGENTS/CLAUDE counts + the S96 lessons; vitest.config.ts header
+925; the remediation-plan header AV → AW; the PAD v1.3.4 revision
+block; the worklog; `docs/session_61.md`).
+
+### Cycle-46 — Session-96 · Batch AW — execution record
+
+Executed exactly as planned (the six AW items above), with the census
+correction owned here per the AT precedent.
+
+- **AW1 — DONE.** (a) The blind spot demonstrated LIVE on the pre-change
+  tree: a duplicate later `@utility sf-pill-red` block planted at the
+  globals.css tail — with entirely different content (the orange
+  family) — left ALL 923 unit pins GREEN (the mutant wins at runtime by
+  the CSS cascade; the leg-2 contract reads the first occurrence). (b)
+  The new pin (tests/hue-tokens.test.ts, the leg-2 describe): the
+  completeness form — every `@utility <name> {` header in globals.css
+  must appear EXACTLY once (`headers.length === unique names`, the
+  census-gate asserts > 30 so the scan provably ran). (c) Mutation
+  proof: the plant tripped EXACTLY the new pin
+  (`duplicate @utility blocks … sf-pill-red`) with all 9 other
+  hue-tokens tests GREEN — including the leg-2 contract pin
+  ("carries every utility with the pinned-var declarations…", the
+  first-occurrence read, which is the point). Restored → 10/10 green;
+  globals.css verified pristine (`git diff` clean). Unit 923 → 924.
+- **AW2 — DONE (the suite-verdict precedent).** The pure seam
+  `src/lib/resweep-gate.ts` (`resweepExitCode(envelope)`: 0 ONLY when
+  `ok` AND `probeCleanup === "ok"`); RED demonstrated by running the
+  pin with the seam absent (`Cannot find package '@/lib/resweep-gate'`
+  → 1 failed file), GREEN after the seam (6/6); MUTATION-PROVEN at the
+  seam (the `&&`→`||` flip tripped EXACTLY the 4 failure-leg pins —
+  the failed-verdict leg, both failed-cleanup legs, and the
+  not-run/undefined leg — with the 2 green-leg pins green; restored →
+  6/6). The s96 re-tag (scripts/ref-resweep-s96.mjs) imports the seam
+  and sets `process.exitCode = resweepExitCode({ ...resultEnvelope,
+  probeCleanup })` after the envelope print. LIVE wiring proof: a
+  planted in-try throw → the catch envelope `{ ok: false, error }` +
+  probeCleanup `"not-run (registration never reached)"` → **exit code
+  1 observed at the shell**; the real green sweep → **exit code 0** —
+  the gate discriminates both ways. (The first plant landed OUTSIDE
+  the try — the uncaught-exception path — and proved nothing about
+  the gate; re-planted INSIDE the try for the real proof. Recorded as
+  the calibration.) Unit 924 → 930 (+6: the six focused legs — the
+  green shape, the ok:false shape, the catch-path shape, the
+  delete-answered-500 shape, the delete-threw shape, the
+  probeCleanup-undefined shape). **The census correction: the plan
+  projected +1/+1 (924 → 925); the reality shipped +1/+6 (923 →
+  930)** — six focused legs beat one composite assertion (one failed
+  leg, one precise RED); recorded here, never trimmed to match the
+  projection (the AT precedent).
+- **AW3 — DONE.** The Cycle-45 plan paragraph's closure-grounds
+  parenthetical re-anchored from the S93/AT4-era numbers (lcp
+  2424–3324 / fcp 588–764 / ttfb 6–36 / longTaskTotal 51–1938 / INP
+  1028–1176) to the fresh S95 triple (lcp 2444–2784 / cls 0 / fcp
+  648–732 / ttfb 5–64 / INP 1019–1274) with the straddling Tasks
+  longTaskTotal 2064/2418/2844 recorded as evidence and the explicit
+  sentence "the closure does NOT ride on the straddling budget" — the
+  plan-side sentence now matches the execution record's own evidence
+  (the s95 audit's M1).
+- **AW4 — DONE.** AW4a README:108 "916 tests" → 930 (with the badge
+  1397 → 1404 and the Testing-section counts). AW4b the CLAUDE.md S94
+  wedge relocated from the E2E bullet (the broken sentence healed:
+  "auth flows (incl. the login card's measured chrome…") into the unit
+  seam tail between S93 and S95, with the relocation note. AW4c the
+  README session rows 66–70 reordered (66, 67, 68, 69, 70 — verified:
+  the Session-95 row byte-identical to HEAD after the repair) + the
+  missing-row note (sessions 16, 57–60, 72 carry no row — the
+  operator's session-log commits carry those records; the note makes
+  the skips documented). AW4d the PAD TOC renumbered to the real
+  headings (1–6, 8–13) with the §7-gap note (the gap preserved so
+  every internal §-reference and anchor stays stable). AW4e the AGENTS
+  standing-suite line gains the explicit arithmetic ("the S31 preflight
+  + the 33 standing audits + the demo-theme closing guard = the 35
+  suite steps"). AW4f the AGENTS cold-run quirk line re-anchored to
+  the ALWAYS-COLD mandate (the per-spec stamping technique stays).
+- **AW5 — DONE.** scripts/ref-resweep-s96.mjs (the re-tag: probe
+  prefix `s96-resweep-`, probe name "S96 Probe", filename prefix
+  `96-`, the header's provenance note + the AW2 gate import) — the
+  run **ok:true, exit 0** (refChecks 9/9, cloneChecks 9/9, failed: [],
+  the brand tables byte-matched both hosts, the mobile drawers green
+  on both, probeCleanup ok, 18 captures).
+  scripts/capture-s96-evidence.mjs (the re-tag carrying the AV2
+  exit-code gate + the s93 I5 boolean completion line) — the frames
+  retargeted to this cycle's guarded surfaces: the Dashboard in DARK
+  with the sf-pill-yellow priority pills (the waitForFunction gate
+  counted ≥ 1 rendered pill — the DOM verification) and the Grade
+  Tracker in DARK — reached through the REAL sidebar navigation —
+  with four more guarded families on the seeded score pills (≥ 4
+  `[class*='sf-pill-']` nodes gated), md5-distinct GATE-enforced:
+  2aeb290178548eb593810b15b61d38e9 / 65c0434f02908731f14cfabd5dd323a6,
+  exit 0, the demo surface restored (violet/light).
+
+**Re-certification (all on the FINAL tree — src/ touched by AW2's
+seam, so the canonical build was rebuilt and the full cold cert
+re-ran per the AU precedent):** lint ✓ tsc ✓ unit **930/930** (27
+files); the full cold 5-chunk e2e re-cert **474/474**
+(131+141+57+87+58 — **every chunk first-pass, zero flakes**); the
+standing suite 35/35 (the full background runner: the dev daemon on
+:3000 per the setsid recipe + the :3200 standalone, zero concurrent
+spawns — verdict recorded below on completion); the s96 resweep
+ok:true with the exit-code gate live; agent-browser mobile-nav
+verified on BOTH hosts (reference 24 labeled / drawer navigates to
+/Notes and auto-closes / the drawer's own X at x:228 y:26 / 20
+icon-only collapsed ZERO title/aria [the S52 contract re-confirmed]
+/ scrollWidth 416 on /Notes / the persisted `sidebarOpen` key read
+before interpreting and restored after; clone 26 labeled [the
+superset skip-link, off-screen at x:-9999] / drawer navigates +
+auto-closes / Escape / 20 icon-only collapsed ALL with title+aria
+[the clone's key is `sf-sidebar-collapsed` — the reference's
+`sidebarOpen` is inert on the clone, the first-attempt miss recorded
+as the S96 lesson 5] / scrollWidth 390 — **no Tailwind v4 mobile-nav
+bug, s96 re-confirmed**); the s96 evidence captures (2 frames,
+md5-distinct GATE-enforced, exit 0); `.env.example` verified current
+(the env surface unchanged this cycle).
+
+**DONE** — Batch AW closed. New baselines: unit **930/930**, e2e
+**474/474**, the standing suite **35/35**. Standing debt after AW:
+**ZERO** (the Batch R closure's operational reopen triggers stay
+machine-checked every cycle). The natural next cycle (Session-97)
+remains the standing rhythm: audit the AW diff, ride the riders the
+audit finds, re-certify cold (anchor it on `docs/session_61.md`).

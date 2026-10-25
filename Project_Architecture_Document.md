@@ -1,4 +1,4 @@
-# StudyFlow (Omni-Study) — Master Project Architecture Document (PAD) v1.3.3
+# StudyFlow (Omni-Study) — Master Project Architecture Document (PAD) v1.3.4
 
 **Classification:** Internal Engineering Reference
 **Status:** DEFINITIVE, PRODUCTION-LOCKED BLUEPRINT
@@ -8,6 +8,13 @@
 **Rule:** Every architectural decision in this document traces to a specific rationale. Nothing is here "because it's popular."
 
 ---
+
+#### Revision Block — v1.3.4 (Session-96 / Batch AW, Cycle 46)
+
+- `[SR]` Current test census anchor (the v1.2.0 convention, re-anchored): **930/930 Vitest unit** (27 files, `*.test.ts` only; the AW1 +1 and the AW2 +6 beneath) + **474/474 Playwright e2e** across the 5-chunk cold map (131+141+57+87+58 = 469 real specs in 30 spec files + 5 auth setups; `scripts/e2e-chunked-cert.sh` is the census authority). The PAD carries the census at revision time ONLY — the live count-keepers each cycle are the README badge (1404), AGENTS.md/CLAUDE.md, the `vitest.config.ts` header, and the cert-script header.
+- `[SR]` The @utility-block uniqueness guard (S96/AW1, the s95 audit's L1): the first-occurrence blind spot AV1 closed for palette STEPS lived on for utility BLOCKS — `utilityBlock()` reads the first `@utility <name> {` match, so a duplicate later block wins at runtime by the CSS cascade while every pin stays green (demonstrated live with an orange-content mutant). The new completeness pin guards EVERY utility header in globals.css exactly once (all 38+ blocks, a new utility joins the kill set for free); mutation-proven.
+- `[SR]` The resweep exit-gate seam (S96/AW2, the s95 audit's L2): `src/lib/resweep-gate.ts` — the pure contract (exit 0 ONLY on `ok` AND `probeCleanup === "ok"`), unit-pinned by six RED-first legs and imported by the s96 resweep re-tag. The re-tag class structurally carries the gate from here (a gate-dropping re-tag fails the unit layer through the census-visible import). The suite-verdict precedent extended to the sweep script family.
+- `[SR]` The record-accuracy riders (S96/AW3+AW4): the Cycle-45 plan's closure-grounds paragraph re-anchored to the fresh S95 reading set (the plan-side evidence now matches the execution record); the README File-Hierarchy count, the CLAUDE.md S94 seam-wedge relocation, the README session-row order + the missing-row note, the PAD TOC renumbered to the real headings (the §7 gap preserved deliberately), the AGENTS 35/35 suite arithmetic, and the cold-run quirk re-anchor. Zero standing debt unchanged (the Batch R reopen triggers stay machine-checked).
 
 #### Revision Block — v1.3.3 (Session-95 / Batch AV, Cycle 45)
 
@@ -62,12 +69,14 @@
 4. [Data Architecture](#4-data-architecture)
 5. [Design System Reference](#5-design-system-reference)
 6. [Security Architecture](#6-security-architecture)
-7. [Testing Strategy](#8-testing-strategy)
-8. [Build & Deployment](#9-build--deployment)
-9. [Developer Handbook](#10-developer-handbook)
-10. [Known Issues & Outstanding Tasks](#11-known-issues--outstanding-tasks)
-11. [Key Files Reference](#12-key-files-reference)
-12. [Glossary](#13-glossary)
+8. [Testing Strategy](#8-testing-strategy)
+9. [Build & Deployment](#9-build--deployment)
+10. [Developer Handbook](#10-developer-handbook)
+11. [Known Issues & Outstanding Tasks](#11-known-issues--outstanding-tasks)
+12. [Key Files Reference](#12-key-files-reference)
+13. [Glossary](#13-glossary)
+
+<!-- TOC numbering (corrected by S96/AW4d, the s95 audit's I-3): the body's section numbers run 1–6 then 8–13 — §7 was never issued, and the gap is preserved deliberately so every internal §-reference (§8.1, §14 anchors in the revision blocks, cross-doc citations) and every generated anchor stays stable. -->
 
 ---
 

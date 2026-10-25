@@ -1,7 +1,19 @@
 import { defineConfig } from "vitest/config";
 import path from "node:path";
 
-// Unit-test layer for the pure domain seams — 26 files / 923 tests
+// Unit-test layer for the pure domain seams — 27 files / 930 tests
+// (re-anchored S96: +7 — the AW1 @utility-block uniqueness pin in
+// hue-tokens [the completeness form: EVERY @utility header in globals.css
+// exactly once — the duplicate-later-block blind spot demonstrated live
+// (a planted later sf-pill-red block with orange content left all 923
+// green), mutation-proven (the plant tripped EXACTLY the new pin with the
+// leg-2 contract pins green — they read the first occurrence, which is
+// the point)] + the AW2 resweep-gate seam tests/resweep-gate.test.ts
+// [+6 legs: 0 ONLY on ok AND probeCleanup "ok" — the pure seam the s96
+// resweep re-tag imports; RED-first, mutation-proven at the seam, live
+// wiring-proofed (planted in-try throw → exit 1 observed, green → 0)] —
+// the plan projected +1/+1, the reality +1/+6, owned in the execution
+// record per the AT precedent)
 // (re-anchored S95: census UNCHANGED — the AV1 uniqueness-guard completion
 // modifies the S93/AT2 pin IN-PLACE [the AR1 boundary-pin precedent]: the
 // duplicate-later-definition guard's loop now covers the union of every
