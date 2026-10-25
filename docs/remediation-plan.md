@@ -1,6 +1,6 @@
 # Omni-Study1 — Remediation Plan & Execution Record
 
-> **Status: COMPLETE through Batch BA (session-100) — ZERO standing debt.** Every batch below has
+> **Status: COMPLETE through Batch BB (session-101) — ZERO standing debt.** Every batch below has
 > been executed TDD-style (spec-red → fix → spec-green) and verified:
 > **936/936 Vitest unit**, **474/474 Playwright e2e** across the 5-chunk
 > cold map (131+141+57+87+58, 30 spec files censused exactly once; the
@@ -5930,6 +5930,22 @@ the capture legs were designed; both frames GREEN first-pass).
   rejection of an exact-count pin (it would contradict the
   silent-absorption design intent — the widening's own doctrine — and
   manufacture conscious-update friction on every future re-tag).
+  [S101/BB1 register note, the s100 audit's I1, appended per the
+  AZ4/BA1 precedent: the 215/96 counts above describe the PRE-rider
+  tree AGAIN — the BA2 riders created ref-resweep-s100.mjs +
+  capture-s100-evidence.mjs, two playwright importers that joined the
+  guarded class after the BA1 measurement. The post-BA final-tree
+  re-derivation (the pin's own regex, instrument-identical):
+  **217 importers / 98 Usage-line carriers / 0 stale / 119
+  usage-line-free** (the frozen historical era unchanged). The
+  doctrine's own predicted drift, arrived on schedule: the S100
+  lesson-1 rule says the audit re-derives EXPECTING drift upward (the
+  register's counts + this cycle's riders), never silent drift
+  downward — and the threshold-form pins (>200 />40) absorbed the
+  growth silently BY DESIGN. The register rotates forward: each
+  cycle's honest-zero documentation appends the current-tree counts
+  so the NEXT audit's re-derivation has the scoped expectation. The
+  exact-count pin stays REJECTED (the silent-absorption intent).]
 - **BA2 — DONE.** `scripts/ref-resweep-s100.mjs` (the 7-location
   re-tag sweep from s99 — provenance, usage, probe email
   `s100-resweep-`, probe name "S100 Probe", the three capture path
@@ -5996,3 +6012,190 @@ triggers stay machine-checked every cycle). The natural next cycle
 (Session-101) remains the standing rhythm: audit the BA diff, ride
 the riders the audit finds, re-certify cold (anchor it on
 `docs/session_69.md`).
+
+---
+
+## Cycle-51 plan (Session-101 / Batch BB) — the audit-rider cycle at the plateau: the register rotation + the s101 evidence-frame rotation
+
+**Received state**: `4bb9ffb` (Batch BA `1711b59` + the operator's
+session-log commit adding `docs/session_70.md` [the S100 raw
+transcript — audited clean: one file, 126 insertions, no source
+changes, no key material]). The 25th workspace reset — fresh clone,
+full re-provision (bun install 497 pkgs, `.env` from `.env.example`
+with DATABASE_URL="file:../db/custom.db", the `db/` folder at the
+repo root + push + seed, chromium-1243, the canonical build) and
+baseline re-certified cold BEFORE any work: lint ✓ tsc ✓ unit
+**936/936** (28 files), the cold 5-chunk e2e re-cert (in flight at
+plan time — every completed chunk first-pass).
+
+**Pre-change evidence — the Mode-C audit of the BA diff**
+(`675b4b8..1711b59` + the operator's `4bb9ffb`): **0C/0H/0M/0L/1I**,
+all six BA claims verified TRUE (the BA1 register note read in full
+[the final-tree counts 215/96/0-stale/119, the growth mechanism, the
+threshold doctrine, the exact-count-pin rejection]; the BA2a resweep
+script read in full [the 7-location re-tag diff vs s99 EXACT — 14
+changed line-pairs, nothing else; the AW2 gate import + the
+resweepExitCode wiring, the AX2 node-runner constraint with the
+version note, the AY2-honest crash scope, the S92/AS3 probeEmail
+ownership]; the BA2b capture script read in full [the AG3 AC-key
+wait, the AU3c route-abort shape, the eventsRouteInstalled ownership
+flag, the md5-DISTINCT gate with the explicit booleans, the AV2/AX3
+exit-code semantics, the S4 restore on every path, zero probe rows
+by construction]; the 20 committed 100-*.png frames md5-DISTINCT
+[0 duplicate hashes]; the two rotation frames' committed md5s match
+the record verbatim [97892003… / 727571fc…]; the operator commit
+clean [one file, 126 insertions]; no key material [the
+b3BlbnNzaC1rZXktdjE scan: zero hits]; src/ and tests/ untouched by
+BA [git diff --stat: 0 lines under src/ and tests/]; the docs chain
+aligned [README badge 1410 + the Session-100 row pipe parity at 4,
+AGENTS/CLAUDE carrying 936, the vitest header re-anchored S100/BA,
+PAD v1.3.8]).
+
+**The finding that sizes this cycle:**
+
+- **I1 — the register rotation: the BA1 note's counts (215/96)
+  describe the pre-BA-rider tree — the doctrine's own predicted
+  drift, arrived on schedule.** The BA2 riders created
+  `ref-resweep-s100.mjs` + `capture-s100-evidence.mjs` — two more
+  playwright importers that joined the guarded class after the BA1
+  measurement. The post-BA final-tree re-derivation (the pin's own
+  regex, instrument-identical): **217 importers / 98 Usage-line
+  carriers / 0 stale / 119 usage-line-free (the frozen historical
+  era unchanged)**. Nothing is wrong — the S100 lesson-1 doctrine
+  says the audit re-derives EXPECTING drift upward, never silent
+  drift downward, and the threshold-form pins (>200 />40) absorb the
+  growth silently BY DESIGN. The close: the dated S101 register note
+  appended to the BA1 execution record (the AZ4/BA1 precedent) — the
+  register rotates forward so the NEXT audit's re-derivation has the
+  scoped expectation. Documentation-only; no pin change (the
+  exact-count pin stays rejected).
+
+**The honest-cycle riders (TDD-by-construction — documentation +
+scripts only, src/ untouched, the census projections 936/474
+unchanged EXACT BY CONSTRUCTION):**
+
+- **BB1 — the S101 register note (the audit's I1).** The dated note
+  appended to the BA1 execution record: the post-BA final-tree counts
+  (217 importers / 98 carriers / 0 stale / 119 usage-line-free), the
+  growth mechanism (the two s100 riders joining post-measurement),
+  the doctrine restated (the register rotates forward each cycle the
+  riders grow the class — the scoped expectation is "the last
+  register's counts + this cycle's riders", never an exact pin).
+
+- **BB2 — the s101 riders.** `scripts/ref-resweep-s101.mjs` (the
+  7-location re-tag sweep from s100 — provenance, usage, probe email
+  `s101-resweep-`, probe name "S101 Probe", the three capture path
+  prefixes; the AW2 gate + the AX2 node-runner constraint + the
+  AY2-honest crash scope carried verbatim) and
+  `scripts/capture-s101-evidence.mjs` (the evidence-frame rotation
+  onto two CONSUMERS-map surfaces NO prior evidence frame covered,
+  both already e2e-pinned, both emerald-family alert surfaces never
+  rotated: Frame 1 the LOGIN route's check-email alert
+  [login-surface.tsx's sf-alert-emerald, role=alert — the
+  auth-flows-pinned surface ("Check your email" + the exact alert
+  prose), driven deterministically with a NON-EXISTENT email: the
+  forgot API answers the identical 200 with no link (no account
+  oracle, no PasswordResetToken row), the client's forgotDone state
+  renders the alert regardless — ZERO persistent rows by
+  construction; DARK via the context's colorScheme emulation (the
+  documented dark-OS login theming — no persisted preference to
+  restore)]; Frame 2 the /EXPORT page's import-success alert
+  [export-panel.tsx's sf-alert-emerald, role=status — the
+  s23-import-pinned surface ("the result summary renders with the
+  upsert counts"), driven deterministically with an EMPTY envelope
+  `{format, version: 1, data: {}}` — every collection key absent →
+  skipped → 0 created / 0 updated / 0 total, the emerald result
+  state renders, ZERO persistent mutation by construction; DARK via
+  the S10 API PATCH + navigation, the S4 violet/light restore on
+  every path]; both md5-DISTINCT GATE-enforced, first-pass, exit 0).
+
+- **BB3 — the honest-zero-cycle acknowledgment.** No guard gap
+  found; the census projections 936/474 unchanged EXACT BY
+  CONSTRUCTION (BB1 documentation-only; BB2 scripts-only; src/
+  untouched). No manufactured headline — the verified plateau IS
+  the deliverable (the S100 lesson-2 doctrine).
+
+### Cycle-51 — Session-101 · Batch BB — execution record
+
+**Implemented (all three riders, TDD-by-construction):**
+
+- **BB1 — DONE.** The dated S101 register note appended to the BA1
+  execution record above (visible there): the post-BA final-tree counts
+  **217 playwright importers / 98 Usage-line carriers / 0 stale / 119
+  usage-line-free** (the frozen historical era unchanged), the growth
+  mechanism (the two s100 riders joining post-measurement), the
+  register-rotates-forward doctrine (the scoped expectation is "the
+  last register's counts + this cycle's riders"), and the exact-count
+  pin staying REJECTED.
+
+- **BB2 — DONE.** `scripts/ref-resweep-s101.mjs` (the 7-location
+  re-tag sweep from s100 — provenance, usage, probe email
+  `s101-resweep-`, probe name "S101 Probe", the three capture path
+  prefixes; the AW2 gate import + the AX2 node-runner constraint + the
+  AY2-honest crash scope + the S92/AS3 probeEmail ownership carried
+  verbatim; syntax-checked; the live run: **ok:true, exit 0** — 9/9
+  invariants both hosts, the brand tables byte-matched, probeCleanup
+  ok, 18 captures) and `scripts/capture-s101-evidence.mjs` (Frame 1:
+  the Login route's check-email alert in DARK — login-surface.tsx's
+  sf-alert-emerald, role=alert, the auth-flows-pinned surface, driven
+  with a NON-EXISTENT email (the forgot API's identical-200 no-oracle
+  contract — no register, no PasswordResetToken row; dark via the
+  context's colorScheme emulation, the documented dark-OS login
+  theming; the strict-mode collision on the check-email view's TWO
+  "Back to sign in" buttons sidestepped by a fresh navigation);
+  Frame 2: the /export page's import-success alert in DARK —
+  export-panel.tsx's sf-alert-emerald, role=status, the
+  s23-import-pinned surface, driven with an EMPTY envelope
+  `{format: "studyflow-data-export", version: 1, data: {}}` (every
+  collection key absent → skipped → 0 created / 0 updated / 0 total —
+  the result state renders with zero persistent mutation; dark via the
+  boot script's SYSTEM FALLBACK — the theme-cache key cleared + the
+  colorScheme emulation, the documented pre-paint path for a cache-less
+  dark-OS visitor; the S21 me-route fulfill was INERT on this
+  server-component route — no /api/auth/me consumer — the honest
+  mechanism named in the S101 lessons); both md5-DISTINCT
+  GATE-enforced: efa77bc0414d5ca1c4022c3bd77baaa3 /
+  621d704302cd8a455c7924e8b70e8ad7, first-pass, exit 0).
+
+- **BB3 — DONE.** The honest-zero-cycle acknowledgment: no guard gap
+  found; unit census **936 UNCHANGED** and e2e **474 UNCHANGED** — the
+  projections exact BY CONSTRUCTION (BB1 documentation-only; BB2
+  scripts-only; src/ and tests/ untouched).
+
+**Re-certification (all on the FINAL tree — src/ untouched by the BB
+work, but the standing rhythm re-runs the full ladder anyway):** lint ✓
+tsc ✓ unit **936/936** (28 files — the zero-cycle projection exact);
+the canonical build green (re-run on the final tree — compiled, 50/50
+pages, the standalone asset contract intact); the full cold 5-chunk e2e re-cert **474/474**
+(131+141+57+87+58 — every chunk first-pass, zero flakes); the standing
+suite — **GREEN 35/35 FIRST-PASS** (every stage green through the full-suite
+runner, even the settings-roundtrip stage — the documented S84-class
+environmental save-wait flake — ran green on its first run this window;
+the theme-restore closing guard green [demo light/violet intact]); the s101 resweep ok:true with the
+exit-code gate live (9/9 both hosts, the brand tables byte-matched,
+probeCleanup ok, 18 captures, exit 0); agent-browser mobile-nav
+verified on BOTH hosts (reference: `sidebarOpen` read-then-restored
+["true" = expanded — the S98-settled semantics], 24 labeled visible
+links with the drawer open [20 nav in the panel + 4 page-behind
+through the translucent backdrop — the S97–S100 viewport instrument] /
+drawer navigates to /Notes and auto-closes / the drawer's own X at
+x:228 y:26 / 20 icon-only collapsed ZERO title-aria / scrollWidth 416
+on /Notes — the reference's own overflow defect; clone:
+`sf-sidebar-collapsed` read-and-removed [null default], 26 labeled
+[the superset skip-link "Skip to main content" at x:-9999] / drawer
+navigates to /Notes and auto-closes [the dialog UNMOUNTS] / Escape
+closes / 20 icon-only collapsed ALL title+aria / scrollWidth 390 /
+the hamburger aria-labeled "Open navigation menu" — **no Tailwind v4
+mobile-nav bug, s101 re-confirmed**); the s101 evidence captures (2
+md5-distinct GATE-enforced frames, exit 0, first-pass);
+`.env.example` verified current (the env surface unchanged this cycle
+— src/ reads AUTH_SECRET, DATABASE_URL, NEXT_PUBLIC_SITE_URL,
+NODE_ENV, all covered).
+
+**DONE** — Batch BB closed. Baselines unchanged: unit **936/936**,
+e2e **474/474**, the standing suite **35/35 first-pass**. Standing
+debt after BB: **ZERO** (the Batch R closure's operational reopen
+triggers stay machine-checked every cycle). The natural next cycle
+(Session-102) remains the standing rhythm: audit the BB diff, ride
+the riders the audit finds, re-certify cold (anchor it on
+`docs/session_71.md`).

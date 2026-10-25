@@ -1,13 +1,20 @@
-# StudyFlow (Omni-Study) — Master Project Architecture Document (PAD) v1.3.8
+# StudyFlow (Omni-Study) — Master Project Architecture Document (PAD) v1.3.9
 
 **Classification:** Internal Engineering Reference
 **Status:** DEFINITIVE, PRODUCTION-LOCKED BLUEPRINT
 **Companion Documents:** `README.md` (user-facing), `AGENTS.md` (agent quick-reference), `CLAUDE.md` (agent operating conventions), `docs/Tailwind-V4-Validation-Report.md` (parity trap log)
-**Last Updated:** 2026-10-25
+**Last Updated:** 2026-10-26
 **Audience:** Senior Engineers, Tech Leads, DevOps, Onboarding Engineers, and AI Coding Agents
 **Rule:** Every architectural decision in this document traces to a specific rationale. Nothing is here "because it's popular."
 
 ---
+
+#### Revision Block — v1.3.9 (Session-101 / Batch BB, Cycle 51)
+
+- `[SR]` Current test census anchor (the v1.2.0 convention, re-anchored): **936/936 Vitest unit** (28 files, `*.test.ts` only — census UNCHANGED: the honest-zero-cycle touched documentation + scripts only, src/ untouched) + **474/474 Playwright e2e** across the 5-chunk cold map (131+141+57+87+58 = 469 real specs in 30 spec files + 5 auth setups; `scripts/e2e-chunked-cert.sh` is the census authority). The PAD carries the census at revision time ONLY — the live count-keepers each cycle are the README badge (1410), AGENTS.md/CLAUDE.md, the `vitest.config.ts` header, and the cert-script header.
+- `[SR]` The register rotation (S101/BB1, the s100 audit's I1): the BA1 note's counts (215 playwright importers / 96 Usage-line carriers) describe the pre-BA-rider tree — the BA2 riders joined the guarded class after the measurement, and the post-BA final-tree re-derivation (the pin's own regex, instrument-identical) is **217 importers / 98 carriers / 0 stale / 119 usage-line-free** (the frozen historical era unchanged). The doctrine's own predicted drift, arrived on schedule: the S100 lesson-1 rule says the audit re-derives EXPECTING drift upward (the register's counts + this cycle's riders), never silent drift downward — the register rotates forward with a dated S101 note appended to the BA1 execution record, and the exact-count pin stays REJECTED (the silent-absorption intent). The register is a tripwire whose expected movement is documented, not a number to keep current by pin.
+- `[SR]` The s101 evidence-frame rotation (S101/BB2): two CONSUMERS-map emerald-alert surfaces NO prior evidence frame covered, both already e2e-pinned, both zero-persistent-state BY CONSTRUCTION — the Login route's check-email alert (login-surface.tsx's sf-alert-emerald, role=alert — the auth-flows-pinned surface, driven with a NON-EXISTENT email: the forgot API answers the identical 200 with no link, no oracle, no token row; dark via the context's colorScheme emulation, the documented dark-OS login theming) and the /export page's import-success alert (export-panel.tsx's sf-alert-emerald, role=status — the s23-import-pinned surface, driven with an EMPTY envelope: every collection key absent → skipped → 0 created / 0 updated / 0 total; dark via the boot script's SYSTEM FALLBACK — the theme-cache key cleared + the colorScheme emulation, the documented pre-paint path). Both md5-DISTINCT GATE-enforced, first-pass, exit 0. The s101 resweep ok:true (9/9 both hosts, brand tables byte-matched, probeCleanup ok, 18 captures, exit 0); agent-browser mobile-nav re-verified on BOTH hosts (reference 24 viewport-labeled / clone 26 superset incl. the skip-link; all close paths; **no Tailwind v4 mobile-nav bug, s101 re-confirmed**). Zero standing debt unchanged.
+- `[SR]` The S101 theming lesson (recorded in AGENTS, the S101 lessons): a route-intercept theming convention is only as real as the consumer that fetches it — the S21 capture's /api/auth/me fulfill was INERT on the /export route (a server component with no me-consumer; the recorded darkRootClass printed but never gated). The s101 first attempt re-inherited the dead pattern and timed out; the honest mechanism for a server-gated surface with no me-fetch is the boot script's system fallback (the S11 cache contract). Name the consumer whose fetch you intercept; if none exists, the interception is theater.
 
 #### Revision Block — v1.3.8 (Session-100 / Batch BA, Cycle 50)
 
