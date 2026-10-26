@@ -142,7 +142,14 @@ test.describe("S12-A · forced-colors keeps state indication (Windows High Contr
 test.describe("S12-B · the skip-to-content link (WCAG 2.4.1)", () => {
   test("first Tab stop is the skip link; it appears on focus and lands on main", async ({ page }) => {
     await gotoMode(page, "/Dashboard", "light");
-    await hydrated(page);
+    // S102/BC4: the STATUS-GATED marker, not the weak --sf-primary gate —
+    // the boot script sets the var PRE-PAINT, so the weak gate passes while
+    // the auth gate is still resolving (the LOADING state renders the skip
+    // link WITHOUT main#main-content; the Tab+Enter then finds no focus
+    // target and the 15s ceiling expires — the S8-A lesson's own trap,
+    // cold-start probe-measured: appHydrated ABSENT / mainExists false).
+    // data-app-hydrated fires ONLY when the authed shell renders.
+    await page.waitForFunction(() => document.documentElement.dataset.appHydrated === "true");
     await page.keyboard.press("Tab");
     const first = await page.evaluate(() => {
       const el = document.activeElement as HTMLElement | null;

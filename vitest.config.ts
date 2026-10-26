@@ -2,6 +2,20 @@ import { defineConfig } from "vitest/config";
 import path from "node:path";
 
 // Unit-test layer for the pure domain seams — 28 files / 936 tests
+// (re-anchored S102/BC — the honest-zero-cycle: census UNCHANGED at
+// 936. The BC cycle touched documentation + scripts only: the BB1
+// record's dated register note [the post-BB final-tree playwright-class
+// counts 219 importers / 100 Usage-line carriers — the two s101 riders
+// joined the guarded class after the BB1 measurement; the register
+// rotates forward, the threshold-form pins absorb growth by design,
+// the exact-count pin stays rejected] and the s102 riders
+// [ref-resweep-s102.mjs + capture-s102-evidence.mjs — the
+// evidence-frame rotation onto the GradeTracker dark score pills + the
+// Assignments dark soft pills, both already e2e-pinned surfaces]. No
+// new pins. The BC4 rider (found by the final re-cert): the S12-B
+// skip-link test's hydration gate strengthened IN-PLACE to the
+// status-gated data-app-hydrated marker — ONE test file touched, the
+// census UNCHANGED, the count projection exact.)
 // (re-anchored S101/BB — the honest-zero-cycle: census UNCHANGED at
 // 936. The BB cycle touched documentation + scripts only: the BA1
 // record's dated register note [the post-BA final-tree playwright-class

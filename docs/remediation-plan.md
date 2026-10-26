@@ -1,6 +1,6 @@
 # Omni-Study1 — Remediation Plan & Execution Record
 
-> **Status: COMPLETE through Batch BB (session-101) — ZERO standing debt.** Every batch below has
+> **Status: COMPLETE through Batch BC (session-102) — ZERO standing debt.** Every batch below has
 > been executed TDD-style (spec-red → fix → spec-green) and verified:
 > **936/936 Vitest unit**, **474/474 Playwright e2e** across the 5-chunk
 > cold map (131+141+57+87+58, 30 spec files censused exactly once; the
@@ -6127,6 +6127,23 @@ unchanged EXACT BY CONSTRUCTION):**
   register-rotates-forward doctrine (the scoped expectation is "the
   last register's counts + this cycle's riders"), and the exact-count
   pin staying REJECTED.
+  [S102/BC1 register note, the s101 audit's I1, appended per the
+  AZ4/BA1 precedent: the 217/98 counts above describe the PRE-rider
+  tree AGAIN — the BB2 riders created ref-resweep-s101.mjs +
+  capture-s101-evidence.mjs, two playwright importers that joined the
+  guarded class after the BB1 measurement. The post-BB final-tree
+  re-derivation (the pin's own regex, instrument-identical):
+  **219 importers / 100 Usage-line carriers / 0 stale / 119
+  usage-line-free** (the frozen historical era unchanged). The
+  doctrine's own predicted drift, arrived on schedule: the S101
+  lesson-1 rule says the audit re-derives EXPECTING the register's
+  counts + this cycle's riders (never silent drift downward, never
+  growth beyond the named riders) — and the threshold-form pins
+  (>200 />40) absorbed the growth silently BY DESIGN. The register
+  rotates forward: each cycle's honest-zero documentation appends the
+  current-tree counts so the NEXT audit's re-derivation has the
+  scoped expectation. The exact-count pin stays REJECTED (the
+  silent-absorption intent).]
 
 - **BB2 — DONE.** `scripts/ref-resweep-s101.mjs` (the 7-location
   re-tag sweep from s100 — provenance, usage, probe email
@@ -6199,3 +6216,228 @@ triggers stay machine-checked every cycle). The natural next cycle
 (Session-102) remains the standing rhythm: audit the BB diff, ride
 the riders the audit finds, re-certify cold (anchor it on
 `docs/session_71.md`).
+
+---
+
+## Cycle-52 plan (Session-102 / Batch BC) — the audit-rider cycle at the plateau: the register rotation + the s102 evidence-frame rotation
+
+**Received state**: `c565c3a` (Batch BB `aa0cfc0` + the operator's session-log
+commit adding `docs/session_72.md` [the S101 raw transcript — audited clean:
+one file, 104 insertions, no source changes, no key material]). The 26th
+workspace reset — fresh clone, full re-provision. Anchors: session_71 (the
+S101 record whose closing line names the standing rhythm the natural next
+cycle), session_72 (the operator's S101 transcript), the Cycle-51 record +
+the ZERO standing debt, the worklog tail. Ground truth: last completed cycle
+Session-101/Batch BB (Cycle 51) at `aa0cfc0`; baselines unit 936/936, cold
+e2e 474/474, the standing suite 35/35. Standing debt: ZERO.
+
+**The pre-change audit (Mode-C, the diff `4bb9ffb..aa0cfc0` + the
+operator's `c565c3a`)**: **0C/0H/0M/0L/1I**, all six BB claims verified
+TRUE (the BB1 register note read in full [217/98/0-stale/119 + the growth
+mechanism + the register-rotates-forward doctrine]; the BB2a resweep's
+7-location re-tag diff vs s100 EXACT; the BB2b capture's full gate shape
+[the md5-DISTINCT booleans, the AV2/AX3 exit-code semantics, the catch/
+finally ownership, the S4 restore on every path]; the 20 committed
+101-*.png frames md5-distinct; the two rotation frames' committed md5s
+matching the record verbatim [efa77bc0414d5ca1c4022c3bd77baaa3 /
+621d704302cd8a455c7924e8b70e8ad7]; the operator commit clean; src/ and
+tests/ untouched; the docs chain aligned [README badge 1410 + the
+Session-101 row pipe parity, AGENTS/CLAUDE 936, the vitest header S101/BB,
+PAD v1.3.9]; no key material [the two `b3BlbnNzaC1rZXktdjE` diff hits are
+the audit prose quoting the scan string itself; the four
+BEGIN-OPENSSH-PRIVATE-KEY doc mentions pre-date BB — the wrapper/how-to
+docs and the skills examples]). **The I1 finding that sizes the cycle**:
+the BB1 note's counts (217/98) describe the pre-BB-rider tree — the
+post-BB final-tree re-derivation (the pin's own regex,
+instrument-identical) is **219 importers / 100 carriers / 0 stale / 119
+usage-line-free** — the doctrine's own predicted drift, arrived on
+schedule (the two s101 riders joining the guarded class
+post-measurement); the close is the register rotation (a dated S102 note
+appended to the BB1 record), not a pin change.
+
+**The honest-cycle riders (TDD-by-construction — documentation + scripts
+only, src/ and tests/ untouched, the census projections 936/474 unchanged
+EXACT BY CONSTRUCTION):**
+
+- **BC1 — the S102 register note (the audit's I1).** The dated note
+  appended to the BB1 execution record: the post-BB final-tree counts
+  (219 importers / 100 carriers / 0 stale / 119 usage-line-free), the
+  growth mechanism (the two s101 riders joining post-measurement), the
+  doctrine restated (the register rotates forward each cycle the riders
+  grow the class — the scoped expectation is "the last register's counts
+  + this cycle's riders", never an exact pin).
+
+- **BC2 — the s102 riders.** `scripts/ref-resweep-s102.mjs` (the
+  7-location re-tag sweep from s101 — provenance, usage, probe email
+  `s102-resweep-`, probe name "S102 Probe", the three capture path
+  prefixes; the AW2 gate + the AX2 node-runner constraint + the
+  AY2-honest crash scope carried verbatim) and
+  `scripts/capture-s102-evidence.mjs` (the evidence-frame rotation onto
+  two CONSUMERS-map surfaces NO prior evidence frame covered, both
+  already e2e-pinned, both zero-persistent-state by construction — the
+  seeded rows render the guarded families, no mutation drives the
+  frames: Frame 1 the GRADE TRACKER dark
+  [gradetracker-view.tsx's scoreBadgeClass pills — the AG4-pinned
+  surface: the seeded rows render three families in one frame, the
+  emerald 92/100 + the sky 85/100 + the amber 78/100; zero persistent
+  state by construction (the seeded grades render the pills — no
+  dialog, no mutation); DARK via the S10 API PATCH + navigation, the S4
+  violet/light restore on every path]; Frame 2 the ASSIGNMENTS dark
+  [assignments-view.tsx's sf-pill-soft family — the S6-pinned surface:
+  the seeded rows render the soft-blue due-in pills + the soft-yellow
+  priority pills — the SOFT family's first rotation frame (no prior
+  frame covered any sf-pill-soft-* consumer); zero persistent state by
+  construction (the seeded assignments render the pills); DARK via the
+  S10 API PATCH + navigation, the S4 violet/light restore on every
+  path]; both md5-DISTINCT GATE-enforced, first-pass, exit 0).
+
+- **BC3 — the honest-zero-cycle acknowledgment.** No guard gap found;
+  the census projections 936/474 unchanged EXACT BY CONSTRUCTION (BC1
+  documentation-only; BC2 scripts-only; src/ untouched). No
+  manufactured headline — the verified plateau IS the deliverable (the
+  S100 lesson-2 doctrine).
+
+- **BC4 — the S12-B readiness-gate hardening (found BY the final
+  re-cert; appended to the plan before the change, the standing
+  protocol).** The final cold 5-chunk re-cert's chunk 4 failed ONE
+  test — accessibility.spec.ts's S12-B "first Tab stop is the skip
+  link; it appears on focus and lands on main" — reproducible THREE
+  consecutive times, then green on a warm re-run. The root cause,
+  isolated by a cold-start probe replicating the test's exact flow:
+  the test gates on the WEAK hydration signal (`hydrated()` — the
+  `<html>` `--sf-primary` var, set PRE-PAINT by the boot script — the
+  S8-A lesson's own documented trap), then presses Tab+Enter — and on
+  a cold server the auth gate is still resolving: the app is in the
+  LOADING state (probe-measured at the weak gate: `appHydrated:
+  ABSENT`, `mainExists: false`, `sidebar: false`), whose skip link
+  renders WITHOUT `main#main-content` in the DOM. The Enter's hash
+  navigation finds no focus target; when the ready state renders
+  moments later no hashchange fires; focus never lands on main; the
+  15s ceiling expires (the S81/AH5 symptom — its 10s→15s raise
+  treated the late-hydration TAIL, not the weak-GATE root). The fix:
+  the S12-B focus test's gate strengthened IN-PLACE to the
+  status-gated marker — `data-app-hydrated` (the S8-A marker that
+  fires ONLY when the authed shell renders) — one line, no count
+  change (the census stays 936/474; ONE test file touched, honestly
+  amending the zero-touch construction). The S81 precedent (the same
+  test's flake was FIXED, not re-run green) + the 3-consecutive-failure
+  evidence make this a REAL defect closure, not a flake wave-off —
+  re-running it green and calling it environmental would have been the
+  dishonest move (the S102 lesson-4 doctrine).
+
+### Cycle-52 — Session-102 · Batch BC — execution record
+
+**Implemented (all three riders, TDD-by-construction):**
+
+- **BC1 — DONE.** The dated S102 register note appended to the BB1
+  execution record above (visible there): the post-BB final-tree counts
+  **219 playwright importers / 100 Usage-line carriers / 0 stale / 119
+  usage-line-free** (the frozen historical era unchanged), the growth
+  mechanism (the two s101 riders joining post-measurement), the
+  register-rotates-forward doctrine (the scoped expectation is "the
+  last register's counts + this cycle's riders"), and the exact-count
+  pin staying REJECTED. The arithmetic VERIFIED live: the audit stated
+  the expected number (the register's 217/98 + the two named s101
+  riders) BEFORE the re-derivation ran, and the instrument-identical
+  measurement landed on exactly 219/100/0/119 — the doctrine's tripwire
+  shape confirmed (the S102 lesson-1 doctrine).
+
+- **BC2 — DONE.** `scripts/ref-resweep-s102.mjs` (the 7-location
+  re-tag sweep from s101 — provenance, usage, probe email
+  `s102-resweep-`, probe name "S102 Probe", the three capture path
+  prefixes; the AW2 gate import + the AX2 node-runner constraint + the
+  AY2-honest crash scope + the S92/AS3 probeEmail ownership carried
+  verbatim; syntax-checked; the re-tag exactness verified by the
+  normalization diff — EMPTY — before the live run, the S102 lesson-3
+  instrument; the live run: **ok:true, exit 0** — 9/9 invariants both
+  hosts, the brand tables byte-matched, probeCleanup ok, 18 captures)
+  and `scripts/capture-s102-evidence.mjs` (Frame 1: the GRADE TRACKER
+  view in DARK — gradetracker-view.tsx's scoreBadgeClass pills, the
+  AG4-pinned surface: the seeded grade rows render THREE families in
+  one frame [the emerald "92/100" on Problem set 6, the sky "85/100"
+  on Quiz 4 + "88/100" on Midterm essay, the amber "78/100" on
+  Kinetics quiz]; dark via the S10 API PATCH + navigation; zero
+  persistent state BY CONSTRUCTION — the seeded rows render the pills,
+  no dialog, no mutation; Frame 2: the ASSIGNMENTS view in DARK —
+  assignments-view.tsx's sf-pill-soft family, the S6-pinned surface:
+  the seeded rows render the soft-blue due-in pills [Tomorrow, 2–8
+  days] + the soft-yellow priority pills [high/urgent/medium/low] —
+  the SOFT family's FIRST rotation frame (no prior s99/s100/s101 frame
+  covered any sf-pill-soft-* consumer); dark via the same PATCH window;
+  zero persistent state BY CONSTRUCTION; both md5-DISTINCT
+  GATE-enforced: 2bf33daafba4671e1ab52ee6ca7489f3 /
+  2cab1ce8903f453674d5b2256f576771, first-pass, exit 0; both frames
+  pixel-probe verified genuinely dark [mean brightness 28.4 / 25.5 —
+  the PIL decode, the browser's own canvas refusing file:// draws];
+  the S4 violet/light restore awaited on every path — the theme PATCH
+  is the capture's ONLY mutation).
+
+- **BC3 — DONE.** The honest-zero-cycle acknowledgment: no guard gap
+  found IN THE PRE-CHANGE AUDIT; the census projections **936
+  UNCHANGED** and **474 UNCHANGED** — exact BY CONSTRUCTION for the
+  planned riders (BC1 documentation-only; BC2 scripts-only; src/
+  untouched). The final re-cert then found the BC4 defect BELOW.
+
+- **BC4 — DONE (found by the final re-cert, planned before the
+  change).** The S12-B readiness-gate hardening: the final cold
+  5-chunk re-cert's chunk 4 failed ONE test — the S12-B skip-link
+  focus test — reproducible THREE consecutive times, then green on a
+  warm re-run. The cold-start probe (replicating the test's exact
+  flow: the storageState cookie, the setMode PATCH, the goto, the
+  weak gate, Tab, Enter) measured the app state AT the weak gate on a
+  cold server: **appHydrated ABSENT / mainExists false / sidebar
+  false** — the LOADING state (the boot script's pre-paint
+  --sf-primary satisfies the weak `hydrated()` gate while the auth
+  gate is still resolving; the loading state renders the skip link
+  WITHOUT main#main-content). The Tab focuses the loading-state link;
+  the Enter's hash navigation finds no focus target; when the ready
+  state renders moments later no hashchange fires; the 15s ceiling
+  expires — the S81/AH5 symptom whose 10s→15s raise treated the tail,
+  not the root. The fix: the test's gate strengthened IN-PLACE to the
+  status-gated `data-app-hydrated` marker (the S8-A marker that fires
+  ONLY when the authed shell renders) — one line + the comment; the
+  mutation proof: 3 consecutive RED (the pre-fix failures) → 3
+  consecutive cold GREEN post-fix (the single-test -g filter, fresh
+  db/e2e.db each run) → the FULL chunk-4 cold re-cert **87/87**
+  (131+141+57+87+58 = the 474 map restored; the other four chunks
+  first-pass and untouched by the change — the fix touches only
+  accessibility.spec.ts, a chunk-4 file). lint ✓ tsc ✓ unit
+  **936/936** re-run on the fixed tree (the census projection exact —
+  ONE test file touched, the count unchanged).
+
+**Re-certification (all on the FINAL tree):** lint ✓ tsc ✓ unit
+**936/936** (28 files — the census projection exact; re-run after the
+BC4 fix); the canonical build green (re-run on the final tree); the
+full cold 5-chunk e2e re-cert **474/474** (131+141+57 first-pass +
+58 first-pass; chunk 4's single S12-B failure root-caused to the weak
+readiness gate [the cold-start probe evidence, the BC4 record above],
+fixed IN-PLACE, and the chunk re-certified cold **87/87** — the
+honest fix, not a flake wave-off); the standing suite — **GREEN
+35/35** through the full-suite runner (the theme-restore closing
+guard green [demo light/violet intact]); the s102 resweep ok:true with the
+exit-code gate live (9/9 both hosts, the brand tables byte-matched,
+probeCleanup ok, 18 captures, exit 0); agent-browser mobile-nav
+verified on BOTH hosts (reference: `sidebarOpen` read-then-restored
+["true" = expanded — the S98-settled semantics], 24 labeled visible
+links with the drawer open [20 nav in the panel + 4 page-behind
+through the translucent backdrop — the S97–S101 viewport instrument] /
+drawer navigates to /Notes and auto-closes / the drawer's own X at
+x:228 y:26 / 20 icon-only collapsed ZERO title-aria / scrollWidth 416
+on /Notes — the reference's own overflow defect; clone:
+`sf-sidebar-collapsed` read-and-removed [null default], 26 labeled
+[the superset skip-link "Skip to main content"] / drawer navigates to
+/Notes and auto-closes [the dialog UNMOUNTS] / Escape closes / 20
+icon-only collapsed ALL title+aria / scrollWidth 390 / the hamburger
+aria-labeled "Open navigation menu" — **no Tailwind v4 mobile-nav
+bug, s102 re-confirmed**); the s102 evidence captures (2 md5-distinct
+GATE-enforced frames, exit 0, first-pass, both pixel-probe dark);
+`.env.example` verified current (the env surface unchanged this cycle
+— src/ reads AUTH_SECRET, DATABASE_URL, NEXT_PUBLIC_SITE_URL,
+NODE_ENV, all covered).
+
+**DONE** — Batch BC closed. Baselines unchanged: unit **936/936**,
+e2e **474/474**, the standing suite **35/35**. Standing debt after
+BC: **ZERO** (the Batch R closure's operational reopen triggers stay
+machine-checked every cycle). The natural next cycle (Session-103)
+remains the standing rhythm: audit the BC diff, ride the riders the
+audit finds, re-certify cold (anchor it on `docs/session_73.md`).
