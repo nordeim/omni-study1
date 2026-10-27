@@ -68,7 +68,7 @@
 // to stdout; per-stage raw envelopes under /tmp/standing-suite/; exit 0 iff
 // the suite is green. The single-run-per-audit design makes the S29/S31/S65
 // double-run phantom impossible by construction.
-import { spawn } from "node:child_process";
+import { execFileSync, spawn } from "node:child_process";
 import { existsSync, mkdirSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { randomBytes } from "node:crypto";
@@ -188,6 +188,62 @@ async function ensureStandalone() {
   return { ok: false, error: "the standalone server on :3200 failed to become healthy (boot guard? build stale?)" };
 }
 
+// --- S106/BG4: the dev-server co-residency guard for the CWV × volume stage ---
+// The s106 suite's cwv-volume-stress stage read the Tasks view 2556ms RED at
+// the 2400 pin on a byte-identical app tree, while same-tree re-runs read
+// 2299/2759 with the dev server co-resident on :3000 and 2144 (inside the
+// documented 1821–2288 band) with it stopped: the 4x-throttled long-task
+// measurement is co-residency sensitive, and the dev server idling during
+// the stage (it serves nothing for this :3200-targeted probe) adds
+// 150–600ms of pure contention noise. The runner therefore stops :3000 for
+// the stage's duration and restarts it after — the AP-70 discipline: the
+// PID by the exact listening port, never a blanket pkill; a non-listening
+// dev server (someone else's context) is left untouched.
+async function devServerListenerPid() {
+  try {
+    const out = execFileSync("ss", ["-tlnp"], { encoding: "utf8", timeout: 5000 });
+    const line = out.split("\n").find((l) => l.includes(":3000 "));
+    if (!line) return null;
+    const m = line.match(/pid=(\d+)/);
+    return m ? Number(m[1]) : null;
+  } catch {
+    return null;
+  }
+}
+
+async function stopDevServerForCwv() {
+  const pid = await devServerListenerPid();
+  if (!pid) return null; // nothing listening — not ours to manage
+  try {
+    process.kill(pid, "SIGTERM");
+  } catch {
+    return null; // already gone
+  }
+  for (let i = 0; i < 12; i += 1) {
+    await new Promise((r) => setTimeout(r, 500));
+    if (!(await health("http://localhost:3000/api/health", 1500))) return pid; // dead
+  }
+  try {
+    process.kill(pid, "SIGKILL"); // the AR2 escalation shape
+  } catch {
+    /* already gone */
+  }
+  await new Promise((r) => setTimeout(r, 1000));
+  return pid;
+}
+
+async function restartDevServerAfterCwv() {
+  // The documented S32 daemon recipe, detached so the server survives the
+  // runner exactly as the operator's own precondition left it.
+  const child = spawn("bun", ["run", "dev"], { cwd: REPO, detached: true, stdio: "ignore" });
+  child.unref();
+  for (let i = 0; i < 60; i += 1) {
+    await new Promise((r) => setTimeout(r, 1000));
+    if (await health("http://localhost:3000/api/health", 2000)) return true;
+  }
+  return false;
+}
+
 // --- the stages ---------------------------------------------------------------
 
 async function runAuditStage(spec) {
@@ -276,8 +332,29 @@ try {
         log(`[standing-suite] stage ${i + 1}/33 — cwv SKIPPED (standalone precondition failed — the loud row is already recorded)`);
         continue;
       }
+      // S106/BG4: the co-residency guard — :3000 down for the CWV × volume
+      // stage (the measurement context fix; the pin stays 2400), back up
+      // after it so the :3000-targeted stages (ai-error/ai-a11y/pre15) run
+      // on the precondition they were designed for.
+      let devStoppedForCwv = null;
+      if (spec.name === "cwv-volume-stress") {
+        devStoppedForCwv = await stopDevServerForCwv();
+        log(
+          devStoppedForCwv
+            ? `[standing-suite] S106/BG4: dev server (pid ${devStoppedForCwv}) stopped for the cwv-volume-stress stage — the co-residency guard`
+            : `[standing-suite] S106/BG4: no dev server listening on :3000 — the co-residency guard is a no-op`,
+        );
+      }
       log(`[standing-suite] stage ${i + 1}/33 — ${spec.name}`);
       const r = await runAuditStage(spec);
+      if (devStoppedForCwv) {
+        const back = await restartDevServerAfterCwv();
+        log(
+          back
+            ? `[standing-suite] S106/BG4: dev server restarted after the cwv-volume-stress stage (healthy on :3000)`
+            : `[standing-suite] S106/BG4 WARNING: dev server did NOT return healthy on :3000 — the :3000-targeted stages below will fail loudly with the unreachable remedy`,
+        );
+      }
       rows.push({ name: r.name, verdict: r.verdict });
       await new Promise((res) => setTimeout(res, SETTLE_MS));
     }

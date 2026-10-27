@@ -1274,7 +1274,7 @@ const S51_BUDGETS: ReadonlyArray<{ metric: string; limit: number; label: string 
   { metric: "cls", limit: 0.1, label: "the ADR-014 load-stability contract at volume" },
   { metric: "fcp", limit: 1500, label: "the shell-paint volume-invariance" },
   { metric: "ttfb", limit: 500, label: "the server sanity bound" },
-  { metric: "longTaskTotal", limit: 2400, label: "the load-window sibling of the S13 B3 budget (S91/AR1 re-anchor: the documented same-tree healthy band 1821–2288ms made the original 2000 pin a coin flip)" },
+  { metric: "longTaskTotal", limit: 2400, label: "the load-window sibling of the S13 B3 budget (S91/AR1 re-anchor: the documented same-tree healthy band 1821–2288ms made the original 2000 pin a coin flip; S106/BG4 context fix — the pin UNCHANGED: the s106 suite read 2556 RED on the byte-identical tree while the clean re-run read 2144 GREEN, root-caused to the DEV-SERVER CO-RESIDENCY during the stage [readings 2299–2759 with it up, 2144 with it down, inside the band]; the standing-suite runner now stops :3000 for this stage's duration and restarts it after — the measurement context, not the pin, was the defect; a 2670 re-anchor was tried and REVERTED the same cycle: the observed co-residency band extends past 2670 too [2759], so no pin above the band can also catch the +400ms regression class)" },
 ];
 
 // S92/AS4: the metric → script-family map (the live script tags its

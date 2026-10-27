@@ -1,4 +1,4 @@
-# StudyFlow (Omni-Study) — Master Project Architecture Document (PAD) v1.3.13
+# StudyFlow (Omni-Study) — Master Project Architecture Document (PAD) v1.3.14
 
 **Classification:** Internal Engineering Reference
 **Status:** DEFINITIVE, PRODUCTION-LOCKED BLUEPRINT
@@ -8,6 +8,33 @@
 **Rule:** Every architectural decision in this document traces to a specific rationale. Nothing is here "because it's popular."
 
 ---
+
+#### Revision Block — v1.3.14 (Session-106 / Batch BG, Cycle 56)
+
+- `[SR]` Current test census anchor (the v1.2.0 convention, re-anchored): **936/936 Vitest unit** (28 files, `*.test.ts` only — census UNCHANGED: the honest-zero-cycle touched 
+documentation + scripts only, src/ and tests/ untouched) + **474/474 Playwright e2e** across the 5-chunk cold map (131+141+57+87+58 = 469 real specs in 30 spec files + 5 auth 
+setups; `scripts/e2e-chunked-cert.sh` is the census authority). The PAD carries the census at revision time ONLY — the live count-keepers each cycle are the README badge (1410), 
+AGENTS.md/CLAUDE.md, the `vitest.config.ts` header, and the cert-script header.
+- `[SR]` The register rotation (S106/BG1, the s105 audit's I1): the BF1 note's counts (225 playwright importers / 106 Usage-line carriers) describe the pre-BF-rider tree — the 
+BF2 riders joined the guarded class after the measurement, and the post-BF final-tree re-derivation (the pin's own regex, instrument-identical, the expectation stated BEFORE the 
+measurement: the register's 225/106 + the two named s105 riders) is **227 importers / 108 carriers / 0 stale / 119 usage-line-free** (the frozen historical era unchanged). The 
+register's arithmetic VERIFIED live (the S102 lesson-1 doctrine, fifth consecutive cycle); the register rotates forward with a dated S106 note appended to the BF1 execution 
+record, and the exact-count pin stays REJECTED (the silent-absorption intent). The final-tree forward arithmetic on the BG riders themselves: **229 importers / 110 carriers = 
+227/108 + the two s106 riders** — the scoped expectation for the next audit.
+- `[SR]` The s106 MOBILE evidence-frame rotation — the SECOND mobile cycle, EXHAUSTING the views' mobile-only `md:hidden` class (S106/BG2): the class is exactly THREE surfaces 
+(the Timetable day accordion [s105 Frame 1], the Flashcards in-row Study affordance, and the Notes mobile create FAB) and s106 rotates onto the LAST TWO, closing it — every 
+`md:hidden` view surface now carries an evidence frame, a claim the next audit re-derives with one grep (the S106 lesson-1: an axis's candidate class is ENUMERABLE and its 
+exhaustion is checkable). Two guarded surfaces at 390×844 in DARK, both already e2e-pinned (the S33 mobile sweep + the S36 dark-mobile sweep + their own surface pins — the AF1 
+bounding-box contract for the in-row affordance), both zero-persistent-state BY CONSTRUCTION through the SEED with ZERO interaction — the Flashcards MOBILE (the deck list pane 
+at mobile — the AE6 surface — + the in-row Study affordance on the seeded card-carrying deck rows: `bg-neutral-950 dark:bg-neutral-800` — the family's first rotation-frame 
+subject; the seeded 0-card "Spanish Vocabulary" deck renders NO affordance — the count > 0 boundary-row discriminator BY CONSTRUCTION, the S106 lesson-2: assert BOTH sides of 
+the seed's boundary) and the Notes MOBILE (the notes list pane at mobile — the AE6 surface, the seeded "Kinetics summary" row — + the mobile create FAB: 
+`sf-gradient sf-gradient-shadow` — the S79/AF6 superset surface, the gradient family's first MOBILE evidence frame). Both md5-DISTINCT GATE-enforced 
+(4dfde092fa6e8e51adebaf6fb4bb237a / 02637cbbb248871fbc50c5a73010e190), first-pass, exit 0, both frames pixel-probe verified genuinely dark (mean brightness 52.1 / 54.1 at 
+390×844 — the PIL decode). The s106 resweep ok:true (probeCleanup ok, 18 captures, exit 0); agent-browser mobile-nav re-verified on BOTH hosts (reference 24 viewport-labeled / 
+clone 26 superset incl. the skip-link; all close paths; scrollWidth 416 the reference's own overflow defect vs the clone's 390; **no Tailwind v4 mobile-nav bug, s106 
+re-confirmed**). Zero standing debt unchanged.
+- `[SR]` The BG4 reserved rider EXERCISED — the co-residency measurement-context fix (the standing suite's first run read 34/35: the cwv-volume-stress stage's Tasks view longTaskTotal 2556ms RED at the 2400 pin on the byte-identical tree; root-caused with probes to the DEV-SERVER CO-RESIDENCY on :3000 during the :3200-targeted stage — readings 2299/2759 with it up, 2144 inside the documented band with it down; a 2670 pin re-anchor was tried and REVERTED — the co-residency band extends past it, and no pin above the band catches the +400ms regression class): `scripts/standing-suite.mjs` now stops :3000 for the stage's duration (the AP-70 exact-port-PID kill) and restarts it after (the S32 recipe, health-gated), the S51 longTaskTotal pin stays 2400 (correct for clean conditions — the AR1 pin), the census UNCHANGED (labels/notes only: 936/474), the mechanism validated live, the guarded full-suite re-run GREEN 35/35. The doctrine (the S106 lesson-4, recorded in AGENTS): a throttled perf measurement is a CO-RESIDENCY measurement — pin the context, not just the number; when a budget's noise band widens, ask what the new readings ran co-resident with before moving the pin.
 
 #### Revision Block — v1.3.13 (Session-105 / Batch BF, Cycle 55)
 

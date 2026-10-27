@@ -2,6 +2,26 @@ import { defineConfig } from "vitest/config";
 import path from "node:path";
 
 // Unit-test layer for the pure domain seams — 28 files / 936 tests
+// (re-anchored S106/BG — the honest-zero-cycle: census UNCHANGED at
+// 936. The BG cycle touched documentation + scripts only: the BF1
+// record's dated register note [the post-BF final-tree playwright-class
+// counts 227 importers / 108 Usage-line carriers — the two s105 riders
+// joined the guarded class after the BF1 measurement; the register
+// rotates forward, the threshold-form pins absorb growth by design,
+// the exact-count pin stays rejected] and the s106 riders
+// [ref-resweep-s106.mjs + capture-s106-evidence.mjs — the MOBILE
+// evidence-frame rotation, the SECOND mobile cycle, EXHAUSTING the
+// views' mobile-only md:hidden class: the Flashcards in-row Study
+// affordance [the neutral-950 family's first rotation-frame subject;
+// the seeded 0-card deck renders NO affordance — the boundary-row
+// discriminator] + the Notes create FAB [the gradient family's first
+// MOBILE evidence frame, the S79/AF6 surface]]. No new pins; src/
+// and tests/ untouched by the PLANNED riders — the BG4 reserved rider
+// then exercised legitimately: the seam label + the boundary-test note
+// carry the co-residency context fix [the standing-suite runner stops
+// :3000 for the cwv-volume-stress stage — the pin stays 2400; modified
+// NOTES only, the census projection exact].)
+
 // (re-anchored S105/BF — the honest-zero-cycle: census UNCHANGED at
 // 936. The BF cycle touched documentation + scripts only: the BE1
 // record's dated register note [the post-BE final-tree playwright-class

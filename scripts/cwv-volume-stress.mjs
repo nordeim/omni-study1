@@ -71,6 +71,26 @@
 //                    max documented reading — OUTSIDE the band — while a
 //                    genuine +400ms regression on the worst-case healthy
 //                    baseline still lands beyond it.
+//                    S106/BG4 CONTEXT FIX (the pin UNCHANGED): the s106
+//                    standing suite read the Tasks view 2556ms RED at 2400
+//                    on a byte-identical app tree (src/ untouched by the
+//                    BG riders — git-verified), while same-tree re-runs
+//                    read 2299 and 2759 with the DEV SERVER co-resident on
+//                    :3000 and 2144 with it STOPPED — squarely inside the
+//                    documented band. Root cause: the 4x-throttled
+//                    long-task measurement is co-residency sensitive; the
+//                    dev server idling during the stage (it serves nothing
+//                    for this :3200-targeted probe) inflates readings by
+//                    150–600ms of pure contention noise. A 2670 pin
+//                    re-anchor was tried and REVERTED the same cycle: the
+//                    co-residency band extends past 2670 too (2759), so no
+//                    pin above the band can also catch the +400ms
+//                    regression class — the measurement CONTEXT was the
+//                    defect, not the pin. The standing-suite runner now
+//                    stops :3000 for this stage's duration and restarts it
+//                    after (the S106 lesson-4). For standalone runs of
+//                    this script: stop the dev server first for
+//                    band-comparable readings.
 //   INP proxy ≤ 3000ms — the volume-stressed interaction bound
 //
 // Verdict JSON to stdout; exit 0 on completion (findings ride the JSON —
