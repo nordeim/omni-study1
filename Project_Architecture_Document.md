@@ -1,4 +1,4 @@
-# StudyFlow (Omni-Study) — Master Project Architecture Document (PAD) v1.3.14
+# StudyFlow (Omni-Study) — Master Project Architecture Document (PAD) v1.3.15
 
 **Classification:** Internal Engineering Reference
 **Status:** DEFINITIVE, PRODUCTION-LOCKED BLUEPRINT
@@ -8,6 +8,39 @@
 **Rule:** Every architectural decision in this document traces to a specific rationale. Nothing is here "because it's popular."
 
 ---
+
+#### Revision Block — v1.3.15 (Session-107 / Batch BH, Cycle 57)
+
+- `[SR]` Current test census anchor (the v1.2.0 convention, re-anchored): **936/936 Vitest unit** (28 files, `*.test.ts` only — census UNCHANGED: the honest-zero-cycle touched 
+documentation + scripts only, src/ and tests/ untouched) + **474/474 Playwright e2e** across the 5-chunk cold map (131+141+57+87+58 = 469 real specs in 30 spec files + 5 auth 
+setups; `scripts/e2e-chunked-cert.sh` is the census authority). The PAD carries the census at revision time ONLY — the live count-keepers each cycle are the README badge (1410), 
+AGENTS.md/CLAUDE.md, the `vitest.config.ts` header, and the cert-script header.
+- `[SR]` The register rotation (S107/BH1, the s106 audit's I1): the BG1 note's counts (227 playwright importers / 108 Usage-line carriers) describe the pre-BG-rider tree — the 
+BG2 riders joined the guarded class after the measurement, and the post-BG final-tree re-derivation (the pin's own regex, instrument-identical, the expectation stated BEFORE the 
+measurement: the register's 227/108 + the two named s106 riders) is **229 importers / 110 carriers / 0 stale / 119 usage-line-free** (the frozen historical era unchanged). The 
+register's arithmetic VERIFIED live (the S102 lesson-1 doctrine, sixth consecutive cycle); the register rotates forward with a dated S107 note appended to the BG1 execution 
+record, and the exact-count pin stays REJECTED (the silent-absorption intent). The final-tree forward arithmetic on the BH riders themselves: **231 importers / 112 carriers = 
+229/110 + the two s107 riders** — the scoped expectation for the next audit.
+- `[SR]` The s107 LANDSCAPE evidence-frame rotation — the viewport axis's LAST never-varied band (S107/BH2): the rotation program's 14 committed frames covered exactly TWO 
+viewport cells (1280×800 desktop ×10, s96–s104 dark; 390×844 mobile-portrait ×4, s105–s106 dark), and **844×390 landscape has NEVER been varied** — the S105 lesson-1 ("an 
+axis never varied is an axis never verified") applied at BAND granularity (the S107 lesson-1: a viewport axis rotates through BANDS, not a mobile/desktop binary, and the coverage 
+ledger is the list of bands never varied — the S106 lesson-1's enumerable-class doctrine generalized from `md:hidden` surfaces to viewport bands). Two guarded surfaces at 844×390 
+in DARK, both zero-persistent-state BY CONSTRUCTION (the drawer leg open-capture-close, no navigation; the Tasks leg a pure seed read, ZERO interaction): the DRAWER NAV-SCROLL 
+(the below-1024 chrome renders at 844 BY CONSTRUCTION — the slide-in drawer with its 89px S3-L brand header + the nav list that MUST SCROLL at the 390px viewport height: 
+scrollHeight 992 > clientHeight 301, the LANDSCAPE-ONLY discriminator — portrait fits unscrolled, ≥1024 replaces the drawer with the desktop rail; the w-72 panel, the 20 
+NavItemLinks, the X + backdrop close contract) + the TASKS view (the view's FIRST rotation frame — the coverage gap: zero rotation frames across the entire 14-frame lineage touch 
+Tasks; the two-pane landscape layout: the md:flex aside renders AT 844; the pill family asserted BOTH sides of the seed's boundary per the S106 lesson-2 — the overdue "Return 
+library books" row carries `.sf-pill-red`, the boundary row "Weekly vocabulary review" renders the violet RepeatPill + the slate SubjectChip and NO red pill in-row, the 
+class-overlap trap honored: the SubjectChip shares the future DuePill's slate classes, the gate discriminates by ROW scoping + the red family). Both frames md5-DISTINCT 
+GATE-enforced (3938d39ba803f1b1d5e5e17d3580e58f / 16f1c6115a677911d55ffa62d75b5765, first-pass, exit 0, pixel-probe verified genuinely dark 19.5 / 36.8); the S4 
+violet/light restore awaited on every path. The capture-gate iteration recorded two live lessons (the S107 lesson-2: the desktop rail's nav and the mobile drawer's nav BOTH 
+carry `aria-label="Primary"` with the SAME class string, the desktop renders FIRST in DOM order — hidden at 844, its 0/0 geometry silently poisons the unscoped selector; scope 
+surface queries to their OWNING container; the S107 lesson-3: the view's h1 renders the ACTIVE-LIST label "All Tasks", never the route name — gates assert the DERIVED value the 
+seed deterministically produces).
+- `[SR]` The s107 cycle ran the workspace RESET CONTINGENCY twice in-session (the workspace wiped mid-suite with all uncommitted riders; both times the full re-execution on a 
+fresh clone at the received SHA: runtime restored from zero, baseline re-certified cold BEFORE any work, every rider re-run live, every md5 re-measured, every doc claim 
+re-derived) — the S107 lesson-4: a workspace reset mid-suite is a RE-EXECUTION event, not a resume event; the scoped-expectation doctrine (counts stated BEFORE measurement) is 
+what makes a reset recoverable at all, because the re-execution re-arrives at the same arithmetic independently. Zero standing debt unchanged.
 
 #### Revision Block — v1.3.14 (Session-106 / Batch BG, Cycle 56)
 

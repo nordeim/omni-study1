@@ -1032,6 +1032,61 @@ Hover-parity probing must run in Playwright, not a touch-emulating browser — v
    budget's noise band widens, ask WHAT the new readings ran co-resident with before
    moving the pin — a context variable changed is a context variable to pin.
 
+## S107 lessons (Batch BH — the audit-rider cycle at the plateau: the register rotation + the s107 LANDSCAPE evidence-frame rotation, the viewport axis's last never-varied band)
+
+1. **A viewport axis rotates through BANDS, not a single mobile/desktop binary — and the
+   coverage ledger is the list of BANDS never varied.** The rotation program's 14 committed
+   frames covered exactly two cells (1280×800 desktop ×10, 390×844 mobile-portrait ×4)
+   while 844×390 LANDSCAPE sat unvaried for the program's entire life — the S105 lesson-1
+   ("an axis never varied is an axis never verified") applies to the BAND granularity, not
+   just the mobile/desktop axis itself. When surveying rotation candidates, enumerate the
+   viewport-band matrix (desktop / mid-band / mobile-portrait / mobile-landscape) and pick
+   the never-touched cell — the S106 lesson-1's enumerable-class doctrine generalized from
+   `md:hidden` surfaces to viewport bands. The landscape band also carries its own
+   structural novelty for free (at 844 the `md:flex` asides render while the below-1024
+   drawer chrome still does — the two-pane landscape layout is a THIRD shape neither prior
+   cell ever captured).
+
+2. **A SHARED aria-label across the desktop rail and the mobile drawer makes the unscoped
+   nav selector a SILENT LIE — scope surface queries to their OWNING container.** The
+   desktop sidebar's nav and the mobile drawer's nav both carry
+   `aria-label="Primary"` with the SAME class string, and the desktop rail renders FIRST
+   in DOM order — so `document.querySelector('nav[aria-label="Primary"]')` at a
+   below-1024 viewport returns the HIDDEN desktop nav (display:none → scrollHeight 0,
+   clientHeight 0) while the visible drawer nav goes unread. The s107 Frame-1 gate timed
+   out on exactly this: every condition TRUE on the drawer, the geometry read from the
+   wrong element. The fix is structural, not a retry: scope the query to the drawer's
+   `div[role="dialog"]` container. Any gate that measures a per-surface geometry (scroll
+   Heights, client rects) must query THROUGH the surface's owning mount, because a
+   hidden duplicate with identical selectors is invisible to every visibility-agnostic
+   selector API.
+
+3. **The view's h1 is the ACTIVE-LIST label, not the view name — read the RENDERED
+   subset, never the route name (the S103 lesson-3, second generalization).** The Tasks
+   view's h1 renders the active list's name ("All Tasks" at the default aside state), not
+   "Tasks" — a gate keyed on the route's name times out on a page that rendered
+   perfectly. The deeper rule: when a header renders a DERIVED label (active list,
+   active filter, formatted date), the gate asserts the DERIVED value the seed
+   deterministically produces, and the seed's default state IS the contract. The same
+   lesson covers the pill-family gates: the overdue row's `.sf-pill-red` and the
+   boundary row's violet RepeatPill are both seed-derived renderings, and the
+   class-overlap trap (the SubjectChip shares the future DuePill's slate classes) means
+   the gate discriminates by ROW scoping and the red family — never by a slate-class
+   match alone.
+
+4. **A workspace reset mid-suite is a RE-EXECUTION event, not a resume event — every
+   claim must be re-derived on the fresh tree before it re-enters the record.** The s107
+   session had its workspace wiped twice mid-cycle (standing suite mid-run, all
+   uncommitted riders gone); both times the honest path was the full re-execution: fresh
+   clone at the received SHA, runtime restored from zero (install, browser cache, .env,
+   db seed), baseline re-certified cold BEFORE any work, every rider re-run live, every
+   md5 re-measured, every doc claim re-derived against the fresh tree. The doctrine that
+   made this cheap rather than catastrophic is the S102 lesson-1 lineage: the scoped
+   expectation (register counts + named riders) is stated BEFORE the measurement, so a
+   re-execution re-arrives at the same arithmetic independently — the tripwire shape is
+   what makes a reset recoverable at all. Never carry a number forward from a wiped
+   workspace; re-measure it, and the record's integrity survives the infrastructure.
+
 ## Testing quirks
 
 - E2E specs run against the **production standalone build** — rebuild after any component change or you will chase ghosts.
