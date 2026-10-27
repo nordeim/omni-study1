@@ -915,6 +915,38 @@ Hover-parity probing must run in Playwright, not a touch-emulating browser — v
    subset in the capture's own comment (the s103 capture does) so the next rotation reads the
    truth, not the component's potential.
 
+## S104 lessons (Batch BE — the audit-rider cycle at the plateau: the register rotation + the s104 evidence-frame rotation onto the structural-family class)
+
+1. **The normalization-diff instrument must carry BOTH bare predecessor tokens — the s104 audit's
+   own first attempt is the proof.** Verifying the s103→s104 re-tag exactness, the diff under
+   {s103, S103, s102, S102, 103-, 102-} still showed one residual line: the s102 script's header
+   comment says "from the s101 tag" and s101 was NOT in the token set. The complete instrument
+   normalizes the NEW tag, the OLD tag, AND both scripts' own bare predecessors (for an sN re-tag
+   from sN-1: sN, sN-1, and the sN-1 script's own predecessor sN-2). A "residual" under an
+   incomplete token set is not evidence of a bad re-tag — re-run with the full set before
+   concluding. (The S102 lesson-3 doctrine, sharpened by its own instrument's gap.)
+
+2. **The rotation-candidate survey WIDENS to the structural-family CONSUMERS map when the
+   pill/alert class exhausts — the S103 lesson-2's own anticipated end-state.** After s103 the
+   pill/alert class ∩ the coverage ledger ∩ the seeded-family rule is EMPTY: every seeded pill
+   family has a rotation frame, and the only uncovered views (notes/timetable/practicetests) fail
+   the seeded rule IN THAT CLASS (their only pill/alert family is the error-alert). The honest
+   next step is not a driven-state frame (the deliberately avoided class) but a WIDER map: the
+   @utility families beyond pills/alerts — sf-today-tint, sf-progress-card, the canvas/chip
+   structural families — have consumer components and e2e pins of their own. The s104 rotation
+   (Timetable dark today-header + MyDay dark progress card) selected by the SAME two-set
+   intersection + seeded rule, applied to the widened map. The rotation program's rule survives
+   the class change; only the map's enumeration grows.
+
+3. **Read a view's chip COMPONENTS, not their text — the MyDay gate's own first failure.** The
+   s104 capture's first MyDay gate counted .sf-subject-chip >= 1 because the seeded rows show a
+   "Mathematics" tag — but the task rows render the PLAIN SubjectChip (slate), while the
+   sf-subject-chip accent family rides SubjectTagChip on the Exams and Assignments rows. The
+   probe-first discipline (a debug probe against the live host BEFORE the gate is trusted) caught
+   it in one run; the gate then counted exactly the two families the view renders
+   (sf-progress-card + sf-pill-red). Same shape as the S103 lesson-3: gate on what renders, and
+   verify the component (grep the JSX), not the rendered text.
+
 ## Testing quirks
 
 - E2E specs run against the **production standalone build** — rebuild after any component change or you will chase ghosts.

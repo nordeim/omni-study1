@@ -2,6 +2,19 @@ import { defineConfig } from "vitest/config";
 import path from "node:path";
 
 // Unit-test layer for the pure domain seams — 28 files / 936 tests
+// (re-anchored S104/BE — the honest-zero-cycle: census UNCHANGED at
+// 936. The BE cycle touched documentation + scripts only: the BD1
+// record's dated register note [the post-BD final-tree playwright-class
+// counts 223 importers / 104 Usage-line carriers — the two s103 riders
+// joined the guarded class after the BD1 measurement; the register
+// rotates forward, the threshold-form pins absorb growth by design,
+// the exact-count pin stays rejected] and the s104 riders
+// [ref-resweep-s104.mjs + capture-s104-evidence.mjs — the
+// evidence-frame rotation onto the Timetable dark today-header + the
+// MyDay dark progress card, both already e2e-pinned surfaces, both
+// rendered from the seed — the structural-family class's first
+// rotation frame, the S104 lesson-2 widened map]. No new pins; src/
+// and tests/ untouched.)
 // (re-anchored S103/BD — the honest-zero-cycle: census UNCHANGED at
 // 936. The BD cycle touched documentation + scripts only: the BC1
 // record's dated register note [the post-BC final-tree playwright-class
