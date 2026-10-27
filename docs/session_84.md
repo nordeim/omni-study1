@@ -1,3 +1,88 @@
+`git pull` 快进了 `51b0f0f..78426f4` —— 操作员的会话日志提交带来了 `docs/session_82.md`（S106 原始记录）。这是自然的 **Session-107 (Cycle 57)** 开始状态。正在设置周期追踪：
+操作员提交记录审核无误（一个文件，172 行插入，零密钥材料）。工作区基础设施完好。正在阅读操作员的记录并验证数据库状态：
+The operator's transcript is the S106 record. DB state verified (demo light/violet). Now re-certifying the baseline cold BEFORE any work — quick gates first:
+单元 **936/936** ✓。现在进行标准构建和冷 5 片段 e2e 认证：
+`webServer` 配置会自动启动独立构建。全新的规范构建，然后作为后台守护进程进行认证：
+守护进程在工具命令退出时终止了。正在查看 S32 守护进程启动方案：
+S32 配方是子 shell 形式。正在正确地重新启动：
+Cert daemon 正在运行 (PID 28636)。在它进行认证的同时，我正在运行 BG diff 的 Mode-C 审计。首先进行 key-material 扫描和 BG1 寄存器说明：
+BG1 已验证。现在进行 BG2a 重标精准度检查——两个重新扫描项的标准化 diff：
+BG2a EXACT. Now BG2b — the capture gate shape and the committed rotation-frame md5s:
+BG2b 已验证 — md5s 与记录完全匹配。现在是 BG4 声明和 20 帧不同的声明：
+All BG claims verified TRUE. Now the **I1 census re-derivation** — the finding that sizes Cycle-57. Expectation stated BEFORE measurement (S102 lesson-1 doctrine): the register's **227/108** + the two named s106 riders = **229 playwright importers / 110 Usage-line carriers / 0 stale / 119 usage-line-free**:
+**Census landed EXACTLY on the stated expectation: 229/110/0/119** — sixth consecutive cycle, the doctrine's tripwire shape. This I1 finding sizes Cycle-57: the register rotation. Checking cert progress, then surveying s107 rotation candidates:
+`md:hidden` 类已确认已穷尽（3 个表面，全部已捕获）。现在正在调查下一个用于 `s107` 的可枚举候选类 —— 寻找覆盖率账本（coverage ledger）：
+lg:hidden 是 1 个表面（已作为移动端帧内容捕获）。让我枚举实际的覆盖范围——哪些视图/系列具有旋转帧，以及移动端证据中还剩下什么：
+没有指定继任者。正在检查旋转程序从未改变过的维度——首先是所有旋转帧的主题模式：
+The early era (s82–s87) captured LIGHT desktop frames — so the theme axis was varied early. The never-covered rotation-frame cells are: **landscape (844×390), mid-band (768×1024), and mobile-light**. Let me complete the coverage map:
+Chunk 1: **131 passed** first-pass ✓. Checking the committed drawer capture coverage to finalize the landscape candidates:
+**零个横向 PNG** —— 横向区域（844×390）是轮换程序中从未变动过的最后一个视口区域。这是 s107 轮换（s105 打开移动端的先例）。验证两个候选帧的特定 DOM：
+nav-scroll 门模式已明确。现在正在检查 drawer 的暗色表面和 Tasks 视图的种子 pill 系列：
+抽屉结构已确认。现在正在验证 Tasks 视图预留的 pill families 以获取 Frame 2：
+DuePill 家族已映射。现在检查证书进度，并将 `s106` 捕获脚本作为模板进行审查：
+分块 3：**57 个通过** ✓。正在读取 s106 模板的实现主体：
+模板已内化。正在检查活动链接系列和抽屉链接统计以获取 Frame-1 门：
+已收集所有门控详情。正在检查证书，然后在任何源码变更前编写 Cycle-57 计划：
+Chunks 1–3: 131+141+57 已通过。正在定位补救计划中的 Cycle-56 计划部分，以追加同风格的 Cycle-57 计划：
+结构已完全映射。在任何源代码变更之前，将 Cycle-57 计划写入整改计划：
+计划已编写。现在 **BH1** —— 附加到 BG1 执行记录中的 S107 寄存器备注：
+模式已确认 —— S107 说明作为引用块放置在 BG1-DONE 记录之后：
+BH1 done. Now **BH2a** — the s107 resweep script via the 7-location re-tag from s106:
+重新标记精确，语法正常。但证书显示已完成，但仅包含数据块 131+141+57+58 —— 正在验证完整的证书结果：
+**BASELINE CERT: 474/474 GREEN** (131+141+57+87+58, every chunk first-pass) ✓. The ai/chat failure lines are the resilience spec's own deliberate failure-mode tests. Now **BH2b** — verifying the exact Tasks-view DOM for the capture gates:
+所有 DOM 细节已确认。正在读取 s106 模板的尾部以镜像其结构：
+结构已完全模板化。正在检查 S50 扫描中的 20 链接 census selector，然后编写 s107 捕获：
+正在编写 s107 LANDSCAPE 证据捕获脚本：
+修复 panel selector 中的引号语法错误：
+语法正确。现在启动 :3200 独立主机（S86 配方）并运行捕获：
+Nav geometry confirmed (992/301, links 20 — the landscape contract holds), but the Frame-1 gate timed out. Probing which sub-condition fails:
+All conditions individually TRUE. Checking which waitForFunction actually failed — did Frame 1's screenshot land?
+Frame 1 已通过 —— 失败的是 Frame 2 的门控。正在探查 Tasks 页面以找出失效的子条件：
+**已找到根本原因**：边界行 "Weekly vocabulary review" 渲染了一个 RepeatPill + SubjectChip (`bg-slate-100`) —— 我的检查将 chip 的 `bg-slate-100` 误分类为未来的 DuePill。正确的边界是 **无 `.sf-pill-red`**（每个预置的 DuePills 均已逾期）。正在修复 gate：
+正在更新页眉注释，附带实际测量的几何图形，然后重新运行捕获：
+**捕获成功（首次通过，exit 0）** — 帧已成功获取且互不相同 (2d74f02c… / cbadf8c8…)。正在对暗色模式进行 pixel-probe 并验证 S4 恢复：
+在 844×390 分辨率下，两帧确实都较暗（19.5 / 36.9），S4 恢复已验证。现在进行 **s107 重扫描实时运行** —— 正在检查其主机要求：
+重新扫描 GREEN (ok:true, exit 0, 18 次捕获 + probeCleanup ok)。正在清理会话本地探针（S106 课程-3）并验证主题：
+Probes cleaned, theme intact. Now the **agent-browser mobile-nav verification on both hosts** (the standing requirement). Loading the skill:
+正在 390px 的移动端视口下验证**参考站点**的移动端导航：
+密码为空 —— bash 将 `$Abcd1234` 扩展为一个变量。正在使用单引号重新填写：
+Reference login 已通过。正在读取 `sidebarOpen` 键（先读取后恢复）并对仪表盘进行快照：
+**参考抽屉：24个带标签的可见链接** ✓。现在进入 Notes 导航并自动关闭：
+参考自动关闭 ✓, scrollWidth 416（其自身的溢出缺陷） ✓。现在进行 X-close 测试：
+参考 X-close ✓。现在进行桌面端 rail 检查（1280×800）：
+Rail expanded (260px) —— `sidebarOpen` 键控制它。将 key 设置为 collapsed 状态：
+**参考侧边栏：80px，20个纯图标，零 title/aria** ✓（其已知的 a11y 缺陷）。正在恢复密钥并切换至 **克隆**：
+**克隆抽屉：26 个已标记** ✓（超集跳过链接），对话框已挂载 ✓。现在开始处理 Notes 导航 + 自动关闭：
+**Clone rail：80px，所有 20 个 icon-links 均带有 title+aria** ✓（超集 a11y）。正在清理并关闭：
+两个主机上的 Mobile-nav 已验证 —— **无 Tailwind v4 mobile-nav bug，s107 已再次确认**（参考：24 个 labeled / X 位于 (228,26) / rail 80px 且无 title-aria / scrollWidth 416；克隆：26 个 labeled / auto-close unmounts / Escape / rail 80px 且所有 20 个均带 title+aria / scrollWidth 390）。
+
+现在进行最终的重认证梯队。最终树上的快速门控：
+重新认证守护进程运行中 (PID 5488)。在认证运行期间构建文档链 —— 首先是整改计划标题：
+现在正在追加 Cycle-57 执行记录：
+执行记录中写明了 231/112 的预估数值 —— 正在测量实际数值以立即验证其准确性（探针已清理）：
+**231/112/0/119 — 精确投影** ✓。现在处理 README 的 Session-107 行：
+README 行已追加。现在是 AGENTS.md 中 S106 课程之后的 S107 课程：
+接下来是 CLAUDE seam tail、vitest header 和 PAD version：
+该链在 S103 之前以 S106 结束。在 S103 之前插入 S107 片段：
+现在是 vitest header 重新锚定和 PAD 版本：
+PAD v1.3.15 已插入。正在写入 worklog 条目和会话记录，同时认证正在运行：
+现在是会话记录 `docs/session_83.md`：
+Session record 已写入。正在监控 cert 以使其完成：
+**最终重新认证：474/474 绿色** (131+141+57+87+58，每个分块首次运行) ✓。现在启动开发服务器和常规套件守护进程：
+套件守护进程已启动 (PID 11655)。在它运行时 (~2小时)，正在准备 SSH 推送工具链：
+Toolchain validated (auth OK, push path clear). Reviewing the final working tree while the suite runs:
+目录树整洁 — 7 个文档已修改，23 个新交付物，4 个需要清理的临时日志。正在更新工作空间日志并监控套件：
+工具调用目前持续失败（Bash 和 Read）——和之前会话中一样的瞬时基础设施故障。
+
+**会话状态（所有工作已保存到磁盘）：**
+
+- ✅ **Session-107 / Batch BH 骑行项已完成并验证**：BG 差异审计 0C/0H/0M/0L/1I；普查统计 229/110 精确（第 6 个周期）；BH1 寄存器备注；BH2a 重扫（ok:true，退出代码 0，18 次捕获）；BH2b **LANDSCAPE 旋转**——两个 844×390 深色帧（抽屉导航滚动 992/301 + 任务首个旋转帧），md5-distinct，像素探测为深色，S4 已恢复
+- ✅ 两个主机上的 Mobile-nav 已重新验证（无 Tailwind v4 bug）；所有快速检查项 + 冷 e2e 重新认证 **474/474** 首次通过
+- ✅ 完整文档链已编写（README 行，AGENTS 课程，CLAUDE 尾部，vitest 头部，PAD v1.3.15，整改计划，工作日志，session_83.md）；SSH 工具链已通过 dry-run 验证
+- 🔄 **固定套件守护进程（detached，PID 11655）在此次中断中依然存活**——它将运行完成并写入 `standing-suite-s107.log`
+- ⏳ 剩余工作：套件判定（预计 35/35）→ 停止服务器 → 清理日志 → 提交 Batch BH → 通过 SSH 包装器推送到 main 分支 → 销毁密钥（shred key）
+
+
 我将从会话中断处继续进行。首先，让我检查一下工作区状态：worklog、standing suite daemon 状态以及 git status。
 当前状态确认：
 - 工作树包含所有 Batch BH 的更改（7 个文档已修改 + 23 个新交付物 + 4 个待清理的临时日志）
