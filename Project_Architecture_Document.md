@@ -1,4 +1,4 @@
-# StudyFlow (Omni-Study) — Master Project Architecture Document (PAD) v1.3.12
+# StudyFlow (Omni-Study) — Master Project Architecture Document (PAD) v1.3.13
 
 **Classification:** Internal Engineering Reference
 **Status:** DEFINITIVE, PRODUCTION-LOCKED BLUEPRINT
@@ -8,6 +8,34 @@
 **Rule:** Every architectural decision in this document traces to a specific rationale. Nothing is here "because it's popular."
 
 ---
+
+#### Revision Block — v1.3.13 (Session-105 / Batch BF, Cycle 55)
+
+- `[SR]` Current test census anchor (the v1.2.0 convention, re-anchored): **936/936 Vitest unit** (28 files, `*.test.ts` only — census UNCHANGED: the honest-zero-cycle touched 
+documentation + scripts only, src/ and tests/ untouched) + **474/474 Playwright e2e** across the 5-chunk cold map (131+141+57+87+58 = 469 real specs in 30 spec files + 5 auth 
+setups; `scripts/e2e-chunked-cert.sh` is the census authority). The PAD carries the census at revision time ONLY — the live count-keepers each cycle are the README badge (1410), 
+AGENTS.md/CLAUDE.md, the `vitest.config.ts` header, and the cert-script header.
+- `[SR]` The register rotation (S105/BF1, the s104 audit's I1): the BE1 note's counts (223 playwright importers / 104 Usage-line carriers) describe the pre-BE-rider tree — the 
+BE2 riders joined the guarded class after the measurement, and the post-BE final-tree re-derivation (the pin's own regex, instrument-identical, the expectation stated BEFORE the 
+measurement: the register's 223/104 + the two named s104 riders) is **225 importers / 106 carriers / 0 stale / 119 usage-line-free** (the frozen historical era unchanged). The 
+register's arithmetic VERIFIED live (the S102 lesson-1 doctrine, fourth consecutive cycle); the register rotates forward with a dated S105 note appended to the BE1 execution 
+record, and the exact-count pin stays REJECTED (the silent-absorption intent).
+- `[SR]` The s105 MOBILE evidence-frame rotation — the VIEWPORT AXIS the program never varied (S105/BF2): every s87–s104 evidence frame is a desktop 1280×800 capture and the 
+standing mobile captures are LIGHT dashboard/drawer/tasks only — the AP-79/AP-80 lesson class applied to the evidence program itself (an axis never varied is an axis never 
+verified). Two guarded surfaces at 390×844 in DARK, both already e2e-pinned (the S33 mobile sweep + the S36 dark-mobile sweep + their own surface pins), both 
+zero-persistent-state BY CONSTRUCTION through the SEED with ZERO interaction — the Timetable MOBILE day accordion (the `md:hidden` surface that CANNOT exist at desktop and was 
+NEVER captured in ANY mode by ANY prior evidence frame: the sf-chip-dark "Today" chip — the family's first rotation-frame subject — + the today accordion header's sf-today-tint + 
+the today date chip's sf-selected-tint; openDay defaults to today's column — the today section renders OPEN deterministically every day; the seeded Physics class in the open 
+Tuesday section) and the Dashboard MOBILE (the stacked mobile dashboard — the mobile DARK surface never captured anywhere: the conditional sf-overdue-banner from the seeded 
+incomplete overdue task "Return library books", the S9-A-pinned surface — the family's first MOBILE evidence frame — + the four stat cards + today's tasks under the fixed glass 
+mobile app bar). Both md5-DISTINCT GATE-enforced (1a6faa7d3b7e3f610f1e9b8785744f15 / 3421e021f38f1d763dbfbd7ce2718475), first-pass, exit 0, both frames pixel-probe verified 
+genuinely dark (mean brightness 23.9 / 34.0 at 390×844 — the PIL decode). The s105 resweep ok:true (invariants green both hosts, brand tables byte-matched, probeCleanup ok 
+[zero s105-resweep probe rows verified independently through SQLite], 18 captures, exit 0); agent-browser mobile-nav re-verified on BOTH hosts (reference 24 viewport-labeled / 
+clone 26 superset incl. the skip-link; all close paths; **no Tailwind v4 mobile-nav bug, s105 re-confirmed**). Zero standing debt unchanged.
+- `[SR]` The mobile-only-surface ranking rule + the boolean-string persistence key (recorded in AGENTS, the S105 lessons 2–3): a mobile-only (`md:hidden`) surface is the 
+STRONGEST rotation candidate — it fails the "already covered" check by CONSTRUCTION, not by bookkeeping; and the collapsed-sidebar persistence key is read as the boolean string 
+`"true"` (src/lib/store.ts hydrate) — setting a truthy marker like `"1"` renders EXPANDED, and a rail measurement at the wrong width produces a false-parity reading — read the 
+consumer's exact comparison before driving a persisted UI state.
 
 #### Revision Block — v1.3.12 (Session-104 / Batch BE, Cycle 54)
 

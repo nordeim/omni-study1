@@ -947,6 +947,41 @@ Hover-parity probing must run in Playwright, not a touch-emulating browser — v
    (sf-progress-card + sf-pill-red). Same shape as the S103 lesson-3: gate on what renders, and
    verify the component (grep the JSX), not the rendered text.
 
+## S105 lessons (Batch BF — the audit-rider cycle at the plateau: the register rotation + the s105 MOBILE evidence-frame rotation — the viewport axis the program never varied)
+
+1. **The evidence-frame program's own blind axis is the VIEWPORT — eighteen rotation frames at
+   one width is a coverage ledger with a hole.** Every s87–s104 evidence frame is a desktop
+   1280×800 capture; the standing mobile captures are LIGHT dashboard/drawer/tasks only. The
+   rotation ledger's "surface no prior evidence frame covered" claim was true per-frame but
+   systematically false per-AXIS: the Timetable's `md:hidden` day accordion cannot exist at
+   desktop, so NO rotation frame could ever have shown it, and the mobile DARK surface of the
+   Dashboard was never captured anywhere. The AP-79/AP-80 lesson class (a viewport band never
+   varied is a blind band; an axis never varied is an axis never verified) applies to the
+   evidence program itself, not just the sweep program. The s105 rotation (Timetable mobile
+   accordion dark + Dashboard mobile dark at 390×844) closes the axis hole with the SAME
+   two-set intersection + seeded rule, applied at the new viewport; the lesson generalizes —
+   when a coverage ledger enumerates surfaces, ask which RENDERING AXIS the ledger itself was
+   never varied along.
+
+2. **A mobile-only surface is the STRONGEST rotation candidate — it fails the "already covered"
+   check by CONSTRUCTION, not by bookkeeping.** The rotation candidate survey ranks surfaces
+   that CANNOT render at the already-captured viewport above surfaces that merely were not
+   chosen: the `md:hidden` accordion (desktop-uncapturable) carries its own guaranteed-novel
+   evidence, while a desktop-re-renderable surface at mobile relies on the ledger's
+   completeness for its novelty claim. When the map allows it, prefer the responsive-exclusive
+   surface — the same ranking rule that made the s104 structural families stronger than
+   re-treading a covered view's second family.
+
+3. **The collapsed-sidebar persistence key is a BOOLEAN STRING, not a truthy marker — the
+   mobile-nav verification's own first attempt is the proof.** Setting
+   `localStorage["sf-sidebar-collapsed"] = "1"` renders the sidebar EXPANDED (the store reads
+   `=== "true"`, src/lib/store.ts hydrate), and a rail measurement taken at the wrong width
+   reads 20 text links with ZERO title/aria — exactly the REFERENCE's own rail shape, a
+   false-parity reading in the wrong direction. When driving a persisted UI state through
+   localStorage, read the consumer's exact comparison FIRST (grep the store), then set the
+   key to the value the comparison expects; verify the geometry (aside width 80px) before
+   measuring the links.
+
 ## Testing quirks
 
 - E2E specs run against the **production standalone build** — rebuild after any component change or you will chase ghosts.

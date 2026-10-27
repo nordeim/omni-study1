@@ -2,6 +2,21 @@ import { defineConfig } from "vitest/config";
 import path from "node:path";
 
 // Unit-test layer for the pure domain seams — 28 files / 936 tests
+// (re-anchored S105/BF — the honest-zero-cycle: census UNCHANGED at
+// 936. The BF cycle touched documentation + scripts only: the BE1
+// record's dated register note [the post-BE final-tree playwright-class
+// counts 225 importers / 106 Usage-line carriers — the two s104 riders
+// joined the guarded class after the BE1 measurement; the register
+// rotates forward, the threshold-form pins absorb growth by design,
+// the exact-count pin stays rejected] and the s105 riders
+// [ref-resweep-s105.mjs + capture-s105-evidence.mjs — the MOBILE
+// evidence-frame rotation at 390×844 in dark onto the Timetable
+// md:hidden day accordion [the sf-chip-dark Today chip — the family's
+// first rotation-frame subject; a surface that cannot exist at desktop]
+// + the Dashboard mobile [the sf-overdue-banner from the seeded overdue
+// task — the family's first mobile evidence frame; the viewport axis
+// the program never varied, the S105 lesson-1]. No new pins; src/
+// and tests/ untouched.)
 // (re-anchored S104/BE — the honest-zero-cycle: census UNCHANGED at
 // 936. The BE cycle touched documentation + scripts only: the BD1
 // record's dated register note [the post-BD final-tree playwright-class

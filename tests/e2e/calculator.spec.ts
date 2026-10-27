@@ -15,6 +15,28 @@ const hydrated = (page: Page) =>
     () => document.documentElement.style.getPropertyValue("--sf-primary") !== "",
   );
 
+// S105/BF4 — the view-mounted gate for the S15 physical-keyboard specs.
+// hydrated() alone is NOT a sufficient readiness gate for keystrokes: the
+// PRE-PAINT BOOT SCRIPT stamps --sf-primary at first paint (src/lib/theme.ts
+// THEME_BOOT_SCRIPT — cache or violet default), i.e. BEFORE the auth gate
+// resolves and the Calculator view mounts its window-level keydown
+// listener (the useEffect in calculator-view.tsx). Keystrokes dispatched
+// in that window are lost — no queueing — and the assert then reads a
+// partial display. Verified live on the standalone host: a keystroke
+// dispatched at the hydrated() instant reads back a lost display ("00" —
+// the two zero paragraphs). Gate on the OBSERVABLE end state instead: the
+// Calculator display rendering its initial zero proves the auth gate
+// passed AND the view committed (the listener rides the same commit's
+// effect flush). The order-dependent flake class documented in AGENTS.md
+// ("a click right after goto can silently no-op"), hit once under cert
+// load in the s105 re-cert chunk 4; closed the BC4 way — the readiness
+// gate strengthened to the observable end state, census unchanged.
+const s15Ready = async (page: Page) => {
+  await page.goto("/Calculator");
+  await hydrated(page);
+  await expect(page.getByLabel("Calculator display")).toContainText("0");
+};
+
 test.describe("calculator suite", () => {
   test.beforeEach(async ({ page }) => {
     await page.goto("/Calculator");
@@ -152,8 +174,7 @@ test.describe("theme system", () => {
 
 test.describe("S15 physical keyboard (superset)", () => {
   test("typing an expression on the physical keyboard evaluates it", async ({ page }) => {
-    await page.goto("/Calculator");
-    await hydrated(page);
+    await s15Ready(page);
     await page.keyboard.type("12+3", { delay: 40 });
     await expect(page.getByLabel("Calculator display")).toContainText("12+3");
     await page.keyboard.press("Enter");
@@ -161,8 +182,7 @@ test.describe("S15 physical keyboard (superset)", () => {
   });
 
   test("physical * and / display as the keypad glyphs × and ÷", async ({ page }) => {
-    await page.goto("/Calculator");
-    await hydrated(page);
+    await s15Ready(page);
     await page.keyboard.type("6*8", { delay: 40 });
     await expect(page.getByLabel("Calculator display")).toContainText("6×8");
     await page.keyboard.press("Enter");
@@ -174,8 +194,7 @@ test.describe("S15 physical keyboard (superset)", () => {
   });
 
   test("Backspace deletes and Escape clears the display", async ({ page }) => {
-    await page.goto("/Calculator");
-    await hydrated(page);
+    await s15Ready(page);
     await page.keyboard.type("123", { delay: 40 });
     await page.keyboard.press("Backspace");
     await expect(page.getByLabel("Calculator display")).toContainText("12");
@@ -184,8 +203,7 @@ test.describe("S15 physical keyboard (superset)", () => {
   });
 
   test("form inputs keep their keystrokes (the listener never hijacks fields)", async ({ page }) => {
-    await page.goto("/Calculator");
-    await hydrated(page);
+    await s15Ready(page);
     await page.getByRole("tab", { name: "GPA Calculator" }).click();
     const grade = page.getByRole("textbox").first();
     await grade.click();
