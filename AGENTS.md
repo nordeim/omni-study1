@@ -878,6 +878,43 @@ Hover-parity probing must run in Playwright, not a touch-emulating browser — v
 
 4. **A cold-start failure that reproduces three consecutive times is a DEFECT with a weak gate, not a flake to wave off — probe the app state at the gate before choosing the treatment.** The final re-cert's one chunk-4 failure (the S12-B skip-link focus test) failed 3x consecutively, then passed warm — the temptation was the S84-class "re-run green standalone" precedent. The cold-start probe (the test's exact flow: storageState, setMode PATCH, goto, the gate, Tab, Enter) measured the app AT the weak gate: `appHydrated: ABSENT, mainExists: false` — the LOADING state. The test gated on `--sf-primary` (set PRE-PAINT by the boot script — the S8-A lesson's own documented trap) while the auth gate was still resolving; the loading state renders the skip link WITHOUT `main#main-content`, so the Enter's hash navigation found no focus target and the 15s ceiling expired. The S81/AH5 raise (10s→15s) had treated the late-hydration TAIL, not the weak-GATE root. The honest close: the gate strengthened IN-PLACE to the status-gated `data-app-hydrated` marker (the S8-A marker, fires ONLY when the authed shell renders) — RED 3x → cold GREEN 3x → the chunk re-certified 87/87. The rule: when a keyboard-driven test (no auto-waiting locator) gates on hydration, the gate must be the STATUS-GATED marker — and a reproducible cold failure always gets the probe before the precedent.
 
+## S103 lessons (Batch BD — the audit-rider cycle at the plateau: the register rotation + the s103 evidence-frame rotation)
+
+1. **A fresh workspace's browser cache is a PROVISIONING state, not a repo state — the locked
+   package resolves the browser BUILD, and a stale cache fails as 130 consecutive
+   `browserType.launch` errors that look like a code regression.** The 27th reset's first cold-cert
+   chunk failed 130/131 with "Executable doesn't exist at
+   chromium_headless_shell-1243/…" — the cache held build 1200 from an earlier era while the
+   locked playwright-core 1.63.0's browsers.json pins revision 1243. The fix is `bunx playwright
+   install chromium` (a required provisioning step on a reset workspace, BEFORE any e2e run); the
+   tell that separates infrastructure from regression is the error CLASS (every test failing at
+   launch, zero app-side assertions reached — a code regression never fails 130 tests in
+   2ms each). The lesson generalizes the S46 doctrine: classify the gate (browser
+   infrastructure) before reading the failures as source debt.
+
+2. **The rotation-candidate survey follows the CONSUMERS map + the coverage ledger TOGETHER —
+   the seeded-data doctrine's selection rule is a two-set intersection.** The s103 rotation
+   (Exams dark urgency pills + Flashcards dark difficulty badges) was selected by intersecting
+   [every CONSUMERS-map entry] with [the frames NO prior evidence run covered — the s87–s102
+   rotation ledger AND the standing 31's five dark views (Dashboard/Tasks/Calendar/Analytics/
+   Settings)] and keeping only the entries whose guarded families render from the SEED (the
+   S102 lesson-2 rule). The exams entry's orange family had waited since s100's Events frame;
+   the flashcards entry since the rotation program began. Two views whose ONLY guarded family
+   is the error-alert (`sf-alert-red` on notes/timetable/practicetests) fail the seeded-data
+   rule — their frames would need a DRIVEN failure state, the rotation program's deliberately
+   avoided class.
+
+3. **A view's pill-family COVERAGE must be read from the SEED's date math, not from the
+   component's full ramp.** The exams view's urgency() renders four families (past-slate /
+   today-red / tomorrow-orange / ≥2-days-yellow), but the SEED's dates (+1/+3/+4/+12 days)
+   render exactly TWO of them — the orange "Tomorrow" + the yellow "N days"; no seeded exam is
+   today or past, so the red and slate families stay unrendered BY SEED CONSTRUCTION. The
+   capture's waitForFunction gates on the families the seed actually renders (orange ≥ 1,
+   yellow ≥ 2) — gating on an unrendered family would be a guaranteed timeout, and claiming
+   "four families covered" in the record would be a false coverage claim. State the rendered
+   subset in the capture's own comment (the s103 capture does) so the next rotation reads the
+   truth, not the component's potential.
+
 ## Testing quirks
 
 - E2E specs run against the **production standalone build** — rebuild after any component change or you will chase ghosts.

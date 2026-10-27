@@ -1,13 +1,20 @@
-# StudyFlow (Omni-Study) — Master Project Architecture Document (PAD) v1.3.10
+# StudyFlow (Omni-Study) — Master Project Architecture Document (PAD) v1.3.11
 
 **Classification:** Internal Engineering Reference
 **Status:** DEFINITIVE, PRODUCTION-LOCKED BLUEPRINT
 **Companion Documents:** `README.md` (user-facing), `AGENTS.md` (agent quick-reference), `CLAUDE.md` (agent operating conventions), `docs/Tailwind-V4-Validation-Report.md` (parity trap log)
-**Last Updated:** 2026-10-26
+**Last Updated:** 2026-10-27
 **Audience:** Senior Engineers, Tech Leads, DevOps, Onboarding Engineers, and AI Coding Agents
 **Rule:** Every architectural decision in this document traces to a specific rationale. Nothing is here "because it's popular."
 
 ---
+
+#### Revision Block — v1.3.11 (Session-103 / Batch BD, Cycle 53)
+
+- `[SR]` Current test census anchor (the v1.2.0 convention, re-anchored): **936/936 Vitest unit** (28 files, `*.test.ts` only — census UNCHANGED: the honest-zero-cycle touched documentation + scripts only, src/ and tests/ untouched) + **474/474 Playwright e2e** across the 5-chunk cold map (131+141+57+87+58 = 469 real specs in 30 spec files + 5 auth setups; `scripts/e2e-chunked-cert.sh` is the census authority). The PAD carries the census at revision time ONLY — the live count-keepers each cycle are the README badge (1410), AGENTS.md/CLAUDE.md, the `vitest.config.ts` header, and the cert-script header.
+- `[SR]` The register rotation (S103/BD1, the s102 audit's I1): the BC1 note's counts (219 playwright importers / 100 Usage-line carriers) describe the pre-BC-rider tree — the BC2 riders joined the guarded class after the measurement, and the post-BC final-tree re-derivation (the pin's own regex, instrument-identical) is **221 importers / 102 carriers / 0 stale / 119 usage-line-free** (the frozen historical era unchanged). The register's arithmetic VERIFIED live (the S102 lesson-1 doctrine re-confirmed: the audit stated the expected number — the register's 219/100 + the two named s102 riders — BEFORE the re-derivation ran); the register rotates forward with a dated S103 note appended to the BC1 execution record, and the exact-count pin stays REJECTED (the silent-absorption intent).
+- `[SR]` The s103 evidence-frame rotation (S103/BD2): two CONSUMERS-map surfaces NO prior evidence frame covered, both already e2e-pinned, both zero-persistent-state BY CONSTRUCTION through the SEED (the S102 lesson-2 doctrine re-applied; the S103 lesson-2 selection rule: the CONSUMERS map ∩ the coverage ledger [the s87–s102 rotation frames + the standing 31's five dark views] ∩ the seeded-family rule) — the Exams dark (exams-view.tsx's urgency pills, the S6/S9-J-pinned surface: the seeded +1/+3/+4/+12-day dates render TWO of the ramp's four families — the orange "Tomorrow" on Calculus II Midterm + the yellow "3/4/12 days" on the rest; the red and slate families stay unrendered BY SEED CONSTRUCTION, the S103 lesson-3 doctrine: read the rendered subset from the seed's date math, never the component's full ramp) and the Flashcards dark (flashcards-view.tsx's sf-pill-yellow difficulty badges, the S7-pinned surface: the seeded cards render easy/medium/hard). Both md5-DISTINCT GATE-enforced (214f37331116ca3c7251856f6308ad07 / ccee9f9830c6cd5ae6eea6e9104492ae), first-pass, exit 0, both frames pixel-probe verified genuinely dark (mean brightness 48.8 / 52.3 — the PIL decode; the brighter families [the yellow pills] raise the floor without approaching light mode). The s103 resweep ok:true (9/9 invariants both hosts, brand tables byte-matched, probeCleanup ok, 18 captures, exit 0); agent-browser mobile-nav re-verified on BOTH hosts (reference 24 viewport-labeled / clone 26 superset incl. the skip-link; all close paths; **no Tailwind v4 mobile-nav bug, s103 re-confirmed**). Zero standing debt unchanged.
+- `[SR]` The fresh-workspace browser-build provisioning doctrine (recorded in AGENTS, the S103 lesson-1): a reset workspace's browser cache is a PROVISIONING state, not a repo state — the locked playwright-core resolves the browser BUILD revision (1243 for 1.63.0), and a stale cache (1200) fails as 130 consecutive `browserType.launch` errors that mimic a code regression. `bunx playwright install chromium` is a REQUIRED provisioning step on a reset workspace before any e2e run; the tell separating infrastructure from regression is the error class (every test failing at launch in ~2ms, zero app-side assertions reached).
 
 #### Revision Block — v1.3.10 (Session-102 / Batch BC, Cycle 52)
 
