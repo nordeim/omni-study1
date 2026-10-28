@@ -2,27 +2,29 @@ import { defineConfig } from "vitest/config";
 import path from "node:path";
 
 // Unit-test layer for the pure domain seams — 28 files / 936 tests
-// (re-anchored S107/BH — the honest-zero-cycle: census UNCHANGED at
-// 936. The BH cycle touched documentation + scripts only: the BG1
-// record's dated register note [the post-BG final-tree playwright-class
-// counts 229 importers / 110 Usage-line carriers — the two s106 riders
-// joined the guarded class after the BG1 measurement; the register
+// (re-anchored S108/BI — the honest-zero-cycle: census UNCHANGED at
+// 936. The BI cycle touched documentation + scripts only: the BH1
+// record's dated register note [the post-BH final-tree playwright-class
+// counts 231 importers / 112 Usage-line carriers — the two s107 riders
+// joined the guarded class after the BH1 measurement; the register
 // rotates forward, the threshold-form pins absorb growth by design,
-// the exact-count pin stays rejected] and the s107 riders
-// [ref-resweep-s107.mjs + capture-s107-evidence.mjs — the LANDSCAPE
-// evidence-frame rotation, the viewport axis's LAST never-varied band:
-// the rotation program's 14 committed frames covered exactly 1280×800
-// desktop + 390×844 mobile-portrait, and 844×390 landscape NEVER varied
-// — the S105 lesson-1 at BAND granularity; the drawer nav-scroll
-// [the 20-link nav list MUST scroll at the 390px viewport height —
-// scrollHeight 992 > clientHeight 301, the landscape-only
-// discriminator; the S107 lesson-2 dialog-scoped selector — the desktop
-// rail's nav shares aria-label="Primary" and renders first in DOM
-// order, hidden at 844] + the Tasks view [the view's FIRST rotation
-// frame; the h1 renders the ACTIVE-LIST label "All Tasks", never the
-// route name; the pill-family gate asserted both sides of the seed
-// boundary with the class-overlap trap honored]]. No new pins; src/
-// and tests/ untouched — the census projection exact.)
+// the exact-count pin stays rejected] and the s108 riders
+// [ref-resweep-s108.mjs + capture-s108-evidence.mjs — the MID-BAND
+// evidence-frame rotation, the viewport-band matrix's LAST never-varied
+// cell: the rotation program's 16 committed frames covered exactly
+// 1280×800 desktop + 390×844 mobile-portrait + 844×390 mobile-landscape,
+// and 768×1024 mid-band NEVER varied — the S107 lesson-1's own
+// band-matrix enumeration; the PracticeTests view [the view's FIRST
+// rotation frame; the 2-COLUMN grid = the MID-BAND-ONLY structural
+// discriminator — the computed gridTemplateColumns carries EXACTLY 2
+// tracks at 768, never 1 (mobile-portrait) and never 3 (desktop-lg),
+// the column-count boundary asserted BOTH sides] + the StudyGroups view
+// [the view's FIRST rotation frame; the two-pane flex negotiation at
+// full 320px w-80 — the S78/AE13 floor shrinks the aside to ~222px at
+// 390; the S8-Z two-variant empty-state boundary asserted on the
+// seeded side — ONE group + null selection renders the PLAIN variant,
+// the 80px gradient EmptyState renders ONLY at zero groups]]. No new
+// pins; src/ and tests/ untouched — the census projection exact.)
 
 // (re-anchored S106/BG — the honest-zero-cycle: census UNCHANGED at
 // 936. The BG cycle touched documentation + scripts only: the BF1

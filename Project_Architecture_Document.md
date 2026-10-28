@@ -1,13 +1,47 @@
-# StudyFlow (Omni-Study) — Master Project Architecture Document (PAD) v1.3.15
+# StudyFlow (Omni-Study) — Master Project Architecture Document (PAD) v1.3.16
 
 **Classification:** Internal Engineering Reference
 **Status:** DEFINITIVE, PRODUCTION-LOCKED BLUEPRINT
 **Companion Documents:** `README.md` (user-facing), `AGENTS.md` (agent quick-reference), `CLAUDE.md` (agent operating conventions), `docs/Tailwind-V4-Validation-Report.md` (parity trap log)
-**Last Updated:** 2026-10-27
+**Last Updated:** 2026-10-28
 **Audience:** Senior Engineers, Tech Leads, DevOps, Onboarding Engineers, and AI Coding Agents
 **Rule:** Every architectural decision in this document traces to a specific rationale. Nothing is here "because it's popular."
 
 ---
+
+#### Revision Block — v1.3.16 (Session-108 / Batch BI, Cycle 58)
+
+- `[SR]` Current test census anchor (the v1.2.0 convention, re-anchored): **936/936 Vitest unit** (28 files, `*.test.ts` only — census UNCHANGED: the honest-zero-cycle touched 
+documentation + scripts only, src/ and tests/ untouched) + **474/474 Playwright e2e** across the 5-chunk cold map (131+141+57+87+58 = 469 real specs in 30 spec files + 5 auth 
+setups; `scripts/e2e-chunked-cert.sh` is the census authority). The PAD carries the census at revision time ONLY — the live count-keepers each cycle are the README badge (1410), 
+AGENTS.md/CLAUDE.md, the `vitest.config.ts` header, and the cert-script header.
+- `[SR]` The register rotation (S108/BI1, the s107 audit's I1): the BH1 note's counts (229 playwright importers / 110 Usage-line carriers) describe the pre-s107-rider tree — the 
+BH2 riders joined the guarded class after the measurement, and the post-BH final-tree re-derivation (the pin's own regex, instrument-identical, the expectation stated BEFORE the 
+measurement: the register's 229/110 + the two named s107 riders) is **231 importers / 112 carriers / 0 stale / 119 usage-line-free** (the frozen historical era unchanged). The 
+register's arithmetic VERIFIED live (the S102 lesson-1 doctrine, seventh consecutive cycle); the register rotates forward with a dated S108 note appended to the BH1 execution 
+record, and the exact-count pin stays REJECTED (the silent-absorption intent). The final-tree forward arithmetic on the BI riders themselves: **233 importers / 114 carriers = 
+231/112 + the two s108 riders** — the scoped expectation for the next audit. The cycle's audit additionally found and fixed ONE L-class doc-chain staleness (the remediation 
+plan's own header still read "COMPLETE through Batch BG" — the BH cycle had appended its Cycle-57 plan + record without re-anchoring the header; the S108 lesson-4: a doc chain 
+has MANY anchors and every cycle must re-anchor ALL of them — the header IS a rotation anchor).
+- `[SR]` The s108 MID-BAND evidence-frame rotation — the viewport-band matrix's LAST never-varied cell (S108/BI2): the rotation program's 16 committed frames covered exactly THREE 
+viewport cells (1280×800 desktop ×10, s96–s104 dark; 390×844 mobile-portrait ×4, s105–s106 dark; 844×390 mobile-landscape ×2, s107 dark), and **768×1024 mid-band has NEVER 
+been varied** — the S107 lesson-1's own band-matrix enumeration (desktop / mid-band / mobile-portrait / mobile-landscape), three of four cells covered, the mid-band the LAST 
+never-touched cell; the S34 midband sweep pins the LIGHT-mode 768×1024 drawer-navigation e2e, so the band's DARK rotation frames are additionally the theme-side novelty. Two 
+guarded surfaces at 768×1024 in DARK, both zero-persistent-state BY CONSTRUCTION (pure seed reads, ZERO interaction): the PRACTICETESTS view (the view's FIRST rotation frame — 
+the coverage gap: zero rotation frames across the entire 16-frame lineage touch PracticeTests; the 2-COLUMN GRID = the MID-BAND-ONLY structural discriminator — `grid gap-4 
+md:grid-cols-2 lg:grid-cols-3` renders 1 column at mobile-portrait, EXACTLY 2 tracks at the md mid-band, 3 at desktop-lg, the computed `gridTemplateColumns` "360px 360px", the 
+column-count boundary asserted BOTH sides; both seeded cards side-by-side in ONE row: "Vectors practice set" 30 min · 2 questions + "Biology Review" 45 min · 3 questions) + the 
+STUDYGROUPS view (the view's FIRST rotation frame; the two-pane flex negotiation at mid-band width — the aside at its FULL 320px w-80, the S78/AE13 content-driven floor: the 
+aside shrinks to ~222px at 390 while the mid-band renders the full negotiation; the seeded "Calc Crew" group button with "2 members" + the Mathematics SubjectChip; the detail 
+pane's deterministic null-selection empty state). Both frames md5-DISTINCT GATE-enforced (26ba5f6b5562c6b708822fffcd3359f5 / cfc5a079b3b804905729dcd74f33b2ce, first-pass on the 
+fixed gates, exit 0, pixel-probe verified genuinely dark 48.5 / 47.9); the S4 violet/light restore awaited on every path. The capture-gate iteration recorded ONE live lesson 
+(the S108 lesson-1: an empty state can carry MULTIPLE variants selected by LIST LENGTH — the S8-Z two-variant boundary, the StudyGroups detail pane renders the 80px-gradient 
+Users EmptyState ONLY at `groups.length === 0` while the seeded ONE-group null-selection state renders the PLAIN "Select a group" variant; the gate initially asserted the 
+zero-group side the seed does NOT produce and timed out with every other condition TRUE — root-caused with the diagnostic probe, fixed to assert the rendered subset with the 
+boundary itself as the discriminator).
+- `[SR]` The s108 cycle ran the workspace RESET CONTINGENCY once more (the workspace wiped after the S107 close; the cycle executed fresh on a re-clone from the remote at 
+`4e6772c` — runtime restored from zero, baseline re-certified cold BEFORE any work, every rider run live, every md5 measured fresh) — the S107 lesson-4 doctrine holding: a 
+workspace reset is a RE-EXECUTION event, never a resume event, and the scoped-expectation doctrine is what keeps it recoverable. Zero standing debt unchanged.
 
 #### Revision Block — v1.3.15 (Session-107 / Batch BH, Cycle 57)
 

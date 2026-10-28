@@ -1087,6 +1087,58 @@ Hover-parity probing must run in Playwright, not a touch-emulating browser — v
    what makes a reset recoverable at all. Never carry a number forward from a wiped
    workspace; re-measure it, and the record's integrity survives the infrastructure.
 
+## S108 lessons (Batch BI — the audit-rider cycle at the plateau: the register rotation + the s108 MID-BAND evidence-frame rotation, the viewport-band matrix's last never-varied cell)
+
+1. **An empty state can carry MULTIPLE variants selected by LIST LENGTH — a gate
+   written from the wrong branch times out on a page that rendered perfectly
+   (the S8-Z boundary, hit live).** The StudyGroups detail pane renders the
+   80px-gradient Users EmptyState ONLY at `groups.length === 0`, while the
+   seeded ONE-group + null-selection state renders the PLAIN "Select a group"
+   variant — the s108 Frame-2 gate initially asserted the icon block (the
+   zero-group side the seed does NOT produce) and timed out with every other
+   condition TRUE (`gradientBlock: false` in the diagnostic probe's isolated
+   read). The S107 lesson-3 generalizes once more: when a view's state
+   renders through a LENGTH-KEYED ternary, read the BRANCH CONDITIONS before
+   writing the gate, then assert the side the seed deterministically produces
+   — and make the boundary itself the discriminator (the plain variant
+   present AND the icon variant ABSENT proves the seeded side rendered, the
+   S106 lesson-2 applied to state boundaries).
+
+2. **A responsive grid's COMPUTED track count is the strongest band
+   discriminator — it reads the breakpoint's own resolution, not a proxy.**
+   `getComputedStyle(grid).gridTemplateColumns` at the mid-band reads
+   `"360px 360px"` — EXACTLY two tracks, the value only the md-mid-band
+   produces (1 column at mobile-portrait, 3 at desktop-lg). A bounding-box
+   comparison (same-row cards) verifies the layout consequence, but the
+   track count IS the band identity: assert it directly
+   (`.split(" ").filter((t) => t.endsWith("px")).length === 2`) and the gate
+   cannot pass at any other band — the column-count boundary asserted both
+   sides by construction.
+
+3. **A flex pane's own width is a band pin — the full-negotiation read.** The
+   StudyGroups aside (`w-80`) renders at its FULL 320px at the mid-band while
+   the S78/AE13 content-driven floor shrinks it to ~222px at 390 — the pane's
+   `getBoundingClientRect().width === 320` discriminates the mid-band from
+   mobile-portrait through the element's own geometry, with no viewport
+   comparison and no sibling measurement. The general rule: when a layout's
+   responsive behavior is FLEX NEGOTIATION (not breakpoint-gated classes),
+   the pane width at the band IS the assertion — the shrunk value at the
+   narrow band and the floor value at the wide band are both deterministic
+   reads of the same negotiation.
+
+4. **A doc chain has MANY anchors and every cycle must re-anchor ALL of them —
+   the header IS a rotation anchor (the s108 audit's L1).** The remediation
+   plan's status header is part of the cycle's doc chain exactly like the
+   README row, the AGENTS lessons, the CLAUDE seam tail, the vitest header,
+   and the PAD version: the BG cycle re-anchored it (BF → BG) but the BH
+   cycle appended its Cycle-57 plan + record WITHOUT touching the header —
+   and the header silently went stale ("COMPLETE through Batch BG" while the
+   plan was complete through BH). The next audit's one-grep re-derivation is
+   the tripwire that catches exactly this shape; the fix is to treat the
+   anchor enumeration as a CHECKLIST the cycle closes one by one, not as an
+   instinctive subset. An L-class doc finding is a REAL finding — record it,
+   fix it in-cycle, and the chain's integrity survives.
+
 ## Testing quirks
 
 - E2E specs run against the **production standalone build** — rebuild after any component change or you will chase ghosts.
