@@ -2,6 +2,32 @@ import { defineConfig } from "vitest/config";
 import path from "node:path";
 
 // Unit-test layer for the pure domain seams — 28 files / 936 tests
+// (re-anchored S109/BJ — the honest-zero-cycle: census UNCHANGED at
+// 936. The BJ cycle touched documentation + scripts only: the BI1
+// record's dated register note [the post-BI final-tree playwright-class
+// counts 233 importers / 114 Usage-line carriers — the two s108 riders
+// joined the guarded class after the BI1 measurement; the register
+// rotates forward, the threshold-form pins absorb growth by design,
+// the exact-count pin stays rejected] and the s109 riders
+// [ref-resweep-s109.mjs + capture-s109-evidence.mjs — the LIGHT
+// evidence-frame rotation, the theme axis's NEVER-VARIED side: the
+// rotation program's 18 committed frames covered all four viewport
+// cells — 1280×800 desktop + 390×844 mobile-portrait + 844×390
+// mobile-landscape + 768×1024 mid-band — and 18/18 are DARK, LIGHT
+// NEVER varied; the Events desktop light [the view's FIRST rotation
+// frame; the WITHIN-VIEW THEME BOUNDARY = the light-only discriminator:
+// the bg-slate-900 terminal panel is intentionally dark in BOTH themes,
+// the boundary asserted both sides — the panel computes rgb(15, 23, 42)
+// while the page h1 computes the light-side slate-800 rgb(30, 41, 59)] +
+// the Analytics desktop light [the view's FIRST rotation frame; the
+// light-side WITHIN-ELEMENT reads — the chart axis text at the
+// light-only #666 rgb(102, 102, 102), the StatBlock cards at the
+// light-only bg-white rgb(255, 255, 255); the seeded stat values
+// 2/12 + 0/6 + 4; the stat grid's EXACTLY 4 px tracks at the desktop
+// band]]. No new pins; src/ and tests/ untouched — the census
+// projection exact.)
+
+// Unit-test layer for the pure domain seams — 28 files / 936 tests
 // (re-anchored S108/BI — the honest-zero-cycle: census UNCHANGED at
 // 936. The BI cycle touched documentation + scripts only: the BH1
 // record's dated register note [the post-BH final-tree playwright-class

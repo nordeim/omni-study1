@@ -1,4 +1,4 @@
-# StudyFlow (Omni-Study) — Master Project Architecture Document (PAD) v1.3.16
+# StudyFlow (Omni-Study) — Master Project Architecture Document (PAD) v1.3.17
 
 **Classification:** Internal Engineering Reference
 **Status:** DEFINITIVE, PRODUCTION-LOCKED BLUEPRINT
@@ -6,6 +6,36 @@
 **Last Updated:** 2026-10-28
 **Audience:** Senior Engineers, Tech Leads, DevOps, Onboarding Engineers, and AI Coding Agents
 **Rule:** Every architectural decision in this document traces to a specific rationale. Nothing is here "because it's popular."
+
+---
+
+#### Revision Block — v1.3.17 (Session-109 / Batch BJ, Cycle 59)
+
+- `[SR]` Current test census anchor (the v1.2.0 convention, re-anchored): **936/936 Vitest unit** (28 files, `*.test.ts` only — census UNCHANGED: the honest-zero-cycle touched 
+documentation + scripts only, src/ and tests/ untouched) + **474/474 Playwright e2e** across the 5-chunk cold map (131+141+57+87+58 = 469 real specs in 30 spec files + 5 auth 
+setups; `scripts/e2e-chunked-cert.sh` is the census authority). The PAD carries the census at revision time ONLY — the live count-keepers each cycle are the README badge (1410), 
+AGENTS.md/CLAUDE.md, the `vitest.config.ts` header, and the cert-script header.
+- `[SR]` The register rotation (S109/BJ1, the s108 audit's I1): the BI1 note's counts (231 playwright importers / 112 Usage-line carriers) describe the pre-s108-rider tree — the 
+BI2 riders joined the guarded class after the measurement, and the post-BI final-tree re-derivation (the pin's own regex, instrument-identical, the expectation stated BEFORE the 
+measurement: the register's 231/112 + the two named s108 riders) is **233 importers / 114 carriers / 0 stale / 119 usage-line-free** (the frozen historical era unchanged). The 
+register's arithmetic VERIFIED live (the S102 lesson-1 doctrine, eighth consecutive cycle); the register rotates forward with a dated S109 note appended to the BI1 execution 
+record, and the exact-count pin stays REJECTED (the silent-absorption intent). The final-tree forward arithmetic on the BJ riders themselves: **235 importers / 116 carriers = 
+233/114 + the two s109 riders** — the scoped expectation for the next audit. The cycle's audit found ZERO L-class findings — the remediation plan's header was properly 
+re-anchored to Batch BI by the BI cycle (the S108 lesson-4 held: the header-is-a-rotation-anchor discipline survived its first re-derivation).
+- `[SR]` The s109 LIGHT evidence-frame rotation — the theme axis's NEVER-VARIED side (S109/BJ2): the rotation program's 18 committed frames cover ALL FOUR viewport cells 
+(1280×800 desktop ×10, s96–s104 dark; 390×844 mobile-portrait ×4, s105–s106 dark; 844×390 mobile-landscape ×2, s107 dark; 768×1024 mid-band ×2, s108 dark) — the viewport-band 
+matrix COMPLETE, and **the THEME axis has NEVER been varied: 18/18 committed rotation frames are DARK, LIGHT = 0** (the S105 axis-enumeration logic applied one axis later — 
+that cycle opened the viewport axis after the desktop era saturated it; the S107 lesson-1 exhausted the band matrix; the theme axis is the remaining never-opened axis). Two 
+guarded surfaces at 1280×800 desktop in LIGHT — the program's home band, its 10 frames all dark, desktop×light never varied — both zero-persistent-state BY CONSTRUCTION (pure 
+seed reads, ZERO interaction): the EVENTS view (the view's FIRST rotation frame; the WITHIN-VIEW THEME BOUNDARY = the light-only structural discriminator — the bg-slate-900 
+terminal panel is INTENTIONALLY dark in BOTH themes per the view's own header contract, so the light frame's own read is the boundary itself: the panel computes rgb(15, 23, 42) 
+while the page h1 computes the light-side slate-800 rgb(30, 41, 59), a pair ONLY light mode produces; pixel-probe mean brightness 107.6 — the theme-boundary signature, the 
+light shell framing the intentionally-dark panel, against the dark frames' ~48) and the ANALYTICS view (the view's FIRST rotation frame; the light-side WITHIN-ELEMENT theme 
+reads — a chart SVG's axis text computing the light-only #666 rgb(102, 102, 102), a StatBlock card computing the light-only bg-white rgb(255, 255, 255); the seeded stat values 
+2/12 Tasks Completed + 0/6 Assignments + 4 Upcoming Exams; the stat grid's EXACTLY 4 px tracks at the desktop band; mean brightness 247.8 — genuinely light). The mobile-nav 
+dual-host verification re-run through agent-browser (reference: 24 labeled visible links / the X at (228,26) closes / 20 icon-only collapsed ZERO title-aria / scrollWidth 416 — 
+the reference's own overflow defect; clone: 26 labeled / the dialog MOUNTS / a REAL Escape keypress closes / 20 icon-only collapsed ALL title+aria / scrollWidth 390 — no 
+Tailwind v4 mobile-nav bug, s109 re-confirmed).
 
 ---
 
