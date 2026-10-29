@@ -2,6 +2,32 @@ import { defineConfig } from "vitest/config";
 import path from "node:path";
 
 // Unit-test layer for the pure domain seams — 28 files / 936 tests
+// (re-anchored S111/BL — the honest-zero-cycle: census UNCHANGED at
+// 936. The BL cycle touched documentation + scripts only: the BK1
+// record's dated register note [the post-BK final-tree playwright-class
+// counts 237 importers / 118 Usage-line carriers — the two s110 riders
+// joined the guarded class after the BK1 measurement; the register
+// rotates forward, the threshold-form pins absorb growth by design,
+// the exact-count pin stays rejected] and the s111 riders
+// [ref-resweep-s111.mjs + capture-s111-evidence.mjs — the
+// MOBILE-LANDSCAPE LIGHT evidence-frame rotation, the theme axis's
+// never-varied LANDSCAPE cell: the rotation program's 22 committed
+// frames cover all four viewport cells on dark (1280×800 desktop ×10
+// + 390×844 mobile-portrait ×4 + 844×390 mobile-landscape ×2 +
+// 768×1024 mid-band ×2) plus the home band and the mobile band on
+// light (1280×800 desktop ×2, s109; 390×844 mobile-portrait ×2,
+// s110); the theme axis's remaining never-varied cells —
+// mobile-landscape×light, mid-band×light; the Calendar landscape
+// light [the view's FIRST rotation frame; the A4/S5-G/S9-F mode
+// switch — the Calendar tab aria-pressed=true in the sf-selected-tint
+// violet-600 rgb(124, 58, 237), the 7-column weekday header, the
+// today cell data-today=true selected by default] + the FocusTimer
+// landscape light [the view's FIRST rotation frame; the seeded stats
+// 7/7 with the Today card at the 0-or-1 midnight boundary, the
+// Pomodoro preset's border-sf-primary violet, the role=timer 25:00
+// rest state]]. No new pins; src/ and tests/ untouched — the census
+// projection exact.)
+// Unit-test layer for the pure domain seams — 28 files / 936 tests
 // (re-anchored S110/BK — the honest-zero-cycle: census UNCHANGED at
 // 936. The BK cycle touched documentation + scripts only: the BJ1
 // record's dated register note [the post-BJ final-tree playwright-class
