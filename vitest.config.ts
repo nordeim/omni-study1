@@ -2,6 +2,32 @@ import { defineConfig } from "vitest/config";
 import path from "node:path";
 
 // Unit-test layer for the pure domain seams — 28 files / 936 tests
+// (re-anchored S110/BK — the honest-zero-cycle: census UNCHANGED at
+// 936. The BK cycle touched documentation + scripts only: the BJ1
+// record's dated register note [the post-BJ final-tree playwright-class
+// counts 235 importers / 116 Usage-line carriers — the two s109 riders
+// joined the guarded class after the BJ1 measurement; the register
+// rotates forward, the threshold-form pins absorb growth by design,
+// the exact-count pin stays rejected] and the s110 riders
+// [ref-resweep-s110.mjs + capture-s110-evidence.mjs — the
+// MOBILE-PORTRAIT LIGHT evidence-frame rotation, the theme axis's
+// never-varied MOBILE cell: the rotation program's 20 committed frames
+// cover all four viewport cells on dark + the home band on light
+// (1280×800 desktop ×10 dark + ×2 light, s109); the theme axis's
+// remaining never-varied cells — mobile-portrait×light,
+// mobile-landscape×light, mid-band×light — the S109 lesson-3 axis
+// enumeration applied one cell deeper; the Settings mobile light [the
+// view's FIRST rotation frame; the Appearance tab's measured chrome —
+// the selected Light theme button's violet border rgb(139, 92, 246),
+// the 7 accent swatches with Violet aria-pressed — deterministic from
+// the seed, zero interaction] + the Files mobile light [the view's
+// FIRST rotation frame; the S17-pinned zero-data EmptyState the seed
+// produces — the seed creates no folders/files: the "No files yet"
+// card with the gradient Upload CTA; the stacked mobile two-pane at
+// 390]]. No new pins; src/ and tests/ untouched — the census
+// projection exact.)
+
+// Unit-test layer for the pure domain seams — 28 files / 936 tests
 // (re-anchored S109/BJ — the honest-zero-cycle: census UNCHANGED at
 // 936. The BJ cycle touched documentation + scripts only: the BI1
 // record's dated register note [the post-BI final-tree playwright-class

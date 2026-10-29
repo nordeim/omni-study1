@@ -1,14 +1,62 @@
-# StudyFlow (Omni-Study) — Master Project Architecture Document (PAD) v1.3.17
+# StudyFlow (Omni-Study) — Master Project Architecture Document (PAD) v1.3.18
 
 **Classification:** Internal Engineering Reference
 **Status:** DEFINITIVE, PRODUCTION-LOCKED BLUEPRINT
 **Companion Documents:** `README.md` (user-facing), `AGENTS.md` (agent quick-reference), `CLAUDE.md` (agent operating conventions), `docs/Tailwind-V4-Validation-Report.md` (parity trap log)
-**Last Updated:** 2026-10-28
+**Last Updated:** 2026-10-29
 **Audience:** Senior Engineers, Tech Leads, DevOps, Onboarding Engineers, and AI Coding Agents
 **Rule:** Every architectural decision in this document traces to a specific rationale. Nothing is here "because it's popular."
 
 ---
 
+#### Revision Block — v1.3.18 (Session-110 / Batch BK, Cycle 60)
+
+- `[SR]` Current test census anchor (the v1.2.0 convention, re-anchored): **936/936 Vitest unit** (28 files, `*.test.ts` only — census UNCHANGED: the honest-zero-cycle touched 
+documentation + scripts only, src/ and tests/ untouched) + **474/474 Playwright e2e** across the 5-chunk cold map (131+141+57+87+58 = 469 real specs in 30 spec files + 5 auth 
+setups; `scripts/e2e-chunked-cert.sh` is the census authority). The PAD carries the census at revision time ONLY — the live count-keepers each cycle are the README badge (1410), 
+AGENTS.md/CLAUDE.md, the `vitest.config.ts` header, and the cert-script header.
+- `[SR]` The register rotation (S110/BK1, the s109 audit's I1): the BJ1 note's counts (233 playwright importers / 114 Usage-line carriers) describe the pre-s109-rider tree — the 
+BJ2 riders joined the guarded class after the measurement, and the post-BJ final-tree re-derivation (the pin's own regex, instrument-identical, the expectation stated BEFORE the 
+measurement: the register's 233/114 + the two named s109 riders) is **235 importers / 116 carriers / 0 stale / 119 usage-line-free** (the frozen historical era unchanged). The 
+register's arithmetic VERIFIED live (the S102 lesson-1 doctrine, ninth consecutive cycle); the register rotates forward with a dated S110 note appended to the BJ1 execution 
+record, and the exact-count pin stays REJECTED (the silent-absorption intent). The final-tree forward arithmetic on the BK riders themselves: **237 importers / 118 carriers = 
+235/116 + the two s110 riders** — the scoped expectation for the next audit, measured LAST through an instrument that is itself not a rider (the eleventh consecutive tripwire). 
+The cycle's audit found ZERO L-class findings — the remediation plan's header was properly re-anchored to Batch BK by the BK cycle (the S108 lesson-4 held through its second 
+re-derivation).
+- `[SR]` The s110 MOBILE-PORTRAIT LIGHT evidence-frame rotation — the theme axis's never-varied MOBILE cell (S110/BK2): the rotation program's 20 committed frames cover all four 
+viewport cells on dark (1280×800 desktop ×10, s96–s104; 390×844 mobile-portrait ×4, s105–s106; 844×390 mobile-landscape ×2, s107; 768×1024 mid-band ×2, s108) plus the home band 
+on light (1280×800 desktop ×2, s109 — Events + Analytics, the theme axis OPENED) — the theme axis's REMAINING never-varied cells: mobile-portrait×light, mobile-landscape×light, 
+mid-band×light (the S109 lesson-3 axis enumeration applied one cell deeper). Two guarded surfaces at 390×844 in LIGHT — the mobile-portrait cell, its 4 committed frames all dark, 
+mobile-portrait×light never varied in the rotation program (the standing 31's mobile captures are LIGHT dashboard/drawer/tasks only, so the cell is standing-covered while 
+remaining rotation-program-new) — both zero-persistent-state BY CONSTRUCTION (pure seed reads, ZERO interaction): the SETTINGS view (the view's FIRST rotation frame; the 
+Appearance tab's measured chrome — the S69/S4-pinned surfaces: the ONE max-w-4xl bg-card card, the three h-[88px] theme buttons with the selected LIGHT button's violet border 
+rgb(139, 92, 246) through the --sf-primary token, the 7 accent swatches with the Violet one aria-pressed, the emoji avatar tile grid, the Save Preferences gradient CTA; md5 
+7506871ac19c0860a25b4b1da175b41d, pixel-probe mean brightness 240.4) and the FILES view (the view's FIRST rotation frame; the mobile stacked layout — the md:flex aside renders at 390 as 
+the stacked list pane per the AE6 surface; the S5-K-pinned toolbar chrome; the S17-pinned zero-data EmptyState the seed produces — the seed creates no folders/files; md5 
+9a469ef03b7243fd3945b75008674baa, pixel-probe mean brightness 248.2). Both frames md5-DISTINCT GATE-enforced, the mobile no-overflow contract scrollWidth <= 390 on both, the S4 violet/light 
+restore awaited on every path; the 20 committed 110-*.png frames md5-distinct. The plan-vs-record correction (the S110 lesson-3): the Cycle-60 plan described the Files frame as 
+"the seeded rows"; the seed creates NO folders/files — the rider's gate asserted the seed's ACTUAL state (the zero-data EmptyState) and the execution record carries the truth, 
+the plan left un-retro-edited as the immutable pre-change record.
+- `[SR]` The s110 cycle ran the first IN-FLIGHT continuation (the S110 lesson-4) and recovered the workspace's between-call process reaper (the S110 lesson-1): the 34th 
+continuation arrived to an interrupted session, not a wiped workspace (riders GREEN but uncommitted, the plan written but the execution record missing, the standing suite reaped 
+mid-run) — the recovery protocol (git status as the interruption-point reconstruction; the plan's rider list as the remaining-work ledger; the DB quiescence state [Task 12 / 
+Note 4 / Event 3, demo light/violet, zero stranded probes] as the coordination signal; the already-verified work honored, only the interrupted steps re-run) closed the cycle with 
+the baselines unchanged. The reaper find: the standing suite (60–120 min, per-stage budgets to 25 min) cannot fit any single foreground call, and the workspace reaps background 
+processes between tool calls — verified live by racing three daemonization strategies (setsid / nohup / the python double-fork), only the double-fork orphan (PPID 1) survives the 
+call boundary (the reaper kills by DESCENT, not by session); the remedy — the python double-fork launcher with stdio to a log, the suite polled across calls through the log + 
+the per-stage envelopes; the mutating riders held back until the suite's closing guard restored the quiescence state (the S110 lesson-2 exclusion window). The mobile-nav 
+dual-host verification re-run through agent-browser (reference: 24 labeled visible links / the X at (228,26) closes / 20 icon-only collapsed ZERO title-aria / scrollWidth 416 
+— the reference's own overflow defect; clone: 26 labeled / the dialog MOUNTS / a REAL Escape keypress closes / 20 icon-only collapsed ALL title+aria / scrollWidth 390 — no 
+Tailwind v4 mobile-nav bug, s110 re-confirmed). **The BK4 reserved rider EXERCISED** (the standing suite's first NOT-GREEN verdict, root-caused + fixed + re-certified): the suite run #1 
+completed 33/35 — ai-error + ai-a11y FAIL (crashed at connect on the dead :3000) — the root cause: the S106/BG4 stop path verified the LISTENER, not the PROCESS (the next-server 
+survived its SIGTERM sleeping, the .next/dev lock kept naming the live pid, the restarted `next dev` refused to boot — "Another next dev server is already running"); the fix in the 
+guard's own file (scripts/standing-suite.mjs, scripts-only, the census 936/474 UNCHANGED by construction, the register untouched): the PROCESS-gone verification (kill(pid, 0) → 
+ESRCH) after the listener polls, the SIGKILL escalation whenever the process outlives its listener, and the zombie parent-chain fallback — the AP-70 discipline preserved; verified 
+empirically before the patch (the stale lock naming a DEAD pid does NOT block a fresh boot); the re-cert: suite run #2 on the final tree **35/35 GREEN** with the FIXED guard 
+live-exercised (the stop → the process-gone verification → the restart healthy → ai-error/ai-a11y GREEN). Zero standing debt unchanged — the defect found, fixed, and closed 
+within the cycle that found it.
+
+---
 #### Revision Block — v1.3.17 (Session-109 / Batch BJ, Cycle 59)
 
 - `[SR]` Current test census anchor (the v1.2.0 convention, re-anchored): **936/936 Vitest unit** (28 files, `*.test.ts` only — census UNCHANGED: the honest-zero-cycle touched 

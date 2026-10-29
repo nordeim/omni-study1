@@ -69,7 +69,7 @@
 // the suite is green. The single-run-per-audit design makes the S29/S31/S65
 // double-run phantom impossible by construction.
 import { execFileSync, spawn } from "node:child_process";
-import { existsSync, mkdirSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { randomBytes } from "node:crypto";
 import { fileURLToPath } from "node:url";
@@ -199,6 +199,23 @@ async function ensureStandalone() {
 // the stage's duration and restarts it after — the AP-70 discipline: the
 // PID by the exact listening port, never a blanket pkill; a non-listening
 // dev server (someone else's context) is left untouched.
+//
+// S110/BK4: the PROCESS-gone verification the stop path lacked (the s110
+// run's own defect, root-caused live): the next-server's SIGTERM graceful
+// shutdown closed the LISTENER — health false, where the old code returned
+// "stopped" right there — while the PROCESS lived on (sleeping, the
+// turbopack pool child holding the shutdown open), so the .next/dev lock
+// kept naming a LIVE pid and the restarted `next dev` REFUSED to boot
+// ("Another next dev server is already running" — Next 16's dev lock names
+// the server pid and accepts the takeover only when that pid is GONE,
+// verified empirically: the stale lock naming a SIGKILLed pid does NOT
+// block a fresh boot). :3000 stayed dead for the ai-error/ai-a11y stages —
+// the suite's first NOT-GREEN verdict (33/35). The guard now verifies the
+// pid ITSELF is gone (kill(pid, 0) → ESRCH), escalating to SIGKILL and,
+// for an unreaped zombie (kill(pid, 0) succeeds on a zombie too),
+// SIGKILLing the pid's OWN parent (the `next dev` CLI lineage) so init
+// reaps it — the AP-70 discipline preserved: only the listener's own
+// tree, never a blanket pkill.
 async function devServerListenerPid() {
   try {
     const out = execFileSync("ss", ["-tlnp"], { encoding: "utf8", timeout: 5000 });
@@ -211,6 +228,18 @@ async function devServerListenerPid() {
   }
 }
 
+async function waitForProcessGone(pid, polls, intervalMs) {
+  for (let i = 0; i < polls; i += 1) {
+    try {
+      process.kill(pid, 0);
+    } catch {
+      return true; // ESRCH — the process itself is GONE (reaped, not just silent)
+    }
+    await new Promise((r) => setTimeout(r, intervalMs));
+  }
+  return false;
+}
+
 async function stopDevServerForCwv() {
   const pid = await devServerListenerPid();
   if (!pid) return null; // nothing listening — not ours to manage
@@ -221,12 +250,27 @@ async function stopDevServerForCwv() {
   }
   for (let i = 0; i < 12; i += 1) {
     await new Promise((r) => setTimeout(r, 500));
-    if (!(await health("http://localhost:3000/api/health", 1500))) return pid; // dead
+    if (!(await health("http://localhost:3000/api/health", 1500))) break; // the listener is down — NOT the stop condition
   }
-  try {
-    process.kill(pid, "SIGKILL"); // the AR2 escalation shape
-  } catch {
-    /* already gone */
+  if (!(await waitForProcessGone(pid, 20, 250))) {
+    try {
+      process.kill(pid, "SIGKILL"); // the AR2 escalation — now reached whenever the process outlives its listener
+    } catch {
+      /* already gone */
+    }
+  }
+  if (!(await waitForProcessGone(pid, 20, 250))) {
+    // the zombie fallback: an unreaped zombie still answers kill(pid, 0);
+    // the PARENT must reap it — SIGKILL the pid's own parent chain (the
+    // `next dev` CLI lineage) so init reaps. Scoped to this pid's tree.
+    try {
+      const status = readFileSync(`/proc/${pid}/status`, "utf8");
+      const ppid = Number(/PPid:\s+(\d+)/.exec(status)?.[1] ?? 0);
+      if (ppid > 1) process.kill(ppid, "SIGKILL");
+    } catch {
+      /* already gone or /proc unreadable */
+    }
+    await waitForProcessGone(pid, 20, 250);
   }
   await new Promise((r) => setTimeout(r, 1000));
   return pid;
