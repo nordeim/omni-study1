@@ -2,6 +2,28 @@ import { defineConfig } from "vitest/config";
 import path from "node:path";
 
 // Unit-test layer for the pure domain seams — 28 files / 936 tests
+// (re-anchored S114/BO — the rotation program's SECOND PASS's cycle
+// two: census UNCHANGED at 936. The BO cycle touched documentation +
+// scripts only: the BN1 record's dated register note [the post-BN
+// final-tree playwright-class counts 243 importers / 124 Usage-line
+// carriers — the two s113 riders joined the guarded class after the
+// BN1 measurement; the register rotates forward, the threshold-form
+// pins absorb growth by design, the exact-count pin stays rejected]
+// and the s114 riders [ref-resweep-s114.mjs + capture-s114-evidence.mjs
+// — the MOBILE-PORTRAIT LIGHT evidence-frame rotation, the second
+// pass's cycle two: the mobile home band 390×844, now the tied-thinnest
+// light coverage, with the Dashboard light (the view's FIRST light-side
+// frame; the greeting-bucket h1 + the long-date subtitle at the live
+// clock's own signature, the sf-overdue-banner Overdue alert, the
+// Today's tasks region, the four stat cards, the Upcoming Exams +
+// Assignments sections, the fixed glass app bar) + the Notes light (the
+// view's FIRST light-side frame; the Notes list pane's four seeded
+// rows, the All Notebooks / All Tags comboboxes, the Search notes
+// input, the Filter-by-tag button, the sf-gradient create FAB — the
+// reference's own /Notes mobile overflow defect NOT reproduced, now on
+// the light side too)]. No new pins; src/ and tests/ untouched — the
+// census projection exact.)
+// Unit-test layer for the pure domain seams — 28 files / 936 tests
 // (re-anchored S113/BN — the rotation program's SECOND PASS's opening
 // cycle: census UNCHANGED at 936. The BN cycle touched documentation +
 // scripts only: the BM1 record's dated register note [the post-BM
