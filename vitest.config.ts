@@ -2,6 +2,36 @@ import { defineConfig } from "vitest/config";
 import path from "node:path";
 
 // Unit-test layer for the pure domain seams — 28 files / 936 tests
+// (re-anchored S112/BM — the exhaustion cycle: census UNCHANGED at
+// 936. The BM cycle touched documentation + scripts only: the BL1
+// record's dated register note [the post-BL final-tree playwright-class
+// counts 239 importers / 120 Usage-line carriers — the two s111 riders
+// joined the guarded class after the BL1 measurement; the register
+// rotates forward, the threshold-form pins absorb growth by design,
+// the exact-count pin stays rejected] and the s112 riders
+// [ref-resweep-s112.mjs + capture-s112-evidence.mjs — the MID-BAND
+// LIGHT evidence-frame rotation, the theme axis's LAST never-varied
+// cell, the exhaustion cycle: with these two frames both the theme
+// axis (all four viewport cells × both sides) AND the view-level
+// rotation program (every nav view carrying at least one rotation
+// frame) complete; the rotation program's 24 committed frames cover
+// all four viewport cells on dark (1280×800 desktop ×10 + 390×844
+// mobile-portrait ×4 + 844×390 mobile-landscape ×2 + 768×1024
+// mid-band ×2) plus three light cells (1280×800 desktop ×2, s109;
+// 390×844 mobile-portrait ×2, s110; 844×390 mobile-landscape ×2,
+// s111); the MathSolver mid-band light [the view's FIRST rotation
+// frame; the h1 "Math Solver" + subtitle, the aria-label="Math
+// problem" textarea, the Solve button disabled at rest, the "Math
+// solution" region's rest copy, the "Recent Problems"
+// seed-deterministic empty state] + the AIAssistant mid-band light
+// [the view's FIRST rotation frame; the h1 "AI Study Assistant" +
+// subtitle, the empty-transcript intro, the aria-label="Quick
+// actions" six sf-card prompt buttons, the aria-label="Message the
+// assistant" composer — the shadcn Input, an <input> element NOT a
+// textarea, the S112 lesson-2 element-tag doctrine — with the Send
+// message button disabled at rest]. No new pins; src/ and tests/
+// untouched — the census projection exact.)
+// Unit-test layer for the pure domain seams — 28 files / 936 tests
 // (re-anchored S111/BL — the honest-zero-cycle: census UNCHANGED at
 // 936. The BL cycle touched documentation + scripts only: the BK1
 // record's dated register note [the post-BK final-tree playwright-class
