@@ -2,6 +2,30 @@ import { defineConfig } from "vitest/config";
 import path from "node:path";
 
 // Unit-test layer for the pure domain seams — 28 files / 936 tests
+// (re-anchored S113/BN — the rotation program's SECOND PASS's opening
+// cycle: census UNCHANGED at 936. The BN cycle touched documentation +
+// scripts only: the BM1 record's dated register note [the post-BM
+// final-tree playwright-class counts 241 importers / 122 Usage-line
+// carriers — the two s112 riders joined the guarded class after the BM1
+// measurement; the register rotates forward, the threshold-form pins
+// absorb growth by design, the exact-count pin stays rejected] and the
+// s113 riders [ref-resweep-s113.mjs + capture-s113-evidence.mjs — the
+// DESKTOP LIGHT evidence-frame rotation, the second pass's opening
+// cycle: the theme axis AND the view-level rotation program both
+// completed at s112 [the exhaustion cycle — all four viewport cells ×
+// both sides + every nav view carrying at least one rotation frame];
+// the second pass re-probes any cell, any view, fresh — the desktop
+// light cell [1280×800, its light coverage the thinnest of the four:
+// Events + Analytics at s109] with the Flashcards light [the view's
+// FIRST light-side frame; the h1, the Deck list pane, the three seeded
+// decks, the auto-selected first deck's detail, the Card grid's four
+// seeded cards at their raw-textContent difficulty pills] + the
+// Timetable light [the view's FIRST light-side frame; the h1 +
+// subtitle, the Week filter combobox, the month-label h2 at the live
+// clock's own signature, the Week grid's five seeded classes, the My
+// Classes panel]. No new pins; src/ and tests/ untouched — the census
+// projection exact.)
+// Unit-test layer for the pure domain seams — 28 files / 936 tests
 // (re-anchored S112/BM — the exhaustion cycle: census UNCHANGED at
 // 936. The BM cycle touched documentation + scripts only: the BL1
 // record's dated register note [the post-BL final-tree playwright-class
