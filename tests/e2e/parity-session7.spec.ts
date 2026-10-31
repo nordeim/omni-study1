@@ -210,6 +210,28 @@ test.describe("S7-B · Study Groups + Practice Tests dialogs", () => {
 });
 
 test.describe("S7-C · Timetable week grid", () => {
+  // S119/BT9 — the class-cell edit button's accessible name is exactly
+  // "Edit <name>": the decorative Pencil/Trash2 glyph pair used to
+  // contribute "Edit X Delete X" (a delete action that never existed — the
+  // dead remove() is gone with this cycle; the reference's Timetable has
+  // no delete affordance in any measured state).
+  test("S119/BT9: a class cell announces its visible text + the edit action — never a delete", async ({ page }) => {
+    await page.goto("/Timetable");
+    await hydrated(page);
+    // The seeded timetable carries classes (the demo account's seed). The
+    // grid cell's accessible name comes FROM its content (Label in Name —
+    // the sr-only action word rides along), and "Delete" is announced
+    // NOWHERE on the Timetable anymore (the dead remove() is gone).
+    const cell = page.getByRole("button", { name: /Calculus II/ }).first();
+    await expect(cell).toBeVisible();
+    await expect(cell).toHaveAccessibleName(/Edit class/);
+    await expect(page.getByRole("button", { name: /Delete/ })).toHaveCount(0);
+    // And the cell opens the edit dialog (the one real action).
+    await cell.click();
+    await expect(page.getByRole("dialog").getByRole("heading", { name: "Edit Class" })).toBeVisible();
+  });
+
+
   test("day headers render full names with text-lg bold dates in a grid-cols-8 table", async ({ page }) => {
     await page.goto("/Timetable");
     await hydrated(page);

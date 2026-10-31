@@ -81,7 +81,7 @@ if (!onlineBannerAbsent) {
 // ---------------------------------------------------------------------------
 // A1 — AI send while offline (real transport failure, not route abort)
 // ---------------------------------------------------------------------------
-await page.fill("input[aria-label='Message the assistant']", "connectivity probe A1 offline send");
+await page.fill("[aria-label='Message the assistant']", "connectivity probe A1 offline send");
 await context.setOffline(true);
 await page.click("button[aria-label='Send message']");
 await page.waitForTimeout(2500);
@@ -91,7 +91,7 @@ const a1 = await page.evaluate(() => {
   // are BUTTONS inside the aria-live Notifications region (role=status on
   // the items never existed). The composer is an <Input>, not a textarea.
   const items = [...document.querySelectorAll("main [aria-live] div")];
-  const composer = document.querySelector("input[aria-label='Message the assistant']");
+  const composer = document.querySelector("[aria-label='Message the assistant']");
   const toasts = [
     ...[...document.querySelectorAll('[aria-label=Notifications] button')].map((t) => t.textContent.trim().slice(0, 90)),
     ...[...document.querySelectorAll('div[role="status"]')].map((t) => t.textContent.trim().slice(0, 90)),
@@ -259,12 +259,12 @@ if (a4 && a4StaysCard && a4Announces && a4Recovered) {
 await openView(page, "AI Study Assistant", "AIAssistant");
 await page.waitForTimeout(800);
 await context.setOffline(true);
-await page.fill("input[aria-label='Message the assistant']", "connectivity probe A5 recovery");
+await page.fill("[aria-label='Message the assistant']", "connectivity probe A5 recovery");
 await page.click("button[aria-label='Send message']");
 await page.waitForTimeout(2000);
 await context.setOffline(false);
-await page.fill("input[aria-label='Message the assistant']", "");
-await page.fill("input[aria-label='Message the assistant']", "connectivity probe A5 retry");
+await page.fill("[aria-label='Message the assistant']", "");
+await page.fill("[aria-label='Message the assistant']", "connectivity probe A5 retry");
 // route the real AI call to a canned reply so the probe is deterministic
 // S81/AH10: the view renders the reply from the PERSISTED transcript — the
 // send() flow POSTs /api/ai/chat then re-fetches GET /api/ai/messages — so

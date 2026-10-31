@@ -15,6 +15,7 @@ import { z } from "zod";
 import { checkRateLimit, normalizeVerificationCode } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { clientIp, publicUser, setSessionCookie } from "@/lib/server/auth";
+import { emailField } from "@/lib/validation";
 import {
   errorResponse,
   parseWith,
@@ -26,8 +27,10 @@ import {
 /** Relaxed on purpose: the code is normalized AFTER the parse (the strict
  *  6-digit regex lives in verifyEmailSchema, but pasted "123 456" must
  *  survive the boundary too). */
+// S119/BT4: the shared emailField atom (trim + email + max-200 — was a
+// bare z.string().email()).
 const verifyBodySchema = z.object({
-  email: z.string().email(),
+  email: emailField,
   code: z.string().min(1).max(32),
 });
 

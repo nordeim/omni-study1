@@ -672,7 +672,7 @@ export function TasksView() {
             header row instead of ellipsizing — the ref's own wrap shape
             (the h1's truncate can never engage at sm+ under a wrapping
             flex row; kept as harmless dead styling). */}
-        <div aria-label="Tasks header" className="flex flex-wrap items-center gap-3 pb-4">
+        <div role="group" aria-label="Tasks header" className="flex flex-wrap items-center gap-3 pb-4">
           <div className="w-full sm:w-auto sm:flex-1">
             <div className="flex items-baseline gap-2">
               <h1 className="truncate text-2xl font-bold text-slate-800 dark:text-slate-100">
@@ -729,7 +729,7 @@ export function TasksView() {
           </Button>
         </div>
 
-        <div aria-label="Task rows" className="sf-scroll flex-1 space-y-3 overflow-y-auto pr-1">
+        <div role="group" aria-label="Task rows" className="sf-scroll flex-1 space-y-3 overflow-y-auto pr-1">
           {loading && tasks.length === 0 ? (
             <div className="flex justify-center py-16 text-sf-primary">
               <Spinner className="size-6" />

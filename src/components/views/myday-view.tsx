@@ -235,7 +235,7 @@ export function MyDayView() {
       </section>
 
       {/* ---- task rows ---- */}
-      <div className="sf-scroll flex-1 space-y-3 overflow-y-auto pr-1" aria-label="My Day tasks">
+      <div role="group" className="sf-scroll flex-1 space-y-3 overflow-y-auto pr-1" aria-label="My Day tasks">
         {loading && tasks.length === 0 ? (
           <div className="flex justify-center py-16 text-sf-primary">
             <Spinner className="size-6" />
@@ -305,7 +305,7 @@ export function MyDayView() {
           />
         </button>
         {showSuggestions && (
-          <div id="my-day-suggestions" aria-label="Suggested tasks" className="mt-3 flex flex-col gap-2">
+          <div role="group" id="my-day-suggestions" aria-label="Suggested tasks" className="mt-3 flex flex-col gap-2">
             {suggestedTasks.length === 0 ? (
               <p className="py-4 text-center text-sm text-slate-400 dark:text-slate-500">
                 Nothing to suggest — every task is already in My Day.

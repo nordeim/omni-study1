@@ -256,7 +256,7 @@ export function FocusTimerView() {
             <span role="timer" aria-label="Time remaining" className="text-5xl font-bold tabular-nums text-slate-800 dark:text-slate-100">
               {formatClock(remaining)}
             </span>
-            <span className="mt-1 text-sm text-slate-500">{MODE_LABELS[mode]}</span>
+            <span className="mt-1 text-sm text-slate-500 dark:text-slate-400">{MODE_LABELS[mode]}</span>
           </div>
         </div>
 

@@ -190,7 +190,7 @@ export function DashboardView() {
 
       {/* ---- conditional overdue alert (S9-A) ---- */}
       {overdue.length > 0 && (
-        <div
+        <div role="group"
           aria-label="Overdue alert"
           className="sf-overdue-banner flex items-center gap-4 rounded-2xl p-4"
         >

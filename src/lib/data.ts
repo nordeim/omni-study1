@@ -320,8 +320,20 @@ type DataState = EntityMap & {
 
 const ALL_KEYS = Object.keys(PATHS) as CollectionKey[];
 
+// S119/BT8 — the per-key sequence guard. Every mutation does apiSend(...)
+// then fetchAndSet(key), and nothing serialized them: two in-flight GETs for
+// one collection (the live trigger — the Notes title input PATCHes on every
+// keystroke, each followed by a notes GET) could resolve OUT OF ORDER and the
+// stale response would clobber the fresher slice. A monotonic counter per
+// key: capture the ticket before the GET, setSlice only when still the
+// latest — a late stale resolution is dropped on the floor.
+const fetchSeq: Partial<Record<CollectionKey, number>> = {};
+
 async function fetchAndSet<K extends CollectionKey>(key: K): Promise<void> {
+  const ticket = (fetchSeq[key] ?? 0) + 1;
+  fetchSeq[key] = ticket;
   const rows = await apiGet<EntityMap[K]>(PATHS[key]);
+  if (fetchSeq[key] !== ticket) return; // a newer GET superseded this one
   useDataStore.getState().setSlice(key, rows);
 }
 

@@ -268,7 +268,7 @@ export function ExamsView() {
           />
         </div>
       ) : (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3" aria-label="Exam cards">
+        <div role="group" className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3" aria-label="Exam cards">
           {sorted.map((exam) => {
             const subject = subjectOf(exam.subjectId);
             const urgencyBadge = urgency(exam);

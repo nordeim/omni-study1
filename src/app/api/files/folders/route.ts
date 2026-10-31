@@ -15,10 +15,14 @@ import {
   toErrorResponse,
   withUser,
 } from "@/lib/server/http";
+import { idField } from "@/lib/validation";
 
 const folderCreateSchema = z.object({
   name: z.string().min(1).max(200),
-  parentId: z.string().min(1).nullish().transform((v) => (v === "" ? null : v)),
+  // S119/BT4: the shared idField bound (was z.string().min(1) — unbounded).
+  parentId: idField
+    .nullish()
+    .transform((v) => (v === "" ? null : v)),
 });
 
 export const GET = withUser(async (user) => {

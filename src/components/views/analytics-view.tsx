@@ -265,7 +265,7 @@ function AssignmentDonut({ counts }: { counts: Record<(typeof DONUT_SECTORS)[num
         </svg>
         <div className="absolute inset-0 flex flex-col items-center justify-center">
           <span className="text-3xl font-bold text-slate-800 dark:text-slate-100">{total}</span>
-          <span className="text-xs text-slate-500">assignments</span>
+          <span className="text-xs text-slate-500 dark:text-slate-400">assignments</span>
         </div>
       </div>
       <ul className="flex flex-col gap-2">
@@ -299,7 +299,7 @@ function StatBlock({ icon: Icon, iconClasses, value, label, sub }: StatBlockProp
       </div>
       <h2 className="mt-4 text-3xl font-bold text-slate-800 dark:text-slate-100">{value}</h2>
       <p className="text-sm text-slate-500 dark:text-slate-400">{label}</p>
-      <p className="text-xs text-slate-500">{sub}</p>
+      <p className="text-xs text-slate-500 dark:text-slate-400">{sub}</p>
     </div>
   );
 }
@@ -382,7 +382,7 @@ export function AnalyticsView() {
     <div className="flex flex-col gap-6">
       <ViewHeader title="Analytics" subtitle="Insights across your study activity" icon={ChartColumn} />
       {/* ---- stat cards (icon-block, S8-I) ---- */}
-      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4" aria-label="Analytics stats">
+      <div role="group" className="grid grid-cols-2 gap-4 lg:grid-cols-4" aria-label="Analytics stats">
         <StatBlock
           icon={SquareCheckBig}
           iconClasses="bg-violet-100 dark:bg-violet-900/50"
@@ -429,7 +429,7 @@ export function AnalyticsView() {
         </SectionCard>
 
         <SectionCard title="Subject Workload" icon={Target}>
-          <div aria-label="Subject workload chart" className="h-[250px] overflow-y-auto sf-scroll">
+          <div role="group" aria-label="Subject workload chart" className="h-[250px] overflow-y-auto sf-scroll">
             {workload.length === 0 ? (
               <p className="py-10 text-center text-sm text-slate-500">No subject data yet</p>
             ) : (
@@ -438,7 +438,7 @@ export function AnalyticsView() {
                   <div key={row.name} className="flex flex-col gap-1">
                     <div className="flex items-center justify-between text-sm">
                       <span className="font-medium text-slate-700 dark:text-slate-200">{row.name}</span>
-                      <span className="text-slate-500">{row.count}</span>
+                      <span className="text-slate-500 dark:text-slate-400">{row.count}</span>
                     </div>
                     <div className="h-2.5 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
                       <div
@@ -459,7 +459,7 @@ export function AnalyticsView() {
 
       <div className="grid gap-4 lg:grid-cols-2">
         <SectionCard title="Active Items by Priority" icon={Flame}>
-          <div className="flex flex-wrap gap-2" aria-label="Priority chips">
+          <div role="group" className="flex flex-wrap gap-2" aria-label="Priority chips">
             {priorityCounts.map((chip) => (
               <div
                 key={chip.key}

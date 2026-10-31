@@ -38,6 +38,34 @@ test.describe("AI assistant failure states", () => {
     }
   });
 
+  // S119/BT11 — a failed note-TITLE rename surfaces the once-per-streak
+  // toast (it was a fully silent .catch before: offline renames were
+  // invisible data loss, contradicting the view's own autosave contract).
+  test("S119/BT11: a failed title PATCH toasts the title-specific message once per streak", async ({ page }) => {
+    await page.goto("/Notes");
+    await expect(page.getByRole("heading", { name: "Notes" })).toBeVisible();
+    // select a seeded note (the row button carries the note title)
+    await page.getByRole('button', { name: /Dot product intuition/ }).click();
+    const title = page.getByLabel("Note title");
+    await expect(title).toBeVisible();
+    // Kill the item PATCHes (the collection GET stays live — the abort
+    // pattern routes only the per-id path).
+    await page.route("**/api/notes/*", (route) => route.abort("failed"));
+    try {
+      await title.fill("resilience probe BT11");
+      // The abort maps to the S14 offline ApiError, whose message wins
+      // (the same instance-message precedence as the content autosave).
+      await expect(page.getByText("You appear to be offline. Reconnect and try again — your last action was not saved.")).toBeVisible();
+      // the SECOND burst in the same failure streak stays silent (one
+      // toast per streak — the S78/AE2 mechanism)
+      await title.fill("resilience probe BT11 again");
+      await page.waitForTimeout(400);
+      await expect(page.getByText("You appear to be offline. Reconnect and try again — your last action was not saved.")).toHaveCount(1);
+    } finally {
+      await page.unroute("**/api/notes/*");
+    }
+  });
+
   test("A2: a slow-then-failing send clears the Thinking indicator and recovers", async ({ page }) => {
     await page.goto("/AIAssistant");
     await expect(page.getByRole("heading", { name: "AI Study Assistant" })).toBeVisible();

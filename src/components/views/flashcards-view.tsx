@@ -261,7 +261,14 @@ export function FlashcardsView() {
   const rate = (correct: boolean) => {
     if (!studyCard) return;
     if (correct) {
-      updateFlashcard(studyCard.id, { mastered: true }).catch(() => {});
+      // S119/BT12: a failed mastery mark (offline) must not be silent —
+      // the card stays unmastered while the study flow advances as if
+      // recorded (the file's own removeDeck toast pattern).
+      updateFlashcard(studyCard.id, { mastered: true }).catch((err: unknown) => {
+        toast.error(
+          err instanceof ApiError ? err.message : "Couldn't mark the card mastered — it stays in rotation.",
+        );
+      });
     }
     setFlipped(false);
     setStudyIndex((i) => Math.min(i + 1, Math.max(0, deckCards.length - 1)));
@@ -438,7 +445,7 @@ export function FlashcardsView() {
             onChange={(e) => setQuery(e.target.value)}
           />
         </div>
-        <div className="sf-scroll mt-3 flex-1 space-y-2 overflow-y-auto" aria-label="Deck rows">
+        <div role="group" className="sf-scroll mt-3 flex-1 space-y-2 overflow-y-auto" aria-label="Deck rows">
           {filteredDecks.length === 0 ? (
             <p className="py-8 text-center text-sm text-slate-400">
               {decks.length === 0 ? "No decks yet." : "No decks match."}
@@ -564,7 +571,7 @@ export function FlashcardsView() {
           s78. The mobile STUDY ENTRY is solved by the in-row affordance
           (below): the deck-detail toolbar itself is desktop-first, like
           the Notes editor chrome. */}
-      <div className="sf-scroll flex min-w-0 flex-1 flex-col overflow-y-auto" aria-label="Deck detail">
+      <div role="group" className="sf-scroll flex min-w-0 flex-1 flex-col overflow-y-auto" aria-label="Deck detail">
         {decks.length === 0 ? (
           <div className="sf-card flex flex-1 flex-col justify-center">
             <EmptyState
@@ -634,7 +641,7 @@ export function FlashcardsView() {
                 />
               </div>
             ) : (
-              <div className="mt-4 grid gap-4 md:grid-cols-2 lg:grid-cols-3" aria-label="Card grid">
+              <div role="group" className="mt-4 grid gap-4 md:grid-cols-2 lg:grid-cols-3" aria-label="Card grid">
                 {deckCards.map((card) => (
                   <article
                     key={card.id}
@@ -705,7 +712,7 @@ export function FlashcardsView() {
             </div>
             <div className="flex flex-col gap-1.5">
               <Label>Color</Label>
-              <div className="flex gap-2" aria-label="Deck color swatches">
+              <div role="group" className="flex gap-2" aria-label="Deck color swatches">
                 {DECK_COLORS.map((hex) => (
                   <button
                     key={hex}

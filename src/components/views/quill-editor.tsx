@@ -227,6 +227,6 @@ export const QuillEditor = React.forwardRef<QuillEditorHandle, QuillEditorProps>
       }
     }, [font]);
 
-    return <div ref={containerRef} className={className} aria-label="Rich text note editor" />;
+    return <div role="group" ref={containerRef} className={className} aria-label="Rich text note editor" />;
   },
 );

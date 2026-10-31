@@ -17,7 +17,10 @@ const REMEDY = "Generate one with `openssl rand -hex 32` and set AUTH_SECRET in 
 /**
  * Decide what a server boot should do with the configured AUTH_SECRET.
  * - production: missing/blank/the public dev fallback is FATAL (exit);
- *   a present-but-weak (< 32 chars) secret boots with a warn.
+ *   a present-but-short secret boots with a warn — EXCEPT the forgeable
+ *   band: under 16 chars is FATAL in production (S119/BT5 — an
+ *   offline-brute-forceable HMAC signing key must never ship silently;
+ *   16–31 chars stays the documented warn band, 32+ is ok).
  * - non-production: nothing is fatal — a missing secret warns about the
  *   dev-only fallback; a real secret is OK.
  */
@@ -39,6 +42,15 @@ export function authSecretBootStatus(
       return {
         level: "fatal",
         message: `AUTH_SECRET is required in production — refusing to sign session cookies with the public dev fallback constant. ${REMEDY}`,
+      };
+    }
+    if (secret.length < 16) {
+      // S119/BT5: the forgeable band. A <16-char HMAC key is brute-forceable
+      // offline from any observed cookie's mac — a fail-fast, exactly like
+      // the missing/dev-fallback cases above it.
+      return {
+        level: "fatal",
+        message: `AUTH_SECRET is required in production — a ${secret.length}-char secret is too short to sign session cookies safely. ${REMEDY}`,
       };
     }
     if (secret.length < 32) {

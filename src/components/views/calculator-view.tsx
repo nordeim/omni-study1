@@ -108,6 +108,25 @@ export function CalculatorView() {
   const [expression, setExpression] = React.useState("");
   const [clearing, setClearing] = React.useState(false);
   const [historyOpen, setHistoryOpen] = React.useState(false);
+  // S119/BT7 — the history panel's non-modal focus lifecycle (the BS4
+  // pattern at disclosure weight): the panel is a labelled region, not a
+  // modal (no aria-modal, no scroll lock, no Tab containment — the keypad
+  // stays operable beside it); Escape closes, focus lands in the panel on
+  // open, and the toggle gets focus back on close.
+  const historyPanelRef = React.useRef<HTMLElement>(null);
+  const historyToggleRef = React.useRef<HTMLButtonElement>(null);
+  React.useEffect(() => {
+    if (!historyOpen) return;
+    historyPanelRef.current?.focus();
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setHistoryOpen(false);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      historyToggleRef.current?.focus();
+    };
+  }, [historyOpen]);
   const [lastGood, setLastGood] = React.useState("");
   const justEvaluated = React.useRef(false);
 
@@ -141,21 +160,35 @@ export function CalculatorView() {
       }
       if (token === "=") {
         if (expression.trim() === "") return;
+        // S119/BT12: the evaluation and the history save have SEPARATE
+        // failure modes — a successful evaluation whose history POST failed
+        // (offline) used to toast "could not be evaluated" while the display
+        // correctly showed the result. Split the try blocks so each failure
+        // says what actually failed.
+        let formatted: string;
         try {
           const value = evaluate(expression);
-          const formatted = formatCalcResult(value);
-          // The result becomes the new expression (calculator chaining), and
-          // the next DIGIT starts a fresh entry.
-          setExpression(formatted);
-          setLastGood(formatted);
-          justEvaluated.current = true;
+          formatted = formatCalcResult(value);
+        } catch (err: unknown) {
+          toast.error(errorMessage(err, "That expression could not be evaluated."));
+          return;
+        }
+        // The result becomes the new expression (calculator chaining), and
+        // the next DIGIT starts a fresh entry.
+        setExpression(formatted);
+        setLastGood(formatted);
+        justEvaluated.current = true;
+        try {
           await mutations.createCalculatorEntry({
             expression,
             result: formatted,
             mode: (tab === "scientific" ? "scientific" : "basic") as "basic" | "scientific",
           });
         } catch (err: unknown) {
-          toast.error(errorMessage(err, "That expression could not be evaluated."));
+          // The display already shows the correct result — only the history
+          // copy failed. Surface it as its OWN failure (the S78/AE2
+          // never-swallow doctrine), never the evaluation message.
+          toast.error(errorMessage(err, "The result is shown, but history could not record it."));
         }
         return;
       }
@@ -171,6 +204,9 @@ export function CalculatorView() {
   );
 
   // S15 physical-keyboard superset — window-level, guarded against form fields.
+  // S119/BT7: while the history panel is open, Escape belongs to the PANEL
+  // (it closes the panel — the BT7 lifecycle); the display-clear mapping
+  // stays dormant so one press never does both.
   React.useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
       const target = event.target as HTMLElement | null;
@@ -178,6 +214,7 @@ export function CalculatorView() {
       if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT" || target?.isContentEditable) {
         return;
       }
+      if (historyOpen && event.key === "Escape") return;
       const token = mapPhysicalKey(event.key);
       if (token === null) return;
       event.preventDefault();
@@ -185,7 +222,7 @@ export function CalculatorView() {
     };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [press]);
+  }, [press, historyOpen]);
 
   const clearHistory = async () => {
     setClearing(true);
@@ -252,6 +289,7 @@ export function CalculatorView() {
           </p>
         </div>
         <Button
+          ref={historyToggleRef}
           variant="outline"
           aria-expanded={historyOpen}
           aria-controls={historyOpen ? "calc-history-panel" : undefined}
@@ -281,7 +319,7 @@ export function CalculatorView() {
       </div>
 
       {/* ---- display ---- */}
-      <div className="sf-calc-display rounded-2xl p-6 text-4xl" aria-label="Calculator display" aria-live="polite">
+      <div role="group" className="sf-calc-display rounded-2xl p-6 text-4xl" aria-label="Calculator display" aria-live="polite">
         <p className="text-right font-mono text-sm text-slate-500 dark:text-slate-400" data-testid="calc-expression">
           {expression || "0"}
         </p>
@@ -362,8 +400,10 @@ export function CalculatorView() {
       {historyOpen && (
         <aside
           id="calc-history-panel"
+          ref={historyPanelRef}
+          tabIndex={-1}
           aria-label="Calculation History"
-          className="fixed inset-y-0 right-0 z-50 flex w-80 max-w-[85vw] flex-col overflow-y-auto border-l border-slate-200 bg-white p-6 shadow-2xl dark:border-slate-800 dark:bg-slate-900"
+          className="fixed inset-y-0 right-0 z-50 flex w-80 max-w-[85vw] flex-col overflow-y-auto border-l border-slate-200 bg-white p-6 shadow-2xl outline-none dark:border-slate-800 dark:bg-slate-900"
         >
           {/* the ref renders this title as an h3 (16px/700) — the R1
               heading-order contract owns the level (h1 → h2, no skip) */}

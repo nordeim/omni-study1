@@ -452,6 +452,56 @@ export function NotesView() {
             </SelectContent>
           </Select>
         </div>
+        {/* S119/BT10 — notebook list management (edit/delete): the compact
+            dropdown BELOW THE NOTEBOOK FILTER (its documented placement — it
+            was previously a stray third flex child of the root row, a 130px
+            orphan column at the view's right edge squeezing the editor
+            pane). Shown on md+ (the aside itself is md-only chrome on
+            mobile the drawer pattern owns the surface). */}
+        {notebooks.length > 0 && (
+          <div className="hidden md:block">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button
+                  type="button"
+                  className="mt-2 flex items-center gap-1 text-xs font-medium text-slate-500 outline-none hover:text-slate-600 focus-visible:ring-2 focus-visible:ring-sf-primary/40"
+                >
+                  <Pencil className="size-3" strokeWidth={2} />
+                  Manage notebooks
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start">
+                {notebooks.map((nb) => (
+                  <DropdownMenuItem key={nb.id} className="gap-2">
+                    <span className="flex-1">{nb.name}</span>
+                    <button
+                      type="button"
+                      aria-label={`Rename ${nb.name}`}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        openEditNotebook(nb);
+                      }}
+                      className="rounded p-1 text-slate-400 hover:text-slate-600"
+                    >
+                      <Pencil className="size-3" strokeWidth={2} />
+                    </button>
+                    <button
+                      type="button"
+                      aria-label={`Delete ${nb.name}`}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        removeNotebook(nb);
+                      }}
+                      className="rounded p-1 text-slate-400 hover:text-red-500"
+                    >
+                      <Trash2 className="size-3" strokeWidth={2} />
+                    </button>
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        )}
         <div className="mt-3">
           <Select value={tagFilter} onValueChange={setTagFilter}>
             <SelectTrigger className="h-9" aria-label="Filter by tag">
@@ -522,7 +572,7 @@ export function NotesView() {
       </aside>
 
       {/* Right pane — BARE (no card wrapper) */}
-      <div className="flex min-w-0 flex-1 flex-col" aria-label="Note editor pane">
+      <div role="group" className="flex min-w-0 flex-1 flex-col" aria-label="Note editor pane">
         {/* S78/AE6: the list pane now renders at ALL widths (measured on
             the ref at 390×844: the w-80 list + a squeezed right pane) — the
             h1 is reachable at every breakpoint, so the drawer-flow heading
@@ -554,7 +604,31 @@ export function NotesView() {
                 aria-label="Note title"
                 placeholder="Note title..."
                 value={selected.title}
-                onChange={(e) => updateNote(selected.id, { title: e.target.value }).catch(() => {})}
+                onChange={(e) =>
+                  // S119/BT11: a failed rename (offline) is data loss the
+                  // user cannot see — the title PATCH rides the SAME
+                  // once-per-streak toast contract as the content autosave
+                  // (the S78/AE2 mechanism; the streak flag resets on the
+                  // next successful save or selection change).
+                  updateNote(selected.id, { title: e.target.value })
+                    .then(() => {
+                      if (selectedIdRef.current === selected.id) {
+                        autosaveFailedRef.current = false;
+                      }
+                    })
+                    .catch((err: unknown) => {
+                      if (selectedIdRef.current !== selected.id) return;
+                      if (!autosaveFailedRef.current) {
+                        autosaveFailedRef.current = true;
+                        toast.error(
+                          err instanceof ApiError
+                            ? err.message
+                            : "Title not saved — check your connection and edit again.",
+                        );
+                      }
+                    },
+                  )
+                }
                 className="h-9 flex-1 border-none bg-transparent text-sm font-bold shadow-none focus-visible:ring-0 dark:bg-transparent"
               />
               <div className="flex shrink-0 items-center gap-2">
@@ -640,7 +714,7 @@ export function NotesView() {
 
             {/* Tag row (S77/AD6 measured): dark pills (neutral-800 +
                 neutral-50, 6px radius, 12px) + the "Add tag..." input. */}
-            <div className="mt-2 flex flex-wrap items-center gap-2" aria-label="Note tags">
+            <div role="group" className="mt-2 flex flex-wrap items-center gap-2" aria-label="Note tags">
               {selectedTags.map((tag) => (
                 <span
                   key={tag}
@@ -750,51 +824,6 @@ export function NotesView() {
         </DialogContent>
       </Dialog>
 
-      {/* Notebook list management (edit/delete) lives in a compact dropdown below the filter on md+ */}
-      {notebooks.length > 0 && (
-        <div className="hidden md:block">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <button
-                type="button"
-                className="mt-2 flex items-center gap-1 text-xs font-medium text-slate-500 outline-none hover:text-slate-600 focus-visible:ring-2 focus-visible:ring-sf-primary/40"
-              >
-                <Pencil className="size-3" strokeWidth={2} />
-                Manage notebooks
-              </button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="start">
-              {notebooks.map((nb) => (
-                <DropdownMenuItem key={nb.id} className="gap-2">
-                  <span className="flex-1">{nb.name}</span>
-                  <button
-                    type="button"
-                    aria-label={`Rename ${nb.name}`}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      openEditNotebook(nb);
-                    }}
-                    className="rounded p-1 text-slate-400 hover:text-slate-600"
-                  >
-                    <Pencil className="size-3" strokeWidth={2} />
-                  </button>
-                  <button
-                    type="button"
-                    aria-label={`Delete ${nb.name}`}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      removeNotebook(nb);
-                    }}
-                    className="rounded p-1 text-slate-400 hover:text-red-500"
-                  >
-                    <Trash2 className="size-3" strokeWidth={2} />
-                  </button>
-                </DropdownMenuItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-      )}
     </div>
   );
 }

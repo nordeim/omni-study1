@@ -7,6 +7,7 @@ import { z } from "zod";
 
 import { db } from "@/lib/db";
 import { wouldCreateCycle } from "@/lib/folder-tree";
+import { idField } from "@/lib/validation";
 import {
   makeItemRoutes,
   NotFoundError,
@@ -16,11 +17,10 @@ import {
 } from "@/lib/server/http";
 import { sentKeysPatch } from "@/lib/server/entities";
 
+// S119/BT4: the shared idField bound on parentId (was unbounded).
 const folderUpdateSchema = z.object({
   name: z.string().min(1).max(200).optional(),
-  parentId: z
-    .string()
-    .min(1)
+  parentId: idField
     .nullish()
     .transform((v) => (v === "" ? null : v))
     .optional(),

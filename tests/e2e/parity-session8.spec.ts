@@ -402,6 +402,33 @@ test.describe("S8-F · Tasks panel + search", () => {
 });
 
 test.describe("S8-G · Notes two-pane", () => {
+  // S119/BT10 — the "Manage notebooks" superset control lives INSIDE the
+  // left pane, below the notebook filter (its documented placement). It
+  // was previously a stray third flex child of the root row — a 130px
+  // mostly-empty full-height column at the view's right edge squeezing the
+  // editor pane. The root row's visible children are exactly the two panes.
+  test("S119/BT10: the Manage notebooks dropdown lives in the left pane, and the root row has exactly two children", async ({ page }) => {
+    await page.goto("/Notes");
+    await hydrated(page);
+    const pane = page.locator('[aria-label="Notes list pane"]');
+    const manage = page.getByRole("button", { name: "Manage notebooks" });
+    await expect(manage).toBeVisible();
+    // the trigger is INSIDE the left pane
+    await expect(pane.getByRole("button", { name: "Manage notebooks" })).toBeVisible();
+    // the root two-pane row's only visible flex children are the panes
+    const kids = await page.evaluate(() => {
+      const root = [...document.querySelectorAll("div")].find((d) =>
+        /flex h-\[calc\(100vh-8rem\)\] gap-6/.test(d.className.toString()),
+      );
+      if (!root) return null;
+      return [...root.children]
+        .filter((c) => getComputedStyle(c).display !== "none")
+        .map((c) => c.tagName);
+    });
+    expect(kids).toEqual(["ASIDE", "DIV"]);
+  });
+
+
   test("h1 lives INSIDE the left pane with a book-open icon", async ({ page }) => {
     await page.goto("/Notes");
     await hydrated(page);

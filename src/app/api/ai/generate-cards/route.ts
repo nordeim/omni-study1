@@ -12,6 +12,7 @@ import ZAI from "z-ai-web-dev-sdk";
 import { checkRateLimit } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { requireUser } from "@/lib/server/auth";
+import { idField } from "@/lib/validation";
 import {
   errorResponse,
   parseWith,
@@ -27,8 +28,9 @@ import {
   withDeadline,
 } from "@/lib/server/ai";
 
+// S119/BT4: the shared idField bound on deckId (was unbounded).
 const generateCardsSchema = z.object({
-  deckId: z.string().min(1),
+  deckId: idField,
   topic: z.string().max(500).optional().default(""),
   count: z.number().int().min(1).max(20).optional().default(8),
 });

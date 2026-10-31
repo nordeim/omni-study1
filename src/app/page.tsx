@@ -159,9 +159,14 @@ export default function Home() {
         // The full background refresh: pre-warmed collections stay, the
         // rest of the cache fills without gating the first paint. S118/BS9:
         // a failed fetch must never reject into an unhandled rejection —
-        // the offline state surfaces through the connectivity banner and
-        // heals on the first view switch's loadCollections (the pre-warm's
-        // own .catch convention).
+        // the offline state surfaces through the connectivity banner.
+        // S119/BT12 (the honest residual): a boot where BOTH the pre-warm
+        // and this loadAll fail leaves the collections empty until the
+        // next mutation refreshes its slice or the user reloads (the
+        // earlier comment claimed a view-switch healing that never
+        // existed — navigate() loads nothing; loadCollections is called
+        // only here at boot plus three post-mutation sites). The Splash's
+        // own retry affordance is the manual reload.
         void useDataStore.getState().loadAll().catch(() => {});
       } catch (err: unknown) {
         if (cancelled) return;

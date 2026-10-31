@@ -21,7 +21,7 @@ import {
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/toast";
 import { apiSend, isTimeoutError } from "@/lib/api";
 import { mutations, useDataStore, type AiChatMessageRow } from "@/lib/data";
@@ -128,7 +128,7 @@ export function AIAssistantView() {
               <p className="text-center text-sm text-slate-500">
                 Ask anything about your studies — or start with a quick prompt.
               </p>
-              <div className="grid w-full grid-cols-2 gap-2" aria-label="Quick actions">
+              <div role="group" className="grid w-full grid-cols-2 gap-2" aria-label="Quick actions">
                 {QUICK_ACTIONS.map((action) => (
                   <button
                     key={action.title}
@@ -197,12 +197,25 @@ export function AIAssistantView() {
         }}
       >
         <div className="flex gap-2">
-        <Input
+        {/* S119/BT6 — the composer is a REAL textarea, matching the reference's
+            measured element (rows=2, 60px, resize-none, the "Ask me anything..."
+            placeholder) and honoring the pinned hint's PROMISE: Enter sends,
+            Shift+Enter inserts a real newline (the reference's own Shift+Enter
+            sends — measured live; delivering the promised behavior is the
+            superset half of the parity decision P1). */}
+        <Textarea
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          placeholder="Ask your study copilot anything…"
+          onKeyDown={(e) => {
+            if (e.key === "Enter" && !e.shiftKey) {
+              e.preventDefault();
+              void send(input);
+            }
+          }}
+          placeholder="Ask me anything..."
           aria-label="Message the assistant"
-          className="flex-1"
+          className="flex-1 resize-none"
+          rows={2}
           disabled={busy}
         />
         <Button

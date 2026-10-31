@@ -31,12 +31,20 @@ import type { PrismaClient } from "@prisma/client";
 
 import { checkRateLimit } from "@/lib/auth";
 import { DATA_EXPORT_FORMAT, DATA_EXPORT_VERSION, EXPORT_COLLECTIONS } from "@/lib/data-export";
-import { IMPORT_MAX_BYTES, NEVER_IMPORT_FIELDS, sortFoldersParentsFirst } from "@/lib/data-import";
+import {
+  IMPORT_MAX_BYTES,
+  ImportRowError,
+  NEVER_IMPORT_FIELDS,
+  sanitizeImportRow,
+  sortFoldersParentsFirst,
+} from "@/lib/data-import";
 import { db } from "@/lib/db";
 import { requireUser } from "@/lib/server/auth";
 import {
+  assertJsonContentType,
   errorResponse,
   rateLimitedResponse,
+  readBodyCapped,
   toErrorResponse,
 } from "@/lib/server/http";
 
@@ -134,16 +142,25 @@ export const POST = async (request: NextRequest) => {
       return rateLimitedResponse(limit.retryAfterSec, "Too many import attempts");
     }
 
-    // ---- the 10 MiB body cap (S117/BR1 — the documented 413 contract) ------
-    const declaredLength = Number(request.headers.get("content-length") ?? "0");
-    if (Number.isFinite(declaredLength) && declaredLength > IMPORT_MAX_BYTES) {
-      return errorResponse(
-        413,
-        `That backup is too large (${Math.round(declaredLength / (1024 * 1024))} MiB). The import cap is ${IMPORT_MAX_BYTES / (1024 * 1024)} MiB.`,
-      );
+    // ---- S119/BT1a: the BR5 Content-Type gate, shared with readJson ------
+    // A cross-site form POST (text/plain or multipart — native HTML form
+    // encodings) must not reach this JSON parser: sameSite=lax cookies ride
+    // top-level form navigations, the exact CSRF class BR5 closed at readJson.
+    // The app's own client and every e2e POST send application/json.
+    try {
+      assertJsonContentType(request);
+    } catch {
+      return errorResponse(400, "Upload the backup as a JSON file.");
     }
-    const text = await request.text();
-    if (text.length > IMPORT_MAX_BYTES) {
+
+    // ---- the 10 MiB body cap (S117/BR1 — the documented 413 contract) ------
+    // S119/BT2: the capped read now walks the stream chunk-by-chunk (the
+    // declared-length pre-read lives inside readBodyCapped) so a chunked
+    // body is counted AS it is read, never buffered past the cap.
+    let text: string;
+    try {
+      text = await readBodyCapped(request, IMPORT_MAX_BYTES);
+    } catch {
       return errorResponse(
         413,
         `That backup is too large. The import cap is ${IMPORT_MAX_BYTES / (1024 * 1024)} MiB.`,
@@ -298,6 +315,26 @@ export const POST = async (request: NextRequest) => {
       parsed.set("folders", sorted);
     }
 
+    // ---- S119/BT1b: the per-row guard, BEFORE any write -----------------
+    // Every row must satisfy the export format's primitive-value contract
+    // (a wrong type would otherwise surface as PrismaClientValidationError
+    // → HTTP 500) and the files rows additionally satisfy the BR4/BS5 link
+    // rules (a stored javascript: URL renders as href target=_blank in the
+    // Files view — the unguarded third entry point, now guarded).
+    for (const collection of parsed.keys()) {
+      const rows = parsed.get(collection) as Row[];
+      for (let i = 0; i < rows.length; i += 1) {
+        try {
+          sanitizeImportRow(collection, rows[i], i);
+        } catch (err: unknown) {
+          if (err instanceof ImportRowError) {
+            return errorResponse(400, err.message);
+          }
+          throw err;
+        }
+      }
+    }
+
     // ---- the all-or-nothing write --------------------------------------
     const imported: Record<string, { created: number; updated: number }> = {};
     let created = 0;
@@ -355,6 +392,16 @@ export const POST = async (request: NextRequest) => {
       total: created + updated,
     });
   } catch (err: unknown) {
+    // S119/BT1b: a Prisma validation error from the write loop is a
+    // malformed-envelope condition (the guard above catches the known
+    // shapes; anything left is an exotic field-shape mismatch) — the
+    // 400-bad-input contract, never a 500.
+    if (err instanceof Error && err.name === "PrismaClientValidationError") {
+      return errorResponse(
+        400,
+        "That backup contains a row whose fields do not match the app's data model. Re-export a fresh backup and try again.",
+      );
+    }
     return toErrorResponse(err);
   }
 };

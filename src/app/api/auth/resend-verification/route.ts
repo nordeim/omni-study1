@@ -12,6 +12,7 @@ import { z } from "zod";
 import { checkRateLimit, generateVerificationCode } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { clientIp } from "@/lib/server/auth";
+import { emailField } from "@/lib/validation";
 import {
   parseWith,
   rateLimitedResponse,
@@ -20,7 +21,8 @@ import {
 } from "@/lib/server/http";
 
 const CODE_TTL_MS = 15 * 60 * 1000;
-const resendSchema = z.object({ email: z.string().email() });
+// S119/BT4: the shared emailField atom (was a bare z.string().email()).
+const resendSchema = z.object({ email: emailField });
 
 export async function POST(request: NextRequest) {
   try {

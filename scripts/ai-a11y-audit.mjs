@@ -97,7 +97,7 @@ await page.route("**/api/ai/messages", (route) =>
     body: JSON.stringify([seedReply]),
   }),
 );
-await page.fill("input[aria-label='Message the assistant']", "s14 a11y probe D1 seed");
+await page.fill("[aria-label='Message the assistant']", "s14 a11y probe D1 seed");
 await page.click("button[aria-label='Send message']");
 // S81/AH10: the transcript bubbles are <div>s inside the aria-live sf-scroll
 // pane — the <ul>/<li> markup the old wait targeted predates a refactor.
@@ -120,7 +120,7 @@ const d1 = await page.evaluate(() => {
   const bubbles = transcriptPane
     ? [...transcriptPane.querySelectorAll("div")].filter((el) => (el.className || "").includes("whitespace-pre-wrap"))
     : [];
-  const composer = document.querySelector("input[aria-label='Message the assistant']");
+  const composer = document.querySelector("[aria-label='Message the assistant']");
   // The live region may be the pane itself OR its container — resolve upward.
   const liveAncestor = bubbles[0] ? (bubbles[0].closest('[aria-live]') || null) : null;
   return {
@@ -153,7 +153,7 @@ await page.route("**/api/ai/chat", () => {
   /* hold the route — never fulfill (the S13 reload-between-probes lesson
      applies AFTER this probe: we reload below) */
 });
-await page.fill("input[aria-label='Message the assistant']", "s14 a11y probe D2");
+await page.fill("[aria-label='Message the assistant']", "s14 a11y probe D2");
 await page.click("button[aria-label='Send message']");
 await page.waitForTimeout(1500);
 const d2 = await page.evaluate(() => {
@@ -164,7 +164,7 @@ const d2 = await page.evaluate(() => {
   ) || null;
   const items = transcriptPane ? [...transcriptPane.querySelectorAll("div")] : [];
   const thinking = items.find((el) => (el.textContent || "").includes("Thinking"));
-  const composer = document.querySelector("input[aria-label='Message the assistant']");
+  const composer = document.querySelector("[aria-label='Message the assistant']");
   const sendBtn = document.querySelector("button[aria-label='Send message']");
   return {
     thinkingPresent: !!thinking,
@@ -224,7 +224,7 @@ if (d3.liveOutsideToaster === 0) {
 await openView(page, "AI Study Assistant", "AIAssistant");
 await page.waitForTimeout(1000);
 const d4 = await page.evaluate(() => {
-  const composer = document.querySelector("input[aria-label='Message the assistant']") || document.querySelector("main textarea");
+  const composer = document.querySelector("[aria-label='Message the assistant']") || document.querySelector("main textarea");
   // S81/AH10: the quick actions were redesigned as click-to-fill buttons
   // (onClick fills the composer — NOT toggles), so aria-pressed is gone BY
   // DESIGN. The correct semantics probe: the quick-actions grid is labeled

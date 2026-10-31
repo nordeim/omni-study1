@@ -65,13 +65,13 @@ await page.route(chatUrl, (route) => route.abort("failed"));
 let toastSeen = false;
 page.on("toast", () => (toastSeen = true)); // not supported — use DOM probe below.
 
-await page.fill("input[aria-label='Message the assistant']", "audit probe A1");
-await page.press("input[aria-label='Message the assistant']", "Enter");
+await page.fill("[aria-label='Message the assistant']", "audit probe A1");
+await page.press("[aria-label='Message the assistant']", "Enter");
 await page.waitForTimeout(2500);
 
 const afterAbort = await page.evaluate(() => {
   const msgs = [...document.querySelectorAll("main li")].map((li) => li.textContent.trim().slice(0, 40));
-  const composer = document.querySelector("input[aria-label='Message the assistant']");
+  const composer = document.querySelector("[aria-label='Message the assistant']");
   const sendBtn = document.querySelector("button[aria-label='Send message']");
   const toasts = [...document.querySelectorAll("[data-slot=toast], [role=status], ol li")].map((t) => t.textContent.trim().slice(0, 70));
   return {
@@ -130,14 +130,14 @@ await page.route(chatUrl, async (route) => {
   // Never fulfill. Hold the route open.
   await new Promise(() => {});
 });
-await page.fill("input[aria-label='Message the assistant']", "audit probe A2");
-await page.press("input[aria-label='Message the assistant']", "Enter");
+await page.fill("[aria-label='Message the assistant']", "audit probe A2");
+await page.press("[aria-label='Message the assistant']", "Enter");
 // Wait 25 s: busy is expected to persist (the 120 s deadline has not fired).
 await page.waitForTimeout(25000);
 const hungState = await page.evaluate(() => {
   const sendBtn = document.querySelector("button[aria-label='Send message']");
   const thinking = [...document.querySelectorAll("main li")].some((li) => /Thinking/i.test(li.textContent || ""));
-  const composer = document.querySelector("input[aria-label='Message the assistant']");
+  const composer = document.querySelector("[aria-label='Message the assistant']");
   return {
     sendDisabled: sendBtn ? sendBtn.disabled : null,
     thinkingShown: thinking,
@@ -166,8 +166,8 @@ await page.waitForTimeout(1500);
 await page.route(chatUrl, (route) =>
   route.fulfill({ status: 500, contentType: "application/json", body: JSON.stringify({ error: "Internal server error" }) }),
 );
-await page.fill("input[aria-label='Message the assistant']", "audit probe A3");
-await page.press("input[aria-label='Message the assistant']", "Enter");
+await page.fill("[aria-label='Message the assistant']", "audit probe A3");
+await page.press("[aria-label='Message the assistant']", "Enter");
 await page.waitForTimeout(1500);
 const errState = await page.evaluate(() => {
   // S81/AH10 (audit-tools repair): the toaster's items are plain <button>

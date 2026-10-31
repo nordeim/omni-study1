@@ -323,7 +323,7 @@ export function GradeTrackerView() {
           Session-65 re-measure: the reference's row is THREE cards
           (grid md:grid-cols-3 gap-4) — no Highest Grade card and no
           sub-captions; the white-card icons are emerald-500/blue-500. */}
-      <div className="grid gap-4 md:grid-cols-3" aria-label="Grade summary">
+      <div role="group" className="grid gap-4 md:grid-cols-3" aria-label="Grade summary">
         <div className="sf-gradient sf-gradient-shadow-lg rounded-2xl p-6 text-white">
           <Award className="mb-3 h-8 w-8 opacity-80" strokeWidth={2} aria-hidden />
           <p className="text-sm opacity-90">Overall Average</p>
@@ -341,7 +341,7 @@ export function GradeTrackerView() {
           bare cards in a 2-col grid — chip + avg, the Progress-to-A row,
           and the Recent Grades pills; NO "By subject" wrapper heading) ---- */}
       {bySubject.length > 0 && (
-        <div className="grid gap-4 sm:grid-cols-2" aria-label="Subject breakdown">
+        <div role="group" className="grid gap-4 sm:grid-cols-2" aria-label="Subject breakdown">
           {bySubject.map(({ subject, avg, rows }) => (
             <div
               key={subject.id}

@@ -575,6 +575,63 @@ test.describe("S5-N · AI quick-action cards", () => {
     // The composer hint (measured copy).
     await expect(page.getByText("Press Enter to send, Shift + Enter for a new line")).toBeVisible();
   });
+
+  // ---- S119/BT6 — the composer parity decision (P1) ---------------------------
+  // The reference's composer is a <textarea rows=2> (measured live:
+  // 60px tall, resize-none, the "Ask me anything..." placeholder); the
+  // clone's single-line Input made the pinned hint above a lie. The fix
+  // ships the reference's element + geometry AND honors the hint's promise
+  // (Enter sends, Shift+Enter inserts a real newline — the reference's own
+  // Shift+Enter sends, measured; delivering the promised behavior is the
+  // superset half of the decision).
+  test("S119/BT6: the composer is the reference's 2-row textarea with the measured placeholder", async ({ page }) => {
+    await page.goto("/AIAssistant");
+    await hydrated(page);
+    const composer = page.getByLabel("Message the assistant");
+    await expect(composer).toBeVisible();
+    await expect(composer).toHaveAttribute("rows", "2");
+    expect(await composer.evaluate((el) => getComputedStyle(el).resize)).toBe("none");
+    // the reference's measured geometry: 2 text rows + the 8/12 padding
+    expect(await composer.evaluate((el) => Math.round(el.getBoundingClientRect().height))).toBeGreaterThanOrEqual(60);
+    await expect(composer).toHaveAttribute("placeholder", "Ask me anything...");
+  });
+
+  test("S119/BT6: Shift+Enter inserts a newline and Enter sends (the hint's promise, honored)", async ({ page }) => {
+    // The send is MOCKED and GATED (the resilience A-family shape): a real
+    // AI POST would consume the demo user's 20/15-min AI budget — exhausted
+    // by the s14 C1 pin in the earlier chunk (the documented budget
+    // ordering) — and the held response makes the optimistic append
+    // deterministic to observe.
+    let release!: () => void;
+    const gate = new Promise<void>((resolve) => (release = resolve));
+    await page.route("**/api/ai/chat", async (route) => {
+      await gate;
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({ ok: true }),
+      });
+    });
+    await page.goto("/AIAssistant");
+    await hydrated(page);
+    const composer = page.getByLabel("Message the assistant");
+    await composer.click();
+    await composer.fill("line one");
+    await composer.press("Shift+Enter");
+    await composer.type("line two");
+    await expect(composer).toHaveValue("line one\nline two");
+    // Enter (no shift) sends: the composer clears immediately and the
+    // optimistic user message renders in the transcript (held route).
+    await composer.press("Enter");
+    await expect(composer).toHaveValue("");
+    // the optimistic user bubble (the transcript renders divs, not list
+    // items — the self-end user-message class is the stable shape)
+    await expect(page.locator("div.self-end").filter({ hasText: "line one" })).toBeVisible();
+    // Release the send: it succeeds, so the composer STAYS cleared (a
+    // failure would bounce the text back — the resilience A1 contract).
+    release();
+    await expect(composer).toHaveValue("");
+  });
 });
 
 test.describe("S5-V · session-65 reference drift fixes (measured on the live reference 2026-10-19)", () => {

@@ -17,7 +17,6 @@ import {
   MapPin,
   Pencil,
   Plus,
-  Trash2,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -69,7 +68,6 @@ export function TimetableView() {
   const subjects = useDataStore((s) => s.subjects);
   const createTimetableClass = mutations.createTimetableClass;
   const updateTimetableClass = mutations.updateTimetableClass;
-  const deleteTimetableClass = mutations.deleteTimetableClass;
   const { toast } = useToast();
 
   const today = startOfDay(new Date());
@@ -178,14 +176,13 @@ export function TimetableView() {
     }
   };
 
-  const remove = async (id: string) => {
-    try {
-      await deleteTimetableClass(id);
-      toast.success("Class removed.");
-    } catch (err: unknown) {
-      toast.error(err instanceof ApiError ? err.message : "Delete failed.");
-    }
-  };
+  // S119/BT9: the dead `remove()` is gone — the reference's Timetable has NO
+  // delete affordance in any measured state (its class cells carry a single
+  // edit action; its button census shows no delete control), so this
+  // never-called path (and the decorative Trash2 glyph that polluted the
+  // edit button's accessible name with a nonexistent "Delete X" action) was
+  // dead code, not a missing feature. A delete affordance remains an
+  // ADR-level superset decision if ever wanted.
 
   const weekLabel = `${new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric" }).format(weekDays[0])} - ${new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric" }).format(weekDays[6])}`;
 
@@ -291,8 +288,8 @@ export function TimetableView() {
 
           {/* Desktop week grid */}
           <section className="sf-card overflow-hidden p-6 max-md:hidden">
-            <div className="sf-timetable-canvas min-w-[900px] overflow-x-auto" aria-label="Week grid">
-              <div className="grid grid-cols-8" data-builder={builder ? "true" : undefined} aria-label="Week header">
+            <div role="group" className="sf-timetable-canvas min-w-[900px] overflow-x-auto" aria-label="Week grid">
+              <div role="group" className="grid grid-cols-8" data-builder={builder ? "true" : undefined} aria-label="Week header">
                 <div />
                 {weekDays.map((day, col) => {
                   const isTodayCol = isThisWeek && day.toDateString() === today.toDateString();
@@ -315,7 +312,7 @@ export function TimetableView() {
                   );
                 })}
               </div>
-              <div className="grid grid-cols-8" aria-label="Hour cells">
+              <div role="group" className="grid grid-cols-8" aria-label="Hour cells">
                 {HOURS.map((hour) => (
                   <React.Fragment key={hour}>
                     <div className="border-b border-slate-50 pr-2 pt-1 text-right text-xs text-slate-500 dark:border-slate-800">
@@ -359,19 +356,20 @@ export function TimetableView() {
                                   {c.room ? ` · ${c.room}` : ""}
                                 </p>
                                 <span className="mt-1 hidden gap-1 group-hover:flex">
+                                  {/* S119/BT9: the pencil is decorative; the
+                                      action word is visually hidden. The
+                                      accessible name comes FROM the content
+                                      (Label in Name: an aria-label cannot
+                                      contain the whole visible text — the
+                                      name + time + room — so the grid cell
+                                      never takes one). */}
                                   <Pencil
-                                    role="img"
-                                    aria-label={`Edit ${c.name}`}
-                                    className="size-3 text-slate-400"
-                                    strokeWidth={2}
-                                  />
-                                  <Trash2
-                                    role="img"
-                                    aria-label={`Delete ${c.name}`}
+                                    aria-hidden
                                     className="size-3 text-slate-400"
                                     strokeWidth={2}
                                   />
                                 </span>
+                                <span className="sr-only">Edit class</span>
                               </button>
                             );
                           })}
@@ -485,7 +483,7 @@ export function TimetableView() {
       {/* My Classes */}
       {classes.length > 0 && (
         <section className="sf-card p-6">
-          <div className="flex items-center justify-between" aria-label="My Classes header">
+          <div role="group" className="flex items-center justify-between" aria-label="My Classes header">
             <h2 className="text-lg font-bold text-slate-800 dark:text-slate-100">My Classes</h2>
             <p className="text-sm text-slate-500 dark:text-slate-400">{formatWeekdayMonthDay(today)}</p>
           </div>

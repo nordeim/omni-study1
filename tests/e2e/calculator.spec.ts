@@ -215,4 +215,46 @@ test.describe("S15 physical keyboard (superset)", () => {
     await page.getByRole("tab", { name: "Basic" }).click();
     await expect(page.getByLabel("Calculator display")).toContainText("0");
   });
+
+  // ---- S119/BT7 — the history panel's non-modal focus lifecycle -------------
+
+  test("S119/BT7: the history panel closes on Escape and restores focus to the toggle", async ({ page }) => {
+    await s15Ready(page);
+    const toggle = page.getByRole("button", { name: "History", exact: true });
+    await toggle.click();
+    const panel = page.locator("#calc-history-panel");
+    await expect(panel).toBeVisible();
+    // focus landed in the panel on open
+    await expect(panel).toBeFocused();
+    // Escape closes the panel — and ONLY closes it (the display keeps its
+    // value: the S15 display-clear mapping stays dormant while open)
+    await page.keyboard.type("12", { delay: 30 });
+    await expect(page.getByLabel("Calculator display")).toContainText("12");
+    await page.keyboard.press("Escape");
+    await expect(panel).not.toBeVisible();
+    await expect(toggle).toBeFocused();
+    await expect(page.getByLabel("Calculator display")).toContainText("12");
+    // with the panel CLOSED, Escape reverts to the pinned display-clear
+    await page.keyboard.press("Escape");
+    await expect(page.getByLabel("Calculator display")).toContainText("0");
+  });
+
+  test("S119/BT12: a failed history save never toasts the evaluation message", async ({ page }) => {
+    await s15Ready(page);
+    // Route the history POST to a 500: the evaluation must succeed, the
+    // display must show the result, and the toast must be the
+    // history-specific message — never "could not be evaluated".
+    await page.route("**/api/calculator/history", (route) =>
+      route.fulfill({
+        status: 500,
+        contentType: "application/json",
+        body: JSON.stringify({ error: "The history service is unavailable." }),
+      }),
+    );
+    await page.keyboard.type("1+1", { delay: 30 });
+    await page.keyboard.press("Enter");
+    await expect(page.getByLabel("Calculator display")).toContainText("2");
+    await expect(page.getByText("The history service is unavailable.")).toBeVisible();
+    await expect(page.getByText("could not be evaluated")).not.toBeVisible();
+  });
 });

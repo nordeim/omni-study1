@@ -10,8 +10,11 @@ import { ACCENTS } from "./theme";
 // ---- shared atoms ----------------------------------------------------------
 
 // S118/BS2: every id is length-bounded (cuids are 25 chars; 64 is the generous
-// ceiling) — an unbounded id string reached Prisma verbatim.
-const idField = z.string().min(1).max(64);
+// ceiling) — an unbounded id string reached Prisma verbatim. S119/BT4:
+// exported for the route-local schemas (folders/ai) that carry id fields —
+// one atom, every consumer (the AH8/S118-BS5 lesson: grep EVERY route that
+// writes the same shape when a bound lands at an atom).
+export const idField = z.string().min(1).max(64);
 // Dialogs send "" for cleared relations — accept it and map to null
 // (the schema must not reject the empty string BEFORE the transform).
 const nullableId = z
@@ -22,8 +25,9 @@ const boundedTitle = z.string().min(1).max(200);
 const passwordField = z.string().min(8).max(200);
 const hexColor = z.string().regex(/^#[0-9a-fA-F]{6}$/);
 // S118/BS2: the shared email atom — trimmed (a padded paste normalizes
-// instead of hard-failing) and bounded at 200 chars.
-const emailField = z.string().trim().email().max(200);
+// instead of hard-failing) and bounded at 200 chars. S119/BT4: exported for
+// the auth route-local schemas that still hand-rolled z.string().email().
+export const emailField = z.string().trim().email().max(200);
 /** A date-time string; "" normalizes to null (the dialogs' clear-date path).
  * S118/BS2: the string is bounded and must parse as a date — a garbage
  * value is a 400 at the boundary, never a Prisma Invalid-Date 500. The

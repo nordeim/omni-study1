@@ -100,7 +100,7 @@ export function CalendarView() {
         </h1>
         {/* S5-G/S9-F: the bordered segmented control — white p-1 rounded-lg,
             h-8 tabs, grid3x3/list icons, solid-violet active tab. */}
-        <div
+        <div role="group"
           aria-label="Calendar mode"
           className="inline-flex rounded-lg border border-slate-200 bg-white p-1 dark:border-slate-800 dark:bg-slate-900"
         >
@@ -216,7 +216,7 @@ export function CalendarView() {
             </div>
           </div>
 
-          <div aria-label="Calendar weekdays" className="mb-2 grid grid-cols-7 gap-1">
+          <div role="group" aria-label="Calendar weekdays" className="mb-2 grid grid-cols-7 gap-1">
             {CALENDAR_WEEKDAYS.map((d) => (
               <span
                 key={d}
@@ -226,7 +226,7 @@ export function CalendarView() {
               </span>
             ))}
           </div>
-          <div
+          <div role="group"
             aria-label="Calendar days"
             className="mt-1 grid grid-cols-7 gap-1"
           >
@@ -299,7 +299,7 @@ export function CalendarView() {
         </section>
         )}
 
-        <div
+        <div role="group"
           aria-label="Calendar legend"
           className="flex flex-wrap items-center gap-4 text-sm text-slate-600 dark:text-slate-300"
         >

@@ -14,6 +14,7 @@ import ZAI from "z-ai-web-dev-sdk";
 import { checkRateLimit } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { requireUser } from "@/lib/server/auth";
+import { idField } from "@/lib/validation";
 import {
   errorResponse,
   parseWith,
@@ -31,11 +32,10 @@ import {
 
 const QUESTION_TYPES = ["multiple_choice", "true_false", "short_answer"] as const;
 
+// S119/BT4: the shared idField bound on subjectId (was unbounded).
 const generateQuestionsSchema = z.object({
   title: z.string().min(1).max(200),
-  subjectId: z
-    .string()
-    .min(1)
+  subjectId: idField
     .nullish()
     .transform((v) => (v === "" ? null : v)),
   count: z.number().int().min(1).max(20).optional().default(10),

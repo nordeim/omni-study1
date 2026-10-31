@@ -283,7 +283,7 @@ export function AssignmentsView() {
           />
         </div>
       ) : (
-        <div className="flex flex-col gap-3" aria-label="Assignment rows">
+        <div role="group" className="flex flex-col gap-3" aria-label="Assignment rows">
           {filtered.map((a) => {
             const due = dueLabel(a);
             const subject = subjects.find((s) => s.id === a.subjectId) ?? null;

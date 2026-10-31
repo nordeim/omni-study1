@@ -130,7 +130,7 @@ export function MathSolverView() {
       />
 
       {/* ---- input card ---- */}
-      <div className="sf-card p-6" aria-label="Math solver input">
+      <div role="group" className="sf-card p-6" aria-label="Math solver input">
         <Textarea
           value={problem}
           onChange={(e) => setProblem(e.target.value)}

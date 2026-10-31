@@ -141,7 +141,7 @@ function GroupDialog({
           </div>
           <div className="flex flex-col gap-1.5">
             <Label>Color</Label>
-            <div className="flex gap-2" aria-label="Group color swatches">
+            <div role="group" className="flex gap-2" aria-label="Group color swatches">
               {GROUP_COLORS.map((hex) => (
                 <button
                   key={hex}

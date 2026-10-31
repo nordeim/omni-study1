@@ -289,3 +289,133 @@ function finish(rawData: Record<string, unknown>): ImportParseResult {
 
   return { ok: true, rows, totalRows };
 }
+
+// ---------------------------------------------------------------------------
+// S119/BT1b — the per-row guard. The write loop historically persisted
+// envelope fields VERBATIM (only passwordHash/userId stripped), making the
+// import the unguarded THIRD entry point to several route-enforced rules:
+// a hand-edited "backup" could store a javascript: link URL (files-view
+// renders href={file.url} target=_blank — script execution in the app
+// origin on click), wrong field TYPES surfaced as PrismaClientValidationError
+// → HTTP 500 (violating the 400-bad-input contract), and unbounded strings
+// rode the 10 MiB body cap straight into SQLite. The guard runs BEFORE the
+// write loop: every value must be a primitive (the export format's own
+// serialization contract — Date → ISO, JSON columns → strings), strings are
+// capped (generously — the caps stop abuse, never legitimate backups), and
+// the files rows additionally satisfy the BR4 http(s)-only URL rule and the
+// BS5 name/shape rules, exactly like both interactive entry points.
+// ---------------------------------------------------------------------------
+
+/** The generic per-field cap. 1M chars — 100× the largest real field (a
+ *  2000-char card face), far below anything that could abuse a row. */
+export const IMPORT_FIELD_MAX_CHARS = 1_000_000;
+
+/** The files.data cap: ≈ the 2 MiB binary ceiling as base64 (the upload
+ *  route's own MAX_UPLOAD_BYTES contract). */
+export const IMPORT_FILE_DATA_MAX_CHARS = 2_800_000;
+
+const IMPORT_FILE_URL_MAX_CHARS = 2000;
+const IMPORT_FILE_NAME_MAX_CHARS = 200;
+
+/** The guard's rejection — names the collection and row index so the
+ *  operator can find the offender in their backup file. */
+export class ImportRowError extends Error {
+  constructor(collection: string, index: number, detail: string) {
+    super(`Invalid ${collection}[${index}] row: ${detail}`);
+    this.name = "ImportRowError";
+  }
+}
+
+function fieldCapFor(collection: string, field: string): number {
+  if (collection === "files" && field === "data") {
+    return IMPORT_FILE_DATA_MAX_CHARS;
+  }
+  return IMPORT_FIELD_MAX_CHARS;
+}
+
+/** Validate one imported row against the export format's primitive-value
+ *  contract + the files-specific link rules. Throws ImportRowError (the
+ *  route maps it to a 400 with the message as the actionable copy). */
+export function sanitizeImportRow(
+  collection: string,
+  row: ImportRow,
+  index = 0,
+): ImportRow {
+  for (const [field, value] of Object.entries(row)) {
+    if (value === null) continue;
+    const kind = typeof value;
+    if (kind !== "string" && kind !== "number" && kind !== "boolean") {
+      throw new ImportRowError(
+        collection,
+        index,
+        `field "${field}" must be a string, number, boolean, or null — the export format serializes every value to a primitive.`,
+      );
+    }
+    if (typeof value === "string") {
+      const cap = fieldCapFor(collection, field);
+      if (value.length > cap) {
+        throw new ImportRowError(
+          collection,
+          index,
+          `field "${field}" is ${value.length} characters — the import caps it at ${cap.toLocaleString("en-US")}.`,
+        );
+      }
+    }
+  }
+
+  if (collection === "files") {
+    const name = row.name;
+    if (
+      typeof name !== "string" ||
+      name.trim().length < 1 ||
+      name.length > IMPORT_FILE_NAME_MAX_CHARS
+    ) {
+      throw new ImportRowError(
+        collection,
+        index,
+        `field "name" must be a non-empty string of at most ${IMPORT_FILE_NAME_MAX_CHARS} characters.`,
+      );
+    }
+    const url = row.url;
+    if (url !== undefined && url !== null) {
+      if (typeof url !== "string" || url.length > IMPORT_FILE_URL_MAX_CHARS) {
+        throw new ImportRowError(
+          collection,
+          index,
+          `field "url" must be a string of at most ${IMPORT_FILE_URL_MAX_CHARS} characters.`,
+        );
+      }
+      let parsed: URL;
+      try {
+        parsed = new URL(url);
+      } catch {
+        throw new ImportRowError(
+          collection,
+          index,
+          `field "url" must be a valid URL.`,
+        );
+      }
+      if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
+        throw new ImportRowError(
+          collection,
+          index,
+          `field "url" must be an http(s) link — "${parsed.protocol}" URLs are rejected by every file-link entry point.`,
+        );
+      }
+    }
+    const data = row.data;
+    if (
+      data !== undefined &&
+      data !== null &&
+      (typeof data !== "string" || data.length > IMPORT_FILE_DATA_MAX_CHARS)
+    ) {
+      throw new ImportRowError(
+        collection,
+        index,
+        `field "data" must be base64 text of at most ${IMPORT_FILE_DATA_MAX_CHARS.toLocaleString("en-US")} characters (the 2 MiB upload ceiling).`,
+      );
+    }
+  }
+
+  return row;
+}

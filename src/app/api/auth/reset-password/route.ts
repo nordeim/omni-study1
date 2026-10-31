@@ -53,23 +53,35 @@ export async function POST(request: NextRequest) {
       return errorResponse(400, "That reset link is invalid or has expired. Request a new one.");
     }
 
-    // The one-shot consumption rides the SAME transaction as the write —
-    // a replay can never land between them. S118/BS1: the sessionVersion
-    // bump rides the same transaction too — a pre-reset cookie cannot
-    // outlive the reset it predates.
-    await db.$transaction([
-      db.user.update({
+    // The one-shot consumption rides the SAME transaction as the write.
+    // S119/BT3: the single-use guarantee is now CONDITIONAL — the where
+    // clause `usedAt: null AND expiresAt > now` is the arbiter, not the
+    // pre-check above (two concurrent replays both passed it — the
+    // ~50-100ms scrypt window between the findUnique and the commit let
+    // BOTH transactions run; the pre-S119 unconditional update consumed
+    // twice and both replays returned 200). Only ONE updateMany matches;
+    // the loser reads count 0 and takes the invalid-token 400.
+    // S118/BS1: the sessionVersion bump rides the same transaction too —
+    // a pre-reset cookie cannot outlive the reset it predates.
+    const now = new Date();
+    const consumed = await db.$transaction(async (tx) => {
+      const res = await tx.passwordResetToken.updateMany({
+        where: { id: record.id, usedAt: null, expiresAt: { gt: now } },
+        data: { usedAt: now },
+      });
+      if (res.count === 0) return false;
+      await tx.user.update({
         where: { id: record.userId },
         data: {
           passwordHash: hashPassword(password),
           sessionVersion: { increment: 1 },
         },
-      }),
-      db.passwordResetToken.update({
-        where: { id: record.id },
-        data: { usedAt: new Date() },
-      }),
-    ]);
+      });
+      return true;
+    });
+    if (!consumed) {
+      return errorResponse(400, "That reset link is invalid or has expired. Request a new one.");
+    }
 
     return NextResponse.json({ ok: true });
   } catch (err: unknown) {

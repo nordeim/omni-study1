@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test, type Page } from "@playwright/test";
 
 // S23 pins — the data import / restore (docs/remediation-plan-session23.md):
 //
@@ -25,6 +25,8 @@ import { expect, test } from "@playwright/test";
 // 10/15-min per-user budget (round-trip 1 + re-import 1 + dangling-FK 1 +
 // the 400 family 4 + the panel journey 1 + the S117 cards round-trip 1)
 // — counted and documented; no other spec file POSTs the route.
+// S119/BT1: the perimeter pins below POST on a FRESH TEST-NET-registered
+// user (192.0.2.119) — the demo user's import budget is untouched.
 test.use({ storageState: "tests/e2e/.auth/user.json" });
 
 function envelope(overrides: Record<string, unknown> = {}): Record<string, unknown> {
@@ -253,5 +255,68 @@ test.describe("S23 the data import (restore)", () => {
     await expect(result).toBeVisible();
     await expect(result).toContainText("3");
     await expect(result).toContainText("updated");
+  });
+});
+
+
+// S119/BT1 — the import perimeter. The route previously read its body with
+// NO Content-Type gate (a cross-site text/plain form POST rides the
+// sameSite=lax cookie straight into the JSON parser — the exact CSRF class
+// BR5 closed at readJson) and persisted envelope fields VERBATIM (a
+// hand-edited backup could store a javascript: files[].url — the BR4
+// http(s)-only rule's unguarded third entry point — and wrong field types
+// surfaced as Prisma 500s). Both pins run on a FRESH TEST-NET user so the
+// demo import budget (9/10 above) is untouched.
+const PROBE_IP = "192.0.2.119";
+
+async function registerFreshUser(page: Page, salt: string): Promise<void> {
+  const email = `s119-${salt}-${Date.now()}@studyflow.app`;
+  const res = await page.request.post("/api/auth/register", {
+    headers: { "x-forwarded-for": PROBE_IP },
+    data: { email, password: "Fresh1234!", name: "S119 Probe" },
+  });
+  expect(res.ok(), `register failed: ${res.status()}`).toBe(true);
+  const body = (await res.json()) as { code: string };
+  const verify = await page.request.post("/api/auth/verify-email", {
+    headers: { "x-forwarded-for": PROBE_IP },
+    data: { email, code: body.code },
+  });
+  expect(verify.ok(), `verify failed: ${verify.status()}`).toBe(true);
+}
+
+test.describe("S119/BT1 the import perimeter (fresh TEST-NET user)", () => {
+  test("BT1a: a text/plain POST never reaches the JSON parser (the BR5 policy at the import route)", async ({ page }) => {
+    await registerFreshUser(page, "gate");
+    const res = await page.request.post("/api/import/data", {
+      headers: { "content-type": "text/plain" },
+      data: JSON.stringify(envelope()),
+    });
+    expect(res.status()).toBe(400);
+    expect(((await res.json()) as { error: string }).error).toContain("JSON");
+  });
+
+  test("BT1b: a files row carrying a javascript: url is rejected before the write", async ({ page }) => {
+    await registerFreshUser(page, "guard");
+    const evil = envelope({
+      data: {
+        files: [
+          {
+            id: "s119-evil-link",
+            name: "Evil link",
+            mime: "text/plain",
+            size: 0,
+            url: "javascript:alert(1)",
+            folderId: null,
+            createdAt: "2026-09-01T00:00:00.000Z",
+            updatedAt: "2026-09-01T00:00:00.000Z",
+          },
+        ],
+      },
+    });
+    const res = await page.request.post("/api/import/data", { data: evil });
+    expect(res.status()).toBe(400);
+    const body = (await res.json()) as { error: string };
+    expect(body.error).toContain("files");
+    expect(body.error).toContain("http(s)");
   });
 });

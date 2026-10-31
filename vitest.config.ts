@@ -1,8 +1,22 @@
 import { defineConfig } from "vitest/config";
 import path from "node:path";
 
-// Unit-test layer for the pure domain seams — 28 files / 963 tests
-// (re-anchored S118/BS — the audit-driven hardening cycle: census 944 → 963.
+// Unit-test layer for the pure domain seams — 31 files / 990 tests
+// (re-anchored S119/BT — the audit-rider hardening cycle: census 963 → 990.
+// The additions: http-body +9 [the S119/BT2 counting-reader family — the
+// chunked-body cap aborts AT the cap without reading past it (the pull-
+// count proof), the at-cap boundary, the multi-byte split-codepoint decode
+// + the S119/BT1a assertJsonContentType family], import-row-guard +12
+// [the S119/BT1b sanitizeImportRow family — the primitive-value contract,
+// the 1M field guard, the files rows' javascript:/data: URL rejection, the
+// name/data shape rules, the collection+index error naming], data-store +3
+// [the S119/BT8 fetchAndSet sequence-guard family — the stale out-of-order
+// resolution never clobbers], env-check +3 [the S119/BT5 forgeable-key
+// band — <16 chars FATAL in production, the 16-char warn boundary].
+// The route-level halves of BT1/BT2/BT3 ride the e2e layer (the s23
+// perimeter pins + the auth-flows concurrent replay pair).
+//
+// Prior cycle (S118/BS — census 944 → 963):
 // The additions: auth +3 [the S118/BS1 session-version family — the token
 // embeds v, a missing v reads 0 (deploy compat), differing versions sign
 // differently], validation +13 [the S118/BS2 bounded-reads family — the

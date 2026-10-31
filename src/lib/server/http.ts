@@ -86,27 +86,95 @@ export function parseWith<T>(schema: ZodType<T>, input: unknown): T {
  * read (memory) with an actionable 400. */
 const JSON_BODY_MAX_BYTES = 10 * 1024 * 1024;
 
-/** Read a JSON body defensively (malformed JSON → the caller's 400 path).
- * S117/BR5: a non-JSON Content-Type is unparseable-by-policy — a form POST
- * with `text/plain` (which bypasses the CORS/preflight reasoning behind the
- * sameSite=lax CSRF mitigation) must not reach a JSON parser. The app's own
+/** The BR5 Content-Type policy as a shared seam (S119/BT1a): a non-JSON
+ * Content-Type is unparseable-by-policy — a form POST with `text/plain`
+ * (which bypasses the CORS/preflight reasoning behind the sameSite=lax
+ * CSRF mitigation) must not reach a JSON parser. Extracted so BOTH JSON
+ * body readers (readJson here + the import route's own read, which keeps
+ * its 413 response contract) enforce the identical gate. The app's own
  * client sets `Content-Type: application/json` on every JSON call
- * (src/lib/api.ts).
- * S118/BS2: the body is capped at JSON_BODY_MAX_BYTES — checked on the
- * declared Content-Length BEFORE the read and on the actual text after. */
-export async function readJson(request: NextRequest): Promise<unknown> {
+ * (src/lib/api.ts). An ABSENT Content-Type passes (the historical
+ * curl/undici shape — the app's own e2e POSTs and Node fetches). */
+export function assertJsonContentType(request: NextRequest | Request): void {
   const contentType = request.headers.get("content-type") ?? "";
   if (contentType !== "" && !contentType.toLowerCase().includes("application/json")) {
     throw new ValidationError("The request body must be valid JSON.");
   }
+}
+
+/** The counting reader's byte core (S119/BT2): reads a request body
+ * chunk-by-chunk with a running byte count and ABORTS at the cap — a
+ * `Transfer-Encoding: chunked` request (no Content-Length) is counted AS
+ * it is read, never buffered past the cap (the BS2 pre-read check was
+ * inert on chunked bodies; the post-read check fired only after
+ * request.text() had already buffered everything). Returns the RAW bytes —
+ * multipart bodies carry arbitrary binary that a text decode would corrupt
+ * (invalid UTF-8 sequences collapse to U+FFFD); text consumers use the
+ * readBodyCapped wrapper. */
+export async function readBytesCapped(
+  request: NextRequest | Request,
+  maxBytes: number,
+): Promise<Uint8Array> {
   const declaredLength = Number(request.headers.get("content-length") ?? "0");
-  if (Number.isFinite(declaredLength) && declaredLength > JSON_BODY_MAX_BYTES) {
+  if (Number.isFinite(declaredLength) && declaredLength > maxBytes) {
     throw new ValidationError("The request body is too large.");
   }
-  const text = await request.text();
-  if (text.length > JSON_BODY_MAX_BYTES) {
+  const body = request.body;
+  if (!body) return new Uint8Array(0);
+  const reader = body.getReader();
+  let received = 0;
+  const chunks: Uint8Array[] = [];
+  let oversized = false;
+  try {
+    for (;;) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      if (value) {
+        received += value.byteLength;
+        if (received > maxBytes) {
+          oversized = true;
+          break; // stop walking the stream at the cap — never buffer past it
+        }
+        chunks.push(value);
+      }
+    }
+  } finally {
+    // Release the lock whether we finished or aborted at the cap; cancelling
+    // signals the producer to stop generating the rest of the body.
+    await reader.cancel().catch(() => {});
+  }
+  if (oversized) {
     throw new ValidationError("The request body is too large.");
   }
+  const out = new Uint8Array(received);
+  let offset = 0;
+  for (const chunk of chunks) {
+    out.set(chunk, offset);
+    offset += chunk.byteLength;
+  }
+  return out;
+}
+
+/** The counting reader's text form (S119/BT2) — the JSON body path. Multi-
+ *  byte codepoints split across chunks decode correctly. */
+export async function readBodyCapped(
+  request: NextRequest | Request,
+  maxBytes: number,
+): Promise<string> {
+  const bytes = await readBytesCapped(request, maxBytes);
+  if (bytes.byteLength === 0) return "";
+  return new TextDecoder().decode(bytes);
+}
+
+/** Read a JSON body defensively (malformed JSON → the caller's 400 path).
+ * S117/BR5 (via assertJsonContentType): a non-JSON Content-Type never
+ * reaches the parser.
+ * S118/BS2: the body is capped at JSON_BODY_MAX_BYTES — the declared
+ * Content-Length pre-read AND the actual length, now through the counting
+ * reader (S119/BT2) so chunked bodies are bounded during the read too. */
+export async function readJson(request: NextRequest): Promise<unknown> {
+  assertJsonContentType(request);
+  const text = await readBodyCapped(request, JSON_BODY_MAX_BYTES);
   if (text.length === 0) return {};
   try {
     return JSON.parse(text) as unknown;

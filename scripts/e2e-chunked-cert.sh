@@ -1,5 +1,15 @@
 #!/usr/bin/env bash
-# Session-89 cold e2e certification — the 5-chunk map, final post-Batch-BS
+# Session-89 cold e2e certification — the 5-chunk map, final post-Batch-BT
+# (census 478 → 488: s119/BT +10 [chunk 1 +1 the BT10 notes manage-notebooks
+# placement pin; chunk 2 +1 the BT9 timetable edit-button accessible-name
+# pin; chunk 3 +2 the BT6 composer pins (the reference-measured 2-row
+# textarea geometry + the Shift+Enter-newline/Enter-send behavior) and +1
+# the BT11 failed-title-PATCH streak toast; chunk 4 +2 the BT7 history
+# panel Escape/focus-lifecycle pin + the BT12 history-save toast split;
+# chunk 5 +2 the BT1 import-perimeter pins (the text/plain Content-Type
+# gate + the javascript: files-row guard, on a fresh TEST-NET user) and +1
+# the BT3 concurrent reset-token replay pair {200, 400}] — all on fresh
+# TEST-NET or held-route budgets where they touch limited routes)
 # (census 476 → 478: s118/BS +2 [the BS4 drawer modal focus-lifecycle pin in
 # chunk 1 — focus moves to the close button on open, Tab wraps the dialog's
 # focusables, focus restores to the hamburger on close; the BS2 readJson-cap
@@ -52,12 +62,15 @@
 # 12 tests [the AJ1 folder pin + the AK1 guard family] and accessibility 84
 # [the AJ5 print family + AJ6 focus pin + the AK2 print-enumeration closure
 # + the AL2 chip]).
-# Expected: 132 + 141 + 57 + 87 + 61 = 478 (each chunk's count includes its
+# Expected: 133 + 142 + 60 + 89 + 64 = 488 (each chunk's count includes its
 # auth setup; 473 real specs = the S82 443 + the seven S83 pins + the eight
 # S84 pins + the four S85 pins + the one S86 pin + the one S88 pin + the one
 # S89 pin + the four S94 pins [A0c + AU3a/b/c] + the two S117/BR pins [the
 # s23 cards round-trip + the verify-429] + the two S118/BS pins [BS4 drawer
-# focus in chunk 1 + BS2 oversized-body in chunk 5] — S95/AV4a, the s94
+# focus in chunk 1 + BS2 oversized-body in chunk 5] + the ten S119/BT pins
+# [BT10 notes placement, BT9 timetable name, BT6 composer ×2, BT11 title
+# toast, BT7 calc panel, BT12 calc toast split, BT1 import gate + guard,
+# BT3 reset replay pair] — S95/AV4a, the s94
 # audit's L3: the AU re-tag updated the sum but left the 470-era "465" stale;
 # the S118 re-tag repaired the same class for the 474-era sum the S117 cycle
 # left behind).

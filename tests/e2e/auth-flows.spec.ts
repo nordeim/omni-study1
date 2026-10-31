@@ -163,6 +163,70 @@ test.describe("S15 auth flows", () => {
     });
   });
 
+  // S119/BT3 — the reset token's single-use consumption is CONDITIONAL.
+  // The pre-S119 shape read usedAt BEFORE the transaction and consumed
+  // unconditionally inside it: two concurrent replays both passed the
+  // pre-check (the ~50-100ms scrypt window between the findUnique and the
+  // commit) and BOTH committed — {200, 200}. The conditional updateMany
+  // (`usedAt: null AND expiresAt > now` inside the transaction) makes
+  // exactly one win; the loser reads count 0 and takes the invalid-token
+  // 400. API-level on a fresh TEST-NET user (192.0.2.119) so the loopback
+  // register budget and the journey's own budgets are untouched.
+  test("S119/BT3: a concurrent reset-token replay pair yields exactly {200, 400}", async ({ page }) => {
+    const ip = { "x-forwarded-for": "192.0.2.119" };
+    const email = `s119-bt3-${Date.now()}@studyflow.app`;
+    const reg = await page.request.post("/api/auth/register", {
+      headers: ip,
+      data: { email, password: "Fresh1234!", name: "BT3 Probe" },
+    });
+    expect(reg.ok()).toBe(true);
+    const { code } = (await reg.json()) as { code: string };
+    const verify = await page.request.post("/api/auth/verify-email", {
+      headers: ip,
+      data: { email, code },
+    });
+    expect(verify.ok()).toBe(true);
+
+    // The self-hosted delivery: the forgot response IS the link.
+    const forgot = await page.request.post("/api/auth/forgot-password", {
+      headers: ip,
+      data: { email },
+    });
+    expect(forgot.ok()).toBe(true);
+    const { resetUrl } = (await forgot.json()) as { resetUrl: string };
+    const token = new URL(resetUrl).searchParams.get("token");
+    expect(token).toBeTruthy();
+
+    // THE PAIR: two simultaneous POSTs of the same token. Pre-fix both
+    // pass the pre-check and both commit ({200, 200}); post-fix exactly
+    // one consumption wins.
+    const newPassword = "PairPass123!";
+    const [a, b] = await Promise.all([
+      page.request.post("/api/auth/reset-password", {
+        headers: ip,
+        data: { token, password: newPassword },
+      }),
+      page.request.post("/api/auth/reset-password", {
+        headers: ip,
+        data: { token, password: newPassword },
+      }),
+    ]);
+    expect([a.status(), b.status()].sort()).toEqual([200, 400]);
+
+    // The winner's password signs in (the reset landed exactly once) and
+    // a THIRD sequential replay is the plain invalid-token 400.
+    const login = await page.request.post("/api/auth/login", {
+      headers: ip,
+      data: { email, password: newPassword },
+    });
+    expect(login.ok()).toBe(true);
+    const replay = await page.request.post("/api/auth/reset-password", {
+      headers: ip,
+      data: { token, password: newPassword },
+    });
+    expect(replay.status()).toBe(400);
+  });
+
   test("the login card's chrome is unchanged in the sign-in state (byte-parity guard)", async ({ page }) => {
     // The S4-F pins that the S15 redesign had to preserve: the brand block
     // (h1 + subtitle + logo) and the Google + divider composition.

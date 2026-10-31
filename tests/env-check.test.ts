@@ -62,6 +62,27 @@ describe("authSecretBootStatus", () => {
     expect(r.level).toBe("ok");
   });
 
+  // ---- S119/BT5: the forgeable-key band — production secrets under 16 ----
+  // ---- chars are FATAL (an offline-brute-forceable HMAC signing key must --
+  // ---- never ship silently; 16–31 stays the documented warn band) ---------
+
+  it("is FATAL in production when AUTH_SECRET is 15 chars (a brute-forceable HMAC key)", () => {
+    const r = authSecretBootStatus("production", "012345678901234");
+    expect(r.level).toBe("fatal");
+    expect(r.message).toContain("openssl rand -hex 32");
+  });
+
+  it("is FATAL in production when AUTH_SECRET is a single character", () => {
+    const r = authSecretBootStatus("production", "x");
+    expect(r.level).toBe("fatal");
+  });
+
+  it("WARNS (not fatal) at the 16-char boundary of the fatal band", () => {
+    const r = authSecretBootStatus("production", "0123456789012345");
+    expect(r.level).toBe("warn");
+    expect(r.message).toContain("openssl rand -hex 32");
+  });
+
   // ---- the warn family: weak-but-present, or the dev fallback -------------
 
   it("WARNS in production one char under the boundary (31 chars)", () => {

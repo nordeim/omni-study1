@@ -22,6 +22,7 @@ import {
   errorResponse,
   parseWith,
   rateLimitedResponse,
+  readBytesCapped,
   readJson,
   toErrorResponse,
   withUser,
@@ -101,7 +102,30 @@ export const POST = withUser(async (user, request: NextRequest) => {
     return NextResponse.json(link, { status: 201 });
   }
 
-  const form = await request.formData().catch(() => null);
+  // S119/BT2 — the multipart branch reads BOUNDED bytes. request.formData()
+  // buffered the whole body inside the parser with no cap in any form (a
+  // chunked multipart POST with no Content-Length reached the parser
+  // unbounded); now the counting reader caps the RAW bytes first (the
+  // 2 MiB file ceiling + the multipart envelope overhead), then formData()
+  // parses the bounded buffer — byte-exact, never text-decoded (binary
+  // uploads survive intact). The reconstructed Request keeps the original
+  // headers (the multipart boundary lives in Content-Type).
+  const UPLOAD_BODY_MAX_BYTES = MAX_UPLOAD_BYTES + 64 * 1024;
+  let rawBytes: Uint8Array;
+  try {
+    rawBytes = await readBytesCapped(request, UPLOAD_BODY_MAX_BYTES);
+  } catch {
+    return errorResponse(413, "Files are limited to 2 MiB.");
+  }
+  const form = await new Request(request.url, {
+    method: "POST",
+    headers: request.headers,
+    // TS 5.7's BlobPart wants ArrayBufferView<ArrayBuffer>; the counting
+    // reader always allocates a fresh ArrayBuffer-backed view.
+    body: new Blob([rawBytes.buffer as ArrayBuffer]),
+  })
+    .formData()
+    .catch(() => null);
   if (!form) {
     return errorResponse(400, "Upload the file as multipart form data.");
   }

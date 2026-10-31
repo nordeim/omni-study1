@@ -9,7 +9,7 @@ description: >
   routing model, the CRUD factory, auth, and the two-layer testing strategy.
   Use this to extend, debug, onboard, or replicate the architecture without
   re-deriving two sessions of hard-won knowledge.
-version: 2.1.0
+version: 2.2.0
 tags:
   - nextjs16
   - react19
@@ -25,9 +25,11 @@ tags:
 
 > **What this is:** the single-source-of-truth reference for working in
 > `nordeim/omni-study1`. Every fact below is verified against the codebase
-> (1133 tests green, re-verified at the 2.0 update: 834 Vitest unit + 299
-> Playwright e2e incl. 1 setup — the full suite re-run in six chunks after the
-> parity re-application + account-flow completion + regression hardening).
+> (1478 tests green, re-anchored at the 2.2 update: 990 Vitest unit + 488
+> Playwright e2e across the 5-chunk cold map — the census re-anchored through
+> the s117–s119 hardening cycles; the 2.0 baseline was 834 + 299 in six
+> chunks after the parity re-application + account-flow completion +
+> regression hardening).
 > Sections marked with ⚠️ encode non-obvious contracts — violating them has
 > historically produced silent visual or data-path bugs.
 
@@ -512,6 +514,12 @@ notes, decks, grades; `avatarEmoji: ""` (reference default state).
 | AP-115 | HIGH | The s70 cycle's two probes DISAGREED on the same dashboard action node (probe #1: anchor/16px/gray vs probe #2: button/12px/violet-600) and the standing Z12 pin ("22-emoji avatar list") was overturned by a scoped re-dump (the real count is 24 — the s69 scan filtered the whole document without visibility scoping and silently dropped ⭐ and ⚽). A text node's PARENT styles are not the visible text's styles: probe #3's full-path node dump (path + parentFs + parentColor) revealed the reference's anchor-wrapping-button anatomy that both earlier probes had half-read. Rule: when probes disagree — or when a pin encodes a probe reading — dump EVERY candidate node with its DOM path and parent chain, and scope every filtered scan to visible nodes (offsetParent !== null). One-element-deep reads and document-wide filters are both silent mis-measurement. |
 | AP-116 | MEDIUM | The s71 cycle's first chunk-3 run reported 53 passed where the s70 baseline demanded 58 — the re-derived chunk map had taken the s70 transcript's compressed map line "chunk 3 = auth+s18–s26+greeting" at face value, but "auth" meant BOTH auth.spec.ts (6) AND auth-flows.spec.ts (5); the missing file covered 5 tests. A re-certification that silently under-covers is worse than a failure: it LOOKS green while 5 specs never ran | compressed map notation in a transcript is NOT a file census. Before running any re-derived chunk map, enumerate the spec directory (`ls tests/e2e/*.spec.ts`) and diff it against the map's file set — every spec file must appear exactly once; when a sum mismatches the baseline, trust the arithmetic and bisect the map (per-file --list counts), never the baseline | /home/z/my-project/scripts/e2e-chunk.sh + the remediation-plan cycle-22 note (session-71) |
 | AP-117 | MEDIUM | The Batch-AB pin draft asserted `getByText("78%")` on the populated GradeTracker's Chemistry card and would strict-mode-violate at GREEN time: Chemistry has ONE seeded grade (78/100), so the card renders the SAME string in two roles (the big avg AND the Recent-Grades pill). The reference never hits this because its avg format is 1dp ("50.0%") while its pills are integer — the clone's integer convention (the measured Overall card) makes avg==pill collisions inherent for single-grade subjects | when a surface renders the same value in two roles, assert through a role hook (`data-testid="gt-subject-avg"`), never bare text; before pinning populated aggregates, check the SEED for coincidences (single-grade subjects, avg==grade); a RED run cannot catch this class — the failure only appears at GREEN when the surface finally renders | tests/e2e/parity-session5.spec.ts (S5-AB7) + scripts/capture-s73-populated.mjs |
+| AP-118 | HIGH | The s75 probe's residue scan reported ZERO while a probe-created exam SURVIVED on the reference: the CANDIDATES entity list (inherited verbatim from the s72 probe) had no `Exam` entry, so neither the delta scan nor the signature scan ever listed it | a probe's cleanup candidate list must cover EVERY entity its UI session can write — derive it from the dialogs actually driven, not from a prior session's list; always cross-check the DELETIONS count against the rows the UI measurably gained before accepting a RESIDUE ZERO verdict | scripts/ref-populated-s6family5-s75.mjs (session-75) |
+| AP-119 | MEDIUM | The s75 probe's assignment/exam submits silently verified the WRONG dialog layer: Radix date-picker popovers are themselves modal `[role=dialog]` elements, so `[role=dialog]` `.last()` scoped the submit-click and the detach-wait to the popover while the form stayed open, poisoning every later nav click | scope Radix form dialogs by their accessible TITLE, never a bare role query — a popover is a dialog too; when a submit "succeeds" but the form never detaches, suspect the wrong layer before the network | the s75 probe family (session-75) |
+| AP-120 | MEDIUM | The import route's `knownIds` loop correctly deck-scoped its cards query while the write loop TWENTY LINES BELOW probed `{ id, userId }` on the same flashcard delegate → PrismaClientValidationError → the all-or-nothing rollback → HTTP 500 on ANY envelope containing cards, invisible for 94 sessions because the s23 e2e envelope only ever POSTED a card with a DANGLING deckId | a special-cased model must be special-cased at EVERY probe site, not just the ones the tests reach: grep for the model name across the whole route before declaring the special case done, and pin the exact branch the special case guards | the S117/BR1 import cards fix (session-117) |
+| AP-121 | MEDIUM | Two s118 auditor recommendations — wire the drawer's dead `sf-slide-in` animation; add `scrollTo(0,0)` on navigate — were both DISPROVEN by live reference measurement (the reference drawer computes `transition: all 0s`; it PERSISTS a 600px scroll across drawer navigation); implementing either would have BROKEN parity | an auditor's conventional-wisdom recommendation is a parity HYPOTHESIS, not a finding: any behavioral change to shared chrome must be measured on the reference BEFORE the fix is planned — the audit report's fix column is a suggestion, the reference is the contract | the S118 Q1/Q2 non-gap record (session-118) |
+| AP-122 | MEDIUM | The s119 audit flagged the AI composer's hint ("Shift + Enter for a new line") as misleading copy while the clone shipped a single-line input — measuring the reference settled the direction: its composer IS a `<textarea rows=2>` (the ELEMENT was the real parity gap) while its own Shift+Enter SENDS (the reference's hint is aspirational too) | a pinned hint is a parity contract the CODE must honor: when copy and behavior drift on a pinned surface, measure the reference's element AND its behavior — ship the reference's element (parity) and the promised behavior (superset), never a copy change | the S119/BT6 composer fix (session-119) |
+| AP-123 | MEDIUM | The calculator maps Escape to display-clear (pinned since S15); the new history panel's Escape-to-close would have made ONE press do BOTH (two window-level listeners, registration order — not intent) | when adding an overlay to a view that already binds Escape, the overlay OWNS the key while open: the pre-existing binding consults the overlay state and stays dormant — grep the view's existing key bindings before adding a new one | the S119/BT7 panel lifecycle (session-119) |
 
 ---
 
@@ -560,12 +568,15 @@ tail -40 dev.log                            # request traces + prisma queries
 ```bash
 bun run lint && bun run typecheck && bun run test && bun run build && bun run test:e2e
 ```
-Current green state: lint ✓ · tsc ✓ · 834 unit ✓ · build ✓ · 299 e2e ✓ (1133 green).
+Current green state (re-anchored at 2.2): lint ✓ · tsc ✓ · 990 unit ✓ · build ✓ · 488 e2e ✓ (1478 green).
 
 **Full-suite chunk map** (one server-boot per chunk; the 10-min tool cap makes
-one-shot full runs unreliable — six chunks, all green at the 2.0 update):
-chrome+s14 104 · S5+calc+S6 46 · S7+S8+S9 79 · tasks/resilience/s16/s17 20 ·
-auth+s18–s23 35 · s24–s26 18.
+one-shot full runs unreliable — the 2.0 six-chunk map: chrome+s14 104 ·
+S5+calc+S6 46 · S7+S8+S9 79 · tasks/resilience/s16/s17 20 · auth+s18–s23 35 ·
+s24–s26 18. Re-anchored at 2.2: the FIVE-chunk cold map of
+`scripts/e2e-chunked-cert.sh` — 133+142+60+89+64 = 488, always run COLD
+[`rm -f db/e2e.db`]: the s23 round-trip posts a FIXED-id envelope and the
+seed's idempotent upserts never refresh day-relative dates).
 
 **Pre-deployment:** set a real `AUTH_SECRET` (`openssl rand -hex 32`); use an
 ABSOLUTE `DATABASE_URL` (see `docs/DEPLOYMENT.md` §4); never ship `.env`,
