@@ -2,27 +2,29 @@ import { defineConfig } from "vitest/config";
 import path from "node:path";
 
 // Unit-test layer for the pure domain seams — 28 files / 936 tests
-// (re-anchored S115/BP — the rotation program's SECOND PASS's cycle
-// three: census UNCHANGED at 936. The BP cycle touched documentation +
-// scripts only: the BO1 record's dated register note [the post-BO
-// final-tree playwright-class counts 245 importers / 126 Usage-line
-// carriers — the two s114 riders joined the guarded class after the
-// BO1 measurement; the register rotates forward, the threshold-form
-// pins absorb growth by design, the exact-count pin stays rejected]
-// and the s115 riders [ref-resweep-s115.mjs + capture-s115-evidence.mjs
-// — the MID-BAND LIGHT evidence-frame rotation, the second pass's
-// cycle three: the mid-band cell 768×1024, now the tied-thinnest
-// light coverage alongside the landscape-light cell, with the
-// PracticeTests light (the view's FIRST light-side frame; the
-// 2-column grid — the mid-band-only structural discriminator with
-// EXACTLY 2 px computed tracks — both seeded cards side-by-side in
-// one row, the card metadata lines, the below-lg app bar) + the
-// StudyGroups light (the view's FIRST light-side frame; the w-80
-// aside at its FULL 320px mid-band width, the Calc Crew row with
-// 2 members + the Mathematics chip, the plain-variant null-selection
-// empty state with the Users EmptyState icon ABSENT — the S8-Z
-// two-variant boundary)]. No new pins; src/ and tests/ untouched —
-// the census projection exact.)
+// (re-anchored S116/BQ — the rotation program's SECOND PASS's cycle
+// four, the LIGHT QUARTET's closing cell: census UNCHANGED at 936.
+// The BQ cycle touched documentation + scripts only: the BP1 record's
+// dated register note [the post-BP final-tree playwright-class counts
+// 247 importers / 128 Usage-line carriers — the two s115 riders
+// joined the guarded class after the BP1 measurement; the register
+// rotates forward, the threshold-form pins absorb growth by design,
+// the exact-count pin stays rejected] and the s116 riders
+// [ref-resweep-s116.mjs + capture-s116-evidence.mjs — the
+// MOBILE-LANDSCAPE LIGHT evidence-frame rotation, the second pass's
+// cycle four: the landscape cell 844×390, the light quartet's LAST
+// never-second-passed cell, with the s107 pair both taking their
+// FIRST light-side frames — the drawer nav-scroll (the
+// landscape-only structural discriminator: the 20-link nav list
+// MUST scroll at the 390px viewport height, scrollHeight >
+// clientHeight, while the portrait list fits unscrolled; the 288px
+// w-72 panel over the light surface, the S3-L brand header, the
+// dialog semantics) + the Tasks light (the active-list h1 "All
+// Tasks" — the derived value; the md:flex two-pane layout rendered
+// AT 844; the red-pill family on the overdue row + the violet
+// RepeatPill + slate SubjectChip on the boundary row, NEVER the
+// exact date)]. No new pins; src/ and tests/ untouched — the census
+// projection exact.)
 // Unit-test layer for the pure domain seams — 28 files / 936 tests
 // (re-anchored S114/BO — the rotation program's SECOND PASS's cycle
 // two: census UNCHANGED at 936. The BO cycle touched documentation +
