@@ -61,7 +61,7 @@ export function verifyLoginCredentials(
   return ok && user != null;
 }
 
-// ---- session tokens (HMAC over { uid, iat, exp }) -----------------------------
+// ---- session tokens (HMAC over { uid, iat, exp, v }) ------------------------
 
 function sessionSecret(): string {
   return process.env.AUTH_SECRET?.trim() || DEV_FALLBACK_SECRET;
@@ -71,14 +71,20 @@ function b64url(input: Buffer | string): string {
   return Buffer.from(input).toString("base64url");
 }
 
-export function createSessionToken(userId: string): string {
-  const payload = { uid: userId, iat: Date.now(), exp: Date.now() + SESSION_TTL_MS };
+/** The session-version embedding (S118/BS1): the token carries the user's
+ * sessionVersion at issue time so a password reset (the possible-attacker
+ * path — anyone can request a reset for any address under the documented
+ * in-response delivery) revokes every session issued before it. A token
+ * with no v reads as 0 — cookies issued before this change keep working
+ * across the deploy. */
+export function createSessionToken(userId: string, sessionVersion: number = 0): string {
+  const payload = { uid: userId, iat: Date.now(), exp: Date.now() + SESSION_TTL_MS, v: sessionVersion };
   const body = b64url(JSON.stringify(payload));
   const mac = createHmac("sha256", sessionSecret()).update(body).digest("base64url");
   return `${body}.${mac}`;
 }
 
-export function readSessionToken(token: string): { uid: string; iat: number; exp: number } | null {
+export function readSessionToken(token: string): { uid: string; iat: number; exp: number; v: number } | null {
   const parts = token.split(".");
   if (parts.length !== 2 || !parts[0] || !parts[1]) return null;
   const [body, mac] = parts;
@@ -96,7 +102,9 @@ export function readSessionToken(token: string): { uid: string; iat: number; exp
     const { uid, iat, exp } = payload as Record<string, unknown>;
     if (typeof uid !== "string" || typeof iat !== "number" || typeof exp !== "number") return null;
     if (exp <= Date.now()) return null;
-    return { uid, iat, exp };
+    // Missing v (a pre-S118 token) reads as 0 — the deploy-compat shape.
+    const v = typeof (payload as Record<string, unknown>).v === "number" ? (payload as { v: number }).v : 0;
+    return { uid, iat, exp, v };
   } catch {
     return null;
   }

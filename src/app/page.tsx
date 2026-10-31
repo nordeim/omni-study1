@@ -157,8 +157,12 @@ export default function Home() {
 
         setStatus("ready");
         // The full background refresh: pre-warmed collections stay, the
-        // rest of the cache fills without gating the first paint.
-        void useDataStore.getState().loadAll();
+        // rest of the cache fills without gating the first paint. S118/BS9:
+        // a failed fetch must never reject into an unhandled rejection —
+        // the offline state surfaces through the connectivity banner and
+        // heals on the first view switch's loadCollections (the pre-warm's
+        // own .catch convention).
+        void useDataStore.getState().loadAll().catch(() => {});
       } catch (err: unknown) {
         if (cancelled) return;
         if (err instanceof ApiError && err.status === 401) {
@@ -211,7 +215,9 @@ export default function Home() {
         id="main-content"
         tabIndex={-1}
         className={cn(
-          "p-4 pt-20 outline-none transition-[margin] lg:p-8 lg:pt-8",
+          // duration-200 matches the rail (S118/BS10): the margin transition
+          // otherwise rides the 150 ms default and finishes early.
+          "p-4 pt-20 outline-none transition-[margin] duration-200 lg:p-8 lg:pt-8",
           sidebarCollapsed ? "lg:ml-20" : "lg:ml-[260px]",
         )}
       >

@@ -106,6 +106,12 @@ test.describe("S15 auth flows", () => {
     await expect(page.getByRole("heading", { name: /Good (morning|afternoon|evening|night)/ })).toBeVisible({
       timeout: 20000,
     });
+    // S118/BS1 — capture the PRE-RESET session cookie (verify signs the
+    // fresh account in): the reset below must REVOKE it (the sessionVersion
+    // bump) — replayed after the reset it must 401.
+    const cookies = await page.context().cookies();
+    const preReset = cookies.find((c) => c.name === "sf_session");
+    expect(preReset?.value).toBeTruthy();
     await page.context().clearCookies();
 
     // The forgot flow (measured): Reset your password → Send reset link.
@@ -140,6 +146,15 @@ test.describe("S15 auth flows", () => {
     await expect(page.locator("div.shadow-2xl").getByRole("alert")).toContainText(
       "Password reset successfully. Sign in with your new password.",
     );
+
+    // S118/BS1 — the pre-reset session is REVOKED: replaying the captured
+    // cookie against /api/auth/me must 401 (the reset's sessionVersion bump
+    // — the canonical compromise-recovery contract).
+    const meWithOldCookie = await page.request.get("/api/auth/me", {
+      headers: { cookie: `sf_session=${preReset!.value}` },
+    });
+    expect(meWithOldCookie.status()).toBe(401);
+
     await page.getByLabel("Email", { exact: true }).fill(email);
     await page.getByLabel("Password", { exact: true }).fill(newPassword);
     await page.getByRole("button", { name: "Sign in", exact: true }).click();
@@ -187,5 +202,17 @@ test.describe("S15 auth flows", () => {
     const retryAfter = blocked.headers()["retry-after"];
     expect(retryAfter).toBeTruthy();
     expect(Number(retryAfter)).toBeGreaterThan(0);
+  });
+
+  test("an oversized JSON body is rejected before the read (S118/BS2)", async ({ request }) => {
+    // The shared readJson cap (10 MiB): an 11 MiB login POST answers the
+    // actionable 400 from the DECLARED Content-Length check — BEFORE the
+    // body is read (bounded memory), and before any validation. The error
+    // copy distinguishes the cap from the schema's own rejection.
+    const big = { email: `x@${"y".repeat(11 * 1024 * 1024)}.com`, password: "Whatever123!" };
+    const res = await request.post("/api/auth/login", { data: big });
+    expect(res.status()).toBe(400);
+    const body = (await res.json()) as { error: string };
+    expect(body.error).toContain("too large");
   });
 });

@@ -281,3 +281,33 @@ describe("buildPanelRows + trends (the v3 display model — S20)", () => {
     expect(lcp.points).toEqual([100, 300]);
   });
 });
+
+// S118/BS6 — the CSV formula guard: a field beginning with a spreadsheet
+// formula trigger (= + - @ tab CR) is neutralized with a leading apostrophe;
+// every other field renders byte-identically.
+describe("toRumCsv formula neutralization (S118/BS6)", () => {
+  const event = (navigationType: string) => ({
+    metric: "LCP",
+    value: 1,
+    rating: "good",
+    navigationType,
+    path: "/Dashboard",
+    sessionId: "s1",
+    createdAt: "2026-10-31T00:00:00.000Z",
+  });
+
+  it("prefixes a leading apostrophe onto every formula trigger", () => {
+    for (const danger of ["=cmd|' /C calc'!A0", "+1|0", "-2+3|4", "@SUM(A1:A2)", "\ttab", "\rCR"]) {
+      const line = toRumCsv([event(danger)]).trim().split("\n")[1];
+      // After the third comma (the navigationType field) comes either the
+      // bare apostrophe prefix or the quoted "'..." form (fields that also
+      // carry a comma/quote/newline get RFC-4180 wrapped).
+      expect(line).toMatch(/good,(?:'|"')/);
+    }
+  });
+
+  it("leaves ordinary fields byte-identical", () => {
+    const before = toRumCsv([event("navigate")]).trim().split("\n")[1];
+    expect(before.startsWith("LCP,1,good,navigate,/Dashboard,s1,")).toBe(true);
+  });
+});

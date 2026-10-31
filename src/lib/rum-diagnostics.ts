@@ -172,12 +172,17 @@ const CSV_HEADER =
   "metric,value,rating,navigationType,path,sessionId,createdAt";
 
 /** Escape one CSV field RFC-4180 style: fields carrying a comma, quote, or
- *  line break are wrapped in quotes with inner quotes doubled. */
+ *  line break are wrapped in quotes with inner quotes doubled. S118/BS6:
+ *  a field BEGINNING with a spreadsheet formula trigger (= + - @ tab CR)
+ *  is additionally prefixed with a neutralizing apostrophe — the beacon's
+ *  path/userAgent/sessionId/navigationType are client-controlled strings
+ *  and the export opens in Excel/LibreOffice. */
 function csvField(raw: string): string {
-  if (/[",\n\r]/.test(raw)) {
-    return `"${raw.replace(/"/g, '""')}"`;
+  const guarded = /^[=+\-\t\r@]/.test(raw) ? `'${raw}` : raw;
+  if (/[",\n\r]/.test(guarded)) {
+    return `"${guarded.replace(/"/g, '""')}"`;
   }
-  return raw;
+  return guarded;
 }
 
 /** Render the export body: the header line + one RAW row per event (no

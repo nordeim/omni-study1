@@ -38,6 +38,9 @@ model User {
   studyGoalHours       Int      @default(4) // 1–12
   // S15 auth flows: registration creates an UNVERIFIED account
   emailVerified        Boolean  @default(false)
+  // S118/BS1: bumped by a password reset — session tokens embed the value at
+  // issue time and getCurrentUser rejects a mismatch (the reset revocation).
+  sessionVersion       Int      @default(0)
   createdAt            DateTime @default(now())
   updatedAt            DateTime @updatedAt
 

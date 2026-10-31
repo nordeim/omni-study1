@@ -71,6 +71,13 @@ export function MathSolverView() {
       toast.error("Please choose an image file");
       return;
     }
+    // S118/BS2 — the size gate BEFORE the base64 read (a photo over 5 MiB
+    // base64-encodes past the schema's 7,000,000-char cap; the fast feedback
+    // beats an opaque server 400 after the upload).
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("Images are limited to 5 MB.");
+      return;
+    }
     const reader = new FileReader();
     reader.onload = () => {
       if (typeof reader.result === "string") setImage(reader.result);

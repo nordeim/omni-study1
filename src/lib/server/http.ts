@@ -78,18 +78,35 @@ export function parseWith<T>(schema: ZodType<T>, input: unknown): T {
   return result.data;
 }
 
+/** The shared JSON body cap (S118/BS2). 10 MiB — the same ceiling the import
+ * route enforces (its own 413 contract predates this and stays). The largest
+ * legitimate JSON body is the math solver's photographed-problem image
+ * (base64, schema-bounded at 7,000,000 chars); everything else is bounded
+ * far below. The cap converts an unbounded request.text() into a bounded
+ * read (memory) with an actionable 400. */
+const JSON_BODY_MAX_BYTES = 10 * 1024 * 1024;
+
 /** Read a JSON body defensively (malformed JSON → the caller's 400 path).
  * S117/BR5: a non-JSON Content-Type is unparseable-by-policy — a form POST
  * with `text/plain` (which bypasses the CORS/preflight reasoning behind the
  * sameSite=lax CSRF mitigation) must not reach a JSON parser. The app's own
  * client sets `Content-Type: application/json` on every JSON call
- * (src/lib/api.ts). */
+ * (src/lib/api.ts).
+ * S118/BS2: the body is capped at JSON_BODY_MAX_BYTES — checked on the
+ * declared Content-Length BEFORE the read and on the actual text after. */
 export async function readJson(request: NextRequest): Promise<unknown> {
   const contentType = request.headers.get("content-type") ?? "";
   if (contentType !== "" && !contentType.toLowerCase().includes("application/json")) {
     throw new ValidationError("The request body must be valid JSON.");
   }
+  const declaredLength = Number(request.headers.get("content-length") ?? "0");
+  if (Number.isFinite(declaredLength) && declaredLength > JSON_BODY_MAX_BYTES) {
+    throw new ValidationError("The request body is too large.");
+  }
   const text = await request.text();
+  if (text.length > JSON_BODY_MAX_BYTES) {
+    throw new ValidationError("The request body is too large.");
+  }
   if (text.length === 0) return {};
   try {
     return JSON.parse(text) as unknown;

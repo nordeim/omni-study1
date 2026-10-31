@@ -3,12 +3,18 @@
 // ---------------------------------------------------------------------------
 // The below-lg chrome (§5): a fixed h-16 glass app bar (hamburger + 32px
 // gradient brand chip + "StudyFlow" + a live clock — NEVER the view title)
-// and the slide-in navigation drawer. Reference-measured drawer geometry the
-// e2e suite pins: a full-viewport dialog over a bg-black/20 backdrop-blur-xs
+// and the navigation drawer. Reference-measured drawer geometry the e2e
+// suite pins: a full-viewport dialog over a bg-black/20 backdrop-blur-xs
 // backdrop button, a 288px (w-72) white panel (dark: slate-950) with the
 // 40px-chip brand header + "Your study companion" + all 20 shared
 // NavItemLinks and NO footer; Esc and backdrop-tap close it; body scroll is
-// locked while open.
+// locked while open. The panel opens INSTANTLY — the reference's own
+// measured behavior (transition: all 0s; S118/Q1 — the inert sf-slide-in
+// class and its keyframes were removed as dead code).
+// S118/BS4 — the focus lifecycle: opening moves focus INTO the dialog (the
+// panel's close button), Tab is contained to the dialog's focusables while
+// aria-modal is announced, and closing restores focus to the opener (the
+// hamburger) — the WCAG 2.2 AA modal contract the role/aria already claimed.
 //
 // Trap 4: the nav list is flex flex-col gap-* — never space-y-* with mt-*/
 // mb-* children (v4's :where() rewrite flips the specificity outcome).
@@ -39,15 +45,56 @@ export function MobileChrome() {
   const now = useNow();
   const close = React.useCallback(() => setMobileMenu(false), [setMobileMenu]);
 
-  // While the drawer is open: lock body scroll, close on Escape, and close
-  // if the viewport crosses into lg (the app bar itself disappears there).
+  // While the drawer is open: lock body scroll, close on Escape, close
+  // if the viewport crosses into lg (the app bar itself disappears there),
+  // and run the modal focus lifecycle (S118/BS4): focus-in on open, Tab
+  // contained, focus restored to the opener on close.
   React.useEffect(() => {
     if (!mobileMenuOpen) return;
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
 
+    // BS4: the opener (the hamburger, normally) gets focus back on close.
+    const opener = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    const dialog = document.querySelector<HTMLElement>('[role="dialog"][aria-label="Navigation menu"]');
+    const focusables = () =>
+      dialog
+        ? Array.from(
+            dialog.querySelectorAll<HTMLElement>(
+              'a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])',
+            ),
+          ).filter((el) => el.offsetParent !== null)
+        : [];
+
+    // BS4: land focus on the panel's own close button — a real control at
+    // the top of the announced modal (never the panel container).
+    dialog?.querySelector<HTMLElement>('button[aria-label="Close menu"]')?.focus();
+
     const onKey = (event: KeyboardEvent) => {
-      if (event.key === "Escape") close();
+      if (event.key === "Escape") {
+        close();
+        return;
+      }
+      if (event.key !== "Tab") return;
+      const items = focusables();
+      if (items.length === 0) return;
+      const first = items[0];
+      const last = items[items.length - 1];
+      const active = document.activeElement;
+      if (!dialog?.contains(active)) {
+        // Focus escaped the dialog (an async re-render reclaim) — pull it
+        // back inside rather than letting Tab walk the background.
+        event.preventDefault();
+        (event.shiftKey ? last : first).focus();
+        return;
+      }
+      if (event.shiftKey && active === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && active === last) {
+        event.preventDefault();
+        first.focus();
+      }
     };
     window.addEventListener("keydown", onKey);
 
@@ -61,6 +108,9 @@ export function MobileChrome() {
       document.body.style.overflow = previousOverflow;
       window.removeEventListener("keydown", onKey);
       desktop.removeEventListener("change", onBreakpoint);
+      // BS4: hand focus back to the opener (the hamburger) — the modal's
+      // exit contract. The opener may be gone (a view unmount); guard it.
+      if (opener && document.contains(opener)) opener.focus();
     };
   }, [mobileMenuOpen, close]);
 
@@ -99,7 +149,8 @@ export function MobileChrome() {
         </p>
       </header>
 
-      {/* The slide-in drawer — mounted only while open. */}
+      {/* The navigation drawer — mounted only while open (instant open: the
+          reference's measured behavior; S118/Q1). */}
       {mobileMenuOpen && (
         <div
           role="dialog"
@@ -113,7 +164,7 @@ export function MobileChrome() {
             onClick={close}
             className="absolute inset-0 bg-black/20 backdrop-blur-xs"
           />
-          <div className="sf-slide-in absolute inset-y-0 left-0 flex w-72 max-w-[85vw] flex-col bg-white shadow-2xl dark:bg-slate-950">
+          <div className="absolute inset-y-0 left-0 flex w-72 max-w-[85vw] flex-col bg-white shadow-2xl dark:bg-slate-950">
             {/* S3-L (measured s68): the reference brand block is p-6 with a
                 border-b divider (89px tall) — the old p-6 pb-4 (80px, no
                 divider) dropped the line the reference draws under it. */}

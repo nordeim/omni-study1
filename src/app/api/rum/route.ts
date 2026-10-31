@@ -13,7 +13,6 @@
 
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { z } from "zod";
 
 import { checkRateLimit } from "@/lib/auth";
 import { db } from "@/lib/db";
@@ -24,21 +23,8 @@ import {
   readJson,
   toErrorResponse,
 } from "@/lib/server/http";
+import { rumBatchSchema } from "@/lib/validation";
 import { RUM_METRIC_ORDER } from "@/lib/rum-diagnostics";
-
-const rumEventSchema = z.object({
-  metric: z.enum(["TTFB", "FCP", "LCP", "CLS", "INP"]),
-  value: z.number().min(0).max(6_000_000),
-  rating: z.enum(["good", "needs-improvement", "poor"]),
-  navigationType: z.string().min(1).max(40),
-  path: z.string().max(500).optional().default("/"),
-  userAgent: z.string().max(400).optional().default(""),
-});
-
-const rumBatchSchema = z.object({
-  sessionId: z.string().min(1).max(100),
-  events: z.array(rumEventSchema).min(1).max(20),
-});
 
 export const POST = async (request: NextRequest) => {
   try {

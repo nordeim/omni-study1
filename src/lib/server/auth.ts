@@ -37,6 +37,7 @@ const SESSION_USER_SELECT = {
   gradeLevel: true,
   studyGoalHours: true,
   emailVerified: true,
+  sessionVersion: true,
   createdAt: true,
   updatedAt: true,
 } as const;
@@ -53,6 +54,7 @@ export type SessionUser = {
   gradeLevel: string;
   studyGoalHours: number;
   emailVerified: boolean;
+  sessionVersion: number;
   createdAt: Date;
   updatedAt: Date;
 };
@@ -81,7 +83,11 @@ export function publicUser(user: SessionUser) {
 
 /** Resolve the signed-in user from the `sf_session` cookie, or null. The
  *  token verification (HMAC + expiry) is the pure seam's job; the DB lookup
- *  proves the user still exists (a deleted account's cookie is dead). */
+ *  proves the user still exists (a deleted account's cookie is dead) and —
+ *  S118/BS1 — that the token's session version still matches the user's
+ *  `sessionVersion` (a password reset bumps it, revoking every session
+ *  issued before the reset; a token with no v reads as 0, so pre-BS1
+ *  cookies keep working across the deploy). */
 export async function getCurrentUser(): Promise<SessionUser | null> {
   const store = await cookies();
   const token = store.get(SESSION_COOKIE_NAME)?.value;
@@ -92,6 +98,8 @@ export async function getCurrentUser(): Promise<SessionUser | null> {
     where: { id: payload.uid },
     select: SESSION_USER_SELECT,
   });
+  if (!user) return null;
+  if (payload.v !== user.sessionVersion) return null;
   return user;
 }
 
@@ -116,9 +124,9 @@ export async function requireUser(): Promise<SessionUser> {
 export function setSessionCookie(
   response: NextResponse,
   userId: string,
-  options?: { secure?: boolean },
+  options?: { secure?: boolean; sessionVersion?: number },
 ): NextResponse {
-  response.cookies.set(SESSION_COOKIE_NAME, createSessionToken(userId), {
+  response.cookies.set(SESSION_COOKIE_NAME, createSessionToken(userId, options?.sessionVersion ?? 0), {
     httpOnly: true,
     sameSite: "lax",
     secure: options?.secure ?? process.env.NODE_ENV === "production",

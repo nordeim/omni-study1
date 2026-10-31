@@ -9,7 +9,9 @@ import { ACCENTS } from "./theme";
 
 // ---- shared atoms ----------------------------------------------------------
 
-const idField = z.string().min(1);
+// S118/BS2: every id is length-bounded (cuids are 25 chars; 64 is the generous
+// ceiling) — an unbounded id string reached Prisma verbatim.
+const idField = z.string().min(1).max(64);
 // Dialogs send "" for cleared relations — accept it and map to null
 // (the schema must not reject the empty string BEFORE the transform).
 const nullableId = z
@@ -19,15 +21,28 @@ const nullableId = z
 const boundedTitle = z.string().min(1).max(200);
 const passwordField = z.string().min(8).max(200);
 const hexColor = z.string().regex(/^#[0-9a-fA-F]{6}$/);
-/** A date-time string; "" normalizes to null (the dialogs' clear-date path). */
+// S118/BS2: the shared email atom — trimmed (a padded paste normalizes
+// instead of hard-failing) and bounded at 200 chars.
+const emailField = z.string().trim().email().max(200);
+/** A date-time string; "" normalizes to null (the dialogs' clear-date path).
+ * S118/BS2: the string is bounded and must parse as a date — a garbage
+ * value is a 400 at the boundary, never a Prisma Invalid-Date 500. The
+ * optional leg keeps its own ""-tolerant union (the clear-date path). */
+const dateAtom = z
+  .string()
+  .min(1)
+  .max(40)
+  .refine((v) => !Number.isNaN(Date.parse(v)), { message: "Enter a valid date." });
 const optionalDate = z
-  .union([z.string(), z.null()])
+  .union([z.literal(""), dateAtom, z.null()])
   .optional()
   .transform((v) => (v === "" ? null : v));
-const requiredDate = z.string().min(1);
-/** A JSON string that parses to an array (the reference's JSON-blob columns). */
+const requiredDate = dateAtom;
+/** A JSON string that parses to an array (the reference's JSON-blob columns).
+ * S118/BS2: bounded at 100k chars — the blobs persist to SQLite. */
 const jsonArray = z
   .string()
+  .max(100_000)
   .refine((v) => {
     try {
       return Array.isArray(JSON.parse(v));
@@ -47,23 +62,23 @@ const REPEATS = ["none", "daily", "weekly", "monthly"] as const;
 // ---- auth ------------------------------------------------------------------
 
 export const loginSchema = z.object({
-  email: z.string().email(),
+  email: emailField,
   password: passwordField,
 });
 
 export const registerSchema = z.object({
   fullName: z.string().max(100).optional().default(""),
-  email: z.string().email(),
+  email: emailField,
   password: passwordField,
 });
 
 export const verifyEmailSchema = z.object({
-  email: z.string().email(),
+  email: emailField,
   code: z.string().regex(/^\d{6}$/),
 });
 
 export const forgotPasswordSchema = z.object({
-  email: z.string().email(),
+  email: emailField,
 });
 
 export const resetPasswordSchema = z.object({
@@ -92,8 +107,8 @@ export const deleteAccountSchema = z
 export const changeEmailSchema = z
   .object({
     password: passwordField,
-    newEmail: z.string().max(200).email(),
-    confirmEmail: z.string().max(200).email(),
+    newEmail: emailField,
+    confirmEmail: emailField,
   })
   .refine((v) => v.newEmail === v.confirmEmail, {
     message: "The email addresses do not match.",
@@ -273,7 +288,7 @@ export const studyGroupSchema = z.object({
         // are stored trimmed. This keeps the server boundary in agreement
         // with normalizeMembers' blank-after-trim drop.
         name: z.string().trim().min(1).max(100),
-        email: z.string().trim().email(),
+        email: z.string().trim().email().max(200),
       }),
     )
     .max(50),
@@ -300,9 +315,12 @@ export const focusSessionSchema = z.object({
 // WHATWG-valid javascript:/data: URLs; a stored href rendered with
 // target="_blank" is script execution in the app origin on click. The upload
 // route (files/route.ts POST) has enforced the same ^https?:// rule since
-// S14 — this schema holds the LINK route (files/link/route.ts) to it.
+// S14 — this schema holds BOTH file-link entry points to it (S118/BS5:
+// the files POST's JSON branch consumes it too; name trims before the
+// checks — the AM1 members convention — so a whitespace-only name is
+// rejected, never stored).
 export const linkFileSchema = z.object({
-  name: boundedTitle,
+  name: z.string().trim().min(1).max(200),
   url: z
     .string()
     .url()
@@ -335,30 +353,30 @@ export const mathSolveSchema = z.object({
   problem: z.string().min(1).max(4000),
   image: z
     .string()
+    .max(7_000_000) // S118/BS2: ≈5 MiB binary as base64 — above the client's 5 MiB picker gate
     .regex(/^data:image\/(png|jpe?g|webp);base64,[A-Za-z0-9+/=]+$/)
     .optional(),
 });
 
+// S118/BS7: these bounds are the ROUTE's enforced shape (the pre-S118
+// validation.ts twin was dead code with DIFFERENT bounds — navType enum,
+// path ≤200, UA ≤300, value unbounded, events ≤10 — a future consumer
+// following the "one validation.ts" convention would have inherited the
+// weaker value cap). The route now imports THESE schemas; the twin is gone.
 export const rumEventSchema = z.object({
   metric: z.enum(["TTFB", "FCP", "LCP", "CLS", "INP"]),
-  value: z.number().min(0),
+  value: z.number().min(0).max(6_000_000),
   rating: z.enum(["good", "needs-improvement", "poor"]),
-  navigationType: z.enum([
-    "navigate",
-    "reload",
-    "back-forward",
-    "back-forward-cache",
-    "prerender",
-    "restore",
-    "soft-navigation",
-  ]),
-  path: z.string().max(200).optional().default("/"),
-  userAgent: z.string().max(300).optional().default(""),
+  // navigationType is the beacon's free-form label (soft-navigation,
+  // prerender, …) — a bounded free string, not an enum.
+  navigationType: z.string().min(1).max(40),
+  path: z.string().max(500).optional().default("/"),
+  userAgent: z.string().max(400).optional().default(""),
 });
 
 export const rumBatchSchema = z.object({
   sessionId: z.string().min(1).max(100),
-  events: z.array(rumEventSchema).min(1).max(10),
+  events: z.array(rumEventSchema).min(1).max(20),
 });
 
 export const calculatorHistorySchema = z.object({

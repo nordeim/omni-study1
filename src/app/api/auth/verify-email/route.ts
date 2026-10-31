@@ -51,7 +51,7 @@ export async function POST(request: NextRequest) {
 
     const user = await db.user.findUnique({
       where: { email: email.toLowerCase() },
-      select: { id: true, emailVerified: true },
+      select: { id: true, emailVerified: true, sessionVersion: true },
     });
     if (!user) {
       // Uniform rejection — no account-state oracle.
@@ -78,7 +78,11 @@ export async function POST(request: NextRequest) {
     return setSessionCookie(
       NextResponse.json({ ok: true, user: publicUser(verifiedUser) }),
       user.id,
-      { secure: request.nextUrl.protocol === "https:" },
+      {
+        secure: request.nextUrl.protocol === "https:",
+        // S118/BS1: embed the current session version in the fresh token.
+        sessionVersion: user.sessionVersion,
+      },
     );
   } catch (err: unknown) {
     return toErrorResponse(err);

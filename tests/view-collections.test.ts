@@ -62,3 +62,13 @@ describe("INITIAL_COLLECTIONS (S16-A pre-warm seam)", () => {
     }
   });
 });
+
+// S118/BS8 — the settings pre-warm: the Holidays tab reads s.holidays, so a
+// fast tab click after boot flashed a false "No holidays set" until the
+// post-ready loadAll landed. The pre-warm now carries holidays alongside
+// subjects.
+describe("the settings pre-warm carries the Holidays tab's collection (S118/BS8)", () => {
+  it("settings pre-warms subjects AND holidays", () => {
+    expect(INITIAL_COLLECTIONS.settings).toEqual(["subjects", "holidays"]);
+  });
+});

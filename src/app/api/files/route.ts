@@ -6,12 +6,26 @@
 // DECISION (ADR-012: the reference stores arbitrary types; the residual
 // risk is mitigated by the download contract — attachment + nosniff +
 // private, no-store).
+// S118/BS3: POST is rate-limited 20/15 min per user (the rubric's upload
+// shape — unthrottled authenticated writes fill the single-node SQLite).
+// S118/BS5: the JSON link branch consumes the SHARED linkFileSchema (the
+// hand-rolled near-duplicate diverged from files/link — unbounded name,
+// no .url() check).
 // ---------------------------------------------------------------------------
 
 import { NextResponse, type NextRequest } from "next/server";
 
+import { checkRateLimit } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { errorResponse, toErrorResponse, withUser } from "@/lib/server/http";
+import { linkFileSchema } from "@/lib/validation";
+import {
+  errorResponse,
+  parseWith,
+  rateLimitedResponse,
+  readJson,
+  toErrorResponse,
+  withUser,
+} from "@/lib/server/http";
 
 export const MAX_UPLOAD_BYTES = 2 * 1024 * 1024; // 2 MiB
 
@@ -47,27 +61,26 @@ export const GET = withUser(async (user) => {
 });
 
 export const POST = withUser(async (user, request: NextRequest) => {
+  // S118/BS3 — the upload budget (both branches: the multipart upload AND
+  // the JSON link creation write the same table; ONE shared bucket).
+  const limit = checkRateLimit(`upload:${user.id}`, 20);
+  if (!limit.ok) {
+    return rateLimitedResponse(limit.retryAfterSec, "Too many uploads. Try again shortly.");
+  }
+
   // Link-files arrive as JSON (name + url, no binary payload).
   if ((request.headers.get("content-type") ?? "").includes("application/json")) {
-    const raw: unknown = await request.json().catch(() => null);
-    if (typeof raw !== "object" || raw === null) {
-      return errorResponse(400, "The link payload must be a JSON object.");
-    }
-    const body = raw as { name?: unknown; url?: unknown; folderId?: unknown };
-    const name = typeof body.name === "string" ? body.name.trim() : "";
-    const url = typeof body.url === "string" ? body.url.trim() : "";
-    if (!name) return errorResponse(400, "The link needs a name.");
-    if (!/^https?:\/\//i.test(url)) {
-      return errorResponse(400, "The link needs a valid http(s) URL.");
-    }
-    let folderId: string | null = null;
-    if (typeof body.folderId === "string" && body.folderId.length > 0) {
+    // S118/BS5 — the shared schema (bounded + trimmed name, WHATWG .url()
+    // AND ^https?://, bounded folderId): the same contract files/link holds.
+    const { name, url, folderId } = parseWith(linkFileSchema, await readJson(request));
+    let folderIdOrNull: string | null = null;
+    if (folderId) {
       const folder = await db.fileFolder.findFirst({
-        where: { id: body.folderId, userId: user.id },
+        where: { id: folderId, userId: user.id },
         select: { id: true },
       });
       if (!folder) return errorResponse(404, "That folder does not exist.");
-      folderId = folder.id;
+      folderIdOrNull = folder.id;
     }
     const link = await db.fileItem.create({
       data: {
@@ -77,7 +90,7 @@ export const POST = withUser(async (user, request: NextRequest) => {
         size: 0,
         data: null,
         url,
-        folderId,
+        folderId: folderIdOrNull,
       },
       // S82/AI6: the create responses carry the SAME metadata shape as
       // the LIST (the AH13 select) — the base64 `data` column never

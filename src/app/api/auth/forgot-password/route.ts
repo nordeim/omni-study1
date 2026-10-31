@@ -7,11 +7,11 @@
 // ---------------------------------------------------------------------------
 
 import { NextResponse, type NextRequest } from "next/server";
-import { z } from "zod";
 
 import { checkRateLimit, generateResetToken, hashResetToken } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { siteUrl } from "@/lib/site";
+import { forgotPasswordSchema } from "@/lib/validation";
 import { clientIp } from "@/lib/server/auth";
 import {
   parseWith,
@@ -21,7 +21,6 @@ import {
 } from "@/lib/server/http";
 
 const TOKEN_TTL_MS = 30 * 60 * 1000;
-const forgotSchema = z.object({ email: z.string().email() });
 
 export async function POST(request: NextRequest) {
   try {
@@ -34,7 +33,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { email } = parseWith(forgotSchema, await readJson(request));
+    // S118/BS2: the shared validation.ts schema (the inline twin is gone —
+    // its z.string().email() lacked the trim/max atoms).
+    const { email } = parseWith(forgotPasswordSchema, await readJson(request));
     const user = await db.user.findUnique({
       where: { email: email.toLowerCase() },
       select: { id: true },

@@ -251,3 +251,23 @@ describe("hashResetToken (S117/BR6 — hashed at rest)", () => {
     expect(hashResetToken(generateResetToken())).not.toBe(digest);
   });
 });
+
+// S118/BS1 — the session-version family: the token carries v so a password
+// reset can revoke every session issued before it (getCurrentUser compares
+// the token's v against the user's sessionVersion column).
+describe("session tokens carry the session version (S118/BS1)", () => {
+  it("embeds the given version and reads it back", () => {
+    const payload = readSessionToken(createSessionToken("user-123", 3));
+    expect(payload?.uid).toBe("user-123");
+    expect(payload?.v).toBe(3);
+  });
+
+  it("defaults the version to 0 (pre-BS1 cookies keep working across the deploy)", () => {
+    const payload = readSessionToken(createSessionToken("user-123"));
+    expect(payload?.v).toBe(0);
+  });
+
+  it("signs different versions into different tokens", () => {
+    expect(createSessionToken("user-123", 1)).not.toBe(createSessionToken("user-123", 2));
+  });
+});

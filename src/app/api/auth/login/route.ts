@@ -62,6 +62,9 @@ export async function POST(request: NextRequest) {
 
     return setSessionCookie(NextResponse.json({ user: publicUser(user) }), user.id, {
       secure: request.nextUrl.protocol === "https:",
+      // S118/BS1: the fresh token embeds the user's current session version
+      // (a password reset bumped it — the new sign-in must carry the new v).
+      sessionVersion: user.sessionVersion,
     });
   } catch (err: unknown) {
     return toErrorResponse(err);

@@ -1,6 +1,23 @@
 import { defineConfig } from "vitest/config";
 import path from "node:path";
 
+// Unit-test layer for the pure domain seams — 28 files / 963 tests
+// (re-anchored S118/BS — the audit-driven hardening cycle: census 944 → 963.
+// The additions: auth +3 [the S118/BS1 session-version family — the token
+// embeds v, a missing v reads 0 (deploy compat), differing versions sign
+// differently], validation +13 [the S118/BS2 bounded-reads family — the
+// email atom trims+bounds, jsonArray 100k, requiredDate parses as a date,
+// idField 64, mathSolve image 7M — + the S118/BS5 linkFileSchema trim
+// family + the S118/BS7 RUM re-anchor family (4 pins carrying the ROUTE's
+// enforced bounds: navType free-string, path 500, UA 400, value 6M, events
+// 20)], rum-diagnostics +2 [the S118/BS6 CSV formula-neutralization family],
+// view-collections +1 [the S118/BS8 settings-holidays pin]. The re-anchors:
+// the RUM event/batch pins re-shaped to the enforced bounds (the old pins
+// asserted the dead twin) + the theme-cache boot-script pin re-anchored to
+// the var-KEY consumption (S118/BS12). The route-level halves of BS1/BS2/
+// BS3 ride the e2e layer (the auth-flows reset-revocation + oversized-body
+// pins, the mobile-navigation focus-lifecycle pin).
+//
 // Unit-test layer for the pure domain seams — 28 files / 944 tests
 // (re-anchored S117/BR — the hardening cycle: census 936 → 944.
 // The additions: auth +5 [the S117/BR3 timing-equalizer family —

@@ -9,11 +9,13 @@
 
 import { NextResponse } from "next/server";
 
+import { checkRateLimit } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { linkFileSchema } from "@/lib/validation";
 import {
   errorResponse,
   parseWith,
+  rateLimitedResponse,
   readJson,
   toErrorResponse,
   withUser,
@@ -21,6 +23,13 @@ import {
 
 export const POST = withUser(async (user, request) => {
   try {
+    // S118/BS3 — the SHARED upload budget (the files POST's own bucket:
+    // both routes write the same table with the same class of payload).
+    const limit = checkRateLimit(`upload:${user.id}`, 20);
+    if (!limit.ok) {
+      return rateLimitedResponse(limit.retryAfterSec, "Too many uploads. Try again shortly.");
+    }
+
     const { name, url, folderId } = parseWith(linkFileSchema, await readJson(request));
     if (folderId) {
       const folder = await db.fileFolder.findFirst({

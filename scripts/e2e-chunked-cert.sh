@@ -1,5 +1,13 @@
 #!/usr/bin/env bash
-# Session-89 cold e2e certification — the 5-chunk map, final post-Batch-AU
+# Session-89 cold e2e certification — the 5-chunk map, final post-Batch-BS
+# (census 476 → 478: s118/BS +2 [the BS4 drawer modal focus-lifecycle pin in
+# chunk 1 — focus moves to the close button on open, Tab wraps the dialog's
+# focusables, focus restores to the hamburger on close; the BS2 readJson-cap
+# pin in chunk 5 — an oversized JSON body is rejected before the route reads];
+# BS1 rides the reset-journey spec IN-PLACE [the journey's captured pre-reset
+# cookie replays to 401 after the reset]. This re-tag also repairs the S117/BR
+# delta that was never re-tagged here: 474 → 476, both chunk 5 [the s23 cards
+# round-trip pin + the auth-flows verify-429 pin]. The S94/AU map beneath:)
 # (census 470 → 474: s14-hardening +1 [the S94/AU1 A0c pin — the offline
 # banner's light amber pair computes the pinned v3 hexes; trap-10 closed,
 # the RED demonstrated live against the pre-change build — the unpinned
@@ -44,11 +52,15 @@
 # 12 tests [the AJ1 folder pin + the AK1 guard family] and accessibility 84
 # [the AJ5 print family + AJ6 focus pin + the AK2 print-enumeration closure
 # + the AL2 chip]).
-# Expected: 131 + 141 + 57 + 87 + 58 = 474 (each chunk's count includes its
-# auth setup; 469 real specs = the S82 443 + the seven S83 pins + the eight
+# Expected: 132 + 141 + 57 + 87 + 61 = 478 (each chunk's count includes its
+# auth setup; 473 real specs = the S82 443 + the seven S83 pins + the eight
 # S84 pins + the four S85 pins + the one S86 pin + the one S88 pin + the one
-# S89 pin + the four S94 pins [A0c + AU3a/b/c] — S95/AV4a, the s94 audit's
-# L3: the AU re-tag updated the sum but left the 470-era "465" stale).
+# S89 pin + the four S94 pins [A0c + AU3a/b/c] + the two S117/BR pins [the
+# s23 cards round-trip + the verify-429] + the two S118/BS pins [BS4 drawer
+# focus in chunk 1 + BS2 oversized-body in chunk 5] — S95/AV4a, the s94
+# audit's L3: the AU re-tag updated the sum but left the 470-era "465" stale;
+# the S118 re-tag repaired the same class for the 474-era sum the S117 cycle
+# left behind).
 # Per-chunk: fresh
 # db/e2e.db + stale-server kill (fresh in-memory limiter, register budget
 # stays <= 9/10 per chunk).

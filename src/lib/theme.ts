@@ -190,7 +190,8 @@ export function resolveMode(mode: ThemeMode, systemPrefersDark: boolean): "light
 
 /**
  * The COMPLETE --sf-* variable set for an accent (S3-J regression pin: exactly
- * 15 entries — a partial set leaves stale violet tokens on non-violet accents).
+ * 16 entries — S88/AO5 added clock-date-dark; a partial set leaves stale
+ * violet tokens on non-violet accents).
  * Keys are kebab-case (the S8 e2e lesson: camelCase suffixes resolve no var).
  */
 export function accentCssVars(accent: Accent): Record<string, string> {
@@ -273,7 +274,7 @@ export const THEME_BOOT_SCRIPT = `
   try {
     var KEY = "${THEME_CACHE_KEY}";
     var ACCENTS = ${JSON.stringify(ACCENTS)};
-    var raw = localStorage.getItem("sf-theme");
+    var raw = localStorage.getItem(KEY);
     var mode = "system";
     var accent = "violet";
     if (raw) {

@@ -128,6 +128,45 @@ test.describe("mobile navigation", () => {
     await expect(panel.getByText(/@/)).toHaveCount(0);
   });
 
+  test("the drawer runs the modal focus lifecycle (S118/BS4)", async ({ page }) => {
+    // The dialog declares role=dialog + aria-modal — the WCAG 2.2 AA modal
+    // contract: focus moves IN on open, Tab is contained, and focus returns
+    // to the opener on close. (The reference has no role=dialog at all —
+    // this is the documented a11y superset; live-verified pre-fix that the
+    // drawer opened with focus still on the hamburger.)
+    const hamburger = page.getByRole("button", { name: "Open navigation menu" });
+    await hamburger.tap();
+    const dialog = page.getByRole("dialog");
+    await expect(dialog).toBeVisible();
+
+    // Focus-in: the panel's own close button receives focus on open.
+    const closeMenu = dialog.getByRole("button", { name: "Close menu" });
+    await expect(closeMenu).toBeFocused();
+
+    // Tab containment — the dialog's focusable order is backdrop → close X
+    // → the 20 links. From the X, Tab walks into the nav (first link).
+    await page.keyboard.press("Tab");
+    const firstLink = dialog.getByRole("link", { name: "Dashboard", exact: true });
+    await expect(firstLink).toBeFocused();
+
+    // Shift+Tab walks back through the X to the FIRST focusable (the
+    // backdrop), and one more Shift+Tab WRAPS to the last focusable
+    // (Settings) — the trap cycles, never escaping to the background shell.
+    await page.keyboard.press("Shift+Tab");
+    await expect(closeMenu).toBeFocused();
+    await page.keyboard.press("Shift+Tab");
+    const backdrop = dialog.getByRole("button", { name: "Close navigation menu" });
+    await expect(backdrop).toBeFocused();
+    await page.keyboard.press("Shift+Tab");
+    const lastLink = dialog.getByRole("link", { name: "Settings", exact: true });
+    await expect(lastLink).toBeFocused();
+
+    // Escape closes AND restores focus to the opener (the hamburger).
+    await page.keyboard.press("Escape");
+    await expect(dialog).toHaveCount(0);
+    await expect(hamburger).toBeFocused();
+  });
+
   test("the drawer brand header typography matches the measured reference (S3-I pin)", async ({ page }) => {
     // Reference (measured 390×844, session-67): drawer brand title 16px
     // bold / 24px line-height (text-base defaults), subtitle 12px / 16px

@@ -889,17 +889,6 @@
   }
 }
 
-@keyframes sf-slide-in {
-  from {
-    transform: translateX(-16px);
-    opacity: 0;
-  }
-  to {
-    transform: translateX(0);
-    opacity: 1;
-  }
-}
-
 /* ---------------------------------------------------------------------------
    Forced-colors (Windows HC) state restoration (S12) — state must survive
    without fills.

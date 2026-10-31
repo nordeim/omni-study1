@@ -69,7 +69,12 @@ describe("THEME_BOOT_SCRIPT (S12-C1 — the print handlers, pinned)", () => {
   });
 
   it("still applies the cached mode pre-paint (the S11 contract holds)", () => {
-    expect(THEME_BOOT_SCRIPT).toContain('localStorage.getItem("sf-theme")');
+    // S118/BS12 re-anchor: the script now READS THROUGH its own var KEY
+    // (interpolated from THEME_CACHE_KEY) instead of a parallel literal —
+    // the pin proves the constant is both injected AND consumed (a key
+    // rename can no longer desync the hand-maintained script silently).
+    expect(THEME_BOOT_SCRIPT).toContain('var KEY = "sf-theme"');
+    expect(THEME_BOOT_SCRIPT).toContain("localStorage.getItem(KEY)");
     expect(THEME_BOOT_SCRIPT).toContain("classList.add(\"dark\")");
   });
 });

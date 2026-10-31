@@ -136,7 +136,18 @@ export function ExportPanel({
             accept="application/json,.json"
             aria-label="Choose a backup file"
             onChange={(e) => {
-              setFile(e.target.files?.[0] ?? null);
+              const picked = e.target.files?.[0] ?? null;
+              // S118/BS11 — reject an oversized backup BEFORE reading it
+              // into memory (the server's 10 MiB cap answers 413 after the
+              // full upload; this is the fast path with the same limit).
+              if (picked && picked.size > 10 * 1024 * 1024) {
+                setFile(null);
+                setResult(null);
+                setError("That backup is too large. The import cap is 10 MiB.");
+                e.target.value = "";
+                return;
+              }
+              setFile(picked);
               setResult(null);
               setError("");
             }}

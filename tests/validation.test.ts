@@ -10,6 +10,7 @@ import {
   flashcardDeckSchema,
   flashcardSchema,
   forgotPasswordSchema,
+  holidaySchema,
   linkFileSchema,
   loginSchema,
   mathSolveSchema,
@@ -556,14 +557,21 @@ describe("rumEventSchema (S18 — the RUM hook)", () => {
     expect(rumEventSchema.safeParse({ ...base, metric: "SI" }).success).toBe(false);
     expect(rumEventSchema.safeParse({ ...base, value: -1 }).success).toBe(false);
     expect(rumEventSchema.safeParse({ ...base, rating: "excellent" }).success).toBe(false);
-    expect(rumEventSchema.safeParse({ ...base, navigationType: "unknown" }).success).toBe(false);
+    // S118/BS7 re-anchor: navigationType is the ENFORCED bounded free string
+    // (a non-enum label the beacon may coin) — an EMPTY or 41-char label is
+    // rejected, an unknown-but-short one is fine (the route's own contract).
+    expect(rumEventSchema.safeParse({ ...base, navigationType: "" }).success).toBe(false);
+    expect(rumEventSchema.safeParse({ ...base, navigationType: "n".repeat(41) }).success).toBe(false);
+    expect(rumEventSchema.safeParse({ ...base, navigationType: "unknown" }).success).toBe(true);
   });
 
   it("bounds the path and userAgent strings (the store stays tidy)", () => {
     const base = { metric: "FCP", value: 50, rating: "good", navigationType: "navigate" };
-    expect(rumEventSchema.safeParse({ ...base, path: "x".repeat(201) }).success).toBe(false);
-    expect(rumEventSchema.safeParse({ ...base, path: "/".repeat(200) }).success).toBe(true);
-    expect(rumEventSchema.safeParse({ ...base, userAgent: "u".repeat(301) }).success).toBe(false);
+    // S118/BS7 re-anchor: the ENFORCED bounds are path<=500 / UA<=400 (the
+    // route's own inline shape, now the validation.ts source of truth).
+    expect(rumEventSchema.safeParse({ ...base, path: "x".repeat(501) }).success).toBe(false);
+    expect(rumEventSchema.safeParse({ ...base, path: "/".repeat(500) }).success).toBe(true);
+    expect(rumEventSchema.safeParse({ ...base, userAgent: "u".repeat(401) }).success).toBe(false);
     // The sessionId is bounded on the BATCH schema (one per POST body).
     expect(rumBatchSchema.safeParse({ sessionId: "s".repeat(101), events: [{ ...base }] }).success).toBe(false);
     expect(rumBatchSchema.safeParse({ sessionId: "s".repeat(100), events: [{ ...base }] }).success).toBe(true);
@@ -626,19 +634,19 @@ describe("rumBatchSchema (S18 — the beacon POST body)", () => {
     path: "/",
   };
 
-  it("accepts a sessionId with up to 10 events", () => {
+  it("accepts a sessionId with up to 20 events (S118/BS7 re-anchor: the enforced cadence)", () => {
     const r = rumBatchSchema.safeParse({
       sessionId: "7c9e6679-7425-40de-944b-e07fc1f90ae7",
       events: [{ ...event }, { ...event, metric: "FCP", value: 90 }],
     });
     expect(r.success).toBe(true);
-    expect(rumBatchSchema.safeParse({ sessionId: "abc", events: Array(10).fill(event) }).success).toBe(true);
+    expect(rumBatchSchema.safeParse({ sessionId: "abc", events: Array(20).fill(event) }).success).toBe(true);
   });
 
-  it("rejects a missing sessionId, an empty batch, and >10 events", () => {
+  it("rejects a missing sessionId, an empty batch, and >20 events", () => {
     expect(rumBatchSchema.safeParse({ events: [event] }).success).toBe(false);
     expect(rumBatchSchema.safeParse({ sessionId: "abc", events: [] }).success).toBe(false);
-    expect(rumBatchSchema.safeParse({ sessionId: "abc", events: Array(11).fill(event) }).success).toBe(false);
+    expect(rumBatchSchema.safeParse({ sessionId: "abc", events: Array(21).fill(event) }).success).toBe(false);
   });
 
   it("rejects an invalid event inside the batch (per-item validation)", () => {
@@ -786,5 +794,111 @@ describe("linkFileSchema (S117/BR4 — http(s)-only link URLs)", () => {
       linkFileSchema.safeParse({ name: "Ok", url: "https://example.com", folderId: "folder-1" })
         .success,
     ).toBe(true);
+  });
+});
+
+// ---- S118/BS2 + BS5 + BS7: the bounded-reads / shared-link / RUM families ----
+
+describe("the email atom trims and bounds (S118/BS2)", () => {
+  it("accepts a padded email and parses it trimmed", () => {
+    const r = loginSchema.safeParse({ email: "  demo@studyflow.app  ", password: "Demo1234!" });
+    expect(r.success).toBe(true);
+    if (r.success) expect(r.data.email).toBe("demo@studyflow.app");
+  });
+
+  it("rejects an email longer than 200 chars", () => {
+    const long = `${"a".repeat(190)}@example.com`;
+    expect(loginSchema.safeParse({ email: long, password: "Demo1234!" }).success).toBe(false);
+  });
+});
+
+describe("jsonArray is length-bounded (S118/BS2)", () => {
+  it("accepts a <=100k-char JSON array and rejects a longer one", () => {
+    // Both bodies must be VALID JSON arrays — only the length crosses the cap.
+    const under = "[" + `"x",`.repeat(24_998) + '"x"' + "]"; // 99,997 chars
+    expect(under.length).toBe(99_997);
+    expect(taskSchema.safeParse({ title: "t", subtasks: under }).success).toBe(true);
+    const over = "[" + `"x",`.repeat(25_001) + '"x"' + "]"; // 100,007 chars
+    expect(over.length).toBeGreaterThan(100_000);
+    expect(taskSchema.safeParse({ title: "t", subtasks: over }).success).toBe(false);
+  });
+});
+
+describe("requiredDate validates as a date (S118/BS2)", () => {
+  it("rejects garbage date strings (a 400 at the boundary, never a Prisma 500)", () => {
+    expect(holidaySchema.safeParse({ name: "Break", date: "not-a-date" }).success).toBe(false);
+    expect(holidaySchema.safeParse({ name: "Break", date: "" }).success).toBe(false);
+  });
+
+  it("rejects an over-long date string and accepts a real ISO date", () => {
+    expect(holidaySchema.safeParse({ name: "B", date: "x".repeat(41) }).success).toBe(false);
+    expect(holidaySchema.safeParse({ name: "B", date: "2026-11-01T00:00:00.000Z" }).success).toBe(true);
+  });
+});
+
+describe("idField is length-bounded (S118/BS2)", () => {
+  it("rejects a 65-char id (cuids are 25)", () => {
+    const body = { deckId: "d".repeat(65), front: "f", back: "b" };
+    expect(flashcardSchema.safeParse(body).success).toBe(false);
+    expect(
+      flashcardSchema.safeParse({ deckId: "d".repeat(64), front: "f", back: "b" }).success,
+    ).toBe(true);
+  });
+});
+
+describe("mathSolveSchema.image is length-bounded (S118/BS2)", () => {
+  const url = (n: number) => `data:image/png;base64,${"A".repeat(n)}`;
+  it("rejects a data-URL image over 7,000,000 chars (boundary-exact incl. the prefix)", () => {
+    expect(mathSolveSchema.safeParse({ problem: "p", image: url(7_000_000 - 22) }).success).toBe(true);
+    expect(mathSolveSchema.safeParse({ problem: "p", image: url(7_000_000 - 21) }).success).toBe(false);
+  });
+});
+
+describe("linkFileSchema.name trims before the checks (S118/BS5 — the AM1 convention)", () => {
+  it("rejects a whitespace-only name at BOTH file-link entry points", () => {
+    expect(linkFileSchema.safeParse({ name: "   ", url: "https://example.com" }).success).toBe(false);
+  });
+
+  it("stores a padded name trimmed", () => {
+    const r = linkFileSchema.safeParse({ name: "  Docs  ", url: "https://example.com" });
+    expect(r.success).toBe(true);
+    if (r.success) expect(r.data.name).toBe("Docs");
+  });
+});
+
+describe("rumEventSchema/rumBatchSchema carry the ROUTE's enforced bounds (S118/BS7)", () => {
+  const base = {
+    metric: "LCP",
+    value: 1,
+    rating: "good",
+    navigationType: "navigate",
+    path: "/Dashboard",
+    userAgent: "ua",
+  } as const;
+
+  it("navigationType is a bounded free string, not an enum (the enforced shape)", () => {
+    expect(rumEventSchema.safeParse({ ...base, navigationType: "unknown" }).success).toBe(true);
+    expect(rumEventSchema.safeParse({ ...base, navigationType: "" }).success).toBe(false);
+    expect(rumEventSchema.safeParse({ ...base, navigationType: "n".repeat(41) }).success).toBe(false);
+  });
+
+  it("path allows 500 and rejects 501; userAgent allows 400 and rejects 401", () => {
+    expect(rumEventSchema.safeParse({ ...base, path: "/".repeat(500) }).success).toBe(true);
+    expect(rumEventSchema.safeParse({ ...base, path: "/".repeat(501) }).success).toBe(false);
+    expect(rumEventSchema.safeParse({ ...base, userAgent: "u".repeat(400) }).success).toBe(true);
+    expect(rumEventSchema.safeParse({ ...base, userAgent: "u".repeat(401) }).success).toBe(false);
+  });
+
+  it("value is bounded at 6,000,000 (the DoS cap the route enforces)", () => {
+    expect(rumEventSchema.safeParse({ ...base, value: 6_000_000 }).success).toBe(true);
+    expect(rumEventSchema.safeParse({ ...base, value: 6_000_001 }).success).toBe(false);
+  });
+
+  it("the batch allows up to 20 events (the beacon's real cadence)", () => {
+    const events = Array.from({ length: 20 }, () => ({ ...base }));
+    expect(rumBatchSchema.safeParse({ sessionId: "s", events }).success).toBe(true);
+    expect(
+      rumBatchSchema.safeParse({ sessionId: "s", events: [...events, { ...base }] }).success,
+    ).toBe(false);
   });
 });

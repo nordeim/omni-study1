@@ -34,5 +34,5 @@ export const INITIAL_COLLECTIONS: Record<ViewId, CollectionKey[]> = {
   mathsolver: [],
   aiassistant: [],
   focustimer: ["focusSessions", "subjects"],
-  settings: ["subjects"],
+  settings: ["subjects", "holidays"],
 };
