@@ -1,14 +1,28 @@
 // ---------------------------------------------------------------------------
-// POST /api/import/data — the data import / restore (S23/ADR-019). The exact
-// inverse of GET /api/export/data: the versioned envelope validates (format
-// identity, version ceiling, duplicate ids, FK integrity), then every row
-// upserts BY ID inside ONE transaction — an import never duplicates and
-// never deletes, and a rejected envelope rolls back completely.
+// POST /api/import/data — the data import / restore (S23/ADR-019, hardened
+// S117/BR1). The exact inverse of GET /api/export/data: the versioned
+// envelope validates (format identity, version floor+ceiling, known
+// collections only, duplicate ids, FK integrity), then every row upserts BY
+// ID inside ONE transaction — an import never duplicates and never deletes,
+// and a rejected envelope rolls back completely.
 //
 // FK semantics: a dangling OPTIONAL FK imports NULLED (the SetNull family);
 // a dangling REQUIRED FK (cards.deckId) is a 400 with the actionable
-// collection.field message. The 10/15min per-user budget matches the spec's
-// documented 8-POST envelope.
+// collection.field message. Resolution is ACCOUNT-AWARE: a FK is resolvable
+// if it points at a row in this envelope OR at an existing row the importer
+// already owns (knownIds = imported ∪ existing).
+//
+// S117/BR1 (the cards fix + the documented-contract restoration): cards
+// (Flashcard — no userId column) scope EVERY ownership probe through the
+// deck relation, including the write loop's findFirst (the pre-S117 loop
+// probed `{ id, userId }` on the flashcard delegate → PrismaClientValidationError
+// → the whole transaction rolled back → HTTP 500 on ANY envelope containing
+// cards — the export→import round-trip was broken for every account with
+// flashcards). The body is capped at IMPORT_MAX_BYTES (413), the S23 seam's
+// NEVER_IMPORT_FIELDS are stripped from every row, unknown collections are
+// rejected BY NAME, and folders import parents-first (the seam's topo sort —
+// a child-first hand-crafted order would die P2003 mid-transaction).
+// The 10/15min per-user budget matches the spec's documented envelope.
 // ---------------------------------------------------------------------------
 
 import { NextResponse } from "next/server";
@@ -16,7 +30,8 @@ import type { NextRequest } from "next/server";
 import type { PrismaClient } from "@prisma/client";
 
 import { checkRateLimit } from "@/lib/auth";
-import { DATA_EXPORT_FORMAT, DATA_EXPORT_VERSION } from "@/lib/data-export";
+import { DATA_EXPORT_FORMAT, DATA_EXPORT_VERSION, EXPORT_COLLECTIONS } from "@/lib/data-export";
+import { IMPORT_MAX_BYTES, NEVER_IMPORT_FIELDS, sortFoldersParentsFirst } from "@/lib/data-import";
 import { db } from "@/lib/db";
 import { requireUser } from "@/lib/server/auth";
 import {
@@ -28,7 +43,7 @@ import {
 type Row = Record<string, unknown>;
 
 /** Restore order: referents before referees (folders before files, decks
- *  before cards, subjects before everything subject-tagged). */
+ * before cards, subjects before everything subject-tagged). */
 const IMPORT_ORDER = [
   "subjects",
   "taskLists",
@@ -98,6 +113,18 @@ const OPTIONAL_FKS: Partial<Record<Collection, Record<string, Collection | "self
   folders: { parentId: "self" },
 };
 
+/** The import-side secret guard (the S23 seam's list): the file never speaks
+ * for the account — passwordHash and userId are stripped from every row
+ * (the importer's own id is re-attached by the route, never by the file). */
+function stripNeverImportFields(row: Row): Row {
+  const out: Row = {};
+  for (const [key, value] of Object.entries(row)) {
+    if ((NEVER_IMPORT_FIELDS as readonly string[]).includes(key)) continue;
+    out[key] = value;
+  }
+  return out;
+}
+
 export const POST = async (request: NextRequest) => {
   try {
     const user = await requireUser();
@@ -107,7 +134,27 @@ export const POST = async (request: NextRequest) => {
       return rateLimitedResponse(limit.retryAfterSec, "Too many import attempts");
     }
 
-    const raw: unknown = await request.json().catch(() => null);
+    // ---- the 10 MiB body cap (S117/BR1 — the documented 413 contract) ------
+    const declaredLength = Number(request.headers.get("content-length") ?? "0");
+    if (Number.isFinite(declaredLength) && declaredLength > IMPORT_MAX_BYTES) {
+      return errorResponse(
+        413,
+        `That backup is too large (${Math.round(declaredLength / (1024 * 1024))} MiB). The import cap is ${IMPORT_MAX_BYTES / (1024 * 1024)} MiB.`,
+      );
+    }
+    const text = await request.text();
+    if (text.length > IMPORT_MAX_BYTES) {
+      return errorResponse(
+        413,
+        `That backup is too large. The import cap is ${IMPORT_MAX_BYTES / (1024 * 1024)} MiB.`,
+      );
+    }
+    let raw: unknown;
+    try {
+      raw = text.length === 0 ? null : (JSON.parse(text) as unknown);
+    } catch {
+      raw = null;
+    }
     if (typeof raw !== "object" || raw === null) {
       return errorResponse(400, `Expected a ${DATA_EXPORT_FORMAT} envelope.`);
     }
@@ -125,7 +172,7 @@ export const POST = async (request: NextRequest) => {
       );
     }
 
-    // Version ceiling.
+    // Version floor + ceiling (S117/BR1 — the floor restored with the seam's copy).
     if (
       typeof envelope.version !== "number" ||
       !Number.isInteger(envelope.version) ||
@@ -138,11 +185,28 @@ export const POST = async (request: NextRequest) => {
         )} > ${DATA_EXPORT_VERSION}). Update the app before restoring it.`,
       );
     }
+    if (envelope.version < DATA_EXPORT_VERSION) {
+      return errorResponse(
+        400,
+        `This export is from an unsupported older version (v${String(envelope.version)}).`,
+      );
+    }
 
     if (typeof envelope.data !== "object" || envelope.data === null) {
       return errorResponse(400, "The envelope carries no data object.");
     }
     const data = envelope.data as Record<string, unknown>;
+
+    // Unknown collections are rejected BY NAME (S117/BR1 — the seam's copy).
+    const knownCollections = new Set<string>(EXPORT_COLLECTIONS);
+    for (const key of Object.keys(data)) {
+      if (!knownCollections.has(key)) {
+        return errorResponse(
+          400,
+          `Unknown collection "${key}" in the export file. This app imports exactly: ${EXPORT_COLLECTIONS.join(", ")}.`,
+        );
+      }
+    }
 
     // ---- per-collection validation -------------------------------------
     const parsed = new Map<Collection, Row[]>();
@@ -179,7 +243,7 @@ export const POST = async (request: NextRequest) => {
         collection === "cards"
           ? { deck: { userId: user.id } }
           : { userId: user.id };
-       
+
       const existing = await (db[model] as any).findMany({
         where,
         select: { id: true },
@@ -222,6 +286,18 @@ export const POST = async (request: NextRequest) => {
       }
     }
 
+    // Folders import parents-first (S117/BR1 — the seam's topo sort; a
+    // hand-crafted child-first order would die P2003 mid-transaction. A
+    // parentId pointing at an EXISTING owned folder (not in this envelope)
+    // sorts as a root — its FK was already validated above).
+    if (parsed.has("folders")) {
+      const sorted = sortFoldersParentsFirst(parsed.get("folders") as Row[]);
+      if (typeof sorted === "string") {
+        return errorResponse(400, sorted);
+      }
+      parsed.set("folders", sorted);
+    }
+
     // ---- the all-or-nothing write --------------------------------------
     const imported: Record<string, { created: number; updated: number }> = {};
     let created = 0;
@@ -232,19 +308,30 @@ export const POST = async (request: NextRequest) => {
         const rows = parsed.get(collection);
         if (!rows || rows.length === 0) continue;
         const model = MODEL[collection] as keyof PrismaClient;
-         
-        const delegate = tx[model] as any;
+
+        // tx omits $connect/$disconnect/$on/$transaction/$extends, so a
+        // `keyof PrismaClient` cannot index it without a cast (the delegate
+        // is used as `any` throughout — the pre-S117 shape, now explicit
+        // under noImplicitAny).
+        const delegate = (tx as any)[model];
         let c = 0;
         let u = 0;
         for (const row of rows) {
-          const { id, ...fields } = row;
-          // cards carry no userId column — deckId ownership is validated
-          // against the user's decks above (transitive).
-          const data = (
-            collection === "cards" ? fields : { ...fields, userId: user.id }
-          ) as Row;
+          const { id, ...rawFields } = row;
+          const fields = stripNeverImportFields(rawFields);
+          // cards carry no userId column — ownership rides the deck relation,
+          // so EVERY probe (including this write loop's findFirst, the S117
+          // fix) scopes through { deck: { userId } }, exactly like the
+          // knownIds loop above. Envelope userId never reaches Prisma: it is
+          // stripped (NEVER_IMPORT_FIELDS) and re-attached from the session.
+          const data =
+            collection === "cards" ? fields : { ...fields, userId: user.id };
+          const probe =
+            collection === "cards"
+              ? { id: id as string, deck: { userId: user.id } }
+              : { id: id as string, userId: user.id };
           const existing = await delegate.findFirst({
-            where: { id: id as string, userId: user.id },
+            where: probe,
             select: { id: true },
           });
           if (existing) {

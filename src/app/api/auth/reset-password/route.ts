@@ -7,7 +7,7 @@
 
 import { NextResponse, type NextRequest } from "next/server";
 
-import { hashPassword } from "@/lib/auth";
+import { hashPassword, hashResetToken } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { resetPasswordSchema } from "@/lib/validation";
 import { errorResponse, parseWith, readJson, toErrorResponse } from "@/lib/server/http";
@@ -19,8 +19,10 @@ export async function POST(request: NextRequest) {
       await readJson(request),
     );
 
+    // S117/BR6 — the row stores the SHA-256 digest, so the presented raw
+    // token is hashed before the lookup.
     const record = await db.passwordResetToken.findUnique({
-      where: { token },
+      where: { token: hashResetToken(token) },
       select: { id: true, userId: true, usedAt: true, expiresAt: true },
     });
     if (!record || record.usedAt || record.expiresAt <= new Date()) {

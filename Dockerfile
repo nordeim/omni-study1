@@ -39,8 +39,13 @@ COPY . .
 # The generated client lands in node_modules (traced into the standalone).
 RUN bunx prisma generate
 # next build + the standalone assembly (cp static + public — package.json's
-# build script). AUTH_SECRET/NEXT_PUBLIC_SITE_URL are runtime concerns here:
-# the server reads them from the environment at serve time.
+# build script). AUTH_SECRET is a runtime concern (read at serve time);
+# NEXT_PUBLIC_SITE_URL is a BUILD-TIME concern (S117/BR7): sitemap.ts and
+# robots.ts are statically prerendered, and the metadataBase is inlined at
+# build — the ARG bakes the canonical origin into those artifacts. Pass it
+# as a build arg: docker build --build-arg NEXT_PUBLIC_SITE_URL=https://…
+ARG NEXT_PUBLIC_SITE_URL=http://localhost:3000
+ENV NEXT_PUBLIC_SITE_URL=${NEXT_PUBLIC_SITE_URL}
 RUN bun run build
 
 # ---------------------------------------------------------------------------

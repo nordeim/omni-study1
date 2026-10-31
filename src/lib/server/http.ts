@@ -78,8 +78,17 @@ export function parseWith<T>(schema: ZodType<T>, input: unknown): T {
   return result.data;
 }
 
-/** Read a JSON body defensively (malformed JSON → the caller's 400 path). */
+/** Read a JSON body defensively (malformed JSON → the caller's 400 path).
+ * S117/BR5: a non-JSON Content-Type is unparseable-by-policy — a form POST
+ * with `text/plain` (which bypasses the CORS/preflight reasoning behind the
+ * sameSite=lax CSRF mitigation) must not reach a JSON parser. The app's own
+ * client sets `Content-Type: application/json` on every JSON call
+ * (src/lib/api.ts). */
 export async function readJson(request: NextRequest): Promise<unknown> {
+  const contentType = request.headers.get("content-type") ?? "";
+  if (contentType !== "" && !contentType.toLowerCase().includes("application/json")) {
+    throw new ValidationError("The request body must be valid JSON.");
+  }
   const text = await request.text();
   if (text.length === 0) return {};
   try {

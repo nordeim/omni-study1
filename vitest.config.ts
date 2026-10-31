@@ -1,6 +1,22 @@
 import { defineConfig } from "vitest/config";
 import path from "node:path";
 
+// Unit-test layer for the pure domain seams — 28 files / 944 tests
+// (re-anchored S117/BR — the hardening cycle: census 936 → 944.
+// The additions: auth +5 [the S117/BR3 timing-equalizer family —
+// verifyLoginCredentials's matching/miss semantics + the DUMMY_LOGIN_HASH
+// scrypt-shape pin that fails the "dummy = malformed string" mutant
+// which would silently reinstate the login enumeration oracle — and the
+// S117/BR6 hashResetToken family (deterministic 64-hex digest, differs
+// from the raw token, differs between tokens)] and validation +3
+// [the S117/BR4 linkFileSchema family — http/https accepted,
+// javascript:/data:/file:/ftp:/mailto: rejected, the name/folderId
+// shape preserved]. The route-level halves of BR1/BR2/BR5 ride the
+// e2e layer (the s23 cards round-trip pin + the auth-flows verify-429
+// TEST-NET pin); the seam exports BR1 reconnected (IMPORT_MAX_BYTES,
+// NEVER_IMPORT_FIELDS, sortFoldersParentsFirst) were already pinned by
+// the 30-test data-import family.
+//
 // Unit-test layer for the pure domain seams — 28 files / 936 tests
 // (re-anchored S116/BQ — the rotation program's SECOND PASS's cycle
 // four, the LIGHT QUARTET's closing cell: census UNCHANGED at 936.

@@ -158,4 +158,34 @@ test.describe("S15 auth flows", () => {
     const h1 = page.getByRole("heading", { name: /Welcome to StudyFlow/ });
     await expect(h1).toHaveCSS("font-size", "30px");
   });
+
+  test("verify-email is rate-limited: the 21st attempt from one IP 429s (S117/BR2)", async ({
+    request,
+  }) => {
+    // The OTP brute-force gate: the 6-digit code space is small and a
+    // successful verify SIGNS THE CALLER IN — pre-S117 the route had no
+    // limiter at all. The 20/15-min per-IP budget mirrors the login route's
+    // limiter-before-validation convention (invalid payloads consume
+    // budget). The 21 attempts ride a DISTINCT client IP (x-forwarded-for:
+    // 192.0.2.117 — the RFC 5737 TEST-NET range, the documented s25
+    // technique) so the localhost verify budget that the other specs'
+    // register→verify journeys share is never touched.
+    const headers = { "x-forwarded-for": "192.0.2.117" };
+    const body = { email: "s117-no-such-user@example.com", code: "000000" };
+
+    for (let i = 0; i < 20; i++) {
+      const res = await request.post("/api/auth/verify-email", { headers, data: body });
+      // Uniform rejection (no account-state oracle) — but never 429 for the
+      // first 20: the budget is consumed, not exceeded.
+      expect(res.status()).toBe(400);
+    }
+
+    const blocked = await request.post("/api/auth/verify-email", { headers, data: body });
+    expect(blocked.status()).toBe(429);
+    const blockedBody = (await blocked.json()) as { error: string };
+    expect(blockedBody.error).toContain("Too many verification attempts");
+    const retryAfter = blocked.headers()["retry-after"];
+    expect(retryAfter).toBeTruthy();
+    expect(Number(retryAfter)).toBeGreaterThan(0);
+  });
 });

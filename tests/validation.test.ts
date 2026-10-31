@@ -10,6 +10,7 @@ import {
   flashcardDeckSchema,
   flashcardSchema,
   forgotPasswordSchema,
+  linkFileSchema,
   loginSchema,
   mathSolveSchema,
   practiceTestSchema,
@@ -748,5 +749,42 @@ describe("changeEmailSchema (S26 — the account-identity rotation)", () => {
     if (r.success) {
       expect(r.data).not.toHaveProperty("userId");
     }
+  });
+});
+
+// S117/BR4 — the link-file URL guard. z.string().url() alone accepts
+// WHATWG-valid javascript:/data: URLs; a stored href rendered with
+// target="_blank" is script execution in the app origin on click. The
+// upload route (files/route.ts POST) has enforced ^https?:// since S14 —
+// this pin holds the LINK route (files/link/route.ts) to the same rule
+// through the shared schema (the near-duplicate inconsistency the s117
+// audit closed).
+describe("linkFileSchema (S117/BR4 — http(s)-only link URLs)", () => {
+  it("accepts http and https URLs", () => {
+    const ok = (url: string) => linkFileSchema.safeParse({ name: "Docs", url }).success;
+    expect(ok("https://example.com/study-guide.pdf")).toBe(true);
+    expect(ok("http://localhost:8080/notes.txt")).toBe(true);
+    expect(ok("https://developer.mozilla.org/en-US/docs/Web/HTTP")).toBe(true);
+  });
+
+  it("rejects javascript:, data:, and other non-http(s) schemes", () => {
+    const bad = (url: string) => linkFileSchema.safeParse({ name: "X", url }).success;
+    expect(bad("javascript:alert(document.cookie)")).toBe(false);
+    expect(bad("JavaScript:alert(1)")).toBe(false);
+    expect(bad("data:text/html;base64,PHNjcmlwdD5hbGVydCgxKTwvc2NyaXB0Pg==")).toBe(false);
+    expect(bad("file:///etc/passwd")).toBe(false);
+    expect(bad("ftp://example.com/file")).toBe(false);
+    expect(bad("mailto:someone@example.com")).toBe(false);
+  });
+
+  it("keeps the name/folderId shape of the route's original schema", () => {
+    expect(linkFileSchema.safeParse({ name: "", url: "https://example.com" }).success).toBe(false);
+    expect(
+      linkFileSchema.safeParse({ name: "x".repeat(201), url: "https://example.com" }).success,
+    ).toBe(false);
+    expect(
+      linkFileSchema.safeParse({ name: "Ok", url: "https://example.com", folderId: "folder-1" })
+        .success,
+    ).toBe(true);
   });
 });

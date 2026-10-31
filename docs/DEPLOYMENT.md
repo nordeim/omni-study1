@@ -129,7 +129,7 @@ What the compose file does:
 | `init` service (`--profile init`) | One-shot `prisma db push` + the idempotent seed onto the same volume |
 | `db-data` volume | The SQLite file (`file:/data/custom.db`) — survives container rebuilds |
 | `AUTH_SECRET` | **Required** — compose refuses to boot with the placeholder (§3) |
-| `NEXT_PUBLIC_SITE_URL` | Optional canonical origin (read at serve time by metadata/sitemap) |
+| `NEXT_PUBLIC_SITE_URL` | Canonical origin for metadata URLs and `sitemap.xml`. **Two surfaces (S117/BR7):** the runtime env var covers the API routes that read it at request time (e.g. the forgot-password reset URL), while `sitemap.xml`/`robots.txt`/`metadataBase` are **statically prerendered at build time** — set the same value as a Docker BUILD ARG (`docker build --build-arg NEXT_PUBLIC_SITE_URL=https://…`, wired in the Dockerfile) or those artifacts ship with the baked `localhost:3000` default |
 
 Notes:
 

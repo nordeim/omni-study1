@@ -20,7 +20,10 @@ services:
       # REQUIRED in production (DEPLOYMENT.md §3) — generate with
       # `openssl rand -hex 32`. Refuses to boot with the placeholder.
       AUTH_SECRET: "${AUTH_SECRET:?Set AUTH_SECRET before starting (openssl rand -hex 32)}"
-      # Canonical public origin for metadata/sitemap (read at serve time).
+      # Canonical public origin (S117/BR7): read at SERVE time by the API
+      # routes that use it per-request (e.g. the forgot-password reset URL);
+      # sitemap.xml/robots.txt/metadataBase are BUILD-TIME prerendered — bake
+      # those with the Dockerfile's NEXT_PUBLIC_SITE_URL build ARG instead.
       NEXT_PUBLIC_SITE_URL: "${NEXT_PUBLIC_SITE_URL:-http://localhost:3000}"
     volumes:
       - db-data:/data

@@ -21,10 +21,10 @@ import { expect, test } from "@playwright/test";
 // (5) THE PANEL JOURNEY: /export renders the Restore card; a real
 //     setInputFiles import → the result summary renders.
 //
-// Rate-limit budget: this file makes exactly 8 import POSTs against the
+// Rate-limit budget: this file makes exactly 9 import POSTs against the
 // 10/15-min per-user budget (round-trip 1 + re-import 1 + dangling-FK 1 +
-// the 400 family 4 + the panel journey 1) — counted and documented; no
-// other spec file POSTs the route.
+// the 400 family 4 + the panel journey 1 + the S117 cards round-trip 1)
+// — counted and documented; no other spec file POSTs the route.
 test.use({ storageState: "tests/e2e/.auth/user.json" });
 
 function envelope(overrides: Record<string, unknown> = {}): Record<string, unknown> {
@@ -105,6 +105,63 @@ test.describe("S23 the data import (restore)", () => {
     const afterCount = ((await after.json()) as unknown[]).length;
     // Upsert-by-id: an import never duplicates (and never deletes).
     expect(afterCount).toBe(beforeCount);
+  });
+
+  test("the cards round-trip (S117/BR1): a card under an EXISTING owned deck imports — the deck-scoped write probe", async ({
+    request,
+  }) => {
+    // RED demonstrated live on the pre-change tree: the export→import
+    // round-trip of an account with flashcards returned HTTP 500 — the write
+    // loop probed { id, userId } on the flashcard delegate (Flashcard has NO
+    // userId column) → PrismaClientValidationError → the whole all-or-nothing
+    // transaction rolled back. The fix scopes EVERY cards ownership probe
+    // through { deck: { userId } }, exactly like the knownIds loop above it.
+    // The stamped id keeps the pin re-run-safe on an aged scratch db (the
+    // S46 lesson — fixed ids read created:0 on the second run).
+    const decks = await request.get("/api/flashcards/decks");
+    expect(decks.status()).toBe(200);
+    const deckList = (await decks.json()) as Array<{ id: string }>;
+    expect(deckList.length).toBeGreaterThan(0);
+    const deckId = deckList[0].id;
+
+    const stamped = `s117-card-${Date.now()}`;
+    try {
+      const res = await request.post("/api/import/data", {
+        data: envelope({
+          data: {
+            cards: [
+              {
+                id: stamped,
+                front: "BR1 front — the deck-scoped probe",
+                back: "BR1 back",
+                deckId,
+                difficulty: "medium",
+                mastered: false,
+                createdAt: "2026-10-01T00:00:00.000Z",
+                updatedAt: "2026-10-01T00:00:00.000Z",
+              },
+            ],
+          },
+        }),
+      });
+      expect(res.status()).toBe(200);
+      const body = (await res.json()) as {
+        imported: Record<string, { created: number; updated: number }>;
+      };
+      // Account-aware REQUIRED-FK resolution: the deck exists in the importer's
+      // account (not in the envelope) — the card imports against it.
+      expect(body.imported.cards).toEqual({ created: 1, updated: 0 });
+
+      // The card landed through the app's own API (deck-scoped list).
+      const cards = await request.get("/api/flashcards/cards");
+      expect(cards.status()).toBe(200);
+      const list = (await cards.json()) as Array<{ id: string; deckId: string }>;
+      const mine = list.find((c) => c.id === stamped);
+      expect(mine?.deckId).toBe(deckId);
+    } finally {
+      // The AM5 convention: cleanup rides every failure path.
+      await request.delete(`/api/flashcards/cards/${stamped}`);
+    }
   });
 
   test("the validation 400 family: format, future version, required FK, duplicate ids — and the rollback", async ({

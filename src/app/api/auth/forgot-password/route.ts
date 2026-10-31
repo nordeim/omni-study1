@@ -9,7 +9,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { z } from "zod";
 
-import { checkRateLimit, generateResetToken } from "@/lib/auth";
+import { checkRateLimit, generateResetToken, hashResetToken } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { siteUrl } from "@/lib/site";
 import { clientIp } from "@/lib/server/auth";
@@ -45,7 +45,10 @@ export async function POST(request: NextRequest) {
       await db.passwordResetToken.create({
         data: {
           userId: user.id,
-          token,
+          // S117/BR6 — hashed at rest: the row stores the SHA-256 digest; the
+          // raw token rides the URL only. A DB read must never yield a live
+          // account-takeover link.
+          token: hashResetToken(token),
           expiresAt: new Date(Date.now() + TOKEN_TTL_MS),
         },
       });

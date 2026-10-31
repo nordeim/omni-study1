@@ -93,8 +93,10 @@ function stripSecrets(row: ImportRow): ImportRow {
  * (a hand-crafted child-first order would die P2003 mid-transaction).
  * Detached parents (parentId nulled by the FK pass) are roots. A parentId
  * CYCLE is rejected — it must never reach the tree renderer or the DB.
+ * S117/BR1: exported for the import route (the S23 contract's parents-first
+ * restore order — the seam's unit pins cover it end-to-end).
  */
-function sortFoldersParentsFirst(folders: ImportRow[]): ImportRow[] | string {
+export function sortFoldersParentsFirst(folders: ImportRow[]): ImportRow[] | string {
   const byId = new Map<string, ImportRow>();
   for (const row of folders) byId.set(String(row.id), row);
 

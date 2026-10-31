@@ -295,6 +295,22 @@ export const focusSessionSchema = z.object({
   completed: z.boolean().optional().default(true),
 });
 
+// S117/BR4 — the link-file schema, extracted from the route so the unit layer
+// can pin the http(s)-only URL rule. z.string().url() alone accepts
+// WHATWG-valid javascript:/data: URLs; a stored href rendered with
+// target="_blank" is script execution in the app origin on click. The upload
+// route (files/route.ts POST) has enforced the same ^https?:// rule since
+// S14 — this schema holds the LINK route (files/link/route.ts) to it.
+export const linkFileSchema = z.object({
+  name: boundedTitle,
+  url: z
+    .string()
+    .url()
+    .max(2000)
+    .regex(/^https?:\/\//i, "The link needs a valid http(s) URL."),
+  folderId: nullableId,
+});
+
 export const holidaySchema = z.object({
   name: boundedTitle,
   date: requiredDate,

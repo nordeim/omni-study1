@@ -6,6 +6,7 @@
 // ---------------------------------------------------------------------------
 
 import {
+  createHash,
   createHmac,
   randomBytes,
   randomFillSync,
@@ -37,6 +38,27 @@ export function verifyPassword(password: string, stored: string): boolean {
   if (salt.length !== 16 || expected.length !== SCRYPT_KEYLEN) return false;
   const derived = scryptSync(password, salt, SCRYPT_KEYLEN);
   return timingSafeEqual(derived, expected);
+}
+
+// ---- login timing equalizer (S117/BR3) ---------------------------------------
+
+/** A real scrypt hash of an unknowable random password — the stand-in burned
+ * by the login miss branch so "no such user" costs the same scrypt work as
+ * "wrong password" (no remotely measurable enumeration oracle under the
+ * uniform 401). Unit-pinned by tests/auth.test.ts (the shape pin is what
+ * fails the "dummy = malformed string" mutant that would silently restore
+ * the oracle while keeping the boolean contract green). */
+export const DUMMY_LOGIN_HASH: string = hashPassword(generateResetToken());
+
+/** The login credential check WITH the timing equalizer: the scrypt burn
+ * happens for every attempt (real hash or the dummy); the result is true
+ * only when the user exists AND the password matches. */
+export function verifyLoginCredentials(
+  user: { passwordHash: string } | null | undefined,
+  password: string,
+): boolean {
+  const ok = verifyPassword(password, user?.passwordHash ?? DUMMY_LOGIN_HASH);
+  return ok && user != null;
 }
 
 // ---- session tokens (HMAC over { uid, iat, exp }) -----------------------------
@@ -122,6 +144,15 @@ export function generateVerificationCode(): string {
 /** 48 lowercase hex characters (24 random bytes). */
 export function generateResetToken(): string {
   return randomBytes(24).toString("hex");
+}
+
+/** SHA-256 digest of a reset token — the AT-REST form (S117/BR6). The raw
+ * 48-hex token rides the reset URL and is never persisted; the
+ * PasswordResetToken row stores this digest so a DB read (backup leak, file
+ * access) cannot yield a live account-takeover token. Lookup hashes the
+ * presented token before touching the index. */
+export function hashResetToken(token: string): string {
+  return createHash("sha256").update(token).digest("hex");
 }
 
 /** Tolerate pasted formatting; reject non-digit garbage and wrong lengths. */

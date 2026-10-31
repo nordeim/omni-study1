@@ -7,7 +7,7 @@
 
 import { NextResponse, type NextRequest } from "next/server";
 
-import { checkRateLimit, resetRateLimit, verifyPassword } from "@/lib/auth";
+import { checkRateLimit, resetRateLimit, verifyLoginCredentials } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { loginSchema } from "@/lib/validation";
 import { clientIp, publicUser, setSessionCookie } from "@/lib/server/auth";
@@ -43,8 +43,12 @@ export async function POST(request: NextRequest) {
       // leaves this handler (publicUser selects its own fields).
       where: { email: email.toLowerCase() },
     });
-    // Uniform rejection for both "no such user" and "wrong password".
-    if (!user || !verifyPassword(password, user.passwordHash)) {
+    // Uniform rejection for both "no such user" and "wrong password" — and
+    // (S117/BR3) the SAME scrypt burn either way: the helper runs BEFORE the
+    // null check, so the miss branch verifies against the dummy hash and
+    // response timing cannot enumerate accounts.
+    const credentialsOk = verifyLoginCredentials(user, password);
+    if (!user || !credentialsOk) {
       return errorResponse(401, INVALID_CREDENTIALS);
     }
     if (!user.emailVerified) {

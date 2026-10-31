@@ -2,12 +2,15 @@ import { describe, expect, it } from "vitest";
 import {
   checkRateLimit,
   createSessionToken,
+  DUMMY_LOGIN_HASH,
   generateResetToken,
   generateVerificationCode,
   hashPassword,
+  hashResetToken,
   normalizeVerificationCode,
   readSessionToken,
   resetRateLimit,
+  verifyLoginCredentials,
   verifyPassword,
 } from "@/lib/auth";
 
@@ -200,5 +203,51 @@ describe("normalizeVerificationCode (S15)", () => {
     expect(normalizeVerificationCode("")).toBeNull();
     expect(normalizeVerificationCode(null)).toBeNull();
     expect(normalizeVerificationCode(undefined)).toBeNull();
+  });
+});
+
+// S117/BR3 — the login timing equalizer. The miss branch (no such user) must
+// burn the SAME scrypt work as the wrong-password branch, or the uniform 401
+// leaks a remotely measurable enumeration oracle. The mutant this family
+// guards: an early `if (!user) return false` before any scrypt call (the
+// pre-S117 login route shape) — the DUMMY_LOGIN_HASH shape pin is what fails
+// for it (the dummy must be a real scrypt hash so the burn actually happens).
+describe("verifyLoginCredentials (S117/BR3 — the timing equalizer)", () => {
+  it("returns true only for the matching password", () => {
+    const hash = hashPassword("Demo1234!");
+    expect(verifyLoginCredentials({ passwordHash: hash }, "Demo1234!")).toBe(true);
+    expect(verifyLoginCredentials({ passwordHash: hash }, "WrongPassword")).toBe(false);
+  });
+
+  it("burns the same scrypt work when the user does not exist (no timing oracle)", () => {
+    expect(verifyLoginCredentials(null, "anything")).toBe(false);
+    expect(verifyLoginCredentials(undefined, "anything")).toBe(false);
+  });
+
+  it("DUMMY_LOGIN_HASH is a real scrypt-format hash — the miss branch's burn is genuine", () => {
+    // The mutant "dummy = a malformed/empty string" fails here: verifyPassword
+    // would early-return false WITHOUT running scrypt, silently reinstating
+    // the timing oracle while keeping the helper's boolean contract green.
+    expect(DUMMY_LOGIN_HASH).toMatch(/^scrypt\$[0-9a-f]{32}\$[0-9a-f]{128}$/);
+    expect(verifyPassword("not-the-dummy-password", DUMMY_LOGIN_HASH)).toBe(false);
+  });
+});
+
+// S117/BR6 — reset tokens are hashed at rest. The raw 48-hex token rides the
+// reset URL (and only the URL); the PasswordResetToken row stores its SHA-256
+// digest — a DB read (backup leak, file access) must never yield a live token.
+describe("hashResetToken (S117/BR6 — hashed at rest)", () => {
+  it("maps any raw token to a deterministic 64-char lowercase hex digest", () => {
+    const raw = generateResetToken();
+    expect(hashResetToken(raw)).toMatch(/^[0-9a-f]{64}$/);
+    expect(hashResetToken(raw)).toBe(hashResetToken(raw));
+  });
+
+  it("digests differ from the raw token and between tokens", () => {
+    const raw = generateResetToken();
+    const digest = hashResetToken(raw);
+    expect(digest).not.toBe(raw);
+    expect(digest).not.toContain(raw);
+    expect(hashResetToken(generateResetToken())).not.toBe(digest);
   });
 });

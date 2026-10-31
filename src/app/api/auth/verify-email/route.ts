@@ -3,17 +3,22 @@
 // is normalized (pasted formatting tolerated), matched against the LATEST
 // UNEXPIRED token for the account, consumed, and — on success — the account
 // is marked verified AND signed in (verify = the email proof).
+// Rate-limited 20/IP/15 min (S117/BR2): the 6-digit code space is small and
+// success signs the caller in — unthrottled guessing is an account-takeover
+// vector. The limiter sits BEFORE validation (invalid payloads consume
+// budget — the login route's own convention).
 // ---------------------------------------------------------------------------
 
 import { NextResponse, type NextRequest } from "next/server";
 import { z } from "zod";
 
-import { normalizeVerificationCode } from "@/lib/auth";
+import { checkRateLimit, normalizeVerificationCode } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { publicUser, setSessionCookie } from "@/lib/server/auth";
+import { clientIp, publicUser, setSessionCookie } from "@/lib/server/auth";
 import {
   errorResponse,
   parseWith,
+  rateLimitedResponse,
   readJson,
   toErrorResponse,
 } from "@/lib/server/http";
@@ -28,6 +33,16 @@ const verifyBodySchema = z.object({
 
 export async function POST(request: NextRequest) {
   try {
+    // The OTP brute-force gate (S117/BR2) — before parsing, like login.
+    const ip = clientIp(request);
+    const limit = checkRateLimit(`verify:${ip}`, 20);
+    if (!limit.ok) {
+      return rateLimitedResponse(
+        limit.retryAfterSec,
+        "Too many verification attempts. Try again shortly.",
+      );
+    }
+
     const { email, code } = parseWith(verifyBodySchema, await readJson(request));
     const normalized = normalizeVerificationCode(code);
     if (!normalized) {
