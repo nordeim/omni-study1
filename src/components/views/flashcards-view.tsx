@@ -175,7 +175,11 @@ export function FlashcardsView() {
 
   const submitCard = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (busy || !selectedDeckId) return;
+    // S125/BZ1: the guard reads the RENDER-DERIVED selection — the
+    // auto-selected first deck (effectiveDeckId) is a real target; the raw
+    // selectedDeckId is null until an explicit click, so the old guard
+    // silently no-op'd every Add Card on first visit.
+    if (busy || !effectiveDeckId) return;
     setBusy(true);
     setError("");
     const payload = {
@@ -188,7 +192,7 @@ export function FlashcardsView() {
         await updateFlashcard(cardDialog.editing.id, payload);
         toast.success("Card updated.");
       } else {
-        await createFlashcard(selectedDeckId, payload);
+        await createFlashcard(effectiveDeckId, payload);
         toast.success("Card added.");
       }
       setCardDialog({ open: false, editing: null });
@@ -218,13 +222,14 @@ export function FlashcardsView() {
   };
 
   const generateCards = async () => {
-    if (!selectedDeckId || generating) return;
+    // S125/BZ1: the render-derived selection (the submitCard twin).
+    if (!effectiveDeckId || generating) return;
     setGenerating(true);
     try {
       await apiSend(
         "POST",
         "/api/ai/generate-cards",
-        { deckId: selectedDeckId, topic: selectedDeck?.name },
+        { deckId: effectiveDeckId, topic: selectedDeck?.name },
         { timeoutMs: 120_000 },
       );
       await useDataStore.getState().loadCollections(["flashcards"]);

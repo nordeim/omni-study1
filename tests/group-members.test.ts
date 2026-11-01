@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { normalizeMembers } from "@/lib/group-members";
+import { normalizeMembers, removeOneMember } from "@/lib/group-members";
 // The server-side read seam (S88/AO3) — imported here so both sides of
 // the members boundary are pinned in ONE family (the sentKeysPatch
 // precedent for importing entities' pure seams into unit tests).
@@ -129,5 +129,41 @@ describe("membersFromRow · the S88/AO3 server read symmetry", () => {
     expect(membersFromRow(42)).toBe(42);
     expect((membersFromRow({ members: null }) as { members: unknown[] }).members).toEqual([]);
     expect((membersFromRow({}) as { members: unknown[] }).members).toEqual([]);
+  });
+});
+
+// S125/BZ4 — removeOneMember: duplicate members are schema-legal (BV17 —
+// the render key disambiguates by index), but the view's removal filtered
+// by email alone, so clicking one member's X removed EVERY row sharing
+// that email in one write. The seam removes exactly the FIRST (email,
+// name) composite occurrence — identical duplicates (same email AND
+// name) are indistinguishable rows, so removing the first is visually
+// equivalent to removing the clicked one; same-email members with
+// DIFFERENT names disambiguate by the composite.
+describe("removeOneMember (S125/BZ4 — the one-occurrence removal)", () => {
+  it("removes exactly ONE identical duplicate — the sibling survives", () => {
+    const members = [
+      { name: "Ada", email: "ada@example.com" },
+      { name: "Ada", email: "ada@example.com" },
+      { name: "Bob", email: "bob@example.com" },
+    ];
+    const out = removeOneMember(members, "ada@example.com", "Ada");
+    expect(out).toHaveLength(2);
+    expect(out[0]).toEqual({ name: "Ada", email: "ada@example.com" });
+    expect(out[1]).toEqual({ name: "Bob", email: "bob@example.com" });
+  });
+
+  it("disambiguates same-email members with different names (the composite match)", () => {
+    const members = [
+      { name: "Ada Lovelace", email: "shared@example.com" },
+      { name: "Ada Byron", email: "shared@example.com" },
+    ];
+    const out = removeOneMember(members, "shared@example.com", "Ada Byron");
+    expect(out).toEqual([{ name: "Ada Lovelace", email: "shared@example.com" }]);
+  });
+
+  it("a no-match removal is a no-op (the idempotent guard)", () => {
+    const members = [{ name: "Bob", email: "bob@example.com" }];
+    expect(removeOneMember(members, "ada@example.com", "Ada")).toEqual(members);
   });
 });

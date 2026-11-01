@@ -1,4 +1,23 @@
 #!/usr/bin/env bash
+# (S125/BZ re-tag — census 523 → 529, net +6: chunk 1 +2 [parity-session8
+# +2: the BZ3 manage-notebooks popover keyboard pin (the content renders
+# role=dialog with NO menuitem, Tab reaches the action buttons, Escape
+# closes) and the BZ4 duplicate-member pin (a fresh group with two
+# IDENTICAL members — removing one keeps the sibling; RED pre-fix: the
+# email filter removed both)]; chunk 2 +4 [parity-session7 +1 the BZ1
+# Add-Card-on-the-auto-selected-deck pin (the effectiveDeckId guard fix;
+# the locator rides .first() — the seed's same-millisecond createdAt ties
+# make decks[0] random, and the 0-card Spanish Vocabulary renders a
+# second exact-name "Add Card" CTA when it wins the tie); s14-hardening +3
+# the BZ6 grade-guard wire pin (the inverted create pair 400s, the
+# single-leg PATCH legs guard against the stored row), the BZ8 files/link
+# response-shape pin (no data key), and the BZ5 write-budget exhaustion
+# pin (a FRESH REGISTERED user's budget — the demo user is never mutated:
+# playwright's alphabetical file order runs s14 BEFORE tasks.spec, so the
+# first design's demo-budget exhaustion 429'd every later chunk create —
+# six collateral tasks.spec failures, the mid-flight-collision class;
+# the fresh-user rewrite rides the s25 TEST-NET register convention)])
+# Expected: 139 + 157 + 71 + 92 + 70 = 529 (each chunk's count includes its
 # Session-89 cold e2e certification — the 5-chunk map, final post-Batch-BT
 # (census 478 → 488: s119/BT +10 [chunk 1 +1 the BT10 notes manage-notebooks
 # placement pin; chunk 2 +1 the BT9 timetable edit-button accessible-name

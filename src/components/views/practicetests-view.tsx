@@ -59,7 +59,7 @@ import {
   SubjectChip,
   ViewHeader,
 } from "@/components/views/shared";
-import { apiSend } from "@/lib/api";
+import { apiSend, isTimeoutError } from "@/lib/api";
 import { cn } from "@/lib/utils";
 
 // ---- question model -----------------------------------------------------------
@@ -196,7 +196,10 @@ function TestDialog({
         subjectId: subjectId === "none" ? "" : subjectId,
         count: 5,
         persist: false,
-      });
+        // S125/BZ2: the S13 RESILIENCE contract — a hung backend must never
+        // disable the composer forever; this was the only AI call site
+        // without the deadline (apiSend sets NO AbortSignal otherwise).
+      }, { timeoutMs: 120_000 });
       const drafts = (res.questions ?? [])
         .filter((q) => typeof q.question === "string" && q.question.trim())
         .map((q) => ({
@@ -217,7 +220,14 @@ function TestDialog({
       setDrafts(drafts);
       toast.success("Questions generated — review and save.");
     } catch (err: unknown) {
-      toast.error(errorMessage(err, "Could not generate questions. Try again."));
+      // S125/BZ2: the isTimeoutError branch (the flashcards-view twin) — a
+      // raw AbortSignal.timeout rejection must never surface DOMException
+      // text to the user.
+      toast.error(
+        isTimeoutError(err)
+          ? "The assistant took too long to respond. Please try again."
+          : errorMessage(err, "Could not generate questions. Try again."),
+      );
     } finally {
       setGenerating(false);
     }

@@ -1,4 +1,4 @@
-# StudyFlow (Omni-Study) — Master Project Architecture Document (PAD) v1.3.32
+# StudyFlow (Omni-Study) — Master Project Architecture Document (PAD) v1.3.33
 
 **Classification:** Internal Engineering Reference
 **Status:** DEFINITIVE, PRODUCTION-LOCKED BLUEPRINT
@@ -9,10 +9,14 @@
 
 ---
 
+#### Revision Block — v1.3.33 (Session-125 / Batch BZ, Cycle 75)
+
+- `[SR]` The audit-driven hardening cycle (`docs/remediation-plan-session125.md`): **BZ1** the flashcards auto-select guard fix (the Add Card + AI Generate guards read the raw `selectedDeckId` while the S123/BX8 render model auto-selects the first deck — a first-visit user's dialog submit silently no-op'd, reproduced live in the DOM AND at the wire; both guards + payloads read `effectiveDeckId` now); **BZ2** the practice-tests AI call site joins the 120 s deadline family (`timeoutMs` + `isTimeoutError` — the only site without); **BZ3** the manage-notebooks surface converts DropdownMenu→Popover (the Rename/Delete buttons were nested inside `role="menuitem"` — a WAI-ARIA nested-interactive violation, menu keys skipped them and Tab closed the menu; the popover keeps the geometry, the actions are real tab stops, Escape restores focus); **BZ4** the duplicate-member removal removes ONE (the email-only filter deleted every duplicate sharing the address — the `removeOneMember` seam removes the first (email,name) composite); **BZ5** the factory write budget (`write:${user.id}` 600/15-min across all 16 collection POSTs — the S118/BS3 bounded-writes doctrine reaching the CRUD family; the exhaustion pin rides a FRESH TEST-NET-registered user: the first design's demo-budget exhaustion 429'd six later chunk tests because playwright runs spec files ALPHABETICALLY — s14 sorts before tasks.spec); **BZ6** the grade score≤maxScore ordering guard (the events BU22+BV1 pattern with the zod4-default amendment: the update schema owns NO `.check()` — `.partial()` injects the maxScore default, so the `checkGradeRangeMerge` beforeWrite seam owns EVERY combination through one effective-pair compare); **BZ7** the folder re-parent TOCTOU closed inside `$transaction` (the cycle check re-reads the chain inside it); **BZ8** the files/link metadata shape (`FILE_METADATA` moved to `server/http.ts` — route files cannot export shared symbols under Next's route-type validation; the link create answers the AI6 metadata shape); **BZ9** the register P2002 race answers the uniform 200 (the S120/BU14 enumeration oracle re-opened in the millisecond create-race window); **BZ10** the calculator-history trim runs in `$transaction` with an id-tiebroken orderBy; **BZ13** the factory `list` bounded (`take: 500`, the ai/messages convention — the export's own findManys stay independent, the completeness contract untouched); **BZ14** the dead note-rename dialog variant removed; **BZ15** the dead `formatClockShort` export removed; **BZ16** the FilesView boot-fetch loader dedup. **BZ11 RETRACTED** (the two "corrupted log tags" were display-pipeline artifacts — the hex dump + byte-constructed searches proved `[health]`/`[math/solve]` byte-correct since birth; the AP-130 class extends to python-repr "verifications"; no change shipped — the S125 lesson-1 record). The docs set: §12's `globals.css` Lines re-measured (1002), §8.4's checklist floors re-anchored (1127+/529+), §6.3's session shape gained the `v` sessionVersion claim, **§3.2's annotated tree regenerated end-to-end** (the v1.0-era snapshot), §8.1's changed rows + Total re-measured (73 files / 1127+530; the badge sum 1656). The rejected digest claim: §1.2's zod/playwright version cells (the lockfile pins 4.6.5/1.63.0 — the cells were already correct; the subagent's "4.6.7/1.64.1" misread). Four honest mid-run corrections (the pin-side ones in the plan's §5). Unit 1113 → **1127** (42 files), e2e 523 → **529** (139+157+71+92+70), every chunk first-pass on the final tree (chunk 2 twice).
+
 #### Revision Block — v1.3.32 (Session-124 / Batch BY, Cycle 74)
 
 - `[SR]` The audit-driven hardening cycle (`docs/remediation-plan-session124.md`): **BY1** the gradeLevel clearable form (the UI's "Not set" mapped to `undefined` — JSON drops the key, the sent-keys filter skips it, the bare enum 400'd `""` — a silent data lie behind a success toast; the `z.union([enum, ""])` + the UI `""` send + the reload round-trip live-verified); **BY2** the db-path production gate (the Turbopack-mangled fallback silently redirected a missing absolute PRODUCTION target to the seeded dev DB — now environment-gated via the explicit `nodeEnv` parameter; DEPLOYMENT §4 form-2's "absolute passes through untouched" is true in production); **BY3** the export/import size reconciliation (the import cap moved 10 → 25 MiB — the export emits base64 file payloads inline, so ~4 max-size uploads made the user's own backup unrestorable in-app; the panel's pre-check now reads the SAME `IMPORT_MAX_BYTES` constant); **BY4** the RUM contract doc sync (the p75 window 200 → the shipped 500; the trends shape → the 7-day null-gap series); **BY5** the export-family limiter (`export:${user.id}` 10/15-min, ONE shared key on both export GETs — the heaviest enumerations joined the S14 posture); **BY6** the RUM trends null-gap semantics (unsampled days fabricated literal 0s — a 0 CLS reads as a GOOD score on idle days; the `buildTrends` pure seam pushes null, the panel's finite filter drops the gaps); **BY7** the hydration-gate fleet swap (the vacuous `--sf-primary` wait — true at t=0 via the pre-paint boot script — replaced by the HydrationMarker contract across 16 spec files, the five-view overflow pin's 900 ms sleep deleted, the gotoDark route-universality correction: the appHydrated marker never fires on the non-shell /rum + /export routes); **BY8** the checked-checkbox print-exact (the S12 print contract's claim now true in code); **BY9** the avatarEmoji vocabulary at the boundary (the 24-emoji list + the `""` clear form — an arbitrary ≤8-code-point string no longer stores); **BY10** the popstate drawer close (browser Back with the drawer open used to swap the view UNDER the open drawer); **BY11** the skip-link gating (the splash/error branches carry no `#main-content` target); **BY12** the dead `sf-focus` utility removed + the SKILL focus-convention synced; **BY13** the forced-colors picker restoration (the Appearance tab + the dialog color pickers + the timer/answer groups — selection was invisible under Windows HC; container-scoped selectors, the bare-aria-pressed doctrine honored); **BY14** the s4o probe residue note; **BY15** the comment-hygiene set; **BY16** the docs-drift set (README's stale 508 census line + the pre-BT5 boot band + 16.4.0 + the wrong clone URL + "Six accents"; **ADR-022's Rationale still said "30-day session cookie" — reconciled to the shipped 7-day**, the sibling BX11 missed; §1.2's version cells → 16.4.2 / Tailwind 4.3.3; **§8.1's era-grouped distribution rows replaced with a per-file script-derivable table**; §12's Lines column re-measured; §6.4's OTP row gained the BX2 per-account cap + the register row the BX4 equalizer; the SKILL doc's nine drift items incl. the Task `done` shape). The honest mid-run corrections (five, all pin-side or gate-side, in the plan's §5).
-- `[SR]` Current test census anchor (the v1.2.0 convention, re-anchored): **1113/1113 Vitest unit** (41 files — the S124 additions: validation +7 [BY1 gradeLevel ×3 + BY9 avatar ×4], db-path +2 [the production gate], rum-diagnostics +5 [the buildTrends seam]) + **523/523 cold-chunk e2e** (518 chromium specs in 30 files + the auth setup re-run per chunk; the 5-chunk map **137+153+71+92+70**, every chunk first-pass on its final-tree run; `vitest run` 1113/1113 + `bunx playwright test --list` 519 [518 + 1 setup] — the per-file counts in §8.1 are script-derivable). Unit + e2e = **1637 green**.
+- `[SR]` Current test census anchor (the v1.2.0 convention, re-anchored): **1127/1127 Vitest unit** (42 files — the S125 additions: grade-merge.test.ts the 42nd file +7 [the checkGradeRangeMerge effective-pair legs], validation +4 [the gradeCreateSchema create legs], group-members +3 [the removeOneMember seam]) + **529/529 cold-chunk e2e** (524 chromium specs in 30 files + the auth setup re-run per chunk; the 5-chunk map **139+157+71+92+70**, every chunk first-pass on its final-tree run — chunk 2 verified twice; `vitest run` 1127/1127 + `bunx playwright test --list` 525 [524 + 1 setup] — the per-file counts in §8.1 are script-derivable). Unit + e2e = **1656 green**.
 
 #### Revision Block — v1.3.31 (Session-123 / Batch BX, Cycle 73)
 
@@ -716,59 +720,99 @@ Layer 6: Persistence        — src/lib/{db,db-path}.ts, prisma/schema     Rule:
 
 ### 3.2 Annotated Directory Structure
 
+(Regenerated S125/BZ16 — the v1.0-era snapshot had drifted: it omitted the
+/rum + /export + /reset-password routes, robots/sitemap, the seven
+account-journey auth routes, the import/export/RUM/AI-generation API
+surfaces, the S13–S24 lib seams, and the login/connectivity/RUM/export
+components.)
+
 ```
 omni-study/
 ├── src/
 │   ├── app/
 │   │   ├── page.tsx                     ← the whole app: auth gate → shell → view switcher
 │   │   ├── layout.tsx                   ← metadata, fonts, Toaster
-│   │   ├── login/page.tsx               ← reference-parity login card
-│   │   ├── globals.css                  ← @theme tokens + the five v4 trap pins + .glass/.sf-* utilities
+│   │   ├── login/page.tsx               ← reference-parity login card (login-surface.tsx)
+│   │   ├── reset-password/page.tsx      ← the 3-state forgot-password journey
+│   │   ├── rum/page.tsx                 ← auth-gated RUM diagnostics panel (server component)
+│   │   ├── export/page.tsx              ← auth-gated data-portability panel (server component)
+│   │   ├── robots.ts / sitemap.ts       ← the site contract (22 URLs, src/lib/site.ts)
+│   │   ├── globals.css                  ← @theme tokens + the v4 trap pins + .glass/.sf-* utilities
 │   │   └── api/
 │   │       ├── health/route.ts          ← liveness + DB probe (e2e webServer gate)
-│   │       ├── auth/{login,register,logout,me}/route.ts
+│   │       ├── auth/                    ← the FULL account journey (11 routes): login, register,
+│   │       │                              logout, me, verify-email, resend-verification,
+│   │       │                              forgot-password, reset-password, change-password,
+│   │       │                              change-email, delete-account
 │   │       ├── tasks|task-lists|assignments|exams|events|timetable|
 │   │       │   notebooks|notes|practice-tests|study-groups|grades|
 │   │       │   focus-sessions|holidays]/route.ts + [id]/route.ts   ← factory shells
+│   │       │                              (the POST family carries the S125/BZ5 write budget)
 │   │       ├── subjects/route.ts + [id]/route.ts
 │   │       ├── flashcards/{decks,cards}/route.ts + [id]/route.ts   ← cards carry a deck-ownership guard
-│   │       ├── files/{route,folders,link,[id]}/route.ts            ← multipart upload ≤ 2 MiB, download, links
+│   │       ├── files/{route,folders,link,[id]}/route.ts            ← multipart upload ≤ 2 MiB, download,
+│   │       │                              links (FILE_METADATA lives in server/http.ts, S125/BZ8)
 │   │       ├── settings/preferences/route.ts                       ← theme/accent/avatar/name persistence
-│   │       ├── calculator/history/route.ts
-│   │       └── ai/{chat,messages}/route.ts, math/solve/route.ts    ← z-ai-web-dev-sdk (server-only)
+│   │       ├── calculator/history/route.ts                          ← 500-row retention trim (the BZ10
+│   │       │                              transaction + id tiebreak)
+│   │       ├── rum/route.ts + rum/export/route.ts                   ← the beacon POST (1000/15-min) +
+│   │       │                              the owner panel GET (take: 500) + the CSV export
+│   │       ├── export/data/route.ts + import/data/route.ts          ← the 20-collection portability pair
+│   │       │                              (25 MiB cap, all-or-nothing upsert, both limiter-gated)
+│   │       └── ai/{chat,messages,generate-cards,generate-questions}/route.ts,
+│   │           math/solve/route.ts        ← z-ai-web-dev-sdk (server-only, the shared ai: budget)
 │   ├── components/
-│   │   ├── layout/sidebar.tsx           ← collapsible glass rail: w-[260px] ↔ w-20 (S52), hidden lg:flex, active gradient + dot
+│   │   ├── layout/sidebar.tsx           ← collapsible glass rail: w-[260px] ↔ w-20 (S52), hidden lg:flex
 │   │   ├── layout/nav-items.tsx         ← NAV_ICONS + NavItemLink — the ONE nav-item markup source
 │   │   ├── layout/mobile-chrome.tsx     ← fixed h-16 glass app bar (brand + live clock) + 288px drawer
-│   │   ├── ui/                          ← button, card, input, dialog, select, tabs, badge,
+│   │   ├── layout/connectivity-banner.tsx ← ambient offline pill (renders null online)
+│   │   ├── layout/rum-beacon.tsx        ← invisible CWV beacon (zero DOM)
+│   │   ├── auth/login-surface.tsx       ← the login card (themes pre-paint)
+│   │   ├── rum/rum-panel.tsx            ← the five-CWV p75 diagnostics surface
+│   │   ├── export/export-panel.tsx      ← the portability surface (reads IMPORT_MAX_BYTES)
+│   │   ├── ui/                          ← button, card, input, dialog, select, tabs, badge, popover,
 │   │   │                                  primitives (checkbox/switch/progress/separator/skeleton),
 │   │   │                                  dropdown-menu, toast (zustand toaster)
 │   │   └── views/                       ← 20 view files + shared.tsx (ViewHeader, StatCard w/ gradient
 │   │                                      chips + blobs, SectionCard, EmptyState, SubjectChip, …)
+│   ├── instrumentation.ts               ← the AUTH_SECRET boot guard (register(), env-check bands)
 │   ├── lib/
-│   │   ├── db-path.ts                   ← THE DATABASE_URL contract (pure, unit-tested)
+│   │   ├── db-path.ts                   ← THE DATABASE_URL contract (pure, unit-tested, env-gated)
 │   │   ├── db.ts                        ← Prisma singleton; sets env before construction
-│   │   ├── auth.ts                      ← scrypt, HMAC tokens, requireUser, rate limiter
+│   │   ├── auth.ts                      ← scrypt, HMAC tokens (+ sessionVersion), rate limiter
 │   │   ├── router.ts                    ← 20-view ↔ path map + greeting buckets (pure)
 │   │   ├── date.ts                      ← local-time date math, month grid, HH:MM helpers (pure)
 │   │   ├── calculator.ts                ← tokenizer + shunting-yard (u- unary op), GPA, converter (pure)
 │   │   ├── theme.ts                     ← 7 accent token sets (RGB triplets), avatar set (pure)
 │   │   ├── validation.ts                ← every Zod schema (the API payload contract)
-│   │   ├── api.ts                       ← typed fetch helpers + ApiError
+│   │   ├── api.ts                       ← typed fetch helpers + ApiError + isTimeoutError
 │   │   ├── store.ts                     ← useAppStore + useThemeStore (+ html token application)
 │   │   ├── data.ts                      ← useDataStore + typed mutations (refresh-on-mutate)
-│   │   └── server/{http,entities}.ts    ← CRUD factory + 16 delegates
+│   │   ├── view-collections.ts          ← the pre-warm map (ADR-014) — unit-pinned
+│   │   ├── env-check.ts / site.ts       ← the boot-secret bands / the NEXT_PUBLIC_SITE_URL contract
+│   │   ├── data-export.ts / data-import.ts ← the portability pair (IMPORT_MAX_BYTES, sanitize rows)
+│   │   ├── rum-diagnostics.ts           ← p75 + CWV bounds + buildTrends (the null-gap seam, BY6)
+│   │   ├── folder-tree.ts / group-members.ts ← wouldCreateCycle / normalizeMembers + removeOneMember
+│   │   ├── text.ts / dep-audit.ts / dev-preflight.ts / resweep-gate.ts / suite-verdict.ts ← pure seams
+│   │   └── server/{http,auth,entities,ai}.ts ← CRUD factory + the write budget + FILE_METADATA,
+│   │                                      the 16 delegates (+ the grade/event/timetable merges), the AI seam
 ├── prisma/
 │   ├── schema.prisma                    ← 24 models + the DATABASE PATH CONTRACT header
-│   └── seed.ts                          ← idempotent demo data (uses db.ts for env-aware resolution)
+│   └── seed.ts                          ← idempotent demo data (SEED_DEMO off-switch)
 ├── tests/
-│   ├── *.test.ts                        ← Vitest: router, theme, date, calculator, auth, validation, db-path
+│   ├── *.test.ts                        ← Vitest: 42 pure-seam files (router, theme, date, calculator,
+│   │                                      auth, validation, db-path, grade-merge, group-members, …)
 │   └── e2e/                             ← Playwright: global-setup (e2e.db), auth.setup (storageState),
-│                                          auth, mobile-navigation, navigation, tasks, calculator specs
+│                                          30 spec files — auth, auth-flows, navigation, tasks,
+│                                          calculator, the 9 parity-session specs, mobile-navigation,
+│                                          theme-system, dark-mode, accessibility, a11y-sweep,
+│                                          resilience, s14-hardening, s16–s26, s52
 ├── docs/
-│   ├── screenshots/                     ← dev-server captures (the standard 31 + the per-session evidence sets through S124 — 1331 files)
-│   ├── Tailwind-V4-Validation-Report.md ← the five documented traps + methodology notes
+│   ├── screenshots/                     ← dev-server captures (the standard sets + the per-session
+│   │                                      evidence frames through S125)
+│   ├── Tailwind-V4-Validation-Report.md ← the documented traps + methodology notes
 │   ├── DEPLOYMENT.md                    ← production notes (absolute DATABASE_URL, §4)
+│   ├── remediation-plan-sessionNNN.md + session_NNN.md + worklog.md ← the per-cycle record chain
 │   └── ssh_git_wrapper_v3.py + how-to-git-push-using-ssh-wrapper_SKILL.md
 ├── next.config.ts                       ← standalone output, 20 rewrites, allowedDevOrigins
 ├── vitest.config.ts / playwright.config.ts / eslint.config.mjs / tsconfig.json / components.json
@@ -964,7 +1008,7 @@ CSS-keyframe only (`sf-shimmer` skeletons, `sf-toast-in` slide, dialog zoom/fade
 
 ### 6.3 Authentication & Authorization
 
-Single-role per-user ownership model; no admin surface. Session: `{ uid, iat, exp }` HMAC-SHA256 with `AUTH_SECRET` (dev fallback constant when unset — production MUST set it, enforced at boot by the S22 guard). Registration creates the account with ZERO starter subjects (S17/ADR-015 — the reference's own measured behavior; the seeded demo account carries the showcase). Logout clears the cookie client- and server-side.
+Single-role per-user ownership model; no admin surface. Session: `{ uid, iat, exp, v }` HMAC-SHA256 (the `v` sessionVersion claim, S118/BS1 — missing read as 0, so pre-BS1 cookies keep validating and a password reset bumps it to revoke) with `AUTH_SECRET` (dev fallback constant when unset — production MUST set it, enforced at boot by the S22 guard). Registration creates the account with ZERO starter subjects (S17/ADR-015 — the reference's own measured behavior; the seeded demo account carries the showcase). Logout clears the cookie client- and server-side.
 
 ### 6.4 Threat Model
 
@@ -1027,7 +1071,8 @@ Single-role per-user ownership model; no admin surface. Session: `{ uid, iat, ex
 | Unit — `event-merge.test.ts` | 1 | 12 | `tests/event-merge.test.ts` |
 | Unit — `files.test.ts` | 1 | 5 | `tests/files.test.ts` |
 | Unit — `folder-tree.test.ts` | 1 | 16 | `tests/folder-tree.test.ts` |
-| Unit — `group-members.test.ts` | 1 | 12 | `tests/group-members.test.ts` |
+| Unit — `grade-merge.test.ts` | 1 | 7 | `tests/grade-merge.test.ts` |
+| Unit — `group-members.test.ts` | 1 | 15 | `tests/group-members.test.ts` |
 | Unit — `http-body.test.ts` | 1 | 9 | `tests/http-body.test.ts` |
 | Unit — `hue-pairs.test.ts` | 1 | 2 | `tests/hue-pairs.test.ts` |
 | Unit — `hue-tokens.test.ts` | 1 | 13 | `tests/hue-tokens.test.ts` |
@@ -1047,7 +1092,7 @@ Single-role per-user ownership model; no admin surface. Session: `{ uid, iat, ex
 | Unit — `theme.test.ts` | 1 | 16 | `tests/theme.test.ts` |
 | Unit — `timetable-merge.test.ts` | 1 | 14 | `tests/timetable-merge.test.ts` |
 | Unit — `user-hydration.test.ts` | 1 | 3 | `tests/user-hydration.test.ts` |
-| Unit — `validation.test.ts` | 1 | 94 | `tests/validation.test.ts` |
+| Unit — `validation.test.ts` | 1 | 98 | `tests/validation.test.ts` |
 | Unit — `view-collections.test.ts` | 1 | 6 | `tests/view-collections.test.ts` |
 | E2E — `a11y-sweep.spec.ts` | 1 | 20 | `tests/e2e/a11y-sweep.spec.ts` |
 | E2E — `accessibility.spec.ts` | 1 | 33 | `tests/e2e/accessibility.spec.ts` |
@@ -1060,11 +1105,11 @@ Single-role per-user ownership model; no admin surface. Session: `{ uid, iat, ex
 | E2E — `navigation.spec.ts` | 1 | 58 | `tests/e2e/navigation.spec.ts` |
 | E2E — `parity-session5.spec.ts` | 1 | 45 | `tests/e2e/parity-session5.spec.ts` |
 | E2E — `parity-session6.spec.ts` | 1 | 17 | `tests/e2e/parity-session6.spec.ts` |
-| E2E — `parity-session7.spec.ts` | 1 | 50 | `tests/e2e/parity-session7.spec.ts` |
-| E2E — `parity-session8.spec.ts` | 1 | 60 | `tests/e2e/parity-session8.spec.ts` |
+| E2E — `parity-session7.spec.ts` | 1 | 51 | `tests/e2e/parity-session7.spec.ts` |
+| E2E — `parity-session8.spec.ts` | 1 | 62 | `tests/e2e/parity-session8.spec.ts` |
 | E2E — `parity-session9.spec.ts` | 1 | 32 | `tests/e2e/parity-session9.spec.ts` |
 | E2E — `resilience.spec.ts` | 1 | 22 | `tests/e2e/resilience.spec.ts` |
-| E2E — `s14-hardening.spec.ts` | 1 | 11 | `tests/e2e/s14-hardening.spec.ts` |
+| E2E — `s14-hardening.spec.ts` | 1 | 14 | `tests/e2e/s14-hardening.spec.ts` |
 | E2E — `s16-perf-parity.spec.ts` | 1 | 3 | `tests/e2e/s16-perf-parity.spec.ts` |
 | E2E — `s17-fresh-user.spec.ts` | 1 | 10 | `tests/e2e/s17-fresh-user.spec.ts` |
 | E2E — `s18-rum.spec.ts` | 1 | 6 | `tests/e2e/s18-rum.spec.ts` |
@@ -1080,7 +1125,7 @@ Single-role per-user ownership model; no admin surface. Session: `{ uid, iat, ex
 | E2E — `tasks.spec.ts` | 1 | 8 | `tests/e2e/tasks.spec.ts` |
 | E2E — `theme-system.spec.ts` | 1 | 14 | `tests/e2e/theme-system.spec.ts` |
 | E2E — the shared-sign-in setup project (one login; the storageState the whole suite rides; each cert chunk re-runs it) | 1 | 1 | `tests/e2e/auth.setup.ts` |
-| **Total** | **72** | **1637** | `tests/` — **1113 Vitest unit** (41 files, `vitest run` 1113/1113) + **524 e2e** (518 chromium specs in 30 files per `playwright --list` + the 1 setup × the 5 cold-cert chunks = the 523-test chunked census [137+153+71+92+70, `db/e2e.db` cold every chunk]); unit + e2e = 1637 green. Re-measured S124/BY (the previous era-grouped rows had drifted three-plus epochs — the table is now PER-FILE and script-derivable: `vitest run` per-file counts + `playwright test --list`). |
+| **Total** | **73** | **1657** | `tests/` — **1127 Vitest unit** (42 files, `vitest run` 1127/1127) + **530 e2e** (524 chromium specs in 30 files per `playwright --list` + the 1 setup × the 5 cold-cert chunks = the 529-test chunked census [139+157+71+92+70, `db/e2e.db` cold every chunk]); unit + e2e = **1656 green** (the badge sum: 1127 + 529). Re-measured S125/BZ (the previous era-grouped rows had drifted three-plus epochs — the table is now PER-FILE and script-derivable: `vitest run` per-file counts + `playwright test --list`). |
 
 ### 8.2 Test Patterns
 
@@ -1097,9 +1142,9 @@ No numeric coverage gate is configured; the standard is "every pure seam has a t
 
 - [ ] `bun run lint` clean
 - [ ] `bun run typecheck` clean
-- [ ] `bun run test` green (1099+)
+- [ ] `bun run test` green (1127+)
 - [ ] `bun run build` succeeds
-- [ ] `bun run test:e2e` green (516+; rebuild first if components changed)
+- [ ] `bun run test:e2e` green (529+; rebuild first if components changed)
 - [ ] No secrets / db files staged (`git status`)
 - [ ] Docs touched if behavior/setup changed
 
@@ -1204,7 +1249,7 @@ Enforced: ESLint flat config + `tsc --noEmit` (both gate). Convention (review-en
 | `prisma/seed.ts` | ~270 | Idempotent demo data |
 | `tests/e2e/mobile-navigation.spec.ts` | ~499 | The highest-regression-risk chrome (drawer + lg breakpoint) |
 | `tests/e2e/navigation.spec.ts` | ~834 | 20-view render matrix + computed parity pins |
-| `src/app/globals.css` | ~230 | Token pins (traps 1–3, 5–6), `.glass`, `.sf-*` utilities |
+| `src/app/globals.css` | 1002 | Token pins (traps 1–3, 5–6, 10), `.glass`, the sf-* utility census, forced-colors/print/reduced-motion blocks, the Quill + md:hidden rule sets |
 
 ---
 

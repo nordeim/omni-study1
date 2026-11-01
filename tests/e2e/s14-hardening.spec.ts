@@ -285,3 +285,147 @@ test.describe("S124/BY9: the avatarEmoji vocabulary at the wire", () => {
     await request.patch("/api/settings/preferences", { data: { avatarEmoji: "" } });
   });
 });
+
+// S125/BZ6 — the grade range guard at the wire. The schema capped each leg
+// independently (score 0..1000, maxScore 1..1000) but never checked the
+// pair: 900/100 persisted and rendered 900%. The CREATE shape now carries
+// the .check(); the PATCH legs go through the checkGradeRangeMerge
+// beforeWrite seam (zod4's .partial() injects the maxScore default, so a
+// schema-side update check would read the injected denominator — the sent
+// pair must be compared against the STORED row).
+test.describe("S125/BZ6: the grade score ≤ maxScore guard at the wire", () => {
+  test("an inverted create pair 400s; the single-leg PATCH legs guard against the stored row (RED pre-fix: both write)", async ({ request }) => {
+    const stamp = Date.now();
+    // Both-legs create, inverted: 900 out of 100 → 400 (RED pre-fix: 201).
+    const bad = await request.post("/api/grades", {
+      data: { title: `BZ6 bad ${stamp}`, score: 900, maxScore: 100 },
+    });
+    expect(bad.status()).toBe(400);
+
+    // A legal create to PATCH against (cleaned up in the finally below).
+    const created = await request.post("/api/grades", {
+      data: { title: `BZ6 ok ${stamp}`, score: 85, maxScore: 100 },
+    });
+    expect(created.status()).toBe(201);
+    const row = (await created.json()) as { id: string };
+    try {
+      // Single-leg maxScore PATCH below the stored score → 400
+      // (RED pre-fix: 200 — the 85/50 row persists and renders 170%).
+      const shrink = await request.patch(`/api/grades/${row.id}`, {
+        data: { maxScore: 50 },
+      });
+      expect(shrink.status()).toBe(400);
+      // Single-leg score PATCH above the stored maxScore → 400
+      // (RED pre-fix: 200).
+      const inflate = await request.patch(`/api/grades/${row.id}`, {
+        data: { score: 900 },
+      });
+      expect(inflate.status()).toBe(400);
+      // The legal single-leg pairs still write.
+      const ok = await request.patch(`/api/grades/${row.id}`, {
+        data: { score: 90 },
+      });
+      expect(ok.status()).toBe(200);
+      const legal = await request.patch(`/api/grades/${row.id}`, {
+        data: { score: 900, maxScore: 1000 },
+      });
+      expect(legal.status()).toBe(200);
+    } finally {
+      await request.delete(`/api/grades/${row.id}`);
+    }
+  });
+});
+
+// S125/BZ8 — files/link's create response carries the SAME metadata shape
+// as the LIST and the files POST (S82/AI6: "the base64 data column never
+// rides a JSON response body"). Pre-fix the route returned the FULL row —
+// `data` is null for links so nothing leaked, but the shape drifted from
+// the documented contract.
+test.describe("S125/BZ8: the files/link create response shape", () => {
+  test("a link create answers the metadata shape — no data key (RED pre-fix: the full row)", async ({ request }) => {
+    const stamp = Date.now();
+    const res = await request.post("/api/files/link", {
+      data: { name: `BZ8 link ${stamp}`, url: `https://example.com/bz8-${stamp}` },
+    });
+    expect(res.status()).toBe(201);
+    const body = (await res.json()) as { id?: string; name?: string; data?: unknown };
+    // RED pre-fix: the full row carries data: null.
+    expect(body).not.toHaveProperty("data");
+    expect(body.name).toBe(`BZ8 link ${stamp}`);
+    // Cleanup: the created link row.
+    if (body.id) await request.delete(`/api/files/${body.id}`);
+  });
+});
+
+// S125/BZ5 — the factory write budget. Only login-family, upload, AI,
+// export/import, and rum carried checkRateLimit; every
+// makeCollectionRoutes POST (16 routes) was unthrottled — an authenticated
+// script grew the single-node SQLite at line rate (the exact rationale
+// S118/BS3 documented for uploads). The factory POST now enforces
+// `write:${user.id}` 600/15-min (after auth, BEFORE readJson — the C1
+// convention; the limiter after auth keeps anon requests 401).
+//
+// The exhaustion leg rides a FRESH REGISTERED USER (the S17/S25 convention
+// — the demo user is never mutated): playwright runs spec files
+// alphabetically, so s14-hardening runs BEFORE tasks.spec and theme-system
+// in this chunk — exhausting the DEMO user's write budget here would 429
+// every later create in the chunk (the first cert run's six collateral
+// tasks.spec failures, the exact mid-flight-collision class). The fresh
+// user's budget is its own; the demo user's stays clean. Self-calibrating:
+// POST until the budget trips (cap 620), so the pin never depends on a
+// count. The exhausted user + its ~600 scratch rows die with the chunk's
+// db/e2e.db (the per-chunk rm; no cleanup API can run under the 429).
+// The register rides a distinct TEST-NET client IP (the s25 convention —
+// the suite's loopback register budget is at its 10/IP cap).
+test.describe("S125/BZ5: the factory write budget (600/15-min)", () => {
+  test("rapid valid creates exhaust to 429 + Retry-After; anon still 401s (RED pre-fix: 620x 201, never 429)", async ({ request }) => {
+    test.setTimeout(180_000);
+    const stamp = Date.now();
+    const email = `s125-bz5-${stamp}@studyflow.app`;
+    // The fresh user rides THIS test's request fixture: the login REPLACES
+    // the jar's demo cookie for this test only (each test gets a fresh jar
+    // from the storageState, so the later specs' demo session is intact).
+
+    // Register + verify + sign in the throwaway user (the s25 pattern).
+    const reg = await request.post("/api/auth/register", {
+      headers: { "x-forwarded-for": "192.0.2.125" },
+      data: { email, password: "Fresh1234!", name: "S125 BZ5 Probe" },
+    });
+    expect(reg.ok(), `register failed: ${reg.status()}`).toBe(true);
+    const { code } = (await reg.json()) as { code: string };
+    const verify = await request.post("/api/auth/verify-email", {
+      headers: { "x-forwarded-for": "192.0.2.125" },
+      data: { email, code },
+    });
+    expect(verify.ok(), `verify failed: ${verify.status()}`).toBe(true);
+    const login = await request.post("/api/auth/login", {
+      headers: { "x-forwarded-for": "192.0.2.125" },
+      data: { email, password: "Fresh1234!" },
+    });
+    expect(login.ok(), `login failed: ${login.status()}`).toBe(true);
+
+    // Exhaust the FRESH user's write budget (self-calibrating to the 429).
+    let tripped = false;
+    for (let i = 0; i < 620; i++) {
+      const res = await request.post("/api/tasks", {
+        data: { title: `BZ5 write ${stamp} ${i}` },
+      });
+      if (res.status() === 429) {
+        expect(res.headers()["retry-after"]).toBeTruthy();
+        tripped = true;
+        break;
+      }
+      // The budget never interferes with legitimate flows before exhaust.
+      expect(res.status()).toBe(201);
+    }
+    // RED pre-fix: the loop ran 620 all-201 iterations and never tripped.
+    expect(tripped).toBe(true);
+    // The limiter sits AFTER auth: unauthenticated requests still 401.
+    const anon = await request.post("/api/tasks", {
+      data: { title: "anon" },
+      headers: { cookie: "" },
+      maxRedirects: 0,
+    });
+    expect(anon.status()).toBe(401);
+  });
+});

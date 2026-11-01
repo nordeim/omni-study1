@@ -13,6 +13,7 @@ import { checkRateLimit } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { linkFileSchema } from "@/lib/validation";
 import {
+  FILE_METADATA,
   errorResponse,
   parseWith,
   rateLimitedResponse,
@@ -48,6 +49,10 @@ export const POST = withUser(async (user, request) => {
         url,
         folderId: folderId ?? null,
       },
+      // S125/BZ8: the metadata shape (S82/AI6) — files POST's JSON link leg
+      // carries this select; the full row (with the null `data` column)
+      // was shape drift.
+      select: FILE_METADATA,
     });
     return NextResponse.json(created, { status: 201 });
   } catch (err: unknown) {

@@ -40,7 +40,7 @@ import {
 } from "@/components/ui/select";
 import { useToast } from "@/components/ui/toast";
 import { mutations, useDataStore, type StudyGroupRow } from "@/lib/data";
-import { normalizeMembers, type GroupMember } from "@/lib/group-members";
+import { normalizeMembers, removeOneMember, type GroupMember } from "@/lib/group-members";
 import { EmptyState, initialFor, Spinner, SubjectChip } from "@/components/views/shared";
 import { cn } from "@/lib/utils";
 
@@ -232,8 +232,12 @@ export function StudyGroupsView() {
     if (!selected) return;
     // S123/BX10: the fresh-state read (the addMember twin).
     const fresh = useDataStore.getState().studyGroups.find((g) => g.id === selected.id);
-    const members = parseMembers(fresh?.members ?? selected.members).filter(
-      (m) => m.email !== member.email,
+    // S125/BZ4: remove ONE occurrence — the email-only filter deleted
+    // every duplicate sharing the address (the removeOneMember seam).
+    const members = removeOneMember(
+      parseMembers(fresh?.members ?? selected.members),
+      member.email,
+      member.name,
     );
     mutations
       .updateStudyGroup(selected.id, { members })

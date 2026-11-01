@@ -186,12 +186,22 @@ export function FilesView() {
 
   const fileInputRef = React.useRef<HTMLInputElement>(null);
 
-  const refresh = React.useCallback(async () => {
-    try {
-      const [folderRows, fileRows] = await Promise.all([
+  // S125/BZ16: the request pair is ONE loader shared by refresh() and the
+  // mount effect (the pair was duplicated verbatim — a divergence risk on
+  // every future edit). The effect still inlines the loader CALL with its
+  // setStates after the await (the set-state-in-effect lint contract).
+  const loadFileRows = React.useCallback(
+    () =>
+      Promise.all([
         apiGet<FileFolderRow[]>("/api/files/folders"),
         apiGet<FileItemRow[]>("/api/files"),
-      ]);
+      ]),
+    [],
+  );
+
+  const refresh = React.useCallback(async () => {
+    try {
+      const [folderRows, fileRows] = await loadFileRows();
       setFolders(folderRows);
       setFiles(fileRows);
     } catch (err: unknown) {
@@ -199,7 +209,7 @@ export function FilesView() {
     } finally {
       setLoading(false);
     }
-  }, [toast]);
+  }, [loadFileRows]);
 
   // Initial fetch is INLINED in the effect (setStates run after the await —
   // the set-state-in-effect lint contract flags wrapped loaders).
@@ -207,10 +217,7 @@ export function FilesView() {
     let cancelled = false;
     (async () => {
       try {
-        const [folderRows, fileRows] = await Promise.all([
-          apiGet<FileFolderRow[]>("/api/files/folders"),
-          apiGet<FileItemRow[]>("/api/files"),
-        ]);
+        const [folderRows, fileRows] = await loadFileRows();
         if (cancelled) return;
         setFolders(folderRows);
         setFiles(fileRows);
@@ -223,7 +230,7 @@ export function FilesView() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [loadFileRows]);
 
   // Breadcrumb: walk parents from the current folder to the root (the
   // pure seam — S84/AK1: the visited-set guard bounds the walk over ANY

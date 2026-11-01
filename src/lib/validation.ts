@@ -378,9 +378,11 @@ export const flashcardDeckSchema = z.object({
 });
 
 export const flashcardSchema = z.object({
-  // deckId is injected by the create route from the URL (/api/flashcards/cards
-  // is nested under a deck); the schema keeps it optional so update PATCHes
-  // that only flip difficulty/mastered validate unchanged.
+  // S125/BZ12: deckId arrives in the BODY — the route is the FLAT
+  // /api/flashcards/cards (never nested under a deck path); the delegate
+  // enforces presence at create ("A flashcard needs a deck."). The schema
+  // keeps it optional so update PATCHes that only flip
+  // difficulty/mastered validate unchanged.
   deckId: idField.optional(),
   front: z.string().min(1).max(2000),
   back: z.string().min(1).max(2000),
@@ -446,6 +448,34 @@ export const gradeSchema = z.object({
   maxScore: z.number().min(1).max(1000).optional().default(100),
   weight: z.number().min(0).max(100).optional().default(1),
   subjectId: nullableId,
+});
+
+// S125/BZ6: the score ≤ maxScore ordering guard (the events BU22+BV1
+// pattern on the numeric pair). The schema capped each leg independently —
+// 900/100 persisted and rendered 900%. The CREATE shape carries the
+// .check(): score is required and an unsent maxScore defaults to 100, so
+// the injected denominator IS the honest row state at create time (a bare
+// 900 is honestly "900 out of the default 100" — rejected). The UPDATE
+// path deliberately owns NO schema check: zod@4's .partial() injects the
+// maxScore default into every parsed payload (the S81 lesson), so a
+// schema-side compare would read the injected 100 instead of the stored
+// denominator — the sent-keys filter drops the injected key BEFORE the
+// write but .check() runs INSIDE parse, outside the filter's reach. The
+// checkGradeRangeMerge beforeWrite seam owns BOTH legs on PATCH (one
+// unified compare over the effective pair — src/lib/server/entities.ts,
+// pinned by tests/grade-merge.test.ts).
+export const GRADE_SCORE_ABOVE_MAX = "Score cannot be higher than the maximum score.";
+
+export const gradeCreateSchema = gradeSchema.check((ctx) => {
+  const { score, maxScore } = ctx.value;
+  if (score > maxScore) {
+    ctx.issues.push({
+      code: "custom",
+      input: ctx.value,
+      message: GRADE_SCORE_ABOVE_MAX,
+      path: ["score"],
+    });
+  }
 });
 
 export const focusSessionSchema = z.object({

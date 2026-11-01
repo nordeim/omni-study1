@@ -330,13 +330,9 @@ export function initialFor(userName: string, email: string): string {
   return "S";
 }
 
-/** Today's " HH:MM" time suffix for exam/datetime lines ("9:00 AM"). */
-export function formatClockShort(date: Date): string {
-  let hours = date.getHours() % 12;
-  if (hours === 0) hours = 12;
-  const minutes = date.getMinutes().toString().padStart(2, "0");
-  return `${hours}:${minutes} ${date.getHours() < 12 ? "AM" : "PM"}`;
-}
+// S125/BZ15: formatClockShort (a "9:00 AM" suffix helper) was removed —
+// zero consumers repo-wide (grep-verified; exam datetime lines use
+// formatTime12h from src/lib/date.ts).
 
 export function Spinner({ className }: { className?: string }) {
   return (

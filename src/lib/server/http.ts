@@ -11,6 +11,8 @@
 
 import { NextResponse, type NextRequest } from "next/server";
 import { Prisma } from "@prisma/client";
+
+import { checkRateLimit } from "@/lib/auth";
 import type { ZodError, ZodType } from "zod";
 
 import type { SessionUser } from "./auth";
@@ -68,6 +70,28 @@ export function rateLimitedResponse(
     { status: 429, headers: { "Retry-After": String(Math.max(1, retryAfterSec)) } },
   );
 }
+
+/**
+ * S125/BZ8: the file-item METADATA select — the shared shape for the files
+ * LIST + BOTH create branches (files POST's JSON link leg AND files/link).
+ * S82/AI6's contract: "the base64 `data` column never rides a JSON response
+ * body" — bytes go through the per-file download endpoint. The constant
+ * moved here from files/route.ts because route files cannot export shared
+ * symbols (Next validates route module exports) and files/link had drifted
+ * to the FULL row. Route files cannot export shared symbols (Next's
+ * route-type validation), so it lives beside buildContentDisposition.
+ */
+export const FILE_METADATA = {
+  id: true,
+  userId: true,
+  name: true,
+  mime: true,
+  size: true,
+  url: true,
+  folderId: true,
+  createdAt: true,
+  updatedAt: true,
+} as const;
 
 /** Parse a request body through its Zod schema; failure → ValidationError. */
 export function parseWith<T>(schema: ZodType<T>, input: unknown): T {
@@ -268,6 +292,25 @@ export function makeCollectionRoutes(delegate: EntityDelegate) {
     return NextResponse.json(rows);
   });
   const POST = withUser(async (user, request) => {
+    // S125/BZ5: the shared write budget — every makeCollectionRoutes
+    // create (16 routes) rides `write:${user.id}` 600/15-min. Before this,
+    // only login-family, upload, AI, export/import, and rum were
+    // throttled: an authenticated script grew the single-node SQLite at
+    // line rate (the exact rationale S118/BS3 documented for uploads;
+    // noteSchema.content alone is 100 KB/row). 600 ≈ 40 sustained
+    // writes/min — 12x the heaviest realistic human burst; a flooding
+    // script consumes it in seconds. After auth, BEFORE readJson (the C1
+    // convention: the limiter never parses a flooded body); unauthenticated
+    // requests still 401. PATCH/DELETE stay unthrottled (bounded by
+    // existing rows — the growth vector is creates; the next-cycle
+    // candidate).
+    const limit = checkRateLimit(`write:${user.id}`, 600);
+    if (!limit.ok) {
+      return rateLimitedResponse(
+        limit.retryAfterSec,
+        "Too many requests. Please slow down.",
+      );
+    }
     const row = await delegate.create(user.id, await readJson(request));
     return NextResponse.json(row, { status: 201 });
   });

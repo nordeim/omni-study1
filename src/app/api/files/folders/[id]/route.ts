@@ -47,35 +47,13 @@ const folderDelegate: EntityDelegate = {
       name?: string;
       parentId?: string | null;
     };
-    if (writes.parentId) {
-      // S84/AK1: the folder-tree integrity guard. Verified live pre-guard:
-      // a self-parent or A→B→A cycle PATCH answered 200 and, once the user
-      // opened the cycled folder, the Files view's breadcrumb walk wedged
-      // the renderer PERMANENTLY (one authenticated API call froze the
-      // tab). Reject self-parenting and any re-parent that would close a
-      // cycle — one userId-scoped query, the ancestor chain walked in
-      // memory with a visited set (also terminates on a pre-existing
-      // cycled row set from an imported DB).
-      // S85/AL3 (the s85 audit's L4): the walk lives in the shared pure
-      // seam now (wouldCreateCycle, src/lib/folder-tree.ts — unit-pinned
-      // against the pre-existing-cycle shapes; the inline twin's
-      // termination property was unpinned and mutation-surviving).
-      if (writes.parentId === id) {
-        throw new ValidationError("A folder cannot be its own parent.");
-      }
-      const chain = await db.fileFolder.findMany({
-        where: { userId },
-        select: { id: true, parentId: true },
-      });
-      if (!chain.some((row) => row.id === writes.parentId)) {
-        throw new NotFoundError("That folder does not exist.");
-      }
-      if (wouldCreateCycle(chain, id, writes.parentId)) {
-        throw new ValidationError(
-          "A folder cannot be moved inside its own subtree.",
-        );
-      }
-    }
+    // S125/BZ7: the cycle check + the update now run inside ONE
+    // transaction. The pre-fix shape read the chain, checked it, then
+    // updated non-atomically — two concurrent PATCHes (A→B, B→A) both
+    // passed against the pre-write snapshot (TOCTOU: the guard's promise
+    // was false under concurrency). SQLite serializes interactive
+    // transactions, so the chain re-read inside the transaction is
+    // authoritative.
     if (Object.keys(writes).length === 0) {
       // An empty patch is a no-op — short-circuit to the existing row
       // (S83/AJ2, verified against the resolved Prisma runtime (6.19.3 at the S84 re-probe; the ^6.11.1 range): an update with an empty
@@ -83,7 +61,38 @@ const folderDelegate: EntityDelegate = {
       // pointless write, matching the factory and the card delegate).
       return existing;
     }
-    return db.fileFolder.update({ where: { id }, data: writes });
+    return db.$transaction(async (tx) => {
+      if (writes.parentId) {
+        // S84/AK1: the folder-tree integrity guard. Verified live pre-guard:
+        // a self-parent or A→B→A cycle PATCH answered 200 and, once the user
+        // opened the cycled folder, the Files view's breadcrumb walk wedged
+        // the renderer PERMANENTLY (one authenticated API call froze the
+        // tab). Reject self-parenting and any re-parent that would close a
+        // cycle — one userId-scoped query, the ancestor chain walked in
+        // memory with a visited set (also terminates on a pre-existing
+        // cycled row set from an imported DB).
+        // S85/AL3 (the s85 audit's L4): the walk lives in the shared pure
+        // seam now (wouldCreateCycle, src/lib/folder-tree.ts — unit-pinned
+        // against the pre-existing-cycle shapes; the inline twin's
+        // termination property was unpinned and mutation-surviving).
+        if (writes.parentId === id) {
+          throw new ValidationError("A folder cannot be its own parent.");
+        }
+        const chain = await tx.fileFolder.findMany({
+          where: { userId },
+          select: { id: true, parentId: true },
+        });
+        if (!chain.some((row) => row.id === writes.parentId)) {
+          throw new NotFoundError("That folder does not exist.");
+        }
+        if (wouldCreateCycle(chain, id, writes.parentId)) {
+          throw new ValidationError(
+            "A folder cannot be moved inside its own subtree.",
+          );
+        }
+      }
+      return tx.fileFolder.update({ where: { id }, data: writes });
+    });
   },
   remove: async (userId, id) => {
     const existing = await db.fileFolder.findFirst({

@@ -25,8 +25,7 @@ tags:
 
 > **What this is:** the single-source-of-truth reference for working in
 > `nordeim/omni-study1`. Every fact below is verified against the codebase
-> (1637 tests green, re-anchored at the S124 update: 1113 Vitest unit + 524
-> Playwright e2e (518 specs + the per-chunk setup) — the census re-anchored through
+> (1656 tests green, re-anchored at the S125 update: 1127 Vitest unit [42 files] + 529 Playwright e2e [the 5-chunk census: 524 chromium specs + the per-chunk setup re-runs — 139+157+71+92+70]) — the census re-anchored through
 > the s117–s124 hardening cycles; the 2.0 baseline was 834 + 299 in six
 > chunks after the parity re-application + account-flow completion +
 > regression hardening).
@@ -122,7 +121,7 @@ use `bun run db:push` / `db:seed` (they inline the env var). Additionally,
 Next dev (Turbopack) **pre-resolves** relative `file:` URLs against the
 project dir; `db-path.ts` detects the wrong-but-absolute result (target
 missing + schema-anchored default exists) and corrects it. All pinned by
-`tests/db-path.test.ts` (16 tests) — update them in the same commit if you
+`tests/db-path.test.ts` (18 tests) — update them in the same commit if you
 touch resolution.
 
 **Config files that matter:**
@@ -222,13 +221,13 @@ titles `h3 text-xl` (20px); nav labels 16px with `w-5` icons; body `text-sm`.
 (`rounded-md`); nav items `rounded-xl` → **12px**; login card ~16-20px.
 
 **Canvas:** `.sf-canvas` =
-`linear-gradient(to right bottom, hsl(210 40% 98%), hsl(0 0% 100%), rgb(245 243 255 / 0.3))`
+`linear-gradient(to right bottom, #f8fafc, #ffffff, rgb(245 243 255 / 0.3))` (the shipped literals — slate-50/hsl(0 0% 100%) drift if you paraphrase hex to hsl names)
 — the third stop is violet-50 written in exact sRGB (an `hsl()` approximation
 drifted it 4 units/channel). Dark variant swaps to a slate-950 family ramp.
 
 **Custom classes:** `.glass` (sidebar `rgba(255,255,255,0.8)` + blur),
 `.sf-card`, `.sf-scroll` (thin scrollbars),
-`.sf-skeleton` + 2 keyframes (`sf-shimmer`, `sf-slide-in`), `.sf-gradient` +
+`.sf-skeleton` + one keyframe (`sf-shimmer` — the drawer opens instantly per the S118 measured reference; the old `sf-slide-in` mention was a dead-CSS ghost), `.sf-gradient` +
 `.sf-gradient-shadow` / `-lg` (the session-5 gradient CTA surfaces — sRGB-exact
 stops through `--sf-primary` → `--sf-primary-gradient-to`, hover via
 `--sf-primary-gradient-to-strong`), `.sf-calc-display` (the calculator's
@@ -272,7 +271,7 @@ lib/{calculator,theme,router,date,auth,validation,db-path}.ts    pure seams (uni
 
 **Client/Server decision tree:** everything interactive is `"use client"`
 (top of file); server code appears only in route handlers + the two pages'
-server shells. Server-only imports (`z-ai-web-dev-dev-sdk`, `node:crypto`,
+server shells. Server-only imports (`z-ai-web-dev-sdk`, `node:crypto`,
 `node:fs`) never appear in `components/` or client-reachable `lib/` modules.
 
 **Chrome anatomy (measured):** sidebar `fixed left-0 w-[260px] hidden
@@ -347,8 +346,8 @@ files are 3-line shells:
 ```ts
 // src/app/api/tasks/route.ts — the whole file
 import { makeCollectionRoutes } from "@/lib/server/http";
-import { tasksDelegate } from "@/lib/server/entities";
-export const { GET, POST } = makeCollectionRoutes(tasksDelegate);
+import { taskDelegate } from "@/lib/server/entities";
+export const { GET, POST } = makeCollectionRoutes(taskDelegate);
 // src/app/api/tasks/[id]/route.ts — same, but makeItemRoutes → { PATCH, DELETE }
 ```
 
@@ -398,7 +397,7 @@ notes, decks, grades; `avatarEmoji: ""` (reference default state).
 
 | # | Severity | Symptom | Root cause | Fix + pin |
 |---|---|---|---|---|
-| AP-1 | CRITICAL | db created one directory too high | `.env`-loaded `file:` URLs anchor at CWD in Prisma CLI | `db:*` scripts set env inline; `tests/db-path.test.ts` (16 tests) |
+| AP-1 | CRITICAL | db created one directory too high | `.env`-loaded `file:` URLs anchor at CWD in Prisma CLI | `db:*` scripts set env inline; `tests/db-path.test.ts` (18 tests) |
 | AP-2 | CRITICAL | e2e hits the dev db / wrong client | hardcoded schema url embeds in the generated client | schema uses `env("DATABASE_URL")`; shell-env anchoring |
 | AP-3 | HIGH | Every corner ~33% too large vs reference | one-notch-up radius pin block (v4 "shadow trap" wrongly applied to radii) | only `--radius-sm: 0.125rem` pinned; e2e "corner radii" spec (session-2 R1) |
 | AP-4 | HIGH | Login button silently no-ops in e2e (order-dependent flake) | click lands pre-hydration (SSR buttons lack handlers) | `hydrated(page)` gate on inline `--sf-primary` var (session-2 R8) |
@@ -513,7 +512,7 @@ notes, decks, grades; `avatarEmoji: ""` (reference default state).
 | AP-113 | HIGH | The s69 discriminator probe clicked the reference's own "Light" theme option and NOTHING changed — html.dark stayed set, Dark stayed selected, the body stayed black (the documented Base44 no-op means the reference account's MODE is frozen state); the Appearance card's black panel + violet-on-black labels were the account's dark-mode artifact, not a permanently-dark design, and measuring them as light-mode truth would have enshrined the no-op's broken rendering as the parity target | when the reference's own picker cannot flip a state, do not measure the confused rendering as design truth: classify each reading as mode artifact (bg-card tokens re-theme) vs hard structure (anatomy, geometry, radii, copy, vocabulary — mode-independent), pin the structure, and let the clone's own dark-mode contract own the mode-dependent values (dark: variants + the a11y floor — the labels the reference renders unreadable stay readable in the clone) | scripts/z-probe4-s69.mjs + the remediation-plan Batch Z settings note (session-69) |
 | AP-114 | MEDIUM | The S4-O/S7-P/S8-Z zero-state pins failed against the SEEDED demo account — the seed ships exams, assignments, practice tests, and a study group, so the dashboard sections and those views never render their empty states in the shared storageState; the first S4-O draft also called test.use() inside the test body, which Playwright rejects | a zero-state pin needs a zero-data account: clearCookies() + the register/verify POST pair inline (the S17 pattern — test.use({ storageState: … }) is describe-level only), and the seed's data inventory is part of the pin's environment contract, not noise | tests/e2e/navigation.spec.ts S4-O + parity-session7 S7-P + parity-session8 S8-Z (session-69) |
 | AP-115 | HIGH | The s70 cycle's two probes DISAGREED on the same dashboard action node (probe #1: anchor/16px/gray vs probe #2: button/12px/violet-600) and the standing Z12 pin ("22-emoji avatar list") was overturned by a scoped re-dump (the real count is 24 — the s69 scan filtered the whole document without visibility scoping and silently dropped ⭐ and ⚽). A text node's PARENT styles are not the visible text's styles: probe #3's full-path node dump (path + parentFs + parentColor) revealed the reference's anchor-wrapping-button anatomy that both earlier probes had half-read. Rule: when probes disagree — or when a pin encodes a probe reading — dump EVERY candidate node with its DOM path and parent chain, and scope every filtered scan to visible nodes (offsetParent !== null). One-element-deep reads and document-wide filters are both silent mis-measurement. |
-| AP-116 | MEDIUM | The s71 cycle's first chunk-3 run reported 53 passed where the s70 baseline demanded 58 — the re-derived chunk map had taken the s70 transcript's compressed map line "chunk 3 = auth+s18–s26+greeting" at face value, but "auth" meant BOTH auth.spec.ts (6) AND auth-flows.spec.ts (5); the missing file covered 5 tests. A re-certification that silently under-covers is worse than a failure: it LOOKS green while 5 specs never ran | compressed map notation in a transcript is NOT a file census. Before running any re-derived chunk map, enumerate the spec directory (`ls tests/e2e/*.spec.ts`) and diff it against the map's file set — every spec file must appear exactly once; when a sum mismatches the baseline, trust the arithmetic and bisect the map (per-file --list counts), never the baseline | /home/z/my-project/scripts/e2e-chunk.sh + the remediation-plan cycle-22 note (session-71) |
+| AP-116 | MEDIUM | The s71 cycle's first chunk-3 run reported 53 passed where the s70 baseline demanded 58 — the re-derived chunk map had taken the s70 transcript's compressed map line "chunk 3 = auth+s18–s26+greeting" at face value, but "auth" meant BOTH auth.spec.ts (6) AND auth-flows.spec.ts (5); the missing file covered 5 tests. A re-certification that silently under-covers is worse than a failure: it LOOKS green while 5 specs never ran | compressed map notation in a transcript is NOT a file census. Before running any re-derived chunk map, enumerate the spec directory (`ls tests/e2e/*.spec.ts`) and diff it against the map's file set — every spec file must appear exactly once; when a sum mismatches the baseline, trust the arithmetic and bisect the map (per-file --list counts), never the baseline | scripts/e2e-chunked-cert.sh + the remediation-plan cycle-22 note (session-71) |
 | AP-117 | MEDIUM | The Batch-AB pin draft asserted `getByText("78%")` on the populated GradeTracker's Chemistry card and would strict-mode-violate at GREEN time: Chemistry has ONE seeded grade (78/100), so the card renders the SAME string in two roles (the big avg AND the Recent-Grades pill). The reference never hits this because its avg format is 1dp ("50.0%") while its pills are integer — the clone's integer convention (the measured Overall card) makes avg==pill collisions inherent for single-grade subjects | when a surface renders the same value in two roles, assert through a role hook (`data-testid="gt-subject-avg"`), never bare text; before pinning populated aggregates, check the SEED for coincidences (single-grade subjects, avg==grade); a RED run cannot catch this class — the failure only appears at GREEN when the surface finally renders | tests/e2e/parity-session5.spec.ts (S5-AB7) + scripts/capture-s73-populated.mjs |
 | AP-118 | HIGH | The s75 probe's residue scan reported ZERO while a probe-created exam SURVIVED on the reference: the CANDIDATES entity list (inherited verbatim from the s72 probe) had no `Exam` entry, so neither the delta scan nor the signature scan ever listed it | a probe's cleanup candidate list must cover EVERY entity its UI session can write — derive it from the dialogs actually driven, not from a prior session's list; always cross-check the DELETIONS count against the rows the UI measurably gained before accepting a RESIDUE ZERO verdict | scripts/ref-populated-s6family5-s75.mjs (session-75) |
 | AP-119 | MEDIUM | The s75 probe's assignment/exam submits silently verified the WRONG dialog layer: Radix date-picker popovers are themselves modal `[role=dialog]` elements, so `[role=dialog]` `.last()` scoped the submit-click and the detach-wait to the popover while the form stayed open, poisoning every later nav click | scope Radix form dialogs by their accessible TITLE, never a bare role query — a popover is a dialog too; when a submit "succeeds" but the form never detaches, suspect the wrong layer before the network | the s75 probe family (session-75) |
@@ -530,6 +529,7 @@ notes, decks, grades; `avatarEmoji: ""` (reference default state).
 | AP-130 | HIGH | The agent toolchain's OUTPUT pipeline silently strips bracket-letter sequences (`[m`, `[h` observed) — a displayed `transition-argin]` was actually `transition-[margin]`, manufacturing a phantom "corrupted class" finding through grep, git show, sed, AND browser eval views alike; two probe harnesses were corrupted the same way before the char-code check exposed it | any candidate finding whose evidence is a bracket-bearing string must be re-read as CHAR CODES (or a length-checking hash) before it is reported — the display is not the bytes | the S122 retraction (session-122) |
 | AP-131 | HIGH | A comparison guard must be normalized at EVERY enforcement site — the S122/BW7 single-leg timetable merge was minutes-normalized while the schema-level both-legs check kept the RAW string compare: the legal unpadded span ("9:00"→"11:00") FALSELY 400'd and the inverted padded/unpadded mix ("09:00"→"8:30") PERSISTED, both wire-verified; the UI half compounds (`<input type="time">` BLANKS a non-HH:MM value, so the legacy row's edit dialog opened empty) | when introducing a comparison guard for a value family, enumerate EVERY site that compares it (schema checks, merge seams, UI populate) and route them all through ONE exported normalizer; pad the seed out of the legacy shape while the normalizer keeps old rows working | the S123/BX1 cycle (session-123) |
 | AP-132 | MEDIUM | A hydration gate must match the ROUTE CLASS it serves — the appHydrated marker (the shell-commit gate, S124/BY7) never fires on the non-shell routes (/rum, /export: standalone Next routes without the app shell), so a helper serving BOTH route classes must gate on a route-universal observable (.dark for theme; content for data). The same family: Playwright's toBeVisible requires a non-empty bounding box — a single-value sparkline's flat two-point line is painted + user-visible but zero-HEIGHT (assert the chart container instead). |
+| AP-133 | HIGH | A display-pipeline "byte verification" that PRINTS the region inherits the artifact it was supposed to catch — the S125/BZ11 phantom log-tag finding survived a python-repr "confirmation" because repr output renders through the same eating pipeline as the finding (the `[h`/`[m` prefixes were byte-present all along). The verifier of a suspicious BYTE SEQUENCE must produce hex dumps (`' '.join(f'{b:02x}')`) or byte-constructed boolean searches (`b"\\x5b\\x68" in src`) — never a rendering of the bytes. A retracted finding ships NO change and is recorded in the cycle's honesty ledger | the S125/BZ11 cycle (session-125) |
 
 ---
 
@@ -545,9 +545,13 @@ check which file actually exists (`ls db/`), then re-read §3. First stop for
 any db weirdness: `bunx vitest run tests/db-path.test.ts`.
 
 **Hydration race (click does nothing):** SSR HTML renders buttons before
-React attaches handlers. Gate: `page.waitForFunction(() =>
-document.documentElement.style.getPropertyValue("--sf-primary") !== "")` —
-the theme store sets that inline var only post-hydration.
+React attaches handlers. Gate on the STATUS marker, never a style var:
+`page.waitForFunction(() => document.documentElement.dataset.appHydrated ===
+"true")` — `data-app-hydrated` fires on the app-shell commit (auth + the
+active view's initial collections, ADR-014), while a `--sf-primary` style
+gate satisfies itself at FIRST PAINT via the pre-paint boot script and
+proves nothing (the S124/BY7 fleet swap + AP-96; a non-shell route like
+/rum never mounts the marker — gate such routes on content observables).
 
 **Computed styles read empty in e2e:** the element went detached
 (splash removal race) — wait for a hydrated-shell landmark (e.g.
@@ -564,7 +568,7 @@ confirm against the DOM before changing tokens.
 
 **Live verification commands:**
 ```bash
-curl -s localhost:3000/api/health           # {"status":"ok","db":"up"}
+curl -s localhost:3000/api/health           # {"status":"ok","db":"up","app":"studyflow"}
 bunx playwright test tests/e2e/navigation.spec.ts --project=chromium
 bunx vitest run tests/db-path.test.ts       # the db contract, isolated
 tail -40 dev.log                            # request traces + prisma queries
@@ -578,13 +582,13 @@ tail -40 dev.log                            # request traces + prisma queries
 ```bash
 bun run lint && bun run typecheck && bun run test && bun run build && bun run test:e2e
 ```
-Current green state (re-anchored at S124/BY): lint ✓ · tsc ✓ (`noImplicitAny` + `noUnusedLocals`/`noUnusedParameters` — the BV16 machine guard) · 1113 unit ✓ · build ✓ (the type gate live — `ignoreBuildErrors` removed) · 523 e2e ✓ (1637 green).
+Current green state (re-anchored at S124/BY): lint ✓ · tsc ✓ (`noImplicitAny` + `noUnusedLocals`/`noUnusedParameters` — the BV16 machine guard) · 1127 unit ✓ · build ✓ (the type gate live — `ignoreBuildErrors` removed) · 529 e2e ✓ (1656 green).
 
 **Full-suite chunk map** (one server-boot per chunk; the 10-min tool cap makes
 one-shot full runs unreliable — the 2.0 six-chunk map: chrome+s14 104 ·
 S5+calc+S6 46 · S7+S8+S9 79 · tasks/resilience/s16/s17 20 · auth+s18–s23 35 ·
 s24–s26 18. Re-anchored at 2.2: the FIVE-chunk cold map of
-`scripts/e2e-chunked-cert.sh` — 137+153+71+92+70 = 523 (re-anchored S124/BY — the pre-S124 line said 516 [136+151+69+90+70], the S123-era map, an AP-74-class drift), always run COLD
+`scripts/e2e-chunked-cert.sh` — 139+157+71+92+70 = 529 (re-anchored S125/BZ; the pre-S125 line said 523 [137+153+71+92+70], the S124-era map, always run COLD
 [`rm -f db/e2e.db`]: the s23 round-trip posts a FIXED-id envelope and the
 seed's idempotent upserts never refresh day-relative dates).
 
@@ -722,7 +726,7 @@ the wrapper verifies remote == local HEAD and shreds its key copy).
 ```ts
 const hydrated = (page: Page) =>
   page.waitForFunction(
-    () => document.documentElement.style.getPropertyValue("--sf-primary") !== "",
+    () => document.documentElement.dataset.appHydrated === "true",
   );
 await page.goto("/Settings");
 await hydrated(page);
@@ -797,7 +801,7 @@ no bottom tab bar, drawer-only mobile nav). Mobile QA viewport: 390×844.
 
 | Layer | z | Where |
 |---|---|---|
-| Fixed app chrome (mobile header, desktop sidebar, the notes mobile FAB) | `z-30` | `mobile-chrome.tsx:121`, `sidebar.tsx:48`, `notes-view.tsx:776` |
+| Fixed app chrome (mobile header, desktop sidebar, the notes mobile FAB) | `z-30` | `mobile-chrome.tsx:121`, `sidebar.tsx:48`, `notes-view.tsx:877` |
 | The Radix overlay family (dialog/alert-dialog/dropdown/select/popover/tooltip backdrops + content, the mobile drawer) | `z-50` | `ui/dialog.tsx`, `ui/alert-dialog.tsx`, `ui/dropdown-menu.tsx`, `ui/select.tsx`, `ui/popover.tsx`, `ui/tooltip.tsx` |
 | Toast viewport (above open dialogs) | `z-[60]` | `ui/toast.tsx:61` |
 | Connectivity banner (the topmost feedback surface) | `z-[70]` | `connectivity-banner.tsx:48` |
@@ -845,7 +849,7 @@ type Accent = "violet" | "blue" | "green" | "orange" | "pink" | "red" | "teal";
 type ThemeMode = "light" | "dark" | "system";         // src/lib/theme.ts
 interface AccentToken { primary, primaryFg, soft, softDark, strong,
   strongDark, deep, softest, softestAdjacent, gradientTo, avatarFrom,
-  avatarTo, emptyFrom, emptyTo: string }  // RGB triplets (14 CSS vars;
+  avatarTo, emptyFrom, emptyTo: string }  // RGB triplets (17 fields / 17 CSS vars;
   gradientTo = adjacent-hue 600 for brand chips + CTA — indigo-600 for
   violet; avatarFrom/to = the lighter 400→adjacent-500 pair; emptyFrom/to
   = the 100-level pair for the empty-state block — all measured, S4-G)
@@ -882,7 +886,7 @@ priority, repeat, myDay, subtasks, createdAt, updatedAt }`); the client `mutatio
 |---|---|
 | Commands + gate order | `AGENTS.md` (top table) |
 | DATABASE_URL contract | §3 here; `prisma/schema.prisma` header; `tests/db-path.test.ts` |
-| The 9 Tailwind traps | §4 here; `docs/Tailwind-V4-Validation-Report.md`; session-3/4 plans |
+| The 10 Tailwind traps | §4 here; `docs/Tailwind-V4-Validation-Report.md`; session-3/4 plans |
 | Session-2 parity audit + non-gaps | `docs/remediation-plan.md` |
 | View↔path map | `src/lib/router.ts` (unit-tested) |
 | Accent tokens (7 accents) | `src/lib/theme.ts` `ACCENT_TOKENS` |

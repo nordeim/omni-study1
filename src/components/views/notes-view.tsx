@@ -50,6 +50,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -70,16 +71,21 @@ import {
   mutations,
   useDataStore,
   type NoteInput,
-  type NoteRow,
   type NotebookRow,
 } from "@/lib/data";
 import { apiSend, ApiError } from "@/lib/api";
 import { stripHtmlPreview } from "@/lib/text";
 import { cn } from "@/lib/utils";
 
+// S125/BZ14: the note leg carries no `editing` — the dead "Rename note"
+// variant. All three setDialog sites were enumerated before narrowing:
+// only {kind:"note", editing:null} (new note), {kind:"notebook",
+// editing:null} (new notebook) and {kind:"notebook", editing:row} (rename
+// notebook) ever fired; note titles edit through the debounced inline
+// input (S122/BW3), so the unreachable updateNote branch is gone.
 type DialogState =
   | { open: false }
-  | { open: true; kind: "note"; editing: NoteRow | null }
+  | { open: true; kind: "note" }
   | { open: true; kind: "notebook"; editing: NotebookRow | null };
 
 /** The NoteRow.tags JSON contract → a sorted unique list (safe parse). */
@@ -321,7 +327,7 @@ export function NotesView() {
   const openNewNote = () => {
     setName("");
     setError("");
-    setDialog({ open: true, kind: "note", editing: null });
+    setDialog({ open: true, kind: "note" });
   };
 
   const openNewNotebook = () => {
@@ -343,16 +349,14 @@ export function NotesView() {
     setError("");
     try {
       if (dialog.kind === "note") {
-        if (dialog.editing) {
-          await updateNote(dialog.editing.id, { title: name });
-        } else {
-          const created = await createNote({ title: name, content: "", notebookId: notebookFilter === "all" ? "" : notebookFilter });
-          setSelectedId(created ?? null);
-          // S79/AF3: a freshly created note starts with a clean streak.
-          // S80/AG6: …and owns the selection mirror from birth.
-          selectedIdRef.current = created ?? null;
-          autosaveFailedRef.current = false;
-        }
+        // S125/BZ14: the note dialog is CREATE-only (titles rename via the
+        // debounced inline input — the dead updateNote branch removed).
+        const created = await createNote({ title: name, content: "", notebookId: notebookFilter === "all" ? "" : notebookFilter });
+        setSelectedId(created ?? null);
+        // S79/AF3: a freshly created note starts with a clean streak.
+        // S80/AG6: …and owns the selection mirror from birth.
+        selectedIdRef.current = created ?? null;
+        autosaveFailedRef.current = false;
       } else {
         if (dialog.editing) {
           // Notebooks ride the generic API through apiSend — the store keeps
@@ -567,8 +571,16 @@ export function NotesView() {
             mobile the drawer pattern owns the surface). */}
         {notebooks.length > 0 && (
           <div className="hidden md:block">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
+            {/* S125/BZ3: the notebook rows now live in a Popover, not a
+                DropdownMenu. The old menu nested the Rename/Delete buttons
+                inside role="menuitem" (a WAI-ARIA nested-interactive
+                violation): menu arrow-keys focused the ITEM and Tab CLOSED
+                the menu — both actions were mouse-only. The Popover keeps
+                the menu's exact geometry (content classes mirror
+                DropdownMenuContent's) while the actions become real tab
+                stops; Escape closes and restores focus to the trigger. */}
+            <Popover>
+              <PopoverTrigger asChild>
                 <button
                   type="button"
                   className="mt-2 flex items-center gap-1 text-xs font-medium text-slate-500 dark:text-slate-400 outline-none hover:text-slate-600 focus-visible:ring-2 focus-visible:ring-sf-primary/40"
@@ -576,10 +588,16 @@ export function NotesView() {
                   <Pencil className="size-3" strokeWidth={2} />
                   Manage notebooks
                 </button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="start">
+              </PopoverTrigger>
+              <PopoverContent
+                align="start"
+                className="flex w-auto min-w-[8rem] flex-col gap-0 overflow-hidden rounded-md border-border p-1 shadow-md data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95"
+              >
                 {notebooks.map((nb) => (
-                  <DropdownMenuItem key={nb.id} className="gap-2">
+                  <div
+                    key={nb.id}
+                    className="flex items-center gap-2 rounded-sm px-2 py-1.5 text-sm"
+                  >
                     <span className="flex-1">{nb.name}</span>
                     <button
                       type="button"
@@ -588,7 +606,7 @@ export function NotesView() {
                         e.stopPropagation();
                         openEditNotebook(nb);
                       }}
-                      className="rounded p-1 text-slate-400 hover:text-slate-600"
+                      className="rounded p-1 text-slate-400 outline-none hover:text-slate-600 focus-visible:ring-2 focus-visible:ring-sf-primary/40"
                     >
                       <Pencil className="size-3" strokeWidth={2} />
                     </button>
@@ -599,14 +617,14 @@ export function NotesView() {
                         e.stopPropagation();
                         removeNotebook(nb);
                       }}
-                      className="rounded p-1 text-slate-400 hover:text-red-500"
+                      className="rounded p-1 text-slate-400 outline-none hover:text-red-500 focus-visible:ring-2 focus-visible:ring-sf-primary/40"
                     >
                       <Trash2 className="size-3" strokeWidth={2} />
                     </button>
-                  </DropdownMenuItem>
+                  </div>
                 ))}
-              </DropdownMenuContent>
-            </DropdownMenu>
+              </PopoverContent>
+            </Popover>
           </div>
         )}
         <div className="mt-3">
@@ -870,9 +888,7 @@ export function NotesView() {
               {!dialog.open
                 ? "New note"
                 : dialog.kind === "note"
-                  ? dialog.editing
-                    ? "Rename note"
-                    : "New note"
+                  ? "New note"
                   : dialog.editing
                     ? "Rename notebook"
                     : "New notebook"}

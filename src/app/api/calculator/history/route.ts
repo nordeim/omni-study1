@@ -40,20 +40,28 @@ export const POST = withUser(async (user, request) => {
     });
     // The retention trim: keep the newest HISTORY_WINDOW rows, drop the
     // rest (the self-join-free form — count, then delete by offset).
-    const total = await db.calculatorHistoryEntry.count({ where: { userId: user.id } });
-    if (total > HISTORY_WINDOW) {
-      const stale = await db.calculatorHistoryEntry.findMany({
-        where: { userId: user.id },
-        orderBy: { createdAt: "desc" },
-        skip: HISTORY_WINDOW,
-        select: { id: true },
-      });
-      if (stale.length > 0) {
-        await db.calculatorHistoryEntry.deleteMany({
-          where: { userId: user.id, id: { in: stale.map((row) => row.id) } },
+    // S125/BZ10: the count→skip→delete sequence now runs inside ONE
+    // transaction with an id-tiebroken orderBy — the pre-fix shape could
+    // interleave with a concurrent POST, and same-millisecond createdAt
+    // ties made the skip-trim nondeterministic (it could trim a NEWER row
+    // while keeping an older twin). SQLite serializes interactive
+    // transactions, and the id tiebreak is monotonic per row.
+    await db.$transaction(async (tx) => {
+      const total = await tx.calculatorHistoryEntry.count({ where: { userId: user.id } });
+      if (total > HISTORY_WINDOW) {
+        const stale = await tx.calculatorHistoryEntry.findMany({
+          where: { userId: user.id },
+          orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+          skip: HISTORY_WINDOW,
+          select: { id: true },
         });
+        if (stale.length > 0) {
+          await tx.calculatorHistoryEntry.deleteMany({
+            where: { userId: user.id, id: { in: stale.map((row) => row.id) } },
+          });
+        }
       }
-    }
+    });
     return NextResponse.json(entry, { status: 201 });
   } catch (err: unknown) {
     return toErrorResponse(err);

@@ -1783,3 +1783,60 @@ test.describe("S123/BX8: the deck-row highlight follows the fallback selection",
     }
   });
 });
+
+// S125/BZ1 — the Add Card / AI Generate guards read the RENDER-DERIVED
+// selection. The S123/BX8 selection model falls back to the first deck
+// (effectiveDeckId) while selectedDeckId stays null until an explicit
+// click — but the two action guards read the RAW selectedDeckId, so a
+// user with existing decks (the first-visit state of every session:
+// detail pane rendering the auto-selected deck) submitting the Add Card
+// dialog or clicking AI Generate got a SILENT no-op (verified live: the
+// dialog stayed open, no toast, no POST at the wire). Both guards + the
+// create/generate payloads now read effectiveDeckId.
+test.describe("S125/BZ1 · the Add Card dialog on the auto-selected deck", () => {
+  test("BZ1: creating a card on the AUTO-SELECTED first deck works (pre-fix: the silent no-op)", async ({ page }) => {
+    await page.goto("/Flashcards");
+    await hydrated(page);
+    // Nothing has been clicked: the render auto-selects the first seeded
+    // deck (effectiveDeckId) while selectedDeckId is still null — the
+    // exact state the bug needs. Derive the deck id at the wire so the
+    // pin never hard-codes seed data.
+    const decks = (await (await page.request.get("/api/flashcards/decks")).json()) as {
+      id: string;
+      name: string;
+    }[];
+    expect(decks.length).toBeGreaterThan(0);
+    const stamp = Date.now();
+    const front = `BZ1 auto-select front ${stamp}`;
+    // The seed writes the three decks with same-millisecond createdAt
+    // ties, so WHICH deck wins the effectiveDeckId fallback is random per
+    // seed — and when the 0-card "Spanish Vocabulary" lands first, the
+    // empty grid renders its OWN "Add Card" CTA beside the header's: two
+    // exact-name matches. The header button is deterministically
+    // DOM-first (the .first() of the strict-mode aka in the failure
+    // snapshot), and both open the SAME dialog, so .first() is
+    // order-agnostic.
+    const addCard = page
+      .getByRole("button", { name: "Add Card", exact: true })
+      .first();
+    await expect(addCard).toBeVisible();
+    await addCard.click();
+    const dialog = page.getByRole("dialog");
+    await expect(dialog).toBeVisible();
+    await dialog.getByLabel("Front (question)").fill(front);
+    await dialog.getByLabel("Back (answer)").fill(`BZ1 back ${stamp}`);
+    await dialog.getByRole("button", { name: "Add card", exact: true }).click();
+    // Post-fix: the dialog closes and the card renders in the auto-selected
+    // deck's grid. Pre-fix: the guard returned silently — the dialog stayed
+    // open and no POST fired.
+    await expect(dialog).not.toBeVisible();
+    await expect(page.getByText(front)).toBeVisible();
+    // Cleanup: the created card (unique front text → unique row).
+    const cards = (await (await page.request.get("/api/flashcards/cards")).json()) as {
+      id: string;
+      front: string;
+    }[];
+    const mine = cards.find((c) => c.front === front);
+    if (mine) await page.request.delete(`/api/flashcards/cards/${mine.id}`);
+  });
+});

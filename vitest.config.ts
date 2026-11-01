@@ -1,7 +1,18 @@
 import { defineConfig } from "vitest/config";
 import path from "node:path";
 
-// Unit-test layer for the pure domain seams — 41 files / 1113 tests
+// Unit-test layer for the pure domain seams — 42 files / 1127 tests
+// (re-anchored S125/BZ — the audit-driven hardening cycle: census 1113 →
+// 1127, +14 [grade-merge.test.ts the 42nd file, +7: the checkGradeRangeMerge
+// effective-pair legs — the single-leg score-over-stored rejection, the
+// maxScore-under-stored rejection, the both-legs-inverted rejection (the
+// merge owns the both-sent case for grades), the legal single-leg pass, the
+// legal both-legs pass, the title-only no-op, the non-numeric stored legacy
+// skip; validation +4: the gradeCreateSchema inverted pair, the legal pair,
+// the 900/1000 heavy case, the bare-900 defaulted-denominator rejection;
+// group-members +3: the removeOneMember one-occurrence seam — exactly one
+// identical duplicate removed, the composite (email,name) disambiguation,
+// the no-match no-op]).
 // (re-anchored S124/BY — the audit-driven hardening cycle: census 1099 →
 // 1113, +14. The additions: validation +7 [the S124/BY1 gradeLevel
 // clearable union — the "" clear form accepted (RED pre-fix: the

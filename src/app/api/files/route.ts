@@ -19,6 +19,7 @@ import { checkRateLimit } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { linkFileSchema } from "@/lib/validation";
 import {
+  FILE_METADATA,
   errorResponse,
   parseWith,
   rateLimitedResponse,
@@ -33,17 +34,9 @@ export const MAX_UPLOAD_BYTES = 2 * 1024 * 1024; // 2 MiB
 // create responses (S82/AI6) carry the same shape: the base64 `data`
 // column never rides a JSON response body; bytes go through the per-file
 // download endpoint (`GET /api/files/[id]`).
-const FILE_METADATA = {
-  id: true,
-  userId: true,
-  name: true,
-  mime: true,
-  size: true,
-  url: true,
-  folderId: true,
-  createdAt: true,
-  updatedAt: true,
-} as const;
+// S125/BZ8: the select moved to src/lib/server/http.ts (FILE_METADATA) —
+// route files cannot export shared symbols, and files/link had drifted to
+// the full row.
 
 export const GET = withUser(async (user) => {
   // S81/AH13: the list carries METADATA only — the base64 `data` column

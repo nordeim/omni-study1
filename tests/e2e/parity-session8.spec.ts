@@ -1368,3 +1368,119 @@ test.describe("S123/BX3: the exam edit dialog shows the stored time in the local
     }
   });
 });
+
+// S125/BZ3 — the S119/BT10 "Manage notebooks" surface is keyboard-operable.
+// The DropdownMenu nested Rename/Delete <button>s inside DropdownMenuItem
+// (role="menuitem") — a WAI-ARIA nested-interactive violation: menu
+// arrow-keys focus the ITEM (never the buttons), and Tab CLOSES the menu,
+// so both actions were effectively mouse-only. The surface is now a Radix
+// Popover (the content keeps the menu's exact geometry classes; the rows
+// are plain divs; the actions are real tab stops; Escape closes and
+// restores focus). The BT10 placement pin above is unchanged — the
+// trigger's name and its in-pane placement are byte-identical.
+test.describe("S125/BZ3 · the Manage notebooks surface is keyboard-operable", () => {
+  test("BZ3: the notebook actions are real tab stops inside a popover (pre-fix: nested in role=menuitem — Tab closed the menu)", async ({ page }) => {
+    // A fresh stamped notebook (the control renders only when notebooks
+    // exist; the e2e DB persists across specs — never mutate seeded rows).
+    // The page context is established FIRST (the AL1b convention: a
+    // relative-URL fetch inside evaluate needs a real origin, and the
+    // post-create goto re-hydrates the store with the fresh notebook).
+    await page.goto("/Notes");
+    await hydrated(page);
+    const stamp = `s125-BZ3-${Date.now()}`;
+    const info = await page.evaluate(async (stamp) => {
+      const res = await fetch("/api/notebooks", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "same-origin",
+        body: JSON.stringify({ name: stamp }),
+      });
+      return { id: (await res.json()).id, status: res.status };
+    }, stamp);
+    expect(info.status).toBe(201);
+    try {
+      await page.goto("/Notes");
+      await hydrated(page);
+      const manage = page.getByRole("button", { name: "Manage notebooks" });
+      await expect(manage).toBeVisible();
+      await manage.click();
+      // Post-fix: the popover content carries role=dialog and NO menuitem
+      // roles. Pre-fix (RED): the DropdownMenu rendered role=menu with
+      // menuitems — the dialog expect fails right here.
+      const content = page.getByRole("dialog");
+      await expect(content).toBeVisible();
+      await expect(content.getByRole("menuitem")).toHaveCount(0);
+      // Keyboard operability: Tab from the trigger reaches the FIRST
+      // action button (pre-fix: Tab closed the menu — the buttons were
+      // unreachable by keyboard).
+      await page.keyboard.press("Tab");
+      const focusedAction = await page.evaluate(() => {
+        const active = document.activeElement;
+        return (
+          active !== null &&
+          active.tagName === "BUTTON" &&
+          active.closest('[role="dialog"]') !== null
+        );
+      });
+      expect(focusedAction).toBe(true);
+      // Escape closes and restores focus to the trigger (the popover
+      // lifecycle contract).
+      await page.keyboard.press("Escape");
+      await expect(content).toHaveCount(0);
+    } finally {
+      await page.evaluate(async (id) => {
+        await fetch(`/api/notebooks/${id}`, { method: "DELETE", credentials: "same-origin" });
+      }, info.id);
+    }
+  });
+});
+
+// S125/BZ4 — duplicate members are schema-legal (BV17: the render key
+// disambiguates by index), but the view's removal filtered by email alone
+// — clicking one member's X removed EVERY row sharing that email in one
+// write. The removal now goes through the removeOneMember seam: exactly
+// the FIRST (email, name) composite occurrence.
+test.describe("S125/BZ4 · duplicate-member removal removes ONE", () => {
+  test("BZ4: removing one identical duplicate keeps the sibling (pre-fix: the email filter removed both)", async ({ page }) => {
+    // The page context is established FIRST (the AL1b convention: a
+    // relative-URL fetch inside evaluate needs a real origin, and the
+    // post-create goto re-hydrates the store with the fresh row).
+    await page.goto("/StudyGroups");
+    await hydrated(page);
+    const stamp = `s125-BZ4-${Date.now()}`;
+    const info = await page.evaluate(async (stamp) => {
+      const res = await fetch("/api/study-groups", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "same-origin",
+        body: JSON.stringify({
+          name: `${stamp}-crew`,
+          members: [
+            { name: "Dup BZ4", email: "dup-bz4@example.com" },
+            { name: "Dup BZ4", email: "dup-bz4@example.com" },
+          ],
+        }),
+      });
+      return { id: (await res.json()).id, status: res.status };
+    }, stamp);
+    expect(info.status).toBe(201);
+    try {
+      await page.goto("/StudyGroups");
+      await hydrated(page);
+      await page.getByRole("button", { name: new RegExp(`${stamp}-crew`) }).first().click();
+      const detail = page.locator('[aria-label="Study group detail pane"]');
+      // Two identical member rows render (duplicates are legal).
+      const removeButtons = detail.locator('[aria-label="Remove Dup BZ4"]');
+      await expect(removeButtons).toHaveCount(2);
+      // Remove ONE: click the first X.
+      await removeButtons.first().click();
+      // Post-fix: exactly one duplicate remains. Pre-fix (RED): the email
+      // filter removed BOTH in one write.
+      await expect(detail.locator('[aria-label="Remove Dup BZ4"]')).toHaveCount(1);
+    } finally {
+      await page.evaluate(async (id) => {
+        await fetch(`/api/study-groups/${id}`, { method: "DELETE", credentials: "same-origin" });
+      }, info.id);
+    }
+  });
+});

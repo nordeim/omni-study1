@@ -12,6 +12,7 @@ import {
   flashcardDeckSchema,
   flashcardSchema,
   forgotPasswordSchema,
+  gradeCreateSchema,
   holidaySchema,
   linkFileSchema,
   loginSchema,
@@ -1140,5 +1141,41 @@ describe("S124/BY9: the avatarEmoji vocabulary at the boundary", () => {
 
   it("rejects an unlisted 8-code-point string — max-length alone never sufficed", () => {
     expect(preferencesSchema.safeParse({ avatarEmoji: "sneaky12" }).success).toBe(false);
+  });
+});
+
+// S125/BZ6 — the grade ordering guard (the events BU22+BV1 pattern on the
+// score/maxScore pair). The schema capped each leg independently but never
+// checked the pair: 900/100 persisted and rendered 900%. The CREATE shape
+// carries the .check() (score is required; an unsent maxScore defaults to
+// 100 — the injected value IS the honest row state at create time, so a
+// bare 900 is honestly "900 out of the default 100"). The UPDATE path
+// deliberately owns NO schema check: zod4's .partial() injects the
+// maxScore default into every parsed payload, so a schema-side compare
+// would read the injected 100 instead of the stored pair (the sent-keys
+// filter drops the injected key before the write, but .check() runs
+// INSIDE parse) — the checkGradeRangeMerge beforeWrite seam owns BOTH legs
+// on PATCH (the single unified compare — tests/grade-merge.test.ts).
+describe("S125/BZ6: the grade score ≤ maxScore guard (the create shape)", () => {
+  it("rejects an inverted pair (a score above the maximum)", () => {
+    expect(
+      gradeCreateSchema.safeParse({ title: "Midterm", score: 900, maxScore: 100 }).success,
+    ).toBe(false);
+  });
+
+  it("accepts the legal pair", () => {
+    expect(
+      gradeCreateSchema.safeParse({ title: "Midterm", score: 90, maxScore: 100 }).success,
+    ).toBe(true);
+  });
+
+  it("accepts a 900-point score under a 1000-point maximum (the measured heavy case)", () => {
+    expect(
+      gradeCreateSchema.safeParse({ title: "Final", score: 900, maxScore: 1000 }).success,
+    ).toBe(true);
+  });
+
+  it("rejects a bare 900 (the defaulted 100 denominator — the honest create semantics)", () => {
+    expect(gradeCreateSchema.safeParse({ title: "Final", score: 900 }).success).toBe(false);
   });
 });

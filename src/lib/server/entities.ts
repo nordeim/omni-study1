@@ -16,6 +16,7 @@ import type { ZodType } from "zod";
 import { normalizeMembers, type GroupMember } from "../group-members";
 import { db } from "../db";
 import {
+  GRADE_SCORE_ABOVE_MAX,
   assignmentSchema,
   examSchema,
   eventCreateSchema,
@@ -23,6 +24,7 @@ import {
   flashcardDeckSchema,
   flashcardSchema,
   focusSessionSchema,
+  gradeCreateSchema,
   gradeSchema,
   holidaySchema,
   noteSchema,
@@ -54,6 +56,9 @@ type OwnedModel = {
   findMany(args: {
     where: { userId: string };
     orderBy?: { createdAt: "asc" | "desc" };
+    // S125/BZ13: the bounded-reads ceiling (take: 500, the ai/messages
+    // convention) — every concrete Prisma delegate accepts it.
+    take?: number;
   }): Promise<unknown[]>;
   findFirst(args: { where: Record<string, unknown> }): Promise<unknown>;
   create(args: { data: unknown }): Promise<unknown>;
@@ -142,6 +147,31 @@ function epochMs(value: unknown): number {
   if (typeof value === "string") return Date.parse(value);
   if (value instanceof Date) return value.getTime();
   return Number.NaN;
+}
+
+/**
+ * S125/BZ6 — the grade range merge (the events BV1 pattern on the numeric
+ * score/maxScore pair, with one structural difference): the grades UPDATE
+ * path owns NO schema-side .check() — zod@4's .partial() injects the
+ * maxScore default into every parsed payload, so a schema-side compare
+ * would read the injected denominator instead of the stored one (the
+ * sent-keys filter runs after parse, outside the schema's reach). This
+ * seam therefore owns EVERY combination through one unified compare over
+ * the EFFECTIVE pair (sent leg wins, stored leg fills): both-legs-sent,
+ * score-only, and maxScore-only all funnel into the same comparison —
+ * the BX1 "normalized at EVERY enforcement site" doctrine. A non-numeric
+ * stored leg skips (the legacy-seed defense, the BW7 hhmm lesson).
+ */
+export function checkGradeRangeMerge(existing: Row, writes: Row): void {
+  const scoreSent = "score" in writes;
+  const maxSent = "maxScore" in writes;
+  if (!scoreSent && !maxSent) return;
+  const score = scoreSent ? writes.score : existing.score;
+  const maxScore = maxSent ? writes.maxScore : existing.maxScore;
+  if (typeof score !== "number" || typeof maxScore !== "number") return;
+  if (score > maxScore) {
+    throw new ValidationError(GRADE_SCORE_ABOVE_MAX);
+  }
 }
 
 /**
@@ -235,7 +265,19 @@ function makeOwnedDelegate(config: OwnedConfig): EntityDelegate {
   return {
     list: (userId) =>
       model
-        .findMany({ where: { userId }, orderBy: { createdAt: orderBy } })
+        .findMany({
+          where: { userId },
+          orderBy: { createdAt: orderBy },
+          // S125/BZ13: the bounded-reads doctrine (S118/BS3) finally reaches
+          // the factory family — ai/messages + calculator history have
+          // shipped take: 500 since BS3 while every collection route
+          // returned unbounded rows (notes ship 100 KB content each; a
+          // 1 000-note account answered a ~100 MB JSON per GET). The
+          // asc+take convention matches the shipped seams. The export is
+          // independent (its own findManys — verified) so the completeness
+          // contract is untouched.
+          take: 500,
+        })
         .then((rows) => rows.map(normalize)),
 
     create: async (userId, input) => {
@@ -440,8 +482,13 @@ export const studyGroupDelegate = makeOwnedDelegate({
 
 export const gradeDelegate = makeOwnedDelegate({
   model: db.grade as unknown as OwnedModel,
-  createSchema: gradeSchema,
+  // S125/BZ6: the ordering-checked create shape (the events delegate's
+  // createSchema pattern); beforeWrite owns the PATCH legs (see
+  // checkGradeRangeMerge — the update schema stays .check()-free by
+  // design: zod@4's .partial() injects the maxScore default).
+  createSchema: gradeCreateSchema,
   updateSchema: gradeSchema.partial(),
+  beforeWrite: checkGradeRangeMerge,
   ownedFks: OWNED_FKS.grade,
 });
 

@@ -109,19 +109,41 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ ok: true, code });
     }
 
-    const user = await db.user.create({
-      data: {
-        email: normalizedEmail,
-        passwordHash: hashPassword(password),
-        fullName,
-        // emailVerified stays false — the schema default. No session
-        // cookie: the register→verify journey completes only after the
-        // code matches.
-      },
-      select: { id: true },
-    });
+    // S125/BZ9: the create-race branch answers the uniform 200. Two
+    // concurrent same-email registrations both passed the findUnique above;
+    // the loser's create throws P2002 → toErrorResponse → 409 "That record
+    // already exists." — the exact enumeration oracle S120/BU14 closed,
+    // re-opened in the millisecond window. The loser answers the
+    // verified-exists branch's shape. NO code leg: the loser's own token
+    // was never stored (echoing its code would send the user down a dead
+    // verification path); the winner's client carries the working one.
+    let userId: string;
+    try {
+      const user = await db.user.create({
+        data: {
+          email: normalizedEmail,
+          passwordHash: hashPassword(password),
+          fullName,
+          // emailVerified stays false — the schema default. No session
+          // cookie: the register→verify journey completes only after the
+          // code matches.
+        },
+        select: { id: true },
+      });
+      userId = user.id;
+    } catch (err: unknown) {
+      if (
+        typeof err === "object" &&
+        err !== null &&
+        "code" in err &&
+        (err as { code?: string }).code === "P2002"
+      ) {
+        return NextResponse.json({ ok: true });
+      }
+      throw err;
+    }
     await db.verificationToken.create({
-      data: { ...tokenData, userId: user.id },
+      data: { ...tokenData, userId },
     });
 
     // S120/BU14: the SAME 200 as every other branch (was 201 — the status

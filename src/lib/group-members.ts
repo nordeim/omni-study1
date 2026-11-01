@@ -48,3 +48,29 @@ export function normalizeMembers(value: unknown): GroupMember[] {
     return [{ name: name.trim(), email: email.trim() }];
   });
 }
+
+/**
+ * S125/BZ4 — remove EXACTLY ONE member by (email, name) composite.
+ * Duplicates are schema-legal (BV17: the render key disambiguates by
+ * index), and the view's old removal filtered by email alone — clicking
+ * one member's X removed EVERY row sharing that email in one write.
+ * Identical duplicates (same email AND name) are indistinguishable rows,
+ * so removing the first is visually equivalent to removing the clicked
+ * one; same-email members with DIFFERENT names disambiguate by the
+ * composite. A no-match removal is a no-op (the idempotent guard).
+ */
+export function removeOneMember(
+  members: GroupMember[],
+  email: string,
+  name: string,
+): GroupMember[] {
+  let removed = false;
+  return members.filter((m) => {
+    if (removed) return true;
+    if (m.email === email && m.name === name) {
+      removed = true;
+      return false;
+    }
+    return true;
+  });
+}
