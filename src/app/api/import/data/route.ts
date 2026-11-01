@@ -141,7 +141,8 @@ export const POST = async (request: NextRequest) => {
       return errorResponse(400, "Upload the backup as a JSON file.");
     }
 
-    // ---- the 10 MiB body cap (S117/BR1 — the documented 413 contract) ------
+    // ---- the 25 MiB body cap (S117/BR1 — the documented 413 contract;
+    // S124/BY3 moved it 10 → 25 MiB, the export/import reconciliation) ------
     // S119/BT2: the capped read now walks the stream chunk-by-chunk (the
     // declared-length pre-read lives inside readBodyCapped) so a chunked
     // body is counted AS it is read, never buffered past the cap.

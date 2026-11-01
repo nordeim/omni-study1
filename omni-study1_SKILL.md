@@ -25,9 +25,9 @@ tags:
 
 > **What this is:** the single-source-of-truth reference for working in
 > `nordeim/omni-study1`. Every fact below is verified against the codebase
-> (1615 tests green, re-anchored at the S123 update: 1099 Vitest unit + 516
-> Playwright e2e across the 5-chunk cold map — the census re-anchored through
-> the s117–s119 hardening cycles; the 2.0 baseline was 834 + 299 in six
+> (1637 tests green, re-anchored at the S124 update: 1113 Vitest unit + 524
+> Playwright e2e (518 specs + the per-chunk setup) — the census re-anchored through
+> the s117–s124 hardening cycles; the 2.0 baseline was 834 + 299 in six
 > chunks after the parity re-application + account-flow completion +
 > regression hardening).
 > Sections marked with ⚠️ encode non-obvious contracts — violating them has
@@ -74,12 +74,12 @@ vars — never hardcode violet hexes in view code.
 
 | Layer | Technology | Version | Critical note |
 |---|---|---|---|
-| Framework | `next` | ^16.1.1 (16.4.0 installed) | App Router; `output: "standalone"`; Turbopack dev |
+| Framework | `next` | ^16.4.2 (16.4.2 installed) | App Router; `output: "standalone"`; Turbopack dev |
 | UI runtime | `react` / `react-dom` | ^19.0.0 | Client view switching inside one page |
 | Language | `typescript` | ^5 | `strict: true`; `tsc --noEmit` is a gate |
 | Styling | `tailwindcss` + `@tailwindcss/postcss` | ^4 | **CSS-first** — no `tailwind.config.js`; tokens in `globals.css` `@theme` |
 | Animation | `tw-animate-css` + `tailwindcss-animate` | ^1.3.5 / ^1.0.7 | Radix enter/exit transitions |
-| Primitives | `@radix-ui/*` (16 pkgs) | current | shadcn-style wrappers in `src/components/ui/*` |
+| Primitives | `@radix-ui/*` (18 pkgs) | current | shadcn-style wrappers in `src/components/ui/*` |
 | Icons | `lucide-react` | ^0.525.0 | Nav icons `strokeWidth={2}`; view icons 1.75 |
 | State | `zustand` | ^5.0.6 | 3 stores; URL is routing truth |
 | Validation | `zod` | ^4.6.5 | v4 counts **code points** in `.max()` (UTF-16 trap) |
@@ -98,8 +98,8 @@ Next dev-tools floating button (absent from the production build).
 ## §3 Bootstrapping & Configuration
 
 ```bash
-git clone https://github.com/nordeim/omni-study.git
-cd omni-study
+git clone https://github.com/nordeim/omni-study1.git
+cd omni-study1
 bun install
 bun run db:push && bun run db:seed   # creates <repo>/db/custom.db + demo data
 cp .env.example .env                 # defaults already correct
@@ -131,7 +131,7 @@ touch resolution.
   → `/`).
 - `tsconfig.json` — strict, `@/*` → `src/*`.
 - `eslint.config.mjs` — flat config, next core-web-vitals; lint is a gate.
-- `vitest.config.ts` — node env, `@` alias, `include: tests/**/*.test.ts`
+- `vitest.config.ts` — node env, `@` alias, `include: ["src/**/*.test.ts", "tests/**/*.test.ts"]`
   (never picks up e2e specs).
 - `playwright.config.ts` — 2 projects (auth setup + chromium), `workers: 1`,
   `fullyParallel: false`, webServer boots `.next/standalone` on :3100 with
@@ -227,7 +227,7 @@ titles `h3 text-xl` (20px); nav labels 16px with `w-5` icons; body `text-sm`.
 drifted it 4 units/channel). Dark variant swaps to a slate-950 family ramp.
 
 **Custom classes:** `.glass` (sidebar `rgba(255,255,255,0.8)` + blur),
-`.sf-card`, `.sf-focus` (accent focus ring), `.sf-scroll` (thin scrollbars),
+`.sf-card`, `.sf-scroll` (thin scrollbars),
 `.sf-skeleton` + 2 keyframes (`sf-shimmer`, `sf-slide-in`), `.sf-gradient` +
 `.sf-gradient-shadow` / `-lg` (the session-5 gradient CTA surfaces — sRGB-exact
 stops through `--sf-primary` → `--sf-primary-gradient-to`, hover via
@@ -338,7 +338,7 @@ nesting). 22 of the 23 non-User models carry direct `userId` `onDelete:
 Cascade` relations (the count behind the "all 22 user relations" claims —
 correct as written).
 
-**The CRUD factory** (`src/lib/server/entities.ts`, 621 lines): one
+**The CRUD factory** (`src/lib/server/entities.ts`): one
 `EntityDelegate` config per entity (model name, Zod create/update schemas,
 default order, optional handler maps) consumed by
 `makeCollectionRoutes`/`makeItemRoutes` (`src/lib/server/http.ts`). Route
@@ -356,7 +356,8 @@ The factory provides: `requireUser()` auth → Zod parse → `where: { userId }`
 → Prisma call → `{ error }` JSON on failure (never stack traces). Special
 routes outside the factory: `auth/*`, `files/*` (multipart ≤ 2 MiB base64),
 `settings/preferences`, `calculator/history`, `ai/chat`, `ai/messages`,
-`math/solve`, `health`.
+`ai/generate-cards`, `ai/generate-questions`, `math/solve`, `import/data`,
+`export/data`, `rum`, `rum/export`, `health`.
 
 **Seed** (`prisma/seed.ts`): idempotent (early-returns when the demo user
 exists — ⚠️ changing seed VALUES requires deleting `db/e2e.db`, see §10);
@@ -372,7 +373,7 @@ notes, decks, grades; `avatarEmoji: ""` (reference default state).
 
 ## §8 Accessibility Implementation
 
-- **Focus:** `.sf-focus` applies `outline: 2px solid rgb(var(--sf-primary))`
+- **Focus:** the convention is the per-component `focus-visible:ring-2 focus-visible:ring-sf-primary/40` pair (the S124/BY12 correction: the `sf-focus` utility had ZERO consumers and was removed; the SKILL doc previously described it as load-bearing)
   + 2px offset on `:focus-visible` — accent-aware, consistent.
 - **Labels:** every icon-only button carries `aria-label` ("Open navigation
   menu", "Close menu", "Collapse sidebar", "Delete task", …). The reference's
@@ -528,6 +529,7 @@ notes, decks, grades; `avatarEmoji: ""` (reference default state).
 | AP-129 | MEDIUM | The API audit's "add timeoutMs to the vision branch" recommendation was a TYPE ERROR — the SDK's vision body type carries no such field; the shipped omission was correct | an audit recommendation is a hypothesis; the type gate is the cheapest discriminator — run the guard experiment DURING implementation (or at the plan phase), never after the docs claim the fix | the S121/BV13 non-gap the build proved (session-121) |
 | AP-130 | HIGH | The agent toolchain's OUTPUT pipeline silently strips bracket-letter sequences (`[m`, `[h` observed) — a displayed `transition-argin]` was actually `transition-[margin]`, manufacturing a phantom "corrupted class" finding through grep, git show, sed, AND browser eval views alike; two probe harnesses were corrupted the same way before the char-code check exposed it | any candidate finding whose evidence is a bracket-bearing string must be re-read as CHAR CODES (or a length-checking hash) before it is reported — the display is not the bytes | the S122 retraction (session-122) |
 | AP-131 | HIGH | A comparison guard must be normalized at EVERY enforcement site — the S122/BW7 single-leg timetable merge was minutes-normalized while the schema-level both-legs check kept the RAW string compare: the legal unpadded span ("9:00"→"11:00") FALSELY 400'd and the inverted padded/unpadded mix ("09:00"→"8:30") PERSISTED, both wire-verified; the UI half compounds (`<input type="time">` BLANKS a non-HH:MM value, so the legacy row's edit dialog opened empty) | when introducing a comparison guard for a value family, enumerate EVERY site that compares it (schema checks, merge seams, UI populate) and route them all through ONE exported normalizer; pad the seed out of the legacy shape while the normalizer keeps old rows working | the S123/BX1 cycle (session-123) |
+| AP-132 | MEDIUM | A hydration gate must match the ROUTE CLASS it serves — the appHydrated marker (the shell-commit gate, S124/BY7) never fires on the non-shell routes (/rum, /export: standalone Next routes without the app shell), so a helper serving BOTH route classes must gate on a route-universal observable (.dark for theme; content for data). The same family: Playwright's toBeVisible requires a non-empty bounding box — a single-value sparkline's flat two-point line is painted + user-visible but zero-HEIGHT (assert the chart container instead). |
 
 ---
 
@@ -576,13 +578,13 @@ tail -40 dev.log                            # request traces + prisma queries
 ```bash
 bun run lint && bun run typecheck && bun run test && bun run build && bun run test:e2e
 ```
-Current green state (re-anchored at S123/BX): lint ✓ · tsc ✓ (`noImplicitAny` + `noUnusedLocals`/`noUnusedParameters` — the BV16 machine guard) · 1099 unit ✓ · build ✓ (the type gate live — `ignoreBuildErrors` removed) · 516 e2e ✓ (1615 green).
+Current green state (re-anchored at S124/BY): lint ✓ · tsc ✓ (`noImplicitAny` + `noUnusedLocals`/`noUnusedParameters` — the BV16 machine guard) · 1113 unit ✓ · build ✓ (the type gate live — `ignoreBuildErrors` removed) · 523 e2e ✓ (1637 green).
 
 **Full-suite chunk map** (one server-boot per chunk; the 10-min tool cap makes
 one-shot full runs unreliable — the 2.0 six-chunk map: chrome+s14 104 ·
 S5+calc+S6 46 · S7+S8+S9 79 · tasks/resilience/s16/s17 20 · auth+s18–s23 35 ·
 s24–s26 18. Re-anchored at 2.2: the FIVE-chunk cold map of
-`scripts/e2e-chunked-cert.sh` — 136+151+69+90+70 = 516 (re-anchored S123/BX — the pre-S123 line said 497, the S120-era map, an AP-74-class drift), always run COLD
+`scripts/e2e-chunked-cert.sh` — 137+153+71+92+70 = 523 (re-anchored S124/BY — the pre-S124 line said 516 [136+151+69+90+70], the S123-era map, an AP-74-class drift), always run COLD
 [`rm -f db/e2e.db`]: the s23 round-trip posts a FIXED-id envelope and the
 seed's idempotent upserts never refresh day-relative dates).
 
@@ -851,8 +853,8 @@ interface EntityDelegate { model, createSchema, updateSchema, orderBy, ... }
 ```
 
 Entity rows are camelCase mirrors of the Prisma models (e.g. `Task {
-id, userId, title, notes?, listId?, important, done, dueDate?, createdAt,
-updatedAt }`); the client `mutations` object exposes typed
+id, userId, title, notes, listId?, subjectId?, completed, important, dueDate?,
+priority, repeat, myDay, subtasks, createdAt, updatedAt }`); the client `mutations` object exposes typed
 `create*/update*/delete*` per entity; `ApiError` carries the server's
 `{ error }` envelope for `toast.error()`.
 
@@ -891,4 +893,4 @@ updatedAt }`); the client `mutations` object exposes typed
 | Push procedure | `docs/how-to-git-push-using-ssh-wrapper_SKILL.md` + `docs/ssh_git_wrapper_v3.py` |
 | Screenshots (all 20 views) | `docs/screenshots/` |
 | Demo account | `demo@studyflow.app` / `Demo1234!` |
-
+ (the S124 reconciliation: the historical §11 six-chunk map sums to 302 [104+46+79+20+35+18], so the 2.0-era '299' undercounted by 3 — the map is authoritative for its era; both figures left in place as the historical record)

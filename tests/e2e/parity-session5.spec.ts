@@ -16,7 +16,7 @@ import { expect, test, type Page } from "@playwright/test";
  */
 
 const hydrated = (page: Page) =>
-  page.waitForFunction(() => document.documentElement.style.getPropertyValue("--sf-primary") !== "");
+  page.waitForFunction(() => document.documentElement.dataset.appHydrated === "true");
 
 test.describe("S5-A · gradient primary CTAs", () => {
   test("the Tasks Add Task button renders the violet→indigo gradient", async ({ page }) => {
@@ -290,9 +290,11 @@ test.describe("S5-D · gray form-control palette", () => {
     const outline = page.getByRole("button", { name: "Grid Builder" });
     await expect(outline).toBeVisible();
     const border = await outline.evaluate((el) => getComputedStyle(el).borderColor);
-    expect(border).toBe("rgb(229, 229, 229)"); // gray-200 — measured.
+    // S124/BY15: neutral-200/950, NOT gray — the gray family's 200 is
+    // rgb(229,231,233); these measured bytes are the neutral ramp's.
+    expect(border).toBe("rgb(229, 229, 229)"); // neutral-200 — measured.
     const color = await outline.evaluate((el) => getComputedStyle(el).color);
-    expect(color).toBe("rgb(10, 10, 10)"); // gray-950 — measured.
+    expect(color).toBe("rgb(10, 10, 10)"); // neutral-950 — measured.
     const shadow = await outline.evaluate((el) => getComputedStyle(el).boxShadow);
     expect(shadow).toContain("rgba(0, 0, 0, 0.05)"); // v3 shadow-sm pin (rgba serialization — trap 7).
   });

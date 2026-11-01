@@ -1094,3 +1094,51 @@ describe("S123/BX5: the exported nullableId atom", () => {
     expect(nullableId.safeParse("x".repeat(65)).success).toBe(false);
   });
 });
+
+// S124/BY1 — the gradeLevel clearable form. The Study Profile card ships a
+// "Not set" option, but the schema's enum had no clearable leg: the UI
+// mapped "none" → undefined, JSON.stringify dropped the key, and the route's
+// sent-keys filter skipped it — the stored grade silently persisted behind a
+// success toast. The DB column is String @default("") (the natural cleared
+// state — schoolName: "" already clears fine in the same card).
+describe("S124/BY1: the gradeLevel clearable form", () => {
+  it("still accepts the 12 documented grades (the shipped enum leg, unchanged)", () => {
+    expect(preferencesSchema.safeParse({ gradeLevel: "9th Grade" }).success).toBe(true);
+    expect(preferencesSchema.safeParse({ gradeLevel: "Graduate" }).success).toBe(true);
+  });
+
+  it('accepts the "" clear form and parses it to the stored-empty state (RED pre-fix: the ZodError itself)', () => {
+    const out = preferencesSchema.safeParse({ gradeLevel: "" });
+    expect(out.success).toBe(true);
+    if (out.success) expect(out.data.gradeLevel).toBe("");
+  });
+
+  it("still rejects values outside the vocabulary", () => {
+    expect(preferencesSchema.safeParse({ gradeLevel: "Kindergarten" }).success).toBe(false);
+    expect(preferencesSchema.safeParse({ gradeLevel: " " }).success).toBe(false);
+  });
+});
+
+// S124/BY9 — the avatarEmoji vocabulary at the API boundary. The picker is
+// unit-pinned to 24 emojis, but the schema accepted ANY ≤8-code-point string
+// — an arbitrary string stored + rendered as the avatar (React-escaped, no
+// XSS — but the Settings grid then shows no selected tile). The "" clear
+// form stays legal (the seed's own default state).
+describe("S124/BY9: the avatarEmoji vocabulary at the boundary", () => {
+  it("accepts a listed emoji (the picker's 24)", () => {
+    expect(preferencesSchema.safeParse({ avatarEmoji: "🎓" }).success).toBe(true);
+    expect(preferencesSchema.safeParse({ avatarEmoji: "🏆" }).success).toBe(true);
+  });
+
+  it('accepts the "" clear form (the reference default state)', () => {
+    expect(preferencesSchema.safeParse({ avatarEmoji: "" }).success).toBe(true);
+  });
+
+  it("rejects an unlisted string (RED pre-fix: accepted at ≤8 code points)", () => {
+    expect(preferencesSchema.safeParse({ avatarEmoji: "sneaky" }).success).toBe(false);
+  });
+
+  it("rejects an unlisted 8-code-point string — max-length alone never sufficed", () => {
+    expect(preferencesSchema.safeParse({ avatarEmoji: "sneaky12" }).success).toBe(false);
+  });
+});

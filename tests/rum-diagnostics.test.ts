@@ -13,6 +13,7 @@ import {
   RUM_METRIC_ORDER,
   buildPanelRows,
   buildSparklinePoints,
+  buildTrends,
   classifyP75,
   formatMetricValue,
   toRumCsv,
@@ -309,5 +310,68 @@ describe("toRumCsv formula neutralization (S118/BS6)", () => {
   it("leaves ordinary fields byte-identical", () => {
     const before = toRumCsv([event("navigate")]).trim().split("\n")[1];
     expect(before.startsWith("LCP,1,good,navigate,/Dashboard,s1,")).toBe(true);
+  });
+});
+
+
+// S124/BY6 — buildTrends: the route's 7-day series construction, extracted
+// pure. The route fabricated a literal 0 for every unsampled day (a 0 CLS
+// reads as a GOOD score, so the sparkline looked great on idle days — a
+// display lie on the owner panel); the gaps are now null and the panel's
+// finite filter drops them (the seam-to-seam contract pinned below). The
+// UTC-day bucket stays the chosen semantics (single-owner panel; the
+// comment in the route documents it).
+describe("S124/BY6: buildTrends (the route's series construction, extracted pure)", () => {
+  const DAY = 86_400_000;
+  // Fixed mid-day UTC reference — offsets of ±hours never cross the day edge.
+  const NOW = Date.parse("2026-11-01T12:00:00Z");
+  const at = (dayOffset: number, hourOfDayUtc = 12) =>
+    new Date(NOW + dayOffset * DAY + (hourOfDayUtc - 12) * 3_600_000);
+
+  it("a sampled day carries the day's NEWEST value (final-value-wins — order-independent)", () => {
+    const trends = buildTrends(
+      [
+        { metric: "LCP", value: 2500, createdAt: at(-1, 10) }, // oldest sample
+        { metric: "LCP", value: 2000, createdAt: at(-1, 12) },
+        { metric: "LCP", value: 900, createdAt: at(-1, 15) }, // the day's newest wins
+      ],
+      NOW,
+    );
+    expect(trends.LCP).toEqual([null, null, null, null, null, 900, null]);
+  });
+
+  it("an unsampled day is a null GAP — never a fabricated 0 (a 0 CLS reads as a GOOD score on idle days)", () => {
+    const trends = buildTrends([{ metric: "CLS", value: 0.05, createdAt: at(0) }], NOW);
+    expect(trends.CLS).toEqual([null, null, null, null, null, null, 0.05]);
+  });
+
+  it("the 7-day window: exactly 7 entries, oldest → newest (today LAST)", () => {
+    const trends = buildTrends(
+      [
+        { metric: "TTFB", value: 400, createdAt: at(-6, 1) },
+        { metric: "TTFB", value: 500, createdAt: at(-3, 2) },
+        { metric: "TTFB", value: 600, createdAt: at(0, 3) },
+      ],
+      NOW,
+    );
+    expect(trends.TTFB).toEqual([400, null, null, 500, null, null, 600]);
+  });
+
+  it("metrics with no rows at all are omitted (the route's skip semantics preserved)", () => {
+    const trends = buildTrends([{ metric: "LCP", value: 900, createdAt: at(0) }], NOW);
+    expect(trends.LCP).toBeDefined();
+    expect(trends.TTFB).toBeUndefined();
+    expect(trends.INP).toBeUndefined();
+  });
+
+  it("the panel drops the null gaps from the card's points (the seam-to-seam contract)", () => {
+    const rows = buildPanelRows({
+      p75: { LCP: 900 },
+      samples: 2,
+      total: 2,
+      recent: [],
+      trends: { LCP: [null, 900, null] },
+    });
+    expect(rows.cards.find((c) => c.metric === "LCP")!.points).toEqual([900]);
   });
 });

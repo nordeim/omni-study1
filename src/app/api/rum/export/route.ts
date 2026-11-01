@@ -8,13 +8,22 @@
 import { NextResponse } from "next/server";
 
 import { db } from "@/lib/db";
+import { checkRateLimit } from "@/lib/auth";
 import { requireUser } from "@/lib/server/auth";
-import { downloadHeaders, toErrorResponse } from "@/lib/server/http";
+import { downloadHeaders, rateLimitedResponse, toErrorResponse } from "@/lib/server/http";
 import { toRumCsv, type RumCsvEvent } from "@/lib/rum-diagnostics";
 
 export const GET = async () => {
   try {
     const user = await requireUser();
+
+    // S124/BY5: the CSV enumeration joins the SHARED `export:${user.id}`
+    // 10/15-min budget (the sibling GET's key — the ai: shared-key
+    // precedent; exhausting one route 429s the other).
+    const limit = checkRateLimit(`export:${user.id}`, 10);
+    if (!limit.ok) {
+      return rateLimitedResponse(limit.retryAfterSec, "Too many export requests");
+    }
 
     const events = await db.rumEvent.findMany({
       where: { userId: user.id },

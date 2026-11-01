@@ -43,16 +43,21 @@ async function setMode(page: Page, mode: "dark" | "light") {
   expect(res.ok()).toBeTruthy();
 }
 
-/** Navigate and wait for the theme store to apply the user's dark preference
- *  (html.dark + the accent var — both land post-hydration). */
+/** Navigate and wait for the theme store to apply the user's dark preference.
+ *  The .dark class is the ROUTE-UNIVERSAL gate: setMode PATCHes the record
+ *  without the client cache, so the pre-paint boot script paints the stale
+ *  LIGHT theme and only the post-hydration loadFromUser(/api/auth/me)
+ *  resolves the class — on the shell pages AND the non-shell routes (/rum,
+ *  /export) alike. (S124/BY7 correction: the appHydrated marker half had to
+ *  come OFF this helper — the marker mounts only inside the app shell, so
+ *  it never fires on /rum and the AU3b pin hung; the --sf-primary var half
+ *  it replaced was equally shell-blind but pre-paint-true everywhere, which
+ *  masked the difference. The marker stays the gate for the shell-only
+ *  waits below.) */
 async function gotoDark(page: Page, path: string) {
   await setMode(page, "dark");
   await page.goto(path);
-  await page.waitForFunction(
-    () =>
-      document.documentElement.classList.contains("dark") &&
-      document.documentElement.style.getPropertyValue("--sf-primary") !== "",
-  );
+  await page.waitForFunction(() => document.documentElement.classList.contains("dark"));
 }
 
 test.afterEach(async ({ page }) => {
@@ -328,7 +333,7 @@ test.describe("S79/AF5 · the dark-mode clock date reads the 400 step", () => {
   test("light mode keeps the clock date at violet-600 (the regression guard)", async ({ page }) => {
     await page.goto("/Dashboard");
     await page.waitForFunction(
-      () => document.documentElement.style.getPropertyValue("--sf-primary") !== "",
+      () => document.documentElement.dataset.appHydrated === "true",
     );
     const date = page.locator(".sf-clock-date");
     await expect(date).toBeVisible();

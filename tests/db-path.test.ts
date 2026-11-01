@@ -170,3 +170,50 @@ describe("anchor validation", () => {
     }
   });
 });
+
+// S124/BY2 — the production gate on the Turbopack-mangled fallback. The
+// guard was broader than the quirk it targets: ANY absolute file: URL whose
+// target was missing on disk silently redirected to the dev default —
+// including a PRODUCTION boot whose operator skipped db:push (prod writes
+// then landed in the dev DB with seed data, silently — the §18 "reads the
+// WRONG database" class). The fallback now fires only outside production;
+// DEPLOYMENT.md §4 form-2's "absolute passes through untouched" is true in
+// production (a missing target fails LOUDLY downstream, never silently).
+describe("S124/BY2: the db-path production gate", () => {
+  // Self-contained fixture: the outer describe's `repo` is block-scoped to
+  // its own hooks, so this family carries its own fake repo layout.
+  let gate: string;
+
+  beforeAll(() => {
+    gate = mkdtempSync(path.join(tmpdir(), "dbpath-gate-"));
+    mkdirSync(path.join(gate, "prisma"));
+    writeFileSync(path.join(gate, "prisma", "schema.prisma"), 'datasource db { provider = "sqlite" }');
+    mkdirSync(path.join(gate, "db"));
+  });
+
+  afterAll(() => {
+    rmSync(gate, { recursive: true, force: true });
+  });
+
+  it("in PRODUCTION a missing absolute target passes through untouched — never the silent dev-DB redirect", () => {
+    writeFileSync(path.join(gate, "db", "custom.db"), "");
+    try {
+      const fresh = path.resolve(gate, "..", `fresh-prod-${Date.now()}.db`);
+      const out = resolveDatabaseUrl(`file:${fresh}`, [gate], "production");
+      expect(toPosix(out)).toBe(`file:${toPosix(fresh)}`);
+    } finally {
+      rmSync(path.join(gate, "db", "custom.db"), { force: true });
+    }
+  });
+
+  it("outside production the Turbopack-mangled correction still fires (the dev contract, parameterized)", () => {
+    writeFileSync(path.join(gate, "db", "custom.db"), "");
+    try {
+      const wrong = path.resolve(gate, "..", "db", "custom.db");
+      const out = resolveDatabaseUrl(`file:${wrong}`, [gate], "development");
+      expect(toPosix(out)).toBe(`file:${toPosix(path.join(gate, "db", "custom.db"))}`);
+    } finally {
+      rmSync(path.join(gate, "db", "custom.db"), { force: true });
+    }
+  });
+});

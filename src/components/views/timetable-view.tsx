@@ -350,6 +350,12 @@ export function TimetableView() {
                                   right: `${2 + idx * 10}%`,
                                   backgroundColor: `${color}1a`,
                                   borderLeftColor: color,
+                                  // The documented z-map's ONE inline
+                                  // exception (S124/BY15): a local
+                                  // same-cell overlap tweak inside an
+                                  // absolutely-positioned block — not a
+                                  // chrome layer, outside the 30/50/60/70
+                                  // scale on purpose.
                                   zIndex: 1,
                                 }}
                               >

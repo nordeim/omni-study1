@@ -320,7 +320,7 @@ test.describe("S78 · mobile two-pane parity — the list panes render at 390", 
   test("Notes renders the list pane and selects a note from it", async ({ page }) => {
     await page.goto("/Notes");
     await page.waitForFunction(
-      () => document.documentElement.style.getPropertyValue("--sf-primary") !== "",
+      () => document.documentElement.dataset.appHydrated === "true",
     );
 
     const aside = page.getByRole("complementary", { name: "Notes list pane" });
@@ -346,7 +346,7 @@ test.describe("S78 · mobile two-pane parity — the list panes render at 390", 
   test("Flashcards renders the deck list and switches decks from it", async ({ page }) => {
     await page.goto("/Flashcards");
     await page.waitForFunction(
-      () => document.documentElement.style.getPropertyValue("--sf-primary") !== "",
+      () => document.documentElement.dataset.appHydrated === "true",
     );
 
     const aside = page.getByRole("complementary", { name: "Deck list pane" });
@@ -383,10 +383,13 @@ test.describe("S78 · mobile two-pane parity — the list panes render at 390", 
   test("the five remediated views keep scrollWidth within 390 (S78/AE9-13)", async ({ page }) => {
     for (const v of ["Timetable", "Exams", "Files", "Calculator", "StudyGroups"]) {
       await page.goto(`/${v}`);
+      // S124/BY7: the HydrationMarker gate replaces the vacuous --sf-primary
+      // wait + the bare 900 ms sleep — the shell commits only after the
+      // view's INITIAL collections resolved (ADR-014), so the scrollWidth
+      // read now measures the data-rendered layout, not a race against it.
       await page.waitForFunction(
-        () => document.documentElement.style.getPropertyValue("--sf-primary") !== "",
+        () => document.documentElement.dataset.appHydrated === "true",
       );
-      await page.waitForTimeout(900);
       const scrollW = await page.evaluate(() => document.documentElement.scrollWidth);
       expect(scrollW, `${v} overflowed`).toBeLessThanOrEqual(390);
     }
@@ -411,7 +414,7 @@ test.describe("S79 · mobile Flashcards study mode (the full-replacement parity 
   test("the in-row Study affordance enters the full-width study pane at 390; Exit restores the layout", async ({ page }) => {
     await page.goto("/Flashcards");
     await page.waitForFunction(
-      () => document.documentElement.style.getPropertyValue("--sf-primary") !== "",
+      () => document.documentElement.dataset.appHydrated === "true",
     );
 
     // The 4-card deck's row carries the below-md Study affordance, fully
@@ -455,5 +458,42 @@ test.describe("S79 · mobile Flashcards study mode (the full-replacement parity 
     await exit.tap();
     await expect(page.getByRole("complementary", { name: "Deck list pane" })).toBeVisible();
     await expect(page.getByLabel("Deck detail")).toBeVisible();
+  });
+});
+
+// S124/BY10 — the popstate drawer close. The store's popstate listener set
+// `view` only; navigate() also closes the drawer — the popstate path didn't.
+// Hardware/browser Back while the drawer was open swapped the view UNDER the
+// open drawer (mobile-only edge; no data impact, but the drawer showed the
+// OLD view's title behind the scrim until the next interaction).
+test.describe("S124/BY10 · browser Back follows the URL and closes the drawer (the popstate contract)", () => {
+  test("goBack() with the drawer open closes it and returns to the prior view (RED pre-fix: the drawer stays open)", async ({ page }) => {
+    const drawer = page.getByRole("dialog", { name: "Navigation menu" });
+
+    // This describe sits OUTSIDE the file's beforeEach describe — navigate
+    // explicitly (the blank-page wrong-reason red, caught at RED time).
+    await page.goto("/Dashboard");
+    await expect(page.getByRole("banner")).toBeVisible();
+
+    // Arrive at /Analytics through the drawer (the mobile vehicle), then
+    // re-open the drawer and press hardware Back.
+    await page.getByRole("button", { name: "Open navigation menu" }).click();
+    await expect(drawer).toBeVisible();
+    await drawer.getByRole("link", { name: "Analytics" }).click();
+    await expect(drawer).toBeHidden();
+    await expect(page.getByRole("heading", { name: "Analytics" })).toBeVisible();
+
+    await page.getByRole("button", { name: "Open navigation menu" }).click();
+    await expect(drawer).toBeVisible();
+
+    await page.goBack();
+
+    // The popstate contract: the URL returns to /Dashboard, the view follows,
+    // AND the drawer closes (navigate()'s own contract, now shared).
+    await expect(page).toHaveURL(/\/Dashboard$/);
+    await expect(drawer).toBeHidden(); // RED pre-fix: the drawer stays open
+    await expect(
+      page.getByRole("heading", { name: /^Good (morning|afternoon|evening)/ }),
+    ).toBeVisible();
   });
 });

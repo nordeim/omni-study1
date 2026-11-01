@@ -24,7 +24,7 @@ import {
   toErrorResponse,
 } from "@/lib/server/http";
 import { rumBatchSchema } from "@/lib/validation";
-import { RUM_METRIC_ORDER } from "@/lib/rum-diagnostics";
+import { buildTrends, RUM_METRIC_ORDER } from "@/lib/rum-diagnostics";
 
 export const POST = async (request: NextRequest) => {
   try {
@@ -97,29 +97,13 @@ export const GET = async () => {
     p75[metric] = sorted[idx];
   }
 
-  // 7-day trend series per metric (oldest → newest daily mean).
-  const trends: Record<string, number[]> = {};
-  const dayMs = 86_400_000;
-  const dayKey = (ts: number) => Math.floor(ts / dayMs);
-  const todayKey = dayKey(Date.now());
-  for (const metric of RUM_METRIC_ORDER) {
-    const rows = events.filter((e) => e.metric === metric);
-    if (rows.length === 0) continue;
-    const series: number[] = [];
-    for (let d = 6; d >= 0; d--) {
-      const key = todayKey - d;
-      const dayRows = rows.filter((e) => dayKey(e.createdAt.getTime()) === key);
-      if (dayRows.length === 0) {
-        series.push(0);
-        continue;
-      }
-      // The day's NEWEST sample (events are most-recent-first) — the
-      // final-value-wins semantics carried into the trend (S20 contract:
-      // a freshly posted probe value IS its day's bucket).
-      series.push(dayRows[0].value);
-    }
-    trends[metric] = series;
-  }
+  // S124/BY6: the series construction lives in the pure seam (unit-pinned
+  // on the gap/newest/window contracts). The UTC-day buckets are the
+  // documented single-owner choice; an unsampled day is a null GAP (never
+  // a fabricated 0 — the panel's finite filter drops it; a 0 CLS would
+  // read as a GOOD score on idle days), and each sampled day carries the
+  // day's NEWEST sample (final-value-wins, order-independent).
+  const trends = buildTrends(events, Date.now());
 
     const recent = events.slice(0, 50).map((e) => ({
       metric: e.metric,

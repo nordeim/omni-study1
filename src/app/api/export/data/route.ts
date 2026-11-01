@@ -12,12 +12,23 @@ import { NextResponse } from "next/server";
 
 import { db } from "@/lib/db";
 import { buildDataExport } from "@/lib/data-export";
+import { checkRateLimit } from "@/lib/auth";
 import { publicUser, requireUser } from "@/lib/server/auth";
-import { downloadHeaders, toErrorResponse } from "@/lib/server/http";
+import { downloadHeaders, rateLimitedResponse, toErrorResponse } from "@/lib/server/http";
 
 export const GET = async () => {
   try {
     const user = await requireUser();
+
+    // S124/BY5: the heaviest enumeration in the app (20 tables + base64
+    // file payloads + the full in-memory JSON.stringify) answers a budgeted
+    // 10/15-min — the S14 posture every other enumeration family already
+    // carries. ONE shared `export:${user.id}` key covers both export GETs
+    // (the ai: shared-key precedent): exhausting one route 429s the sibling.
+    const limit = checkRateLimit(`export:${user.id}`, 10);
+    if (!limit.ok) {
+      return rateLimitedResponse(limit.retryAfterSec, "Too many export requests");
+    }
 
     const [
       subjects,

@@ -213,7 +213,7 @@ the full-fidelity backup.
 
 **Restoring (session-23):** the same file imports back — the
 **Restore from a backup** card on the `/export` page takes a downloaded
-`studyflow-data-*.json` (up to 10 MiB) and restores it into the signed-in
+`studyflow-data-*.json` (up to 25 MiB) and restores it into the signed-in
 account. Rows match by id: existing rows update to the file's values,
 new ones are created, nothing is ever deleted, and the whole import
 either completes or rolls back completely (a failed import changes

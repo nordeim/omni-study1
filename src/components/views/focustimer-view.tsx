@@ -215,7 +215,9 @@ export function FocusTimerView() {
         </div>
 
         {/* ---- presets ---- */}
-        <div className="flex items-center gap-2">
+        {/* S124/BY13: the labeled container gives the forced-colors
+            restoration its scope (invisible in normal rendering). */}
+        <div className="flex items-center gap-2" role="group" aria-label="Timer presets">
           {PRESETS.map((preset) => (
             <Button
               key={preset.id}

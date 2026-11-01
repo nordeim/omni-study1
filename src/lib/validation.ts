@@ -5,7 +5,7 @@
 
 import { z } from "zod";
 
-import { ACCENTS } from "./theme";
+import { ACCENTS, AVATAR_EMOJIS } from "./theme";
 
 // ---- shared atoms ----------------------------------------------------------
 
@@ -154,28 +154,49 @@ export const changeEmailSchema = z
 
 // ---- settings (S17 study profile + theme preferences) ------------------------
 
+// S124/BY1: the 12 grade labels — the enum's vocabulary, kept adjacent to the
+// schema so the clearable union below stays self-explanatory.
+export const GRADE_LEVELS = [
+  "6th Grade",
+  "7th Grade",
+  "8th Grade",
+  "9th Grade",
+  "10th Grade",
+  "11th Grade",
+  "12th Grade",
+  "College Freshman",
+  "College Sophomore",
+  "College Junior",
+  "College Senior",
+  "Graduate",
+] as const;
+
 export const preferencesSchema = z.object({
   themeMode: z.enum(["light", "dark", "system"]).optional(),
   accentColor: z.enum(ACCENTS).optional(),
-  avatarEmoji: z.string().max(8).optional(),
+  // S124/BY9: the avatar vocabulary at the API boundary — the picker is
+  // unit-pinned to these 24 emojis; an arbitrary string used to store +
+  // render as the avatar (React-escaped, but the Settings grid then showed
+  // no selected tile). "" stays legal: the reference default state (the
+  // initial-letter avatar).
+  avatarEmoji: z
+    .string()
+    .max(8)
+    .refine(
+      (v) => v === "" || AVATAR_EMOJIS.includes(v),
+      "Choose one of the available avatars",
+    )
+    .optional(),
   displayName: z.string().max(100).optional(),
   schoolName: z.string().max(120).optional(),
-  gradeLevel: z
-    .enum([
-      "6th Grade",
-      "7th Grade",
-      "8th Grade",
-      "9th Grade",
-      "10th Grade",
-      "11th Grade",
-      "12th Grade",
-      "College Freshman",
-      "College Sophomore",
-      "College Junior",
-      "College Senior",
-      "Graduate",
-    ])
-    .optional(),
+  // S124/BY1: the clearable form — the Study Profile card ships a "Not set"
+  // option, but the bare enum had no clearable leg: the UI mapped "none" →
+  // undefined (JSON.stringify drops the key, the route's sent-keys filter
+  // skips it) while "" 400'd — a user picked "Not set", saved, got the
+  // success toast, and the stored grade silently persisted. "" now stores
+  // as "" (the DB column's natural cleared state — the schoolName
+  // convention in the same card).
+  gradeLevel: z.union([z.enum(GRADE_LEVELS), z.literal("")]).optional(),
   studyGoalHours: z.number().int().min(1).max(12).optional(),
   notificationsEnabled: z.boolean().optional(),
 });
@@ -375,7 +396,8 @@ export const practiceTestSchema = z.object({
     // S121/BV5: the blob bound (the family convention — content 100k, tags
     // 2k, reminders/subtasks/topics 100k). `questions` was the only
     // unbounded JSON-blob field: a ~9.5 MiB valid-questions JSON passed
-    // the schema AND the 10 MiB read cap and persisted to SQLite.
+    // the schema AND the import read cap (10 MiB at the time — 25 MiB
+    // since S124/BY3) and persisted to SQLite.
     .max(100_000)
     .refine((v) => {
       try {

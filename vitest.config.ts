@@ -1,9 +1,21 @@
 import { defineConfig } from "vitest/config";
 import path from "node:path";
 
-// Unit-test layer for the pure domain seams — 41 files / 1099 tests
-// (re-anchored S123/BX — the audit-driven hardening cycle: census 1085 →
-// 1099. The additions: validation +9 [the S123/BX1 both-legs family —
+// Unit-test layer for the pure domain seams — 41 files / 1113 tests
+// (re-anchored S124/BY — the audit-driven hardening cycle: census 1099 →
+// 1113, +14. The additions: validation +7 [the S124/BY1 gradeLevel
+// clearable union — the "" clear form accepted (RED pre-fix: the
+// ZodError), the enum legs, the out-of-vocabulary rejection — and the
+// S124/BY9 avatarEmoji vocabulary — a listed emoji accepted, the ""
+// clear form legal, unlisted 6/8-code-point strings rejected (RED
+// pre-fix: accepted)], db-path +2 [the S124/BY2 production gate — a
+// missing absolute target passes through untouched in production (RED
+// pre-fix: the silent dev-DB redirect), the dev correction leg
+// parameterized], and rum-diagnostics +5 [the S124/BY6 buildTrends seam
+// — the day's newest sample wins order-independently, an unsampled day
+// is a null GAP never a fabricated 0, the 7-day window shape, the
+// route's skip semantics, and the panel's seam-to-seam gap tolerance].
+// The S123/BX additions beneath: validation +9 [the S123/BX1 both-legs family —
 // the LEGAL unpadded span accepted ("9:00" → "11:00", the seeded shape
 // the raw string compare falsely 400'd), the INVERTED padded/unpadded
 // mix rejected (the "8:30" > "09:00" lexicographic bypass), the update

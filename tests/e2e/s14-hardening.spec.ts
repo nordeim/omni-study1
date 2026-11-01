@@ -227,3 +227,61 @@ test.describe("AI-surface live regions (S14-D1/D2/D3)", () => {
     await expect(solutionCard).toHaveAttribute("aria-busy", "false");
   });
 });
+
+// S124/BY1 — the gradeLevel clear round-trip at the wire. The Study Profile
+// card ships a "Not set" option, but no valid payload could clear the stored
+// grade: the UI mapped "none" → undefined (JSON.stringify drops the key, the
+// route's sent-keys filter skips it) while the schema's enum rejected "".
+// A user picked "Not set", saved, got the success toast — and the stored
+// grade silently persisted. The "" clear form is now first-class.
+test.describe("S124/BY1: the gradeLevel clear round-trip (the study-profile wire)", () => {
+  test('PATCH gradeLevel "" clears the stored grade; a real value sets it (RED pre-fix: "" → 400)', async ({ request }) => {
+    // The restore rides a finally: a RED-step failure must not leave a
+    // mutated seeded field behind for later specs (the theme-spec lesson).
+    try {
+      // Set a real grade first (idempotent from the seeded "9th Grade").
+      const set = await request.patch("/api/settings/preferences", {
+        data: { gradeLevel: "10th Grade" },
+      });
+      expect(set.status()).toBe(200);
+      const me1 = (await (await request.get("/api/auth/me")).json()) as { user: { gradeLevel?: string } };
+      expect(me1.user.gradeLevel).toBe("10th Grade");
+
+      // The clear leg — RED pre-fix: the enum 400s the empty string.
+      const clear = await request.patch("/api/settings/preferences", {
+        data: { gradeLevel: "" },
+      });
+      expect(clear.status()).toBe(200);
+      const me2 = (await (await request.get("/api/auth/me")).json()) as { user: { gradeLevel?: string } };
+      expect(me2.user.gradeLevel).toBe("");
+    } finally {
+      // Restore the seeded grade for later specs (the B3 restore convention).
+      await request.patch("/api/settings/preferences", { data: { gradeLevel: "9th Grade" } });
+    }
+  });
+});
+
+// S124/BY9 — the avatarEmoji vocabulary at the wire. The schema accepted ANY
+// ≤8-code-point string while the picker is pinned to 24 emojis — an arbitrary
+// string stored and rendered as the avatar (React-escaped; the Settings grid
+// then shows no selected tile).
+test.describe("S124/BY9: the avatarEmoji vocabulary at the wire", () => {
+  test("an unlisted avatar string 400s; a listed emoji persists (RED pre-fix: 200)", async ({ request }) => {
+    const bogus = await request.patch("/api/settings/preferences", {
+      data: { avatarEmoji: "sneaky" },
+    });
+    expect(bogus.status()).toBe(400); // RED pre-fix: 200
+    const bogusBody = (await bogus.json()) as { error?: string };
+    expect(bogusBody.error).toBeTruthy();
+
+    const ok = await request.patch("/api/settings/preferences", {
+      data: { avatarEmoji: "🎓" },
+    });
+    expect(ok.status()).toBe(200);
+    const me = (await (await request.get("/api/auth/me")).json()) as { user: { avatarEmoji?: string } };
+    expect(me.user.avatarEmoji).toBe("🎓");
+
+    // Restore the seeded default (the initial-letter avatar) for later specs.
+    await request.patch("/api/settings/preferences", { data: { avatarEmoji: "" } });
+  });
+});

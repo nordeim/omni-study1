@@ -16,8 +16,13 @@ import {
   type ExportCollection,
 } from "./data-export";
 
-/** The documented 10 MiB body cap (5× the largest realistic envelope). */
-export const IMPORT_MAX_BYTES = 10 * 1024 * 1024;
+/** The documented body cap. S124/BY3: 10 → 25 MiB — the export emits base64
+ *  file payloads INLINE (a 2 MiB upload inflates ×4/3), so the old cap
+ *  rejected the user's OWN backup once ~4-5 max-size files landed (~13 MiB):
+ *  the "own your data" round-trip downloaded a file the in-app restore then
+ *  413'd. 25 MiB covers the realistic round-trip ADR-019 promises (~18
+ *  max-size files' base64 + content). */
+export const IMPORT_MAX_BYTES = 25 * 1024 * 1024;
 
 /** The import-side secret guard — the file never speaks for the account:
  *  passwordHash and userId are stripped from every row (the importer's own
@@ -349,7 +354,7 @@ function finish(rawData: Record<string, unknown>): ImportParseResult {
 // renders href={file.url} target=_blank — script execution in the app
 // origin on click), wrong field TYPES surfaced as PrismaClientValidationError
 // → HTTP 500 (violating the 400-bad-input contract), and unbounded strings
-// rode the 10 MiB body cap straight into SQLite. The guard runs BEFORE the
+// rode the body cap (10 MiB at the time — 25 MiB since S124/BY3) straight into SQLite. The guard runs BEFORE the
 // write loop: every value must be a primitive (the export format's own
 // serialization contract — Date → ISO, JSON columns → strings), strings are
 // capped (generously — the caps stop abuse, never legitimate backups), and

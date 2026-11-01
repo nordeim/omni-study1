@@ -21,7 +21,7 @@ import { expect, test, type Page } from "@playwright/test";
  */
 
 const hydrated = (page: Page) =>
-  page.waitForFunction(() => document.documentElement.style.getPropertyValue("--sf-primary") !== "");
+  page.waitForFunction(() => document.documentElement.dataset.appHydrated === "true");
 
 const rgb = (r: number, g: number, b: number) => `rgb(${r}, ${g}, ${b})`;
 

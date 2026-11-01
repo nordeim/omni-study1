@@ -387,13 +387,6 @@
   }
 }
 
-@utility sf-focus {
-  &:focus-visible {
-    outline: 2px solid rgb(var(--sf-primary));
-    outline-offset: 2px;
-  }
-}
-
 @utility sf-scroll {
   scrollbar-width: thin;
   scrollbar-color: rgb(203 213 225 / 0.9) transparent;
@@ -773,7 +766,8 @@
   color: rgb(var(--sf-primary-strong));
   .dark & {
     /* S79/AF5 (the standing dark-sweep artifact, closed): the date read
-     * --sf-primary-soft-dark = violet-950 → 1.78:1 on the dark chip
+     * --sf-primary-soft-dark = violet-900 (76 29 149, theme.ts's own
+     * label) → 1.78:1 on the dark chip
      * (unreadable on all 20 views). The theme system's own token comments
      * name strong/strongDark as the clock-date pair; the 400 step
      * keeps light's one-step hierarchy (the time's 300 is one step
@@ -828,7 +822,8 @@
      rgb(237,233,254)/rgb(124,58,237) = violet-100/violet-600 = EXACTLY
      --sf-primary-empty/--sf-primary-strong at violet, so the default accent
      renders byte-identical). The dark branch rides the soft-dark/strong-dark
-     pair (= violet-950/violet-300 at violet). */
+     pair (= violet-900/violet-300 at violet — the soft-dark triplet is
+     violet-900, #4c1d95). */
   background-color: rgb(var(--sf-primary-empty));
   color: rgb(var(--sf-primary-strong));
 
@@ -951,7 +946,22 @@
   [aria-label="Calendar mode"] [aria-pressed="true"],
   [role="tab"][data-state="active"],
   [data-today],
-  .sf-today-tint {
+  .sf-today-tint,
+  /* S124/BY13: the aria-pressed picker families — selection previously
+     survived only through fills/rings that forced-colors strips, so the
+     Settings theme/accent/avatar tiles, the dialog color pickers (event/
+     subject/group/deck), the focus-timer mode+preset rows, the practice
+     answers, and the study-groups list pane were all state-invisible
+     under Windows HC. Container-scoped selectors ONLY (the doctrine: 12
+     files carry bare aria-pressed — a bare rule would over-match). */
+  [aria-label="Appearance"] [aria-pressed="true"],
+  [aria-label="Study groups pane"] [aria-pressed="true"],
+  [aria-label="Deck color swatches"] [aria-pressed="true"],
+  [aria-label="Group color swatches"] [aria-pressed="true"],
+  [aria-label="Timer mode"] [aria-pressed="true"],
+  [aria-label="Timer presets"] [aria-pressed="true"],
+  [aria-label="True or false"] [aria-pressed="true"],
+  [role="dialog"] [aria-pressed="true"] {
     outline: 2px solid Highlight;
     outline-offset: -2px;
   }

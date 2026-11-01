@@ -36,7 +36,7 @@ import { expect, test, type Page } from "@playwright/test";
 // RESET the IP limiter, so the login budget is unaffected).
 
 const hydrated = (page: Page) =>
-  page.waitForFunction(() => document.documentElement.style.getPropertyValue("--sf-primary") !== "");
+  page.waitForFunction(() => document.documentElement.dataset.appHydrated === "true");
 
 /** Registers a throwaway user inside THIS test's context (the S17 pattern:
  *  register + verify with the surfaced code — no SMTP by design). */

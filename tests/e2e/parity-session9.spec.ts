@@ -33,7 +33,7 @@ import { expect, test, type Page } from "@playwright/test";
  */
 
 const hydrated = (page: Page) =>
-  page.waitForFunction(() => document.documentElement.style.getPropertyValue("--sf-primary") !== "");
+  page.waitForFunction(() => document.documentElement.dataset.appHydrated === "true");
 
 /** Registers a throwaway user inside THIS test's context (fresh cookie jar,
  *  zero data). The shared storageState demo user is untouched.

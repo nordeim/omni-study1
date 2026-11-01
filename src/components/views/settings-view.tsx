@@ -318,7 +318,11 @@ function StudyProfileCard({ user, onRefreshed }: { user: AppUser | null; onRefre
     try {
       const response = await apiSend<{ ok: true; user: AppUser }>("PATCH", "/api/settings/preferences", {
         schoolName: school.trim(),
-        gradeLevel: grade === "none" ? undefined : grade,
+        // S124/BY1: "Not set" sends the "" clear form (the schoolName
+        // convention) — the old undefined mapping made the save a silent
+        // no-op (JSON.stringify drops the key, the route's sent-keys filter
+        // skips it), so the stored grade persisted behind a success toast.
+        gradeLevel: grade === "none" ? "" : grade,
         studyGoalHours: goal,
       });
       onRefreshed(response.user);

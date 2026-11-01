@@ -78,7 +78,9 @@ export function parseWith<T>(schema: ZodType<T>, input: unknown): T {
   return result.data;
 }
 
-/** The shared JSON body cap (S118/BS2). 10 MiB — the same ceiling the import
+/** The shared JSON body cap (S118/BS2). 10 MiB (the import route alone
+ *  carries the higher 25 MiB ceiling — S124/BY3, the export/import
+ *  reconciliation; every other JSON route keeps this shared cap).
  * route enforces (its own 413 contract predates this and stays). The largest
  * legitimate JSON body is the math solver's photographed-problem image
  * (base64, schema-bounded at 7,000,000 chars); everything else is bounded

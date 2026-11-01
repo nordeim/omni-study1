@@ -39,7 +39,14 @@ const DEFAULT_RELATIVE_DB = "../db/custom.db";
  * order for one that contains prisma/schema.prisma; the first hit wins, and
  * when none matches the LAST anchor is used (CWD-compatibility fallback).
  */
-export function resolveDatabaseUrl(envUrl: string | undefined, anchors: string[]): string {
+// S124/BY2: the explicit nodeEnv parameter keeps the seam pure (the
+// env-check precedent — explicit args, unit-pinnable); every existing call
+// site passes two args and rides the default.
+export function resolveDatabaseUrl(
+  envUrl: string | undefined,
+  anchors: string[],
+  nodeEnv: string | undefined = process.env.NODE_ENV,
+): string {
   const url = envUrl?.trim();
   const schemaRoot =
     anchors.find((root) => existsSync(path.join(root, "prisma", "schema.prisma"))) ??
@@ -58,10 +65,13 @@ export function resolveDatabaseUrl(envUrl: string | undefined, anchors: string[]
       // level off from this module's schema-anchored contract (observed
       // live: .env "file:../db/custom.db" arrived as
       // "file:<project>/../db/custom.db"). When such a pre-resolved target
-      // does not exist but the documented default DOES, prefer the default;
-      // a genuinely valid absolute URL (production deployments) still passes
-      // through untouched.
-      if (!existsSync(raw)) {
+      // does not exist but the documented default DOES, prefer the default.
+      // S124/BY2: NEVER in production — a dev-boot misconfiguration must
+      // not silently become a prod boot on the SEEDED dev database (the
+      // "reads the WRONG database" class); in production a missing absolute
+      // target passes through untouched and fails LOUDLY downstream (the
+      // schema was not pushed), which is DEPLOYMENT.md §4 form-2's promise.
+      if (nodeEnv !== "production" && !existsSync(raw)) {
         const fallback = path.resolve(schemaRoot, "prisma", DEFAULT_RELATIVE_DB);
         if (existsSync(fallback)) return `file:${fallback}`;
       }

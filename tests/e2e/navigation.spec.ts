@@ -701,6 +701,12 @@ test.describe("view chrome (computed parity pins)", () => {
     // fresh-user pattern (the demo seed ships exams/assignments); the
     // cookie clear detaches the shared demo storageState first.
     await page.context().clearCookies();
+    // S124/BY14 — accepted residue: this probe registers a user that is
+    // NEVER deleted. It cannot self-clean through the public API (an
+    // unverified account cannot log in — the 403 gate — and verify+login
+    // would clobber the shared demo storageState with a second session).
+    // The cold `rm db/e2e.db` doctrine wipes it every full run; the row
+    // is unverified + inert (the AB4/AGENTS aged-scratch pattern).
     const email = `s4o-${Date.now()}@studyflow.app`;
     const res = await page.request.post("/api/auth/register", {
       data: { email, password: "Fresh1234!", name: "S4O Probe" },

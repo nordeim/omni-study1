@@ -265,7 +265,12 @@ export function PriorityCheckbox({
       className={cn(
         "flex size-6 shrink-0 items-center justify-center rounded-full border-2 bg-white transition-colors dark:bg-slate-900",
         PRIORITY_BORDER[priority] ?? PRIORITY_BORDER.none,
-        checked && "border-sf-primary bg-sf-primary text-sf-primary-foreground",
+        // S124/BY8: print keeps the accent fill + the WHITE glyph — without
+        // print-exact both strip and checked/unchecked print identically as
+        // bare 2px-bordered circles (AGENTS.md's S12 contract claims this
+        // coverage; the code now delivers it).
+        checked &&
+          "border-sf-primary bg-sf-primary text-sf-primary-foreground sf-print-exact",
       )}
     >
       {checked && (

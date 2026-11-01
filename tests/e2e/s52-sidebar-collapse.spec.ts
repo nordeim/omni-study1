@@ -31,7 +31,7 @@ import { expect, test, type Page } from "@playwright/test";
  */
 
 const hydrated = (page: Page) =>
-  page.waitForFunction(() => document.documentElement.style.getPropertyValue("--sf-primary") !== "");
+  page.waitForFunction(() => document.documentElement.dataset.appHydrated === "true");
 
 test.describe("S52 · the collapsed-sidebar parity", () => {
   test.use({ viewport: { width: 1280, height: 800 } });

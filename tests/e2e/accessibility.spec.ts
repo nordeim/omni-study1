@@ -51,10 +51,12 @@ async function gotoMode(page: Page, path: string, mode: "dark" | "light") {
   );
 }
 
-/** Wait for hydration (the theme store's inline --sf-primary var). */
+/** Wait for hydration (the HydrationMarker contract, S124/BY7: the shell
+ *  commit implies auth + the active view's initial collections resolved —
+ *  the old --sf-primary gate was true at t=0 via the pre-paint boot script). */
 const hydrated = (page: Page) =>
   page.waitForFunction(
-    () => document.documentElement.style.getPropertyValue("--sf-primary") !== "",
+    () => document.documentElement.dataset.appHydrated === "true",
   );
 
 /** Read a forced-colors "state outline": style solid + width >= 2px. */
@@ -638,5 +640,67 @@ test.describe("E · the Lighthouse audit pins (dashboard, light)", () => {
     await page.goto("/login");
     await expect(page.locator("main").first()).toBeVisible();
     await expect(page.getByRole("main")).toHaveCount(1);
+  });
+});
+
+// S124/BY8 — the checked priority checkbox prints its state. AGENTS.md's
+// S12 contract claims print-exact coverage on "the checked checkboxes";
+// the code carried none — PriorityCheckbox's checked branch is an accent
+// fill + a WHITE glyph, so print (which strips backgrounds) rendered
+// checked and unchecked identically as bare 2px-bordered circles. The
+// checked branch now carries sf-print-exact: the fill + glyph survive.
+test.describe("S124/BY8 · the checked checkbox keeps its accent fill + glyph in print", () => {
+  test.beforeEach(async ({ page }) => {
+    await page.emulateMedia({ media: "print" });
+  });
+  test.afterEach(async ({ page }) => {
+    await page.emulateMedia({ media: "screen" });
+  });
+
+  test("a seeded checked task's checkbox carries print-color-adjust: exact (RED pre-fix: auto)", async ({ page }) => {
+    await gotoMode(page, "/Tasks", "light");
+    await hydrated(page);
+    // The Tasks status filter defaults to "active" — switch it to
+    // "Completed" so the seed's checked rows render (ZERO mutations: the
+    // pin never toggles a task). The button's accessible name carries the
+    // measured prefix "Filter tasks: " + the current value.
+    await page.getByRole("button", { name: "Filter tasks: Active" }).click();
+    await page.getByRole("menuitem", { name: "Completed", exact: true }).click();
+    const checked = page
+      .getByRole("checkbox", { name: "Set up study group chat" })
+      .and(page.locator('[aria-checked="true"]'));
+    await expect(checked).toBeVisible();
+
+    const adjust = await checked.evaluate((el) => getComputedStyle(el).printColorAdjust);
+    expect(adjust).toBe("exact"); // RED pre-fix: "auto" — the fill + white glyph strip in print
+  });
+});
+
+// S124/BY13 — forced-colors selection state on the Appearance pickers. The
+// S12 restoration covered the calendar/tabs/today/nav/slider set; the theme/
+// accent/avatar tiles marked selection purely with fills/rings that
+// forced-colors strips — under Windows HC a user could not tell which theme
+// or accent was selected. The restoration now extends to the labeled picker
+// families (the Appearance tab container — the doctrine: container-scoped,
+// never bare aria-pressed rules).
+test.describe("S124/BY13 · forced-colors keeps the Appearance pickers' selection", () => {
+  test.beforeEach(async ({ page }) => {
+    await page.emulateMedia({ forcedColors: "active" });
+  });
+  test.afterEach(async ({ page }) => {
+    await page.emulateMedia({ forcedColors: "none" });
+  });
+
+  test("the selected accent swatch carries a visible state outline (RED pre-fix: none)", async ({ page }) => {
+    await gotoMode(page, "/Settings", "light");
+    await hydrated(page);
+    await page.getByRole("tab", { name: "Appearance" }).click();
+
+    // The selected swatch is aria-pressed=true inside the labeled Appearance
+    // container; the [role="dialog"] family (the color pickers) shares the
+    // rule — this pin locks the doctrine's canonical case.
+    const r = await stateOutline(page, '[aria-label="Appearance"] button[aria-pressed="true"]');
+    expect(r.style).toBe("solid"); // RED pre-fix: "none"
+    expect(r.width).toBeGreaterThanOrEqual(2);
   });
 });

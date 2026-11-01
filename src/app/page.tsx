@@ -191,11 +191,11 @@ export default function Home() {
   }, [attempt]);
 
   if (status !== "ready") {
+    // S124/BY11: NO skip link on the splash/error surfaces — <main
+    // id="main-content"> renders only in the ready branch, so the anchor
+    // focused nothing here (the first Tab stop became a no-op).
     return (
       <>
-        <a href="#main-content" className="sf-skip-link">
-          Skip to main content
-        </a>
         <Splash
           error={status === "error" ? gateError : undefined}
           onRetry={status === "error" ? () => setAttempt((n) => n + 1) : undefined}

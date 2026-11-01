@@ -627,15 +627,92 @@ test.describe("S122/BW11: the over-cap 413 contracts", () => {
     });
   });
 
-  test("an import past the 10 MiB cap answers 413 (the JSON content-type passes the BR5 gate first)", async ({ request }) => {
-    // 10 MiB + 1 byte of JSON — the cap fires at the body read, before
-    // parsing. Content-Type must be application/json (the BR5 gate runs
-    // before the cap and would otherwise answer a misleading 400).
+  test("an import past the 25 MiB cap answers 413 with the MiB copy (the JSON content-type passes the BR5 gate first)", async ({ request }) => {
+    // S124/BY3 re-anchor: the cap moved 10 → 25 MiB (the export/import
+    // reconciliation — the export emits base64 file payloads inline, so the
+    // old cap rejected ~4-5 max-size uploads' worth of the user's OWN backup;
+    // 25 MiB covers the realistic round-trip ADR-019 promises). 25 MiB + 1
+    // byte of JSON — the cap fires at the body read, before parsing.
+    // Content-Type must be application/json (the BR5 gate runs before the
+    // cap and would otherwise answer a misleading 400).
     const res = await request.post("/api/import/data", {
       headers: { "content-type": "application/json" },
-      data: "x".repeat(10 * 1024 * 1024 + 1),
+      data: "x".repeat(25 * 1024 * 1024 + 1),
     });
     expect(res.status()).toBe(413);
+    const body = (await res.json()) as { error?: string };
+    expect(body.error).toContain("25 MiB");
+  });
+});
+
+// S124/BY3 — the export/import size reconciliation's ACCEPTANCE leg. The
+// between-caps envelope: a small valid task + padding in an UNKNOWN field —
+// Zod strip mode drops the key at parse (verified: zero .strict() in the
+// schemas), so the BYTES count for the cap while the written row stays
+// small. Pre-fix the 10 MiB cap 413'd everything between 10 and 25 MiB.
+test.describe("S124/BY3: the between-caps import acceptance", () => {
+  test("a valid ~12 MiB envelope imports (RED pre-fix: 413 at the old 10 MiB cap)", async ({ request }) => {
+    const envelope = {
+      format: "studyflow-data-export",
+      version: 1,
+      exportedAt: "2026-11-01T00:00:00.000Z",
+      // The padding rides the envelope's USER block — the documented
+      // IGNORED block ("content only, never identity": the parse reads
+      // format/version/data and never touches user), so the BYTES count
+      // at the capped read while the written row stays small. (The first
+      // pad design put it in an unknown ROW field — sanitizeImportRow caps
+      // EVERY string field incl. unknowns, the BR1 guard, so the row leg
+      // 400'd; the byte-count mechanism at the read is shape-independent,
+      // so the RED reason (413 at 10 MiB) is unchanged.)
+      user: {
+        id: "u-by3",
+        email: "by3@probe.dev",
+        name: "BY3 Probe",
+        pad: "x".repeat(12 * 1024 * 1024),
+      },
+      counts: {},
+      data: {
+        tasks: [
+          {
+            id: "by3-between-caps-task",
+            title: "BY3 between-caps probe",
+            createdAt: "2026-11-01T00:00:00.000Z",
+            updatedAt: "2026-11-01T00:00:00.000Z",
+          },
+        ],
+      },
+    };
+    const res = await request.post("/api/import/data", { data: envelope });
+    expect(res.status()).toBe(200); // RED pre-fix: 413
+    const body = (await res.json()) as { imported: Record<string, { created: number; updated: number }> };
+    expect(body.imported.tasks.created).toBe(1);
+
+    // Zero residue (the AM1/AN1 finally-cleanup convention).
+    const cleanup = await request.delete(`/api/tasks/${envelope.data.tasks[0].id}`);
+    expect([200, 204]).toContain(cleanup.status());
+  });
+});
+
+// S124/BY5 — the export-family limiter. The two heaviest enumerations
+// (export/data: 20 tables + base64 payloads + the full in-memory
+// JSON.stringify; rum/export: 2000 rows → CSV) answered unlimited GETs
+// while every other write/enumeration family is budgeted (the S14
+// posture). One shared per-user key `export:${user.id}` 10/15-min — the
+// ai: shared-key precedent; the family shape is the pin (exhausting one
+// route 429s the sibling).
+test.describe("S124/BY5: the export-family limiter", () => {
+  test("10 export GETs then the 11th 429s with Retry-After, and the family budget covers rum/export (RED pre-fix: 200s)", async ({ request }) => {
+    for (let i = 0; i < 10; i++) {
+      const r = await request.get("/api/export/data");
+      expect(r.status()).toBe(200);
+    }
+    const r11 = await request.get("/api/export/data");
+    expect(r11.status()).toBe(429); // RED pre-fix: 200
+    expect(r11.headers()["retry-after"]).toBeTruthy();
+
+    // The sibling on the same family key — also 429 (one budget, both routes).
+    const csv = await request.get("/api/rum/export");
+    expect(csv.status()).toBe(429); // RED pre-fix: 200
   });
 });
 

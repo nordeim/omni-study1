@@ -190,7 +190,7 @@ test.describe("S11-2..5 · accent surfaces re-theme in dark (the 300-level conve
 });
 
 const hydrated = (page: Page) =>
-  page.waitForFunction(() => document.documentElement.style.getPropertyValue("--sf-primary") !== "");
+  page.waitForFunction(() => document.documentElement.dataset.appHydrated === "true");
 
 test.describe("S11-7 · the Appearance tab is the reference's single card (s69)", () => {
   test("the appearance pane renders ONE max-w-4xl card with the ref's anatomy", async ({ page }) => {

@@ -7,12 +7,15 @@ import { expect, test, type Page } from "@playwright/test";
 test.use({ viewport: { width: 1440, height: 900 } });
 
 // Hydration gate (module scope — shared by the theme-system and S15
-// keyboard describes): the store stamps an inline --sf-primary var on
-// <html> the moment it applies the user's saved preferences, which only
-// happens post-hydration (see the original comment below).
+// keyboard describes): the HydrationMarker contract (S124/BY7) — page.tsx
+// sets data-app-hydrated on the shell COMMIT, which per ADR-014 only
+// happens after auth AND the active view's initial collections resolve.
+// (The old --sf-primary var gate resolved pre-paint via the boot script —
+// true at t=0, proving nothing; see the BF4 comment below for why the
+// keyboard specs gate on an even stronger view-observable.)
 const hydrated = (page: Page) =>
   page.waitForFunction(
-    () => document.documentElement.style.getPropertyValue("--sf-primary") !== "",
+    () => document.documentElement.dataset.appHydrated === "true",
   );
 
 // S105/BF4 — the view-mounted gate for the S15 physical-keyboard specs.

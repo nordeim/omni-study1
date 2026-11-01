@@ -90,8 +90,20 @@
 # chunk 5 +1 [the BX2 per-account OTP cap pin in auth-flows — after 10
 # wrong codes the CORRECT code also fails (the uniform 400 lockout), one
 # more TEST-NET register/verify pair on 192.0.2.123].)
-# Expected: 136 + 151 + 69 + 90 + 70 = 516 (each chunk's count includes its
-# auth setup. The S122/BW map beneath:)
+# (S124/BY re-tag — census 516 → 523, net +7: chunk 1 +1 [the BY10
+# popstate drawer-close pin in mobile-navigation — Back with the drawer
+# open closes it and follows the URL]; chunk 2 +2 [the BY1 gradeLevel
+# clear round-trip + the BY9 avatar vocabulary wire pins, both in
+# s14-hardening on the shared demo session with finally-restores]; chunk
+# 3 +2 [the BY3 between-caps import acceptance — a valid ~12 MiB envelope
+# (the padding in the IGNORED user block) imports + the BY5 export-family
+# limiter — 10 GETs then the 11th 429s and rum/export shares the family
+# key — both in resilience; the BW11 import over-cap pin re-anchored
+# IN-PLACE to 25 MiB + the MiB copy leg]; chunk 4 +2 [the BY8
+# checked-checkbox print-exact pin + the BY13 forced-colors Appearance
+# picker pin, both in accessibility].)
+# Expected: 137 + 153 + 71 + 92 + 70 = 523 (each chunk's count includes its
+# auth setup. The S123/BX map beneath:)
 # (S122/BW re-tag — census 502 → 508, net +6: chunk 2 +1 [the BW3
 # debounced-title pin in parity-session7 — char-by-char typing fires ≤2
 # PATCHes, never one per keystroke, the final title persisted]; chunk 3 +4

@@ -88,10 +88,24 @@ test.describe("S20 the RUM export + trends", () => {
     await page.goto("/rum");
     await expect(page.getByRole("heading", { name: "Performance Diagnostics" })).toBeVisible();
 
-    // The cards region carries at least one sparkline polyline (sampled
-    // metrics render their trend line; unsampled cards render none).
+    // The cards region carries at least one sparkline chart (sampled
+    // metrics render their trend; unsampled cards render none).
+    // S124/BY6 re-anchor: the trend series now carries NULL GAPS for
+    // unsampled days (never the fabricated 0s — a 0 CLS read as a GOOD
+    // score on idle days), so this single-sample scenario renders the
+    // seam's documented SINGLE-VALUE PROMOTION: a flat two-point line
+    // (y=16,y=16) whose ELEMENT box is zero-HEIGHT — painted and visible
+    // to a user, but Playwright's toBeVisible requires a non-empty
+    // bounding box. The visibility assertion therefore moves to the chart
+    // container (the svg — real 100×32 geometry) while the polyline is
+    // asserted by presence + its rendered points (the intent unchanged:
+    // the sampled card renders its sparkline).
     const cards = page.getByRole("region", { name: "Core Web Vitals at p75" });
-    await expect(cards.locator("polyline").first()).toBeVisible();
+    const chart = cards.locator("svg").first();
+    await expect(chart).toBeVisible();
+    const line = cards.locator("polyline").first();
+    await expect(line).toHaveCount(1);
+    await expect(line).not.toHaveAttribute("points", "");
 
     // The export action: a real navigation link to the authed endpoint.
     await expect(page.locator('a[href="/api/rum/export"]')).toBeVisible();

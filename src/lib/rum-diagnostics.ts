@@ -69,7 +69,9 @@ export type RumAggregate = {
   samples: number;
   total: number;
   recent: RumRecentSample[];
-  trends?: Record<string, number[]>;
+  // S124/BY6: the series may carry null GAPS (unsampled days) — the panel's
+  // finite filter drops them from the card's points.
+  trends?: Record<string, (number | null)[]>;
 };
 
 export type RumCard = {
@@ -101,8 +103,10 @@ export function buildPanelRows(aggregate: RumAggregate): RumPanelRows {
     const p75 = aggregate.p75[metric];
     const sampled = typeof p75 === "number" && Number.isFinite(p75);
     const rawTrend = aggregate.trends?.[metric];
+    // The type predicate narrows the (number | null)[] gaps away —
+    // RumCard.points stays the always-finite series (S124/BY6).
     const points = Array.isArray(rawTrend)
-      ? rawTrend.filter((v) => typeof v === "number" && Number.isFinite(v))
+      ? rawTrend.filter((v): v is number => typeof v === "number" && Number.isFinite(v))
       : [];
     return {
       metric,
@@ -115,6 +119,49 @@ export function buildPanelRows(aggregate: RumAggregate): RumPanelRows {
   });
 
   return { hasData, cards, recent: aggregate.recent };
+}
+
+/** A trend-source event: the minimal shape buildTrends reads. */
+export type RumTrendEvent = {
+  metric: string;
+  value: number;
+  createdAt: Date;
+};
+
+/** S124/BY6 — the route's 7-day series construction, extracted pure.
+ *  Day buckets are UTC (the documented single-owner choice); each sampled
+ *  day carries the day's NEWEST sample (the final-value-wins semantics,
+ *  order-independent — never the input array's first row); an unsampled
+ *  day is a null GAP, never a fabricated 0 (a 0 CLS reads as a GOOD score,
+ *  so the sparkline looked great on idle days — a display lie on the owner
+ *  panel); a metric with no rows is omitted entirely (the route's skip
+ *  semantics). The panel's finite filter drops the nulls (pinned by the
+ *  seam-to-seam leg in tests/rum-diagnostics.test.ts). */
+export function buildTrends(
+  events: readonly RumTrendEvent[],
+  now: number = Date.now(),
+): Record<string, (number | null)[]> {
+  const dayMs = 86_400_000;
+  const dayKey = (ts: number) => Math.floor(ts / dayMs);
+  const todayKey = dayKey(now);
+  const trends: Record<string, (number | null)[]> = {};
+  for (const metric of RUM_METRIC_ORDER) {
+    const rows = events.filter((e) => e.metric === metric);
+    if (rows.length === 0) continue;
+    const series: (number | null)[] = [];
+    for (let d = 6; d >= 0; d--) {
+      const key = todayKey - d;
+      let newest: RumTrendEvent | null = null;
+      for (const e of rows) {
+        const ts = e.createdAt.getTime();
+        if (dayKey(ts) !== key) continue;
+        if (!newest || ts > newest.createdAt.getTime()) newest = e;
+      }
+      series.push(newest ? newest.value : null);
+    }
+    trends[metric] = series;
+  }
+  return trends;
 }
 
 // ---- the sparkline geometry (S20) ----------------------------------------------

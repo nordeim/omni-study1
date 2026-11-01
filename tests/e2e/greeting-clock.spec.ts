@@ -24,7 +24,7 @@ import { expect, test, type Page } from "@playwright/test";
  */
 
 const hydrated = (page: Page) =>
-  page.waitForFunction(() => document.documentElement.style.getPropertyValue("--sf-primary") !== "");
+  page.waitForFunction(() => document.documentElement.dataset.appHydrated === "true");
 
 /** The S17 pattern: register + verify a throwaway user inside THIS
  *  context's cookie jar (zero data ⇒ MyDay renders the greeting-titled

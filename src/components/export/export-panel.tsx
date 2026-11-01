@@ -12,6 +12,7 @@ import * as React from "react";
 
 import { apiSend } from "@/lib/api";
 import { Spinner } from "@/components/views/shared";
+import { IMPORT_MAX_BYTES } from "@/lib/data-import";
 
 type ImportSummary = {
   created: number;
@@ -144,12 +145,16 @@ export function ExportPanel({
             onChange={(e) => {
               const picked = e.target.files?.[0] ?? null;
               // S118/BS11 — reject an oversized backup BEFORE reading it
-              // into memory (the server's 10 MiB cap answers 413 after the
-              // full upload; this is the fast path with the same limit).
-              if (picked && picked.size > 10 * 1024 * 1024) {
+              // into memory (the server's cap answers 413 after the full
+              // upload; this is the fast path with the same limit — the
+              // CONSTANT is the single source, S124/BY3: the 10 MiB hardcode
+              // here silently drifted when the server cap moved to 25).
+              if (picked && picked.size > IMPORT_MAX_BYTES) {
                 setFile(null);
                 setResult(null);
-                setError("That backup is too large. The import cap is 10 MiB.");
+                setError(
+                  `That backup is too large. The import cap is ${IMPORT_MAX_BYTES / (1024 * 1024)} MiB.`,
+                );
                 e.target.value = "";
                 return;
               }

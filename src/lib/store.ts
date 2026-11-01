@@ -100,7 +100,12 @@ export const useAppStore = create<AppStore>((set, get) => ({
     if (!popstateBound) {
       popstateBound = true;
       window.addEventListener("popstate", () => {
-        useAppStore.setState({ view: viewFromPath(window.location.pathname) });
+        // S124/BY10: the navigate() contract — Back/Forward also closes the
+        // drawer; the old listener flipped the view UNDER an open drawer.
+        useAppStore.setState({
+          view: viewFromPath(window.location.pathname),
+          mobileMenuOpen: false,
+        });
       });
     }
   },

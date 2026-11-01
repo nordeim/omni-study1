@@ -50,7 +50,7 @@ import { expect, test, type Page } from "@playwright/test";
 // the IP limiter, so the login budget is unaffected).
 
 const hydrated = (page: Page) =>
-  page.waitForFunction(() => document.documentElement.style.getPropertyValue("--sf-primary") !== "");
+  page.waitForFunction(() => document.documentElement.dataset.appHydrated === "true");
 
 /** Registers a throwaway user on a DISTINCT client IP (the AP-71
  *  technique — the loopback register budget is at its 10/IP cap). */

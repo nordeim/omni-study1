@@ -340,7 +340,10 @@ describe("IMPORT_FK_MAP (the completeness pin — the INITIAL_COLLECTIONS patter
 
 describe("IMPORT_MAX_BYTES (the documented body cap)", () => {
   it("is 10 MiB — 5x the largest realistic single-user envelope", () => {
-    expect(IMPORT_MAX_BYTES).toBe(10 * 1024 * 1024);
+    // S124/BY3: 10 → 25 MiB — the export/import reconciliation (the export
+    // emits base64 file payloads inline; ~4-5 max-size uploads made the
+    // user's own backup unrestorable under the old cap).
+    expect(IMPORT_MAX_BYTES).toBe(25 * 1024 * 1024);
   });
 });
 
