@@ -259,6 +259,81 @@ test.describe("S15 auth flows", () => {
     expect(replay.status()).toBe(400);
   });
 
+  // S121/BV6 — the re-register password refresh.
+  //
+  // The existing-unverified branch re-issued the code but kept the FIRST
+  // registration's passwordHash/fullName: a user who re-registered with a
+  // different password, verified, then signed in with the password they
+  // last typed got a 401 and had to run forgot-password. The fix: the
+  // re-typed values win on re-register.
+  test("S121/BV6: a re-registered UNVERIFIED account signs in with the NEWLY typed password", async ({ page }) => {
+    const ip = { "x-forwarded-for": "192.0.2.121" };
+    const email = `s121-bv6-${Date.now()}@studyflow.app`;
+    const first = await page.request.post("/api/auth/register", {
+      headers: ip,
+      data: { email, password: "First1234!", name: "BV6 Probe" },
+    });
+    expect(first.ok()).toBe(true);
+    // The re-register with a DIFFERENT password (the BU14 shape — 200 + code).
+    const second = await page.request.post("/api/auth/register", {
+      headers: ip,
+      data: { email, password: "Second1234!", name: "BV6 Renamed" },
+    });
+    expect(second.ok()).toBe(true);
+    const { code } = (await second.json()) as { code: string };
+    // Verify with the re-issued code.
+    const verify = await page.request.post("/api/auth/verify-email", {
+      headers: ip,
+      data: { email, code },
+    });
+    expect(verify.ok()).toBe(true);
+    // The NEWLY typed password signs in (pre-fix: 401 — the FIRST hash won).
+    const loginNew = await page.request.post("/api/auth/login", {
+      headers: ip,
+      data: { email, password: "Second1234!" },
+    });
+    expect(loginNew.ok()).toBe(true);
+    // The FIRST password is dead.
+    const loginOld = await page.request.post("/api/auth/login", {
+      headers: ip,
+      data: { email, password: "First1234!" },
+    });
+    expect(loginOld.status()).toBe(401);
+  });
+
+  // S121/BV11a — the OTP's conditional single-use consumption.
+  //
+  // The shipped verify-email read the token (findFirst) THEN transacted an
+  // unconditional deleteMany — two concurrent replays of a valid code both
+  // passed the read and BOTH got sessions (the BT3 reset-token class, the
+  // ~100ms window). The fix is the BT3 shape applied to the OTP family: the
+  // conditional deleteMany (code + unexpired in the WHERE) is the consume.
+  test("S121/BV11a: a concurrent verify-code replay pair yields exactly {200, 400}", async ({ page }) => {
+    const ip = { "x-forwarded-for": "192.0.2.121" };
+    const email = `s121-bv11-${Date.now()}@studyflow.app`;
+    const reg = await page.request.post("/api/auth/register", {
+      headers: ip,
+      data: { email, password: "Fresh1234!", name: "BV11 Probe" },
+    });
+    expect(reg.ok()).toBe(true);
+    const { code } = (await reg.json()) as { code: string };
+    // THE PAIR: two simultaneous verify POSTs of the same code. Pre-fix
+    // both read the live token and both transact ({200, 200}); post-fix
+    // exactly one consumption wins.
+    const [a, b] = await Promise.all([
+      page.request.post("/api/auth/verify-email", { headers: ip, data: { email, code } }),
+      page.request.post("/api/auth/verify-email", { headers: ip, data: { email, code } }),
+    ]);
+    expect([a.status(), b.status()].sort()).toEqual([200, 400]);
+    // A THIRD sequential replay is the plain invalid-code 400 (the winner
+    // consumed it; the loser's 400 already proved the same).
+    const replay = await page.request.post("/api/auth/verify-email", {
+      headers: ip,
+      data: { email, code },
+    });
+    expect(replay.status()).toBe(400);
+  });
+
   test("the login card's chrome is unchanged in the sign-in state (byte-parity guard)", async ({ page }) => {
     // The S4-F pins that the S15 redesign had to preserve: the brand block
     // (h1 + subtitle + logo) and the Google + divider composition.

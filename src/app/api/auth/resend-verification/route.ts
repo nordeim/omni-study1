@@ -44,6 +44,13 @@ export async function POST(request: NextRequest) {
 
     if (user && !user.emailVerified) {
       const code = generateVerificationCode();
+      // S121/BV8: the register route's own pruning, mirrored here — the
+      // account's EXPIRED tokens never outlive a resend either (bounded
+      // auth tables; the shipped branch only ever created, so abandoned
+      // unverified accounts accumulated expired rows).
+      await db.verificationToken.deleteMany({
+        where: { userId: user.id, expiresAt: { lt: new Date() } },
+      });
       await db.verificationToken.create({
         data: {
           userId: user.id,

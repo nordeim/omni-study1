@@ -19,7 +19,6 @@ import {
   assignmentSchema,
   examSchema,
   eventCreateSchema,
-  eventSchema,
   eventUpdateSchema,
   flashcardDeckSchema,
   flashcardSchema,
@@ -75,7 +74,73 @@ type OwnedConfig = {
   /** Pre-write normalizer applied after the date conversion. */
   writeTransform?: (data: Row) => Row;
   orderBy?: "asc" | "desc";
+  /** S121/BV1: cross-field guard run on UPDATE with the STORED row + the
+   * sent writes (a single-leg PATCH that inverts against the stored row —
+   * the events end≥start merge). Throw ValidationError/NotFoundError. */
+  beforeWrite?: (existing: Row, writes: Row) => void;
+  /** S121/BV7: FK fields whose sent values must reference rows OWNED by the
+   * caller (the files/folders + ai/generate convention: 404 "That <label>
+   * does not exist." on a foreign or missing target). */
+  ownedFks?: Partial<Record<string, { model: OwnedModel; label: string }>>;
 };
+
+/** S121/BV7: the owned-FK registry — the census `tests/owned-fks.test.ts`
+ * pins, so a NEW FK-bearing delegate cannot ship unwired. */
+export const OWNED_FKS: Record<
+  string,
+  Partial<Record<string, { model: OwnedModel; label: string }>>
+> = {};
+
+/** S121/BV7: verify every non-null sent FK references an owned row. */
+async function assertOwnedFks(
+  ownedFks: NonNullable<OwnedConfig["ownedFks"]>,
+  userId: string,
+  writes: Row,
+): Promise<void> {
+  for (const [field, cfg] of Object.entries(ownedFks)) {
+    const value = writes[field];
+    if (value === undefined || value === null || value === "") continue;
+    const target = await cfg?.model.findFirst({ where: { id: String(value), userId } });
+    if (!target) throw new NotFoundError(`That ${cfg?.label} does not exist.`);
+  }
+}
+
+/**
+ * S121/BV1 — the events single-leg ordering merge. BU22's update schema
+ * validates the end≥start ordering only when BOTH legs arrive together;
+ * a single-leg PATCH (`{"endDate": …}` alone) must be compared against
+ * the STORED row's other leg — this seam is that merge. Comparisons use
+ * Date.parse values (S121/BV10: a mixed-offset ISO string can sort later
+ * lexicographically while being EARLIER in time). A NaN on either side
+ * skips the comparison (the dateAtom refine already rejected unparseable
+ * strings at the schema boundary).
+ */
+export function checkEventOrderingMerge(existing: Row, writes: Row): void {
+  const startSent = "startDate" in writes;
+  const endSent = "endDate" in writes;
+  // Both legs arriving together are the UPDATE SCHEMA's contract (the
+  // .check() on eventUpdateSchema); neither leg is the delegate's no-op.
+  if (startSent === endSent) return;
+  const startDate = startSent ? writes.startDate : existing.startDate;
+  const endDate = endSent ? writes.endDate : existing.endDate;
+  if (startDate === null || endDate === null) return; // a three-state clear
+  // The STORED row arrives from Prisma as a Date; the sent write is a
+  // string — normalize both (the first live probe caught the string-only
+  // form silently skipping on the Date side).
+  const startMs = epochMs(startDate);
+  const endMs = epochMs(endDate);
+  if (Number.isNaN(startMs) || Number.isNaN(endMs)) return;
+  if (endMs < startMs) {
+    throw new ValidationError("End date must be after the start date");
+  }
+}
+
+/** S121/BV1: a leg is an ISO string (the wire) or a Date (the stored row). */
+function epochMs(value: unknown): number {
+  if (typeof value === "string") return Date.parse(value);
+  if (value instanceof Date) return value.getTime();
+  return Number.NaN;
+}
 
 function datesOnWrite(data: Row, dateFields: readonly string[]): Row {
   const out: Row = {};
@@ -127,6 +192,8 @@ function makeOwnedDelegate(config: OwnedConfig): EntityDelegate {
   const { model, createSchema, updateSchema, fromRow, writeTransform } = config;
   const dateFields = config.dateFields ?? [];
   const orderBy = config.orderBy ?? "asc";
+  const ownedFks = config.ownedFks;
+  const beforeWrite = config.beforeWrite;
 
   const normalize = (row: unknown): unknown => (fromRow ? fromRow(row) : row);
   const toWrite = (data: Row): Row => {
@@ -142,6 +209,10 @@ function makeOwnedDelegate(config: OwnedConfig): EntityDelegate {
 
     create: async (userId, input) => {
       const parsed = parseWith(createSchema, input);
+      // S121/BV7: a sent FK must reference a row the CALLER owns (a foreign
+      // subject/list/notebook id satisfies the Prisma FK but dangles from
+      // the owner's view once the other account deletes it).
+      if (ownedFks) await assertOwnedFks(ownedFks, userId, parsed as Row);
       const row = await model.create({
         data: { ...toWrite(parsed), userId },
       });
@@ -165,6 +236,12 @@ function makeOwnedDelegate(config: OwnedConfig): EntityDelegate {
         // three write-site families, not to dodge a client rejection).
         return normalize(existing);
       }
+      // S121/BV7: the sent FKs must reference owned rows (PATCH too —
+      // re-pointing a task at a foreign subject is the same hazard).
+      if (ownedFks) await assertOwnedFks(ownedFks, userId, writes);
+      // S121/BV1: the cross-field merge guard sees the STORED row (a
+      // single-leg events PATCH inverts against the row's other leg).
+      if (beforeWrite) beforeWrite(existing as Row, writes);
       const row = await model.update({
         where: { id },
         data: toWrite(writes as Row),
@@ -223,11 +300,31 @@ export const taskListDelegate = makeOwnedDelegate({
   updateSchema: taskListSchema.partial(),
 });
 
+// S121/BV7: the owned-FK registry — the census pins every FK-bearing
+// delegate (tests/owned-fks.test.ts); a new one that ships unwired fails.
+OWNED_FKS.task = {
+  listId: { model: db.taskList as unknown as OwnedModel, label: "list" },
+  subjectId: { model: db.subject as unknown as OwnedModel, label: "subject" },
+};
+OWNED_FKS.assignment = { subjectId: { model: db.subject as unknown as OwnedModel, label: "subject" } };
+OWNED_FKS.exam = { subjectId: { model: db.subject as unknown as OwnedModel, label: "subject" } };
+OWNED_FKS.note = {
+  notebookId: { model: db.notebook as unknown as OwnedModel, label: "notebook" },
+  subjectId: { model: db.subject as unknown as OwnedModel, label: "subject" },
+};
+OWNED_FKS.deck = { subjectId: { model: db.subject as unknown as OwnedModel, label: "subject" } };
+OWNED_FKS.practiceTest = { subjectId: { model: db.subject as unknown as OwnedModel, label: "subject" } };
+OWNED_FKS.studyGroup = { subjectId: { model: db.subject as unknown as OwnedModel, label: "subject" } };
+OWNED_FKS.grade = { subjectId: { model: db.subject as unknown as OwnedModel, label: "subject" } };
+OWNED_FKS.focusSession = { subjectId: { model: db.subject as unknown as OwnedModel, label: "subject" } };
+OWNED_FKS.timetable = { subjectId: { model: db.subject as unknown as OwnedModel, label: "subject" } };
+
 export const taskDelegate = makeOwnedDelegate({
   model: db.task as unknown as OwnedModel,
   createSchema: taskSchema,
   updateSchema: taskSchema.partial(),
   dateFields: ["dueDate"],
+  ownedFks: OWNED_FKS.task,
 });
 
 export const subjectDelegate = makeOwnedDelegate({
@@ -241,6 +338,7 @@ export const assignmentDelegate = makeOwnedDelegate({
   createSchema: assignmentSchema,
   updateSchema: assignmentSchema.partial(),
   dateFields: ["dueDate"],
+  ownedFks: OWNED_FKS.assignment,
 });
 
 export const examDelegate = makeOwnedDelegate({
@@ -248,21 +346,26 @@ export const examDelegate = makeOwnedDelegate({
   createSchema: examSchema,
   updateSchema: examSchema.partial(),
   dateFields: ["date"],
+  ownedFks: OWNED_FKS.exam,
 });
 
 export const eventDelegate = makeOwnedDelegate({
   model: db.event as unknown as OwnedModel,
   // S120/BU22: the ordering-checked shapes (the pure eventSchema stays
-  // partial()-able for the base — see validation.ts).
+  // partial()-able for the base — see validation.ts). S121/BV1: the
+  // beforeWrite merge guards the SINGLE-LEG PATCH against the stored row
+  // (the schema's .check() only fires when both legs arrive together).
   createSchema: eventCreateSchema,
   updateSchema: eventUpdateSchema,
   dateFields: ["startDate", "endDate"],
+  beforeWrite: checkEventOrderingMerge,
 });
 
 export const timetableDelegate = makeOwnedDelegate({
   model: db.timetableClass as unknown as OwnedModel,
   createSchema: timetableClassSchema,
   updateSchema: timetableClassSchema.partial(),
+  ownedFks: OWNED_FKS.timetable,
 });
 
 export const notebookDelegate = makeOwnedDelegate({
@@ -275,18 +378,21 @@ export const noteDelegate = makeOwnedDelegate({
   model: db.note as unknown as OwnedModel,
   createSchema: noteSchema,
   updateSchema: noteSchema.partial(),
+  ownedFks: OWNED_FKS.note,
 });
 
 export const flashcardDeckDelegate = makeOwnedDelegate({
   model: db.flashcardDeck as unknown as OwnedModel,
   createSchema: flashcardDeckSchema,
   updateSchema: flashcardDeckSchema.partial(),
+  ownedFks: OWNED_FKS.deck,
 });
 
 export const practiceTestDelegate = makeOwnedDelegate({
   model: db.practiceTest as unknown as OwnedModel,
   createSchema: practiceTestSchema,
   updateSchema: practiceTestSchema.partial(),
+  ownedFks: OWNED_FKS.practiceTest,
 });
 
 export const studyGroupDelegate = makeOwnedDelegate({
@@ -295,12 +401,14 @@ export const studyGroupDelegate = makeOwnedDelegate({
   updateSchema: studyGroupSchema.partial(),
   fromRow: membersFromRow,
   writeTransform: membersToWrite,
+  ownedFks: OWNED_FKS.studyGroup,
 });
 
 export const gradeDelegate = makeOwnedDelegate({
   model: db.grade as unknown as OwnedModel,
   createSchema: gradeSchema,
   updateSchema: gradeSchema.partial(),
+  ownedFks: OWNED_FKS.grade,
 });
 
 export const focusSessionDelegate = makeOwnedDelegate({
@@ -308,6 +416,7 @@ export const focusSessionDelegate = makeOwnedDelegate({
   createSchema: focusSessionSchema,
   updateSchema: focusSessionSchema.partial(),
   dateFields: ["startedAt"],
+  ownedFks: OWNED_FKS.focusSession,
 });
 
 export const holidayDelegate = makeOwnedDelegate({

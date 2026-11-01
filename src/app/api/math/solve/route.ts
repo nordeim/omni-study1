@@ -11,7 +11,6 @@ import ZAI from "z-ai-web-dev-sdk";
 
 import { checkRateLimit } from "@/lib/auth";
 import { mathSolveSchema } from "@/lib/validation";
-import { requireUser } from "@/lib/server/auth";
 import {
   errorResponse,
   parseWith,

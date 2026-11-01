@@ -1,6 +1,27 @@
 import { defineConfig } from "vitest/config";
 import path from "node:path";
 
+// Unit-test layer for the pure domain seams — 39 files / 1054 tests
+// (re-anchored S121/BV — the audit-driven hardening cycle: census 1030 →
+// 1054. The additions: event-merge +12 [the S121/BV1 single-leg ordering
+// merge — the pure seam's endDate-only/startDate-only inversions against
+// the stored row, the legal moves, the null clear, the both-legs handoff
+// to the update schema, the Date-fixture leg (the stored Prisma row's
+// value type — the live-probe catch), the S121/BV10 mixed-offset family
+// (Date.parse comparisons, a string-compare-passing inversion)], secure-
+// cookie +3 [the S121/BV12 comma-joined x-forwarded-proto family], clear-
+// cookie +3 [the S121/BV2 logout-side Secure derivation — the explicit
+// flag honored both ways, the optionless NODE_ENV default preserved],
+// owned-fks +3 [the S121/BV7 census registry — every FK-bearing delegate
+// declares its owned FK targets, the field names match the schema
+// vocabulary], auth +1 [the S121/BV9 limiter HARD cap — the all-live
+// flood evicts the oldest bucket at cap, the map never exceeds 2048, the
+// evicted key re-arms fresh], validation +2 [the S121/BV5 questions blob
+// bound at 100k, the boundary exact]. The theme +0 in-place [the S121/
+// BV15 17-var accentCssVars re-anchor — the solid --sf-primary-empty
+// entry]; the wiring halves (the BV6 re-register password, the BV7
+// owned-FK guards, the BV11a concurrent verify pair) ride the e2e layer.)
+//
 // Unit-test layer for the pure domain seams — 36 files / 1030 tests
 // (re-anchored S120/BU — the parity-superset hardening cycle: census 990 →
 // 1030. The additions: client-ip +14 [the S120/BU3 declared proxy-hop

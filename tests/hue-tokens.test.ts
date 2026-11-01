@@ -238,7 +238,10 @@ describe("the @utility census (S96/AW1 + S97/AX1 + S98/AY3)", () => {
 // machine-guard against silent raw-class reintroduction — a new consumer
 // must ride the family, not fork the classes).
 const CONSUMERS: Record<string, string[]> = {
-  "src/components/views/shared.tsx": ["sf-pill-red"],
+  // S121/BV15: RepeatPill rides the accent-token utility (light
+  // rgb(var(--sf-primary-empty)) / text strong; dark soft-dark bg / strong-dark
+  // text — at violet EXACTLY the measured violet-100/600/950/300 family).
+  "src/components/views/shared.tsx": ["sf-pill-red", "sf-repeat-pill"],
   // S120/BU8: the ≥2-days badge rode sf-pill-yellow until the live
   // reference drifted it to blue (measured 2026-11-01 on an 11-day exam);
   // the family follows — yellow stays on flashcards + dashboard priority.

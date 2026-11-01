@@ -42,7 +42,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const raw = (await readJson(request)) as RegisterBody;
+    // S121/BV4: a JSON `null` (or any non-object) body is validation-INVALID
+    // input, not a server error — the pre-Zod deref below threw a 500 on
+    // `raw.fullName` of null. Coerce to {} and let the schema answer 400
+    // with the specific field messages.
+    const read = await readJson(request);
+    const raw = (read && typeof read === "object" ? read : {}) as RegisterBody;
     const body: unknown =
       raw.fullName === undefined && raw.name !== undefined
         ? { ...raw, fullName: raw.name }
@@ -76,6 +81,16 @@ export async function POST(request: NextRequest) {
       // never outlive a re-register (bounded auth tables).
       await db.verificationToken.deleteMany({
         where: { userId: existing.id, expiresAt: { lt: new Date() } },
+      });
+      // S121/BV6: the re-typed password + name WIN — the shipped branch
+      // kept the FIRST registration's hash, so a user who re-registered
+      // with a different password and verified could not sign in with the
+      // password they last typed (a 401 + a forced forgot-password dance).
+      // The account is unverified: there is no verified identity to
+      // protect, and any abuse self-heals on the next re-register.
+      await db.user.update({
+        where: { id: existing.id },
+        data: { passwordHash: hashPassword(password), fullName },
       });
       await db.verificationToken.create({
         data: { ...tokenData, userId: existing.id },

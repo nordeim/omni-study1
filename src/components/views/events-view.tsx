@@ -47,7 +47,7 @@ import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/components/ui/toast";
 import { mutations, useDataStore, type EventInput, type EventRow } from "@/lib/data";
 import { addDays, daysUntil, formatWeekdayMonthDay, referenceWeekNumber, startOfDay } from "@/lib/date";
-import { apiSend, ApiError } from "@/lib/api";
+import { ApiError } from "@/lib/api";
 import { cn } from "@/lib/utils";
 
 const EVENT_COLORS = [

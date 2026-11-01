@@ -24,7 +24,10 @@ type PrefsBody = { name?: unknown; displayName?: unknown };
 
 export const PATCH = withUser(async (user, request) => {
   try {
-    const raw = (await readJson(request)) as PrefsBody;
+    // S121/BV4: a JSON `null` body is validation-invalid input, not a
+    // server error (the raw.displayName deref below threw a 500).
+    const read = await readJson(request);
+    const raw = (read && typeof read === "object" ? read : {}) as PrefsBody;
 
     // The display-name guard runs BEFORE the schema (the schema's strip
     // mode would silently drop an unknown `name` alias otherwise).

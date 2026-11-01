@@ -42,7 +42,7 @@ import { useToast } from "@/components/ui/toast";
 import { EmptyState, SubjectTagChip } from "@/components/views/shared";
 import { mutations, useDataStore, type ExamInput, type ExamRow } from "@/lib/data";
 import { daysUntil } from "@/lib/date";
-import { apiSend, ApiError } from "@/lib/api";
+import { ApiError } from "@/lib/api";
 import { cn } from "@/lib/utils";
 
 const EXAM_TYPES = ["test", "quiz", "midterm", "final", "oral", "practical"];

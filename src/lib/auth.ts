@@ -124,7 +124,17 @@ export function checkRateLimit(key: string, max: number = MAX_ATTEMPTS): RateLim
   const now = Date.now();
   const bucket = buckets.get(key);
   if (!bucket || now - bucket.windowStart >= WINDOW_MS) {
-    if (buckets.size >= MAX_BUCKETS) sweepExpiredBuckets(now);
+    if (buckets.size >= MAX_BUCKETS) {
+      sweepExpiredBuckets(now);
+      // S121/BV9: the HARD cap — when the sweep frees nothing (an all-live
+      // flood: ≥2048 distinct keys inside one window, per-request forged
+      // X-Forwarded-For under the legacy posture), evict the OLDEST live
+      // bucket before inserting. The map is bounded at MAX_BUCKETS even
+      // under the flood; the evicted key re-arms a fresh window (the
+      // limiter fails open for that one key — the documented single-node
+      // trade-off, strictly better than unbounded growth).
+      if (buckets.size >= MAX_BUCKETS) evictOldestBucket();
+    }
     buckets.set(key, { count: 1, windowStart: now });
     return { ok: true, retryAfterSec: 0 };
   }
@@ -163,6 +173,22 @@ function sweepExpiredBuckets(now: number): void {
   for (const [key, bucket] of buckets) {
     if (now - bucket.windowStart >= WINDOW_MS) buckets.delete(key);
   }
+}
+
+/** S121/BV9: the hard-cap eviction — the oldest live bucket (min
+ * windowStart) is removed so a distinct-key flood can never grow the map
+ * past the cap. Deterministic: ties break on first-insertion order (the
+ * Map iteration order), the same order windowStart monotonicity gives. */
+function evictOldestBucket(): void {
+  let oldestKey: string | null = null;
+  let oldestStart = Infinity;
+  for (const [key, bucket] of buckets) {
+    if (bucket.windowStart < oldestStart) {
+      oldestStart = bucket.windowStart;
+      oldestKey = key;
+    }
+  }
+  if (oldestKey !== null) buckets.delete(oldestKey);
 }
 
 // ---- S15 seams: verification codes + reset tokens -------------------------------
@@ -245,7 +271,11 @@ export function clientIpFromForwarded(
 // behavior).
 
 export function secureCookieFlag(xForwardedProto: string | null, requestProtocol: string): boolean {
-  const header = xForwardedProto?.trim().toLowerCase();
+  // S121/BV12: headers.get() JOINS duplicate headers ("https, https"
+  // behind a double proxy) — read the FIRST comma-separated value (the
+  // client-most hop's protocol), then the existing case/whitespace
+  // normalization.
+  const header = xForwardedProto?.split(",")[0]?.trim().toLowerCase();
   if (header) return header === "https";
   return requestProtocol === "https:";
 }

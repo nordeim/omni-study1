@@ -89,7 +89,11 @@ export function StatCard({ icon: Icon, label, value, hint, iconClassName, iconBa
         <span
           className={cn(
             "flex size-12 shrink-0 items-center justify-center rounded-xl sf-print-exact",
-            iconClassName ?? "bg-violet-500 dark:bg-violet-500",
+            // S121/BV15: the accent token replaces the hardcoded violet-500
+            // fallback (rgb(var(--sf-primary)) = violet-500 at the default
+            // accent — byte-identical; the tile now follows the accent like
+            // every other accent-semantic surface).
+            iconClassName ?? "bg-sf-primary",
           )}
           style={iconBackground ? { backgroundImage: iconBackground } : undefined}
         >
@@ -303,11 +307,11 @@ export function DuePill({
 }
 
 export function RepeatPill({ label }: { label: string }) {
-  return (
-    <span className="inline-flex items-center rounded-full bg-violet-100 px-2.5 py-0.5 text-xs font-medium text-violet-600 dark:bg-violet-950 dark:text-violet-300">
-      {label}
-    </span>
-  );
+  // S121/BV15: the accent-token utility (at violet EXACTLY the reference's
+  // measured violet-100/600 light + the clone's violet-950/300 dark pair;
+  // the hardcoded classes ignored the 7-accent superset — see
+  // sf-repeat-pill in globals.css).
+  return <span className="sf-repeat-pill inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium">{label}</span>;
 }
 
 // ---- helpers -----------------------------------------------------------------------

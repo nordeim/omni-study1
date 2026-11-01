@@ -178,7 +178,7 @@ model Exam {
   subjectId String?
   // S6-F reference card fields
   type      String   @default("test") // test | quiz | midterm | final | oral | practical
-  duration  Int      @default(60) // minutes (5..6000)
+  duration  Int      @default(60) // minutes (examSchema enforces 5..600)
   topics    String   @default("[]") // JSON string array
   // S76/AC5 (measured on the reference): the 📍 card row + the dialog's
   // Location input — nullable string, empty when unset.

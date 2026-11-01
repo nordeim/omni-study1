@@ -218,20 +218,33 @@ export const eventSchema = z.object({
 // unwrapped (the client type inference + the partial-update base) and the
 // ordering check rides the two CONSUMED shapes: the create schema (full
 // payload) and the update schema (a partial payload validates the ordering
-// only when both legs arrive together — a single-leg PATCH merges with the
-// stored row before the route's own write).
+// only when both legs arrive together — a single-leg PATCH is guarded by
+// the delegate's checkEventOrderingMerge against the STORED row
+// [S121/BV1, src/lib/server/entities.ts]).
+// S121/BV10: the comparisons use Date.parse values, never raw string
+// ordering — a mixed-offset ISO string can sort LATER lexicographically
+// while being EARLIER in time ("…T10:00:00+14:00" vs "…T09:00:00Z");
+// a NaN on either side skips (the dateAtom refine already rejected
+// unparseable strings at the boundary).
 const END_BEFORE_START = "End date must be after the start date";
+
+function isoBefore(a: string, b: string): boolean {
+  const aMs = Date.parse(a);
+  const bMs = Date.parse(b);
+  if (Number.isNaN(aMs) || Number.isNaN(bMs)) return false;
+  return aMs < bMs;
+}
 
 export const eventCreateSchema = eventSchema.check((ctx) => {
   const { endDate, startDate } = ctx.value;
-  if (endDate && endDate < startDate) {
+  if (endDate && startDate && isoBefore(endDate, startDate)) {
     ctx.issues.push({ code: "custom", input: ctx.value, message: END_BEFORE_START, path: ["endDate"] });
   }
 });
 
 export const eventUpdateSchema = eventSchema.partial().check((ctx) => {
   const { endDate, startDate } = ctx.value;
-  if (endDate && startDate && endDate < startDate) {
+  if (endDate && startDate && isoBefore(endDate, startDate)) {
     ctx.issues.push({ code: "custom", input: ctx.value, message: END_BEFORE_START, path: ["endDate"] });
   }
 });
@@ -281,6 +294,11 @@ export const practiceTestSchema = z.object({
   durationMinutes: z.number().int().min(1).max(600).optional().default(60),
   questions: z
     .string()
+    // S121/BV5: the blob bound (the family convention — content 100k, tags
+    // 2k, reminders/subtasks/topics 100k). `questions` was the only
+    // unbounded JSON-blob field: a ~9.5 MiB valid-questions JSON passed
+    // the schema AND the 10 MiB read cap and persisted to SQLite.
+    .max(100_000)
     .refine((v) => {
       try {
         const parsed: unknown = JSON.parse(v);

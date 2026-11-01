@@ -950,3 +950,34 @@ describe("rumEventSchema/rumBatchSchema carry the ROUTE's enforced bounds (S118/
     ).toBe(false);
   });
 });
+
+// S121/BV5 — the practice-test questions blob bound.
+//
+// `questions` was the only JSON-blob field with no `.max()`: a ~9.5 MiB
+// valid-questions JSON passed the schema AND the 10 MiB read cap and
+// persisted to SQLite (every sibling blob is capped: content 100k, tags 2k,
+// reminders/subtasks/topics 100k). The bound is the family convention.
+describe("practiceTestSchema.questions bound (S121/BV5)", () => {
+  it("accepts a valid questions JSON at the 100,000-char boundary", () => {
+    // The JSON wrapper around one short_answer question is exactly 39 chars:
+    // [{"question":"…","type":"short_answer"}] — pad the question so the
+    // WHOLE body lands on exactly 100,000.
+    const wrap = (question: string) =>
+      JSON.stringify([{ question, type: "short_answer" }]);
+    expect(wrap("").length).toBe(39);
+    const body = wrap("q".repeat(100_000 - 39));
+    expect(body.length).toBe(100_000);
+    expect(practiceTestSchema.safeParse({ title: "Bound probe", questions: body }).success).toBe(true);
+  });
+
+  it("rejects a VALID questions JSON longer than 100,000 chars (the max, not the refine)", () => {
+    const wrap = (question: string) =>
+      JSON.stringify([{ question, type: "short_answer" }]);
+    const body = wrap("q".repeat(100_000 - 39 + 1));
+    expect(body.length).toBe(100_001);
+    // The refine itself passes (valid shape) — the length cap is the rejection.
+    const parsed = JSON.parse(body) as unknown[];
+    expect(Array.isArray(parsed)).toBe(true);
+    expect(practiceTestSchema.safeParse({ title: "Bound probe", questions: body }).success).toBe(false);
+  });
+});

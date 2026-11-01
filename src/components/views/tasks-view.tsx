@@ -59,7 +59,6 @@ import {
   EmptyState,
   PriorityCheckbox,
   RepeatPill,
-  SimpleEmptyState,
   SubjectChip,
   Spinner,
 } from "@/components/views/shared";

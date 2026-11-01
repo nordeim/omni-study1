@@ -24,7 +24,6 @@ import {
   rateLimitedResponse,
   readBytesCapped,
   readJson,
-  toErrorResponse,
   withUser,
 } from "@/lib/server/http";
 

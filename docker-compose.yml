@@ -25,6 +25,16 @@ services:
       # sitemap.xml/robots.txt/metadataBase are BUILD-TIME prerendered — bake
       # those with the Dockerfile's NEXT_PUBLIC_SITE_URL build ARG instead.
       NEXT_PUBLIC_SITE_URL: "${NEXT_PUBLIC_SITE_URL:-http://localhost:3000}"
+      # S121/BV3 — the BU gate passthroughs (DEPLOYMENT.md §2/§3/§8's own
+      # commands become true through compose; each empty-string default
+      # preserves the gate's documented default semantics):
+      # TRUSTED_PROXY_HOPS: unset = the legacy first-hop posture; 0 = never
+      #   trust; N>=1 = trust the Nth hop from the right (fails closed).
+      TRUSTED_PROXY_HOPS: "${TRUSTED_PROXY_HOPS:-}"
+      # DISABLE_IN_APP_*: "1"/"true" omits the in-response OTP/reset delivery
+      #   (a real mail transport owns delivery then).
+      DISABLE_IN_APP_OTP: "${DISABLE_IN_APP_OTP:-}"
+      DISABLE_IN_APP_RESET: "${DISABLE_IN_APP_RESET:-}"
     volumes:
       - db-data:/data
     healthcheck:
@@ -43,6 +53,11 @@ services:
     profiles: ["init"]
     environment:
       DATABASE_URL: "file:/data/custom.db"
+      # S121/BV3 — SEED_DEMO reaches the seed through compose at last
+      # (DEPLOYMENT.md §8's `SEED_DEMO=0 docker compose --profile init up`
+      # was a no-op without this declaration; 0/false/no skips the
+      # public-credentials demo account, any other value seeds it).
+      SEED_DEMO: "${SEED_DEMO:-}"
     volumes:
       - db-data:/data
     command: >

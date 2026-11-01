@@ -357,7 +357,6 @@ test.describe("S8-E · Timetable today tint + nav", () => {
     await expect(head).toHaveCount(1);
     const cs = await head.evaluate((el) => getComputedStyle(el).backgroundColor);
     expect(cs).toBe(rgb(245, 243, 255)); // violet-50 (softest)
-    const others = page.locator('[aria-label="Week header"] [data-today-header]');
     // The day body columns below stay transparent:
     const bodyCols = page.locator('[aria-label="Week grid"] .grid.grid-cols-8 > div').filter({
       has: page.locator("button.absolute"),

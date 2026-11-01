@@ -43,6 +43,11 @@ export type AccentToken = {
   clockDateDark: string; // 400 — the dark clock-date text (dedicated, S88/AO5)
   emptyFrom: string; // 100 — empty-state block start
   emptyTo: string; // ADJACENT hue 100 — empty-state block end
+  empty: string; // 100 — the SOLID empty step (RepeatPill + the calendar
+  // today-cell tint; S121/BV15) — value-equal to emptyFrom by design (the
+  // clockDateDark≡avatarFrom precedent: the shared VALUE is deliberate,
+  // the dedicated key lets a future retune diverge without touching the
+  // gradient consumers)
 };
 
 export const ACCENT_TOKENS: Record<Accent, AccentToken> = {
@@ -63,6 +68,7 @@ export const ACCENT_TOKENS: Record<Accent, AccentToken> = {
     clockDateDark: "167 139 250", // violet-400 — the dark clock-date text (S88/AO5)
     emptyFrom: "237 233 254", // violet-100
     emptyTo: "224 231 255", // indigo-100
+    empty: "237 233 254", // = emptyFrom (violet-100)
   },
   blue: {
     primary: "59 130 246", // #3b82f6
@@ -81,6 +87,7 @@ export const ACCENT_TOKENS: Record<Accent, AccentToken> = {
     clockDateDark: "96 165 250", // blue-400 (S88/AO5)
     emptyFrom: "219 234 254", // blue-100
     emptyTo: "224 242 254", // sky-100
+    empty: "219 234 254", // = emptyFrom (blue-100)
   },
   green: {
     primary: "16 185 129", // emerald-500 (the reference swatch)
@@ -99,6 +106,7 @@ export const ACCENT_TOKENS: Record<Accent, AccentToken> = {
     clockDateDark: "52 211 153", // emerald-400 (S88/AO5)
     emptyFrom: "209 250 229", // emerald-100
     emptyTo: "204 251 241", // teal-100
+    empty: "209 250 229", // = emptyFrom (emerald-100)
   },
   orange: {
     primary: "245 158 11", // amber-500 (the reference swatch)
@@ -117,6 +125,7 @@ export const ACCENT_TOKENS: Record<Accent, AccentToken> = {
     clockDateDark: "251 191 36", // amber-400 (S88/AO5)
     emptyFrom: "254 243 199", // amber-100
     emptyTo: "255 237 213", // orange-100
+    empty: "254 243 199", // = emptyFrom (amber-100)
   },
   pink: {
     primary: "236 72 153", // #ec4899
@@ -135,6 +144,7 @@ export const ACCENT_TOKENS: Record<Accent, AccentToken> = {
     clockDateDark: "244 114 182", // pink-400 (S88/AO5)
     emptyFrom: "252 231 243", // pink-100
     emptyTo: "255 228 230", // rose-100
+    empty: "252 231 243", // = emptyFrom (pink-100)
   },
   red: {
     primary: "239 68 68", // #ef4444
@@ -153,6 +163,7 @@ export const ACCENT_TOKENS: Record<Accent, AccentToken> = {
     clockDateDark: "248 113 113", // red-400 (S88/AO5)
     emptyFrom: "254 226 226", // red-100
     emptyTo: "255 237 213", // orange-100
+    empty: "254 226 226", // = emptyFrom (red-100)
   },
   teal: {
     primary: "20 184 166", // #14b8a6
@@ -171,6 +182,7 @@ export const ACCENT_TOKENS: Record<Accent, AccentToken> = {
     clockDateDark: "45 212 191", // teal-400 (S88/AO5)
     emptyFrom: "204 251 241", // teal-100
     emptyTo: "207 250 254", // cyan-100
+    empty: "204 251 241", // = emptyFrom (teal-100)
   },
 };
 
@@ -190,8 +202,9 @@ export function resolveMode(mode: ThemeMode, systemPrefersDark: boolean): "light
 
 /**
  * The COMPLETE --sf-* variable set for an accent (S3-J regression pin: exactly
- * 16 entries — S88/AO5 added clock-date-dark; a partial set leaves stale
- * violet tokens on non-violet accents).
+ * 17 entries — S88/AO5 added clock-date-dark; S121/BV15 added the solid
+ * empty step; a partial set leaves stale violet tokens on non-violet
+ * accents).
  * Keys are kebab-case (the S8 e2e lesson: camelCase suffixes resolve no var).
  */
 export function accentCssVars(accent: Accent): Record<string, string> {
@@ -213,6 +226,11 @@ export function accentCssVars(accent: Accent): Record<string, string> {
     "--sf-primary-clock-date-dark": t.clockDateDark, // S88/AO5 — the dedicated dark clock-date text token
     "--sf-primary-empty-from": t.emptyFrom,
     "--sf-primary-empty-to": t.emptyTo,
+    // S121/BV15: the SOLID empty step — RepeatPill + the calendar today-cell
+    // tint ride it (the sf-today-cell-tint light branch read the :root violet
+    // default on every accent before this entry existed — the exact stale-
+    // token class the S3-J pin's comment warns about).
+    "--sf-primary-empty": t.empty,
   };
 }
 
@@ -292,13 +310,13 @@ export const THEME_BOOT_SCRIPT = `
     // — the accent sweeps read dataset.accent as their mode proof.
     document.documentElement.dataset.accent = accent;
     var TOKENS = {
-      violet: ["primary","foreground","strong","strong-dark","deep","soft","soft-dark","softest","softest-adjacent","gradient-to","gradient-to-strong","avatar-from","avatar-to","clock-date-dark","empty-from","empty-to"],
-      blue: ["primary","foreground","strong","strong-dark","deep","soft","soft-dark","softest","softest-adjacent","gradient-to","gradient-to-strong","avatar-from","avatar-to","clock-date-dark","empty-from","empty-to"],
-      green: ["primary","foreground","strong","strong-dark","deep","soft","soft-dark","softest","softest-adjacent","gradient-to","gradient-to-strong","avatar-from","avatar-to","clock-date-dark","empty-from","empty-to"],
-      orange: ["primary","foreground","strong","strong-dark","deep","soft","soft-dark","softest","softest-adjacent","gradient-to","gradient-to-strong","avatar-from","avatar-to","clock-date-dark","empty-from","empty-to"],
-      pink: ["primary","foreground","strong","strong-dark","deep","soft","soft-dark","softest","softest-adjacent","gradient-to","gradient-to-strong","avatar-from","avatar-to","clock-date-dark","empty-from","empty-to"],
-      red: ["primary","foreground","strong","strong-dark","deep","soft","soft-dark","softest","softest-adjacent","gradient-to","gradient-to-strong","avatar-from","avatar-to","clock-date-dark","empty-from","empty-to"],
-      teal: ["primary","foreground","strong","strong-dark","deep","soft","soft-dark","softest","softest-adjacent","gradient-to","gradient-to-strong","avatar-from","avatar-to","clock-date-dark","empty-from","empty-to"]
+      violet: ["primary","foreground","strong","strong-dark","deep","soft","soft-dark","softest","softest-adjacent","gradient-to","gradient-to-strong","avatar-from","avatar-to","clock-date-dark","empty-from","empty-to","empty"],
+      blue: ["primary","foreground","strong","strong-dark","deep","soft","soft-dark","softest","softest-adjacent","gradient-to","gradient-to-strong","avatar-from","avatar-to","clock-date-dark","empty-from","empty-to","empty"],
+      green: ["primary","foreground","strong","strong-dark","deep","soft","soft-dark","softest","softest-adjacent","gradient-to","gradient-to-strong","avatar-from","avatar-to","clock-date-dark","empty-from","empty-to","empty"],
+      orange: ["primary","foreground","strong","strong-dark","deep","soft","soft-dark","softest","softest-adjacent","gradient-to","gradient-to-strong","avatar-from","avatar-to","clock-date-dark","empty-from","empty-to","empty"],
+      pink: ["primary","foreground","strong","strong-dark","deep","soft","soft-dark","softest","softest-adjacent","gradient-to","gradient-to-strong","avatar-from","avatar-to","clock-date-dark","empty-from","empty-to","empty"],
+      red: ["primary","foreground","strong","strong-dark","deep","soft","soft-dark","softest","softest-adjacent","gradient-to","gradient-to-strong","avatar-from","avatar-to","clock-date-dark","empty-from","empty-to","empty"],
+      teal: ["primary","foreground","strong","strong-dark","deep","soft","soft-dark","softest","softest-adjacent","gradient-to","gradient-to-strong","avatar-from","avatar-to","clock-date-dark","empty-from","empty-to","empty"]
     };
     var VALUES = ${JSON.stringify(Object.fromEntries(ACCENTS.map((a) => [a, Object.values(ACCENT_TOKENS[a])])))};
     var st = document.documentElement.style;

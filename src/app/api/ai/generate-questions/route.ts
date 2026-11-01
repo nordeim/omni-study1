@@ -13,7 +13,6 @@ import ZAI from "z-ai-web-dev-sdk";
 
 import { checkRateLimit } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { requireUser } from "@/lib/server/auth";
 import { idField } from "@/lib/validation";
 import {
   errorResponse,

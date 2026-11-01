@@ -598,9 +598,12 @@ function QuestionRunner({
           <p className="font-medium text-slate-800 dark:text-slate-100">{question.question}</p>
           {question.type === "multiple_choice" && (
             <div className="mt-4 flex flex-col gap-2" role="radiogroup" aria-label="Answer options">
-              {(question.options ?? []).map((option) => (
+              {(question.options ?? []).map((option, i) => (
                 <label
-                  key={option}
+                  // S121/BV17: options are comma-separated USER input —
+                  // "A, B, A" duplicated the key (the exams topics-chips
+                  // precedent: value-index composite).
+                  key={`${option}-${i}`}
                   className={cn(
                     "flex items-center gap-3 rounded-xl border p-3 text-sm transition-colors",
                     answers[index] === option

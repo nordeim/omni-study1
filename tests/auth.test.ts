@@ -326,3 +326,38 @@ describe("rate-limiter bucket eviction (S120/BU6)", () => {
     }
   });
 });
+
+// S121/BV9 — the limiter's HARD cap.
+//
+// BU6's sweep only deletes EXPIRED windows: ≥2048 distinct LIVE keys within
+// one 15-minute window (per-request forged X-Forwarded-For under the legacy
+// first-hop posture) free nothing and the Map still grows at request rate.
+// The hard cap: when the sweep at capacity frees nothing, the OLDEST live
+// bucket (min windowStart) is evicted before the insert — bounded memory
+// even under an all-live flood. The evicted key re-arms a fresh window (the
+// limiter fails open for that one key — the documented single-node
+// trade-off).
+describe("rate-limiter hard cap under an all-live flood (S121/BV9)", () => {
+  it("the map never exceeds MAX_BUCKETS when the sweep frees nothing (the oldest live bucket is evicted)", () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-11-01T10:00:00Z"));
+    resetAllRateLimits();
+    try {
+      // Exactly the cap: 2048 distinct live keys, all inside the window.
+      for (let i = 0; i < 2048; i++) checkRateLimit(`flood-live-${i}`, 5);
+      expect(rateLimitBucketCount()).toBe(2048);
+      // One more distinct key: the sweep finds NOTHING expired — the oldest
+      // bucket is evicted and the size stays at the cap (pre-fix: 2049).
+      checkRateLimit("flood-next", 5);
+      expect(rateLimitBucketCount()).toBe(2048);
+      // The EVICTED key (flood-live-0, the oldest windowStart) re-arms fresh.
+      expect(checkRateLimit("flood-live-0", 5).ok).toBe(true);
+      // The newest keys are untouched — a mid-flood key still enforces.
+      for (let i = 0; i < 4; i++) checkRateLimit("flood-live-1000", 5);
+      expect(checkRateLimit("flood-live-1000", 5).ok).toBe(false);
+    } finally {
+      resetAllRateLimits();
+      vi.useRealTimers();
+    }
+  });
+});

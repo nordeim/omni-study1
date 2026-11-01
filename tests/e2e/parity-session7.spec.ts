@@ -25,8 +25,6 @@ const hydrated = (page: Page) =>
 
 const rgb = (r: number, g: number, b: number) => `rgb(${r}, ${g}, ${b})`;
 
-const isRound = (radius: string) => radius === "9999px" || radius === "3.35544e+07px";
-
 test.describe("S7-A · Flashcards deck sidebar", () => {
   test("deck rows are slate-50 r12 cards with a 40px colored icon block", async ({ page }) => {
     await page.goto("/Flashcards");
@@ -256,7 +254,6 @@ test.describe("S7-C · Timetable week grid", () => {
     await hydrated(page);
     const cell = page.locator('[aria-label="Week grid"] [aria-label="Hour cells"] > div').first();
     const cs = await cell.evaluate((el) => {
-      const s = getComputedStyle(el);
       const r = el.getBoundingClientRect();
       return { h: r.height, label: el.textContent?.trim() ?? "" };
     });

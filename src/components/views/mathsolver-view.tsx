@@ -13,7 +13,7 @@
 // ---------------------------------------------------------------------------
 
 import * as React from "react";
-import { Calculator, Camera, ImagePlus, RefreshCw, Sparkles, X } from "lucide-react";
+import { Calculator, Camera, RefreshCw, Sparkles, X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";

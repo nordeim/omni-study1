@@ -152,7 +152,9 @@ describe("accentCssVars", () => {
     // 400-step would have silently restyled the sidebar date on all 20
     // views. The dedicated token carries the SAME 400-step values, so every
     // computed color is byte-identical — the AF5 e2e pins are the
-    // regression guards).
+    // regression guards. S121/BV15 adds the solid --sf-primary-empty (the
+    // measured violet-100 empty step, accent-varied) for the repeat pill +
+    // the calendar today-cell tint — 17 vars total).
     for (const accent of ACCENTS) {
       const vars = accentCssVars(accent);
       const t = ACCENT_TOKENS[accent];
@@ -167,7 +169,13 @@ describe("accentCssVars", () => {
       expect(vars["--sf-primary-clock-date-dark"]).toBe(t.avatarFrom); // the decoupling preserves the values
       expect(vars["--sf-primary-empty-from"]).toBe(t.emptyFrom);
       expect(vars["--sf-primary-empty-to"]).toBe(t.emptyTo);
-      expect(Object.keys(vars)).toHaveLength(16);
+      // S121/BV15: the solid empty-step token joins the accent set (17 vars) —
+      // RepeatPill + the calendar today-cell tint ride it; at violet it is
+      // EXACTLY the measured violet-100 (value-equal to emptyFrom by
+      // design — the dedicated key, the AO5 precedent).
+      expect(vars["--sf-primary-empty"]).toBe(t.empty);
+      expect(vars["--sf-primary-empty"]).toBe(t.emptyFrom);
+      expect(Object.keys(vars)).toHaveLength(17);
     }
   });
 });

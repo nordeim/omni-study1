@@ -39,8 +39,8 @@ import {
 import { useToast } from "@/components/ui/toast";
 import { EmptyState } from "@/components/views/shared";
 import { mutations, useDataStore, type TimetableClassInput, type TimetableClassRow } from "@/lib/data";
-import { addDays, formatHHMMRange, formatLongDate, formatWeekdayMonthDay, formatShortWithYear, startOfDay } from "@/lib/date";
-import { apiSend, ApiError } from "@/lib/api";
+import { addDays, formatHHMMRange, formatWeekdayMonthDay, formatShortWithYear, startOfDay } from "@/lib/date";
+import { ApiError } from "@/lib/api";
 import { cn } from "@/lib/utils";
 
 const DAY_NAMES = [

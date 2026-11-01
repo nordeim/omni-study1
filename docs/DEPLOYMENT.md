@@ -40,7 +40,7 @@ key on the REAL client address, not a forged `x-forwarded-for` hop
 | `NEXT_PUBLIC_SITE_URL` | Recommended | Canonical public origin, used for metadata URLs and `sitemap.xml` (e.g. `https://orbital.example.com`). |
 | `SEED_DEMO` | No (default: on) | `0` skips the demo account in `bun run db:seed` and the Docker `init` profile — see §8 "The demo account" (S120/BU21; fail-safe: unrecognized values skip too). |
 | `TRUSTED_PROXY_HOPS` | No (behind a proxy: recommended) | The `x-forwarded-for` hop depth for the auth limiter's per-IP keys: unset → first-hop default; `0` → never trust; `N≥1` → Nth hop from the right, failing closed (S120/BU3). |
-| `DISABLE_IN_APP_OTP` / `DISABLE_IN_APP_RESET` | No (exposed deployments: recommended) | Gate the in-response OTP/reset-link delivery (the ADR-013 posture's off-switch — responses become shape-identical `{ok:true}`, S120/BU2). |
+| `DISABLE_IN_APP_OTP` / `DISABLE_IN_APP_RESET` | No (exposed deployments: recommended) | Gate the in-response OTP/reset-link delivery (the ADR-013 posture's off-switch — responses become shape-identical `{ok:true}`, S120/BU2). All four gates are declared in `docker-compose.yml`'s environments (S121/BV3) — the host env reaches the container. |
 
 ## 4. Database location (§4 — the `.env.example` reference)
 
@@ -159,8 +159,10 @@ Notes:
   `Demo1234!`, `emailVerified: true` — which is right for a local
   quickstart but is a live public login on an exposed deployment. Set
   `SEED_DEMO=0` to skip it entirely: `AUTH_SECRET="$(openssl rand -hex
-  32)" SEED_DEMO=0 docker compose --profile init up -d` (also honored
-  by `bun run db:seed`; unset/empty keeps the documented default —
+  32)" SEED_DEMO=0 docker compose --profile init up -d` (the variable is
+  declared in the compose `init` service's environment, so the command
+  reaches the seed through compose — S121/BV3 wired the passthrough; also
+  honored by `bun run db:seed`; unset/empty keeps the documented default —
   seed; the gate is fail-safe, an unrecognized value skips too). To
   remove the account after a seeded first run, register your own
   account, then delete the demo rows (they are all scoped by

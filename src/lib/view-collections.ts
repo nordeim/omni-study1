@@ -8,7 +8,8 @@
 // Unit-pinned by tests/view-collections.test.ts: an entry for every view id
 // (a missing entry regresses to the load shift), keys validated against
 // PATHS in src/lib/data.ts. The three tool views declare [] and gate on
-// auth alone. Files manages its own collections via src/lib/files.ts.
+// auth alone. Files manages its own collections inline in
+// src/components/views/files-view.tsx (its fetch effect).
 // ---------------------------------------------------------------------------
 
 import type { CollectionKey } from "./data";

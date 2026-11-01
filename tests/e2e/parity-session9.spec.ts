@@ -527,7 +527,6 @@ test.describe("S9-P · AI composer icon", () => {
   test("composer submit uses wand-sparkles", async ({ page }) => {
     await page.goto("/AIAssistant");
     await hydrated(page);
-    const composer = page.locator("main form, main .border-t button[type=submit], main button:last-child");
     const send = page.getByRole("button", { name: /send message/i });
     await expect(send.locator("svg")).toHaveClass(/lucide-wand-sparkles/);
   });

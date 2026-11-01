@@ -10,7 +10,6 @@ import { NextResponse, type NextRequest } from "next/server";
 
 import { checkRateLimit, generateResetToken, hashResetToken } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { siteUrl } from "@/lib/site";
 import { forgotPasswordSchema } from "@/lib/validation";
 import { inAppDeliveryGates } from "@/lib/env-check";
 import { clientIp } from "@/lib/server/auth";
@@ -44,10 +43,13 @@ export async function POST(request: NextRequest) {
 
     if (user) {
       const token = generateResetToken();
-      // S120/BU22: opportunistic pruning — this account's expired/used tokens
-      // never outlive a forgot-password request (bounded auth tables).
+      // S120/BU22 → S121/BV11b: the prune widens to ALL prior tokens — a new
+      // issue SUPERSEDES (the shipped expired/used-only prune left N live
+      // one-shot takeover links per account after N requests inside 30 min;
+      // exactly one live link per account is the bounded, least-surprise
+      // posture — the newest email is the one the user will click).
       await db.passwordResetToken.deleteMany({
-        where: { userId: user.id, OR: [{ expiresAt: { lt: new Date() } }, { usedAt: { not: null } }] },
+        where: { userId: user.id },
       });
       await db.passwordResetToken.create({
         data: {

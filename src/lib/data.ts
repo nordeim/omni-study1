@@ -337,7 +337,7 @@ async function fetchAndSet<K extends CollectionKey>(key: K): Promise<void> {
   useDataStore.getState().setSlice(key, rows);
 }
 
-export const useDataStore = create<DataState>((set, get) => ({
+export const useDataStore = create<DataState>((set) => ({
   subjects: [],
   taskLists: [],
   tasks: [],

@@ -559,3 +559,46 @@ test.describe("files upload edge cases", () => {
     }
   });
 });
+
+// S121/BV1 — the events single-leg ordering merge, at the WIRE.
+//
+// The unit seam is pinned with string fixtures; this pin covers the WIRING
+// (the delegate passes the STORED Prisma row — Date objects — to the seam).
+// The first live probe caught the string-only form silently skipping: the
+// PATCH below wrote the inverted span pre-fix.
+test.describe("S121/BV1: the events single-leg ordering merge", () => {
+  test("a single-leg endDate PATCH earlier than the stored startDate is rejected at the API", async ({ request }) => {
+    const stamp = `${Date.now()}`;
+    const created = await request.post("/api/events", {
+      data: {
+        title: `E2E — BV1 ordering probe ${stamp}`,
+        startDate: "2026-11-02T09:00:00",
+        endDate: "2026-11-02T10:00:00",
+      },
+    });
+    expect(created.ok()).toBe(true);
+    const { id } = (await created.json()) as { id: string };
+    try {
+      // The single-leg inversion (endDate alone, earlier than the stored start).
+      const inverted = await request.patch(`/api/events/${id}`, {
+        data: { endDate: "2026-11-02T08:00:00" },
+      });
+      expect(inverted.status()).toBe(400);
+      expect((await inverted.json()) as { error?: string }).toMatchObject({
+        error: "End date must be after the start date",
+      });
+      // The other direction: startDate alone, later than the stored end.
+      const invertedStart = await request.patch(`/api/events/${id}`, {
+        data: { startDate: "2026-11-02T12:00:00" },
+      });
+      expect(invertedStart.status()).toBe(400);
+      // The legal single-leg move passes.
+      const legal = await request.patch(`/api/events/${id}`, {
+        data: { endDate: "2026-11-02T11:00:00" },
+      });
+      expect(legal.ok()).toBe(true);
+    } finally {
+      await request.delete(`/api/events/${id}`);
+    }
+  });
+});

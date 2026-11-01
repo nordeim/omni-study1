@@ -25,7 +25,7 @@ tags:
 
 > **What this is:** the single-source-of-truth reference for working in
 > `nordeim/omni-study1`. Every fact below is verified against the codebase
-> (1527 tests green, re-anchored at the S120 update: 1030 Vitest unit + 497
+> (1556 tests green, re-anchored at the S121 update: 1054 Vitest unit + 502
 > Playwright e2e across the 5-chunk cold map — the census re-anchored through
 > the s117–s119 hardening cycles; the 2.0 baseline was 834 + 299 in six
 > chunks after the parity re-application + account-flow completion +
@@ -523,6 +523,9 @@ notes, decks, grades; `avatarEmoji: ""` (reference default state).
 | AP-124 | MEDIUM | Three first-cert failures shared one root: BU7 changed the dashboard badge family, BU8 the exams-view family, BU17d the reset-success channel — each landed with its NEW pin GREEN while an OLD pin still asserted the superseded measured contract (an `rgb(254,226,226)` badge pin, an `sf-pill-red` dashboard census pin, a `getByRole("alert")` locator) | a measured-parity change must sweep the PIN layer for the OLD measured values in the same change: `grep -rn "<old value>" tests/` is a RED-phase step — a measured-value pin is a contract with two ends, and the old end is re-anchored deliberately, never left to fail at the cert | the S120 stale-pin trio (session-120) |
 | AP-125 | MEDIUM | The new `sf-pill-blue` utility failed the hue-tokens census until THREE coherent edits landed: the @theme pins for its steps, the UTILITY_CONTRACT entry, and the CONSUMERS census swap — plus the stale globals.css comment healed | a utility-family addition is a three-edit contract with the hue-tokens census; run `tests/hue-tokens.test.ts` immediately after adding any `@utility` family — the census is the guard working, 6 seconds instead of a 3-minute cert round | the S120/BU8 blue-family addition (session-120) |
 | AP-126 | MEDIUM | BU21 (the SEED_DEMO gate) was planned but unimplemented — the prior context window was interrupted mid-GREEN, and the miss was invisible until the docs phase enumerated the BU table against the tree | a resumed session never trusts its memory of what the prior window completed: re-derive the plan's item×tree matrix (grep each item's surfaces) BEFORE the docs chain claims completion — the plan's Status field is the only source of truth | the S120/BU21 recovery (session-120) |
+| AP-127 | HIGH | The event-merge seam's unit pins passed on STRING fixtures while the delegate passed the STORED Prisma row (Date objects) — the seam's `typeof !== "string"` guard silently skipped and the first live curl probe wrote the inverted span the guard existed to block | a pure-seam unit pin must pin the DB's actual VALUE TYPES (Prisma Dates), not only the wire's strings — and a seam consumed by a delegate needs at least one WIRE-level observable-behavior pin; the live probe before the docs phase is the backstop | the S121/BV1 live-probe catch (session-121) |
+| AP-128 | MEDIUM | The frontend audit found 8 dead imports by name-grep; the `noUnusedLocals`/`noUnusedParameters` experiment surfaced 13 MORE (four in API routes) — the hand-sweep was never going to be complete | when an audit finds a hygiene CLASS, ask whether the compiler can own it: one tsconfig flag closed the dead-code class machine-wise, enforced by both `typecheck` and the canonical build (itself the type gate) | the S121/BV16 guard experiment (session-121) |
+| AP-129 | MEDIUM | The API audit's "add timeoutMs to the vision branch" recommendation was a TYPE ERROR — the SDK's vision body type carries no such field; the shipped omission was correct | an audit recommendation is a hypothesis; the type gate is the cheapest discriminator — run the guard experiment DURING implementation (or at the plan phase), never after the docs claim the fix | the S121/BV13 non-gap the build proved (session-121) |
 
 ---
 
@@ -571,7 +574,7 @@ tail -40 dev.log                            # request traces + prisma queries
 ```bash
 bun run lint && bun run typecheck && bun run test && bun run build && bun run test:e2e
 ```
-Current green state (re-anchored at S120/BU): lint ✓ · tsc ✓ · 1030 unit ✓ · build ✓ (the type gate live — `ignoreBuildErrors` removed) · 497 e2e ✓ (1527 green).
+Current green state (re-anchored at S121/BV): lint ✓ · tsc ✓ (`noImplicitAny` + `noUnusedLocals`/`noUnusedParameters` — the BV16 machine guard) · 1054 unit ✓ · build ✓ (the type gate live — `ignoreBuildErrors` removed) · 502 e2e ✓ (1556 green).
 
 **Full-suite chunk map** (one server-boot per chunk; the 10-min tool cap makes
 one-shot full runs unreliable — the 2.0 six-chunk map: chrome+s14 104 ·

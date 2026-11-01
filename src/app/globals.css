@@ -10,7 +10,10 @@
 
    1.  @theme inline vars must be FULL hsl() colors — bare triplets resolve to
        transparent. Shadcn tokens therefore stay raw triplets in :root/.dark,
-       consumed as hsl(var(--x)) INSIDE @theme inline (trap 13 routing).
+       consumed as hsl(var(--x)) inside the @theme block below (the var()
+       reference keeps them RUNTIME-resolved, so .dark overrides reach the
+       utilities — the trap-13 routing; a LITERAL under @theme inline would
+       inline at build time and freeze the light value).
    2.  The v3-era palette is PINNED below — v4's oklch defaults drift 1–3
        units/channel (trap: unpinned colors serialize as lab(...)).
    3.  --shadow-sm is pinned to v3's exact value — v4 shifted the scale a notch.
@@ -819,6 +822,22 @@
  * step darker, exactly like the calendar's today fill); non-text elements
  * (the dot + border) keep the base accent. Dark mode brightens the tint
  * to 0.15 for legibility on dark cards. */
+@utility sf-repeat-pill {
+  /* S121/BV15: the task-row repeat pill — the ACCENT-TOKEN form of the
+     reference's measured violet-100/violet-600 pill (N1, s121: measured
+     rgb(237,233,254)/rgb(124,58,237) = violet-100/violet-600 = EXACTLY
+     --sf-primary-empty/--sf-primary-strong at violet, so the default accent
+     renders byte-identical). The dark branch rides the soft-dark/strong-dark
+     pair (= violet-950/violet-300 at violet). */
+  background-color: rgb(var(--sf-primary-empty));
+  color: rgb(var(--sf-primary-strong));
+
+  .dark & {
+    background-color: rgb(var(--sf-primary-soft-dark));
+    color: rgb(var(--sf-primary-strong-dark));
+  }
+}
+
 @utility sf-subject-chip {
   background-color: rgb(var(--sf-primary) / 0.08);
   border: 1px solid rgb(var(--sf-primary) / 0.19);

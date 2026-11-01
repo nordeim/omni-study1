@@ -38,3 +38,24 @@ describe("secureCookieFlag (S120/BU15)", () => {
     expect(secureCookieFlag("", "http:")).toBe(false);
   });
 });
+
+// S121/BV12 — the comma-joined proxy header.
+//
+// `headers.get()` JOINS duplicate headers ("https, https" behind a double
+// proxy); the strict `=== "https"` comparison fails the joined form and the
+// Secure flag is silently dropped. The FIRST comma-separated value is the
+// client-most hop's protocol — the comparison reads it.
+describe("secureCookieFlag comma-joined headers (S121/BV12)", () => {
+  it("a duplicated https header still sets Secure", () => {
+    expect(secureCookieFlag("https, https", "http:")).toBe(true);
+  });
+
+  it("a joined header whose first value is http does NOT set Secure", () => {
+    expect(secureCookieFlag("http, https", "http:")).toBe(false);
+  });
+
+  it("a joined header with inner whitespace is normalized before the comparison", () => {
+    expect(secureCookieFlag(" HTTPS ,http", "http:")).toBe(true);
+    expect(secureCookieFlag("http , https", "http:")).toBe(false);
+  });
+});

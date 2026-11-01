@@ -79,3 +79,51 @@ test.describe("my day quick add", () => {
     await expect(page.getByText(`E2E — my day task ${stamp}`)).toBeVisible();
   });
 });
+
+// S121/BV7 — the owned-FK guard on the interactive CRUD path.
+//
+// makeOwnedDelegate wrote parsed subjectId/listId/notebookId verbatim — a
+// task referencing a subject id that exists but belongs to ANOTHER account
+// (or no account at all) satisfied the Prisma FK and persisted as an
+// owner-view dangling reference. The factory now ownership-checks every
+// non-null sent FK (the files/folders + ai/generate convention: 404 "That
+// subject does not exist."). API-level on the shared demo session.
+test.describe("S121/BV7: owned-FK guards", () => {
+  test("a task POST with a foreign/nonexistent subjectId answers the actionable 404", async ({ request }) => {
+    const foreign = await request.post("/api/tasks", {
+      data: {
+        title: `E2E — BV7 foreign subject ${stamp}`,
+        subjectId: "cm ForeignSubject0000000000000001",
+      },
+    });
+    expect(foreign.status()).toBe(404);
+    expect((await foreign.json()) as { error?: string }).toMatchObject({
+      error: "That subject does not exist.",
+    });
+    // The legal path is untouched: an OWN subject still accepts the task.
+    const subjects = await request.get("/api/subjects");
+    expect(subjects.ok()).toBe(true);
+    const rows = (await subjects.json()) as { id: string }[];
+    if (rows.length > 0) {
+      const legal = await request.post("/api/tasks", {
+        data: { title: `E2E — BV7 own subject ${stamp}`, subjectId: rows[0].id },
+      });
+      expect(legal.ok()).toBe(true);
+      // Cleanup: the probe rows never outlive the pin.
+      await request.delete(`/api/tasks/${((await legal.json()) as { id: string }).id}`);
+    }
+  });
+
+  test("a task POST with a nonexistent listId answers the actionable 404", async ({ request }) => {
+    const foreign = await request.post("/api/tasks", {
+      data: {
+        title: `E2E — BV7 foreign list ${stamp}`,
+        listId: "cm ForeignList000000000000000000001",
+      },
+    });
+    expect(foreign.status()).toBe(404);
+    expect((await foreign.json()) as { error?: string }).toMatchObject({
+      error: "That list does not exist.",
+    });
+  });
+});

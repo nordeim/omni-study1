@@ -398,9 +398,12 @@ export function StudyGroupsView() {
             <div className="sf-card flex-1 overflow-y-auto p-6">
               <h3 className="text-sm font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Members</h3>
               <ul className="mt-3 flex flex-col gap-2">
-                {parseMembers(selected.members).map((member) => (
+                {parseMembers(selected.members).map((member, index) => (
                   <li
-                    key={`${member.email}-${member.name}`}
+                    // S121/BV17: two members may share email+name (the
+                    // schema caps neither's uniqueness) — the index
+                    // disambiguates.
+                    key={`${member.email}-${member.name}-${index}`}
                     className="group flex items-center gap-3 rounded-xl border border-slate-100 p-3 dark:border-slate-800"
                   >
                     <span

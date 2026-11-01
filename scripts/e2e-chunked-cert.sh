@@ -74,8 +74,17 @@
 # BU14 register uniform-200 pin in auth-flows + the BU4 RUM user-scoping
 # pin in s18-rum; the S15 reset-success pin re-anchored IN-PLACE to the
 # role=status channel].)
-# Expected: 135 + 145 + 61 + 90 + 66 = 497 (each chunk's count includes its
-# auth setup; 482 real specs = the S82 443 + the seven S83 pins + the eight
+# (S121/BV re-tag — census 497 → 502, net +5: chunk 2 +2 [the BV7 owned-FK
+# guard pins in tasks.spec — a foreign/nonexistent subjectId AND listId both
+# answer the actionable 404 "That X does not exist." on the shared demo
+# session]; chunk 3 +1 [the BV1 wire-level events ordering pin in resilience
+# — the single-leg inversion PATCH against the stored row, both directions +
+# the legal move, finally-cleanup]; chunk 5 +2 [the BV6 re-register password
+# pin in auth-flows — the newly typed password signs in, the first 401s, on
+# a fresh TEST-NET IP — + the BV11a concurrent verify-code replay pair
+# asserting exactly {200, 400}, the BT3 shape on the OTP family].)
+# Expected: 135 + 147 + 62 + 90 + 68 = 502 (each chunk's count includes its
+# auth setup; 487 real specs = the S82 443 + the seven S83 pins + the eight
 # S84 pins + the four S85 pins + the one S86 pin + the one S88 pin + the one
 # S89 pin + the four S94 pins [A0c + AU3a/b/c] + the two S117/BR pins [the
 # s23 cards round-trip + the verify-429] + the two S118/BS pins [BS4 drawer
@@ -85,7 +94,9 @@
 # BT3 reset replay pair] + the nine S120/BU pins [BU7 dashboard badges,
 # BU9 exam Cancel, BU9 class + assignment Cancel ×2, BU16 headers, BU1
 # rename prefill, BU13 expiry aria-live, BU14 register 200, BU4 RUM
-# user-scoping] — S95/AV4a, the s94
+# user-scoping] + the five S121/BV pins [BV7 owned-FK ×2, BV1 the events
+# wire-level ordering, BV6 the re-register password, BV11a the concurrent
+# verify pair] — S95/AV4a, the s94
 # audit's L3: the AU re-tag updated the sum but left the 470-era "465" stale;
 # the S118 re-tag repaired the same class for the 474-era sum the S117 cycle
 # left behind).

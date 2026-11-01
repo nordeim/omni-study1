@@ -48,7 +48,6 @@ import { useToast } from "@/components/ui/toast";
 import { mutations, useDataStore, type GradeRow } from "@/lib/data";
 import {
   Spinner,
-  StatCard,
   SubjectChip,
   ViewHeader,
 } from "@/components/views/shared";

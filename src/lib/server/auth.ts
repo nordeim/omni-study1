@@ -142,12 +142,20 @@ export function setSessionCookie(
 }
 
 /** Clear the session cookie (logout + account deletion): maxAge 0 — the
- *  browser drops it immediately. */
-export function clearSessionCookie(response: NextResponse): NextResponse {
+ *  browser drops it immediately. S121/BV2: the optional `{ secure }` mirrors
+ *  setSessionCookie — the CLEAR must ride the same proxy-aware derivation
+ *  the SET rides (a Secure Set-Cookie over a plain-HTTP origin is DROPPED
+ *  by browsers, so a NODE_ENV-derived Secure flag made logout silently
+ *  leak the live session cookie on the plain-HTTP Docker posture; the
+ *  routes pass secureCookieFlag(...) exactly as login does). */
+export function clearSessionCookie(
+  response: NextResponse,
+  options?: { secure?: boolean },
+): NextResponse {
   response.cookies.set(SESSION_COOKIE_NAME, "", {
     httpOnly: true,
     sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
+    secure: options?.secure ?? process.env.NODE_ENV === "production",
     maxAge: 0,
     path: "/",
   });

@@ -70,7 +70,24 @@ export async function POST(request: NextRequest) {
       return errorResponse(400, "That code is invalid or has expired.");
     }
 
-    // The one-shot consumption + the verification mark in one transaction.
+    // S121/BV11a: the CONDITIONAL single-use consumption — the deleteMany
+    // itself carries the code + expiry in its WHERE, so two concurrent
+    // replays race on the SAME delete and exactly one wins (the BT3
+    // reset-token pattern applied to the OTP family; the shipped
+    // read-then-transact shape let both replays pass the read and both
+    // get sessions in the ~100ms window).
+    const consumed = await db.verificationToken.deleteMany({
+      where: {
+        userId: user.id,
+        code: normalized,
+        expiresAt: { gt: new Date() },
+      },
+    });
+    if (consumed.count === 0) {
+      return errorResponse(400, "That code is invalid or has expired.");
+    }
+
+    // The verification mark + the residual-token cleanup in one transaction.
     const [verifiedUser] = await db.$transaction([
       db.user.update({
         where: { id: user.id },

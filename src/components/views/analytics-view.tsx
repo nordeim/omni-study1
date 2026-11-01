@@ -9,7 +9,6 @@
 // card, and the grade-trend line superset. No chart library, no gradient CTA.
 // ---------------------------------------------------------------------------
 
-import * as React from "react";
 import {
   BookOpen,
   ChartColumn,
@@ -314,10 +313,9 @@ export function AnalyticsView() {
 
   const today = startOfDay(new Date());
 
-  const week = React.useMemo(
-    () => Array.from({ length: 7 }, (_, i) => addDays(today, i - 6)),
-    [today],
-  );
+  // S121/BV19: a plain derivation — the memo keyed on `today` (a fresh
+  // Date object every render) never cached once.
+  const week = Array.from({ length: 7 }, (_, i) => addDays(today, i - 6));
   const dayLabels = week.map((d) => d.toLocaleDateString("en-US", { weekday: "short" }));
 
   // ---- stat figures -----------------------------------------------------------
@@ -357,6 +355,9 @@ export function AnalyticsView() {
   // ---- subject workload -------------------------------------------------------------
   const workload = subjects
     .map((subject) => ({
+      // S121/BV17: the id rides the mapped row — duplicate subject NAMES
+      // are schema-legal and collided on key={row.name}.
+      id: subject.id,
       name: subject.name,
       color: subject.color,
       count:
@@ -435,7 +436,7 @@ export function AnalyticsView() {
             ) : (
               <div className="flex flex-col gap-3">
                 {workload.map((row) => (
-                  <div key={row.name} className="flex flex-col gap-1">
+                  <div key={row.id} className="flex flex-col gap-1">
                     <div className="flex items-center justify-between text-sm">
                       <span className="font-medium text-slate-700 dark:text-slate-200">{row.name}</span>
                       <span className="text-slate-500 dark:text-slate-400">{row.count}</span>

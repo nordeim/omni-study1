@@ -9,7 +9,7 @@
 
 import { NextResponse, type NextRequest } from "next/server";
 
-import { checkRateLimit, verifyPassword } from "@/lib/auth";
+import { checkRateLimit, secureCookieFlag, verifyPassword } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { deleteAccountSchema } from "@/lib/validation";
 import { clearSessionCookie, requireUser } from "@/lib/server/auth";
@@ -43,7 +43,15 @@ export async function POST(request: NextRequest) {
     // chat, RUM events, tokens: every user relation carries Cascade.
     await db.user.delete({ where: { id: user.id } });
 
-    return clearSessionCookie(NextResponse.json({ ok: true }));
+    // S121/BV2: the clear rides the proxy-aware derivation (the user row
+    // is gone — the cookie is doubly dead — but the browser must actually
+    // DROP it on the plain-HTTP posture).
+    return clearSessionCookie(NextResponse.json({ ok: true }), {
+      secure: secureCookieFlag(
+        request.headers.get("x-forwarded-proto"),
+        request.nextUrl.protocol,
+      ),
+    });
   } catch (err: unknown) {
     return toErrorResponse(err);
   }

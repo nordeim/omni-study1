@@ -60,7 +60,7 @@ import {
   type AssignmentRow,
 } from "@/lib/data";
 import { daysUntil, startOfDay } from "@/lib/date";
-import { apiSend, ApiError } from "@/lib/api";
+import { ApiError } from "@/lib/api";
 import { cn } from "@/lib/utils";
 
 const TYPES = ["homework", "essay", "project", "reading", "lab", "presentation", "other"];

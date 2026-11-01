@@ -40,13 +40,6 @@ import {
   type TaskRowActions,
 } from "@/components/views/tasks-view";
 
-const STUDY_TIPS: string[] = [
-  "Break big tasks into 25-minute focus blocks.",
-  "Review yesterday's notes for two minutes first — recall beats re-reading.",
-  "Do the hardest task while your energy is highest.",
-  "Drink water before your next session — hydration is focus fuel.",
-];
-
 function errorMessage(err: unknown, fallback: string): string {
   return err instanceof Error && err.message ? err.message : fallback;
 }
