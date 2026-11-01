@@ -93,6 +93,74 @@ function parseNoteTags(raw: string): string[] {
   }
 }
 
+// S122/BW3 — the debounced note-title input. Owned as a KEY-REMOUNTED child
+// (by note id, the BU1 pattern) so the draft resets naturally on note
+// switch with NO set-state-in-effect; the pending PATCH flushes on unmount
+// (the note-switch path — the QuillEditor's unmount-flush symmetry) and on
+// an explicit Save (the imperative flush()). The pre-fix input PATCHed on
+// EVERY keystroke with a full-collection refetch, on an input controlled
+// only by store state — interleaved refetches snapped the visible text back
+// mid-typing (and the reference persists the title on Save only, measured
+// live: zero saves during 10+ s of typing).
+interface NoteTitleInputHandle {
+  /** Fire the pending PATCH immediately (the Save path). */
+  flush(): void;
+}
+
+const TITLE_DEBOUNCE_MS = 600; // the editor's own autosave rhythm
+
+const NoteTitleInput = React.forwardRef<NoteTitleInputHandle, {
+  noteId: string;
+  initialTitle: string;
+  onPatch: (noteId: string, title: string) => void;
+}>(function NoteTitleInput({ noteId, initialTitle, onPatch }, forwarded) {
+  const [draft, setDraft] = React.useState(initialTitle);
+  const timerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
+  const pendingRef = React.useRef<{ id: string; title: string } | null>(null);
+  // The latest onPatch for the flush closures (a ref write in an effect —
+  // the AH1 lint contract; the unmount flush must route through the
+  // parent's CURRENT patchTitle, not a stale closure).
+  const onPatchRef = React.useRef(onPatch);
+  React.useEffect(() => {
+    onPatchRef.current = onPatch;
+  }, [onPatch]);
+
+  const flush = React.useCallback(() => {
+    if (timerRef.current) {
+      clearTimeout(timerRef.current);
+      timerRef.current = null;
+    }
+    const pending = pendingRef.current;
+    pendingRef.current = null;
+    if (pending) onPatchRef.current(pending.id, pending.title);
+  }, []);
+
+  React.useImperativeHandle(forwarded, () => ({ flush }), [flush]);
+
+  // The unmount flush — a note switch (the key change) or view exit must
+  // not lose the last debounced edit.
+  React.useEffect(() => () => flush(), [flush]);
+
+  return (
+    <Input
+      aria-label="Note title"
+      placeholder="Note title..."
+      value={draft}
+      onChange={(e) => {
+        const value = e.target.value;
+        setDraft(value);
+        if (timerRef.current) clearTimeout(timerRef.current);
+        pendingRef.current = { id: noteId, title: value };
+        timerRef.current = setTimeout(() => {
+          timerRef.current = null;
+          flush();
+        }, TITLE_DEBOUNCE_MS);
+      }}
+      className="h-9 flex-1 border-none bg-transparent text-sm font-bold shadow-none focus-visible:ring-0 dark:bg-transparent"
+    />
+  );
+});
+
 export function NotesView() {
   const notes = useDataStore((s) => s.notes);
   const notebooks = useDataStore((s) => s.notebooks);
@@ -129,6 +197,41 @@ export function NotesView() {
   // note is still open" — it is not). Event-handler writes only, never
   // render-time mutation (the react-hooks lint contract).
   const selectedIdRef = React.useRef<string | null>(null);
+
+  // S122/BW3: the title input is a KEY-REMOUNTED child component (by note
+  // id) that owns its own draft + 600 ms debounce — the per-keystroke
+  // PATCH + full-collection refetch on a store-controlled input snapped
+  // the visible text back mid-typing (and the reference persists the
+  // title on Save only, measured live). The child flushes its pending
+  // PATCH on unmount (the note-switch path, the QuillEditor's symmetry)
+  // and exposes flush() for the explicit Save. See NoteTitleInput below.
+  const titleInputRef = React.useRef<NoteTitleInputHandle | null>(null);
+
+  // The BT11 failed-rename streak contract (the settle branches keep the
+  // AG6 selection-mirror gates — a departed note's rejection is ignored
+  // outright, its success resets the streak only for the still-open note).
+  const patchTitle = React.useCallback(
+    (noteId: string, title: string) => {
+      updateNote(noteId, { title })
+        .then(() => {
+          if (selectedIdRef.current === noteId) {
+            autosaveFailedRef.current = false;
+          }
+        })
+        .catch((err: unknown) => {
+          if (selectedIdRef.current !== noteId) return;
+          if (!autosaveFailedRef.current) {
+            autosaveFailedRef.current = true;
+            toast.error(
+              err instanceof ApiError
+                ? err.message
+                : "Title not saved — check your connection and edit again.",
+            );
+          }
+        });
+    },
+    [toast],
+  );
 
   const allTags = React.useMemo(() => {
     const set = new Set<string>();
@@ -361,6 +464,10 @@ export function NotesView() {
 
   const saveNow = async () => {
     if (!selected) return;
+    // S122/BW3: an explicit Save flushes the pending title FIRST — the
+    // reference's Save persists the whole note, and a pending debounced
+    // title must not be lost to a same-click content PATCH racing it.
+    titleInputRef.current?.flush();
     // getContent() is null during the Quill load window — the ?? fallback
     // then carries the STORED content (S78/AE1: never PATCH "" over a
     // populated note from a Save raced against the dynamic import).
@@ -600,36 +707,12 @@ export function NotesView() {
             {/* Title row (S77/AD3 measured): 14px/700 title + the black
                 square actions button + the gradient Save. */}
             <div className="flex items-center gap-2">
-              <Input
-                aria-label="Note title"
-                placeholder="Note title..."
-                value={selected.title}
-                onChange={(e) =>
-                  // S119/BT11: a failed rename (offline) is data loss the
-                  // user cannot see — the title PATCH rides the SAME
-                  // once-per-streak toast contract as the content autosave
-                  // (the S78/AE2 mechanism; the streak flag resets on the
-                  // next successful save or selection change).
-                  updateNote(selected.id, { title: e.target.value })
-                    .then(() => {
-                      if (selectedIdRef.current === selected.id) {
-                        autosaveFailedRef.current = false;
-                      }
-                    })
-                    .catch((err: unknown) => {
-                      if (selectedIdRef.current !== selected.id) return;
-                      if (!autosaveFailedRef.current) {
-                        autosaveFailedRef.current = true;
-                        toast.error(
-                          err instanceof ApiError
-                            ? err.message
-                            : "Title not saved — check your connection and edit again.",
-                        );
-                      }
-                    },
-                  )
-                }
-                className="h-9 flex-1 border-none bg-transparent text-sm font-bold shadow-none focus-visible:ring-0 dark:bg-transparent"
+              <NoteTitleInput
+                ref={titleInputRef}
+                key={selected.id}
+                noteId={selected.id}
+                initialTitle={selected.title}
+                onPatch={patchTitle}
               />
               <div className="flex shrink-0 items-center gap-2">
                 <DropdownMenu>

@@ -19,6 +19,21 @@
 
 export const AI_DEADLINE_MS = 120_000;
 
+/**
+ * S122/BW6: the persisted-content bound — every other field at the AI
+ * write boundaries is schema-bounded (the user leg ≤10 k, cards ≤2 k,
+ * questions ≤2 k); the assistant leg trusted the provider. A runaway
+ * reply (or a compromised provider response) must not write an
+ * unbounded row the GET then serves 500 of. 100_000 is the note-content
+ * precedent. Truncation (not rejection) keeps the conversation — the
+ * trust boundary is the provider, not the requester.
+ */
+export const PERSISTED_CONTENT_MAX = 100_000;
+
+export function capPersistedContent(content: string, max: number = PERSISTED_CONTENT_MAX): string {
+  return content.length > max ? content.slice(0, max) : content;
+}
+
 /** Thrown when the deadline beats the SDK call; mapped to a 504 by the
  *  AI routes' catch. */
 export class AiDeadlineError extends Error {

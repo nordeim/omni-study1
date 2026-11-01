@@ -1,6 +1,22 @@
 import { defineConfig } from "vitest/config";
 import path from "node:path";
 
+// Unit-test layer for the pure domain seams — 41 files / 1085 tests
+// (re-anchored S122/BW — the audit-driven hardening cycle: census 1054 →
+// 1085. The additions: timetable-merge +14 [the S122/BW7 ordering guard —
+// the pure merge seam's single-leg inversions both directions, the legal
+// moves, the null/neither-leg skips, the equal-legs legality, the
+// UNPADDED legacy seeded hours ("9:00" vs "11:00" — the live-probe catch:
+// a raw string compare rejects every legal move on a legacy row), the
+// malformed-legacy skip, and the create/update schema checks], ai-helpers
+// +15 [the S122/BW12 unit pins for src/lib/server/ai.ts — withDeadline
+// (resolve, deadline rejection, the loser's rejection suppression, timer
+// cleanup), extractAssistantContent (the shape-walker family), and
+// extractJsonBlock (fences, bare JSON, the balanced-block fallback, the
+// nulls) + the S122/BW6 capPersistedContent boundary (100_000 exact)],
+// data-import +2 [the S122/BW8 derived-map pins — IMPORT_REQUIRED_FKS/
+// IMPORT_OPTIONAL_FKS derived from IMPORT_FK_MAP, the drift-hazard close].)
+//
 // Unit-test layer for the pure domain seams — 39 files / 1054 tests
 // (re-anchored S121/BV — the audit-driven hardening cycle: census 1030 →
 // 1054. The additions: event-merge +12 [the S121/BV1 single-leg ordering

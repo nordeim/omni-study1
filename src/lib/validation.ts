@@ -259,6 +259,37 @@ export const timetableClassSchema = z.object({
   weekType: z.enum(["ALL", "A", "B"]).optional().default("ALL"),
 });
 
+// S122/BW7: the timetable ordering guard — the events family (BU22/BV1)
+// applied to the hhmm atoms. Zero-padded hhmm strings compare
+// lexicographically, so a plain string comparison is exact (no offsets
+// exist in hhmm — no Date.parse needed, no BV10 class). The reference has
+// no such guard; this is superset hardening (the owned-FK precedent).
+const TIMETABLE_END_BEFORE_START = "End time must be after the start time";
+
+export const timetableClassCreateSchema = timetableClassSchema.check((ctx) => {
+  const { endTime, startTime } = ctx.value;
+  if (endTime && startTime && endTime < startTime) {
+    ctx.issues.push({
+      code: "custom",
+      input: ctx.value,
+      message: TIMETABLE_END_BEFORE_START,
+      path: ["endTime"],
+    });
+  }
+});
+
+export const timetableClassUpdateSchema = timetableClassSchema.partial().check((ctx) => {
+  const { endTime, startTime } = ctx.value;
+  if (endTime && startTime && endTime < startTime) {
+    ctx.issues.push({
+      code: "custom",
+      input: ctx.value,
+      message: TIMETABLE_END_BEFORE_START,
+      path: ["endTime"],
+    });
+  }
+});
+
 export const notebookSchema = z.object({
   name: boundedTitle,
 });

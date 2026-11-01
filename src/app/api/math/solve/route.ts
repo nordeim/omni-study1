@@ -10,6 +10,7 @@ import { NextResponse } from "next/server";
 import ZAI from "z-ai-web-dev-sdk";
 
 import { checkRateLimit } from "@/lib/auth";
+import { db } from "@/lib/db";
 import { mathSolveSchema } from "@/lib/validation";
 import {
   errorResponse,
@@ -21,6 +22,7 @@ import {
 } from "@/lib/server/http";
 import {
   AI_DEADLINE_MS,
+  capPersistedContent,
   extractAssistantContent,
   withDeadline,
 } from "@/lib/server/ai";
@@ -68,6 +70,32 @@ export const POST = withUser(async (user, request) => {
     if (!solution) {
       return errorResponse(502, "The solver returned an empty solution. Try again.");
     }
+
+    // S122/BW2: persist the exchange — the view's "Recent Problems" is
+    // built from surface="solver" rows, and the solve route never wrote
+    // any (the feature was dead: the empty-state copy promised saves that
+    // could never happen, and the s72-measured populated reference surface
+    // had no clone counterpart). Mirrors the chat route's two-row
+    // transaction, written ONLY on a successful reply (a failed solve
+    // bounces the composer — no orphan rows, the S13 doctrine).
+    await db.$transaction([
+      db.aiChatMessage.create({
+        data: {
+          userId: user.id,
+          role: "user",
+          content: capPersistedContent(problem),
+          surface: "solver",
+        },
+      }),
+      db.aiChatMessage.create({
+        data: {
+          userId: user.id,
+          role: "assistant",
+          content: capPersistedContent(solution),
+          surface: "solver",
+        },
+      }),
+    ]);
 
     return NextResponse.json({ solution });
   } catch (err: unknown) {

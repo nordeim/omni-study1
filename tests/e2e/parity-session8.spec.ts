@@ -237,7 +237,12 @@ test.describe("S8-C · Calendar rework", () => {
     // cells carry transition-all — the tint ANIMATES in over ~150ms, so we
     // gate on the final computed color (an immediate read catches a
     // mid-transition blend like rgb(184,157,250)).
-    const other = grid.locator("button").filter({ hasText: "15" }).first();
+    // S122/BW1: the deselect target must never be TODAY — the calendar's
+    // onClick SETS the selection (no toggle-off), so on the 15th of any
+    // month the fixed "15" click re-selected today and the unselected
+    // tint poll timed out (a deterministic once-a-month suite failure).
+    const alt = new Date().getDate() === 15 ? 14 : 15;
+    const other = grid.locator("button").filter({ hasText: String(alt) }).first();
     await other.click();
     await page.waitForFunction(
       () =>
@@ -330,22 +335,25 @@ test.describe("S8-D · MyDay header + suggestions", () => {
   test("suggestion rows are bg-slate-50 rounded-xl with circle icons", async ({ page }) => {
     await page.goto("/MyDay");
     await hydrated(page);
+    // S122/BW1: the pre-fix body hid behind non-retrying `if (await …count())`
+    // guards taken right after hydrated() — when the view hadn't mounted
+    // yet the whole test passed vacuously (the false-PASS variant of the
+    // BU9 class). The sibling test's toBeVisible() flow gates instead; the
+    // demo user's tasks guarantee the suggestions section renders.
     const toggle = page.locator('button[aria-controls="my-day-suggestions"]');
-    if (await toggle.count()) {
-      const expanded = await toggle.getAttribute("aria-expanded");
-      if (expanded !== "true") await toggle.click();
-      const row = page.locator('[aria-label="Suggested tasks"] > div').first();
-      if (await row.count()) {
-        const cs = await row.evaluate((el) => {
-          const s = getComputedStyle(el);
-          return { bg: s.backgroundColor, radius: s.borderRadius, pad: s.padding };
-        });
-        expect(cs.bg).toBe(rgb(248, 250, 252)); // slate-50
-        expect(cs.radius).toBe("12px");
-        expect(cs.pad).toBe("12px");
-        await expect(row.locator("svg.lucide-circle").first()).toBeVisible();
-      }
-    }
+    await expect(toggle).toBeVisible();
+    const expanded = await toggle.getAttribute("aria-expanded");
+    if (expanded !== "true") await toggle.click();
+    const row = page.locator('[aria-label="Suggested tasks"] > div').first();
+    await expect(row).toBeVisible();
+    const cs = await row.evaluate((el) => {
+      const s = getComputedStyle(el);
+      return { bg: s.backgroundColor, radius: s.borderRadius, pad: s.padding };
+    });
+    expect(cs.bg).toBe(rgb(248, 250, 252)); // slate-50
+    expect(cs.radius).toBe("12px");
+    expect(cs.pad).toBe("12px");
+    await expect(row.locator("svg.lucide-circle").first()).toBeVisible();
   });
 });
 
@@ -1219,6 +1227,12 @@ test.describe("S8-AC · the exam card's measured S76 anatomy", () => {
     await page.goto("/Exams");
     await hydrated(page);
     const cards = page.locator('[aria-label="Exam cards"] > div');
+    // S122/BW1: the before-count is a non-retrying read — gate on the
+    // seeded content first (the AP-96 pattern). hydrated() resolves
+    // pre-paint (the boot-script var), so an immediate count raced the
+    // shell flip + the pre-warm and read 0 during the Splash (the cert's
+    // 134≠135 — reproduced 4/4; the seeded 4 exams guarantee a first row).
+    await expect(cards.first()).toBeVisible();
     const before = await cards.count();
     await page.getByRole("button", { name: "Add Exam" }).click();
     const dlg = page.getByRole("dialog");

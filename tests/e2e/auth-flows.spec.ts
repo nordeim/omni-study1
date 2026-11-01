@@ -87,6 +87,49 @@ test.describe("S15 auth flows", () => {
     });
   });
 
+  // S122/BW9 — the OTP paste distributes across the boxes. The pre-fix
+  // setBox took `value.replace(/\D/g,"").slice(-1)`: a pasted 6-digit code
+  // landed as ONE character in the focused box (browsers clip a paste to
+  // maxLength=1) — yet the code is surfaced right above the input (the
+  // in-band delivery), so paste is the dominant entry path. The fix
+  // distributes the clipboard digits left-to-right from the focused box.
+  // Superset (invisible statically — the reference has no such handler).
+  test("S122/BW9: pasting the 6-digit code fills all six boxes", async ({ page }) => {
+    const email = `e2e-paste-${Date.now()}@example.com`;
+    await page.goto("/login");
+    await page.getByRole("button", { name: /sign up/i }).click();
+    await page.getByLabel("Email", { exact: true }).fill(email);
+    await page.getByLabel("Password", { exact: true }).fill(PASSWORD);
+    await page.getByLabel("Confirm Password").fill(PASSWORD);
+    await page.getByRole("button", { name: /create account/i }).click();
+
+    await expect(page.getByRole("heading", { name: "Verify your email" })).toBeVisible();
+    const note = page.getByText(/your code is/);
+    await expect(note).toBeVisible();
+    const code = ((await note.textContent()) ?? "").match(/\d{6}/)![0]!;
+
+    const boxes = page.locator("input[inputmode=numeric]");
+    await boxes.first().click();
+    // A real clipboard paste into the focused box.
+    await boxes.first().evaluate((el, text) => {
+      const dt = new DataTransfer();
+      dt.setData("text/plain", text);
+      el.dispatchEvent(
+        new ClipboardEvent("paste", { clipboardData: dt, bubbles: true, cancelable: true }),
+      );
+    }, code);
+
+    for (let i = 0; i < 6; i++) {
+      await expect(boxes.nth(i)).toHaveValue(code.charAt(i));
+    }
+
+    // The distributed code verifies (the paste carried the REAL code).
+    await page.getByRole("button", { name: /verify email/i }).click();
+    await expect(page.getByRole("heading", { name: /Good (morning|afternoon|evening|night)/ })).toBeVisible({
+      timeout: 20000,
+    });
+  });
+
   test("unverified accounts are gated at login with the reference copy", async ({ page }) => {
     const email = `e2e-gate-${Date.now()}@example.com`;
     // Register WITHOUT verifying.

@@ -20,6 +20,12 @@ type ImportSummary = {
 };
 
 function errorMessage(err: unknown, fallback: string): string {
+  // S122/BW13: a malformed backup's JSON.parse failure surfaces the raw V8
+  // message ("Unexpected token …") — map the SyntaxError family to friendly
+  // copy, keep every other error's own message (the API's actionable 400s).
+  if (err instanceof SyntaxError) {
+    return "That file is not a valid StudyFlow backup (it is not readable JSON).";
+  }
   return err instanceof Error && err.message ? err.message : fallback;
 }
 

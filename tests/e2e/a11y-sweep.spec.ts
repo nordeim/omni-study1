@@ -136,6 +136,16 @@ test.describe("Family F — Lighthouse-set a11y sweep (all 20 authed views)", ()
       await expect(
         page.getByRole("heading", { name: view.heading }).first(),
       ).toBeVisible();
+      // S122/BW1: settle the DATA before scanning. The headline renders at
+      // view mount while the initial collection GETs are still in flight —
+      // axe then nondeterministically scanned the empty-state DOM, and
+      // violations that only appear on data rows (row controls, table
+      // headers) could be intermittently missed. networkidle = 500 ms of
+      // network quiet: the pre-warm/loadAll GETs and the RUM beacon's
+      // early vitals POST have landed. If the beacon ever storms (it
+      // posts only on TTFB/FCP/LCP/CLS/INP — no intervals), this wait
+      // fails LOUDLY here rather than silently scanning a partial DOM.
+      await page.waitForLoadState("networkidle");
 
       const result = await runLighthouseSetAxe(page);
 

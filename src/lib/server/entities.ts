@@ -32,7 +32,8 @@ import {
   subjectSchema,
   taskListSchema,
   taskSchema,
-  timetableClassSchema,
+  timetableClassCreateSchema,
+  timetableClassUpdateSchema,
 } from "../validation";
 import {
   NotFoundError,
@@ -140,6 +141,45 @@ function epochMs(value: unknown): number {
   if (typeof value === "string") return Date.parse(value);
   if (value instanceof Date) return value.getTime();
   return Number.NaN;
+}
+
+/**
+ * S122/BW7 — the timetable single-leg ordering merge (the events BV1
+ * pattern on the hhmm atoms). The update schema's .check() fires only
+ * when BOTH legs arrive together; a single-leg PATCH
+ * (`{"endTime": …}` alone) is compared against the STORED row's other
+ * leg here. Comparisons are MINUTES-SINCE-MIDNIGHT, never raw strings:
+ * the SEED writes unpadded hours ("9:00" — Prisma directly, past the
+ * Zod boundary), and "11:00" < "9:00" lexicographically — a legacy row
+ * would reject every legal move (the live probe caught exactly this). A
+ * missing stored leg skips (legacy defense); a null leg cannot occur
+ * (hhmm is required, not nullable — no three-state clear).
+ */
+export function checkTimetableOrderingMerge(existing: Row, writes: Row): void {
+  const startSent = "startTime" in writes;
+  const endSent = "endTime" in writes;
+  // Both legs arriving together are the UPDATE SCHEMA's contract; neither
+  // leg is the delegate's no-op.
+  if (startSent === endSent) return;
+  const startTime = startSent ? writes.startTime : existing.startTime;
+  const endTime = endSent ? writes.endTime : existing.endTime;
+  if (typeof startTime !== "string" || typeof endTime !== "string") return;
+  const startMin = hhmmMinutes(startTime);
+  const endMin = hhmmMinutes(endTime);
+  if (startMin === null || endMin === null) return; // a malformed legacy leg skips
+  if (endMin < startMin) {
+    throw new ValidationError("End time must be after the start time");
+  }
+}
+
+/** "9:00"/"09:00" → 540 — the padded and the seeded-unpadded forms. */
+function hhmmMinutes(value: string): number | null {
+  const match = /^(\d{1,2}):(\d{2})$/.exec(value);
+  if (!match) return null;
+  const hours = Number(match[1]);
+  const minutes = Number(match[2]);
+  if (hours > 23 || minutes > 59) return null;
+  return hours * 60 + minutes;
 }
 
 function datesOnWrite(data: Row, dateFields: readonly string[]): Row {
@@ -363,9 +403,12 @@ export const eventDelegate = makeOwnedDelegate({
 
 export const timetableDelegate = makeOwnedDelegate({
   model: db.timetableClass as unknown as OwnedModel,
-  createSchema: timetableClassSchema,
-  updateSchema: timetableClassSchema.partial(),
+  // S122/BW7: the ordering-checked shapes + the single-leg merge — the
+  // events family (BU22/BV1) applied to the hhmm atoms.
+  createSchema: timetableClassCreateSchema,
+  updateSchema: timetableClassUpdateSchema,
   ownedFks: OWNED_FKS.timetable,
+  beforeWrite: checkTimetableOrderingMerge,
 });
 
 export const notebookDelegate = makeOwnedDelegate({

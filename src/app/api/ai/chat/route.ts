@@ -26,6 +26,7 @@ import {
 } from "@/lib/server/http";
 import {
   AI_DEADLINE_MS,
+  capPersistedContent,
   extractAssistantContent,
   withDeadline,
 } from "@/lib/server/ai";
@@ -124,7 +125,9 @@ export const POST = withUser(async (user, request) => {
         data: {
           userId: user.id,
           role: "assistant",
-          content,
+          // S122/BW6: the provider reply is capped at write — the only
+          // unbounded persisted field at this boundary.
+          content: capPersistedContent(content),
           surface: body.surface,
         },
       }),

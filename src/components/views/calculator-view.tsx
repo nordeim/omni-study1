@@ -470,6 +470,9 @@ function GpaPanel() {
     { id: "c1", name: "Calculus II", credits: "3", grade: "A" },
     { id: "c2", name: "Physics", credits: "4", grade: "B+" },
   ]);
+  // S122/BW13: a monotonic counter for added-course ids — Date.now()
+  // collides on a same-millisecond double-click (a React key collision).
+  const nextCourseIdRef = React.useRef(3);
 
   const rows: GpaRow[] = courses.map((c) => ({
     grade: c.grade,
@@ -552,7 +555,7 @@ function GpaPanel() {
           onClick={() =>
             setCourses((list) => [
               ...list,
-              { id: `c${Date.now()}`, name: "", credits: "3", grade: "A" },
+              { id: `c${nextCourseIdRef.current++}`, name: "", credits: "3", grade: "A" },
             ])
           }
         >

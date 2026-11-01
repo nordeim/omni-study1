@@ -73,6 +73,24 @@ export function LoginSurface() {
     if (digit && index < 5) boxRefs.current[index + 1]?.focus();
   };
 
+  // S122/BW9: a pasted code distributes across the boxes. The pre-fix
+  // setBox clipped a paste to ONE character (browsers honor maxLength=1)
+  // — yet the in-band delivery surfaces the code right above the inputs,
+  // so paste is the dominant entry path. Digits fill left-to-right from
+  // the focused box; focus lands on the next empty box.
+  const onBoxPaste = (index: number, event: React.ClipboardEvent<HTMLInputElement>) => {
+    const digits = event.clipboardData.getData("text/plain").replace(/\D/g, "");
+    if (!digits) return; // a non-digit paste falls through to the default clip
+    event.preventDefault();
+    const fill = digits.slice(0, 6 - index);
+    setCode((prev) => {
+      const next = [...prev];
+      for (let i = 0; i < fill.length; i++) next[index + i] = fill.charAt(i);
+      return next;
+    });
+    boxRefs.current[Math.min(index + fill.length, 5)]?.focus();
+  };
+
   const finishSignIn = () => {
     // Full reload — the boot script re-defaults the theme, and the shell
     // lands on the reference's canonical /Dashboard path.
@@ -445,6 +463,7 @@ export function LoginSurface() {
                     aria-label={`Digit ${i + 1}`}
                     value={digit}
                     onChange={(e) => setBox(i, e.target.value)}
+                    onPaste={(e) => onBoxPaste(i, e)}
                     onKeyDown={(e) => {
                       if (e.key === "Backspace" && !code[i] && i > 0) {
                         boxRefs.current[i - 1]?.focus();

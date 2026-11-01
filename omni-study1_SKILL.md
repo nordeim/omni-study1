@@ -25,7 +25,7 @@ tags:
 
 > **What this is:** the single-source-of-truth reference for working in
 > `nordeim/omni-study1`. Every fact below is verified against the codebase
-> (1556 tests green, re-anchored at the S121 update: 1054 Vitest unit + 502
+> (1593 tests green, re-anchored at the S122 update: 1085 Vitest unit + 508
 > Playwright e2e across the 5-chunk cold map — the census re-anchored through
 > the s117–s119 hardening cycles; the 2.0 baseline was 834 + 299 in six
 > chunks after the parity re-application + account-flow completion +
@@ -526,6 +526,7 @@ notes, decks, grades; `avatarEmoji: ""` (reference default state).
 | AP-127 | HIGH | The event-merge seam's unit pins passed on STRING fixtures while the delegate passed the STORED Prisma row (Date objects) — the seam's `typeof !== "string"` guard silently skipped and the first live curl probe wrote the inverted span the guard existed to block | a pure-seam unit pin must pin the DB's actual VALUE TYPES (Prisma Dates), not only the wire's strings — and a seam consumed by a delegate needs at least one WIRE-level observable-behavior pin; the live probe before the docs phase is the backstop | the S121/BV1 live-probe catch (session-121) |
 | AP-128 | MEDIUM | The frontend audit found 8 dead imports by name-grep; the `noUnusedLocals`/`noUnusedParameters` experiment surfaced 13 MORE (four in API routes) — the hand-sweep was never going to be complete | when an audit finds a hygiene CLASS, ask whether the compiler can own it: one tsconfig flag closed the dead-code class machine-wise, enforced by both `typecheck` and the canonical build (itself the type gate) | the S121/BV16 guard experiment (session-121) |
 | AP-129 | MEDIUM | The API audit's "add timeoutMs to the vision branch" recommendation was a TYPE ERROR — the SDK's vision body type carries no such field; the shipped omission was correct | an audit recommendation is a hypothesis; the type gate is the cheapest discriminator — run the guard experiment DURING implementation (or at the plan phase), never after the docs claim the fix | the S121/BV13 non-gap the build proved (session-121) |
+| AP-130 | HIGH | The agent toolchain's OUTPUT pipeline silently strips bracket-letter sequences (`[m`, `[h` observed) — a displayed `transition-argin]` was actually `transition-[margin]`, manufacturing a phantom "corrupted class" finding through grep, git show, sed, AND browser eval views alike; two probe harnesses were corrupted the same way before the char-code check exposed it | any candidate finding whose evidence is a bracket-bearing string must be re-read as CHAR CODES (or a length-checking hash) before it is reported — the display is not the bytes | the S122 retraction (session-122) |
 
 ---
 
@@ -574,7 +575,7 @@ tail -40 dev.log                            # request traces + prisma queries
 ```bash
 bun run lint && bun run typecheck && bun run test && bun run build && bun run test:e2e
 ```
-Current green state (re-anchored at S121/BV): lint ✓ · tsc ✓ (`noImplicitAny` + `noUnusedLocals`/`noUnusedParameters` — the BV16 machine guard) · 1054 unit ✓ · build ✓ (the type gate live — `ignoreBuildErrors` removed) · 502 e2e ✓ (1556 green).
+Current green state (re-anchored at S122/BW): lint ✓ · tsc ✓ (`noImplicitAny` + `noUnusedLocals`/`noUnusedParameters` — the BV16 machine guard) · 1085 unit ✓ · build ✓ (the type gate live — `ignoreBuildErrors` removed) · 508 e2e ✓ (1593 green).
 
 **Full-suite chunk map** (one server-boot per chunk; the 10-min tool cap makes
 one-shot full runs unreliable — the 2.0 six-chunk map: chrome+s14 104 ·

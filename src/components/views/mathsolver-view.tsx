@@ -51,7 +51,6 @@ function pairSolverMessages(
 export function MathSolverView() {
   const { toast } = useToast();
   const aiMessages = useDataStore((s) => s.aiMessages);
-  const loading = useDataStore((s) => s.loading);
 
   const [problem, setProblem] = React.useState("");
   const [image, setImage] = React.useState<string | null>(null);
@@ -222,17 +221,16 @@ export function MathSolverView() {
 
       {/* ---- past solutions: the ref's free-standing section heading
           (measured h2 18px/600 slate-800, no card header chrome) ---- */}
-      <section className="flex flex-col gap-3" aria-label="Recent Problems">
-        <h2 className="text-lg font-semibold text-slate-800 dark:text-slate-100">Recent Problems</h2>
-        {loading && history.length === 0 ? (
-          <div className="flex justify-center py-6">
-            <Spinner className="size-5 text-sf-primary" />
-          </div>
-        ) : history.length === 0 ? (
-          <p className="text-sm text-slate-500 dark:text-slate-400">
-            Problems you solve will be saved here.
-          </p>
-        ) : (
+      {/* S122/BW2: the section renders ONLY with history — the reference's
+          measured zero-state renders NO history chrome (the s70 zero-state
+          probe + the s122 live re-measure). The pre-fix unconditional
+          heading carried an invented "Problems you solve will be saved
+          here." promise the route never honored; the persistence half of
+          the fix lives in the solve route (the chat route's two-row
+          transaction), this is the display half. */}
+      {history.length > 0 && (
+        <section className="flex flex-col gap-3" aria-label="Recent Problems">
+          <h2 className="text-lg font-semibold text-slate-800 dark:text-slate-100">Recent Problems</h2>
           <ul className="flex flex-col gap-3">
             {history.slice(0, 10).map((pair) => (
               <li key={pair.id} className="rounded-xl border border-slate-100 p-4 dark:border-slate-800">
@@ -243,8 +241,8 @@ export function MathSolverView() {
               </li>
             ))}
           </ul>
-        )}
-      </section>
+        </section>
+      )}
     </div>
   );
 }

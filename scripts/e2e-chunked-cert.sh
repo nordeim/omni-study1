@@ -74,6 +74,20 @@
 # BU14 register uniform-200 pin in auth-flows + the BU4 RUM user-scoping
 # pin in s18-rum; the S15 reset-success pin re-anchored IN-PLACE to the
 # role=status channel].)
+# (S122/BW re-tag — census 502 → 508, net +6: chunk 2 +1 [the BW3
+# debounced-title pin in parity-session7 — char-by-char typing fires ≤2
+# PATCHes, never one per keystroke, the final title persisted]; chunk 3 +4
+# [the BW2 solver-persistence pin in parity-session5 — a REAL solve through
+# /api/math/solve populates the Recent Problems card (surface:"solver"
+# rows, the reference's measured zero-state hide + populated anatomy),
+# with the trailing DELETE cleanup — + the two BW11 413 wire pins in
+# resilience (the files 2 MiB multipart over-cap + the import 10 MiB
+# over-cap) + the BW7 timetable single-leg ordering wire pin]; chunk 5 +1
+# [the BW9 OTP paste-distribution pin in auth-flows — a synthetic
+# clipboard paste fills all six boxes and verifies, one more loopback
+# register: 7 of the 10/IP budget].)
+# Expected: 135 + 148 + 66 + 90 + 69 = 508 (each chunk's count includes its
+# auth setup. The S121/BV map beneath:
 # (S121/BV re-tag — census 497 → 502, net +5: chunk 2 +2 [the BV7 owned-FK
 # guard pins in tasks.spec — a foreign/nonexistent subjectId AND listId both
 # answer the actionable 404 "That X does not exist." on the shared demo

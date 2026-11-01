@@ -26,6 +26,8 @@ import { describe, expect, it } from "vitest";
 import {
   IMPORT_FK_MAP,
   IMPORT_MAX_BYTES,
+  IMPORT_OPTIONAL_FKS,
+  IMPORT_REQUIRED_FKS,
   parseImportEnvelope,
 } from "../src/lib/data-import";
 import { EXPORT_COLLECTIONS } from "../src/lib/data-export";
@@ -339,5 +341,35 @@ describe("IMPORT_FK_MAP (the completeness pin — the INITIAL_COLLECTIONS patter
 describe("IMPORT_MAX_BYTES (the documented body cap)", () => {
   it("is 10 MiB — 5x the largest realistic single-user envelope", () => {
     expect(IMPORT_MAX_BYTES).toBe(10 * 1024 * 1024);
+  });
+});
+
+describe("the derived route FK maps (S122/BW8 — the drift-hazard close)", () => {
+  // The import ROUTE consumed its own hand-maintained REQUIRED_FKS/
+  // OPTIONAL_FKS twins for 100+ sessions while this seam's IMPORT_FK_MAP
+  // carried the unit-pinned copy — two map families that could drift
+  // apart silently (a new FK-bearing collection would fail THIS file's
+  // completeness pin while shipping with no route-side pre-emption).
+  // BW8 moves the operative maps INTO the seam (derived from
+  // IMPORT_FK_MAP, single source) — these pins hold the derivation.
+  it("derives REQUIRED exactly: cards.deckId → decks", () => {
+    expect(IMPORT_REQUIRED_FKS).toEqual({ cards: { deckId: "decks" } });
+  });
+
+  it("derives OPTIONAL with the self-target for folders.parentId and no required leakage", () => {
+    expect(IMPORT_OPTIONAL_FKS).toEqual({
+      tasks: { subjectId: "subjects", listId: "taskLists" },
+      assignments: { subjectId: "subjects" },
+      exams: { subjectId: "subjects" },
+      timetableClasses: { subjectId: "subjects" },
+      notes: { subjectId: "subjects", notebookId: "notebooks" },
+      decks: { subjectId: "subjects" },
+      practiceTests: { subjectId: "subjects" },
+      studyGroups: { subjectId: "subjects" },
+      grades: { subjectId: "subjects" },
+      focusSessions: { subjectId: "subjects" },
+      files: { folderId: "folders" },
+      folders: { parentId: "self" },
+    });
   });
 });

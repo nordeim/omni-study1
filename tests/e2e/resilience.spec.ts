@@ -602,3 +602,91 @@ test.describe("S121/BV1: the events single-leg ordering merge", () => {
     }
   });
 });
+
+// S122/BW11 — the two 413 wire guards were unpinned: no test ever posted an
+// over-cap upload or an over-cap import (only the shared reader's unit pin
+// and an 11 MiB LOGIN post covered the reader itself; the routes' own caps
+// and copies could regress green). Request-level pins, no UI.
+test.describe("S122/BW11: the over-cap 413 contracts", () => {
+  test("an upload past the 2 MiB envelope answers 413 with the files copy", async ({ request }) => {
+    // The route's envelope math: 2 MiB + 64 KiB (the multipart overhead
+    // allowance) — one byte over is the boundary-exact probe.
+    const overCap = 2 * 1024 * 1024 + 64 * 1024 + 1;
+    const res = await request.post("/api/files", {
+      multipart: {
+        file: {
+          name: "bw11-over-cap.bin",
+          mimeType: "application/octet-stream",
+          buffer: Buffer.alloc(overCap, 65),
+        },
+      },
+    });
+    expect(res.status()).toBe(413);
+    expect((await res.json()) as { error?: string }).toMatchObject({
+      error: "Files are limited to 2 MiB.",
+    });
+  });
+
+  test("an import past the 10 MiB cap answers 413 (the JSON content-type passes the BR5 gate first)", async ({ request }) => {
+    // 10 MiB + 1 byte of JSON — the cap fires at the body read, before
+    // parsing. Content-Type must be application/json (the BR5 gate runs
+    // before the cap and would otherwise answer a misleading 400).
+    const res = await request.post("/api/import/data", {
+      headers: { "content-type": "application/json" },
+      data: "x".repeat(10 * 1024 * 1024 + 1),
+    });
+    expect(res.status()).toBe(413);
+  });
+});
+
+// S122/BW7 — the timetable single-leg ordering merge at the wire (the
+// events BV1 pin's sibling). The create schema rejects the inverted span;
+// the single-leg PATCH merges against the STORED row — including the
+// SEED's unpadded legacy hours ("9:00"), which a raw string compare would
+// misread ("11:00" < "9:00" lexicographically, rejecting every legal move).
+test.describe("S122/BW7: the timetable single-leg ordering merge", () => {
+  test("an inverted create is rejected; the single-leg PATCH merges against the stored row", async ({ request }) => {
+    const stamp = `${Date.now()}`;
+    // The inverted create → 400 with the ordering copy.
+    const inverted = await request.post("/api/timetable", {
+      data: {
+        name: `BW7 inverted ${stamp}`,
+        dayOfWeek: 1,
+        startTime: "10:00",
+        endTime: "09:00",
+        subjectId: null,
+        room: "",
+        weekType: "ALL",
+      },
+    });
+    expect(inverted.status()).toBe(400);
+
+    // The legal create → 201; then the single-leg inversions both ways.
+    const created = await request.post("/api/timetable", {
+      data: {
+        name: `BW7 probe ${stamp}`,
+        dayOfWeek: 1,
+        startTime: "09:00",
+        endTime: "10:00",
+        subjectId: null,
+        room: "",
+        weekType: "ALL",
+      },
+    });
+    expect(created.ok()).toBe(true);
+    const { id } = (await created.json()) as { id: string };
+    try {
+      const earlyEnd = await request.patch(`/api/timetable/${id}`, { data: { endTime: "08:00" } });
+      expect(earlyEnd.status()).toBe(400);
+      expect((await earlyEnd.json()) as { error?: string }).toMatchObject({
+        error: "End time must be after the start time",
+      });
+      const lateStart = await request.patch(`/api/timetable/${id}`, { data: { startTime: "11:00" } });
+      expect(lateStart.status()).toBe(400);
+      const legal = await request.patch(`/api/timetable/${id}`, { data: { endTime: "11:30" } });
+      expect(legal.ok()).toBe(true);
+    } finally {
+      await request.delete(`/api/timetable/${id}`);
+    }
+  });
+});

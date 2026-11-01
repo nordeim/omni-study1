@@ -17,6 +17,8 @@ import type QuillType from "quill";
 
 import "quill/dist/quill.snow.css";
 
+import { useToastStore } from "@/components/ui/toast";
+
 /** The reference's measured snow toolbar: 3 pickers + 5 format groups = 20 controls. */
 const TOOLBAR: unknown[] = [
   [{ header: [] }, { font: [] }, { size: [] }],
@@ -57,6 +59,59 @@ interface QuillEditorProps {
 
 /** Minimal structural shape of a parchment BlockEmbed constructor. */
 type BlockEmbedCtor = new (domNode: HTMLElement) => object & { create: () => HTMLElement };
+
+/**
+ * S122/BW10 — the image-insert budget. The measured snow toolbar includes
+ * `image` (parity — the reference's own toolbar has it), but Quill 2's
+ * DEFAULT handler inserts base64 data-URLs unbounded: a typical screenshot
+ * (~200 KB → ~270 KB base64) blows the note-content schema cap (100_000)
+ * and the autosave then 400s — the editor was permitting content the
+ * server rejects. The gate keeps the toolbar intact and rejects inserts
+ * whose base64 would not leave room for text in the content budget.
+ */
+const MAX_IMAGE_BYTES = 60_000; // ≈80 KB base64 — leaves 20 KB for text
+
+function installImageSizeGate(quill: QuillType) {
+  const toolbar = quill.getModule("toolbar") as
+    | { handlers?: Record<string, (...args: unknown[]) => void> }
+    | undefined;
+  if (!toolbar) return;
+  toolbar.handlers = {
+    ...(toolbar.handlers ?? {}),
+    image: () => {
+      const input = document.createElement("input");
+      input.type = "file";
+      input.accept = "image/*";
+      input.onchange = () => {
+        const file = input.files?.[0];
+        if (!file) return;
+        if (file.size > MAX_IMAGE_BYTES) {
+          useToastStore
+            .getState()
+            .push(
+              "error",
+              `Images are limited to ${Math.round(MAX_IMAGE_BYTES / 1000)} KB in notes — the note would exceed its save limit.`,
+            );
+          return;
+        }
+        const reader = new FileReader();
+        reader.onerror = () => {
+          useToastStore.getState().push("error", "Could not read that image. Try again.");
+        };
+        reader.onload = () => {
+          const url = typeof reader.result === "string" ? reader.result : null;
+          if (!url) return;
+          const sel = quill.getSelection(true);
+          const index = sel ? sel.index : Math.max(0, quill.getLength() - 1);
+          quill.insertEmbed(index, "image", url);
+          quill.setSelection(index + 1);
+        };
+        reader.readAsDataURL(file);
+      };
+      input.click();
+    },
+  };
+}
 
 /** a11y-win (the repo's standing doctrine): Quill's snow toolbar buttons
  * ship with no accessible names — label them from their classes. */
@@ -179,6 +234,9 @@ export const QuillEditor = React.forwardRef<QuillEditorHandle, QuillEditorProps>
           modules: { toolbar: TOOLBAR },
         }) as QuillType;
         quillRef.current = quill;
+        // S122/BW10: the size-gated image insert (the default handler's
+        // unbounded base64 broke the note-content cap on save).
+        installImageSizeGate(quill);
 
         // a11y-win: the snow theme ships nameless toolbar buttons.
         labelToolbarButtons(containerRef.current.parentElement?.querySelector(".ql-toolbar") ?? null);

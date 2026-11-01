@@ -756,13 +756,65 @@ test.describe("S5-AB · the populated-surface drift layer (measured on the POPUL
     ).toBeVisible();
   });
 
-  test("S5-AB6 Math Solver: Recent Problems is a free-standing h2; the SectionCard title is gone", async ({ page }) => {
+  test("S5-AB6 Math Solver: NO history chrome at zero (the reference's measured zero-state)", async ({ page }) => {
     await page.goto("/MathSolver");
     await hydrated(page);
-    // Measured: h2 18px/600 slate-800 in the space-y-6 stack — not a card
-    // header (the chain read: no borderB, parent pad 0/0).
-    await expect(page.getByRole("heading", { name: "Recent Problems" })).toBeVisible();
+    // s70 probe #6 + the s122 live re-measure: the reference renders NO
+    // history section at zero. The clone's unconditional heading + the
+    // invented "Problems you solve will be saved here." copy was the
+    // deviation (S122/BW2) — the heading now appears only with history
+    // (the populated pin below), matching the reference both ways.
+    await expect(page.getByRole("heading", { name: "Recent Problems" })).toHaveCount(0);
+    await expect(page.getByText("Problems you solve will be saved here.")).toHaveCount(0);
     await expect(page.getByText("Recent solutions")).toHaveCount(0);
+  });
+
+  // S122/BW2 — the persistence half. The solve route never wrote rows
+  // (the view's refreshAiMessages fed an empty store forever); it now
+  // mirrors the chat route's two-row transaction with surface "solver",
+  // written ONLY on a successful reply. This pin solves a trivial problem
+  // through the REAL route and asserts the populated anatomy: the s72-
+  // measured free-standing h2 (18px/600 slate-800) + the Q/A pair card.
+  // The SDK occasionally returns an empty solution (a 502) — retry once.
+  // Budget: 1–2 of the demo user's 20/15-min `ai:` requests; nothing else
+  // in chunk 3 consumes it (every other AI pin route-mocks, and the s14
+  // C1 exhaustion lives in chunk 2 with its own per-chunk-boot limiter).
+  // Cleanup: the trailing DELETE keeps the transcript at zero for the
+  // next run (the zero-state pin above) — the aged-scratch-db class
+  // (S45/S46) applies only to a crashed run; `rm -f db/e2e.db` re-arms it.
+  test("S122/BW2: a solved problem persists to Recent Problems (the populated anatomy)", async ({ page }) => {
+    await page.goto("/MathSolver");
+    await hydrated(page);
+
+    const probe = "BW2 solver persistence probe: what is 2+2? Answer with just the number.";
+    let res = await page.request.post("/api/math/solve", { data: { problem: probe } });
+    if (!res.ok()) res = await page.request.post("/api/math/solve", { data: { problem: probe } });
+    expect(res.ok(), `the solve route answered ${res.status()}`).toBe(true);
+
+    await page.reload();
+    await hydrated(page);
+    const h2 = page.getByRole("heading", { name: "Recent Problems" });
+    await expect(h2).toBeVisible();
+    // The measured s72 anatomy: h2 18px/600 slate-800 in the space-y-6
+    // stack — not a card header (no borderB, parent pad 0/0).
+    const cs = await h2.evaluate((el) => {
+      const s = getComputedStyle(el);
+      return { fs: s.fontSize, fw: s.fontWeight, color: s.color };
+    });
+    expect(cs.fs).toBe("18px");
+    expect(cs.fw).toBe("600");
+    expect(cs.color).toBe("rgb(30, 41, 59)"); // slate-800
+    // The pair card: the question + a non-empty answer.
+    const card = page
+      .locator('[aria-label="Recent Problems"] li', { hasText: "BW2 solver persistence probe" })
+      .first();
+    await expect(card).toBeVisible();
+    const answer = card.locator("p").nth(1);
+    await expect(answer).not.toBeEmpty();
+    await expect(page.getByText("Recent solutions")).toHaveCount(0);
+
+    // Cleanup — back to the reference's measured zero state.
+    await page.request.delete("/api/ai/messages");
   });
 
   test("S5-AB7 GradeTracker: per-subject cards render chip + avg + the Progress-to-A row", async ({ page }) => {

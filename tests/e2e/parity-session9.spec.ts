@@ -348,6 +348,10 @@ test.describe("S9-G/H · Files breadcrumb + toggle; Timetable Grid Builder", () 
     // cells (the BT9 name-from-content buttons). A cancelled Add Class
     // session must leave the census unchanged.
     const classCells = page.locator('[aria-label="Week grid"] button:has(span.sr-only)');
+    // S122/BW1: the visibility gate before the non-retrying before-count
+    // (the third instance of the BU9 race class — the seeded timetable
+    // classes guarantee a first cell).
+    await expect(classCells.first()).toBeVisible();
     const before = await classCells.count();
     await page.getByRole("button", { name: "Add Class" }).first().click();
     const dlg = page.getByRole("dialog");
@@ -367,6 +371,9 @@ test.describe("S9-I/J · Assignments rows + default filter; Exams badge", () => 
     await page.goto("/Assignments");
     await hydrated(page);
     const rows = page.locator('[aria-label="Assignment rows"] > *');
+    // S122/BW1: the visibility gate before the non-retrying before-count
+    // (the Exams twin failed the s122 cert 4/4 — the same race lived here).
+    await expect(rows.first()).toBeVisible();
     const before = await rows.count();
     await page.getByRole("button", { name: "Add Assignment" }).first().click();
     const dlg = page.getByRole("dialog");

@@ -66,6 +66,57 @@ export const IMPORT_FK_MAP: Record<ExportCollection, ImportFkSpec[]> = {
   holidays: [],
 };
 
+/**
+ * S122/BW8 — the OPERATIVE route FK maps, derived from IMPORT_FK_MAP (the
+ * single source). The import route consumed its own hand-maintained twins
+ * for 100+ sessions while this seam's map carried the unit-pinned copy —
+ * two map families that could drift apart silently (a new FK-bearing
+ * collection would fail the completeness pin while shipping with no
+ * route-side pre-emption). The derivation is mechanical; the SEMANTIC
+ * split stays where it belongs: this seam's parseImportEnvelope resolves
+ * FKs ENVELOPE-ONLY (a self-contained validator), the ROUTE resolves
+ * envelope ∪ the owner's live rows (knownIds — the account-aware
+ * semantics). A same-collection target renders as "self" (folders.
+ * parentId) exactly as the route's resolution loop expects.
+ */
+export const IMPORT_REQUIRED_FKS: Partial<
+  Record<ExportCollection, Record<string, ExportCollection>>
+> = deriveRequiredFks();
+
+export const IMPORT_OPTIONAL_FKS: Partial<
+  Record<ExportCollection, Record<string, ExportCollection | "self">>
+> = deriveOptionalFks();
+
+function deriveRequiredFks() {
+  const out: Partial<Record<ExportCollection, Record<string, ExportCollection>>> = {};
+  for (const [collection, specs] of Object.entries(IMPORT_FK_MAP) as [
+    ExportCollection,
+    ImportFkSpec[],
+  ][]) {
+    for (const spec of specs) {
+      if (!spec.required) continue;
+      (out[collection] ??= {})[spec.field] = spec.target;
+    }
+  }
+  return out;
+}
+
+function deriveOptionalFks() {
+  const out: Partial<Record<ExportCollection, Record<string, ExportCollection | "self">>> = {};
+  for (const [collection, specs] of Object.entries(IMPORT_FK_MAP) as [
+    ExportCollection,
+    ImportFkSpec[],
+  ][]) {
+    for (const spec of specs) {
+      if (spec.required) continue;
+      const target: ExportCollection | "self" =
+        spec.target === collection ? "self" : spec.target;
+      (out[collection] ??= {})[spec.field] = target;
+    }
+  }
+  return out;
+}
+
 export type ImportRow = Record<string, unknown>;
 export type ImportRows = Record<ExportCollection, ImportRow[]>;
 

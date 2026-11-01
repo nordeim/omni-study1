@@ -174,7 +174,11 @@ test.describe("S10-4 · timetable and calendar accent tints re-theme", () => {
     const grid = page.locator('[aria-label="Calendar days"]');
     await expect(grid).toBeVisible();
     // Deselect today (selected = today by default) to expose the tint cell.
-    await grid.locator("button").filter({ hasText: "15" }).first().click();
+    // S122/BW1: never click TODAY — the calendar's onClick SETS the
+    // selection (no toggle-off), so on the 15th the fixed target
+    // re-selected today and this poll timed out (once-a-month failure).
+    const alt = new Date().getDate() === 15 ? 14 : 15;
+    await grid.locator("button").filter({ hasText: String(alt) }).first().click();
     // transition-all animates the tint — poll the FINAL computed value (S8 lesson).
     await page.waitForFunction(() => {
       const el = document.querySelector('[aria-label="Calendar days"] button[data-today]');

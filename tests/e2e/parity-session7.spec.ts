@@ -1270,9 +1270,14 @@ test.describe("S81 · the partial-PATCH keeps what the caller did not send (AH8)
     await expect(rowPill).toBeVisible();
 
     // Edit the title (a {title}-only PATCH through the real input).
+    // S122/BW3: the PATCH is debounced (600 ms, the editor's rhythm) —
+    // wait for it deterministically, never a fixed timeout.
     const titleInput = page.getByLabel("Note title");
+    const patched = page.waitForResponse(
+      (r) => r.request().method() === "PATCH" && /\/api\/notes\//.test(r.url()),
+    );
     await titleInput.fill(`Dot product intuition ${Date.now()}`);
-    await page.waitForTimeout(800); // the debounced title PATCH settles
+    await patched; // the debounced title PATCH completed
 
     // The content and the tags must BOTH survive (pre-fix: the PATCH's
     // parsed defaults wiped them — content "", tags "[]").
@@ -1313,6 +1318,47 @@ test.describe("S81 · the partial-PATCH keeps what the caller did not send (AH8)
     ).toBeVisible();
     const editorText = await page.locator(".ql-editor").innerText();
     expect(editorText).toContain("appended");
+  });
+
+  // S122/BW3 — the note title PATCH is debounced. The pre-fix input fired
+  // updateNote on EVERY keystroke (a PATCH + a full-collection GET per
+  // character, on an input controlled only by store state — interleaved
+  // refetches snapped the visible text back mid-typing, and the reference
+  // persists the title on Save only [measured live: zero saves during
+  // 10+ s of typing]). The fix mirrors the editor's own 600 ms rhythm
+  // with a local draft. This pin types character-by-character and bounds
+  // the request count — the old behavior fired one PATCH per character.
+  test("S122/BW3: typing a title fires at most two PATCHes — never one per keystroke", async ({ page }) => {
+    await page.goto("/Notes");
+    await hydrated(page);
+
+    const row = page.getByRole("button", { name: /Dot product intuition/ }).first();
+    await row.click();
+    await expect(page.locator(".ql-editor")).toBeVisible();
+
+    const patches: string[] = [];
+    page.on("request", (req) => {
+      if (req.method() === "PATCH" && /\/api\/notes\//.test(req.url())) patches.push(req.url());
+    });
+
+    const titleInput = page.getByLabel("Note title");
+    await titleInput.click();
+    // 8 keystrokes at 40 ms ≈ 320 ms of typing — one continuous burst that
+    // never crosses the 600 ms debounce window mid-typing.
+    await titleInput.pressSequentially(" revised", { delay: 40 });
+    await page.waitForTimeout(1_500); // the debounce fires + completes
+
+    expect(patches.length, `fired ${patches.length} PATCHes`).toBeGreaterThanOrEqual(1);
+    expect(patches.length, "the debounced title PATCH — never per-keystroke").toBeLessThanOrEqual(2);
+
+    // The final title persisted (the debounced PATCH completed). AH8a ran
+    // first on this same note (a Date.now() rename), so the row reads
+    // "Dot product intuition <stamp> revised" — match both segments.
+    await page.reload();
+    await hydrated(page);
+    await expect(
+      page.getByRole("button", { name: /Dot product intuition.*revised/ }).first(),
+    ).toBeVisible();
   });
 
   test("AH8c: an API task completed toggle keeps notes, priority and subtasks", async ({ page }) => {

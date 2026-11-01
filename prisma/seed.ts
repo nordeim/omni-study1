@@ -36,6 +36,9 @@ async function main(): Promise<void> {
   const existing = await db.user.findUnique({ where: { email: DEMO_EMAIL } });
   if (existing) {
     console.log(`Seed: demo user already exists (${DEMO_EMAIL}) — nothing to do.`);
+    // S122/BW13: the early-return path now disconnects like its siblings
+    // (the SEED_DEMO=0 path and the happy path always did).
+    await db.$disconnect();
     return;
   }
 

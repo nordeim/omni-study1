@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test, type Route } from "@playwright/test";
 
 // S14 hardening pins — the ambient states the per-request specs never
 // exercise. Families from docs/remediation-plan-session14.md:
@@ -192,8 +192,16 @@ test.describe("AI-surface live regions (S14-D1/D2/D3)", () => {
     await expect(pane).toHaveAttribute("aria-busy", "false");
 
     // D2 — hold the chat route, send, and watch aria-busy flip true.
-    await page.route("**/api/ai/chat", () => {
-      /* held — never fulfills (unrouted in finally per the S11 lesson) */
+    // S122/BW1: the held route is ABORTED (not just unrouted) — the
+    // pre-fix finally released the in-flight request to the REAL server,
+    // which only looked harmless because C1 (earlier in this file) had
+    // already exhausted the demo user's AI budget; in isolation it fired
+    // a real AI POST that persisted a probe row in the shared transcript
+    // (the exact shared-mutable-e2e-state hazard the repo bans).
+    let heldRoute: Route | undefined;
+    await page.route("**/api/ai/chat", (route) => {
+      heldRoute = route;
+      /* held — never fulfills (aborted in finally per the S11 lesson) */
     });
     try {
       const composer = page.getByLabel("Message the assistant");
@@ -201,6 +209,9 @@ test.describe("AI-surface live regions (S14-D1/D2/D3)", () => {
       await composer.press("Enter");
       await expect(pane).toHaveAttribute("aria-busy", "true", { timeout: 5000 });
     } finally {
+      // Kill the in-flight request — the abort rejection is the real
+      // busy-clearing path this pin asserts below.
+      await heldRoute?.abort("failed");
       await page.unroute("**/api/ai/chat");
     }
     // Busy clears once the route is gone and the send settles/rejects.

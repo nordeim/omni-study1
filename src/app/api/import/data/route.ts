@@ -33,6 +33,8 @@ import { checkRateLimit } from "@/lib/auth";
 import { DATA_EXPORT_FORMAT, DATA_EXPORT_VERSION, EXPORT_COLLECTIONS } from "@/lib/data-export";
 import {
   IMPORT_MAX_BYTES,
+  IMPORT_OPTIONAL_FKS,
+  IMPORT_REQUIRED_FKS,
   ImportRowError,
   NEVER_IMPORT_FIELDS,
   sanitizeImportRow,
@@ -100,26 +102,12 @@ const MODEL: Record<Collection, keyof PrismaClient> = {
   holidays: "holiday",
 };
 
-/** REQUIRED FKs — a dangling reference is a 400 (the row cannot exist). */
-const REQUIRED_FKS: Partial<Record<Collection, Record<string, Collection>>> = {
-  cards: { deckId: "decks" },
-};
+/** REQUIRED FKs — a dangling reference is a 400 (the row cannot exist).
+ * S122/BW8: DERIVED from the seam's IMPORT_FK_MAP (the single source —
+ * the hand-maintained twin maps drifted hazard for 100+ sessions; the
+ * unit pins in tests/data-import.test.ts hold the derivation). */
 
 /** OPTIONAL FKs — a dangling reference imports NULLED (SetNull semantics). */
-const OPTIONAL_FKS: Partial<Record<Collection, Record<string, Collection | "self">>> = {
-  tasks: { subjectId: "subjects", listId: "taskLists" },
-  assignments: { subjectId: "subjects" },
-  exams: { subjectId: "subjects" },
-  timetableClasses: { subjectId: "subjects" },
-  notes: { subjectId: "subjects", notebookId: "notebooks" },
-  decks: { subjectId: "subjects" },
-  practiceTests: { subjectId: "subjects" },
-  studyGroups: { subjectId: "subjects" },
-  grades: { subjectId: "subjects" },
-  focusSessions: { subjectId: "subjects" },
-  files: { folderId: "folders" },
-  folders: { parentId: "self" },
-};
 
 /** The import-side secret guard (the S23 seam's list): the file never speaks
  * for the account — passwordHash and userId are stripped from every row
@@ -270,7 +258,7 @@ export const POST = async (request: NextRequest) => {
     }
 
     // FK integrity: required → 400; optional → nulled.
-    for (const [collection, fks] of Object.entries(REQUIRED_FKS) as [
+    for (const [collection, fks] of Object.entries(IMPORT_REQUIRED_FKS) as [
       Collection,
       Record<string, Collection>,
     ][]) {
@@ -289,7 +277,7 @@ export const POST = async (request: NextRequest) => {
         }
       }
     }
-    for (const [collection, fks] of Object.entries(OPTIONAL_FKS) as [
+    for (const [collection, fks] of Object.entries(IMPORT_OPTIONAL_FKS) as [
       Collection,
       Record<string, Collection | "self">,
     ][]) {
@@ -340,7 +328,13 @@ export const POST = async (request: NextRequest) => {
     let created = 0;
     let updated = 0;
 
-    await db.$transaction(async (tx) => {
+    // S122/BW4: the documented 60 s timeout, EXPLICIT. Prisma's interactive
+    // default is 5 s — a legitimate large envelope (the seam allows ~1 M-char
+    // fields; many small rows) could exceed it → P2028 → the shared mapper's
+    // 500, violating this route's own 400-contract for bad input (the
+    // rollback itself was always correct — only the timeout was missing).
+    await db.$transaction(
+      async (tx) => {
       for (const collection of IMPORT_ORDER) {
         const rows = parsed.get(collection);
         if (!rows || rows.length === 0) continue;
@@ -383,7 +377,9 @@ export const POST = async (request: NextRequest) => {
         created += c;
         updated += u;
       }
-    });
+      },
+      { timeout: 60_000 },
+    );
 
     return NextResponse.json({
       imported,

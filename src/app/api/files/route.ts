@@ -138,6 +138,12 @@ export const POST = withUser(async (user, request: NextRequest) => {
   if (!name) {
     return errorResponse(400, "The uploaded file needs a name.");
   }
+  // S122/BW13: the name contract of the JSON/link branch (linkFileSchema:
+  // trim + max 200) — the multipart branch only trimmed, leaving the
+  // length unbounded (row bloat; serve-time was already safe).
+  if (name.length > 200) {
+    return errorResponse(400, "File names are limited to 200 characters.");
+  }
   if (entry.size > MAX_UPLOAD_BYTES) {
     return errorResponse(413, "Files are limited to 2 MiB.");
   }
