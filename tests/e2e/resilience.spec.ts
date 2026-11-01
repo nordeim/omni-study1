@@ -690,3 +690,88 @@ test.describe("S122/BW7: the timetable single-leg ordering merge", () => {
     }
   });
 });
+
+// S123/BX1 — the both-legs half of the timetable ordering guard at the
+// wire. The S122/BW7 wire pin above covers the SINGLE-leg merge; the
+// schema-level both-legs path compared raw strings, so the UNPADDED legal
+// span ("9:00" → "11:00" — the seeded shape) 400'd (wire-verified
+// pre-fix) while the INVERTED padded/unpadded mix ("09:00" → "8:30")
+// persisted (201). Both legs now compare minutes.
+test.describe("S123/BX1: the both-legs timetable ordering at the wire", () => {
+  test("the unpadded legal span creates; the inverted mix 400s", async ({ request }) => {
+    const stamp = Date.now();
+    // The legal unpadded span — pre-fix this was the false 400.
+    const legal = await request.post("/api/timetable", {
+      data: {
+        name: `BX1 legal ${stamp}`,
+        dayOfWeek: 3,
+        startTime: "9:00",
+        endTime: "11:00",
+        subjectId: null,
+        room: "",
+        weekType: "ALL",
+      },
+    });
+    expect(legal.status()).toBe(201);
+    const { id } = (await legal.json()) as { id: string };
+    try {
+      // The both-legs PATCH with the inverted mix — pre-fix this
+      // persisted (the "8:30" > "09:00" lexicographic bypass).
+      const inverted = await request.patch(`/api/timetable/${id}`, {
+        data: { startTime: "09:00", endTime: "8:30" },
+      });
+      expect(inverted.status()).toBe(400);
+      // The both-legs path rejects at the SCHEMA (the Zod message carries
+      // the field prefix — "endTime: …"); the single-leg merge above
+      // rejects at the delegate with the bare copy. Same words, two
+      // enforcement sites.
+      expect(((await inverted.json()) as { error?: string }).error ?? "").toContain(
+        "End time must be after the start time",
+      );
+      // The both-legs legal move with unpadded hours still succeeds.
+      const move = await request.patch(`/api/timetable/${id}`, {
+        data: { startTime: "10:00", endTime: "12:30" },
+      });
+      expect(move.ok()).toBe(true);
+    } finally {
+      await request.delete(`/api/timetable/${id}`);
+    }
+    // And the inverted CREATE stays rejected.
+    const bad = await request.post("/api/timetable", {
+      data: {
+        name: `BX1 inverted ${stamp}`,
+        dayOfWeek: 3,
+        startTime: "09:00",
+        endTime: "8:30",
+        subjectId: null,
+        room: "",
+        weekType: "ALL",
+      },
+    });
+    expect(bad.status()).toBe(400);
+  });
+});
+
+// S123/BX5 — the folder routes' parentId carried a DEAD ""→null transform:
+// idField's min(1) rejected "" BEFORE the transform, so the app's own
+// clear-to-root convention (every other entity FK via the shared
+// nullableId atom) 400'd at the folder routes. The routes now consume the
+// shared atom.
+test.describe("S123/BX5: the folder parentId clear-to-root at the wire", () => {
+  test("creating a folder with parentId \"\" lands at the root (201, not 400)", async ({ request }) => {
+    const stamp = Date.now();
+    const created = await request.post("/api/files/folders", {
+      data: { name: `BX5 root ${stamp}`, parentId: "" },
+    });
+    expect(created.status()).toBe(201);
+    const { id } = (await created.json()) as { id: string };
+    const row = (await (await request.get("/api/files/folders")).json()) as {
+      id: string;
+      parentId: string | null;
+    }[];
+    expect(row.find((r) => r.id === id)?.parentId).toBeNull();
+    await request.delete(`/api/files/folders/${id}`);
+    const after = (await (await request.get("/api/files/folders")).json()) as { id: string }[];
+    expect(after.some((r) => r.id === id)).toBe(false);
+  });
+});

@@ -83,11 +83,14 @@ export function AssignmentsView() {
     open: false,
     editing: null,
   });
+  // S123/BX9: progress is a STRING in form state — the number-typed state
+  // coerced mid-keystroke (clearing snapped the field to 0 instantly).
+  // The parse + clamp happens on submit only.
   const [form, setForm] = React.useState({
     title: "",
     type: "homework",
     priority: "medium",
-    progress: 0,
+    progress: "0",
     dueDate: "",
     subjectId: "",
   });
@@ -113,7 +116,7 @@ export function AssignmentsView() {
   }, [assignments, status, subjectId, search]);
 
   const openCreate = () => {
-    setForm({ title: "", type: "homework", priority: "medium", progress: 0, dueDate: "", subjectId: "" });
+    setForm({ title: "", type: "homework", priority: "medium", progress: "0", dueDate: "", subjectId: "" });
     setError("");
     setDialog({ open: true, editing: null });
   };
@@ -123,7 +126,7 @@ export function AssignmentsView() {
       title: row.title,
       type: row.type,
       priority: row.priority,
-      progress: row.progress,
+      progress: String(row.progress),
       dueDate: row.dueDate ? row.dueDate.slice(0, 10) : "",
       subjectId: row.subjectId ?? "",
     });
@@ -140,7 +143,7 @@ export function AssignmentsView() {
       title: form.title,
       type: form.type as AssignmentInput["type"],
       priority: form.priority as AssignmentInput["priority"],
-      progress: form.progress,
+      progress: Math.max(0, Math.min(100, Math.round(Number(form.progress) || 0))),
       dueDate: form.dueDate,
       subjectId: form.subjectId,
     };
@@ -466,12 +469,7 @@ export function AssignmentsView() {
                   min={0}
                   max={100}
                   value={form.progress}
-                  onChange={(e) =>
-                    setForm((f) => ({
-                      ...f,
-                      progress: Math.max(0, Math.min(100, Number(e.target.value) || 0)),
-                    }))
-                  }
+                  onChange={(e) => setForm((f) => ({ ...f, progress: e.target.value }))}
                 />
               </div>
             </div>

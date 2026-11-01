@@ -224,3 +224,36 @@ export function formatHHMMRange(start: string, end: string): string {
   if (a === null || b === null) return "";
   return formatMinutes(Math.max(0, b - a));
 }
+
+/**
+ * S123/BX3 — a stored UTC instant → the datetime-local string for the
+ * USER's wall-clock (the tasks-view local-noon pattern, adapted for
+ * datetime-local). The exams/events edit dialogs previously populated with
+ * `row.date.slice(0, 16)` — the UTC WALL-CLOCK — and submitted the TZ-less
+ * string raw, which the server re-interprets in ITS zone: on any non-UTC
+ * host the card and the dialog disagreed, and every untouched edit cycle
+ * drifted the stored time by the UTC offset. Malformed input returns ""
+ * (the form's required gate owns the rest).
+ */
+export function toDatetimeLocalValue(iso: string): string {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "";
+  const month = (d.getMonth() + 1).toString().padStart(2, "0");
+  const day = d.getDate().toString().padStart(2, "0");
+  const hours = d.getHours().toString().padStart(2, "0");
+  const minutes = d.getMinutes().toString().padStart(2, "0");
+  return `${d.getFullYear()}-${month}-${day}T${hours}:${minutes}`;
+}
+
+/**
+ * S123/BX3 — the datetime-local string (the user's wall-clock, no zone) →
+ * a full UTC ISO instant. The browser interprets the local value in ITS
+ * zone (the zone the user typed in), and toISOString() anchors the wire
+ * format — the server's new Date() then parses it zone-INDEPENDENTLY.
+ */
+export function fromDatetimeLocalInput(value: string): string {
+  if (!value) return "";
+  const d = new Date(value);
+  if (Number.isNaN(d.getTime())) return "";
+  return d.toISOString();
+}

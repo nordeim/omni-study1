@@ -2,6 +2,8 @@ import { describe, expect, it } from "vitest";
 import {
   addDays,
   addMonths,
+  fromDatetimeLocalInput,
+  toDatetimeLocalValue,
   dayBucketLabel,
   daysUntil,
   formatHHMMRange,
@@ -210,5 +212,74 @@ describe("HH:MM helpers", () => {
     expect(formatHHMMRange("09:00", "10:30")).toBe("1h 30m");
     expect(formatHHMMRange("10:30", "09:00")).toBe("0m"); // reversed clamps to 0
     expect(formatHHMMRange("bad", "inputs")).toBe("");
+  });
+});
+
+// S123/BX3 — the datetime-local round-trip helpers (the tasks-view
+// local-noon pattern, adapted for datetime-local). The exams/events edit
+// dialogs populated with `row.date.slice(0, 16)` — the UTC WALL-CLOCK of
+// the stored instant — and submitted the TZ-less string raw, which the
+// server's datesOnWrite re-interprets in the SERVER's zone: on any
+// non-UTC deployment the card (toLocaleTimeString — correct) and the
+// dialog (UTC wall-clock) disagreed, and each untouched edit cycle
+// re-interpreted the UTC wall-clock as local — a per-save drift of the
+// UTC offset. These helpers own both boundaries in the USER's zone.
+describe("S123/BX3: the datetime-local round-trip helpers", () => {
+  it("fromDatetimeLocalInput produces a full UTC ISO instant from the local input", () => {
+    const iso = fromDatetimeLocalInput("2031-03-15T14:30");
+    // The wire contract: a full ISO string the server's new Date() parses
+    // zone-INDEPENDENTLY (the Z suffix — never a TZ-less string again).
+    expect(iso).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/);
+    // The instant is the input interpreted in the PROCESS zone (the
+    // browser's zone at runtime) — the TZ-independent formulation.
+    expect(Date.parse(iso)).toBe(Date.parse("2031-03-15T14:30:00"));
+  });
+
+  it("toDatetimeLocalValue returns the 16-char local wall-clock (never a Z-suffixed UTC clock)", () => {
+    expect(toDatetimeLocalValue("2031-03-15T14:30:00.000Z")).toMatch(
+      /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/,
+    );
+    // The drift-kill property, part 1: the value never carries the UTC
+    // marker (the slice(0,16) form DID — it was the UTC wall-clock).
+    expect(toDatetimeLocalValue("2031-03-15T14:30:00.000Z")).not.toContain("Z");
+  });
+
+  it("the round-trip preserves the instant for minute-aligned inputs (the drift-kill property)", () => {
+    // In ANY process timezone: a minute-aligned instant, converted to the
+    // local wall-clock and back, is the SAME instant. The slice(0,16)
+    // form fails this in every non-UTC zone (it round-trips through the
+    // UTC wall-clock and re-anchors it as local — the per-save drift).
+    for (const iso of [
+      "2031-03-15T14:30:00.000Z",
+      "2026-01-01T00:00:00.000Z",
+      "2026-12-31T23:59:00.000Z",
+    ]) {
+      const round = fromDatetimeLocalInput(toDatetimeLocalValue(iso));
+      expect(Date.parse(round)).toBe(Date.parse(iso));
+    }
+  });
+
+  it("drops sub-minute precision (the datetime-local granularity, truncated)", () => {
+    const iso = "2031-03-15T14:30:45.123Z";
+    const local = toDatetimeLocalValue(iso);
+    // Seconds never survive the datetime-local boundary — the input's own
+    // granularity — and the truncation never rounds UP: the rebuilt
+    // instant is within one minute BELOW the original, in any zone.
+    expect(local).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/);
+    const rebuilt = Date.parse(fromDatetimeLocalInput(local));
+    const original = Date.parse(iso);
+    expect(rebuilt).toBeLessThanOrEqual(original);
+    expect(original - rebuilt).toBeLessThan(60_000);
+  });
+
+  it("the empty and malformed legs return empty strings (never invented instants)", () => {
+    expect(toDatetimeLocalValue("")).toBe("");
+    expect(toDatetimeLocalValue("garbage")).toBe("");
+    expect(fromDatetimeLocalInput("")).toBe("");
+    // A date-only ISO string still PARSES (UTC midnight, per the spec) —
+    // the formatter renders it rather than inventing a rejection; the
+    // form's required + min/max gates own the rest. Only UNPARSEABLE
+    // input yields "".
+    expect(toDatetimeLocalValue("2031-03-15")).toMatch(/^2031-03-1[45]T/);
   });
 });

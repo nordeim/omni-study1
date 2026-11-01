@@ -25,7 +25,7 @@ tags:
 
 > **What this is:** the single-source-of-truth reference for working in
 > `nordeim/omni-study1`. Every fact below is verified against the codebase
-> (1593 tests green, re-anchored at the S122 update: 1085 Vitest unit + 508
+> (1615 tests green, re-anchored at the S123 update: 1099 Vitest unit + 516
 > Playwright e2e across the 5-chunk cold map — the census re-anchored through
 > the s117–s119 hardening cycles; the 2.0 baseline was 834 + 299 in six
 > chunks after the parity re-application + account-flow completion +
@@ -527,6 +527,7 @@ notes, decks, grades; `avatarEmoji: ""` (reference default state).
 | AP-128 | MEDIUM | The frontend audit found 8 dead imports by name-grep; the `noUnusedLocals`/`noUnusedParameters` experiment surfaced 13 MORE (four in API routes) — the hand-sweep was never going to be complete | when an audit finds a hygiene CLASS, ask whether the compiler can own it: one tsconfig flag closed the dead-code class machine-wise, enforced by both `typecheck` and the canonical build (itself the type gate) | the S121/BV16 guard experiment (session-121) |
 | AP-129 | MEDIUM | The API audit's "add timeoutMs to the vision branch" recommendation was a TYPE ERROR — the SDK's vision body type carries no such field; the shipped omission was correct | an audit recommendation is a hypothesis; the type gate is the cheapest discriminator — run the guard experiment DURING implementation (or at the plan phase), never after the docs claim the fix | the S121/BV13 non-gap the build proved (session-121) |
 | AP-130 | HIGH | The agent toolchain's OUTPUT pipeline silently strips bracket-letter sequences (`[m`, `[h` observed) — a displayed `transition-argin]` was actually `transition-[margin]`, manufacturing a phantom "corrupted class" finding through grep, git show, sed, AND browser eval views alike; two probe harnesses were corrupted the same way before the char-code check exposed it | any candidate finding whose evidence is a bracket-bearing string must be re-read as CHAR CODES (or a length-checking hash) before it is reported — the display is not the bytes | the S122 retraction (session-122) |
+| AP-131 | HIGH | A comparison guard must be normalized at EVERY enforcement site — the S122/BW7 single-leg timetable merge was minutes-normalized while the schema-level both-legs check kept the RAW string compare: the legal unpadded span ("9:00"→"11:00") FALSELY 400'd and the inverted padded/unpadded mix ("09:00"→"8:30") PERSISTED, both wire-verified; the UI half compounds (`<input type="time">` BLANKS a non-HH:MM value, so the legacy row's edit dialog opened empty) | when introducing a comparison guard for a value family, enumerate EVERY site that compares it (schema checks, merge seams, UI populate) and route them all through ONE exported normalizer; pad the seed out of the legacy shape while the normalizer keeps old rows working | the S123/BX1 cycle (session-123) |
 
 ---
 
@@ -575,13 +576,13 @@ tail -40 dev.log                            # request traces + prisma queries
 ```bash
 bun run lint && bun run typecheck && bun run test && bun run build && bun run test:e2e
 ```
-Current green state (re-anchored at S122/BW): lint ✓ · tsc ✓ (`noImplicitAny` + `noUnusedLocals`/`noUnusedParameters` — the BV16 machine guard) · 1085 unit ✓ · build ✓ (the type gate live — `ignoreBuildErrors` removed) · 508 e2e ✓ (1593 green).
+Current green state (re-anchored at S123/BX): lint ✓ · tsc ✓ (`noImplicitAny` + `noUnusedLocals`/`noUnusedParameters` — the BV16 machine guard) · 1099 unit ✓ · build ✓ (the type gate live — `ignoreBuildErrors` removed) · 516 e2e ✓ (1615 green).
 
 **Full-suite chunk map** (one server-boot per chunk; the 10-min tool cap makes
 one-shot full runs unreliable — the 2.0 six-chunk map: chrome+s14 104 ·
 S5+calc+S6 46 · S7+S8+S9 79 · tasks/resilience/s16/s17 20 · auth+s18–s23 35 ·
 s24–s26 18. Re-anchored at 2.2: the FIVE-chunk cold map of
-`scripts/e2e-chunked-cert.sh` — 135+145+61+90+66 = 497, always run COLD
+`scripts/e2e-chunked-cert.sh` — 136+151+69+90+70 = 516 (re-anchored S123/BX — the pre-S123 line said 497, the S120-era map, an AP-74-class drift), always run COLD
 [`rm -f db/e2e.db`]: the s23 round-trip posts a FIXED-id envelope and the
 seed's idempotent upserts never refresh day-relative dates).
 

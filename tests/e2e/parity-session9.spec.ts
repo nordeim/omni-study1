@@ -570,3 +570,49 @@ test.describe("S9-S · Study groups hint text", () => {
     await expect(page.getByText("Choose a study group from the sidebar or create a new one")).toBeVisible();
   });
 });
+
+// S123/BX1 — the seeded legacy rows carry UNPADDED hours ("9:00" — the
+// seed writes past the Zod boundary), and <input type="time">'s HTML value
+// sanitization blanks a non-HH:MM value: editing the seeded Calculus II
+// opened with an EMPTY start input (live-verified on the pre-fix tree),
+// forcing a retype to save. The edit form now normalizes on populate.
+test.describe("S123/BX1: the timetable edit form normalizes legacy hhmm", () => {
+  test("editing the seeded Calculus II shows 09:00 in the start input (not blank)", async ({ page }) => {
+    await page.goto("/Timetable");
+    await hydrated(page);
+    const cells = page.locator('[aria-label="Week grid"] button:has(span.sr-only)');
+    await expect(cells.first()).toBeVisible();
+    const cell = cells.filter({ hasText: "Calculus II" }).first();
+    await expect(cell).toBeVisible();
+    await cell.click();
+    const dlg = page.getByRole("dialog");
+    await expect(dlg).toBeVisible();
+    // The seeded row stores startTime "9:00" — the input must SHOW the
+    // padded form. Pre-fix this read "" (the sanitization blanking).
+    await expect(dlg.locator("#class-start")).toHaveValue("09:00");
+    await expect(dlg.locator("#class-end")).toHaveValue("10:30");
+    // Cancel — this pin never mutates the seeded row.
+    await dlg.getByRole("button", { name: "Cancel" }).click();
+    await expect(dlg).toHaveCount(0);
+  });
+});
+
+// S123/BX9 — the controlled-number snap-back class: clearing the
+// assignments progress field immediately coerced to "0" (Number("") || 0
+// mid-keystroke), interrupting typing. The string-state pattern
+// (gradetracker's) keeps the empty string until submit.
+test.describe("S123/BX9: the assignment progress field holds the empty string", () => {
+  test("clearing the progress input leaves it empty (no mid-typing snap-back)", async ({ page }) => {
+    await page.goto("/Assignments");
+    await hydrated(page);
+    await page.getByRole("button", { name: "Add Assignment" }).first().click();
+    const dlg = page.getByRole("dialog");
+    await expect(dlg).toBeVisible();
+    const progress = dlg.locator("#assignment-progress");
+    // Pre-fix: clearing snapped the visible value to "0" instantly.
+    await progress.fill("");
+    await expect(progress).toHaveValue("");
+    await dlg.getByRole("button", { name: "Cancel" }).click();
+    await expect(dlg).toHaveCount(0);
+  });
+});

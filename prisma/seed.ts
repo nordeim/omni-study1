@@ -131,9 +131,15 @@ async function main(): Promise<void> {
   }
 
   const classDefs = [
-    { name: "Calculus II", dayOfWeek: 0, startTime: "9:00", endTime: "10:30", subjectId: math.id, room: "M201" },
+    // S123/BX1: the times are PADDED — the pre-BX1 unpadded "9:00" rows
+    // were written PAST the Zod boundary (the schema's atom admits them,
+    // but <input type="time">'s value sanitization BLANKS them in the edit
+    // form, and the pre-BX1 raw-string ordering compare mis-ranked them).
+    // The normalization (hhmmMinutes) keeps legacy unpadded rows working;
+    // the seed no longer mints new ones.
+    { name: "Calculus II", dayOfWeek: 0, startTime: "09:00", endTime: "10:30", subjectId: math.id, room: "M201" },
     { name: "Physics", dayOfWeek: 1, startTime: "11:00", endTime: "12:30", subjectId: physics.id, room: "P105", weekType: "A" },
-    { name: "World History", dayOfWeek: 2, startTime: "9:00", endTime: "10:30", subjectId: history.id, room: "H14" },
+    { name: "World History", dayOfWeek: 2, startTime: "09:00", endTime: "10:30", subjectId: history.id, room: "H14" },
     { name: "English Literature", dayOfWeek: 3, startTime: "13:00", endTime: "14:30", subjectId: english.id, room: "E3" },
     { name: "Chemistry Lab", dayOfWeek: 4, startTime: "14:00", endTime: "16:00", subjectId: chemistry.id, room: "Sci 2", weekType: "B" },
   ];

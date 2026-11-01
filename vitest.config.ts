@@ -1,9 +1,20 @@
 import { defineConfig } from "vitest/config";
 import path from "node:path";
 
-// Unit-test layer for the pure domain seams — 41 files / 1085 tests
-// (re-anchored S122/BW — the audit-driven hardening cycle: census 1054 →
-// 1085. The additions: timetable-merge +14 [the S122/BW7 ordering guard —
+// Unit-test layer for the pure domain seams — 41 files / 1099 tests
+// (re-anchored S123/BX — the audit-driven hardening cycle: census 1085 →
+// 1099. The additions: validation +9 [the S123/BX1 both-legs family —
+// the LEGAL unpadded span accepted ("9:00" → "11:00", the seeded shape
+// the raw string compare falsely 400'd), the INVERTED padded/unpadded
+// mix rejected (the "8:30" > "09:00" lexicographic bypass), the update
+// both-legs twin, the malformed-atom coverage leg, the hhmmMinutes
+// padded/unpadded/out-of-range family, the normalizeHhmmForInput
+// padding legs, and the S123/BX5 exported nullableId atom pins] and
+// date +5 [the S123/BX3 datetime-local round-trip helpers — the full-ISO
+// from-local contract, the 16-char local wall-clock (never the Z-suffixed
+// UTC clock), the TZ-independent round-trip instant preservation (the
+// drift-kill property), the sub-minute truncation bound, and the
+// empty/malformed legs]. The additions: timetable-merge +14 [the S122/BW7 ordering guard —
 // the pure merge seam's single-leg inversions both directions, the legal
 // moves, the null/neither-leg skips, the equal-legs legality, the
 // UNPADDED legacy seeded hours ("9:00" vs "11:00" — the live-probe catch:

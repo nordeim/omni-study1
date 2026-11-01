@@ -17,7 +17,10 @@ import { ACCENTS } from "./theme";
 export const idField = z.string().min(1).max(64);
 // Dialogs send "" for cleared relations — accept it and map to null
 // (the schema must not reject the empty string BEFORE the transform).
-const nullableId = z
+// S123/BX5: exported — the folder routes' route-local parentId twin carried
+// a DEAD ""→null transform (idField's min(1) rejected "" first, so the
+// clear-to-root convention 400'd at the folder routes).
+export const nullableId = z
   .union([idField, z.literal("")])
   .nullish()
   .transform((v) => (v === "" ? null : (v ?? null)));
@@ -58,6 +61,37 @@ const hhmm = z.string().regex(/^\d{1,2}:\d{2}$/).refine((v) => {
   const [h, m] = v.split(":").map(Number);
   return h <= 23 && m <= 59;
 });
+
+/**
+ * S123/BX1 — minutes-since-midnight for a padded OR unpadded hhmm value
+ * ("9:00" and "09:00" both → 540), null for anything malformed or
+ * out-of-range. The atom above admits UNPADDED hours, and unpadded hours
+ * do NOT compare lexicographically ("11:00" < "9:00" — the seed's own
+ * legacy rows carry the unpadded shape), so every ordering comparison on
+ * hhmm atoms must normalize through here, never compare raw strings.
+ * Exported for the entities.ts single-leg merge (the single source).
+ */
+export function hhmmMinutes(value: string): number | null {
+  const match = /^(\d{1,2}):(\d{2})$/.exec(value);
+  if (!match) return null;
+  const hours = Number(match[1]);
+  const minutes = Number(match[2]);
+  if (hours > 23 || minutes > 59) return null;
+  return hours * 60 + minutes;
+}
+
+/**
+ * S123/BX1 — pad a 1-digit hour for `<input type="time">`: the HTML value
+ * sanitization algorithm BLANKS a non-HH:MM value, so a stored legacy
+ * "9:00" opened the edit dialog with an EMPTY start input (live-verified).
+ * Values that are already well-formed (or unparseable — the form's own
+ * required gate owns those) pass through unchanged.
+ */
+export function normalizeHhmmForInput(value: string): string {
+  const match = /^(\d):(\d{2})$/.exec(value);
+  if (!match) return value;
+  return `0${match[1]}:${match[2]}`;
+}
 
 const TASK_PRIORITIES = ["none", "low", "medium", "high"] as const;
 const ASSIGNMENT_PRIORITIES = ["low", "medium", "high", "urgent"] as const;
@@ -259,16 +293,29 @@ export const timetableClassSchema = z.object({
   weekType: z.enum(["ALL", "A", "B"]).optional().default("ALL"),
 });
 
-// S122/BW7: the timetable ordering guard — the events family (BU22/BV1)
-// applied to the hhmm atoms. Zero-padded hhmm strings compare
-// lexicographically, so a plain string comparison is exact (no offsets
-// exist in hhmm — no Date.parse needed, no BV10 class). The reference has
-// no such guard; this is superset hardening (the owned-FK precedent).
+// S122/BW7 + S123/BX1: the timetable ordering guard — the events family
+// (BU22/BV1) applied to the hhmm atoms. The comparison is MINUTES-SINCE-
+// MIDNIGHT (hhmmMinutes), never raw strings: the atom admits UNPADDED
+// hours ("9:00" — the seed's own legacy shape), and "11:00" < "9:00"
+// lexicographically, so the pre-BX1 raw compare BOTH falsely rejected
+// legal spans AND accepted inverted ones (wire-verified both directions).
+// The reference has no such guard; this is superset hardening (the
+// owned-FK precedent).
 const TIMETABLE_END_BEFORE_START = "End time must be after the start time";
+
+function hhmmEndBeforeStart(startTime?: string, endTime?: string): boolean {
+  if (!endTime || !startTime) return false;
+  const startMin = hhmmMinutes(startTime);
+  const endMin = hhmmMinutes(endTime);
+  // A malformed leg skips here — the ATOM's own regex/refine rejects it
+  // with the field-level message (the schema's first issue wins).
+  if (startMin === null || endMin === null) return false;
+  return endMin < startMin;
+}
 
 export const timetableClassCreateSchema = timetableClassSchema.check((ctx) => {
   const { endTime, startTime } = ctx.value;
-  if (endTime && startTime && endTime < startTime) {
+  if (endTime && startTime && hhmmEndBeforeStart(startTime, endTime)) {
     ctx.issues.push({
       code: "custom",
       input: ctx.value,
@@ -280,7 +327,7 @@ export const timetableClassCreateSchema = timetableClassSchema.check((ctx) => {
 
 export const timetableClassUpdateSchema = timetableClassSchema.partial().check((ctx) => {
   const { endTime, startTime } = ctx.value;
-  if (endTime && startTime && endTime < startTime) {
+  if (endTime && startTime && hhmmEndBeforeStart(startTime, endTime)) {
     ctx.issues.push({
       code: "custom",
       input: ctx.value,

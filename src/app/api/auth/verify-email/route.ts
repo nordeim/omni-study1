@@ -62,6 +62,21 @@ export async function POST(request: NextRequest) {
       return errorResponse(400, "That code is invalid or has expired.");
     }
 
+    // S123/BX2: the per-ACCOUNT attempt budget. The per-IP limiter above is
+    // the outer gate, but its key is client-forgeable in the default
+    // TRUSTED_PROXY_HOPS-unset posture (a forged x-forwarded-for mints a
+    // fresh key per request), and a correct guess SIGNS THE CALLER IN —
+    // 10 failed attempts per account per 15 min makes the 10^6 code space
+    // unguessable inside the 15-min code TTL no matter how many IPs are
+    // forged. The exhausted branch answers the SAME uniform 400 as every
+    // other rejection: a distinguishable 429 here would be an
+    // account-EXISTENCE oracle (the no-user branch above never budgets),
+    // a worse leak than the guessing surface this closes.
+    const accountLimit = checkRateLimit(`verifyAcct:${user.id}`, 10);
+    if (!accountLimit.ok) {
+      return errorResponse(400, "That code is invalid or has expired.");
+    }
+
     const token = await db.verificationToken.findFirst({
       where: { userId: user.id, expiresAt: { gt: new Date() } },
       orderBy: { createdAt: "desc" },

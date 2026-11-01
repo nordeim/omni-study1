@@ -13,6 +13,8 @@ import {
   checkRateLimit,
   generateVerificationCode,
   hashPassword,
+  verifyPassword,
+  DUMMY_LOGIN_HASH,
 } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { registerSchema } from "@/lib/validation";
@@ -65,6 +67,10 @@ export async function POST(request: NextRequest) {
       // verified; saying anything more would be an enumeration oracle.
       // (S120/BU14: every branch answers 200 — the shipped 201-vs-200 split
       // distinguished new accounts from existing ones.)
+      // S123/BX4: burn the same scrypt work the other branches pay — the
+      // fast path's ~50-100 ms asymmetry was a timing enumeration oracle
+      // (the verifyLoginCredentials/DUMMY_LOGIN_HASH equalizer precedent).
+      verifyPassword(password, DUMMY_LOGIN_HASH);
       return NextResponse.json({ ok: true });
     }
 

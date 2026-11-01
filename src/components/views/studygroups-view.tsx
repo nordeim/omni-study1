@@ -212,7 +212,11 @@ export function StudyGroupsView() {
     if (!name || !email || savingMember) return;
     setSavingMember(true);
     try {
-      const members = [...parseMembers(selected.members), { name, email }];
+      // S123/BX10: the members base is read from the STORE at mutation
+      // time, never the render-scope snapshot — add/remove interleaving
+      // computed from the same stale base and silently lost one op.
+      const fresh = useDataStore.getState().studyGroups.find((g) => g.id === selected.id);
+      const members = [...parseMembers(fresh?.members ?? selected.members), { name, email }];
       await mutations.updateStudyGroup(selected.id, { members });
       setMemberName("");
       setMemberEmail("");
@@ -226,7 +230,11 @@ export function StudyGroupsView() {
 
   const removeMember = (member: Member) => {
     if (!selected) return;
-    const members = parseMembers(selected.members).filter((m) => m.email !== member.email);
+    // S123/BX10: the fresh-state read (the addMember twin).
+    const fresh = useDataStore.getState().studyGroups.find((g) => g.id === selected.id);
+    const members = parseMembers(fresh?.members ?? selected.members).filter(
+      (m) => m.email !== member.email,
+    );
     mutations
       .updateStudyGroup(selected.id, { members })
       .then(() => toast.success(`${member.name} removed`))

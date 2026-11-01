@@ -43,6 +43,7 @@ import { EmptyState, SubjectTagChip } from "@/components/views/shared";
 import { mutations, useDataStore, type ExamInput, type ExamRow } from "@/lib/data";
 import { daysUntil } from "@/lib/date";
 import { ApiError } from "@/lib/api";
+import { fromDatetimeLocalInput, toDatetimeLocalValue } from "@/lib/date";
 import { cn } from "@/lib/utils";
 
 const EXAM_TYPES = ["test", "quiz", "midterm", "final", "oral", "practical"];
@@ -82,11 +83,14 @@ export function ExamsView() {
   // The reference's status filter (measured 2026-10-18, session-63):
   // All Exams / Upcoming / Past, defaulting to Upcoming.
   const [statusFilter, setStatusFilter] = React.useState<"all" | "upcoming" | "past">("upcoming");
+  // S123/BX9: duration is a STRING in form state — the number-typed state
+  // coerced mid-keystroke (clearing snapped the field to 60 instantly,
+  // interrupting typing). The parse happens on submit only.
   const [form, setForm] = React.useState({
     title: "",
     date: "",
     type: "test",
-    duration: 60,
+    duration: "60",
     subjectId: "",
     topics: [] as string[],
     location: "",
@@ -132,7 +136,7 @@ export function ExamsView() {
   const subjectOf = (id: string | null) => subjects.find((s) => s.id === id) ?? null;
 
   const openCreate = () => {
-    setForm({ title: "", date: "", type: "test", duration: 60, subjectId: "", topics: [], location: "" });
+    setForm({ title: "", date: "", type: "test", duration: "60", subjectId: "", topics: [], location: "" });
     setTopicInput("");
     setError("");
     setDialog({ open: true, editing: null });
@@ -148,9 +152,11 @@ export function ExamsView() {
     }
     setForm({
       title: row.title,
-      date: row.date.slice(0, 16),
+      // S123/BX3: the stored instant rendered in the USER's wall-clock —
+      // never the raw UTC slice (the per-save drift class).
+      date: toDatetimeLocalValue(row.date),
       type: row.type,
-      duration: row.duration,
+      duration: String(row.duration),
       subjectId: row.subjectId ?? "",
       topics,
       location: row.location ?? "",
@@ -174,9 +180,9 @@ export function ExamsView() {
     setError("");
     const payload: ExamInput = {
       title: form.title,
-      date: form.date,
+      date: fromDatetimeLocalInput(form.date),
       type: form.type as ExamInput["type"],
-      duration: form.duration,
+      duration: Math.max(1, Math.round(Number(form.duration) || 60)),
       subjectId: form.subjectId,
       topics: JSON.stringify(form.topics),
       location: form.location,
@@ -434,9 +440,7 @@ export function ExamsView() {
                   min={5}
                   max={600}
                   value={form.duration}
-                  onChange={(e) =>
-                    setForm((f) => ({ ...f, duration: Number(e.target.value) || 60 }))
-                  }
+                  onChange={(e) => setForm((f) => ({ ...f, duration: e.target.value }))}
                   required
                 />
               </div>

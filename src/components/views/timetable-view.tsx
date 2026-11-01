@@ -41,6 +41,7 @@ import { EmptyState } from "@/components/views/shared";
 import { mutations, useDataStore, type TimetableClassInput, type TimetableClassRow } from "@/lib/data";
 import { addDays, formatHHMMRange, formatWeekdayMonthDay, formatShortWithYear, startOfDay } from "@/lib/date";
 import { ApiError } from "@/lib/api";
+import { normalizeHhmmForInput } from "@/lib/validation";
 import { cn } from "@/lib/utils";
 
 const DAY_NAMES = [
@@ -136,8 +137,12 @@ export function TimetableView() {
     setForm({
       name: row.name,
       dayOfWeek: row.dayOfWeek,
-      startTime: row.startTime,
-      endTime: row.endTime,
+      // S123/BX1: legacy rows can carry UNPADDED hours ("9:00" — written
+      // past the Zod boundary by the pre-BX1 seed) — <input type="time">
+      // BLANKS a non-HH:MM value, so the raw populate opened the edit
+      // dialog with an empty start field.
+      startTime: normalizeHhmmForInput(row.startTime),
+      endTime: normalizeHhmmForInput(row.endTime),
       subjectId: row.subjectId ?? "",
       room: row.room,
       weekType: row.weekType,

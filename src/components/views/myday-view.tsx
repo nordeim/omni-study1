@@ -340,7 +340,10 @@ export function MyDayView() {
         defaultMyDay={dialogMyDay}
       />
 
-      {/* delete confirm (pattern shared with TasksView) */}
+      {/* Delete confirm — MyDay's own superset choice. Tasks itself is
+       * INSTANT-delete BY PARITY (the S120 reference measurement: the
+       * reference confirms no task delete); this dialog is the clone's
+       * deliberate extra guard on the My Day surface only. */}
       <DeleteConfirm
         task={pendingDelete}
         onClosed={() => setPendingDelete(null)}

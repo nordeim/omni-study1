@@ -850,3 +850,33 @@ test.describe("S5-AB · the populated-surface drift layer (measured on the POPUL
     await expect(math.getByText("85%")).toBeVisible();
   });
 });
+
+// S123/BX6 — the focus timer recorded the NOMINAL duration on an early
+// manual complete (start 25:00, complete after 2 minutes → a 1500-second
+// session logged: every focus stat silently inflated). The auto path
+// (remaining === 0) is unchanged — the full duration. The manual path now
+// records the true elapsed (durations.focus - remaining, floored at the
+// schema's min-1).
+test.describe("S123/BX6: an early manual complete records the elapsed duration", () => {
+  test("completing ~1.5s into a 25:00 focus logs < 1500s (was exactly 1500)", async ({ page }) => {
+    await page.goto("/FocusTimer");
+    await hydrated(page);
+    // Start the default 25:00 focus session.
+    await page.getByRole("button", { name: /start timer/i }).click();
+    // Let ~1.5s elapse (the schema's min-1 bound needs ≥1s).
+    await page.waitForTimeout(1500);
+    const saved = page.waitForResponse(
+      (r) => r.request().method() === "POST" && r.url().includes("/api/focus-sessions"),
+    );
+    await page.getByRole("button", { name: "Complete session" }).click();
+    const res = await saved;
+    expect(res.ok()).toBe(true);
+    const row = (await res.json()) as { id: string; durationSeconds: number };
+    expect(row.durationSeconds).toBeGreaterThanOrEqual(1);
+    // Pre-fix this was exactly 1500 (the nominal 25:00) — any early
+    // complete must record the ELAPSED time.
+    expect(row.durationSeconds).toBeLessThan(1500);
+    // Zero residue on the shared demo user.
+    await page.request.delete(`/api/focus-sessions/${row.id}`);
+  });
+});

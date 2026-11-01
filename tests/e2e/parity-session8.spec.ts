@@ -1323,3 +1323,48 @@ test.describe("S8-AC · the task pill's measured date form", () => {
     await expect(todayRow.getByText(/Wed, /)).toHaveCount(0);
   });
 });
+
+// S123/BX3 — the exam edit dialog populated with `row.date.slice(0, 16)` —
+// the UTC WALL-CLOCK of the stored instant — and submitted the datetime-
+// local string raw (re-interpreted in the SERVER's zone on save). The
+// dialog now converts through the user's zone on both boundaries
+// (src/lib/date.ts toDatetimeLocalValue / fromDatetimeLocalInput — the
+// tasks-view local-noon pattern). In the UTC suite this pin is a wiring
+// guard (GREEN-on-arrival, the BW11 coverage-pin style — the drift itself
+// is code-verified and unit-pinned at the seam); on any non-UTC host it is
+// the drift proof.
+test.describe("S123/BX3: the exam edit dialog shows the stored time in the local wall-clock", () => {
+  test("create at 14:30, edit shows 14:30 (the round-trip through the user's zone)", async ({ page }) => {
+    await page.goto("/Exams");
+    await hydrated(page);
+    const cards = page.locator('[aria-label="Exam cards"] > div');
+    await expect(cards.first()).toBeVisible();
+    // Create the probe exam at a fixed local time.
+    await page.getByRole("button", { name: "Add Exam" }).click();
+    let dlg = page.getByRole("dialog");
+    await expect(dlg).toBeVisible();
+    await dlg.locator("#exam-title").fill("S123-BX3-probe");
+    await dlg.locator("#exam-date").fill("2031-03-15T14:30");
+    await dlg.getByRole("button", { name: /add exam/i }).click();
+    await expect(dlg).toHaveCount(0);
+    const card = page.locator('[aria-label="Exam cards"] > div', { hasText: "S123-BX3-probe" });
+    await expect(card).toBeVisible();
+    try {
+      // The edit dialog must show the LOCAL wall-clock (the entered time),
+      // never the raw UTC slice.
+      await card.getByRole("button", { name: "Edit S123-BX3-probe" }).click();
+      dlg = page.getByRole("dialog");
+      await expect(dlg).toBeVisible();
+      await expect(dlg.locator("#exam-date")).toHaveValue("2031-03-15T14:30");
+      // Cancel — no mutation of the probe row.
+      await dlg.getByRole("button", { name: "Cancel" }).click();
+      await expect(dlg).toHaveCount(0);
+      // The card still renders the entered time (the full round-trip).
+      await expect(card.getByText("2:30 PM")).toBeVisible();
+    } finally {
+      const rows = (await page.request.get("/api/exams").then((r) => r.json())) as { id: string; title: string }[];
+      const probe = rows.find((r) => r.title === "S123-BX3-probe");
+      if (probe) await page.request.delete(`/api/exams/${probe.id}`);
+    }
+  });
+});

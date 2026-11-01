@@ -74,6 +74,24 @@
 # BU14 register uniform-200 pin in auth-flows + the BU4 RUM user-scoping
 # pin in s18-rum; the S15 reset-success pin re-anchored IN-PLACE to the
 # role=status channel].)
+# (S123/BX re-tag — census 508 → 516, net +8: chunk 1 +1 [the BX3
+# exam-edit round-trip wiring pin in parity-session8 — create at 14:30,
+# the edit dialog shows 14:30 (the local wall-clock, never the UTC
+# slice), cancel, API cleanup]; chunk 2 +3 [the BX1 timetable edit-form
+# normalize pin in parity-session9 — the seeded legacy row opens at
+# "09:00", never a blank input + the BX9 assignments progress string-
+# state pin — a cleared field reads "", never the "0" snap-back + the
+# BX8 deck-row highlight pin in parity-session7 — deleting the selected
+# deck highlights decks[0], API-created probe decks, zero seeded
+# residue]; chunk 3 +3 [the BX1 both-legs ordering wire pin + the BX5
+# folder parentId clear-to-root wire pin, both in resilience + the BX6
+# focus-elapsed pin in parity-session5 — an early manual complete records
+# <1500s, never the nominal 25:00, with the trailing DELETE cleanup];
+# chunk 5 +1 [the BX2 per-account OTP cap pin in auth-flows — after 10
+# wrong codes the CORRECT code also fails (the uniform 400 lockout), one
+# more TEST-NET register/verify pair on 192.0.2.123].)
+# Expected: 136 + 151 + 69 + 90 + 70 = 516 (each chunk's count includes its
+# auth setup. The S122/BW map beneath:)
 # (S122/BW re-tag — census 502 → 508, net +6: chunk 2 +1 [the BW3
 # debounced-title pin in parity-session7 — char-by-char typing fires ≤2
 # PATCHes, never one per keystroke, the final title persisted]; chunk 3 +4
@@ -86,8 +104,7 @@
 # [the BW9 OTP paste-distribution pin in auth-flows — a synthetic
 # clipboard paste fills all six boxes and verifies, one more loopback
 # register: 7 of the 10/IP budget].)
-# Expected: 135 + 148 + 66 + 90 + 69 = 508 (each chunk's count includes its
-# auth setup. The S121/BV map beneath:
+# (the S121/BV map beneath:)
 # (S121/BV re-tag — census 497 → 502, net +5: chunk 2 +2 [the BV7 owned-FK
 # guard pins in tasks.spec — a foreign/nonexistent subjectId AND listId both
 # answer the actionable 404 "That X does not exist." on the shared demo

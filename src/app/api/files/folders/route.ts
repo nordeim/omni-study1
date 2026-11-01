@@ -15,14 +15,15 @@ import {
   toErrorResponse,
   withUser,
 } from "@/lib/server/http";
-import { idField } from "@/lib/validation";
+import { nullableId } from "@/lib/validation";
 
 const folderCreateSchema = z.object({
   name: z.string().min(1).max(200),
-  // S119/BT4: the shared idField bound (was z.string().min(1) — unbounded).
-  parentId: idField
-    .nullish()
-    .transform((v) => (v === "" ? null : v)),
+  // S123/BX5: the shared nullableId atom — the route-local twin's
+  // ""→null transform was DEAD CODE (idField's min(1) rejected "" first,
+  // so the clear-to-root convention every other entity FK honors 400'd
+  // at the folder routes).
+  parentId: nullableId,
 });
 
 export const GET = withUser(async (user) => {

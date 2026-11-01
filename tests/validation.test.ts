@@ -18,6 +18,11 @@ import {
   mathSolveSchema,
   practiceTestSchema,
   preferencesSchema,
+  timetableClassCreateSchema,
+  timetableClassUpdateSchema,
+  hhmmMinutes,
+  normalizeHhmmForInput,
+  nullableId,
   resetPasswordSchema,
   rumBatchSchema,
   rumEventSchema,
@@ -979,5 +984,113 @@ describe("practiceTestSchema.questions bound (S121/BV5)", () => {
     const parsed = JSON.parse(body) as unknown[];
     expect(Array.isArray(parsed)).toBe(true);
     expect(practiceTestSchema.safeParse({ title: "Bound probe", questions: body }).success).toBe(false);
+  });
+});
+
+// S123/BX1 — the both-legs timetable ordering guard must compare MINUTES,
+// never raw strings. The hhmm atom admits UNPADDED hours ("9:00" — the
+// seed's own legacy shape, written past the Zod boundary), and
+// "11:00" < "9:00" lexicographically, so the raw compare BOTH falsely
+// rejects legal spans AND accepts inverted ones (wire-verified both ways
+// on the dev server pre-fix). The single-leg merge normalized minutes in
+// S122/BW7; the schema-level both-legs path never got the same treatment.
+describe("S123/BX1: the both-legs timetable ordering compares minutes, not strings", () => {
+  it("accepts a LEGAL span with an unpadded start (9:00 → 11:00 — the seeded shape)", () => {
+    const parsed = timetableClassCreateSchema.parse({
+      name: "BX1 legal unpadded",
+      dayOfWeek: 1,
+      startTime: "9:00",
+      endTime: "11:00",
+    });
+    expect(parsed.startTime).toBe("9:00");
+  });
+
+  it("rejects an INVERTED span with a padded start and an unpadded earlier end (09:00 → 8:30)", () => {
+    // "8:30" > "09:00" lexicographically — the raw compare let this row
+    // PERSIST pre-fix (wire-verified: 201 CREATED).
+    const res = timetableClassCreateSchema.safeParse({
+      name: "BX1 inverted",
+      dayOfWeek: 1,
+      startTime: "09:00",
+      endTime: "8:30",
+    });
+    expect(res.success).toBe(false);
+    if (!res.success) {
+      expect(res.error.issues[0].message).toBe("End time must be after the start time");
+    }
+  });
+
+  it("rejects an inverted span on the update schema's both-legs path too", () => {
+    const res = timetableClassUpdateSchema.safeParse({ startTime: "10:00", endTime: "9:30" });
+    expect(res.success).toBe(false);
+  });
+
+  it("still rejects malformed times at the atom (the regex leg, unchanged)", () => {
+    expect(
+      timetableClassCreateSchema.safeParse({
+        name: "BX1 malformed",
+        dayOfWeek: 1,
+        startTime: "9:0",
+        endTime: "10:00",
+      }).success,
+    ).toBe(false);
+    expect(
+      timetableClassCreateSchema.safeParse({
+        name: "BX1 malformed",
+        dayOfWeek: 1,
+        startTime: "24:00",
+        endTime: "25:00",
+      }).success,
+    ).toBe(false);
+  });
+});
+
+// S123/BX1 — the exported normalization helpers (the single source the
+// entities.ts merge and the timetable edit form both consume).
+describe("S123/BX1: hhmmMinutes + normalizeHhmmForInput", () => {
+  it("maps padded and unpadded forms to the same minutes-since-midnight", () => {
+    expect(hhmmMinutes("9:00")).toBe(540);
+    expect(hhmmMinutes("09:00")).toBe(540);
+    expect(hhmmMinutes("8:30")).toBe(510);
+    expect(hhmmMinutes("23:59")).toBe(1439);
+    expect(hhmmMinutes("0:00")).toBe(0);
+  });
+
+  it("returns null for malformed or out-of-range values (the skip legs)", () => {
+    expect(hhmmMinutes("24:00")).toBeNull();
+    expect(hhmmMinutes("9:60")).toBeNull();
+    expect(hhmmMinutes("9:0")).toBeNull();
+    expect(hhmmMinutes("09:00:00")).toBeNull();
+    expect(hhmmMinutes("")).toBeNull();
+  });
+
+  it("pads a 1-digit hour for <input type=time> and leaves valid values untouched", () => {
+    // The HTML value-sanitization algorithm blanks a non-HH:MM value —
+    // the seeded legacy rows ("9:00") opened the edit dialog with an
+    // EMPTY start input (live-verified on the pre-fix tree).
+    expect(normalizeHhmmForInput("9:00")).toBe("09:00");
+    expect(normalizeHhmmForInput("09:00")).toBe("09:00");
+    expect(normalizeHhmmForInput("10:30")).toBe("10:30");
+    // A value that is already unparseable passes through unchanged — the
+    // input's own required gate owns that case; this seam never invents
+    // validation.
+    expect(normalizeHhmmForInput("bad")).toBe("bad");
+    expect(normalizeHhmmForInput("")).toBe("");
+  });
+});
+
+// S123/BX5 — nullableId exported for the folder routes (the "" → null
+// clear-to-root convention the atom's min(1) twin rejected BEFORE the
+// transform — the dead-code leg the API audit found).
+describe("S123/BX5: the exported nullableId atom", () => {
+  it("maps the empty string to null (the clear-to-root convention)", () => {
+    expect(nullableId.parse("")).toBeNull();
+    expect(nullableId.parse(undefined)).toBeNull();
+    expect(nullableId.parse(null)).toBeNull();
+  });
+
+  it("passes valid ids and still rejects over-length garbage", () => {
+    expect(nullableId.parse("abc123")).toBe("abc123");
+    expect(nullableId.safeParse("x".repeat(65)).success).toBe(false);
   });
 });

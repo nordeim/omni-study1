@@ -48,6 +48,7 @@ import { useToast } from "@/components/ui/toast";
 import { mutations, useDataStore, type EventInput, type EventRow } from "@/lib/data";
 import { addDays, daysUntil, formatWeekdayMonthDay, referenceWeekNumber, startOfDay } from "@/lib/date";
 import { ApiError } from "@/lib/api";
+import { fromDatetimeLocalInput, toDatetimeLocalValue } from "@/lib/date";
 import { cn } from "@/lib/utils";
 
 const EVENT_COLORS = [
@@ -143,8 +144,10 @@ export function EventsView() {
   const openEdit = (event: EventRow) => {
     setForm({
       title: event.title,
-      startDate: event.startDate.slice(0, 16),
-      endDate: event.endDate ? event.endDate.slice(0, 16) : "",
+      // S123/BX3: the stored instants rendered in the USER's wall-clock —
+      // never the raw UTC slices (the per-save drift class).
+      startDate: toDatetimeLocalValue(event.startDate),
+      endDate: event.endDate ? toDatetimeLocalValue(event.endDate) : "",
       allDay: event.allDay,
       color: event.color,
       location: event.location,
@@ -168,8 +171,8 @@ export function EventsView() {
     setError("");
     const payload: EventInput = {
       title: form.title,
-      startDate: form.startDate,
-      endDate: form.endDate,
+      startDate: fromDatetimeLocalInput(form.startDate),
+      endDate: fromDatetimeLocalInput(form.endDate),
       allDay: form.allDay,
       color: form.color,
       location: form.location,

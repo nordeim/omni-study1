@@ -1726,3 +1726,60 @@ test.describe("S89 · the partial-empty zombie variant (Batch AP)", () => {
     }
   });
 });
+
+// S123/BX8 — the deck-row highlight read the raw selectedDeckId while the
+// detail pane falls back to effectiveDeckId (decks[0]): after deleting the
+// selected deck, NO row was highlighted while decks[0]'s cards rendered.
+// The highlight now reads effectiveDeckId — the fallback and the highlight
+// can never disagree. Probe decks via the API (zero seeded-deck residue);
+// the delete rides the real UI path (the instant delete — the reference's
+// measured F5 parity).
+test.describe("S123/BX8: the deck-row highlight follows the fallback selection", () => {
+  test("deleting the selected deck highlights the first deck's row", async ({ page }) => {
+    const stamp = Date.now();
+    const mk = async (name: string) => {
+      const res = await page.request.post("/api/flashcards/decks", {
+        data: { name, description: "", color: "#8b5cf6", subjectId: null },
+      });
+      expect(res.ok()).toBe(true);
+      return (await res.json()) as { id: string };
+    };
+    const a = await mk(`BX8-A-${stamp}`);
+    const b = await mk(`BX8-B-${stamp}`);
+    try {
+      await page.goto("/Flashcards");
+      await hydrated(page);
+      const rows = page.locator('[aria-label="Deck rows"] > *');
+      await expect(rows.first()).toBeVisible();
+      // Select deck B (the second probe deck).
+      await rows.filter({ hasText: `BX8-B-${stamp}` }).first().click();
+      const selectedClass = "border-sf-primary/30";
+      const rowB = rows.filter({ hasText: `BX8-B-${stamp}` }).first();
+      await expect(rowB).toHaveClass(new RegExp(selectedClass.replace("/", "\\/")));
+      // Delete deck B through the row's ellipsis menu (the real UI path —
+      // the trigger is opacity-0 until row hover, but Playwright's action
+      // visibility check passes on opacity-0; hover anyway for fidelity).
+      await rowB.hover();
+      await rowB
+        .getByRole("button", { name: `Deck options for BX8-B-${stamp}` })
+        .click();
+      const menu = page.getByRole("menu");
+      await expect(menu).toBeVisible();
+      await menu.getByRole("menuitem", { name: "Delete" }).click();
+      await page.waitForTimeout(300);
+      // Post-fix: the highlight follows the fallback to decks[0] — the
+      // FIRST row (a seeded deck; the probe decks were appended) carries
+      // the selected styling. Pre-fix NO row was highlighted while
+      // decks[0]'s cards rendered in the detail pane.
+      const firstRow = rows.first();
+      await expect(firstRow).toHaveClass(new RegExp(selectedClass.replace("/", "\\/")));
+      // And the stale id no longer matches anything (deck B is gone).
+      const rowA = rows.filter({ hasText: `BX8-A-${stamp}` }).first();
+      await expect(rowA).not.toHaveClass(new RegExp(selectedClass.replace("/", "\\/")));
+      await expect(rows.filter({ hasText: `BX8-B-${stamp}` })).toHaveCount(0);
+    } finally {
+      await page.request.delete(`/api/flashcards/decks/${b.id}`).catch(() => {});
+      await page.request.delete(`/api/flashcards/decks/${a.id}`).catch(() => {});
+    }
+  });
+});

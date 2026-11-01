@@ -430,3 +430,49 @@ test.describe("S15 auth flows", () => {
     expect(body.error).toContain("too large");
   });
 });
+
+// S123/BX2 — the per-account OTP attempt cap. The verify route's only
+// brake was the per-IP limiter (20/15-min), whose key is client-forgeable
+// in the default TRUSTED_PROXY_HOPS-unset posture (a forged
+// x-forwarded-for mints a fresh key per request). The code space is 10^6,
+// the TTL 15 minutes, and a correct guess SIGNS THE CALLER IN. The route
+// now carries a per-USER budget (10/15-min) after the user lookup — and
+// it answers the SAME uniform 400 when exhausted (never a distinguishable
+// 429: a per-account 429 would be a WORSE enumeration oracle than the
+// guessing surface it closes). Fresh TEST-NET user + IP (192.0.2.123) so
+// no shared budget is touched.
+test.describe("S123/BX2: the per-account OTP attempt cap", () => {
+  test("after 10 wrong codes the CORRECT code also fails (the uniform 400 lockout)", async ({ page }) => {
+    const ip = { "x-forwarded-for": "192.0.2.123" };
+    const email = `s123-bx2-${Date.now()}@studyflow.app`;
+    const reg = await page.request.post("/api/auth/register", {
+      headers: ip,
+      data: { email, password: "Fresh1234!", name: "BX2 Probe" },
+    });
+    expect(reg.ok()).toBe(true);
+    const { code } = (await reg.json()) as { code: string };
+    expect(code).toBeTruthy();
+
+    // Burn the per-account budget with 10 wrong codes (all uniform 400s —
+    // the IP budget of 20 is not yet reached, so pre-fix these were the
+    // ONLY gate and the correct code still worked).
+    for (let i = 0; i < 10; i++) {
+      const wrong = await page.request.post("/api/auth/verify-email", {
+        headers: ip,
+        data: { email, code: "000000" },
+      });
+      expect(wrong.status()).toBe(400);
+    }
+
+    // THE LOCKOUT: the CORRECT code must now fail — pre-fix this was 200
+    // (the account verified + signed in).
+    const correct = await page.request.post("/api/auth/verify-email", {
+      headers: ip,
+      data: { email, code },
+    });
+    expect(correct.status()).toBe(400);
+    const body = (await correct.json()) as { error?: string };
+    // The SAME uniform copy — no oracle, no new message shape.
+    expect(body.error).toBe("That code is invalid or has expired.");
+  });
+});

@@ -74,11 +74,27 @@ type TestQuestion = {
 };
 
 type DraftQuestion = {
+  // S123/BX7: a stable per-draft id — the list is REMOVABLE mid-list and
+  // every row carries focusable controls, so index keys could land focus /
+  // IME composition on the wrong row after a removal (the BV17 class).
+  // The id never reaches the API (the submit builds explicit objects).
+  id: string;
   question: string;
   type: QuestionType;
   options: string; // comma list for multiple_choice
   correctAnswer: string;
 };
+
+/** S123/BX7 — a fresh draft with its stable id. */
+function newDraft(): DraftQuestion {
+  return {
+    id: crypto.randomUUID(),
+    question: "",
+    type: "multiple_choice",
+    options: "",
+    correctAnswer: "",
+  };
+}
 
 const QUESTION_TYPES: QuestionType[] = ["multiple_choice", "true_false", "short_answer"];
 
@@ -151,6 +167,7 @@ function TestDialog({
   const [drafts, setDrafts] = React.useState<DraftQuestion[]>(
     test
       ? parseQuestions(test.questions).map((q) => ({
+          id: crypto.randomUUID(),
           question: q.question,
           type: q.type,
           options: (q.options ?? []).join(", "),
@@ -183,6 +200,7 @@ function TestDialog({
       const drafts = (res.questions ?? [])
         .filter((q) => typeof q.question === "string" && q.question.trim())
         .map((q) => ({
+          id: crypto.randomUUID(),
           question: q.question,
           type: (["multiple_choice", "true_false", "short_answer"] as const).includes(
             q.type as "multiple_choice",
@@ -339,12 +357,7 @@ function TestDialog({
                 type="button"
                 variant="outline"
                 size="sm"
-                onClick={() =>
-                  setDrafts((list) => [
-                    ...list,
-                    { question: "", type: "multiple_choice", options: "", correctAnswer: "" },
-                  ])
-                }
+                onClick={() => setDrafts((list) => [...list, newDraft()])}
               >
                 <Plus className="size-4" strokeWidth={2} /> Add question
               </Button>
@@ -352,7 +365,7 @@ function TestDialog({
             </div>
             <p className="text-xs text-slate-500 dark:text-slate-400">{drafts.length} questions added</p>
             {drafts.map((draft, index) => (
-              <div key={index} className="flex flex-col gap-2 rounded-xl border border-slate-200 p-3 dark:border-slate-700">
+              <div key={draft.id} className="flex flex-col gap-2 rounded-xl border border-slate-200 p-3 dark:border-slate-700">
                 <div className="flex items-center gap-2">
                   <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">Q{index + 1}</span>
                   <Select
@@ -476,21 +489,27 @@ function QuestionRunner({
   const finish = React.useCallback(() => setFinished(true), []);
 
   // Countdown — one interval, cleaned up on unmount; auto-submits at zero.
+  // S123/BX7: the updater is PURE (prev → next, nothing else — React may
+  // invoke updaters more than once); the zero-detection is an EFFECT on the
+  // state, deferred to a macrotask so the effect body never sets state
+  // synchronously (the focustimer pattern).
   React.useEffect(() => {
     if (finished) return;
     const id = window.setInterval(() => {
-      setSecondsLeft((prev) => {
-        if (prev <= 1) {
-          window.clearInterval(id);
-          setExpired(true);
-          finish();
-          return 0;
-        }
-        return prev - 1;
-      });
+      setSecondsLeft((prev) => Math.max(0, prev - 1));
     }, 1000);
     return () => window.clearInterval(id);
-  }, [finished, finish]);
+  }, [finished]);
+
+  React.useEffect(() => {
+    if (finished || secondsLeft > 0) return;
+    const id = window.setTimeout(() => {
+      setExpired(true);
+      finish();
+    }, 0);
+    return () => window.clearTimeout(id);
+    // finish is a stable useCallback consumer; secondsLeft is the trigger.
+  }, [secondsLeft, finished, finish]);
 
   const total = questions.length;
   const correctCount = React.useMemo(

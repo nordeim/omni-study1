@@ -472,7 +472,11 @@ export function FlashcardsView() {
                   }}
                   className={cn(
                     "group flex w-full items-center gap-3 rounded-xl border-2 p-4 text-left outline-none transition-colors focus-visible:ring-2 focus-visible:ring-sf-primary/40",
-                    selectedDeckId === deck.id
+                    // S123/BX8: the highlight reads the EFFECTIVE id — the
+                    // same fallback the detail pane uses (decks[0]) — so a
+                    // stale selection after a delete can never leave NO row
+                    // highlighted while decks[0]'s cards render.
+                    effectiveDeckId === deck.id
                       ? "border-sf-primary/30 bg-slate-50 dark:bg-slate-800"
                       : "border-transparent bg-slate-50 hover:border-slate-200 dark:bg-slate-800/50 dark:hover:border-slate-700",
                   )}

@@ -116,10 +116,15 @@ export function FocusTimerView() {
       return;
     }
     setSaving(true);
+    // S123/BX6: the ELAPSED duration, not the nominal preset — a manual
+    // early complete previously logged the full 25:00 (every focus stat
+    // silently inflated). The auto path arrives at remaining === 0 and
+    // records the full duration unchanged; the schema's min-1 floors a
+    // sub-second complete.
     mutations
       .createFocusSession({
         startedAt: new Date().toISOString(),
-        durationSeconds: durations.focus,
+        durationSeconds: Math.max(1, durations.focus - remaining),
         mode: "focus",
         completed: true,
         subjectId: subjectId === "none" ? null : subjectId,
