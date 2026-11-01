@@ -124,6 +124,7 @@ export function checkRateLimit(key: string, max: number = MAX_ATTEMPTS): RateLim
   const now = Date.now();
   const bucket = buckets.get(key);
   if (!bucket || now - bucket.windowStart >= WINDOW_MS) {
+    if (buckets.size >= MAX_BUCKETS) sweepExpiredBuckets(now);
     buckets.set(key, { count: 1, windowStart: now });
     return { ok: true, retryAfterSec: 0 };
   }
@@ -137,6 +138,31 @@ export function checkRateLimit(key: string, max: number = MAX_ATTEMPTS): RateLim
 
 export function resetRateLimit(key: string): void {
   buckets.delete(key);
+}
+
+/** S120/BU6: the size observable — the eviction contract's test/ops probe. */
+export function rateLimitBucketCount(): number {
+  return buckets.size;
+}
+
+/** S120/BU6: the test/ops drain — clears every bucket (the eviction pins
+ *  assert exact sizes, so each pin starts from a drained map). */
+export function resetAllRateLimits(): void {
+  buckets.clear();
+}
+
+// S120/BU6 — the eviction. The buckets Map was never swept: every distinct
+// key (every client IP — and under a forged X-Forwarded-For, every spoofed
+// string) created a PERMANENT entry, a remotely-driven unbounded memory
+// leak. The fix is a lazy sweep at the cap: before inserting a NEW key when
+// the map is at capacity, every expired-window bucket is deleted (bounded
+// memory, no timers, live-window buckets always survive).
+const MAX_BUCKETS = 2048;
+
+function sweepExpiredBuckets(now: number): void {
+  for (const [key, bucket] of buckets) {
+    if (now - bucket.windowStart >= WINDOW_MS) buckets.delete(key);
+  }
 }
 
 // ---- S15 seams: verification codes + reset tokens -------------------------------
@@ -170,6 +196,58 @@ export function normalizeVerificationCode(
   if (typeof input !== "string") return null;
   const cleaned = input.replace(/[\s.-]/g, "");
   return /^\d{6}$/.test(cleaned) ? cleaned : null;
+}
+
+// ---- S120/BU3: the declared proxy-hop contract ------------------------------------
+//
+// clientIp() trusted the raw FIRST x-forwarded-for hop — every per-IP budget
+// was bypassable with a per-request forged header (the PAD §6.4 documented
+// reopen trigger). TRUSTED_PROXY_HOPS declares the reverse-proxy depth:
+//   unset  → the legacy first-hop posture (single-node dev/demo — the e2e
+//            suite's own XFF pins keep their semantics);
+//   0      → the header is never trusted (direct-exposure posture);
+//   N >= 1 → the Nth hop FROM THE RIGHT (the client-supplied left side is
+//            never trusted); a header shorter than the declared depth fails
+//            CLOSED (null — the caller falls back to the direct address);
+//   unparsable → 0 (fail closed: the skill §16 "unparsable fails closed").
+
+export function parseTrustedProxyHops(raw: string | undefined): number | undefined {
+  if (raw === undefined || raw.trim() === "") return undefined; // legacy posture
+  const n = Number(raw.trim());
+  if (!Number.isInteger(n) || n < 0) return 0; // fail closed
+  return n;
+}
+
+/** Extract the client IP from an x-forwarded-for value under a declared
+ *  proxy-hop policy. Returns null when the policy says "do not trust the
+ *  header" (hops=0) or the header cannot satisfy the declared depth —
+ *  the caller then falls back to its direct-connection key. */
+export function clientIpFromForwarded(
+  headerValue: string | null,
+  trustedHops: number | undefined,
+): string | null {
+  if (trustedHops === 0) return null;
+  if (!headerValue) return null;
+  const hops = headerValue.split(",").map((h) => h.trim()).filter((h) => h.length > 0);
+  if (hops.length === 0) return null;
+  if (trustedHops === undefined) return hops[0]; // legacy first hop
+  if (hops.length < trustedHops) return null; // fail closed (short header)
+  return hops[hops.length - trustedHops];
+}
+
+// ---- S120/BU15: the session-cookie Secure-flag derivation -------------------------
+//
+// The routes derived `secure` from request.nextUrl.protocol — behind a
+// TLS-terminating proxy the upstream request is plain HTTP and the cookie
+// shipped without Secure over the public HTTPS origin (DEPLOYMENT.md told
+// operators to forward X-Forwarded-Proto, which no code read). The proxy
+// header wins when present; otherwise the request protocol (the shipped
+// behavior).
+
+export function secureCookieFlag(xForwardedProto: string | null, requestProtocol: string): boolean {
+  const header = xForwardedProto?.trim().toLowerCase();
+  if (header) return header === "https";
+  return requestProtocol === "https:";
 }
 
 // ---- misc -----------------------------------------------------------------------

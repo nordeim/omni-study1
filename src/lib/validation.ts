@@ -212,6 +212,30 @@ export const eventSchema = z.object({
   description: z.string().max(1000).optional().default(""),
 });
 
+// S120/BU22: the ordering guard — an endDate before the startDate is a
+// data-quality defect (the views render nonsense spans). zod@4 forbids
+// .partial() on refined object schemas, so the PURE eventSchema stays
+// unwrapped (the client type inference + the partial-update base) and the
+// ordering check rides the two CONSUMED shapes: the create schema (full
+// payload) and the update schema (a partial payload validates the ordering
+// only when both legs arrive together — a single-leg PATCH merges with the
+// stored row before the route's own write).
+const END_BEFORE_START = "End date must be after the start date";
+
+export const eventCreateSchema = eventSchema.check((ctx) => {
+  const { endDate, startDate } = ctx.value;
+  if (endDate && endDate < startDate) {
+    ctx.issues.push({ code: "custom", input: ctx.value, message: END_BEFORE_START, path: ["endDate"] });
+  }
+});
+
+export const eventUpdateSchema = eventSchema.partial().check((ctx) => {
+  const { endDate, startDate } = ctx.value;
+  if (endDate && startDate && endDate < startDate) {
+    ctx.issues.push({ code: "custom", input: ctx.value, message: END_BEFORE_START, path: ["endDate"] });
+  }
+});
+
 export const timetableClassSchema = z.object({
   name: boundedTitle,
   dayOfWeek: z.number().int().min(0).max(6),

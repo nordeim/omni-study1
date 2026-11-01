@@ -456,7 +456,7 @@ export function FilesView() {
                         <span className="block truncate font-medium text-slate-800 dark:text-slate-100">
                           {folder.name}
                         </span>
-                        <span className="block text-xs text-slate-500">{itemCount} items</span>
+                        <span className="block text-xs text-slate-500 dark:text-slate-400">{itemCount} items</span>
                       </span>
                     </button>
                     <div className="flex shrink-0 items-center gap-1 opacity-0 transition-opacity focus-within:opacity-100 group-hover:opacity-100">
@@ -511,7 +511,7 @@ export function FilesView() {
                           file.name
                         )}
                       </p>
-                      <p className="text-xs text-slate-500">{formatSize(file.size)}</p>
+                      <p className="text-xs text-slate-500 dark:text-slate-400">{formatSize(file.size)}</p>
                     </div>
                     <div className="flex shrink-0 items-center gap-1 opacity-0 transition-opacity focus-within:opacity-100 group-hover:opacity-100">
                       {!link && (
@@ -570,7 +570,13 @@ export function FilesView() {
         </DialogContent>
       </Dialog>
 
+      {/* S120/BU1: the key-remount the dialog's own state-initializer
+          contract always claimed — without it the useState(folder?.name)
+          captured the FIRST mount's props forever and the Rename dialog
+          opened with the PREVIOUS session's name (verified live: create A,
+          create B, Rename A showed B). The sibling idiom (tasks-view:775). */}
       <FolderDialog
+        key={folderDialogOpen ? `open-${renamingFolder?.id ?? "new"}` : "closed"}
         open={folderDialogOpen}
         onOpenChange={setFolderDialogOpen}
         folder={renamingFolder}

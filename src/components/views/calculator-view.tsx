@@ -560,7 +560,7 @@ function GpaPanel() {
         </Button>
         <div className="flex items-center gap-3">
           <div className="text-right">
-            <p className="text-xs text-slate-500">Computed GPA</p>
+            <p className="text-xs text-slate-500 dark:text-slate-400">Computed GPA</p>
             <p className="text-3xl font-bold tabular-nums text-slate-800 dark:text-slate-100" aria-live="polite">
               {gpa.toFixed(2)}
             </p>
@@ -610,7 +610,10 @@ function UnitPanel() {
 
   const unitSelect = (which: "from" | "to", unit: string, setUnit: (u: string) => void) => (
     <Select value={unit} onValueChange={setUnit}>
-      <SelectTrigger aria-label={`${which === "from" ? "From" : "To"} unit`}>
+      {/* S120/BU17a: the id binds the visible From/To Labels (they dangled
+          on aria-label-only triggers before — every other Select in the
+          app binds both). */}
+      <SelectTrigger id={`unit-${which}`} aria-label={`${which === "from" ? "From" : "To"} unit`}>
         <SelectValue />
       </SelectTrigger>
       <SelectContent>
@@ -660,7 +663,7 @@ function UnitPanel() {
 
       <div className="grid grid-cols-[1fr_7rem] items-end gap-2">
         <div className="rounded-xl bg-slate-50 px-4 py-3 dark:bg-slate-800/60">
-          <p className="text-xs text-slate-500">Result</p>
+          <p className="text-xs text-slate-500 dark:text-slate-400">Result</p>
           <p className="truncate text-2xl font-bold tabular-nums text-slate-800 dark:text-slate-100" aria-live="polite">
             {converted === null ? "—" : converted}
           </p>

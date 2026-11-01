@@ -25,7 +25,7 @@ tags:
 
 > **What this is:** the single-source-of-truth reference for working in
 > `nordeim/omni-study1`. Every fact below is verified against the codebase
-> (1478 tests green, re-anchored at the 2.2 update: 990 Vitest unit + 488
+> (1527 tests green, re-anchored at the S120 update: 1030 Vitest unit + 497
 > Playwright e2e across the 5-chunk cold map — the census re-anchored through
 > the s117–s119 hardening cycles; the 2.0 baseline was 834 + 299 in six
 > chunks after the parity re-application + account-flow completion +
@@ -520,6 +520,9 @@ notes, decks, grades; `avatarEmoji: ""` (reference default state).
 | AP-121 | MEDIUM | Two s118 auditor recommendations — wire the drawer's dead `sf-slide-in` animation; add `scrollTo(0,0)` on navigate — were both DISPROVEN by live reference measurement (the reference drawer computes `transition: all 0s`; it PERSISTS a 600px scroll across drawer navigation); implementing either would have BROKEN parity | an auditor's conventional-wisdom recommendation is a parity HYPOTHESIS, not a finding: any behavioral change to shared chrome must be measured on the reference BEFORE the fix is planned — the audit report's fix column is a suggestion, the reference is the contract | the S118 Q1/Q2 non-gap record (session-118) |
 | AP-122 | MEDIUM | The s119 audit flagged the AI composer's hint ("Shift + Enter for a new line") as misleading copy while the clone shipped a single-line input — measuring the reference settled the direction: its composer IS a `<textarea rows=2>` (the ELEMENT was the real parity gap) while its own Shift+Enter SENDS (the reference's hint is aspirational too) | a pinned hint is a parity contract the CODE must honor: when copy and behavior drift on a pinned surface, measure the reference's element AND its behavior — ship the reference's element (parity) and the promised behavior (superset), never a copy change | the S119/BT6 composer fix (session-119) |
 | AP-123 | MEDIUM | The calculator maps Escape to display-clear (pinned since S15); the new history panel's Escape-to-close would have made ONE press do BOTH (two window-level listeners, registration order — not intent) | when adding an overlay to a view that already binds Escape, the overlay OWNS the key while open: the pre-existing binding consults the overlay state and stays dormant — grep the view's existing key bindings before adding a new one | the S119/BT7 panel lifecycle (session-119) |
+| AP-124 | MEDIUM | Three first-cert failures shared one root: BU7 changed the dashboard badge family, BU8 the exams-view family, BU17d the reset-success channel — each landed with its NEW pin GREEN while an OLD pin still asserted the superseded measured contract (an `rgb(254,226,226)` badge pin, an `sf-pill-red` dashboard census pin, a `getByRole("alert")` locator) | a measured-parity change must sweep the PIN layer for the OLD measured values in the same change: `grep -rn "<old value>" tests/` is a RED-phase step — a measured-value pin is a contract with two ends, and the old end is re-anchored deliberately, never left to fail at the cert | the S120 stale-pin trio (session-120) |
+| AP-125 | MEDIUM | The new `sf-pill-blue` utility failed the hue-tokens census until THREE coherent edits landed: the @theme pins for its steps, the UTILITY_CONTRACT entry, and the CONSUMERS census swap — plus the stale globals.css comment healed | a utility-family addition is a three-edit contract with the hue-tokens census; run `tests/hue-tokens.test.ts` immediately after adding any `@utility` family — the census is the guard working, 6 seconds instead of a 3-minute cert round | the S120/BU8 blue-family addition (session-120) |
+| AP-126 | MEDIUM | BU21 (the SEED_DEMO gate) was planned but unimplemented — the prior context window was interrupted mid-GREEN, and the miss was invisible until the docs phase enumerated the BU table against the tree | a resumed session never trusts its memory of what the prior window completed: re-derive the plan's item×tree matrix (grep each item's surfaces) BEFORE the docs chain claims completion — the plan's Status field is the only source of truth | the S120/BU21 recovery (session-120) |
 
 ---
 
@@ -568,13 +571,13 @@ tail -40 dev.log                            # request traces + prisma queries
 ```bash
 bun run lint && bun run typecheck && bun run test && bun run build && bun run test:e2e
 ```
-Current green state (re-anchored at 2.2): lint ✓ · tsc ✓ · 990 unit ✓ · build ✓ · 488 e2e ✓ (1478 green).
+Current green state (re-anchored at S120/BU): lint ✓ · tsc ✓ · 1030 unit ✓ · build ✓ (the type gate live — `ignoreBuildErrors` removed) · 497 e2e ✓ (1527 green).
 
 **Full-suite chunk map** (one server-boot per chunk; the 10-min tool cap makes
 one-shot full runs unreliable — the 2.0 six-chunk map: chrome+s14 104 ·
 S5+calc+S6 46 · S7+S8+S9 79 · tasks/resilience/s16/s17 20 · auth+s18–s23 35 ·
 s24–s26 18. Re-anchored at 2.2: the FIVE-chunk cold map of
-`scripts/e2e-chunked-cert.sh` — 133+142+60+89+64 = 488, always run COLD
+`scripts/e2e-chunked-cert.sh` — 135+145+61+90+66 = 497, always run COLD
 [`rm -f db/e2e.db`]: the s23 round-trip posts a FIXED-id envelope and the
 seed's idempotent upserts never refresh day-relative dates).
 
@@ -783,18 +786,19 @@ no bottom tab bar, drawer-only mobile nav). Mobile QA viewport: 390×844.
 
 ---
 
-## §18 Z-Index Layer Map
+## §18 Z-Index Layer Map (re-measured S120/BU22d — five layers, ascending)
 
 | Layer | z | Where |
 |---|---|---|
-| Mobile app bar / desktop sidebar | 40 | `mobile-chrome.tsx`, `sidebar.tsx` |
-| Mobile drawer overlay | 50 | `mobile-chrome.tsx` |
-| Dialog + overlay | 50 | `ui/dialog.tsx` |
-| Dropdown menu | 50 | `ui/dropdown-menu.tsx` |
-| Toasts | top of DOM tree, portal | `ui/toast.tsx` (rendered after main) |
+| Fixed app chrome (mobile header, desktop sidebar, the notes mobile FAB) | `z-30` | `mobile-chrome.tsx:121`, `sidebar.tsx:48`, `notes-view.tsx:776` |
+| The Radix overlay family (dialog/alert-dialog/dropdown/select/popover/tooltip backdrops + content, the mobile drawer) | `z-50` | `ui/dialog.tsx`, `ui/alert-dialog.tsx`, `ui/dropdown-menu.tsx`, `ui/select.tsx`, `ui/popover.tsx`, `ui/tooltip.tsx` |
+| Toast viewport (above open dialogs) | `z-[60]` | `ui/toast.tsx:61` |
+| Connectivity banner (the topmost feedback surface) | `z-[70]` | `connectivity-banner.tsx:48` |
+| Skip link (above everything — the a11y contract) | `z-index: 100` | `globals.css` `sf-skip-link` |
 
-Rule: new overlays start at 50; never stack above toasts except modals that
-must block them.
+Rule (mirrored in AGENTS.md Conventions): a NEW fixed surface picks its layer
+from this scale — never invent a sibling value between two existing layers
+without updating this map AND the AGENTS line in the same change.
 
 ---
 

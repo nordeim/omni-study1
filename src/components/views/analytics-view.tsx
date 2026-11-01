@@ -431,7 +431,7 @@ export function AnalyticsView() {
         <SectionCard title="Subject Workload" icon={Target}>
           <div role="group" aria-label="Subject workload chart" className="h-[250px] overflow-y-auto sf-scroll">
             {workload.length === 0 ? (
-              <p className="py-10 text-center text-sm text-slate-500">No subject data yet</p>
+              <p className="py-10 text-center text-sm text-slate-500 dark:text-slate-400">No subject data yet</p>
             ) : (
               <div className="flex flex-col gap-3">
                 {workload.map((row) => (
@@ -475,7 +475,7 @@ export function AnalyticsView() {
 
         <SectionCard title="Grade Trend" icon={LineChart}>
           {gradePercents.length === 0 ? (
-            <p className="py-10 text-center text-sm text-slate-500">
+            <p className="py-10 text-center text-sm text-slate-500 dark:text-slate-400">
               Log grades in the Grade Tracker to see the trend.
             </p>
           ) : (

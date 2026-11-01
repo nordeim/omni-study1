@@ -439,7 +439,7 @@ function EmailCard({ user, onEmailChanged }: { user: AppUser | null; onEmailChan
   return (
     <section aria-label="Email address" className="sf-card p-6">
       <h2 className="text-lg font-semibold text-slate-800 dark:text-slate-100">Email address</h2>
-      <div className="mt-1 text-sm text-slate-500">
+      <div className="mt-1 text-sm text-slate-500 dark:text-slate-400">
         Update the address you use to sign in. Currently{" "}
         <span className="font-medium text-slate-700 dark:text-slate-200">{user?.email ?? "…"}</span>.
       </div>
@@ -604,7 +604,7 @@ function DangerZoneCard() {
   return (
     <section aria-label="Danger zone" className="sf-card border-red-200 p-6 dark:border-red-900">
       <h2 className="text-lg font-semibold text-red-600 dark:text-red-400">Danger zone</h2>
-      <p className="mt-1 text-sm text-slate-500">
+      <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
         Permanently delete your account and every study record in it. Consider downloading a backup
         from the export page first.
       </p>
@@ -729,14 +729,14 @@ function SubjectDialog({
                   style={{ backgroundColor: hex }}
                 />
               ))}
-              <label className="flex items-center gap-2 text-sm text-slate-500">
+              <label className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
                 Custom
                 <input
                   type="color"
                   value={color}
                   onChange={(e) => setColor(e.target.value)}
                   aria-label="Custom subject color"
-                  className="h-7 w-9 cursor-pointer rounded border border-input bg-transparent"
+                  className="h-7 w-9 rounded border border-input bg-transparent"
                 />
               </label>
             </div>
@@ -779,9 +779,9 @@ function SubjectsTab() {
           <Plus className="size-4" strokeWidth={2} /> Add Subject
         </Button>
       </div>
-      <p className="mt-1 text-sm text-slate-500">Manage your subjects and classes</p>
+      <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">Manage your subjects and classes</p>
       {subjects.length === 0 ? (
-        <p className="py-8 text-center text-sm text-slate-500">
+        <p className="py-8 text-center text-sm text-slate-500 dark:text-slate-400">
           No subjects yet. Add your first subject to get started!
         </p>
       ) : (
@@ -946,14 +946,14 @@ function HolidaysTab() {
       <div className="flex items-center justify-between gap-3">
         <div>
           <h2 className="text-lg font-semibold text-slate-800 dark:text-slate-100">Holidays &amp; Breaks</h2>
-          <p className="mt-1 text-sm text-slate-500">Set your school holidays and breaks</p>
+          <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">Set your school holidays and breaks</p>
         </div>
         <Button variant="gradient" size="sm" className="sf-gradient-shadow" onClick={() => setDialogOpen(true)}>
           <Plus className="size-4" strokeWidth={2} /> Add Holiday
         </Button>
       </div>
       {sorted.length === 0 ? (
-        <p className="py-8 text-center text-sm text-slate-500">
+        <p className="py-8 text-center text-sm text-slate-500 dark:text-slate-400">
           No holidays set. Add your school holidays!
         </p>
       ) : (
@@ -965,7 +965,7 @@ function HolidaysTab() {
             >
               <div>
                 <p className="font-medium text-slate-700 dark:text-slate-200">{holiday.name}</p>
-                <p className="text-xs text-slate-500">{formatLongDate(new Date(holiday.date))}</p>
+                <p className="text-xs text-slate-500 dark:text-slate-400">{formatLongDate(new Date(holiday.date))}</p>
               </div>
               <button
                 type="button"
@@ -1014,7 +1014,7 @@ function NotificationsTab({ user, onRefreshed }: { user: AppUser | null; onRefre
       <div className="mt-4 flex items-center justify-between gap-4">
         <div>
           <h2 className="text-lg font-semibold text-slate-800 dark:text-slate-100">Enable Notifications</h2>
-          <p className="mt-1 text-sm text-slate-500">Receive reminders for tasks and assignments</p>
+          <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">Receive reminders for tasks and assignments</p>
         </div>
         <Switch checked={enabled} onCheckedChange={setEnabled} aria-label="Enable Notifications" />
       </div>
@@ -1086,8 +1086,8 @@ export function SettingsView() {
           <div className="mx-auto flex max-w-2xl flex-col gap-6">
             <section className="sf-card p-6">
               <h2 className="text-lg font-semibold text-slate-800 dark:text-slate-100">Account</h2>
-              <p className="mt-1 text-sm text-slate-500">Your account and study information.</p>
-              <p className="mt-2 text-sm text-slate-500">
+              <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">Your account and study information.</p>
+              <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
                 {user ? (
                   <>
                     {user.email} · Member since {formatLongDate(new Date(user.createdAt))}
@@ -1096,7 +1096,7 @@ export function SettingsView() {
                   "Loading your account…"
                 )}
               </p>
-              <p className="mt-1 text-sm text-slate-500">
+              <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
                 {user ? `Account created: ${formatLongDate(new Date(user.createdAt))}` : "Account created: —"}
               </p>
             </section>

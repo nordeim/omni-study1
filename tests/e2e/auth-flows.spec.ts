@@ -28,6 +28,34 @@ test.describe("S15 auth flows", () => {
     await expect(page.getByRole("heading", { level: 1 })).toHaveCount(0);
   });
 
+  // S120/BU14 — the uniform register status. The shipped route split its
+  // response shapes by account state (existing-verified → 200 {ok} no code;
+  // existing-unverified → 200 {ok, code}; new → 201 {ok, code}) — the
+  // 201-vs-200 split and the code-presence split each distinguished
+  // account states, contradicting the family's own no-enumeration
+  // discipline (login answers a uniform 401). The fix: every branch
+  // answers 200 (the code presence stays the documented self-hosted
+  // delivery — gated OFF in hardened deployments by DISABLE_IN_APP_OTP).
+  test("S120/BU14: register answers the SAME 200 status for a new and a re-registered account", async ({ page }) => {
+    const ip = { "x-forwarded-for": "192.0.2.121" };
+    const email = `s120-bu14-${Date.now()}@studyflow.app`;
+    const first = await page.request.post("/api/auth/register", {
+      headers: ip,
+      data: { email, password: "Fresh1234!", name: "BU14 Probe" },
+    });
+    expect(first.status()).toBe(200); // was 201 — the split closed
+    const second = await page.request.post("/api/auth/register", {
+      headers: ip,
+      data: { email, password: "Other1234!", name: "BU14 Probe" },
+    });
+    expect(second.status()).toBe(200);
+    // The re-register still re-issues the code (the S25/S26 flow's own
+    // contract — the shape is uniform, the delivery is not gated here).
+    const body = (await second.json()) as { ok: boolean; code?: string };
+    expect(body.ok).toBe(true);
+    expect(typeof body.code).toBe("string");
+  });
+
   test("register → verify OTP → signed in (the self-hosted code note)", async ({ page }) => {
     const email = `e2e-verify-${Date.now()}@example.com`;
     await page.goto("/login");
@@ -143,7 +171,11 @@ test.describe("S15 auth flows", () => {
 
     // Back at sign-in with the success note, then the new password works.
     await expect(page.getByRole("button", { name: "Sign in", exact: true })).toBeVisible();
-    await expect(page.locator("div.shadow-2xl").getByRole("alert")).toContainText(
+    // S120/BU17d re-anchor: the reset SUCCESS rides the status channel
+    // (role="status", the emerald InlineStatus) — it rode the red
+    // role="alert" error channel since S15; a success is a status, not an
+    // alert, for assistive tech.
+    await expect(page.locator("div.shadow-2xl").getByRole("status")).toContainText(
       "Password reset successfully. Sign in with your new password.",
     );
 

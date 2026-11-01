@@ -142,7 +142,7 @@ export function CalendarView() {
             {monthLabel}
           </h2>
           {timelineDays.length === 0 ? (
-            <p className="py-8 text-center text-slate-400 dark:text-slate-500">
+            <p className="py-8 text-center text-slate-500 dark:text-slate-400">
               No events this month
             </p>
           ) : (
@@ -323,7 +323,7 @@ export function CalendarView() {
           </h3>
 
           {selectedEvents.length === 0 && selectedTasks.length === 0 ? (
-            <p className="py-8 text-center text-slate-400 dark:text-slate-500">
+            <p className="py-8 text-center text-slate-500 dark:text-slate-400">
               No events this day
             </p>
           ) : (

@@ -7,9 +7,9 @@ const nextConfig: NextConfig = {
   // at .next/standalone/server.js — even when the repo is cloned inside a
   // parent workspace that has its own lockfile.
   outputFileTracingRoot: path.join(import.meta.dirname, "."),
-  typescript: {
-    ignoreBuildErrors: true,
-  },
+  // S120/BU22e: the build is the type gate (the §3 "do not set
+  // ignoreBuildErrors" doctrine — bun run typecheck stays in the gate as
+  // the faster feedback loop). Removed after verifying the build green.
   reactStrictMode: false,
   // Next 16's dev-origin protection silently blocks dev chunks for the
   // 127.0.0.1 origin (unhydrated page, native form GET fallbacks) — restore
@@ -42,6 +42,23 @@ const nextConfig: NextConfig = {
       { source: "/AIAssistant", destination: "/" },
       { source: "/FocusTimer", destination: "/" },
       { source: "/Settings", destination: "/" },
+    ];
+  },
+  // S120/BU16 — the baseline security headers on EVERY route. The shipped
+  // app had none: the authenticated SPA was framable (clickjacking on the
+  // destructive surfaces), no page-level nosniff, no Referrer-Policy. HSTS
+  // is deliberately absent: the documented Docker posture terminates TLS
+  // upstream (add it where TLS ends at the app itself — DEPLOYMENT.md).
+  async headers() {
+    return [
+      {
+        source: "/:path*",
+        headers: [
+          { key: "X-Content-Type-Options", value: "nosniff" },
+          { key: "X-Frame-Options", value: "DENY" },
+          { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+        ],
+      },
     ];
   },
 };

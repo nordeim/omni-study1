@@ -336,9 +336,47 @@ test.describe("S9-G/H · Files breadcrumb + toggle; Timetable Grid Builder", () 
     const svgs = await gb.locator("svg").count();
     expect(svgs).toBe(0);
   });
+
+  // S120/BU9 — the dialog Cancel parity matrix (the P3 decision). The
+  // reference's Add Class dialog carries an explicit Cancel (measured
+  // 2026-11-01: ["Select a subject","Saturday","Every Week","Cancel",
+  // "Add Class","Close"]); the clone shipped submit + X only.
+  test("S120/BU9: the Add Class dialog carries a Cancel that closes without creating", async ({ page }) => {
+    await page.goto("/Timetable");
+    await hydrated(page);
+    // The class-cell census: the seeded timetable renders editable class
+    // cells (the BT9 name-from-content buttons). A cancelled Add Class
+    // session must leave the census unchanged.
+    const classCells = page.locator('[aria-label="Week grid"] button:has(span.sr-only)');
+    const before = await classCells.count();
+    await page.getByRole("button", { name: "Add Class" }).first().click();
+    const dlg = page.getByRole("dialog");
+    await expect(dlg).toBeVisible();
+    await dlg.getByRole("button", { name: "Cancel" }).click();
+    await expect(dlg).toHaveCount(0);
+    expect(await classCells.count()).toBe(before);
+  });
 });
 
 test.describe("S9-I/J · Assignments rows + default filter; Exams badge", () => {
+  // S120/BU9 — the reference's Add Assignment dialog carries an explicit
+  // Cancel (measured 2026-11-01: ["Select","Homework","Pick date","Medium",
+  // "Set reminder","Cancel","Add Assignment","Close"]); the clone shipped
+  // submit + X only.
+  test("S120/BU9: the Add Assignment dialog carries a Cancel that closes without creating", async ({ page }) => {
+    await page.goto("/Assignments");
+    await hydrated(page);
+    const rows = page.locator('[aria-label="Assignment rows"] > *');
+    const before = await rows.count();
+    await page.getByRole("button", { name: "Add Assignment" }).first().click();
+    const dlg = page.getByRole("dialog");
+    await expect(dlg).toBeVisible();
+    await dlg.getByLabel("Title").fill("S120-BU9-never-created");
+    await dlg.getByRole("button", { name: "Cancel" }).click();
+    await expect(dlg).toHaveCount(0);
+    expect(await rows.count()).toBe(before);
+  });
+
   test("status filter defaults to Active", async ({ page }) => {
     await page.goto("/Assignments");
     await hydrated(page);

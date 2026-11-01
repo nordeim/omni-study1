@@ -26,7 +26,10 @@ The server listens on port 3000 by default (`PORT` overrides). Always start
 it from the repo root via the npm/bun script — the scripts guarantee the
 working directory that the SQLite path resolution and the standalone trace
 rely on. Behind a reverse proxy, forward `X-Forwarded-Proto` so cookie
-attributes derive the right scheme.
+attributes derive the right scheme (S120/BU15 — the app reads it), and
+declare `TRUSTED_PROXY_HOPS` so the auth rate-limiter's per-IP budgets
+key on the REAL client address, not a forged `x-forwarded-for` hop
+(S120/BU3 — the PAD §6.4 proxy-hop reopen trigger's off-switch).
 
 ## 3. Environment variables
 
@@ -35,6 +38,9 @@ attributes derive the right scheme.
 | `DATABASE_URL` | Yes | SQLite connection string. See §4. |
 | `AUTH_SECRET` | **Yes in production — enforced at boot** | HMAC secret for session cookies. Generate with `openssl rand -hex 32`. **The session-22 boot guard refuses to start the production server without a real secret** (missing/empty/the public dev constant → the process exits with the remedy message; dev/test keep the zero-config fallback with a one-line boot warning). |
 | `NEXT_PUBLIC_SITE_URL` | Recommended | Canonical public origin, used for metadata URLs and `sitemap.xml` (e.g. `https://orbital.example.com`). |
+| `SEED_DEMO` | No (default: on) | `0` skips the demo account in `bun run db:seed` and the Docker `init` profile — see §8 "The demo account" (S120/BU21; fail-safe: unrecognized values skip too). |
+| `TRUSTED_PROXY_HOPS` | No (behind a proxy: recommended) | The `x-forwarded-for` hop depth for the auth limiter's per-IP keys: unset → first-hop default; `0` → never trust; `N≥1` → Nth hop from the right, failing closed (S120/BU3). |
+| `DISABLE_IN_APP_OTP` / `DISABLE_IN_APP_RESET` | No (exposed deployments: recommended) | Gate the in-response OTP/reset-link delivery (the ADR-013 posture's off-switch — responses become shape-identical `{ok:true}`, S120/BU2). |
 
 ## 4. Database location (§4 — the `.env.example` reference)
 
@@ -148,6 +154,21 @@ Notes:
 - **Schema updates:** re-run the init profile after `git pull` +
   rebuild (`docker compose build && docker compose --profile init run
   --rm init` — the push is additive/idempotent).
+- **The demo account + `SEED_DEMO` (S120/BU21).** The idempotent seed
+  creates a public-credentials login — `demo@studyflow.app` /
+  `Demo1234!`, `emailVerified: true` — which is right for a local
+  quickstart but is a live public login on an exposed deployment. Set
+  `SEED_DEMO=0` to skip it entirely: `AUTH_SECRET="$(openssl rand -hex
+  32)" SEED_DEMO=0 docker compose --profile init up -d` (also honored
+  by `bun run db:seed`; unset/empty keeps the documented default —
+  seed; the gate is fail-safe, an unrecognized value skips too). To
+  remove the account after a seeded first run, register your own
+  account, then delete the demo rows (they are all scoped by
+  `userId`): the account settings' delete-account flow at
+  `/Settings` removes the demo user and its rows once you are signed
+  in as it — or, before any real data exists, stop the stack, delete
+  the volume (`docker volume rm …db-data`), and re-run the init
+  profile with `SEED_DEMO=0`.
 - **PostgreSQL** (§4 form-3) works in containers too: set the
   `DATABASE_URL` service environment to the postgres URL and leave the
   volume unmounted.

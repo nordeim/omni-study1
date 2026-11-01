@@ -88,6 +88,61 @@ test.describe("S18 the RUM hook", () => {
     expect(ours2.find((e) => e.metric === "LCP")?.value).toBe(999);
   });
 
+  // S120/BU4 — the RUM upsert is USER-SCOPED. The shipped unique was
+  // GLOBAL ([sessionId, metric]) with no userId in the update leg: user B
+  // posting user A's sessionId+metric OVERWROTE A's row — the one write
+  // path violating the ownership-by-construction invariant (the AP-120
+  // class at the RUM site). The fix scopes the unique to
+  // [userId, sessionId, metric]. The pin: the demo user's beacon row must
+  // survive a SECOND user posting the same sessionId+metric.
+  test("S120/BU4: a second user's post with the same sessionId+metric never touches the first user's row", async ({ page, request }) => {
+    const sessionId = `e2e-s120-bu4-${Date.now()}`;
+    // 1. The demo user's beacon row (the fixture context carries the demo
+    //    storageState — an isolated cookie jar the browser never touches).
+    const post = await request.post("/api/rum", {
+      data: {
+        sessionId,
+        events: [{ metric: "LCP", value: 1234, rating: "good", navigationType: "navigate", path: "/" }],
+      },
+    });
+    expect(post.status()).toBe(200);
+
+    // 2. A fresh user B (the TEST-NET budget pattern, s119/BT3): register
+    //    + verify through the BROWSER context — the verify response sets
+    //    B's session cookie there, leaving the fixture's demo jar intact.
+    const ip = { "x-forwarded-for": "192.0.2.120" };
+    const email = `s120-bu4-${Date.now()}@studyflow.app`;
+    const reg = await page.request.post("/api/auth/register", {
+      headers: ip,
+      data: { email, password: "Fresh1234!", name: "BU4 Probe" },
+    });
+    expect(reg.ok()).toBe(true);
+    const { code } = (await reg.json()) as { code: string };
+    const verify = await page.request.post("/api/auth/verify-email", {
+      headers: ip,
+      data: { email, code },
+    });
+    expect(verify.ok()).toBe(true);
+
+    // 3. User B posts the SAME sessionId+metric with a different value.
+    const cross = await page.request.post("/api/rum", {
+      data: {
+        sessionId,
+        events: [{ metric: "LCP", value: 5555, rating: "poor", navigationType: "navigate", path: "/" }],
+      },
+    });
+    expect(cross.status()).toBe(200);
+
+    // 4. The demo user's row is UNTOUCHED (pre-fix: the global unique's
+    //    update leg overwrote it to 5555).
+    const after = (await (await request.get("/api/rum")).json()) as {
+      recent: Array<{ sessionId: string; metric: string; value: number }>;
+    };
+    const ours = after.recent.filter((e) => e.sessionId === sessionId && e.metric === "LCP");
+    expect(ours.length).toBe(1);
+    expect(ours[0].value).toBe(1234);
+  });
+
   test("POST /api/rum rejects an invalid metric with the { error } envelope", async ({ request }) => {
     const res = await request.post("/api/rum", {
       data: {

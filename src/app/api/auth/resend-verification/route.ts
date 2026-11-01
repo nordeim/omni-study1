@@ -11,6 +11,7 @@ import { z } from "zod";
 
 import { checkRateLimit, generateVerificationCode } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { inAppDeliveryGates } from "@/lib/env-check";
 import { clientIp } from "@/lib/server/auth";
 import { emailField } from "@/lib/validation";
 import {
@@ -50,6 +51,10 @@ export async function POST(request: NextRequest) {
           expiresAt: new Date(Date.now() + CODE_TTL_MS),
         },
       });
+      // S120/BU2: hardened deployments omit the code (the off-switch).
+      if (inAppDeliveryGates(process.env).otp) {
+        return NextResponse.json({ ok: true });
+      }
       return NextResponse.json({ ok: true, code });
     }
 

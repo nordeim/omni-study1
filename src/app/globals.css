@@ -78,6 +78,7 @@
   --color-violet-700: #6d28d9;
   --color-violet-800: #5b21b6;
   --color-violet-900: #4c1d95;
+  --color-violet-950: #2e1065; /* S120/BU20: the shared StatCard dark violet band (was unpinned — trap 2/10) */
 
   --color-indigo-50: #eef2ff;
   --color-indigo-100: #e0e7ff;
@@ -91,6 +92,8 @@
   --color-blue-400: #60a5fa;
   --color-blue-500: #3b82f6;
   --color-blue-600: #2563eb;
+  --color-blue-700: #1d4ed8; /* S120/BU8: the exams ≥2-days badge text — the AA superset (5.49:1 on blue-100; the reference's own blue-600 measures 4.24:1) */
+  --color-blue-900: #1e3a8a; /* S120/BU20: the analytics dark blue chart band (was unpinned — trap 2/10) */
   --color-blue-950: #172554; /* S92/AS1: the assignments dark blue due pill — trap 2/10 (was unpinned) */
 
   --color-sky-50: #f0f9ff;
@@ -104,6 +107,7 @@
 
   --color-cyan-50: #ecfeff;
   --color-cyan-100: #cffafe;
+  --color-cyan-300: #67e8f9; /* S120/BU20: the events dark-terminal hover ink (was unpinned — trap 2/10) */
   --color-cyan-400: #22d3ee;
   --color-cyan-500: #06b6d4;
   --color-cyan-600: #0891b2;
@@ -126,6 +130,7 @@
   --color-emerald-500: #10b981;
   --color-emerald-600: #059669;
   --color-emerald-700: #047857;
+  --color-emerald-800: #065f46; /* S120/BU20: the practicetests dark pass border (was unpinned — trap 2/10) */
   --color-emerald-900: #064e3b;
   --color-emerald-950: #022c22; /* S80/AG4: the dark score pill — trap 10 */
 
@@ -134,6 +139,7 @@
   --color-green-100: #dcfce7;
   --color-green-500: #22c55e;
   --color-green-600: #16a34a;
+  --color-green-900: #14532d; /* S120/BU20: the analytics dark green chart band (was unpinned — trap 2/10) */
 
   --color-amber-50: #fffbeb;
   --color-amber-100: #fef3c7;
@@ -154,6 +160,7 @@
   --color-orange-500: #f97316;
   --color-orange-600: #ea580c;
   --color-orange-700: #c2410c;
+  --color-orange-900: #7c2d12; /* S120/BU20: the analytics dark orange chart band (was unpinned — trap 2/10) */
   --color-orange-950: #431407; /* S92/AS1: the exams Tomorrow dark badge — trap 2/10 (was unpinned) */
 
   --color-red-50: #fef2f2;
@@ -164,6 +171,7 @@
   --color-red-500: #ef4444;
   --color-red-600: #dc2626;
   --color-red-700: #b91c1c;
+  --color-red-800: #991b1b; /* S120/BU20: the practicetests dark result border (was unpinned — trap 2/10) */
   --color-red-900: #7f1d1d;
   --color-red-950: #450a0a; /* S80/AG3: the dark AC key — trap 10 (the house dark-pill family renders the stable v3 hex now) */
 
@@ -195,6 +203,7 @@
    * mode Exit/Wrong/Divider black buttons (measured rgb(10,10,10)). */
   --color-neutral-50: #fafafa;
   --color-neutral-100: #f5f5f5;
+  --color-neutral-400: #a3a3a3; /* S120/BU20: the notes New-notebook inline hint (was unpinned — trap 2/10) */
   --color-neutral-700: #404040;
   --color-neutral-800: #262626;
   --color-neutral-950: #0a0a0a;
@@ -318,6 +327,13 @@
 @layer base {
   * {
     border-color: hsl(var(--border));
+  }
+  /* S120/BU19: Tailwind v4 preflight sets no cursor:pointer on buttons —
+     the §12 base-layer rule (three ad-hoc cursor-pointer utilities retired
+     with it). */
+  button,
+  [role="button"] {
+    cursor: pointer;
   }
   html {
     font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
@@ -561,13 +577,31 @@
 }
 
 @utility sf-pill-yellow {
-  /* The exams N-days (≥2 bucket) badge, the flashcards difficulty pill,
-     and the dashboard assignments priority pill (s93). */
+  /* The flashcards difficulty pill and the dashboard assignments priority
+     pill (s93). The exams ≥2-days badge rode this family until S120/BU8
+     (the live reference drifted it to blue — see sf-pill-blue). */
   background-color: var(--color-yellow-100);
   color: var(--color-yellow-700);
   .dark & {
     background-color: var(--color-yellow-950);
     color: var(--color-yellow-300);
+  }
+}
+
+@utility sf-pill-blue {
+  /* S120/BU8: the exams N-days (≥2 bucket) badge — the live reference
+     DRIFTED this family yellow → blue (measured 2026-11-01: blue-100 bg /
+     blue-600 text on an 11-day exam). The clone follows the current
+     reference with the AA superset: blue-700 text at 5.49:1 (the
+     reference's own blue-600 measures 4.24:1 — the one-step-darker
+     precedent, the sf-pill-red shape). The flashcards difficulty pill and
+     the dashboard assignments priority pill KEEP sf-pill-yellow (their own
+     measured surfaces). */
+  background-color: var(--color-blue-100);
+  color: var(--color-blue-700);
+  .dark & {
+    background-color: var(--color-blue-950);
+    color: var(--color-blue-300);
   }
 }
 

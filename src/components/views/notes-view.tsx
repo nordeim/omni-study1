@@ -464,7 +464,7 @@ export function NotesView() {
               <DropdownMenuTrigger asChild>
                 <button
                   type="button"
-                  className="mt-2 flex items-center gap-1 text-xs font-medium text-slate-500 outline-none hover:text-slate-600 focus-visible:ring-2 focus-visible:ring-sf-primary/40"
+                  className="mt-2 flex items-center gap-1 text-xs font-medium text-slate-500 dark:text-slate-400 outline-none hover:text-slate-600 focus-visible:ring-2 focus-visible:ring-sf-primary/40"
                 >
                   <Pencil className="size-3" strokeWidth={2} />
                   Manage notebooks
@@ -521,7 +521,7 @@ export function NotesView() {
 
         <div className="sf-scroll mt-3 flex-1 space-y-2 overflow-y-auto">
           {filtered.length === 0 ? (
-            <p className="py-8 text-center text-sm text-slate-500">
+            <p className="py-8 text-center text-sm text-slate-500 dark:text-slate-400">
               {notes.length === 0 ? "No notes yet." : "No notes match."}
             </p>
           ) : (
@@ -593,7 +593,7 @@ export function NotesView() {
           </div>
         ) : !selected ? (
           <div className="flex flex-1 items-center justify-center">
-            <p className="text-sm text-slate-500">Select a note from the list.</p>
+            <p className="text-sm text-slate-500 dark:text-slate-400">Select a note from the list.</p>
           </div>
         ) : (
           <div className="flex min-h-0 flex-1 flex-col">
@@ -645,7 +645,7 @@ export function NotesView() {
                   <DropdownMenuContent align="end">
                     {notebooks.length > 0 && (
                       <div className="px-2 py-1.5">
-                        <p className="mb-1 text-xs font-medium text-slate-500">Move to notebook</p>
+                        <p className="mb-1 text-xs font-medium text-slate-500 dark:text-slate-400">Move to notebook</p>
                         <Select
                           value={selected.notebookId ?? "none"}
                           onValueChange={(v) =>

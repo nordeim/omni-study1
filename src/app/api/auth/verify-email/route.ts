@@ -14,6 +14,7 @@ import { z } from "zod";
 
 import { checkRateLimit, normalizeVerificationCode } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { secureCookieFlag } from "@/lib/auth";
 import { clientIp, publicUser, setSessionCookie } from "@/lib/server/auth";
 import { emailField } from "@/lib/validation";
 import {
@@ -82,7 +83,10 @@ export async function POST(request: NextRequest) {
       NextResponse.json({ ok: true, user: publicUser(verifiedUser) }),
       user.id,
       {
-        secure: request.nextUrl.protocol === "https:",
+        // S120/BU15: the proxy-aware derivation — X-Forwarded-Proto wins
+        // when present (the documented Docker posture terminates TLS
+        // upstream); otherwise the request protocol.
+        secure: secureCookieFlag(request.headers.get("x-forwarded-proto"), request.nextUrl.protocol),
         // S118/BS1: embed the current session version in the fresh token.
         sessionVersion: user.sessionVersion,
       },

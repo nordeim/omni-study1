@@ -160,6 +160,24 @@ test.describe("download hardening headers (S14-C3)", () => {
       await request.delete(`/api/files/${created.id}`);
     }
   });
+
+  // S120/BU16 — the page-level security headers. The app shipped NO
+  // headers() block: the authenticated SPA was framable (clickjacking on
+  // the destructive surfaces), no page-level nosniff, no Referrer-Policy.
+  // The three baseline headers ride every route (HSTS is the TLS-at-app
+  // posture's addition — the Docker posture terminates TLS upstream).
+  test("S120/BU16: page responses carry nosniff + frame-ancestors DENY + Referrer-Policy", async ({ request }) => {
+    const page = await request.get("/login");
+    expect(page.status()).toBe(200);
+    const headers = page.headers();
+    expect(headers["x-content-type-options"]).toBe("nosniff");
+    expect(headers["x-frame-options"]).toBe("DENY");
+    expect(headers["referrer-policy"]).toBe("strict-origin-when-cross-origin");
+    // The API route family carries them too (the block is global).
+    const api = await request.get("/api/health");
+    expect(api.headers()["x-content-type-options"]).toBe("nosniff");
+    expect(api.headers()["x-frame-options"]).toBe("DENY");
+  });
 });
 
 test.describe("AI-surface live regions (S14-D1/D2/D3)", () => {

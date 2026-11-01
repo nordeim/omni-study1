@@ -19,6 +19,10 @@ export const GET = async () => {
     const events = await db.rumEvent.findMany({
       where: { userId: user.id },
       orderBy: { createdAt: "desc" },
+      // S120/BU5: the documented cap (AGENTS.md: "the user's most recent
+      // 2000 events") — the code now matches the doc, and the CSV assembly
+      // is bounded on the single-node SQLite deployment.
+      take: 2000,
     });
 
     const rows: RumCsvEvent[] = events.map((e) => ({

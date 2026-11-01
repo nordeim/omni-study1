@@ -364,4 +364,64 @@ test.describe("S17-W · session-66 zero-state drift fix: Events at zero (measure
     await expect(page.getByText("No events yet")).toHaveCount(0);
     await expect(page.getByText(/see your week come alive/)).toHaveCount(0);
   });
+
+});
+
+// The BU13 surface is AUTHED (the practice-test study flow) — its own
+// describe so the S17-W logged-out storageState override above does not
+// apply (the fresh-user describes opt out of the shared session).
+test.describe("S120/BU13 · the timed-test expiry announcement (authed)", () => {
+  // S120/BU13 — the timed-test expiry announcement. The countdown hitting
+  // zero auto-submits and swaps the whole view to the results screen —
+  // previously SILENT to assistive tech (the S14 aria-live contract's own
+  // pattern class, implemented at mathsolver/aiassistant). The fix
+  // announces "Time is up — your test was submitted" through an
+  // aria-live=polite region on the expiry transition specifically (a
+  // manual finish announces nothing).
+  // The probe: a 1-minute true/false test created through the API, the
+  // study started, the clock observed past zero.
+  test("S120/BU13: the countdown expiry announces the auto-submit through aria-live", async ({ page }) => {
+    test.setTimeout(120_000);
+    const stamp = `s120-bu13-${Date.now()}`;
+    let testId = "";
+    try {
+      // A page must be loaded before the relative-URL fetches below.
+      await page.goto("/PracticeTests");
+      await page.waitForFunction(() => document.querySelector("h1") !== null);
+      testId = await page.evaluate(async (title) => {
+        const res = await fetch("/api/practice-tests", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "same-origin",
+          body: JSON.stringify({
+            title,
+            durationMinutes: 1,
+            questions: JSON.stringify([
+              { question: "The countdown auto-submits a timed test", type: "true_false", correctAnswer: "True" },
+            ]),
+          }),
+        });
+        return res.ok ? ((await res.json()) as { id: string }).id : "";
+      }, stamp);
+      expect(testId, "the 1-minute probe test was created").toBeTruthy();
+      await page.reload();
+      await page.waitForFunction(() => document.querySelector("h1") !== null);
+      // Start the study session through the UI: the probe test's card,
+      // then the Start Test action in the detail pane.
+      const probeCard = page.locator("main .sf-card", { hasText: stamp }).first();
+      await probeCard.click();
+      await probeCard.getByRole("button", { name: "Start Test" }).click();
+      const live = page.locator('[aria-live="polite"]', { hasText: /time is up/i });
+      // The clock runs past zero (60s + margin) — the announcement fires.
+      await expect(live).toBeVisible({ timeout: 90_000 });
+      // The results screen rendered (the auto-submit happened).
+      await expect(page.getByText("Your score")).toBeVisible();
+    } finally {
+      if (testId) {
+        await page.evaluate(async (id) => {
+          await fetch(`/api/practice-tests/${id}`, { method: "DELETE", credentials: "same-origin" });
+        }, testId);
+      }
+    }
+  });
 });

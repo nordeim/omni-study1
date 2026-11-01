@@ -573,17 +573,50 @@ test.describe("E · the Lighthouse audit pins (dashboard, light)", () => {
   test("the overdue badge text meets WCAG AA contrast (red-700)", async ({ page }) => {
     await page.goto("/Dashboard");
     await hydrated(page);
-    // The seeded demo trips both red-100 pill surfaces: the Today's Tasks
-    // DuePills and the Upcoming Exams missed badge. S92/AS1: the family now
-    // rides the sf-pill-red utility — the locator follows the class swap
-    // (the pin's intent, computed red-700, is unchanged).
-    const badges = page.locator("main span.sf-pill-red");
-    await expect(badges.first()).toBeVisible();
-    const count = await badges.count();
-    expect(count).toBeGreaterThanOrEqual(1);
-    for (let i = 0; i < count; i++) {
-      const color = await badges.nth(i).evaluate((el) => getComputedStyle(el).color);
-      expect(color).toBe("rgb(185, 28, 28)"); // red-700 — was red-600 (3.95:1)
+    // S120/BU7 re-anchor: the dashboard's red-pill family collapsed to the
+    // TODAY exam badge alone ("Today!" — the measured form); the seeded
+    // demo carries no today-exam, so the pin creates its own (the
+    // self-owning-data doctrine, the BU7 pin's mechanism). The pin's
+    // intent is unchanged: every sf-pill-red on the dashboard computes
+    // red-700 text (5.32:1 on red-100 — the Lighthouse session-61 fix;
+    // red-600 measured 3.95:1 and failed).
+    const todayId = `a11y-s120-red-${Date.now()}`;
+    let created = false;
+    try {
+      created = await page.evaluate(async (id) => {
+        const subjects = await fetch("/api/subjects", { credentials: "same-origin" });
+        const rows = (await subjects.json()) as Array<{ id: string }>;
+        if (!Array.isArray(rows) || rows.length === 0) return false;
+        const d = new Date();
+        const pad = (n: number) => String(n).padStart(2, "0");
+        const date = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T09:00:00`;
+        const res = await fetch("/api/exams", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "same-origin",
+          body: JSON.stringify({ title: id, subjectId: rows[0].id, date, type: "test", duration: 30 }),
+        });
+        return res.ok;
+      }, todayId);
+      expect(created, "the today-exam probe row was created").toBe(true);
+      await page.reload();
+      await hydrated(page);
+      const badges = page.locator("main span.sf-pill-red");
+      await expect(badges.first()).toBeVisible();
+      const count = await badges.count();
+      expect(count).toBeGreaterThanOrEqual(1);
+      for (let i = 0; i < count; i++) {
+        const color = await badges.nth(i).evaluate((el) => getComputedStyle(el).color);
+        expect(color).toBe("rgb(185, 28, 28)"); // red-700 — was red-600 (3.95:1)
+      }
+    } finally {
+      if (created) {
+        await page.evaluate(async (id) => {
+          const rows = (await (await fetch("/api/exams", { credentials: "same-origin" })).json()) as Array<{ id: string; title: string }>;
+          const probe = rows.find((r) => r.title === id);
+          if (probe) await fetch(`/api/exams/${probe.id}`, { method: "DELETE", credentials: "same-origin" });
+        }, todayId);
+      }
     }
   });
 

@@ -5,7 +5,9 @@ import {
   changeEmailSchema,
   changePasswordSchema,
   deleteAccountSchema,
+  eventCreateSchema,
   eventSchema,
+  eventUpdateSchema,
   examSchema,
   flashcardDeckSchema,
   flashcardSchema,
@@ -168,6 +170,52 @@ describe("examSchema", () => {
     expect(
       examSchema.safeParse({ title: "M", date: "2026-10-13T09:00:00", location: "x".repeat(201) }).success,
     ).toBe(false);
+  });
+});
+
+describe("event date ordering (S120/BU22)", () => {
+  it("accepts an endDate after the startDate", () => {
+    const parsed = eventCreateSchema.parse({
+      title: "Two-hour exam block",
+      startDate: "2026-11-01T09:00:00",
+      endDate: "2026-11-01T11:00:00",
+    });
+    expect(parsed.endDate).toBe("2026-11-01T11:00:00");
+  });
+
+  it("accepts an equal endDate (a zero-length marker event is a valid span)", () => {
+    expect(() =>
+      eventCreateSchema.parse({
+        title: "Marker",
+        startDate: "2026-11-01T09:00:00",
+        endDate: "2026-11-01T09:00:00",
+      }),
+    ).not.toThrow();
+  });
+
+  it("rejects an endDate BEFORE the startDate at CREATE (the data-quality guard)", () => {
+    expect(() =>
+      eventCreateSchema.parse({
+        title: "Inverted span",
+        startDate: "2026-11-01T09:00:00",
+        endDate: "2026-11-01T08:00:00",
+      }),
+    ).toThrow(/end/i);
+  });
+
+  it("rejects an inverted PAIR at UPDATE while accepting single-leg partials", () => {
+    expect(() =>
+      eventUpdateSchema.parse({ startDate: "2026-11-01T09:00:00", endDate: "2026-11-01T08:00:00" }),
+    ).toThrow(/end/i);
+    // A single-leg PATCH is valid on its own (it merges with the stored row).
+    expect(() => eventUpdateSchema.parse({ endDate: "2026-11-01T08:00:00" })).not.toThrow();
+    expect(() => eventUpdateSchema.parse({ startDate: "2026-11-01T10:00:00" })).not.toThrow();
+  });
+
+  it("keeps an absent endDate valid (the optional leg)", () => {
+    expect(() =>
+      eventCreateSchema.parse({ title: "Open-ended", startDate: "2026-11-01T09:00:00" }),
+    ).not.toThrow();
   });
 });
 

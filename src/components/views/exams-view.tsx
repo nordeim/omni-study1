@@ -53,14 +53,16 @@ function urgency(row: ExamRow): { text: string; className: string } {
   if (diff === 0) return { text: "Today", className: "sf-pill-red" };
   if (diff === 1)
     return { text: "Tomorrow", className: "sf-pill-orange" };
-  // S76/AC7 (measured): the ≥2 bucket reads "N days" (no "in " prefix) on
-  // yellow-100/yellow-700 — rgb(254,249,195)/rgb(161,98,7) — the YELLOW
-  // family, not amber (Tailwind v4 lesson 12: same-hue families are not
-  // interchangeable). yellow-700 on yellow-100 = 5.4:1, AA-clean.
-  // S92/AS1: the family rides the sf-pill-yellow utility.
+  // S120/BU8 (re-measured): the ≥2 bucket reads "N days" on the BLUE
+  // family — the live reference DRIFTED from the S76-measured yellow
+  // (rgb(254,249,195)/rgb(161,98,7)) to blue-100/blue-600 (measured
+  // 2026-11-01 on an 11-day exam). The clone follows the CURRENT
+  // reference; the pill carries blue-700 text (5.49:1 — the reference's
+  // own blue-600 measures 4.24:1, the one-step-darker AA precedent).
+  // S92/AS1: the family rides the sf-pill-blue utility.
   return {
     text: `${diff} days`,
-    className: "sf-pill-yellow",
+    className: "sf-pill-blue",
   };
 }
 
@@ -532,6 +534,15 @@ export function ExamsView() {
               </div>
             )}
             <DialogFooter>
+              {/* S120/BU9 (measured): the reference's Add Exam dialog
+                  carries an explicit Cancel beside the submit. */}
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setDialog({ open: false, editing: null })}
+              >
+                Cancel
+              </Button>
               <Button type="submit" variant="gradient" className="sf-gradient-shadow" disabled={busy}>
                 {dialog.editing ? "Save changes" : "Add exam"}
               </Button>

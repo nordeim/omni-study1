@@ -484,6 +484,15 @@ export function AssignmentsView() {
               </div>
             )}
             <DialogFooter>
+              {/* S120/BU9 (measured): the reference's Add Assignment dialog
+                  carries an explicit Cancel beside the submit. */}
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setDialog({ open: false, editing: null })}
+              >
+                Cancel
+              </Button>
               <Button type="submit" variant="gradient" className="sf-gradient-shadow" disabled={busy}>
                 {dialog.editing ? "Save changes" : "Add assignment"}
               </Button>

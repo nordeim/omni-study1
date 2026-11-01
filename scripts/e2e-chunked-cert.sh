@@ -62,15 +62,30 @@
 # 12 tests [the AJ1 folder pin + the AK1 guard family] and accessibility 84
 # [the AJ5 print family + AJ6 focus pin + the AK2 print-enumeration closure
 # + the AL2 chip]).
-# Expected: 133 + 142 + 60 + 89 + 64 = 488 (each chunk's count includes its
-# auth setup; 473 real specs = the S82 443 + the seven S83 pins + the eight
+# (S120/BU re-tag — census 488 → 497, net +9: chunk 1 +2 [the BU7 dashboard
+# badge family pin in navigation + the BU9 Add Exam Cancel pin in
+# parity-session8; the S8-B exam-row badge pin re-anchored IN-PLACE to the
+# slate far family]; chunk 2 +3 [the BU9 Add Class + Add Assignment Cancel
+# pins in parity-session9 + the BU16 security-headers pin in s14-hardening;
+# the AC7 exams-view urgency pin re-anchored IN-PLACE to the blue family];
+# chunk 3 +1 [the BU1 rename-prefill pin in resilience]; chunk 4 +1 [the
+# BU13 expiry aria-live pin in s17-fresh-user; the overdue-badge red-700
+# pin re-anchored IN-PLACE to the self-owned-data shape]; chunk 5 +2 [the
+# BU14 register uniform-200 pin in auth-flows + the BU4 RUM user-scoping
+# pin in s18-rum; the S15 reset-success pin re-anchored IN-PLACE to the
+# role=status channel].)
+# Expected: 135 + 145 + 61 + 90 + 66 = 497 (each chunk's count includes its
+# auth setup; 482 real specs = the S82 443 + the seven S83 pins + the eight
 # S84 pins + the four S85 pins + the one S86 pin + the one S88 pin + the one
 # S89 pin + the four S94 pins [A0c + AU3a/b/c] + the two S117/BR pins [the
 # s23 cards round-trip + the verify-429] + the two S118/BS pins [BS4 drawer
 # focus in chunk 1 + BS2 oversized-body in chunk 5] + the ten S119/BT pins
 # [BT10 notes placement, BT9 timetable name, BT6 composer ×2, BT11 title
 # toast, BT7 calc panel, BT12 calc toast split, BT1 import gate + guard,
-# BT3 reset replay pair] — S95/AV4a, the s94
+# BT3 reset replay pair] + the nine S120/BU pins [BU7 dashboard badges,
+# BU9 exam Cancel, BU9 class + assignment Cancel ×2, BU16 headers, BU1
+# rename prefill, BU13 expiry aria-live, BU14 register 200, BU4 RUM
+# user-scoping] — S95/AV4a, the s94
 # audit's L3: the AU re-tag updated the sum but left the 470-era "465" stale;
 # the S118 re-tag repaired the same class for the 474-era sum the S117 cycle
 # left behind).

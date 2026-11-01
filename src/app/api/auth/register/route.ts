@@ -16,6 +16,7 @@ import {
 } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { registerSchema } from "@/lib/validation";
+import { inAppDeliveryGates } from "@/lib/env-check";
 import { clientIp } from "@/lib/server/auth";
 import {
   parseWith,
@@ -57,6 +58,8 @@ export async function POST(request: NextRequest) {
     if (existing?.emailVerified) {
       // Uniform 200, no code, no re-issue — the account exists and is
       // verified; saying anything more would be an enumeration oracle.
+      // (S120/BU14: every branch answers 200 — the shipped 201-vs-200 split
+      // distinguished new accounts from existing ones.)
       return NextResponse.json({ ok: true });
     }
 
@@ -69,9 +72,19 @@ export async function POST(request: NextRequest) {
     if (existing) {
       // Existing UNVERIFIED account: re-issue a fresh code (the S25/S26
       // flow re-registers and reads the new code from the response).
+      // S120/BU22: opportunistic pruning — the account's expired tokens
+      // never outlive a re-register (bounded auth tables).
+      await db.verificationToken.deleteMany({
+        where: { userId: existing.id, expiresAt: { lt: new Date() } },
+      });
       await db.verificationToken.create({
         data: { ...tokenData, userId: existing.id },
       });
+      // S120/BU14: 200 (was 200 — unchanged) + the S120/BU2 gate: hardened
+      // deployments omit the code (the off-switch contract).
+      if (inAppDeliveryGates(process.env).otp) {
+        return NextResponse.json({ ok: true });
+      }
       return NextResponse.json({ ok: true, code });
     }
 
@@ -90,7 +103,12 @@ export async function POST(request: NextRequest) {
       data: { ...tokenData, userId: user.id },
     });
 
-    return NextResponse.json({ ok: true, code }, { status: 201 });
+    // S120/BU14: the SAME 200 as every other branch (was 201 — the status
+    // split was an enumeration oracle); the S120/BU2 delivery gate rides.
+    if (inAppDeliveryGates(process.env).otp) {
+      return NextResponse.json({ ok: true });
+    }
+    return NextResponse.json({ ok: true, code });
   } catch (err: unknown) {
     return toErrorResponse(err);
   }

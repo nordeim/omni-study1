@@ -307,7 +307,7 @@ export function MyDayView() {
         {showSuggestions && (
           <div role="group" id="my-day-suggestions" aria-label="Suggested tasks" className="mt-3 flex flex-col gap-2">
             {suggestedTasks.length === 0 ? (
-              <p className="py-4 text-center text-sm text-slate-400 dark:text-slate-500">
+              <p className="py-4 text-center text-sm text-slate-500 dark:text-slate-400">
                 Nothing to suggest — every task is already in My Day.
               </p>
             ) : (

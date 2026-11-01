@@ -118,7 +118,13 @@ test.describe("S8-B · Dashboard flush rows", () => {
     expect(cs.cls).toContain("divide-slate-50");
   });
 
-  test("exam rows are p-4 hover rows with a rounded-full red badge", async ({ page }) => {
+  // S120/BU7 re-anchor: the badge family followed the reference measurement
+  // (2026-11-01) — the TODAY badge alone rides the red family ("Today!");
+  // every other distance renders the NEUTRAL slate pill. The seeded first
+  // row is "Calculus II Midterm" at +1d ("Tomorrow") → slate-100. The
+  // geometric intent of the original pin (rounded-full pill, p-4 row, no
+  // card chrome) is unchanged.
+  test("exam rows are p-4 hover rows with a rounded-full badge (the slate far family — S120/BU7)", async ({ page }) => {
     await page.goto("/Dashboard");
     await hydrated(page);
     await page.waitForSelector('h2:has-text("Upcoming Exams")');
@@ -134,13 +140,19 @@ test.describe("S8-B · Dashboard flush rows", () => {
     // (vertical sides stay bare; the divider rides top/bottom).
     expect(cs.borderLeft).toBe("0px");
     expect(cs.borderRight).toBe("0px");
-    const badge = row.locator("span").filter({ hasText: /^(?:\d+d|Today|Tomorrow)$/ }).first();
+    // The label set the reference renders: "Today!" (the measured "!"),
+    // "Tomorrow", or "Nd" — the old "Today" form no longer exists.
+    const badge = row.locator("span").filter({ hasText: /^(?:\d+d|Today!|Tomorrow)$/ }).first();
     const badgeCs = await badge.evaluate((el) => {
       const s = getComputedStyle(el);
-      return { radius: s.borderRadius, bg: s.backgroundColor };
+      return { radius: s.borderRadius, bg: s.backgroundColor, fg: s.color, text: el.textContent?.trim() };
     });
     expect(isRound(badgeCs.radius)).toBe(true);
-    expect(badgeCs.bg).toBe(rgb(254, 226, 226)); // red-100 (urgency badge, measured)
+    // The seeded first row is +1d ("Tomorrow") → the NEUTRAL slate family
+    // (measured on the reference: bg rgb(241,245,249) / text rgb(71,85,105)).
+    expect(badgeCs.text).toBe("Tomorrow");
+    expect(badgeCs.bg).toBe(rgb(241, 245, 249)); // slate-100 (S120/BU7 measured)
+    expect(badgeCs.fg).toBe(rgb(71, 85, 105)); // slate-600 (S120/BU7 measured)
   });
 
   test("assignment rows carry the 4px color strip and priority pill", async ({ page }) => {
@@ -1198,6 +1210,29 @@ test.describe("S8-AC · the exam card's measured S76 anatomy", () => {
     await page.keyboard.press("Escape");
   });
 
+  // S120/BU9 — the dialog Cancel parity matrix (the P3 decision). The
+  // reference's Add Exam dialog carries an explicit Cancel button
+  // (measured 2026-11-01: ["Select","Test","Pick",...,"Cancel","Add Exam",
+  // "Close"]); the clone shipped submit + X only. The pin asserts the
+  // affordance exists AND cancels without creating (the row count is
+  // unchanged after the round-trip).
+  test("S120/BU9: the Add Exam dialog carries a Cancel that closes without creating", async ({ page }) => {
+    await page.goto("/Exams");
+    await hydrated(page);
+    const cards = page.locator('[aria-label="Exam cards"] > div');
+    const before = await cards.count();
+    await page.getByRole("button", { name: "Add Exam" }).click();
+    const dlg = page.getByRole("dialog");
+    await expect(dlg).toBeVisible();
+    const title = dlg.getByLabel("Title");
+    await title.fill("S120-BU9-never-created");
+    await dlg.getByRole("button", { name: "Cancel" }).click();
+    await expect(dlg).toHaveCount(0);
+    // Nothing was created by the cancelled session.
+    expect(await cards.count()).toBe(before);
+    await expect(page.locator('[aria-label="Exam cards"]', { hasText: "S120-BU9-never-created" })).toHaveCount(0);
+  });
+
   test("AC6: the topics block — \"Topics to study:\" label + dark chips (NOT the count row)", async ({ page }) => {
     await page.goto("/Exams");
     await hydrated(page);
@@ -1224,7 +1259,7 @@ test.describe("S8-AC · the exam card's measured S76 anatomy", () => {
     await expect(card.getByText(/2 topics/)).toHaveCount(0);
   });
 
-  test("AC7: the far urgency pill reads \"12 days\" in the yellow family", async ({ page }) => {
+  test("AC7 (S120/BU8 re-anchor): the far urgency pill reads \"12 days\" in the BLUE family", async ({ page }) => {
     await page.goto("/Exams");
     await hydrated(page);
     // "Physics Final" is seeded at(12, 9) — twelve days out.
@@ -1235,8 +1270,13 @@ test.describe("S8-AC · the exam card's measured S76 anatomy", () => {
       const s = getComputedStyle(el);
       return { bg: s.backgroundColor, color: s.color, fw: s.fontWeight };
     });
-    expect(cs.bg).toBe(rgb(254, 249, 195)); // yellow-100 (measured s76)
-    expect(cs.color).toBe(rgb(161, 98, 7)); // yellow-700 (measured)
+    // The live reference drifted the ≥2 bucket yellow → blue (measured
+    // 2026-11-01: bg rgb(219,234,254) / fg rgb(37,99,235), an 11-day
+    // exam). The clone follows the CURRENT reference with the AA superset:
+    // blue-700 text (29,78,216) at 5.49:1 — the reference's own blue-600
+    // measures 4.24:1, below AA (the one-step-darker precedent).
+    expect(cs.bg).toBe(rgb(219, 234, 254)); // blue-100 (measured s120)
+    expect(cs.color).toBe(rgb(29, 78, 216)); // blue-700 (AA superset)
     expect(cs.fw).toBe("600"); // font-semibold (measured)
   });
 });

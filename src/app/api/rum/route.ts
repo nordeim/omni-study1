@@ -38,8 +38,11 @@ export const POST = async (request: NextRequest) => {
 
     for (const event of events) {
       await db.rumEvent.upsert({
+        // S120/BU4: the compound carries the user — a second user posting
+        // the same sessionId+metric lands in the CREATE branch (their own
+        // row), never the update leg of the first user's row.
         where: {
-          sessionId_metric: { sessionId, metric: event.metric },
+          userId_sessionId_metric: { userId: user.id, sessionId, metric: event.metric },
         },
         create: {
           userId: user.id,

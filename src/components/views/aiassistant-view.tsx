@@ -125,7 +125,7 @@ export function AIAssistantView() {
               <div className="mx-auto flex size-16 items-center justify-center rounded-2xl bg-sf-primary-soft dark:bg-sf-primary-soft-dark/40">
                 <Bot className="size-8 text-sf-primary" strokeWidth={2} aria-hidden />
               </div>
-              <p className="text-center text-sm text-slate-500">
+              <p className="text-center text-sm text-slate-500 dark:text-slate-400">
                 Ask anything about your studies — or start with a quick prompt.
               </p>
               <div role="group" className="grid w-full grid-cols-2 gap-2" aria-label="Quick actions">
@@ -182,7 +182,7 @@ export function AIAssistantView() {
                 <span className="size-1.5 animate-pulse rounded-full bg-slate-400 [animation-delay:150ms]" />
                 <span className="size-1.5 animate-pulse rounded-full bg-slate-400 [animation-delay:300ms]" />
               </span>
-              <span className="text-sm text-slate-500">Thinking…</span>
+              <span className="text-sm text-slate-500 dark:text-slate-400">Thinking…</span>
             </div>
           )}
         </div>
@@ -229,7 +229,7 @@ export function AIAssistantView() {
           Send
         </Button>
         </div>
-        <p className="text-center text-xs text-slate-400 dark:text-slate-500">
+        <p className="text-center text-xs text-slate-500 dark:text-slate-400">
           Press Enter to send, Shift + Enter for a new line
         </p>
       </form>

@@ -54,6 +54,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useToast } from "@/components/ui/toast";
+import { Textarea } from "@/components/ui/textarea";
 import { EmptyState, Spinner } from "@/components/views/shared";
 import {
   mutations,
@@ -447,7 +448,7 @@ export function FlashcardsView() {
         </div>
         <div role="group" className="sf-scroll mt-3 flex-1 space-y-2 overflow-y-auto" aria-label="Deck rows">
           {filteredDecks.length === 0 ? (
-            <p className="py-8 text-center text-sm text-slate-400">
+            <p className="py-8 text-center text-sm text-slate-500 dark:text-slate-400">
               {decks.length === 0 ? "No decks yet." : "No decks match."}
             </p>
           ) : (
@@ -470,7 +471,7 @@ export function FlashcardsView() {
                     if (e.key === "Enter" || e.key === " ") selectDeck(deck.id);
                   }}
                   className={cn(
-                    "group flex w-full cursor-pointer items-center gap-3 rounded-xl border-2 p-4 text-left outline-none transition-colors focus-visible:ring-2 focus-visible:ring-sf-primary/40",
+                    "group flex w-full items-center gap-3 rounded-xl border-2 p-4 text-left outline-none transition-colors focus-visible:ring-2 focus-visible:ring-sf-primary/40",
                     selectedDeckId === deck.id
                       ? "border-sf-primary/30 bg-slate-50 dark:bg-slate-800"
                       : "border-transparent bg-slate-50 hover:border-slate-200 dark:bg-slate-800/50 dark:hover:border-slate-700",
@@ -588,7 +589,7 @@ export function FlashcardsView() {
           </div>
         ) : !selectedDeck ? (
           <div className="flex flex-1 items-center justify-center">
-            <p className="text-sm text-slate-400">Select a deck.</p>
+            <p className="text-sm text-slate-500 dark:text-slate-400">Select a deck.</p>
           </div>
         ) : (
           <>
@@ -622,7 +623,7 @@ export function FlashcardsView() {
                     Study
                   </Button>
                 )}
-                <DropdownDeleteDeck onDelete={() => removeDeck(selectedDeck)} onEdit={() => openDeckDialog(selectedDeck)} />
+                <DropdownDeleteDeck name={selectedDeck.name} onDelete={() => removeDeck(selectedDeck)} onEdit={() => openDeckDialog(selectedDeck)} />
               </div>
             </div>
 
@@ -654,7 +655,7 @@ export function FlashcardsView() {
                       <div className="flex gap-1 opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100">
                         <button
                           type="button"
-                          aria-label="Edit card"
+                          aria-label={`Edit card ${card.front}`}
                           onClick={() => openCardDialog(card)}
                           className="flex size-7 items-center justify-center rounded-lg text-slate-400 hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-slate-800"
                         >
@@ -662,7 +663,7 @@ export function FlashcardsView() {
                         </button>
                         <button
                           type="button"
-                          aria-label="Delete card"
+                          aria-label={`Delete card ${card.front}`}
                           onClick={() => removeCard(card.id)}
                           className="flex size-7 items-center justify-center rounded-lg text-slate-400 hover:bg-red-50 hover:text-red-500 dark:hover:bg-red-950"
                         >
@@ -771,24 +772,26 @@ export function FlashcardsView() {
           <form onSubmit={submitCard} className="flex flex-col gap-4" noValidate>
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="card-front">Front (question)</Label>
-              <textarea
+              {/* S120/BU17b: the shared Textarea primitive (was a
+                  hand-rolled raw textarea with bespoke border classes). */}
+              <Textarea
                 id="card-front"
                 value={cardForm.front}
                 onChange={(e) => setCardForm((f) => ({ ...f, front: e.target.value }))}
                 placeholder="What does ATP stand for?"
                 required
-                className="min-h-20 rounded-md border border-gray-200 bg-transparent px-3 py-2 text-sm outline-none focus-visible:ring-2 focus-visible:ring-sf-primary/40 dark:border-slate-700"
+                className="min-h-20"
               />
             </div>
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="card-back">Back (answer)</Label>
-              <textarea
+              <Textarea
                 id="card-back"
                 value={cardForm.back}
                 onChange={(e) => setCardForm((f) => ({ ...f, back: e.target.value }))}
                 placeholder="Adenosine triphosphate"
                 required
-                className="min-h-20 rounded-md border border-gray-200 bg-transparent px-3 py-2 text-sm outline-none focus-visible:ring-2 focus-visible:ring-sf-primary/40 dark:border-slate-700"
+                className="min-h-20"
               />
             </div>
             <div className="flex flex-col gap-1.5">
@@ -825,9 +828,13 @@ export function FlashcardsView() {
 }
 
 function DropdownDeleteDeck({
+  name,
   onEdit,
   onDelete,
 }: {
+  /** S120/BU17c: the entity name rides the icon-button labels (the §13
+   *  convention — a rotor user must differentiate rows). */
+  name: string;
   onEdit: () => void;
   onDelete: () => void;
 }) {
@@ -835,7 +842,7 @@ function DropdownDeleteDeck({
     <span className="flex gap-1">
       <button
         type="button"
-        aria-label="Edit deck"
+        aria-label={`Edit deck ${name}`}
         onClick={onEdit}
         className="flex size-9 items-center justify-center rounded-lg text-slate-400 outline-none hover:bg-slate-100 hover:text-slate-600 focus-visible:ring-2 focus-visible:ring-sf-primary/40 dark:hover:bg-slate-800"
       >
@@ -843,7 +850,7 @@ function DropdownDeleteDeck({
       </button>
       <button
         type="button"
-        aria-label="Delete deck"
+        aria-label={`Delete deck ${name}`}
         onClick={onDelete}
         className="flex size-9 items-center justify-center rounded-lg text-slate-400 outline-none hover:bg-red-50 hover:text-red-500 focus-visible:ring-2 focus-visible:ring-sf-primary/40 dark:hover:bg-red-950"
       >

@@ -71,6 +71,8 @@ const FAMILY_STEPS: Record<string, string> = {
   "--color-blue-600": "#2563eb",
   "--color-blue-300": "#93c5fd", // S92/AS1 (was unpinned)
   "--color-blue-950": "#172554", // S92/AS1 (was unpinned)
+  "--color-blue-100": "#dbeafe", // S120/BU8: the exams ≥2-days pill (the live reference drift yellow → blue)
+  "--color-blue-700": "#1d4ed8", // S120/BU8: the AA superset text step (5.49:1 on blue-100)
   // alert family (border + 50 light / border-900 + 200 dark)
   "--color-red-50": "#fef2f2",
   "--color-red-200": "#fecaca",
@@ -120,6 +122,7 @@ const UTILITY_CONTRACT: Record<string, { bg: string; text: string; darkBg: strin
   "sf-pill-soft-amber": { bg: "amber-50", text: "amber-700", darkBg: "amber-950", darkText: "amber-300" },
   "sf-pill-soft-yellow": { bg: "yellow-50", text: "yellow-700", darkBg: "yellow-950", darkText: "yellow-300" },
   "sf-pill-soft-blue": { bg: "blue-50", text: "blue-600", darkBg: "blue-950", darkText: "blue-300" },
+  "sf-pill-blue": { bg: "blue-100", text: "blue-700", darkBg: "blue-950", darkText: "blue-300" }, // S120/BU8
   "sf-alert-red": { bg: "red-50", text: "red-700", darkBg: "red-950", darkText: "red-200", border: "red-200", darkBorder: "red-900" },
   "sf-alert-emerald": { bg: "emerald-50", text: "emerald-700", darkBg: "emerald-950", darkText: "emerald-200", border: "emerald-200", darkBorder: "emerald-900" },
 };
@@ -236,7 +239,10 @@ describe("the @utility census (S96/AW1 + S97/AX1 + S98/AY3)", () => {
 // must ride the family, not fork the classes).
 const CONSUMERS: Record<string, string[]> = {
   "src/components/views/shared.tsx": ["sf-pill-red"],
-  "src/components/views/exams-view.tsx": ["sf-pill-red", "sf-pill-orange", "sf-pill-yellow", "sf-alert-red"],
+  // S120/BU8: the ≥2-days badge rode sf-pill-yellow until the live
+  // reference drifted it to blue (measured 2026-11-01 on an 11-day exam);
+  // the family follows — yellow stays on flashcards + dashboard priority.
+  "src/components/views/exams-view.tsx": ["sf-pill-red", "sf-pill-orange", "sf-pill-blue", "sf-alert-red"],
   "src/components/views/flashcards-view.tsx": ["sf-pill-yellow", "sf-alert-red"],
   "src/components/views/gradetracker-view.tsx": ["sf-pill-emerald", "sf-pill-sky", "sf-pill-amber", "sf-pill-red"],
   "src/components/views/assignments-view.tsx": ["sf-pill-red", "sf-pill-soft-amber", "sf-pill-soft-blue", "sf-pill-soft-yellow", "sf-alert-red"],

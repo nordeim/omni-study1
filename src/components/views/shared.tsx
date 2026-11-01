@@ -84,7 +84,7 @@ export function StatCard({ icon: Icon, label, value, hint, iconClassName, iconBa
         <div className="min-w-0">
           <p className="mb-1 text-sm font-medium text-slate-500 dark:text-slate-400">{label}</p>
           <h2 className="text-3xl font-bold text-slate-800 dark:text-slate-100">{value}</h2>
-          <p className="mt-1 text-sm text-slate-500">{hint ?? label}</p>
+          <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">{hint ?? label}</p>
         </div>
         <span
           className={cn(

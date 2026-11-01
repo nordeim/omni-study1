@@ -10,6 +10,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { checkRateLimit, resetRateLimit, verifyLoginCredentials } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { loginSchema } from "@/lib/validation";
+import { secureCookieFlag } from "@/lib/auth";
 import { clientIp, publicUser, setSessionCookie } from "@/lib/server/auth";
 import {
   errorResponse,
@@ -61,7 +62,8 @@ export async function POST(request: NextRequest) {
     resetRateLimit(`login:${ip}`);
 
     return setSessionCookie(NextResponse.json({ user: publicUser(user) }), user.id, {
-      secure: request.nextUrl.protocol === "https:",
+      // S120/BU15: the proxy-aware derivation (see verify-email).
+      secure: secureCookieFlag(request.headers.get("x-forwarded-proto"), request.nextUrl.protocol),
       // S118/BS1: the fresh token embeds the user's current session version
       // (a password reset bumped it — the new sign-in must carry the new v).
       sessionVersion: user.sessionVersion,

@@ -332,7 +332,13 @@ export function DashboardView() {
             <ul aria-label="Upcoming exams">
               {upcomingExams.map((exam) => {
                 const diff = daysUntil(new Date(exam.date), today);
-                const label = diff === 0 ? "Today" : diff === 1 ? "Tomorrow" : `${diff}d`;
+                // S120/BU7 (measured on the reference, 2026-11-01): the
+                // TODAY badge reads "Today!" on the red family; every other
+                // distance renders the NEUTRAL slate pill (bg-slate-100
+                // text-slate-600 — rgb(241,245,249)/rgb(71,85,105)) — the
+                // clone previously shipped sf-pill-red for every distance.
+                // The dark pairs ride the superset dark-mode contract.
+                const label = diff === 0 ? "Today!" : diff === 1 ? "Tomorrow" : `${diff}d`;
                 return (
                   <li
                     key={exam.id}
@@ -347,9 +353,15 @@ export function DashboardView() {
                         {formatShortWithYear(new Date(exam.date))}
                       </p>
                     </div>
-                    <span className="sf-pill-red shrink-0 rounded-full px-2.5 py-0.5 text-xs font-medium">
-                      {label}
-                    </span>
+                    {diff === 0 ? (
+                      <span className="sf-pill-red shrink-0 rounded-full px-2.5 py-0.5 text-xs font-medium">
+                        {label}
+                      </span>
+                    ) : (
+                      <span className="shrink-0 rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600 dark:bg-slate-800 dark:text-slate-300">
+                        {label}
+                      </span>
+                    )}
                   </li>
                 );
               })}

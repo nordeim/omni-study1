@@ -12,6 +12,7 @@ import { checkRateLimit, generateResetToken, hashResetToken } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { siteUrl } from "@/lib/site";
 import { forgotPasswordSchema } from "@/lib/validation";
+import { inAppDeliveryGates } from "@/lib/env-check";
 import { clientIp } from "@/lib/server/auth";
 import {
   parseWith,
@@ -43,6 +44,11 @@ export async function POST(request: NextRequest) {
 
     if (user) {
       const token = generateResetToken();
+      // S120/BU22: opportunistic pruning — this account's expired/used tokens
+      // never outlive a forgot-password request (bounded auth tables).
+      await db.passwordResetToken.deleteMany({
+        where: { userId: user.id, OR: [{ expiresAt: { lt: new Date() } }, { usedAt: { not: null } }] },
+      });
       await db.passwordResetToken.create({
         data: {
           userId: user.id,
@@ -57,6 +63,12 @@ export async function POST(request: NextRequest) {
       // serves the app on a non-default port; siteUrl() is the metadata
       // origin, not the serving origin).
       const origin = request.nextUrl.origin;
+      // S120/BU2: hardened deployments omit the reset URL — the no-link
+      // shape is the IDENTICAL response an unknown email gets (the
+      // route's own no-enumeration contract, extended to the gate).
+      if (inAppDeliveryGates(process.env).reset) {
+        return NextResponse.json({ ok: true });
+      }
       return NextResponse.json({
         ok: true,
         resetPath: `/reset-password?token=${token}`,

@@ -749,4 +749,80 @@ test.describe("view chrome (computed parity pins)", () => {
     await page.goto("/Settings");
     await expect(page.getByText("Customize your StudyFlow experience", { exact: true })).toBeVisible();
   });
+
+  // S120/BU7 — the dashboard exam badge family (the P4 parity decision).
+  // Reference (measured 2026-11-01, two live-created exams): the TODAY
+  // badge reads "Today!" on bg-red-100/text-red-600; the far badge ("11d")
+  // reads the NEUTRAL slate family bg-slate-100/text-slate-600
+  // (rgb(241,245,249)/rgb(71,85,105)). The clone shipped sf-pill-red for
+  // EVERY distance and the "Today" label without the measured "!".
+  // The pin creates a today-exam through the API (the self-owning-data
+  // doctrine), asserts BOTH families on the seeded dashboard, and cleans
+  // up in the finally (the AM5 convention).
+  test("S120/BU7: the dashboard exam badges — red Today! + the neutral slate far family", async ({ page }) => {
+    await page.goto("/Dashboard");
+    await page.waitForFunction(() => {
+      const h2 = [...document.querySelectorAll("h2, h3")].find((x) => x.textContent?.trim() === "Upcoming Exams");
+      return !!h2;
+    });
+    const rgb = (r: number, g: number, b: number) => `rgb(${r}, ${g}, ${b})`;
+    const todayId = `exam-s120-bu7-${Date.now()}`;
+    let created = false;
+    try {
+      created = await page.evaluate(async (id) => {
+        const subjects = await fetch("/api/subjects", { credentials: "same-origin" });
+        const rows = (await subjects.json()) as Array<{ id: string }>;
+        if (!Array.isArray(rows) || rows.length === 0) return false;
+        const d = new Date();
+        const pad = (n: number) => String(n).padStart(2, "0");
+        const date = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T09:00:00`;
+        const res = await fetch("/api/exams", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "same-origin",
+          body: JSON.stringify({ title: id, subjectId: rows[0].id, date, type: "test", duration: 30 }),
+        });
+        return res.ok;
+      }, todayId);
+      expect(created, "the today-exam probe row was created").toBe(true);
+      await page.reload();
+      await page.waitForFunction(() => {
+        const h2 = [...document.querySelectorAll("h2, h3")].find((x) => x.textContent?.trim() === "Upcoming Exams");
+        return !!h2;
+      });
+
+      // The TODAY badge: the red family + the measured "Today!" label.
+      const todayPill = page.locator("main span", { hasText: /^Today!$/ }).first();
+      await expect(todayPill).toBeVisible();
+      const todayCs = await todayPill.evaluate((el) => ({
+        bg: getComputedStyle(el).backgroundColor,
+        fg: getComputedStyle(el).color,
+      }));
+      expect(todayCs.bg).toBe(rgb(254, 226, 226)); // red-100 (measured)
+      // red-700 — the AA superset (the S92/AS1 one-step-darker precedent;
+      // the reference's own red-600 measures 3.95:1)
+      expect(todayCs.fg).toBe(rgb(185, 28, 28));
+
+      // A FAR badge (the seeded "Physics Final" at +12d renders "12d"):
+      // the NEUTRAL slate family (measured bg rgb(241,245,249)).
+      const farPill = page.locator("main span", { hasText: /^12d$/ }).first();
+      await expect(farPill).toBeVisible();
+      const farCs = await farPill.evaluate((el) => ({
+        bg: getComputedStyle(el).backgroundColor,
+        fg: getComputedStyle(el).color,
+      }));
+      expect(farCs.bg).toBe(rgb(241, 245, 249)); // slate-100 (measured)
+      expect(farCs.fg).toBe(rgb(71, 85, 105)); // slate-600 (measured)
+    } finally {
+      if (created) {
+        await page.evaluate(async (title) => {
+          const list = await fetch("/api/exams", { credentials: "same-origin" });
+          const rows = (await list.json()) as Array<{ id: string; title: string }>;
+          const hit = rows.find((r) => r.title === title);
+          if (hit) await fetch(`/api/exams/${hit.id}`, { method: "DELETE", credentials: "same-origin" });
+        }, todayId);
+      }
+    }
+  });
 });
+

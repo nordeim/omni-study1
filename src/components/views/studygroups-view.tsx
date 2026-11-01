@@ -306,7 +306,7 @@ export function StudyGroupsView() {
                 }
               />
             ) : (
-              <p className="px-1 py-8 text-center text-sm text-slate-500">No groups match your search.</p>
+              <p className="px-1 py-8 text-center text-sm text-slate-500 dark:text-slate-400">No groups match your search.</p>
             )
           ) : (
             filtered.map((group) => {
@@ -327,7 +327,7 @@ export function StudyGroupsView() {
                 >
                   <h2 className="font-medium text-slate-800 dark:text-slate-100">{group.name}</h2>
                   <div className="mt-1 flex flex-wrap items-center gap-2">
-                    <span className="text-xs text-slate-500">{memberCount} members</span>
+                    <span className="text-xs text-slate-500 dark:text-slate-400">{memberCount} members</span>
                     <SubjectChip name={subject?.name} color={subject?.color} />
                   </div>
                 </button>
@@ -368,7 +368,7 @@ export function StudyGroupsView() {
             </div>
           ) : (
             <div className="flex flex-1 items-center justify-center">
-              <p className="text-sm text-slate-400">
+              <p className="text-sm text-slate-500 dark:text-slate-400">
                 <span className="block">Select a group</span>
                 <span className="block">Choose a study group from the sidebar or create a new one</span>
               </p>
@@ -396,7 +396,7 @@ export function StudyGroupsView() {
             </div>
 
             <div className="sf-card flex-1 overflow-y-auto p-6">
-              <h3 className="text-sm font-semibold uppercase tracking-wider text-slate-500">Members</h3>
+              <h3 className="text-sm font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Members</h3>
               <ul className="mt-3 flex flex-col gap-2">
                 {parseMembers(selected.members).map((member) => (
                   <li
@@ -420,7 +420,7 @@ export function StudyGroupsView() {
                     </span>
                     <div className="min-w-0 flex-1">
                       <p className="truncate text-sm font-medium text-slate-700 dark:text-slate-200">{member.name}</p>
-                      <p className="truncate text-xs text-slate-500">{member.email}</p>
+                      <p className="truncate text-xs text-slate-500 dark:text-slate-400">{member.email}</p>
                     </div>
                     <button
                       type="button"
@@ -433,7 +433,7 @@ export function StudyGroupsView() {
                   </li>
                 ))}
                 {parseMembers(selected.members).length === 0 && (
-                  <li className="rounded-xl bg-slate-50 p-4 text-center text-sm text-slate-500 dark:bg-slate-800/60">
+                  <li className="rounded-xl bg-slate-50 p-4 text-center text-sm text-slate-500 dark:text-slate-400 dark:bg-slate-800/60">
                     No members yet — add the first study partner below.
                   </li>
                 )}

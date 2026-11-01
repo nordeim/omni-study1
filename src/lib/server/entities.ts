@@ -18,7 +18,9 @@ import { db } from "../db";
 import {
   assignmentSchema,
   examSchema,
+  eventCreateSchema,
   eventSchema,
+  eventUpdateSchema,
   flashcardDeckSchema,
   flashcardSchema,
   focusSessionSchema,
@@ -250,8 +252,10 @@ export const examDelegate = makeOwnedDelegate({
 
 export const eventDelegate = makeOwnedDelegate({
   model: db.event as unknown as OwnedModel,
-  createSchema: eventSchema,
-  updateSchema: eventSchema.partial(),
+  // S120/BU22: the ordering-checked shapes (the pure eventSchema stays
+  // partial()-able for the base — see validation.ts).
+  createSchema: eventCreateSchema,
+  updateSchema: eventUpdateSchema,
   dateFields: ["startDate", "endDate"],
 });
 

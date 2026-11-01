@@ -6,7 +6,14 @@
 // (db/custom.db or db/e2e.db) first — the upsert will not refresh them.
 // Run via `bun run db:seed` (the script sets DATABASE_URL inline, schema-
 // anchored; this file resolves the same env var through src/lib/db.ts).
+//
+// S120/BU21 — the demo-seed gate: SEED_DEMO=0 (or "false"/"no") skips the
+// demo account entirely (the Docker `init` profile's public-credentials
+// off-switch — see DEPLOYMENT.md §"Removing the demo account"). Unset or
+// empty keeps the documented default (seed). Fail-safe: an unrecognized
+// value skips too (a typo never ships the demo login).
 // ---------------------------------------------------------------------------
+import { shouldSeedDemo } from "../src/lib/env-check";
 import { hashPassword } from "../src/lib/auth";
 import { db } from "../src/lib/db";
 
@@ -21,6 +28,11 @@ function at(dayOffset: number, hour = 9, minute = 0): Date {
 }
 
 async function main(): Promise<void> {
+  if (!shouldSeedDemo(process.env)) {
+    console.log(`Seed: SEED_DEMO=${JSON.stringify(process.env.SEED_DEMO ?? "")} — the demo account is SKIPPED (the off-switch).`);
+    await db.$disconnect();
+    return;
+  }
   const existing = await db.user.findUnique({ where: { email: DEMO_EMAIL } });
   if (existing) {
     console.log(`Seed: demo user already exists (${DEMO_EMAIL}) — nothing to do.`);

@@ -1,6 +1,8 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import {
   checkRateLimit,
+  rateLimitBucketCount,
+  resetAllRateLimits,
   createSessionToken,
   DUMMY_LOGIN_HASH,
   generateResetToken,
@@ -269,5 +271,58 @@ describe("session tokens carry the session version (S118/BS1)", () => {
 
   it("signs different versions into different tokens", () => {
     expect(createSessionToken("user-123", 1)).not.toBe(createSessionToken("user-123", 2));
+  });
+});
+
+// S120/BU6 — the limiter bucket eviction. The module-level `buckets` Map was
+// never swept: every distinct key (every client IP — and under a forged
+// X-FF, every spoofed string) created a PERMANENT entry, a remotely-driven
+// unbounded memory leak. The fix: a lazy sweep at the size cap — expired
+// buckets are deleted before a new key inserts (bounded memory, no timers,
+// and live-window buckets always survive). The observable:
+// rateLimitBucketCount() (the resetRateLimit kin — a test/ops probe).
+describe("rate-limiter bucket eviction (S120/BU6)", () => {
+  it("an expired mass is swept at the cap (bounded memory across distinct keys)", () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-11-01T10:00:00Z"));
+    resetAllRateLimits();
+    try {
+      for (let i = 0; i < 2100; i++) checkRateLimit(`evict-old-${i}`, 5);
+      // Advance past the 15-minute window: every bucket above is expired.
+      vi.setSystemTime(new Date("2026-11-01T10:20:00Z"));
+      // The next insert trips the cap sweep — the expired mass is gone
+      // and the Map holds only the new key (pre-fix: 2101 and growing).
+      checkRateLimit("evict-old-trigger", 5);
+      expect(rateLimitBucketCount()).toBe(1);
+      // The aged key re-arms fresh (its expired bucket was swept, not kept).
+      const reArmed = checkRateLimit("evict-old-7", 5);
+      expect(reArmed.ok).toBe(true);
+    } finally {
+      resetAllRateLimits();
+      vi.useRealTimers();
+    }
+  });
+
+  it("live-window buckets are NEVER swept (the cap does not evict fresh state)", () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-11-01T10:00:00Z"));
+    resetAllRateLimits();
+    try {
+      for (let i = 0; i < 2100; i++) checkRateLimit(`evict-mix-old-${i}`, 5);
+      // 14 minutes later: still inside the window — nothing is expired.
+      vi.setSystemTime(new Date("2026-11-01T10:14:00Z"));
+      for (let i = 0; i < 50; i++) checkRateLimit(`evict-mix-live-${i}`, 5);
+      // 2 more minutes: the first 2100 expire, the 50 stay live.
+      vi.setSystemTime(new Date("2026-11-01T10:16:00Z"));
+      checkRateLimit("evict-mix-trigger", 5);
+      // The sweep kept exactly the 50 live buckets + the trigger key.
+      expect(rateLimitBucketCount()).toBe(51);
+      // A live bucket still enforces its own window.
+      for (let i = 0; i < 4; i++) checkRateLimit("evict-mix-live-7", 5);
+      expect(checkRateLimit("evict-mix-live-7", 5).ok).toBe(false);
+    } finally {
+      resetAllRateLimits();
+      vi.useRealTimers();
+    }
   });
 });

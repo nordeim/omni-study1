@@ -255,19 +255,23 @@ test.describe("S6-F · exam card grid", () => {
     });
     expect(stripCs.h).toBe(8);
     expect(stripCs.bg).toBe(rgb(139, 92, 246));
-    // Urgency badge (S76/AC7 re-measure, computed styles on the reference):
-    // the ≥2 bucket is the YELLOW family — rgb(254,249,195)/rgb(161,98,7) —
-    // not amber (Tailwind v4 lesson 12: same-hue families are NOT
-    // interchangeable; the s63 amber pin was the adjacent-family read).
+    // Urgency badge (S120/BU8 re-anchor, computed styles on the reference):
+    // the ≥2 bucket is now the BLUE family — the live reference DRIFTED
+    // from the S76-measured yellow (rgb(254,249,195)/rgb(161,98,7)) to
+    // blue-100/blue-600 (measured 2026-11-01 on an 11-day exam:
+    // rgb(219,234,254)/rgb(37,99,235)). The clone follows the CURRENT
+    // reference per the re-crawl doctrine (Appendix A lesson 6) — with the
+    // AA superset carried over: the reference's blue-600 text measures
+    // 4.24:1 (below AA), so the pill ships blue-700 rgb(29,78,216) at
+    // 5.49:1 (the S92/AS1 one-step-darker precedent, the sf-pill-red shape).
     const badge = card.locator("span", { hasText: /days/ }).first();
     const badgeCs = await badge.evaluate((el) => {
       const s = getComputedStyle(el);
       return { bg: s.backgroundColor, color: s.color };
     });
-    expect(badgeCs.bg).toBe(rgb(254, 249, 195)); // yellow-100 (measured s76)
-    // yellow-700 — measured (161,98,7); 5.4:1 on yellow-100, AA-clean
-    // (the s63 one-step-darker-for-AA precedent carried over).
-    expect(badgeCs.color).toBe(rgb(161, 98, 7));
+    expect(badgeCs.bg).toBe(rgb(219, 234, 254)); // blue-100 (measured s120)
+    // blue-700 — the AA-clean text (29,78,216); 5.49:1 on blue-100.
+    expect(badgeCs.color).toBe(rgb(29, 78, 216));
     // Type footer pill + duration line.
     await expect(card.getByText("quiz", { exact: true })).toBeVisible();
     await expect(card.getByText(/45 min/)).toBeVisible();

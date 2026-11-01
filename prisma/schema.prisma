@@ -439,6 +439,9 @@ model RumEvent {
   user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   // S18: the beacon UPSERTS on this pair — final value wins.
-  @@unique([sessionId, metric])
+  // S120/BU4: the unique is USER-SCOPED — the global [sessionId, metric]
+  // pair let a second user's beacon post OVERWRITE the first user's row
+  // (the one write path violating the ownership-by-construction invariant).
+  @@unique([userId, sessionId, metric])
   @@index([userId])
 }

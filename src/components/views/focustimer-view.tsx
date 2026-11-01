@@ -308,7 +308,7 @@ export function FocusTimerView() {
         </div>
 
         {/* ---- session count ---- */}
-        <p className="text-sm text-slate-500" aria-live="polite">
+        <p className="text-sm text-slate-500 dark:text-slate-400" aria-live="polite">
           {loading && focusSessions.length === 0
             ? "Loading your sessions…"
             : `${sessionsToday} focus ${sessionsToday === 1 ? "session" : "sessions"} today`}

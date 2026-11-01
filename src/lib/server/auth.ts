@@ -12,7 +12,12 @@ import { cookies } from "next/headers";
 import type { NextResponse } from "next/server";
 
 import { db } from "../db";
-import { createSessionToken, readSessionToken } from "../auth";
+import {
+  clientIpFromForwarded,
+  createSessionToken,
+  parseTrustedProxyHops,
+  readSessionToken,
+} from "../auth";
 import { UnauthorizedError } from "./http";
 
 // ---- the session cookie contract ------------------------------------------------
@@ -151,10 +156,16 @@ export function clearSessionCookie(response: NextResponse): NextResponse {
 
 // ---- client-IP extraction (the limiter's key material) -------------------------------
 
-/** First hop of x-forwarded-for, or a loopback fallback. Single-instance
- *  in-memory limiter — per-process by design (documented). */
+/** The client IP under the declared proxy-hop policy (S120/BU3).
+ *
+ *  TRUSTED_PROXY_HOPS (unset → the legacy first-hop posture, the documented
+ *  single-node default; 0 → never trust the header; N ≥ 1 → the Nth hop
+ *  from the right, failing closed on short headers). The pure extraction
+ *  seam (clientIpFromForwarded, unit-pinned) carries the policy; this
+ *  wrapper binds it to the request + env and falls back to the direct
+ *  connection's "local" key. Single-instance in-memory limiter —
+ *  per-process by design (documented). */
 export function clientIp(request: Request): string {
-  const forwarded = request.headers.get("x-forwarded-for");
-  const first = forwarded?.split(",")[0]?.trim();
-  return first && first.length > 0 ? first : "local";
+  const hops = parseTrustedProxyHops(process.env.TRUSTED_PROXY_HOPS);
+  return clientIpFromForwarded(request.headers.get("x-forwarded-for"), hops) ?? "local";
 }

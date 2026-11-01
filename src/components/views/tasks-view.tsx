@@ -22,16 +22,6 @@ import {
   Trash2,
 } from "lucide-react";
 
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -700,7 +690,7 @@ export function TasksView() {
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="outline" aria-label={`Filter tasks: ${STATUS_LABELS[status]}`} className="bg-white dark:bg-card">
-                <Filter className="size-4 text-slate-500" strokeWidth={2} />
+                <Filter className="size-4 text-slate-500 dark:text-slate-400" strokeWidth={2} />
                 {STATUS_LABELS[status]}
               </Button>
             </DropdownMenuTrigger>

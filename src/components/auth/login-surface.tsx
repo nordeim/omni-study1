@@ -60,6 +60,9 @@ export function LoginSurface() {
   const [surfacedCode, setSurfacedCode] = React.useState("");
   const [busy, setBusy] = React.useState(false);
   const [error, setError] = React.useState("");
+  // The status channel (role="status", emerald) — the resend hint's own
+  // state; S120/BU17d routes the reset SUCCESS through it too (it rode the
+  // red role="alert" error channel since S15).
   const [status, setStatus] = React.useState("");
 
   const boxRefs = React.useRef<(HTMLInputElement | null)[]>([]);
@@ -178,7 +181,8 @@ export function LoginSurface() {
       });
       useThemeStore.getState().clearThemeCache();
       setView("signin");
-      setError("Password reset successfully. Sign in with your new password.");
+      setError("");
+      setStatus("Password reset successfully. Sign in with your new password.");
       setEmail(resetEmail || email);
     } catch (err: unknown) {
       setError(err instanceof ApiError ? err.message : "Something went wrong. Please try again.");

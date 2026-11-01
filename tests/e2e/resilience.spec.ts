@@ -496,4 +496,66 @@ test.describe("files upload edge cases", () => {
     expect(info.bogusStatus).toBe(404);
     expect(info.parentUnchanged).toBe(true);
   });
+
+  // S120/BU1 — the FolderDialog key-remount. The dialog's state initializes
+  // from props ONCE ("parent key-remount" per its own comment) but the
+  // parent never passed a key: the Rename dialog opened with the PREVIOUS
+  // session's name (live-reproduced: create A, create B, Rename A → the
+  // input shows B; Save silently renames A to B — a data hazard). The fix
+  // is the sibling idiom (key={open ? `open-${folder?.id ?? "new"}`}).
+  // The pin drives the REAL UI flow — the API-level AJ1 pin above cannot
+  // see the dialog's prefilled state.
+  test("S120/BU1: the Rename dialog prefills the TARGET folder's name, not the previous session's", async ({ page }) => {
+    await page.goto("/Files");
+    await expect(page.getByRole("heading", { name: "Files", exact: true })).toBeVisible();
+    const stamp = `resilience-BU1-${Date.now()}`;
+    const created: string[] = [];
+    try {
+      // Create two folders through the API (fast, and the dialog flow
+      // under test is the RENAME, not the create).
+      const ids = await page.evaluate(async (names: string[]) => {
+        const out: string[] = [];
+        for (const name of names) {
+          const res = await fetch("/api/files/folders", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            credentials: "same-origin",
+            body: JSON.stringify({ name }),
+          });
+          if (res.ok) out.push(((await res.json()) as { id: string }).id);
+        }
+        return out;
+      }, [`${stamp}-alpha`, `${stamp}-beta`]);
+      expect(ids.length).toBe(2);
+      created.push(...ids);
+      await page.reload();
+      await expect(page.getByRole("heading", { name: "Files", exact: true })).toBeVisible();
+
+      // Open Rename on ALPHA (the FIRST created) — the dialog must show
+      // ALPHA's name, not BETA's (the most recent session's state).
+      await page.getByRole("button", { name: `Rename ${stamp}-alpha` }).click();
+      const dlg = page.getByRole("dialog");
+      await expect(dlg).toBeVisible();
+      await expect(dlg.getByRole("heading", { name: "Rename Folder" })).toBeVisible();
+      const input = dlg.getByLabel("Name");
+      await expect(input).toHaveValue(`${stamp}-alpha`);
+      await page.keyboard.press("Escape");
+      await expect(dlg).toHaveCount(0);
+
+      // The fresh New Folder dialog opens EMPTY (not carrying the last
+      // session's typed value).
+      await page.getByRole("button", { name: "New Folder" }).click();
+      const createDlg = page.getByRole("dialog");
+      await expect(createDlg).toBeVisible();
+      await expect(createDlg.getByRole("heading", { name: "New Folder" })).toBeVisible();
+      await expect(createDlg.getByLabel("Name")).toHaveValue("");
+      await page.keyboard.press("Escape");
+    } finally {
+      for (const id of created) {
+        await page.evaluate(async (fid) => {
+          await fetch(`/api/files/folders/${fid}`, { method: "DELETE", credentials: "same-origin" });
+        }, id);
+      }
+    }
+  });
 });

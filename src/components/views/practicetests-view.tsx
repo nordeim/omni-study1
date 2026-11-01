@@ -350,11 +350,11 @@ function TestDialog({
               </Button>
               </div>
             </div>
-            <p className="text-xs text-slate-500">{drafts.length} questions added</p>
+            <p className="text-xs text-slate-500 dark:text-slate-400">{drafts.length} questions added</p>
             {drafts.map((draft, index) => (
               <div key={index} className="flex flex-col gap-2 rounded-xl border border-slate-200 p-3 dark:border-slate-700">
                 <div className="flex items-center gap-2">
-                  <span className="text-xs font-semibold text-slate-500">Q{index + 1}</span>
+                  <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">Q{index + 1}</span>
                   <Select
                     value={draft.type}
                     onValueChange={(value) => updateDraft(index, { type: value as QuestionType })}
@@ -388,7 +388,7 @@ function TestDialog({
                 />
                 {draft.type === "multiple_choice" && (
                   <div className="flex flex-col gap-1.5">
-                    <Label htmlFor={`q-${index}-options`} className="text-xs text-slate-500">
+                    <Label htmlFor={`q-${index}-options`} className="text-xs text-slate-500 dark:text-slate-400">
                       Options (comma-separated)
                     </Label>
                     <Input
@@ -401,7 +401,7 @@ function TestDialog({
                 )}
                 {draft.type === "true_false" ? (
                   <div className="flex flex-col gap-1.5">
-                    <Label htmlFor={`q-${index}-correct`} className="text-xs text-slate-500">
+                    <Label htmlFor={`q-${index}-correct`} className="text-xs text-slate-500 dark:text-slate-400">
                       Correct answer
                     </Label>
                     <Select
@@ -419,7 +419,7 @@ function TestDialog({
                   </div>
                 ) : (
                   <div className="flex flex-col gap-1.5">
-                    <Label htmlFor={`q-${index}-correct`} className="text-xs text-slate-500">
+                    <Label htmlFor={`q-${index}-correct`} className="text-xs text-slate-500 dark:text-slate-400">
                       Correct answer
                     </Label>
                     <Input
@@ -433,7 +433,7 @@ function TestDialog({
               </div>
             ))}
             {drafts.length === 0 && (
-              <p className="text-sm text-slate-500">No questions yet — add the first one.</p>
+              <p className="text-sm text-slate-500 dark:text-slate-400">No questions yet — add the first one.</p>
             )}
           </div>
 
@@ -466,6 +466,12 @@ function QuestionRunner({
   const [answers, setAnswers] = React.useState<Record<number, string>>({});
   const [secondsLeft, setSecondsLeft] = React.useState(test.durationMinutes * 60);
   const [finished, setFinished] = React.useState(false);
+  // S120/BU13: the expiry announcement — the countdown auto-submit swaps
+  // the whole view to the results screen; the aria-live region announces
+  // it to assistive tech (the S14 contract's pattern class). Only the
+  // EXPIRY transition announces (a manual finish announces nothing — the
+  // user initiated it).
+  const [expired, setExpired] = React.useState(false);
 
   const finish = React.useCallback(() => setFinished(true), []);
 
@@ -476,6 +482,7 @@ function QuestionRunner({
       setSecondsLeft((prev) => {
         if (prev <= 1) {
           window.clearInterval(id);
+          setExpired(true);
           finish();
           return 0;
         }
@@ -495,10 +502,14 @@ function QuestionRunner({
   if (finished) {
     return (
       <div className="flex flex-col gap-6">
+        {/* S120/BU13: the expiry announcement (visually hidden, polite). */}
+        <p aria-live="polite" className="sr-only">
+          {expired ? "Time is up — your test was submitted" : ""}
+        </p>
         <div className="sf-card p-6 text-center">
-          <p className="text-sm font-medium text-slate-500">Your score</p>
+          <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Your score</p>
           <p className="text-6xl font-bold text-slate-800 dark:text-slate-100">{score}%</p>
-          <p className="mt-1 text-sm text-slate-500">
+          <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
             {correctCount} of {total} correct · {test.title}
           </p>
         </div>
@@ -526,7 +537,7 @@ function QuestionRunner({
                   </span>
                   <div className="min-w-0 flex-1">
                     <p className="font-medium text-slate-800 dark:text-slate-100">{q.question}</p>
-                    <p className="mt-1 text-sm text-slate-500">
+                    <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
                       Your answer: <span className={ok ? "text-emerald-600" : "text-red-600"}>{given || "—"}</span>
                       {!ok && q.correctAnswer !== "" && (
                         <>
@@ -557,7 +568,7 @@ function QuestionRunner({
         <div className="flex items-center justify-between gap-4">
           <div>
             <h2 className="text-lg font-semibold text-slate-800 dark:text-slate-100">{test.title}</h2>
-            <p className="text-sm text-slate-500">
+            <p className="text-sm text-slate-500 dark:text-slate-400">
               Question {index + 1} of {total}
             </p>
           </div>
@@ -591,7 +602,7 @@ function QuestionRunner({
                 <label
                   key={option}
                   className={cn(
-                    "flex cursor-pointer items-center gap-3 rounded-xl border p-3 text-sm transition-colors",
+                    "flex items-center gap-3 rounded-xl border p-3 text-sm transition-colors",
                     answers[index] === option
                       ? "border-sf-primary bg-sf-primary/5"
                       : "border-slate-200 hover:border-slate-300 dark:border-slate-700",
@@ -609,8 +620,12 @@ function QuestionRunner({
               ))}
             </div>
           )}
+          {/* S120/BU12: role="group" (was radiogroup) — a radiogroup
+              REQUIRES radio descendants and these are aria-pressed buttons
+              (the aria-required-children violation; the MC sibling's real
+              radios keep their radiogroup). */}
           {question.type === "true_false" && (
-            <div className="mt-4 flex gap-2" role="radiogroup" aria-label="True or false">
+            <div className="mt-4 flex gap-2" role="group" aria-label="True or false">
               {["True", "False"].map((option) => (
                 <Button
                   key={option}
@@ -761,13 +776,13 @@ export function PracticeTestsView() {
                       </button>
                     </div>
                   </div>
-                  <p className="mt-2 flex items-center gap-1.5 text-sm text-slate-500">
+                  <p className="mt-2 flex items-center gap-1.5 text-sm text-slate-500 dark:text-slate-400">
                     <Clock className="size-4" strokeWidth={2} aria-hidden />
                     {test.durationMinutes} min · {questions.length} questions
                   </p>
                   <div className="mt-2 flex flex-wrap items-center gap-2">
                     <SubjectChip name={subject?.name} color={subject?.color} />
-                    <span className="text-xs text-slate-500">
+                    <span className="text-xs text-slate-500 dark:text-slate-400">
                       {new Date(test.createdAt).toLocaleDateString("en-US", {
                         month: "short",
                         day: "numeric",

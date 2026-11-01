@@ -1,6 +1,30 @@
 import { defineConfig } from "vitest/config";
 import path from "node:path";
 
+// Unit-test layer for the pure domain seams — 36 files / 1030 tests
+// (re-anchored S120/BU — the parity-superset hardening cycle: census 990 →
+// 1030. The additions: client-ip +14 [the S120/BU3 declared proxy-hop
+// contract — parseTrustedProxyHops unset/0/N with the unparsable FAIL-CLOSED
+// leg, clientIpFromForwarded first-hop/Nth-from-right/short-header/forged-
+// longer-header], delivery-gate +6 [the S120/BU2 in-band delivery
+// off-switches — DISABLE_IN_APP_OTP/RESET, kind isolation, the placeholder-
+// empty and unparsable shapes], secure-cookie +6 [the S120/BU15
+// secureCookieFlag seam — x-forwarded-proto beats the upstream protocol,
+// case/whitespace/empty tolerance], hue-pairs +2 [the S120/BU10/BU11 slate
+// text-pair guard — every static text-slate-500/400 site carries its
+// dark:text-slate- sibling, the 51+8 site sweep machine-guarded], seed-gate
+// +5 [the S120/BU21 SEED_DEMO fail-safe gate — default ON, 0/false/no OFF,
+// unrecognized OFF], auth +2 appends [the S120/BU6 limiter bucket eviction —
+// the lazy sweep at the 2,048 cap, expired windows die, live windows
+// survive, the size observable + drain seam], validation +5 appends [the
+// S120/BU22a eventSchema endDate>=startDate ordering refine],
+// hue-tokens appends [the S120/BU8 sf-pill-blue family + the blue-100/700
+// @theme pins — the reference's measured yellow→blue drift]. The
+// route-level halves (the BU1 folder-dialog remount, the BU7 dashboard
+// badge family, the BU8 exams-view badge, the BU9 Cancel buttons, the
+// BU13 expiry announcement, the BU14 register shape, the BU16 headers, the
+// BU4 RUM user-scoping) ride the e2e layer.)
+//
 // Unit-test layer for the pure domain seams — 31 files / 990 tests
 // (re-anchored S119/BT — the audit-rider hardening cycle: census 963 → 990.
 // The additions: http-body +9 [the S119/BT2 counting-reader family — the

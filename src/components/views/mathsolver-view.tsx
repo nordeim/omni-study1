@@ -208,13 +208,13 @@ export function MathSolverView() {
       >
         <h2 className="text-lg font-semibold text-slate-800 dark:text-slate-100">Math solution</h2>
         {busy ? (
-          <p aria-hidden className="mt-3 flex items-center gap-2 text-sm text-slate-500">
+          <p aria-hidden className="mt-3 flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
             <Spinner className="size-4" /> Working through it…
           </p>
         ) : solution !== null ? (
           <p className="mt-3 whitespace-pre-wrap text-sm text-slate-600 dark:text-slate-300">{solution}</p>
         ) : (
-          <p className="mt-3 text-sm text-slate-500">
+          <p className="mt-3 text-sm text-slate-500 dark:text-slate-400">
             Type a problem or attach a photo, then press Solve — step-by-step help appears here.
           </p>
         )}
