@@ -28,7 +28,10 @@ import {
   IMPORT_MAX_BYTES,
   IMPORT_OPTIONAL_FKS,
   IMPORT_REQUIRED_FKS,
+  ImportRowError,
+  importRowIdError,
   parseImportEnvelope,
+  sanitizeImportRow,
 } from "../src/lib/data-import";
 import { EXPORT_COLLECTIONS } from "../src/lib/data-export";
 
@@ -374,5 +377,127 @@ describe("the derived route FK maps (S122/BW8 — the drift-hazard close)", () =
       files: { folderId: "folders" },
       folders: { parentId: "self" },
     });
+  });
+});
+
+// ---------------------------------------------------------------------------
+// S126/CA2 · the shared row-id validator (the s126 persistence audit's
+// B-M2): the import route's inline validator checked only
+// `typeof id === "string"` while the seam rejected empty ids — twin
+// validators that had drifted (the route minted rows with empty-string
+// primary keys no detail route can address). CA2 exports ONE validator from
+// the seam; these pins hold its contract at both call sites' shared shape.
+// ---------------------------------------------------------------------------
+describe("S126/CA2 · the shared row-id validator", () => {
+  it("accepts a normal string id", () => {
+    expect(importRowIdError("tasks", { id: "t1" })).toBeNull();
+  });
+
+  it("rejects a missing id", () => {
+    expect(importRowIdError("tasks", { title: "no id" })).toMatch(/string id/);
+  });
+
+  it("rejects an EMPTY string id — the route's pre-CA2 gap (RED pre-fix: the export did not exist)", () => {
+    expect(importRowIdError("tasks", { id: "", title: "empty" })).toMatch(/string id/);
+  });
+
+  it("rejects a non-string id", () => {
+    expect(importRowIdError("tasks", { id: 42 })).toMatch(/string id/);
+  });
+
+  it("the seam's envelope parse rejects an empty-id row (the contract the route now shares)", () => {
+    const env = validEnvelope();
+    (env.data as Record<string, unknown[]>).tasks = [{ id: "", title: "empty" }];
+    const res = parseImportEnvelope(env);
+    expect(res.ok).toBe(false);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// S126/CA14 · the import's domain caps (the s126 persistence audit's
+// B-L3): the per-row guard checked primitive types + string caps + the
+// files rules but NO domain constraints — a hand-edited backup stored
+// rows that violated every route-enforced invariant (grades 900/100 →
+// 900% renders, maxScore 0 → NaN in the GPA math, progress 500,
+// dayOfWeek 99, out-of-vocabulary enums breaking the badge meta maps,
+// non-JSON strings in the JSON columns throwing in the client parse).
+// ---------------------------------------------------------------------------
+describe("S126/CA14 · the import domain caps", () => {
+  it("rejects a grade with score above maxScore (the BZ6 route guard, now shared by the third entry point)", () => {
+    expect(() =>
+      sanitizeImportRow("grades", { id: "g1", score: 900, maxScore: 100 }, 0),
+    ).toThrow(ImportRowError);
+  });
+
+  it("rejects a grade with a bare score above the default 100 denominator (the create-schema semantics)", () => {
+    expect(() =>
+      sanitizeImportRow("grades", { id: "g1", score: 150 }, 0),
+    ).toThrow(ImportRowError);
+  });
+
+  it("rejects a negative score", () => {
+    expect(() =>
+      sanitizeImportRow("grades", { id: "g1", score: -50, maxScore: 100 }, 0),
+    ).toThrow(ImportRowError);
+  });
+
+  it("rejects a zero maxScore (division by zero in the GPA math)", () => {
+    expect(() =>
+      sanitizeImportRow("grades", { id: "g1", score: 10, maxScore: 0 }, 0),
+    ).toThrow(ImportRowError);
+  });
+
+  it("accepts a legal grade pair", () => {
+    expect(() =>
+      sanitizeImportRow("grades", { id: "g1", score: 90, maxScore: 100 }, 0),
+    ).not.toThrow();
+  });
+
+  it("rejects an assignment progress outside 0..100", () => {
+    expect(() =>
+      sanitizeImportRow("assignments", { id: "a1", progress: 500 }, 0),
+    ).toThrow(ImportRowError);
+  });
+
+  it("rejects a timetable dayOfWeek outside 0..6", () => {
+    expect(() =>
+      sanitizeImportRow("timetableClasses", { id: "c1", dayOfWeek: 99 }, 0),
+    ).toThrow(ImportRowError);
+  });
+
+  it("rejects an out-of-vocabulary assignment priority", () => {
+    expect(() =>
+      sanitizeImportRow("assignments", { id: "a1", priority: "bogus" }, 0),
+    ).toThrow(ImportRowError);
+  });
+
+  it("rejects an out-of-vocabulary card difficulty", () => {
+    expect(() =>
+      sanitizeImportRow("cards", { id: "c1", difficulty: "impossible" }, 0),
+    ).toThrow(ImportRowError);
+  });
+
+  it("rejects an out-of-vocabulary chat role", () => {
+    expect(() =>
+      sanitizeImportRow("chatMessages", { id: "m1", role: "system" }, 0),
+    ).toThrow(ImportRowError);
+  });
+
+  it("rejects a non-JSON subtasks string (the client JSON.parse would throw)", () => {
+    expect(() =>
+      sanitizeImportRow("tasks", { id: "t1", subtasks: "not json" }, 0),
+    ).toThrow(ImportRowError);
+  });
+
+  it("rejects a non-JSON study-group members string", () => {
+    expect(() =>
+      sanitizeImportRow("studyGroups", { id: "g1", members: "{oops" }, 0),
+    ).toThrow(ImportRowError);
+  });
+
+  it("accepts a legal JSON subtasks string", () => {
+    expect(() =>
+      sanitizeImportRow("tasks", { id: "t1", subtasks: '[{"title":"a","done":false}]' }, 0),
+    ).not.toThrow();
   });
 });

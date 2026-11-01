@@ -27,7 +27,7 @@ import {
   daysUntil,
   formatFocusHours,
   formatLongDateWithWeekday,
-  formatShortWithYear,
+  formatShortDate,
   isSameDay,
   isSameMonth,
   startOfDay,
@@ -350,7 +350,7 @@ export function DashboardView() {
                       </h3>
                       <p className="mt-0.5 flex items-center gap-1.5 text-sm text-slate-500 dark:text-slate-400">
                         <Calendar className="size-3.5 shrink-0" strokeWidth={2} aria-hidden />
-                        {formatShortWithYear(new Date(exam.date))}
+                        {formatShortDate(new Date(exam.date))}
                       </p>
                     </div>
                     {diff === 0 ? (

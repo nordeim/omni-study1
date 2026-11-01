@@ -25,19 +25,11 @@ import { GraduationCap, Menu, X } from "lucide-react";
 
 import { NavItemLink } from "@/components/layout/nav-items";
 import { NAV_ITEMS } from "@/lib/router";
-import { formatTime12h } from "@/lib/date";
+import { formatTime12h, useNow } from "@/lib/date";
 import { useAppStore } from "@/lib/store";
 
-/** Ticking clock — 1s interval, cleaned up on unmount (client-only mount). */
-function useNow(): Date {
-  const [now, setNow] = React.useState(() => new Date());
-  React.useEffect(() => {
-    const timer = window.setInterval(() => setNow(new Date()), 1000);
-    return () => window.clearInterval(timer);
-  }, []);
-  return now;
-}
-
+/* S126/CA13: the clock hook moved to @/lib/date (the sidebar's twin —
+ * one shared minute-gated useNow now feeds both chrome trees). */
 export function MobileChrome() {
   const mobileMenuOpen = useAppStore((s) => s.mobileMenuOpen);
   const setMobileMenu = useAppStore((s) => s.setMobileMenu);
@@ -118,7 +110,7 @@ export function MobileChrome() {
     <>
       {/* App bar (the page's banner): brand + clock on BOTH sides of the
           hamburger — the reference never swaps in the view title. */}
-      <header className="glass fixed left-0 right-0 top-0 z-30 flex h-16 items-center justify-between px-4 lg:hidden">
+      <header className="glass fixed left-0 right-0 top-0 z-30 flex h-16 items-center justify-between px-4 lg:hidden print:hidden">
         <div className="flex min-w-0 items-center gap-3">
           <button
             type="button"

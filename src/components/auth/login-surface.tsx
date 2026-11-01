@@ -67,6 +67,21 @@ export function LoginSurface() {
 
   const boxRefs = React.useRef<(HTMLInputElement | null)[]>([]);
 
+  // S126/CA4: the incoming screen's heading receives focus on every view
+  // CHANGE. The pre-fix swap unmounted the trigger button, so focus fell to
+  // <body> with no announcement (WCAG 2.4.3/4.1.3 — axe cannot catch the
+  // class). The initial mount is skipped: the signin h1 must not steal the
+  // email input's focus on first paint.
+  const headingRef = React.useRef<HTMLHeadingElement | null>(null);
+  const initialView = React.useRef(true);
+  React.useEffect(() => {
+    if (initialView.current) {
+      initialView.current = false;
+      return;
+    }
+    headingRef.current?.focus();
+  }, [view]);
+
   const setBox = (index: number, value: string) => {
     const digit = value.replace(/\D/g, "").slice(-1);
     setCode((prev) => prev.map((c, i) => (i === index ? digit : c)));
@@ -152,8 +167,14 @@ export function LoginSurface() {
     }
   };
 
+  const [resending, setResending] = React.useState(false);
+
   const resend = async () => {
-    if (busy) return;
+    if (busy || resending) return;
+    // S126/CA10: the in-flight guard — the old shape checked `busy` but
+    // never set it, so rapid clicks fired duplicate POSTs against the
+    // 10/IP resend limiter (a 429 for a click the user made once).
+    setResending(true);
     setError("");
     try {
       const res = await apiSend<{ code?: string }>("POST", "/api/auth/resend-verification", { email });
@@ -162,6 +183,8 @@ export function LoginSurface() {
     } catch {
       // uniform-200 endpoint — never an error surface
       setStatus("If that account needs verification, a new code is on its way.");
+    } finally {
+      setResending(false);
     }
   };
 
@@ -198,6 +221,9 @@ export function LoginSurface() {
         password: newPassword,
       });
       useThemeStore.getState().clearThemeCache();
+      // S126/CA11: the consumed token leaves the URL (a refresh used to
+      // re-land the user on the reset screen with a spent token).
+      window.history.replaceState({}, "", "/login");
       setView("signin");
       setError("");
       setStatus("Password reset successfully. Sign in with your new password.");
@@ -260,7 +286,7 @@ export function LoginSurface() {
               >
                 <GraduationCap className="size-10" strokeWidth={2} />
               </span>
-              <h1 className="mt-4 text-2xl font-bold text-slate-800 sm:text-3xl dark:text-slate-100">
+              <h1 ref={headingRef} tabIndex={-1} className="mt-4 text-2xl font-bold text-slate-800 sm:text-3xl dark:text-slate-100 outline-none">
                 Welcome to StudyFlow
               </h1>
               <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
@@ -273,11 +299,17 @@ export function LoginSurface() {
               variant="outline"
               className="mt-6 h-[54px] w-full rounded-xl"
               disabled
-              title="Google sign-in is not available in this deployment"
             >
               <Chrome className="size-4" strokeWidth={2} />
               Continue with Google
             </Button>
+            {/* S126/CA9: the unavailability explanation as persistent text —
+                the old title-only tooltip could never display (a disabled
+                button with disabled:pointer-events-none neither hovers nor
+                focuses). */}
+            <p className="mt-2 text-center text-xs text-slate-500 dark:text-slate-400">
+              Google sign-in is not available in this deployment
+            </p>
 
             <div className="my-5 flex items-center gap-3" aria-hidden>
               <span className="h-px flex-1 bg-slate-100 dark:bg-slate-800" />
@@ -364,7 +396,7 @@ export function LoginSurface() {
             <div className="flex flex-col items-center text-center">
               {brandChip}
               {/* h2 — the sub-screen REPLACES the brand block (no h1, S15 pin) */}
-              <h2 className="mt-2 text-xl font-bold text-slate-800 dark:text-slate-100 sm:text-2xl sm:mt-4">
+              <h2 ref={headingRef} tabIndex={-1} className="mt-2 text-xl font-bold text-slate-800 dark:text-slate-100 sm:text-2xl sm:mt-4 outline-none">
                 Create your account
               </h2>
               <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
@@ -440,7 +472,7 @@ export function LoginSurface() {
               <span className="sf-print-exact mb-3 flex h-11 w-11 items-center justify-center rounded-xl bg-sf-primary-soft text-sf-primary-strong dark:bg-sf-primary-soft-dark/40 dark:text-sf-primary-strong-dark">
                 <ShieldCheck className="size-6" strokeWidth={2} />
               </span>
-              <h2 className="mt-2 text-xl font-bold text-slate-800 dark:text-slate-100 sm:text-2xl sm:mt-4">
+              <h2 ref={headingRef} tabIndex={-1} className="mt-2 text-xl font-bold text-slate-800 dark:text-slate-100 sm:text-2xl sm:mt-4 outline-none">
                 Verify your email
               </h2>
               <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
@@ -498,7 +530,7 @@ export function LoginSurface() {
                   "Verify email"
                 )}
               </Button>
-              <Button type="button" variant="ghost" className="h-9 w-full" onClick={resend}>
+              <Button type="button" variant="ghost" className="h-9 w-full" onClick={resend} disabled={busy || resending}>
                 Resend code
               </Button>
             </form>
@@ -511,7 +543,7 @@ export function LoginSurface() {
                 (8). The sub-screen replaces the brand block (S15). */}
             <div className="text-center">{backToSignIn}</div>
             <div className="flex flex-col items-center text-center">
-              <h2 className="mt-2 text-xl font-bold text-slate-800 dark:text-slate-100 sm:text-2xl sm:mt-4">
+              <h2 ref={headingRef} tabIndex={-1} className="mt-2 text-xl font-bold text-slate-800 dark:text-slate-100 sm:text-2xl sm:mt-4 outline-none">
                 {forgotDone ? "Check your email" : "Reset your password"}
               </h2>
               {!forgotDone && (
@@ -588,7 +620,7 @@ export function LoginSurface() {
           <>
             <div className="flex flex-col items-center text-center">
               {brandChip}
-              <h2 className="mt-2 text-xl font-bold text-slate-800 dark:text-slate-100 sm:text-2xl sm:mt-4">
+              <h2 ref={headingRef} tabIndex={-1} className="mt-2 text-xl font-bold text-slate-800 dark:text-slate-100 sm:text-2xl sm:mt-4 outline-none">
                 Reset your password
               </h2>
               <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
@@ -596,6 +628,13 @@ export function LoginSurface() {
               </p>
             </div>
 
+            {/* S126/CA11: a reset screen without its token is explained,
+                not a silent dead end (email clients that strip query
+                strings used to land users on a permanently-disabled submit
+                with no reason). */}
+            {!params.get("token") && (
+              <InlineError message="This reset link is missing its token — request a new one." />
+            )}
             <form onSubmit={submitReset} className="mt-6 flex flex-col gap-4" noValidate>
               <div className="flex flex-col gap-1.5">
                 <Label htmlFor="auth-password">Password</Label>
@@ -647,4 +686,3 @@ export function LoginSurface() {
   );
 }
 
-export default LoginSurface;

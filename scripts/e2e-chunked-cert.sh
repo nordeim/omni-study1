@@ -17,7 +17,23 @@
 # first design's demo-budget exhaustion 429'd every later chunk create —
 # six collateral tasks.spec failures, the mid-flight-collision class;
 # the fresh-user rewrite rides the s25 TEST-NET register convention)])
-# Expected: 139 + 157 + 71 + 92 + 70 = 529 (each chunk's count includes its
+# (S126/CA re-tag — census 529 → 538, net +9: chunk 1 +3 [the CA4 auth
+# view-transition focus pin + the CA9 Google-helper-text pin, both in
+# parity-session8, + the CA7 nav modified-click pin in navigation]; chunk 2
+# +4 [the CA1 AI-transcript newest-window pin + the CA5 factory-list
+# newest-window pin, both via 505-row imports on FRESH TEST-NET users — the
+# BZ5 lesson, the demo user is never mutated — + the CA2 import empty-id/
+# null-collection 400 pin + the CA8 placeholder AA regression guard, both in
+# s14-hardening]; chunk 4 +1 [the CA3 mobile print-chrome pin in
+# accessibility — the print family's missing MOBILE-viewport leg: the fixed
+# lg:hidden app bar printed at portrait paper width where the lg: query
+# stops applying]; chunk 5 +1 [the CA11 reset missing-token pin in
+# auth-flows]. ALSO S126/CA6: the seed's mislabeled deck cards re-mapped —
+# six study pins re-anchored IN-PLACE to the honest remediated counts
+# [Integration rules 1 card, Biology 3, Spanish 2] + explicit distinct deck
+# createdAt values make decks[0] deterministic — the S125 lesson-3 flake
+# class dead at the root.)
+# Expected: 142 + 161 + 71 + 93 + 71 = 538 (each chunk's count includes its
 # Session-89 cold e2e certification — the 5-chunk map, final post-Batch-BT
 # (census 478 → 488: s119/BT +10 [chunk 1 +1 the BT10 notes manage-notebooks
 # placement pin; chunk 2 +1 the BT9 timetable edit-button accessible-name

@@ -8,11 +8,11 @@
    THE TEN DOCUMENTED v3→v4 TRAPS (docs/Tailwind-V4-Validation-Report.md +
    AGENTS.md) — every pin below exists because a trap shipped a parity bug:
 
-   1.  @theme inline vars must be FULL hsl() colors — bare triplets resolve to
+   1.  @theme vars must be FULL hsl() colors — bare triplets resolve to
        transparent. Shadcn tokens therefore stay raw triplets in :root/.dark,
        consumed as hsl(var(--x)) inside the @theme block below (the var()
        reference keeps them RUNTIME-resolved, so .dark overrides reach the
-       utilities — the trap-13 routing; a LITERAL under @theme inline would
+       utilities — the trap-13 routing; a LITERAL under @theme would
        inline at build time and freeze the light value).
    2.  The v3-era palette is PINNED below — v4's oklch defaults drift 1–3
        units/channel (trap: unpinned colors serialize as lab(...)).
@@ -30,7 +30,7 @@
    10. Modern color syntax serializes as legacy forms — pin asserted colors.
 
    Dark-mode contract (S10-1): every token that must re-theme is a raw
-   triplet in :root/.dark routed through hsl(var(…)) in @theme inline — a
+   triplet in :root/.dark routed through hsl(var(…)) in @theme — a
    LITERAL there inlines at build time and .dark can never reach it.
 --------------------------------------------------------------------------- */
 
@@ -253,8 +253,8 @@
 
 /* ---------------------------------------------------------------------------
    Raw triplet tokens (:root / .dark) — consumed through hsl(var(--x)) inside
-   @theme inline above, so .dark overrides actually reach the utilities
-   (trap 13: a literal in @theme inline inlines at build time).
+   @theme above, so .dark overrides actually reach the utilities
+   (trap 13: a literal in @theme inlines at build time).
 --------------------------------------------------------------------------- */
 :root {
   /* the violet accent's runtime defaults (pre-apply state; the theme store

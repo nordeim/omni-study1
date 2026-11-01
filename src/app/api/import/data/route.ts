@@ -37,6 +37,7 @@ import {
   IMPORT_REQUIRED_FKS,
   ImportRowError,
   NEVER_IMPORT_FIELDS,
+  importRowIdError,
   sanitizeImportRow,
   sortFoldersParentsFirst,
 } from "@/lib/data-import";
@@ -215,17 +216,23 @@ export const POST = async (request: NextRequest) => {
     }
 
     // ---- per-collection validation -------------------------------------
+    // S126/CA2: the row-id rule rides the SEAM's shared validator (the
+    // BW8 single-source doctrine — the route's inline twin had dropped the
+    // empty-id guard and minted rows no detail route could address), and a
+    // `null` collection is now rejected like the seam's contract (it is
+    // not an array — the pre-CA2 route silently skipped it).
     const parsed = new Map<Collection, Row[]>();
     for (const collection of IMPORT_ORDER) {
       const rows = data[collection];
-      if (rows === undefined || rows === null) continue;
+      if (rows === undefined) continue;
       if (!Array.isArray(rows)) {
         return errorResponse(400, `The "${collection}" collection must be an array.`);
       }
       const seen = new Set<string>();
       for (const row of rows) {
-        if (typeof row !== "object" || row === null || typeof (row as Row).id !== "string") {
-          return errorResponse(400, `Every "${collection}" row needs a string id.`);
+        const idError = importRowIdError(collection, row);
+        if (idError !== null) {
+          return errorResponse(400, idError);
         }
         const id = (row as Row).id as string;
         if (seen.has(id)) {

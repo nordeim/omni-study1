@@ -5,6 +5,8 @@
 // (S9-E, reference-measured).
 // ---------------------------------------------------------------------------
 
+import * as React from "react";
+
 export const CALENDAR_WEEKDAYS = [
   "Sun",
   "Mon",
@@ -136,9 +138,36 @@ export function formatLongDate(date: Date): string {
   return LONG_DATE.format(date);
 }
 
-/** "Tue, Oct 6" */
-export function formatShortWithYear(date: Date): string {
+/** "Tue, Oct 6" — S126/CA12: renamed from formatShortWithYear (the name
+ * promised a year the format never rendered — the s126 shell audit's A-L1;
+ * a future caller trusting the name would get a year-less string). */
+export function formatShortDate(date: Date): string {
   return SHORT_DATE.format(date);
+}
+
+// ---------------------------------------------------------------------------
+// S126/CA13 — the shared chrome clock hook (the s126 shell audit's A-L2).
+// Sidebar + MobileChrome each ran a byte-identical useNow ticking every
+// 1000ms while the rendered value (formatTime12h) only changes once per
+// MINUTE — both chrome trees (20 nav links + avatar each) reconciled ~60×/
+// min for nothing. The shared hook keeps the 1s tick (the display stays
+// live-correct the moment the minute flips) but only commits state when
+// the RENDERED minute actually changes.
+// ---------------------------------------------------------------------------
+export function useNow(): Date {
+  const [now, setNow] = React.useState(() => new Date());
+  React.useEffect(() => {
+    let lastMinute = new Date().getMinutes();
+    const timer = window.setInterval(() => {
+      const next = new Date();
+      if (next.getMinutes() !== lastMinute) {
+        lastMinute = next.getMinutes();
+        setNow(next);
+      }
+    }, 1000);
+    return () => window.clearInterval(timer);
+  }, []);
+  return now;
 }
 
 /** 12-hour clock, padded hour + minutes — "03:43 AM" (the reference clock). */

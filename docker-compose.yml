@@ -12,6 +12,13 @@ services:
   studyflow:
     build:
       context: .
+      # S126/CA15: the build-time NEXT_PUBLIC_SITE_URL bake (the sitemap/
+      # robots/metadataBase prerender reads it at BUILD time — the runtime
+      # env below never reaches them). Without this args block, compose
+      # always built with the Dockerfile's localhost default even when the
+      # operator set NEXT_PUBLIC_SITE_URL in the environment.
+      args:
+        NEXT_PUBLIC_SITE_URL: "${NEXT_PUBLIC_SITE_URL:-http://localhost:3000}"
     image: studyflow:latest
     restart: unless-stopped
     ports:
@@ -49,14 +56,20 @@ services:
   init:
     build:
       context: .
+      args:
+        NEXT_PUBLIC_SITE_URL: "${NEXT_PUBLIC_SITE_URL:-http://localhost:3000}"
     image: studyflow:latest
     profiles: ["init"]
     environment:
       DATABASE_URL: "file:/data/custom.db"
       # S121/BV3 — SEED_DEMO reaches the seed through compose at last
       # (DEPLOYMENT.md §8's `SEED_DEMO=0 docker compose --profile init up`
-      # was a no-op without this declaration; 0/false/no skips the
-      # public-credentials demo account, any other value seeds it).
+      # was a no-op without this declaration). S126/CA15: the fail-safe
+      # contract — only unset/empty/1/true seeds the demo account; every
+      # other value (0/false/no/yes/on/…) SKIPS it (env-check.ts's rule,
+      # which this comment previously misstated in the dangerous
+      # direction: an operator setting SEED_DEMO=yes expected the demo
+      # account and silently did not get it).
       SEED_DEMO: "${SEED_DEMO:-}"
     volumes:
       - db-data:/data

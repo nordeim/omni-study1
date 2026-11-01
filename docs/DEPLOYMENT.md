@@ -153,7 +153,17 @@ Notes:
   verification step; report any divergence as an issue.
 - **Schema updates:** re-run the init profile after `git pull` +
   rebuild (`docker compose build && docker compose --profile init run
-  --rm init` — the push is additive/idempotent).
+  --rm init` — the push is additive/idempotent). **S126/CA20 — the
+  upgrade-path caution:** the init profile runs `prisma db push
+  --accept-data-loss` against the production `/data` volume; after an
+  image upgrade that carries a BREAKING schema change (a dropped/retyped
+  column), that flag silently discards the affected data. Review the new
+  image's schema diff (or the push command's drift report) before
+  re-running init on a valued volume; the no-migrations-folder posture is
+  the documented single-node trade-off (§"Known limitations"). Also note
+  the first-boot race: the app starts concurrently with the one-shot push
+  + seed, so early requests 500 until the schema lands (absorbed by the
+  healthcheck's start period).
 - **The demo account + `SEED_DEMO` (S120/BU21).** The idempotent seed
   creates a public-credentials login — `demo@studyflow.app` /
   `Demo1234!`, `emailVerified: true` — which is right for a local

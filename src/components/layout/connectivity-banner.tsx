@@ -45,7 +45,7 @@ export function ConnectivityBanner() {
   return (
     <div
       role="status"
-      className="sf-connectivity-pill fixed bottom-4 left-1/2 z-[70] w-max max-w-[calc(100vw-2rem)] -translate-x-1/2 rounded-full px-4 py-2 text-sm font-medium shadow-lg"
+      className="sf-connectivity-pill fixed bottom-4 left-1/2 z-[70] w-max max-w-[calc(100vw-2rem)] -translate-x-1/2 rounded-full px-4 py-2 text-sm font-medium shadow-lg print:hidden"
     >
       You&apos;re offline — changes will not be saved until you reconnect.
     </div>

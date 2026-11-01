@@ -1484,3 +1484,75 @@ test.describe("S125/BZ4 · duplicate-member removal removes ONE", () => {
     }
   });
 });
+
+// ---------------------------------------------------------------------------
+// S126/CA4 · the auth sub-screen swaps manage focus (the s126 shell audit's
+// A-M2): every view transition was triggered from a button that unmounts in
+// the swap, so focus fell to <body> and nothing announced the context change
+// (WCAG 2.4.3/4.1.3 — axe cannot catch this class). The fix: the incoming
+// screen's heading carries tabIndex={-1} and receives focus on every CHANGE
+// (the initial mount is skipped — the signin h1 must not steal the email
+// input's focus).
+// ---------------------------------------------------------------------------
+test.describe("S126/CA4 · auth view transitions focus the incoming heading", () => {
+  test("signin → signup → signin → forgot: each swap lands focus on the heading (RED pre-fix: activeElement is body)", async ({ page }) => {
+    await page.goto("/login");
+    await page.waitForLoadState("networkidle");
+
+    // The initial mount does NOT move focus (the email input keeps it).
+    const initial = await page.evaluate(() => document.activeElement?.tagName ?? "none");
+    expect(initial).not.toBe("H1");
+
+    // signin → signup: the signup h2 receives focus.
+    await page.getByRole("button", { name: /need an account\? sign up/i }).click();
+    const signupH2 = page.getByRole("heading", { name: "Create your account" });
+    await expect(signupH2).toBeVisible();
+    await expect
+      .poll(async () =>
+        page.evaluate(() => ({
+          tag: document.activeElement?.tagName ?? "none",
+          text: (document.activeElement?.textContent ?? "").trim(),
+        })),
+      )
+      .toEqual({ tag: "H2", text: "Create your account" });
+
+    // signup → signin: the signin h1 receives focus.
+    await page.getByRole("button", { name: /back to sign in/i }).click();
+    await expect
+      .poll(async () =>
+        page.evaluate(() => ({
+          tag: document.activeElement?.tagName ?? "none",
+          text: (document.activeElement?.textContent ?? "").trim(),
+        })),
+      )
+      .toEqual({ tag: "H1", text: "Welcome to StudyFlow" });
+
+    // signin → forgot: the forgot h2 receives focus.
+    await page.getByRole("button", { name: /forgot password\?/i }).click();
+    await expect
+      .poll(async () =>
+        page.evaluate(() => ({
+          tag: document.activeElement?.tagName ?? "none",
+          text: (document.activeElement?.textContent ?? "").trim(),
+        })),
+      )
+      .toEqual({ tag: "H2", text: "Reset your password" });
+  });
+});
+
+// ---------------------------------------------------------------------------
+// S126/CA9 · the disabled Google button's explanation is reachable (the s126
+// shell audit's A-L5): the explanation lived only in a `title` attribute on a
+// `disabled:pointer-events-none` button — no hover, no focus, no tooltip, a
+// dead button with no discoverable reason. The fix: persistent small helper
+// text under the button.
+// ---------------------------------------------------------------------------
+test.describe("S126/CA9 · the Google sign-in unavailability is visible", () => {
+  test("the helper text renders under the disabled button (RED pre-fix: only the unreachable title)", async ({ page }) => {
+    await page.goto("/login");
+    await page.waitForLoadState("networkidle");
+    await expect(
+      page.getByText("Google sign-in is not available in this deployment"),
+    ).toBeVisible();
+  });
+});

@@ -607,7 +607,7 @@ test.describe("S7-AD · the Notes rich-text editor (Batch AD)", () => {
 });
 
 test.describe("S7-AD · the Flashcards study mode rework (Batch AD)", () => {
-  test("AD8/AD9: study renders IN-PAGE (no fixed overlay) with the black Exit Study + '1 / 4' counter", async ({ page }) => {
+  test("AD8/AD9: study renders IN-PAGE (no fixed overlay) with the black Exit Study + '1 / 1' counter (S126/CA6 re-anchor)", async ({ page }) => {
     await page.goto("/Flashcards");
     await hydrated(page);
     await page.locator('[aria-label="Deck rows"] > *', { hasText: "Integration rules" }).first().click();
@@ -629,8 +629,11 @@ test.describe("S7-AD · the Flashcards study mode rework (Batch AD)", () => {
     expect(exitCs.color).toBe(rgb(250, 250, 250));
     expect(exitCs.radius).toBe("6px");
     expect(exitCs.size).toBe("14px");
-    // Counter: "1 / 4" (spaces, no deck name), 16px/400 slate-500 (measured).
-    const counter = study.getByText(/^1 \/ 4$/);
+    // Counter (S126/CA6 re-anchor): "1 / 1" — the seed fix moved the 3
+    // mislabeled biology cards out of "Integration rules", leaving the
+    // calculus deck's ONE real card. The measured SHAPE (spaces, no deck
+    // name), 16px/400 slate-500, is what this pins.
+    const counter = study.getByText(/^1 \/ 1$/);
     await expect(counter).toBeVisible();
     const cCs = await counter.evaluate((el) => {
       const s = getComputedStyle(el);
@@ -687,7 +690,10 @@ test.describe("S7-AD · the Flashcards study mode rework (Batch AD)", () => {
   test("AD11: the Wrong/Correct rating — Wrong neutral-950/red-600, Correct green-500; Correct advances; no Prev/Next", async ({ page }) => {
     await page.goto("/Flashcards");
     await hydrated(page);
-    await page.locator('[aria-label="Deck rows"] > *', { hasText: "Integration rules" }).first().click();
+    // S126/CA6: the advancement demo rides the 3-card Biology deck (the
+    // seed fix returned the mislabeled cards — Integration rules is a
+    // 1-card deck now, and a 1-card deck cannot demonstrate advancement).
+    await page.locator('[aria-label="Deck rows"] > *', { hasText: "Biology Chapter 5" }).first().click();
     await page.locator('[aria-label="Deck detail"]').getByRole("button", { name: "Study" }).click();
     const study = page.locator('[aria-label="Study mode"]');
     // Prev/Next are gone — the rating IS the navigation (measured: the ref
@@ -715,9 +721,9 @@ test.describe("S7-AD · the Flashcards study mode rework (Batch AD)", () => {
     expect(cCs.bg).toBe(rgb(34, 197, 94)); // green-500
     expect(cCs.color).toBe(rgb(255, 255, 255)); // honest deviation: no yellow quirk
     expect(cCs.radius).toBe("6px");
-    // Correct advances the counter.
+    // Correct advances the counter (Biology's 3 cards: 1/3 → 2/3).
     await correct.click();
-    await expect(study.getByText(/^2 \/ 4$/)).toBeVisible();
+    await expect(study.getByText(/^2 \/ 3$/)).toBeVisible();
   });
 });
 
@@ -824,14 +830,17 @@ test.describe("S78 · Batch AE hardening (the s78 audit)", () => {
   test("AE4/S79: during study the deck list is absent; Study after switching decks starts the new deck at card 1", async ({ page }) => {
     await page.goto("/Flashcards");
     await hydrated(page);
-    // Integration rules (4 cards) → Study → flip → Correct → card 2.
-    await page.locator('[aria-label="Deck rows"] > *', { hasText: "Integration rules" }).first().click();
+    // S126/CA6: the journey rides Biology (3 cards) → Spanish (2 cards) —
+    // the remediated seed's honest multi-card decks (the old leg pinned
+    // the mislabeled 4-card "Integration rules" + the mislabeled 2-card
+    // "Biology" that actually held the Spanish cards).
+    await page.locator('[aria-label="Deck rows"] > *', { hasText: "Biology Chapter 5" }).first().click();
     await page.locator('[aria-label="Deck detail"]').getByRole("button", { name: "Study" }).click();
     const study = page.locator('[aria-label="Study mode"]');
-    await expect(study.getByText(/^1 \/ 4$/)).toBeVisible();
+    await expect(study.getByText(/^1 \/ 3$/)).toBeVisible();
     await study.locator("[data-flip-card]").click();
     await study.getByRole("button", { name: "Correct", exact: true }).click();
-    await expect(study.getByText(/^2 \/ 4$/)).toBeVisible();
+    await expect(study.getByText(/^2 \/ 3$/)).toBeVisible();
 
     // During study the deck list is ABSENT (the ref's measured
     // full-replacement shape — the whole two-pane layout swaps out).
@@ -844,8 +853,8 @@ test.describe("S78 · Batch AE hardening (the s78 audit)", () => {
     await expect(page.locator('[aria-label="Deck detail"]')).toBeVisible();
 
     // …and switching decks THEN studying starts the new deck from card 1
-    // — never the stale 2-of-4 index into the 2-card deck.
-    await page.locator('[aria-label="Deck rows"] > *', { hasText: "Biology Chapter 5" }).first().click();
+    // — never the stale 2-of-3 index into the 2-card Spanish deck.
+    await page.locator('[aria-label="Deck rows"] > *', { hasText: "Spanish Vocabulary" }).first().click();
     await page.locator('[aria-label="Deck detail"]').getByRole("button", { name: "Study" }).click();
     await expect(study.getByText(/^1 \/ 2$/)).toBeVisible();
   });
@@ -858,7 +867,8 @@ test.describe("S78 · Batch AE hardening (the s78 audit)", () => {
   test("AF1: the study chrome centers in the content area with the Exit+counter on one justify-between row", async ({ page }) => {
     await page.goto("/Flashcards");
     await hydrated(page);
-    await page.locator('[aria-label="Deck rows"] > *', { hasText: "Integration rules" }).first().click();
+    // S126/CA6: the chrome geometry rides the 3-card Biology deck.
+    await page.locator('[aria-label="Deck rows"] > *', { hasText: "Biology Chapter 5" }).first().click();
     await page.locator('[aria-label="Deck detail"]').getByRole("button", { name: "Study" }).click();
     const study = page.locator('[aria-label="Study mode"]');
     await expect(study).toBeVisible();
@@ -866,7 +876,7 @@ test.describe("S78 · Batch AE hardening (the s78 audit)", () => {
     // The Exit + counter share ONE row: y-aligned, counter to the RIGHT
     // of the Exit button (the ref's justify-between chrome).
     const exit = study.getByRole("button", { name: "Exit Study" });
-    const counter = study.getByText(/^1 \/ 4$/);
+    const counter = study.getByText(/^1 \/ 3$/);
     await expect(exit).toBeVisible();
     await expect(counter).toBeVisible();
     const exitBox = await exit.boundingBox();
@@ -967,11 +977,12 @@ test.describe("S80 · the study surface is a labeled region (AG9)", () => {
   test("the study-mode wrapper exposes role=region with its Study mode name", async ({ page }) => {
     await page.goto("/Flashcards");
     await hydrated(page);
-    await page.locator('[aria-label="Deck rows"] > *', { hasText: "Integration rules" }).first().click();
+    // S126/CA6: rides the 3-card Biology deck (the remediated seed).
+    await page.locator('[aria-label="Deck rows"] > *', { hasText: "Biology Chapter 5" }).first().click();
     await page.locator('[aria-label="Deck detail"]').getByRole("button", { name: "Study" }).click();
     const study = page.getByRole("region", { name: "Study mode" });
     await expect(study).toBeVisible();
-    await expect(study.getByText(/^1 \/ 4$/)).toBeVisible();
+    await expect(study.getByText(/^1 \/ 3$/)).toBeVisible();
     await study.getByRole("button", { name: "Exit Study" }).click();
     await expect(page.locator('[aria-label="Deck list pane"]')).toBeVisible();
   });
@@ -1179,9 +1190,10 @@ test.describe("S81 · the flashcards row keyboard guard (AH6)", () => {
     await page.goto("/Flashcards");
     await hydrated(page);
 
-    // Select the deck EXPLICITLY (the seeded decks share one createdAt —
-    // the render-order tie is nondeterministic; never trust the initial
-    // fallback — the AG9 pattern).
+    // Select the deck EXPLICITLY (never trust the initial fallback — the
+    // AG9 pattern; S126/CA6 made the seeded deck order deterministic with
+    // explicit createdAt values, but explicit selection stays the
+    // robust form).
     await page.locator('[aria-label="Deck rows"] > *', { hasText: "Integration rules" }).first().click();
     const detailH2 = page.locator('[aria-label="Deck detail"] h2');
     await expect(detailH2).toHaveText("Integration rules");

@@ -476,3 +476,21 @@ test.describe("S123/BX2: the per-account OTP attempt cap", () => {
     expect(body.error).toBe("That code is invalid or has expired.");
   });
 });
+
+// ---------------------------------------------------------------------------
+// S126/CA11 · the reset screen without a token is not a dead end (the s126
+// shell audit's A-L7): `view` initialized to "reset" whenever ?view=reset
+// was present even WITHOUT a token — a permanently-disabled submit with no
+// explanation (users whose email client stripped the query string), and a
+// consumed token lingered in the URL after a successful reset. The fix: an
+// InlineError names the problem when the token is missing.
+// ---------------------------------------------------------------------------
+test.describe("S126/CA11 · the reset screen explains a missing token", () => {
+  test("/login?view=reset without a token renders the missing-link message (RED pre-fix: a bare disabled submit)", async ({ page }) => {
+    await page.goto("/login?view=reset");
+    await page.waitForLoadState("networkidle");
+    await expect(
+      page.getByText(/missing its token/i),
+    ).toBeVisible();
+  });
+});

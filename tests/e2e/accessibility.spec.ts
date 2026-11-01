@@ -704,3 +704,36 @@ test.describe("S124/BY13 · forced-colors keeps the Appearance pickers' selectio
     expect(r.width).toBeGreaterThanOrEqual(2);
   });
 });
+
+// ---------------------------------------------------------------------------
+// S126/CA3 · the fixed mobile chrome does not print (the s126 shell audit's
+// A-M1): the print stylesheet hid chrome via `aside { display: none }` only
+// — the mobile app bar is a `<header ... lg:hidden>` and at portrait paper
+// width (~816px < 1024px) the lg: media query stops applying, so the fixed
+// header (hamburger, brand, the live clock) printed on every page; the
+// fixed offline pill had no print guard either. The existing print family
+// runs at DESKTOP viewports where lg:hidden still applies — the structural
+// blind spot. The fix: print:hidden on both fixed chrome elements. This pin
+// runs the family's missing leg: the MOBILE viewport under print emulation.
+// ---------------------------------------------------------------------------
+test.describe("S126/CA3 · the mobile chrome stays out of print", () => {
+  test("at 390px under print emulation the app bar and the offline pill are hidden (RED pre-fix: the fixed header renders)", async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await gotoMode(page, "/Dashboard", "light");
+    await hydrated(page);
+    await page.emulateMedia({ media: "print" });
+
+    // The mobile app bar: hidden on paper (RED pre-fix: display flex).
+    await expect(page.locator("header.glass.fixed")).toBeHidden();
+
+    // The offline pill: force the offline state — the pill RENDERS
+    // (attached) but stays HIDDEN under print emulation (the print:hidden
+    // guard; waiting for "visible" here would be self-defeating: hidden
+    // under print IS the fix).
+    await page.context().setOffline(true);
+    await page.waitForSelector("div[role='status'].fixed", { state: "attached" });
+    await expect(page.locator("div[role='status'].fixed")).toBeHidden();
+    await page.context().setOffline(false);
+    await page.emulateMedia({ media: "screen" });
+  });
+});

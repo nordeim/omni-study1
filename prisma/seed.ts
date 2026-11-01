@@ -162,20 +162,33 @@ async function main(): Promise<void> {
     await db.note.create({ data: { ...n, userId: user.id } });
   }
 
+  // S126/CA6: the three decks carry EXPLICIT distinct createdAt values —
+  // the Promise.all family shared a millisecond, so `decks[0]` (the
+  // auto-selected deck) was random per seed (the S125 lesson-3 flake
+  // class, killed at the root: Integration rules is now deterministically
+  // first). The same-millisecond tie also made the asc list order
+  // nondeterministic across reseeds.
+  const deckBase = new Date();
+  const deckDefs = [
+    { name: "Integration rules", description: "Derivatives and antiderivatives", color: "#8b5cf6", subjectId: math.id, createdAt: new Date(deckBase.getTime() - 2000) },
+    { name: "Biology Chapter 5", description: "Cell energy and enzymes", color: "#10b981", subjectId: biology.id, createdAt: new Date(deckBase.getTime() - 1000) },
+    { name: "Spanish Vocabulary", description: "Unit 4 — travel", color: "#3b82f6", subjectId: null, createdAt: deckBase },
+  ];
   const decks = await Promise.all(
-    [
-      { name: "Integration rules", description: "Derivatives and antiderivatives", color: "#8b5cf6", subjectId: math.id },
-      { name: "Biology Chapter 5", description: "Cell energy and enzymes", color: "#10b981", subjectId: biology.id },
-      { name: "Spanish Vocabulary", description: "Unit 4 — travel", color: "#3b82f6", subjectId: null },
-    ].map((d) => db.flashcardDeck.create({ data: { ...d, userId: user.id } })),
+    deckDefs.map((d) => db.flashcardDeck.create({ data: { ...d, userId: user.id } })),
   );
+  // S126/CA6: the card→deck map was [0,0,0,0,1,1] where the content implies
+  // [0,1,1,1,2,2] — the biology cards (ATP/Enzyme/Krebs) lived in the
+  // calculus deck and the Spanish cards in the biology deck while the
+  // Spanish deck sat empty. "Chain rule" stays in decks[0] (the studied
+  // card — the parity pins reference it by name).
   const cardDefs = [
     { deckId: decks[0].id, front: "Chain rule", back: "Differentiate the outer function and multiply by the inner derivative — e.g. d/dx sin(x^2) = 2x cos(x)", difficulty: "medium" },
-    { deckId: decks[0].id, front: "What does ATP stand for?", back: "Adenosine triphosphate", difficulty: "easy" },
-    { deckId: decks[0].id, front: "Enzyme function definition", back: "A biological catalyst that lowers activation energy", difficulty: "medium" },
-    { deckId: decks[0].id, front: "Krebs cycle location", back: "Mitochondrial matrix", difficulty: "hard" },
-    { deckId: decks[1].id, front: "the airport", back: "el aeropuerto", difficulty: "easy" },
-    { deckId: decks[1].id, front: "to travel", back: "viajar", difficulty: "medium" },
+    { deckId: decks[1].id, front: "What does ATP stand for?", back: "Adenosine triphosphate", difficulty: "easy" },
+    { deckId: decks[1].id, front: "Enzyme function definition", back: "A biological catalyst that lowers activation energy", difficulty: "medium" },
+    { deckId: decks[1].id, front: "Krebs cycle location", back: "Mitochondrial matrix", difficulty: "hard" },
+    { deckId: decks[2].id, front: "the airport", back: "el aeropuerto", difficulty: "easy" },
+    { deckId: decks[2].id, front: "to travel", back: "viajar", difficulty: "medium" },
   ];
   for (const c of cardDefs) {
     await db.flashcard.create({ data: c });

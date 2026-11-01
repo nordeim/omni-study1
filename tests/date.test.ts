@@ -11,7 +11,7 @@ import {
   formatMinutes,
   formatDueDateShort,
   formatFocusHours,
-  formatShortWithYear,
+  formatShortDate,
   formatTime12h,
   isSameDay,
   isSameMonth,
@@ -106,8 +106,8 @@ describe("formatters", () => {
     expect(formatTime12h(new Date(2026, 9, 6, 12, 0))).toBe("12:00 PM");
   });
 
-  it("formatShortWithYear renders 'Tue, Oct 6'", () => {
-    expect(formatShortWithYear(new Date(2026, 9, 6))).toBe("Tue, Oct 6");
+  it("formatShortDate renders 'Tue, Oct 6'", () => {
+    expect(formatShortDate(new Date(2026, 9, 6))).toBe("Tue, Oct 6");
   });
 
   it("formatMinutes renders hours and minutes", () => {

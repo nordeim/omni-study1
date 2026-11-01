@@ -28,6 +28,7 @@ import {
   AI_DEADLINE_MS,
   capPersistedContent,
   extractAssistantContent,
+  persistTranscriptPair,
   withDeadline,
 } from "@/lib/server/ai";
 
@@ -109,30 +110,21 @@ export const POST = withUser(async (user, request) => {
 
     // The transcript persists BOTH rows — but only on a successful reply
     // (a failed send bounces the composer text back; no orphan rows).
+    // S126/CA1: persistTranscriptPair owns the pair write (explicit
+    // timestamps, the assistant row +1 ms — same-millisecond pair ties are
+    // impossible) + the retention trim (the calculator mirror). The old
+    // inline two-create transaction wrote schema-default createdAt (the
+    // pair could tie) and never trimmed (the table grew unboundedly).
     const lastUserMessage = [...body.messages]
       .reverse()
       .find((m) => m.role === "user");
-    const created = await db.$transaction([
-      db.aiChatMessage.create({
-        data: {
-          userId: user.id,
-          role: "user",
-          content: lastUserMessage ? lastUserMessage.content : "",
-          surface: body.surface,
-        },
+    const assistantRow = await db.$transaction((tx) =>
+      persistTranscriptPair(tx, user.id, {
+        userContent: lastUserMessage ? lastUserMessage.content : "",
+        assistantContent: capPersistedContent(content),
+        surface: body.surface,
       }),
-      db.aiChatMessage.create({
-        data: {
-          userId: user.id,
-          role: "assistant",
-          // S122/BW6: the provider reply is capped at write — the only
-          // unbounded persisted field at this boundary.
-          content: capPersistedContent(content),
-          surface: body.surface,
-        },
-      }),
-    ]);
-    const assistantRow = created[1];
+    );
 
     return NextResponse.json({
       message: {

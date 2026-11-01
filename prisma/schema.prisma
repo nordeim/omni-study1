@@ -159,7 +159,7 @@ model Assignment {
   subjectId   String?
   dueDate     DateTime?
   // S6-E reference row fields
-  type        String    @default("homework") // homework | essay | project | reading | lab | presentation | other
+  type        String    @default("homework") // homework | essay | project | reading | lab | presentation | other | worksheet (S126/CA18 — matches validation.ts, which always had it)
   progress    Int       @default(0) // 0..100
   priority    String    @default("medium") // low | medium | high | urgent
   createdAt   DateTime  @default(now())
@@ -443,5 +443,8 @@ model RumEvent {
   // pair let a second user's beacon post OVERWRITE the first user's row
   // (the one write path violating the ownership-by-construction invariant).
   @@unique([userId, sessionId, metric])
-  @@index([userId])
+  // S126/CA19: @@index([userId]) REMOVED — the user-scoped unique's
+  // leftmost column already serves every userId-prefixed lookup; the
+  // separate index was pure write amplification on the hottest table
+  // (the 1000-budget beacon upserts).
 }

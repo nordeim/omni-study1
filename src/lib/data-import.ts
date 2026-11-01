@@ -1,3 +1,13 @@
+import {
+  ASSIGNMENT_PRIORITIES,
+  ASSIGNMENT_TYPES,
+  CARD_DIFFICULTIES,
+  CHAT_ROLES,
+  CHAT_SURFACES,
+  REPEATS,
+  TASK_PRIORITIES,
+} from "./validation";
+
 // ---------------------------------------------------------------------------
 // The data-import seam (S23/ADR-021). Pure — unit-pinned by
 // tests/data-import.test.ts. parseImportEnvelope turns a downloaded (or
@@ -133,6 +143,25 @@ const KNOWN_COLLECTIONS = new Set<string>(EXPORT_COLLECTIONS);
 
 function isPlainObject(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+/** S126/CA2 — the ONE row-id validator (the s126 persistence audit's B-M2).
+ * The import route's inline copy checked only `typeof id === "string"` while
+ * this seam rejected empty ids — twin validators that had drifted, and the
+ * ROUTE (the production path) was the lenient one: an `id: ""` row imported
+ * and minted a row with an empty-string primary key no
+ * /api/[collection]/[id] route can ever address. Both call sites now share
+ * THIS function (the BW8 single-source doctrine, extended from the FK maps
+ * to the row-id rule). Returns the rejection message or null. */
+export function importRowIdError(collection: string, row: unknown): string | null {
+  if (!isPlainObject(row)) {
+    return `Collection "${collection}" contains a row that is not an object.`;
+  }
+  const id = row.id;
+  if (typeof id !== "string" || id.length === 0) {
+    return `Collection "${collection}" contains a row without a usable string id.`;
+  }
+  return null;
 }
 
 function stripSecrets(row: ImportRow): ImportRow {
@@ -285,13 +314,11 @@ function finish(rawData: Record<string, unknown>): ImportParseResult {
     const seen = new Set<string>();
     const normalized: ImportRow[] = [];
     for (const row of raw) {
-      if (!isPlainObject(row)) {
-        return { ok: false, error: `Collection "${collection}" contains a row that is not an object.` };
-      }
-      const id = row.id;
-      if (typeof id !== "string" || id.length === 0) {
-        return { ok: false, error: `Collection "${collection}" contains a row without a usable string id.` };
-      }
+      // S126/CA2: the shared validator (the route's loop calls the same
+      // function — one rule, no drift).
+      const idError = importRowIdError(collection, row);
+      if (idError !== null) return { ok: false, error: idError };
+      const id = (row as ImportRow).id as string;
       if (seen.has(id)) {
         return {
           ok: false,
@@ -389,6 +416,137 @@ function fieldCapFor(collection: string, field: string): number {
   return IMPORT_FIELD_MAX_CHARS;
 }
 
+// ---- S126/CA14: the import's domain caps -------------------------------------
+// The per-row guard historically checked ONLY primitive types, string caps,
+// and the files rules — a hand-edited "backup" stored rows that violated
+// every route-enforced invariant (grades 900/100 rendering 900%, maxScore 0
+// feeding NaN into the GPA math, progress 500, dayOfWeek 99, out-of-
+// vocabulary enums breaking the badge/color meta maps, non-JSON strings in
+// the JSON columns throwing in the client parse). The caps below are the
+// CHEAP time-independent invariants — everything with no clock/state
+// dependence — and the vocabularies come from validation.ts's single
+// source (the enums the routes themselves enforce).
+
+/** Enum vocabularies keyed by collection.field (validation.ts's own sets). */
+const ENUM_VOCABULARIES: Record<string, readonly string[]> = {
+  "tasks.priority": TASK_PRIORITIES,
+  "tasks.repeat": REPEATS,
+  "assignments.type": ASSIGNMENT_TYPES,
+  "assignments.priority": ASSIGNMENT_PRIORITIES,
+  "cards.difficulty": CARD_DIFFICULTIES,
+  "chatMessages.role": CHAT_ROLES,
+  "chatMessages.surface": CHAT_SURFACES,
+};
+
+/** The JSON-string columns (the schema's `// JSON ...` family) — the
+ *  client JSON.parses every one of them. */
+const JSON_STRING_FIELDS: Record<string, readonly string[]> = {
+  tasks: ["subtasks"],
+  practiceTests: ["questions", "topics"],
+  events: ["reminders"],
+  notes: ["tags"],
+  studyGroups: ["members"],
+};
+
+function checkDomainCaps(collection: string, row: ImportRow, index: number): void {
+  // The grades pair (the BZ6 route guard, shared by the third entry point):
+  // an absent maxScore means the CREATE default 100 (the honest row state —
+  // a bare 150 is honestly "150 of the default 100" and rejected).
+  if (collection === "grades") {
+    const score = row.score;
+    const maxScore = row.maxScore;
+    if (typeof score === "number" && score < 0) {
+      throw new ImportRowError(collection, index, 'field "score" must be 0 or greater.');
+    }
+    if (maxScore !== undefined && maxScore !== null) {
+      if (typeof maxScore !== "number" || maxScore <= 0) {
+        throw new ImportRowError(
+          collection,
+          index,
+          'field "maxScore" must be a number greater than 0 (the Grade Tracker divides by it).',
+        );
+      }
+      if (typeof score === "number" && score > maxScore) {
+        throw new ImportRowError(
+          collection,
+          index,
+          'field "score" cannot be higher than "maxScore" (the same guard every create route enforces).',
+        );
+      }
+    } else if (typeof score === "number" && score > 100) {
+      throw new ImportRowError(
+        collection,
+        index,
+        'field "score" cannot be higher than the default maxScore of 100.',
+      );
+    }
+  }
+
+  if (collection === "assignments") {
+    const progress = row.progress;
+    if (progress !== undefined && progress !== null) {
+      if (typeof progress !== "number" || progress < 0 || progress > 100) {
+        throw new ImportRowError(
+          collection,
+          index,
+          'field "progress" must be a number between 0 and 100.',
+        );
+      }
+    }
+  }
+
+  if (collection === "timetableClasses") {
+    const dayOfWeek = row.dayOfWeek;
+    if (dayOfWeek !== undefined && dayOfWeek !== null) {
+      if (typeof dayOfWeek !== "number" || dayOfWeek < 0 || dayOfWeek > 6) {
+        throw new ImportRowError(
+          collection,
+          index,
+          'field "dayOfWeek" must be a number between 0 (Monday) and 6 (Sunday).',
+        );
+      }
+    }
+  }
+
+  for (const [field, vocabulary] of Object.entries(ENUM_VOCABULARIES)) {
+    const [owner, key] = field.split(".");
+    if (owner !== collection) continue;
+    const value = row[key];
+    if (value === undefined || value === null) continue;
+    if (typeof value !== "string" || !vocabulary.includes(value)) {
+      throw new ImportRowError(
+        collection,
+        index,
+        `field "${key}" must be one of: ${vocabulary.join(", ")}.`,
+      );
+    }
+  }
+
+  const jsonFields = JSON_STRING_FIELDS[collection];
+  if (jsonFields) {
+    for (const field of jsonFields) {
+      const value = row[field];
+      if (value === undefined || value === null) continue;
+      if (typeof value !== "string") {
+        throw new ImportRowError(
+          collection,
+          index,
+          `field "${field}" must be a JSON string (the export format serializes the array).`,
+        );
+      }
+      try {
+        JSON.parse(value);
+      } catch {
+        throw new ImportRowError(
+          collection,
+          index,
+          `field "${field}" is not valid JSON — re-export a fresh backup and try again.`,
+        );
+      }
+    }
+  }
+}
+
 /** Validate one imported row against the export format's primitive-value
  *  contract + the files-specific link rules. Throws ImportRowError (the
  *  route maps it to a 400 with the message as the actionable copy). */
@@ -397,6 +555,7 @@ export function sanitizeImportRow(
   row: ImportRow,
   index = 0,
 ): ImportRow {
+  checkDomainCaps(collection, row, index);
   for (const [field, value] of Object.entries(row)) {
     if (value === null) continue;
     const kind = typeof value;

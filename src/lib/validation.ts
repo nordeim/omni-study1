@@ -93,9 +93,25 @@ export function normalizeHhmmForInput(value: string): string {
   return `0${match[1]}:${match[2]}`;
 }
 
-const TASK_PRIORITIES = ["none", "low", "medium", "high"] as const;
-const ASSIGNMENT_PRIORITIES = ["low", "medium", "high", "urgent"] as const;
-const REPEATS = ["none", "daily", "weekly", "monthly"] as const;
+export const TASK_PRIORITIES = ["none", "low", "medium", "high"] as const;
+export const ASSIGNMENT_PRIORITIES = ["low", "medium", "high", "urgent"] as const;
+export const REPEATS = ["none", "daily", "weekly", "monthly"] as const;
+// S126/CA14: the vocabulary single-source — the route schemas AND the
+// import seam's domain caps consume the SAME arrays (the twin-validator
+// hazard the s126 audit closed for the row-id rule, applied to the enums).
+export const ASSIGNMENT_TYPES = [
+  "homework",
+  "essay",
+  "project",
+  "reading",
+  "lab",
+  "presentation",
+  "other",
+  "worksheet",
+] as const;
+export const CARD_DIFFICULTIES = ["easy", "medium", "hard"] as const;
+export const CHAT_ROLES = ["user", "assistant"] as const;
+export const CHAT_SURFACES = ["assistant", "solver"] as const;
 
 // ---- auth ------------------------------------------------------------------
 
@@ -232,7 +248,7 @@ export const assignmentSchema = z.object({
   subjectId: nullableId,
   dueDate: optionalDate,
   type: z
-    .enum(["homework", "essay", "project", "reading", "lab", "presentation", "other", "worksheet"])
+    .enum(ASSIGNMENT_TYPES)
     .optional()
     .default("homework"),
   progress: z.number().int().min(0).max(100).optional().default(0),
@@ -386,7 +402,7 @@ export const flashcardSchema = z.object({
   deckId: idField.optional(),
   front: z.string().min(1).max(2000),
   back: z.string().min(1).max(2000),
-  difficulty: z.enum(["easy", "medium", "hard"]).optional().default("medium"),
+  difficulty: z.enum(CARD_DIFFICULTIES).optional().default("medium"),
   mastered: z.boolean().optional().default(false),
 });
 
@@ -516,13 +532,13 @@ export const aiChatSchema = z.object({
   messages: z
     .array(
       z.object({
-        role: z.enum(["user", "assistant"]),
+        role: z.enum(CHAT_ROLES),
         content: z.string().min(1).max(10_000),
       }),
     )
     .min(1)
     .max(40),
-  surface: z.enum(["assistant", "solver"]).optional().default("assistant"),
+  surface: z.enum(CHAT_SURFACES).optional().default("assistant"),
 });
 
 export const mathSolveSchema = z.object({

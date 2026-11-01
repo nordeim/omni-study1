@@ -1,9 +1,9 @@
 # Omni-Study1 — Remediation Plan & Execution Record
 
-> **Status: COMPLETE through Batch BY (session-124) — ZERO standing debt.** Every batch below has
+> **Status: COMPLETE through Batch CA (session-126) — ZERO standing debt.** Every batch below has
 > been executed TDD-style (spec-red → fix → spec-green) and verified:
-> **1113/1113 Vitest unit**, **523/523 Playwright e2e** across the 5-chunk
-> cold map (137+153+71+92+70, 30 spec files censused exactly once; the
+> **1145/1145 Vitest unit**, **538/538 Playwright e2e** across the 5-chunk
+> cold map (142+161+71+93+71, 30 spec files censused exactly once; the
 > per-chunk count includes that chunk's auth setup), lint clean,
 > `tsc --noEmit` clean (with `noUnusedLocals`/`noUnusedParameters` — the
 > S121/BV16 machine guard), production build green with the standalone asset

@@ -96,3 +96,78 @@ export function extractJsonBlock(text: string): unknown {
     }
   }
 }
+
+// ---------------------------------------------------------------------------
+// S126/CA1 — the transcript pair write + the retention trim (the s126
+// persistence audit's B-M1 + B-L1). Two defects shared by both write sites
+// (chat + math/solve): (1) the pair was written with schema-default
+// createdAt — two sub-millisecond inserts inside ONE transaction share a
+// millisecond, so any createdAt-only ordering could render the reply ABOVE
+// its question; (2) nothing trimmed aiChatMessage, so the table grew
+// unboundedly while the GET's take: 500 only ever surfaced the OLDEST
+// window (fixed at the route). The helper owns both: explicit pair
+// timestamps (the assistant row +1 ms — deterministic under ANY tiebreak)
+// and the calculator-history retention trim (BZ10's transactional,
+// id-tiebroken form). Both call sites are successful-reply-only (the S13
+// doctrine: a failed send bounces the composer, no orphan rows).
+// ---------------------------------------------------------------------------
+
+import type { Prisma } from "@prisma/client";
+import type { PrismaClient } from "@prisma/client";
+
+/** The transcript retention window — mirrors calculator history's
+ *  HISTORY_WINDOW (BW5): the newest 500 rows persist, older rows trim. */
+export const TRANSCRIPT_WINDOW = 500;
+
+type TranscriptTx = Prisma.TransactionClient | PrismaClient;
+
+/** Write the user+assistant pair with deterministic ordering, then trim the
+ *  account's transcript to the newest TRANSCRIPT_WINDOW rows. Returns the
+ *  assistant row (the chat route answers with it). */
+export async function persistTranscriptPair(
+  tx: TranscriptTx,
+  userId: string,
+  input: { userContent: string; assistantContent: string; surface: string },
+): Promise<{ id: string; role: string; content: string; createdAt: Date }> {
+  // Explicit pair timestamps: the user row at `base`, the assistant row at
+  // base + 1 ms — same-millisecond ties are impossible for the pair, so
+  // every ordering (with or without an id tiebreak) renders the question
+  // above its answer.
+  const base = new Date();
+  await tx.aiChatMessage.create({
+    data: {
+      userId,
+      role: "user",
+      content: input.userContent,
+      surface: input.surface,
+      createdAt: base,
+    },
+  });
+  const created = await tx.aiChatMessage.create({
+    data: {
+      userId,
+      role: "assistant",
+      content: input.assistantContent,
+      surface: input.surface,
+      createdAt: new Date(base.getTime() + 1),
+    },
+  });
+  // The retention trim (the BZ10 calculator form): count → skip → delete
+  // inside the SAME transaction, id-tiebroken so same-millisecond ties trim
+  // deterministically (an older twin never outlives a newer one).
+  const total = await tx.aiChatMessage.count({ where: { userId } });
+  if (total > TRANSCRIPT_WINDOW) {
+    const stale = await tx.aiChatMessage.findMany({
+      where: { userId },
+      orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+      skip: TRANSCRIPT_WINDOW,
+      select: { id: true },
+    });
+    if (stale.length > 0) {
+      await tx.aiChatMessage.deleteMany({
+        where: { userId, id: { in: stale.map((row) => row.id) } },
+      });
+    }
+  }
+  return created;
+}

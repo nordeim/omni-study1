@@ -429,3 +429,227 @@ test.describe("S125/BZ5: the factory write budget (600/15-min)", () => {
     expect(anon.status()).toBe(401);
   });
 });
+
+// ---------------------------------------------------------------------------
+// S126/CA1 · the AI transcript GET serves the NEWEST 500 (the s126
+// persistence audit's B-M1): the route read `orderBy createdAt asc, take
+// 500` — an ascending sort capped at 500 selects the OLDEST window, so past
+// 500 rows every post-send refresh REPLACED the store with a stale window
+// and the just-sent exchange vanished. The calculator route already shipped
+// the correct form (desc + take + reverse). The pin rides a FRESH TEST-NET
+// user (the BZ5 lesson — the demo user is never mutated): import 505
+// chatMessages with strictly-increasing createdAt, then GET the transcript.
+// ---------------------------------------------------------------------------
+test.describe("S126/CA1 · the AI transcript window is the newest 500", () => {
+  test("505 imported messages → GET answers 500, the NEWEST window (RED pre-fix: the OLDEST 500)", async ({ request }) => {
+    test.setTimeout(120_000);
+    const stamp = Date.now();
+    const email = `s126-ca1-${stamp}@studyflow.app`;
+    const ip = "192.0.2.126";
+
+    const reg = await request.post("/api/auth/register", {
+      headers: { "x-forwarded-for": ip },
+      data: { email, password: "Fresh1234!", name: "S126 CA1 Probe" },
+    });
+    expect(reg.ok(), `register failed: ${reg.status()}`).toBe(true);
+    const { code } = (await reg.json()) as { code: string };
+    const verify = await request.post("/api/auth/verify-email", {
+      headers: { "x-forwarded-for": ip },
+      data: { email, code },
+    });
+    expect(verify.ok()).toBe(true);
+    const login = await request.post("/api/auth/login", {
+      headers: { "x-forwarded-for": ip },
+      data: { email, password: "Fresh1234!" },
+    });
+    expect(login.ok()).toBe(true);
+
+    // 505 messages, createdAt strictly increasing — the newest 500 are
+    // rows 5..504; the oldest 5 are the ones a correct window drops.
+    const base = Date.now() - 505_000;
+    const chatMessages = Array.from({ length: 505 }, (_, i) => ({
+      id: `s126-ca1-msg-${i}`,
+      role: i % 2 === 0 ? "user" : "assistant",
+      content: `CA1 window probe ${i}`,
+      surface: "assistant",
+      createdAt: new Date(base + i * 1000).toISOString(),
+      updatedAt: new Date(base + i * 1000).toISOString(),
+    }));
+    const res = await request.post("/api/import/data", {
+      data: {
+        format: "studyflow-data-export",
+        version: 1,
+        exportedAt: "2026-11-02T00:00:00.000Z",
+        user: { id: "u-ca1", email, name: "S126 CA1 Probe" },
+        counts: {},
+        data: { chatMessages },
+      },
+    });
+    expect(res.ok(), `import failed: ${res.status()}`).toBe(true);
+
+    const messages = (await (await request.get("/api/ai/messages")).json()) as Array<{
+      id: string;
+    }>;
+    // RED pre-fix: length 500 but the OLDEST window (row[0] = msg-0).
+    expect(messages.length).toBe(500);
+    expect(messages[0].id, "the window must start at the newest-500 boundary").toBe(
+      "s126-ca1-msg-5",
+    );
+    expect(messages[499].id).toBe("s126-ca1-msg-504");
+    expect(messages.some((m) => m.id === "s126-ca1-msg-0")).toBe(false);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// S126/CA5 · the factory collection lists serve the NEWEST 500 (the s126
+// persistence audit's B-L1/B-M1 note): the BZ13 `take: 500` shipped on the
+// ASCENDING orderBy — the same oldest-window consequence on all 16
+// collection routes. The fix mirrors CA1: fetch desc + take, reverse to the
+// configured asc presentation, id-tiebreak. Fresh TEST-NET user, 505 tasks.
+// ---------------------------------------------------------------------------
+test.describe("S126/CA5 · the factory list window is the newest 500", () => {
+  test("505 imported tasks → GET /api/tasks answers 500, the NEWEST window (RED pre-fix: the OLDEST 500)", async ({ request }) => {
+    test.setTimeout(120_000);
+    const stamp = Date.now();
+    const email = `s126-ca5-${stamp}@studyflow.app`;
+    const ip = "192.0.2.127";
+
+    const reg = await request.post("/api/auth/register", {
+      headers: { "x-forwarded-for": ip },
+      data: { email, password: "Fresh1234!", name: "S126 CA5 Probe" },
+    });
+    expect(reg.ok(), `register failed: ${reg.status()}`).toBe(true);
+    const { code } = (await reg.json()) as { code: string };
+    const verify = await request.post("/api/auth/verify-email", {
+      headers: { "x-forwarded-for": ip },
+      data: { email, code },
+    });
+    expect(verify.ok()).toBe(true);
+    const login = await request.post("/api/auth/login", {
+      headers: { "x-forwarded-for": ip },
+      data: { email, password: "Fresh1234!" },
+    });
+    expect(login.ok()).toBe(true);
+
+    const base = Date.now() - 505_000;
+    const tasks = Array.from({ length: 505 }, (_, i) => ({
+      id: `s126-ca5-task-${i}`,
+      title: `CA5 window probe ${i}`,
+      completed: false,
+      createdAt: new Date(base + i * 1000).toISOString(),
+      updatedAt: new Date(base + i * 1000).toISOString(),
+    }));
+    const res = await request.post("/api/import/data", {
+      data: {
+        format: "studyflow-data-export",
+        version: 1,
+        exportedAt: "2026-11-02T00:00:00.000Z",
+        user: { id: "u-ca5", email, name: "S126 CA5 Probe" },
+        counts: {},
+        data: { tasks },
+      },
+    });
+    expect(res.ok(), `import failed: ${res.status()}`).toBe(true);
+
+    const list = (await (await request.get("/api/tasks")).json()) as Array<{
+      id: string;
+      title: string;
+    }>;
+    // RED pre-fix: length 500 but the OLDEST window (row[0] = task-0).
+    expect(list.length).toBe(500);
+    expect(list[0].id, "the window must start at the newest-500 boundary").toBe(
+      "s126-ca5-task-5",
+    );
+    expect(list[499].id).toBe("s126-ca5-task-504");
+    expect(list.some((t) => t.id === "s126-ca5-task-0")).toBe(false);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// S126/CA2 · the import route rejects empty ids and null collections (the
+// s126 persistence audit's B-M2): the route's inline validator checked only
+// `typeof id === "string"` — an `id: ""` row imported and minted a row with
+// an empty-string primary key no /api/[collection]/[id] route can address,
+// while the unit-pinned seam (parseImportEnvelope) rejected it — twin
+// validators that had drifted. The fix: one shared row-id validator + the
+// null-collection leg merged into the array check. Fresh TEST-NET user (the
+// RED run's residue stays on the disposable account).
+// ---------------------------------------------------------------------------
+test.describe("S126/CA2 · the import rejects empty ids and null collections", () => {
+  test("an id:\"\" row 400s and a null collection 400s (RED pre-fix: 200 + an empty-PK row mints)", async ({ request }) => {
+    test.setTimeout(120_000);
+    const stamp = Date.now();
+    const email = `s126-ca2-${stamp}@studyflow.app`;
+    const ip = "192.0.2.128";
+
+    const reg = await request.post("/api/auth/register", {
+      headers: { "x-forwarded-for": ip },
+      data: { email, password: "Fresh1234!", name: "S126 CA2 Probe" },
+    });
+    expect(reg.ok(), `register failed: ${reg.status()}`).toBe(true);
+    const { code } = (await reg.json()) as { code: string };
+    const verify = await request.post("/api/auth/verify-email", {
+      headers: { "x-forwarded-for": ip },
+      data: { email, code },
+    });
+    expect(verify.ok()).toBe(true);
+    const login = await request.post("/api/auth/login", {
+      headers: { "x-forwarded-for": ip },
+      data: { email, password: "Fresh1234!" },
+    });
+    expect(login.ok()).toBe(true);
+
+    const envelope = (data: Record<string, unknown>) => ({
+      format: "studyflow-data-export",
+      version: 1,
+      exportedAt: "2026-11-02T00:00:00.000Z",
+      user: { id: "u-ca2", email, name: "S126 CA2 Probe" },
+      counts: {},
+      data,
+    });
+
+    // The empty-id row: 400 (RED pre-fix: 200, created 1 — a row no
+    // detail/update/delete route can ever address).
+    const emptyId = await request.post("/api/import/data", {
+      data: envelope({
+        tasks: [
+          {
+            id: "",
+            title: "CA2 empty-id probe",
+            createdAt: "2026-11-01T00:00:00.000Z",
+            updatedAt: "2026-11-01T00:00:00.000Z",
+          },
+        ],
+      }),
+    });
+    expect(emptyId.status()).toBe(400);
+
+    // The null collection: 400 — a null block is not an array (the seam's
+    // contract; RED pre-fix: silently skipped with a 200).
+    const nullCollection = await request.post("/api/import/data", {
+      data: envelope({ tasks: null }),
+    });
+    expect(nullCollection.status()).toBe(400);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// S126/CA8 · the input placeholder AA guard (the s126 shell audit's A-L4,
+// HONESTLY RESOLVED): the audit flagged text-muted-foreground as ≈#9ca3af
+// (2.5:1) — but the computed truth is hsl(220 9% 46%) = rgb(107,114,128) =
+// gray-500 = 4.82:1, ALREADY AA-compliant. The auditor trusted the input's
+// own "gray-400 placeholders" comment over the computed value (the AP-130
+// lesson class: comments are not ground truth). The real defect was the
+// misleading comment (now fixed); this pin LOCKS the compliant computed
+// value as a regression guard — green by design, pre- and post-fix.
+// ---------------------------------------------------------------------------
+test.describe("S126/CA8 · the input placeholder meets AA contrast", () => {
+  test("the /login email placeholder computes the AA-compliant gray-500 (4.82:1 on white)", async ({ page }) => {
+    await page.goto("/login");
+    await page.waitForLoadState("networkidle");
+    const color = await page.getByLabel("Email", { exact: true }).evaluate((el) => {
+      return getComputedStyle(el, "::placeholder").color;
+    });
+    expect(color).toBe("rgb(107, 114, 128)"); // gray-500 — 4.83:1 on white
+  });
+});

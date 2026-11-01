@@ -832,3 +832,31 @@ test.describe("view chrome (computed parity pins)", () => {
   });
 });
 
+
+// ---------------------------------------------------------------------------
+// S126/CA7 · nav links honor modified clicks (the s126 shell audit's A-L3):
+// the NavLink onClick called preventDefault() unconditionally, so
+// ⌘/Ctrl/Shift-click could never open a view in a new tab — the hrefs are
+// real, server-rewritten paths. The fix: the modified-click early return
+// before preventDefault(). A synthetic ctrl-click's default action never
+// fires navigation in the harness, so the discriminator is the SPA route:
+// pre-fix the handler navigated (URL moves to /Analytics); post-fix the
+// handler stands down (URL stays /Tasks).
+// ---------------------------------------------------------------------------
+test.describe("S126/CA7 · nav links honor modified clicks", () => {
+  test("a ctrl-click on a nav link does NOT fire the SPA navigation (RED pre-fix: the URL moves)", async ({ page }) => {
+    await page.goto("/Tasks");
+    await page.waitForFunction(() =>
+      document.documentElement.dataset.appHydrated === "true",
+    );
+    const link = page.locator('nav a[href="/Analytics"]').first();
+    await expect(link).toBeVisible();
+    await link.evaluate((el) =>
+      el.dispatchEvent(
+        new MouseEvent("click", { bubbles: true, cancelable: true, ctrlKey: true }),
+      ),
+    );
+    await page.waitForTimeout(600);
+    expect(new URL(page.url()).pathname).toBe("/Tasks");
+  });
+});

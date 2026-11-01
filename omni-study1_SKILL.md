@@ -25,7 +25,7 @@ tags:
 
 > **What this is:** the single-source-of-truth reference for working in
 > `nordeim/omni-study1`. Every fact below is verified against the codebase
-> (1656 tests green, re-anchored at the S125 update: 1127 Vitest unit [42 files] + 529 Playwright e2e [the 5-chunk census: 524 chromium specs + the per-chunk setup re-runs — 139+157+71+92+70]) — the census re-anchored through
+> (1683 tests green, re-anchored at the S126 update: 1145 Vitest unit [42 files] + 538 Playwright e2e [the 5-chunk census: 533 chromium specs + the per-chunk setup re-runs — 142+161+71+93+71]) — the census re-anchored through
 > the s117–s124 hardening cycles; the 2.0 baseline was 834 + 299 in six
 > chunks after the parity re-application + account-flow completion +
 > regression hardening).
@@ -215,7 +215,7 @@ font-semibold` + `h-5 w-5` accent icon; stat values `h3 text-3xl font-bold`
 (30px/36px, tracking normal — NOT leading-none/tracking-tight); empty-state
 titles `h3 text-xl` (20px); nav labels 16px with `w-5` icons; body `text-sm`.
 
-**Surface geometry (measured):** cards white, `1px solid #f1f5f9`
+**Surface geometry (measured):** cards white, `1px solid #e2e8f0` (slate-200 — S126/CA corrected; the sketch said slate-100)
 (slate-100), radius **16px** (`rounded-2xl` v3 semantics / `.sf-card`
 `border-radius: 1rem`), v3 `shadow-sm`, `p-6`; buttons radius **6px**
 (`rounded-md`); nav items `rounded-xl` → **12px**; login card ~16-20px.
@@ -351,12 +351,38 @@ export const { GET, POST } = makeCollectionRoutes(taskDelegate);
 // src/app/api/tasks/[id]/route.ts — same, but makeItemRoutes → { PATCH, DELETE }
 ```
 
-The factory provides: `requireUser()` auth → Zod parse → `where: { userId }`
-→ Prisma call → `{ error }` JSON on failure (never stack traces). Special
+The factory provides: `requireUser()` auth → the S125/BZ5 write budget
+(`checkRateLimit(\`write:\${user.id}\`, 600)` on every POST, after auth +
+BEFORE readJson) → Zod parse → `where: { userId }` → Prisma call (the S126/CA5
+newest-window list: desc + take 500 + reverse, id-tiebroken) → `{ error }`
+JSON on failure (never stack traces). The 16 delegates: 15
+`makeOwnedDelegate` configs (taskList, task, subject, assignment, exam,
+event, timetable, notebook, note, flashcardDeck, practiceTest, studyGroup,
+grade, focusSession, holiday) + `flashcardCardDelegate` (deck-scoped — no
+userId column); `OWNED_FKS` maps 10 FK fields. Special
 routes outside the factory: `auth/*`, `files/*` (multipart ≤ 2 MiB base64),
 `settings/preferences`, `calculator/history`, `ai/chat`, `ai/messages`,
 `ai/generate-cards`, `ai/generate-questions`, `math/solve`, `import/data`,
 `export/data`, `rum`, `rum/export`, `health`.
+
+**The recent-batch seam references (S121–S126, the SKILL-doc sync the S126
+digest closed):** `effectiveDeckId` (the flashcards render-derived selection
+— the S123/BX8 fallback + the S125/BZ1 guard/payload fix: with ≥1 deck and
+no explicit click the FIRST deck is the real target, never the raw null
+`selectedDeckId`); `removeOneMember(members, email, name)`
+(`src/lib/group-members.ts` — the S125/BZ4 composite-occurrence removal);
+`checkGradeRangeMerge(existing, writes)` (the S125/BZ6 grade beforeWrite
+guard — one effective-pair compare owning every PATCH leg); `FILE_METADATA`
+(`src/lib/server/http.ts`, the S125/BZ8 shared file-item select — route
+files cannot export shared symbols); `persistTranscriptPair` +
+`TRANSCRIPT_WINDOW = 500` (`src/lib/server/ai.ts`, the S126/CA1 pair write
+[explicit timestamps, assistant +1 ms] + the retention trim); 
+`importRowIdError` (the S126/CA2 shared row-id validator — the route AND
+the seam's parse both call it, the BW8 single-source doctrine extended from
+the FK maps to the validation rules); the S126/CA14 domain caps in
+`sanitizeImportRow` (the grades pair / progress / dayOfWeek / the enum
+vocabularies — imported from validation.ts's exported single-source arrays —
+/ the JSON-column parseability).
 
 **Seed** (`prisma/seed.ts`): idempotent (early-returns when the demo user
 exists — ⚠️ changing seed VALUES requires deleting `db/e2e.db`, see §10);
@@ -443,7 +469,7 @@ notes, decks, grades; `avatarEmoji: ""` (reference default state).
 | AP-44 | HIGH | Inline-style gradients/tints authored for light-mode parity never re-theme: the overdue banner (red-50→orange-50), MyDay amber card, timetable today-header + mobile chips + calendar today cell (softest/empty-from tints), sidebar clock chip (softest→adjacent + deep/strong text), Settings selected theme cards; analytics SVG charts hardcode light fills (#e2e8f0 area, #f1f5f9 gridlines, #666 axis labels) | measured dark flashbulbs/contrast 1.0–1.6 on those surfaces. Fix idiom: globals.css classes with `.dark` washes (`.sf-overdue-banner` red-800/orange-900, `.sf-amber-card` amber-800/orange-900, `.sf-today-tint`/`-cell` + `.sf-clock-chip` + `.sf-selected-tint` soft-dark at 0.3–0.35 alpha, text `--sf-primary-strong-dark` violet-300) + `dark:fill-slate-800`/`dark:fill-slate-400`/`dark:stroke-slate-800` SVG utilities (CSS presentation properties override SVG attributes) | S10-2…S10-7 (session-10) |
 | AP-45 | MEDIUM | Assuming the reference is the dark-mode measuring stick | measured: the reference's Dark/System options are a Base44 platform NO-OP — `html.dark` + dark `body` only; its canvas gradient, glass sidebar, and white cards stay light (VLM read its "dark" dashboard as "properly themed light mode"). The clone's full dark mode is the documented superset; dark parity standard = internal consistency (the dark sweep + the 10-spec pin family) | governing discovery (session-10) |
 | AP-46 | LOW | Theme-mode mutation in specs risks poisoning the shared user record for later spec files | fix pattern: PATCH `/api/settings/preferences` `{ themeMode }` via `page.request` (the storageState cookie rides the request context — no UI navigation), `waitForFunction(html.classList.contains("dark"))` to gate hydration, and an `afterEach` that PATCHes light back and awaits the response — a failed pin can never leak dark mode into the next spec file (the S4 accent-restore lesson, per-hook) | `tests/e2e/dark-mode.spec.ts` (session-10) |
-| AP-47 | CRITICAL | Theme application that waits for the auth round-trip: dark users flash light on every hard load (or see a fully light page when `/api/auth/me` stalls), the login route never themes (its `dark:*` variants are dead code there — dark-OS fresh visitors get light), and System mode goes stale on runtime OS switches (no `matchMedia` change listener) | measured with a network-route abort of `/api/auth/me` + `agent-browser set media dark/light` + a fresh-context login probe. Fix: the next-themes shape — `applyToDocument` caches `{ mode, accent }` to `localStorage["sf-theme"]` (format unit-pinned), a self-contained inline boot script in `<head>` resolves the cached mode (absent → system fallback) BEFORE first paint, `installSystemThemeTracking()` re-applies on OS change when mode==system, sign-out clears the cache, and a plain non-media `meta[name=theme-color]` (appended after Next's media variants — last match wins) tracks the effective mode | `THEME_BOOT_SCRIPT` + `themeCachePayload`/`parseThemeCache` (session-11) |
+| AP-47 | CRITICAL | Theme application that waits for the auth round-trip: dark users flash light on every hard load (or see a fully light page when `/api/auth/me` stalls), the login route never themes (its `dark:*` variants are dead code there — dark-OS fresh visitors get light), and System mode goes stale on runtime OS switches (no `matchMedia` change listener) | measured with a network-route abort of `/api/auth/me` + `agent-browser set media dark/light` + a fresh-context login probe. Fix: the next-themes shape — `applyToDocument` caches `{ mode, accent }` to `localStorage["sf-theme"]` (format unit-pinned), a self-contained inline boot script in `<head>` resolves the cached mode (absent → system fallback) BEFORE first paint, `installSystemThemeTracking()` re-applies on OS change when mode==system, sign-out clears the cache, and a plain non-media `meta[name=theme-color]` (appended after Next's media variants — last match wins) tracks the effective mode | `THEME_BOOT_SCRIPT` + `themeCachePayload`/`parseThemeCache` (session-11) | (the SANCTIONED `dangerouslySetInnerHTML` exception in layout.tsx — a compile-time constant, no user input; the §16 'no dangerouslySetInnerHTML' checklist line is honored with this ONE documented exception)
 | AP-48 | HIGH | Accent-driven TEXT in dark mode left on the light-mode 600/500-level tones: the active nav item (inline `rgb(var(--sf-primary-strong))` + icon), ViewAllLink (`text-sf-primary-strong` no dark pair), the timetable mobile today chip (`bg-sf-primary-soft` — a mobile-only surface the desktop sweep never rendered), the selected avatar swatch (inline soft tint) — all pass the 2.2 contrast bar under the DEFAULT violet (violet-600 is the palette's darkest 600, 3.13:1) which is exactly why the session-10 sweep called them clean | the 7-accent sweep (`scripts/accent-dark-sweep.mjs`, desktop + mobile passes, WARN bar at 3.2 for accent text) + direct DOM probes. Fix: the repo convention — 300-level `--sf-primary-strong-dark` for dark accent text (`.sf-nav-active{,-icon}` classes, `dark:text-sf-primary-strong-dark`, `dark:bg-sf-primary-soft-dark` chips, `.sf-swatch-selected` wash); light values byte-identical | S11-2..S11-5 (session-11) |
 | AP-49 | MEDIUM | Sweeping at ONE viewport / ONE accent / one threshold: the S10 dark sweep was desktop-only + violet-only + a 2.2 bar — it structurally could not find mobile-only surfaces (the timetable accordion's today chip), accent-dependent failures, or the 2.2–3.2 accent-text band | extend the audit matrix: every accent × desktop AND mobile viewports (mobile-only surfaces render below `md:hidden`), plus a WARN tier for accent text; ALSO beware sweep false-negatives from size cutoffs (flashbulb detectors with a ≥40×20 filter miss small pills) and design-intended dimming (adjacent-month days at 2.36 in dark mirror the light 2.2 — verify the LIGHT equivalent before "fixing") | `scripts/accent-dark-sweep.mjs` (session-11) |
 | AP-50 | CRITICAL | State encoded ONLY by fills/tints is lost in forced-colors (Windows HC) AND print — both engines strip author colors: the calendar selected day, today markers, the mode-switch active segment, the active tab, the active nav item, and the slider progress all became indistinguishable (text stayed readable everywhere — 0 invisible-text findings — which is exactly why nothing LOOKED broken) | measured with Chromium `forcedColors: active` emulation over all 20 views + a reference baseline pass (`scripts/forced-colors-sweep.mjs` — the reference degrades IDENTICALLY, so these are superset fixes). Fix idiom: system-color outlines (`2px solid Highlight`, inset -2px) scoped to stable containers, `font-weight: 700` for the active nav (+ its `span` — inherited weights lose to inner utilities), `forced-color-adjust: none` ONLY for essential non-text graphics (WCAG 1.4.11 — the slider fill) | the `@media (forced-colors: active)` block (session-12) |
@@ -582,7 +608,7 @@ tail -40 dev.log                            # request traces + prisma queries
 ```bash
 bun run lint && bun run typecheck && bun run test && bun run build && bun run test:e2e
 ```
-Current green state (re-anchored at S124/BY): lint ✓ · tsc ✓ (`noImplicitAny` + `noUnusedLocals`/`noUnusedParameters` — the BV16 machine guard) · 1127 unit ✓ · build ✓ (the type gate live — `ignoreBuildErrors` removed) · 529 e2e ✓ (1656 green).
+Current green state (re-anchored at S126/CA): lint ✓ · tsc ✓ (`noImplicitAny` + `noUnusedLocals`/`noUnusedParameters` — the BV16 machine guard) · 1145 unit ✓ · build ✓ (the type gate live — `ignoreBuildErrors` removed) · 538 e2e ✓ (1683 green).
 
 **Full-suite chunk map** (one server-boot per chunk; the 10-min tool cap makes
 one-shot full runs unreliable — the 2.0 six-chunk map: chrome+s14 104 ·
@@ -827,7 +853,7 @@ provided).
 (full 50–950 ramp pinned in `@theme`); violet-100 #ede9fe, violet-800
 #5b21b6, violet-900 #4c1d95.
 
-**Surfaces:** card white / border #f1f5f9 / radius 16px; canvas gradient
+**Surfaces:** card white / border #e2e8f0 (slate-200) / radius 16px; canvas gradient
 (§4); sidebar `rgba(255,255,255,0.8)` + blur; dark mode slate-950 family +
 soft-dark accent tokens.
 
@@ -848,11 +874,14 @@ type ViewId = "dashboard" | "myday" | "tasks" | "calendar" | "events"
 type Accent = "violet" | "blue" | "green" | "orange" | "pink" | "red" | "teal";
 type ThemeMode = "light" | "dark" | "system";         // src/lib/theme.ts
 interface AccentToken { primary, primaryFg, soft, softDark, strong,
-  strongDark, deep, softest, softestAdjacent, gradientTo, avatarFrom,
-  avatarTo, emptyFrom, emptyTo: string }  // RGB triplets (17 fields / 17 CSS vars;
-  gradientTo = adjacent-hue 600 for brand chips + CTA — indigo-600 for
-  violet; avatarFrom/to = the lighter 400→adjacent-500 pair; emptyFrom/to
-  = the 100-level pair for the empty-state block — all measured, S4-G)
+  strongDark, deep, softest, softestAdjacent, gradientTo, gradientToStrong,
+  avatarFrom, avatarTo, emptyFrom, emptyTo, clockDate, clockDateDark, empty:
+  string }  // RGB triplets (17 fields / 17 CSS vars — S126/CA completed the
+  sketch: gradientToStrong = the adjacent-700 CTA hover stop [S5], clockDate/
+  clockDateDark = the sidebar clock-date pair, empty = the empty-state solid
+  [BV15]; gradientTo = adjacent-hue 600 for brand chips + CTA — indigo-600
+  for violet; avatarFrom/to = the lighter 400→adjacent-500 pair; emptyFrom/
+  to = the 100-level pair for the empty-state block — all measured, S4-G)
 interface EntityDelegate { model, createSchema, updateSchema, orderBy, ... }
 ```
 

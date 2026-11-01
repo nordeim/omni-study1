@@ -24,6 +24,7 @@ import {
   AI_DEADLINE_MS,
   capPersistedContent,
   extractAssistantContent,
+  persistTranscriptPair,
   withDeadline,
 } from "@/lib/server/ai";
 
@@ -78,24 +79,16 @@ export const POST = withUser(async (user, request) => {
     // had no clone counterpart). Mirrors the chat route's two-row
     // transaction, written ONLY on a successful reply (a failed solve
     // bounces the composer — no orphan rows, the S13 doctrine).
-    await db.$transaction([
-      db.aiChatMessage.create({
-        data: {
-          userId: user.id,
-          role: "user",
-          content: capPersistedContent(problem),
-          surface: "solver",
-        },
+    // S126/CA1: the shared pair write + retention trim (the chat route's
+    // twin — explicit timestamps so the pair can never tie, and the
+    // transcript bounded like calculator history).
+    await db.$transaction((tx) =>
+      persistTranscriptPair(tx, user.id, {
+        userContent: capPersistedContent(problem),
+        assistantContent: capPersistedContent(solution),
+        surface: "solver",
       }),
-      db.aiChatMessage.create({
-        data: {
-          userId: user.id,
-          role: "assistant",
-          content: capPersistedContent(solution),
-          surface: "solver",
-        },
-      }),
-    ]);
+    );
 
     return NextResponse.json({ solution });
   } catch (err: unknown) {

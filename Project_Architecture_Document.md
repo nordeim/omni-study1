@@ -1,4 +1,4 @@
-# StudyFlow (Omni-Study) — Master Project Architecture Document (PAD) v1.3.33
+# StudyFlow (Omni-Study) — Master Project Architecture Document (PAD) v1.3.34
 
 **Classification:** Internal Engineering Reference
 **Status:** DEFINITIVE, PRODUCTION-LOCKED BLUEPRINT
@@ -9,14 +9,19 @@
 
 ---
 
+#### Revision Block — v1.3.34 (Session-126 / Batch CA, Cycle 76)
+
+- `[SR]` The audit-driven hardening cycle (`docs/remediation-plan-session126.md`): **CA1** the AI transcript window fix (the GET's `asc + take: 500` served the OLDEST 500 rows — past 500 rows every post-send refresh replaced the store with a stale window and the just-sent exchange vanished while remaining in the DB and export; the calculator form on the GET [desc + take + reverse + the id tiebreak] + the shared `persistTranscriptPair` in `server/ai.ts` owning BOTH write sites [explicit pair timestamps, assistant +1 ms — same-millisecond pair ties impossible] + the 500-row retention trim; e2e-pinned via a 505-row import on a fresh TEST-NET user); **CA2** the import row-id single source (the route's inline twin had dropped the seam's empty-id guard — `id: ""` minted rows no detail route could address while the unit-pinned seam copy rejected them; ONE exported `importRowIdError` serves both call sites — the BW8 doctrine extended from maps to validation rules; the null-collection leg aligned to the seam's reject-not-skip contract); **CA3** the mobile chrome print guards (`print:hidden` on the fixed `lg:hidden` app bar + the offline pill — the print stylesheet hid only `aside`, and at portrait paper width the lg: query stops applying; e2e-pinned on the mobile viewport the print family never covered); **CA4** the auth view-transition focus (every sub-screen swap unmounted its trigger and dropped focus to `<body>` with no announcement — the incoming heading carries `tabIndex={-1}` + focus on every CHANGE, the initial mount skipped); **CA5** the factory list windows (the BZ13 `asc + take: 500` selected the OLDEST window on all 16 collection routes — the newest-window form + the id tiebreak everywhere `createdAt` orders [the calculator GET + all 20 export findManys]; e2e-pinned via the 505-task import); **CA6** the seed deck mapping repair (the biology cards lived in the calculus deck and the Spanish cards in the biology deck while the Spanish deck sat empty — the `[0,0,0,0,1,1]` indices corrected to the content's `[0,1,1,1,2,2]`; explicit distinct deck `createdAt` values make `decks[0]` deterministic — the S125 lesson-3 flake class dead at the root; SIX study pins re-anchored to the honest remediated counts); **CA7** the nav modified-click fix; **CA8** the placeholder AA guard (honestly resolved as a comment fix — hsl(220 9% 46%) computes to gray-500 rgb(107,114,128) = 4.82:1, ALREADY AA-compliant; the audit's 2.5:1 claim traced to the input's own stale "gray-400" comment; the pin locks the compliant computed value); **CA9** the Google button's reachable explanation; **CA10** the resend in-flight guard; **CA11** the reset missing-token message + the consumed-token URL cleanup; **CA12** the `formatShortWithYear` → `formatShortDate` rename; **CA13** the shared minute-gated `useNow` (two byte-identical 1s-commit hooks re-rendered both chrome trees ~60×/min for a minute-resolution display); **CA14** the import domain caps (the third entry point escaped every route guard — the grades pair/progress/dayOfWeek/enum vocabularies/JSON-column parseability now checked, riding validation.ts's own exported vocabularies — the single-source doctrine); **CA15** the compose SEED_DEMO fail-safe comment + the `NEXT_PUBLIC_SITE_URL` build-args hook; **CA16** the CLAUDE.md lint-attribution fix; **CA17** the OTP `randomInt` sampling; **CA18** the schema worksheet comment; **CA19** the redundant `RumEvent @@index([userId])` dropped (the user-scoped unique serves the prefix); **CA20** the DEPLOYMENT.md upgrade-path caution; **CA21** the `@theme inline` nomenclature reconciliation (the shipped directive is plain `@theme`); **CA22** the dead `export default LoginSurface` removed. The docs set: §8.1's Total row repaired (the setup double-count) + the changed rows re-measured, §12's three line counts re-measured, §3.3's Pattern A/B excerpts replaced with the shipped code + Pattern C's production gate, §3.2's parity-session count + greeting-clock + ui/ lists + worklog placement fixed, §5.1/§5.2's stat-class/card-border/accent-id corrections, §5.3's Radix list completed, ADR-002/004/008/016/017/018 reconciled, §11's avatarEmoji updated, the v1.3.32 retro-edit repaired. Three honest mid-run corrections (the CA5 `completed` field name, the CA3 attached-vs-visible wait, the README historical-row repair after a blanket replace over-reached — the lesson: census re-tags are per-line surgical edits, never blanket string replaces over a history-bearing table).
+- `[SR]` Current test census anchor (the v1.2.0 convention, re-anchored): **1145/1145 Vitest unit** (42 files — the S126 additions: data-import +18 [the shared row-id validator contract + the domain-cap rejection family]) + **538/538 cold-chunk e2e** (533 chromium specs in 30 files + the auth setup re-run per chunk; the 5-chunk map **142+161+71+93+71**, every chunk first-pass on the final tree; the per-file counts in §8.1 are script-derivable). Unit + e2e = **1683 green**.
+
 #### Revision Block — v1.3.33 (Session-125 / Batch BZ, Cycle 75)
 
-- `[SR]` The audit-driven hardening cycle (`docs/remediation-plan-session125.md`): **BZ1** the flashcards auto-select guard fix (the Add Card + AI Generate guards read the raw `selectedDeckId` while the S123/BX8 render model auto-selects the first deck — a first-visit user's dialog submit silently no-op'd, reproduced live in the DOM AND at the wire; both guards + payloads read `effectiveDeckId` now); **BZ2** the practice-tests AI call site joins the 120 s deadline family (`timeoutMs` + `isTimeoutError` — the only site without); **BZ3** the manage-notebooks surface converts DropdownMenu→Popover (the Rename/Delete buttons were nested inside `role="menuitem"` — a WAI-ARIA nested-interactive violation, menu keys skipped them and Tab closed the menu; the popover keeps the geometry, the actions are real tab stops, Escape restores focus); **BZ4** the duplicate-member removal removes ONE (the email-only filter deleted every duplicate sharing the address — the `removeOneMember` seam removes the first (email,name) composite); **BZ5** the factory write budget (`write:${user.id}` 600/15-min across all 16 collection POSTs — the S118/BS3 bounded-writes doctrine reaching the CRUD family; the exhaustion pin rides a FRESH TEST-NET-registered user: the first design's demo-budget exhaustion 429'd six later chunk tests because playwright runs spec files ALPHABETICALLY — s14 sorts before tasks.spec); **BZ6** the grade score≤maxScore ordering guard (the events BU22+BV1 pattern with the zod4-default amendment: the update schema owns NO `.check()` — `.partial()` injects the maxScore default, so the `checkGradeRangeMerge` beforeWrite seam owns EVERY combination through one effective-pair compare); **BZ7** the folder re-parent TOCTOU closed inside `$transaction` (the cycle check re-reads the chain inside it); **BZ8** the files/link metadata shape (`FILE_METADATA` moved to `server/http.ts` — route files cannot export shared symbols under Next's route-type validation; the link create answers the AI6 metadata shape); **BZ9** the register P2002 race answers the uniform 200 (the S120/BU14 enumeration oracle re-opened in the millisecond create-race window); **BZ10** the calculator-history trim runs in `$transaction` with an id-tiebroken orderBy; **BZ13** the factory `list` bounded (`take: 500`, the ai/messages convention — the export's own findManys stay independent, the completeness contract untouched); **BZ14** the dead note-rename dialog variant removed; **BZ15** the dead `formatClockShort` export removed; **BZ16** the FilesView boot-fetch loader dedup. **BZ11 RETRACTED** (the two "corrupted log tags" were display-pipeline artifacts — the hex dump + byte-constructed searches proved `[health]`/`[math/solve]` byte-correct since birth; the AP-130 class extends to python-repr "verifications"; no change shipped — the S125 lesson-1 record). The docs set: §12's `globals.css` Lines re-measured (1002), §8.4's checklist floors re-anchored (1127+/529+), §6.3's session shape gained the `v` sessionVersion claim, **§3.2's annotated tree regenerated end-to-end** (the v1.0-era snapshot), §8.1's changed rows + Total re-measured (73 files / 1127+530; the badge sum 1656). The rejected digest claim: §1.2's zod/playwright version cells (the lockfile pins 4.6.5/1.63.0 — the cells were already correct; the subagent's "4.6.7/1.64.1" misread). Four honest mid-run corrections (the pin-side ones in the plan's §5). Unit 1113 → **1127** (42 files), e2e 523 → **529** (139+157+71+92+70), every chunk first-pass on the final tree (chunk 2 twice).
+- `[SR]` The audit-driven hardening cycle (`docs/remediation-plan-session125.md`): **BZ1** the flashcards auto-select guard fix (the Add Card + AI Generate guards read the raw `selectedDeckId` while the S123/BX8 render model auto-selects the first deck — a first-visit user's dialog submit silently no-op'd, reproduced live in the DOM AND at the wire; both guards + payloads read `effectiveDeckId` now); **BZ2** the practice-tests AI call site joins the 120 s deadline family (`timeoutMs` + `isTimeoutError` — the only site without); **BZ3** the manage-notebooks surface converts DropdownMenu→Popover (the Rename/Delete buttons were nested inside `role="menuitem"` — a WAI-ARIA nested-interactive violation, menu keys skipped them and Tab closed the menu; the popover keeps the geometry, the actions are real tab stops, Escape restores focus); **BZ4** the duplicate-member removal removes ONE (the email-only filter deleted every duplicate sharing the address — the `removeOneMember` seam removes the first (email,name) composite); **BZ5** the factory write budget (`write:${user.id}` 600/15-min across all 16 collection POSTs — the S118/BS3 bounded-writes doctrine reaching the CRUD family; the exhaustion pin rides a FRESH TEST-NET-registered user: the first design's demo-budget exhaustion 429'd six later chunk tests because playwright runs spec files ALPHABETICALLY — s14 sorts before tasks.spec); **BZ6** the grade score≤maxScore ordering guard (the events BU22+BV1 pattern with the zod4-default amendment: the update schema owns NO `.check()` — `.partial()` injects the maxScore default, so the `checkGradeRangeMerge` beforeWrite seam owns EVERY combination through one effective-pair compare); **BZ7** the folder re-parent TOCTOU closed inside `$transaction` (the cycle check re-reads the chain inside it); **BZ8** the files/link metadata shape (`FILE_METADATA` moved to `server/http.ts` — route files cannot export shared symbols under Next's route-type validation; the link create answers the AI6 metadata shape); **BZ9** the register P2002 race answers the uniform 200 (the S120/BU14 enumeration oracle re-opened in the millisecond create-race window); **BZ10** the calculator-history trim runs in `$transaction` with an id-tiebroken orderBy; **BZ13** the factory `list` bounded (`take: 500`, the ai/messages convention — the export's own findManys stay independent, the completeness contract untouched); **BZ14** the dead note-rename dialog variant removed; **BZ15** the dead `formatClockShort` export removed; **BZ16** the FilesView boot-fetch loader dedup. **BZ11 RETRACTED** (the two "corrupted log tags" were display-pipeline artifacts — the hex dump + byte-constructed searches proved `[health]`/`[math/solve]` byte-correct since birth; the AP-130 class extends to python-repr "verifications"; no change shipped — the S125 lesson-1 record). The docs set: §12's `globals.css` Lines re-measured (1002), §8.4's checklist floors re-anchored (1127+/529+), §6.3's session shape gained the `v` sessionVersion claim, **§3.2's annotated tree regenerated end-to-end** (the v1.0-era snapshot), §8.1's changed rows + Total re-measured (73 files / 1127+529; the badge sum 1656 — the S126 digest repaired the "530" setup double-count). The rejected digest claim: §1.2's zod/playwright version cells (the lockfile pins 4.6.5/1.63.0 — the cells were already correct; the subagent's "4.6.7/1.64.1" misread). Four honest mid-run corrections (the pin-side ones in the plan's §5). Unit 1113 → **1127** (42 files), e2e 523 → **529** (139+157+71+92+70), every chunk first-pass on the final tree (chunk 2 twice).
 
 #### Revision Block — v1.3.32 (Session-124 / Batch BY, Cycle 74)
 
 - `[SR]` The audit-driven hardening cycle (`docs/remediation-plan-session124.md`): **BY1** the gradeLevel clearable form (the UI's "Not set" mapped to `undefined` — JSON drops the key, the sent-keys filter skips it, the bare enum 400'd `""` — a silent data lie behind a success toast; the `z.union([enum, ""])` + the UI `""` send + the reload round-trip live-verified); **BY2** the db-path production gate (the Turbopack-mangled fallback silently redirected a missing absolute PRODUCTION target to the seeded dev DB — now environment-gated via the explicit `nodeEnv` parameter; DEPLOYMENT §4 form-2's "absolute passes through untouched" is true in production); **BY3** the export/import size reconciliation (the import cap moved 10 → 25 MiB — the export emits base64 file payloads inline, so ~4 max-size uploads made the user's own backup unrestorable in-app; the panel's pre-check now reads the SAME `IMPORT_MAX_BYTES` constant); **BY4** the RUM contract doc sync (the p75 window 200 → the shipped 500; the trends shape → the 7-day null-gap series); **BY5** the export-family limiter (`export:${user.id}` 10/15-min, ONE shared key on both export GETs — the heaviest enumerations joined the S14 posture); **BY6** the RUM trends null-gap semantics (unsampled days fabricated literal 0s — a 0 CLS reads as a GOOD score on idle days; the `buildTrends` pure seam pushes null, the panel's finite filter drops the gaps); **BY7** the hydration-gate fleet swap (the vacuous `--sf-primary` wait — true at t=0 via the pre-paint boot script — replaced by the HydrationMarker contract across 16 spec files, the five-view overflow pin's 900 ms sleep deleted, the gotoDark route-universality correction: the appHydrated marker never fires on the non-shell /rum + /export routes); **BY8** the checked-checkbox print-exact (the S12 print contract's claim now true in code); **BY9** the avatarEmoji vocabulary at the boundary (the 24-emoji list + the `""` clear form — an arbitrary ≤8-code-point string no longer stores); **BY10** the popstate drawer close (browser Back with the drawer open used to swap the view UNDER the open drawer); **BY11** the skip-link gating (the splash/error branches carry no `#main-content` target); **BY12** the dead `sf-focus` utility removed + the SKILL focus-convention synced; **BY13** the forced-colors picker restoration (the Appearance tab + the dialog color pickers + the timer/answer groups — selection was invisible under Windows HC; container-scoped selectors, the bare-aria-pressed doctrine honored); **BY14** the s4o probe residue note; **BY15** the comment-hygiene set; **BY16** the docs-drift set (README's stale 508 census line + the pre-BT5 boot band + 16.4.0 + the wrong clone URL + "Six accents"; **ADR-022's Rationale still said "30-day session cookie" — reconciled to the shipped 7-day**, the sibling BX11 missed; §1.2's version cells → 16.4.2 / Tailwind 4.3.3; **§8.1's era-grouped distribution rows replaced with a per-file script-derivable table**; §12's Lines column re-measured; §6.4's OTP row gained the BX2 per-account cap + the register row the BX4 equalizer; the SKILL doc's nine drift items incl. the Task `done` shape). The honest mid-run corrections (five, all pin-side or gate-side, in the plan's §5).
-- `[SR]` Current test census anchor (the v1.2.0 convention, re-anchored): **1127/1127 Vitest unit** (42 files — the S125 additions: grade-merge.test.ts the 42nd file +7 [the checkGradeRangeMerge effective-pair legs], validation +4 [the gradeCreateSchema create legs], group-members +3 [the removeOneMember seam]) + **529/529 cold-chunk e2e** (524 chromium specs in 30 files + the auth setup re-run per chunk; the 5-chunk map **139+157+71+92+70**, every chunk first-pass on its final-tree run — chunk 2 verified twice; `vitest run` 1127/1127 + `bunx playwright test --list` 525 [524 + 1 setup] — the per-file counts in §8.1 are script-derivable). Unit + e2e = **1656 green**.
+- `[SR]` Current test census anchor (the v1.2.0 convention, re-anchored AT S124): **1113/1113 Vitest unit** (41 files) + **523/523 cold-chunk e2e** (518 chromium specs in 30 files + the auth setup re-run per chunk; the 5-chunk map **137+153+71+92+70**, every chunk first-pass on its final-tree run — the per-file counts in §8.1 are script-derivable). Unit + e2e = **1636 green**. (S126/CA repaired this block's retro-edit: the S125 cycle had overwritten the S124 anchor with its own 1127/529 numbers, leaving S124's actual closing census unrecorded; the current-cycle anchor now lives in each cycle's OWN revision block.)
 
 #### Revision Block — v1.3.31 (Session-123 / Batch BX, Cycle 73)
 
@@ -463,7 +468,7 @@ StudyFlow is a self-hosted study-companion application: a deliberate clone — f
 **ADR-002: Prisma + SQLite with a three-anchor DATABASE_URL contract**
 
 - **Context:** The requirement pins `.env` to `DATABASE_URL="file:../db/custom.db"` with the `db/` folder at the repo root. Empirical testing of Prisma 6.19 showed three different resolution behaviors for that relative URL: runtime module code can anchor it anywhere (we control it), the CLI anchors shell-provided env at the schema file (correct), but `.env`-loaded env at the CWD (one directory too high). Separately, Next.js dev (Turbopack) pre-resolves relative `file:` DATABASE_URLs against the project directory before app code runs.
-- **Decision:** `prisma/schema.prisma` uses `env("DATABASE_URL")`. The runtime resolution lives in `src/lib/db-path.ts`: a RELATIVE url re-anchors against the first candidate root containing `prisma/schema.prisma` (module anchor for dev; standalone detector for the traced build; CWD fallback). An absolute url passes through UNLESS its target is missing while the schema-anchored default exists — that corrects Next-dev's wrong pre-resolution. The `db:*` npm scripts set `DATABASE_URL` inline (shell-provided → schema-anchored CLI). `tests/db-path.test.ts` pins every rule, including the Next-dev correction regression.
+- **Decision:** `prisma/schema.prisma` uses `env("DATABASE_URL")`. The runtime resolution lives in `src/lib/db-path.ts`: a RELATIVE url re-anchors against the first candidate root containing `prisma/schema.prisma` (module anchor for dev; standalone detector for the traced build; CWD fallback). An absolute url passes through UNLESS (outside production — the S124/BY2 gate) its target is missing while the schema-anchored default exists — that corrects Next-dev's wrong pre-resolution; in production a missing absolute target passes through and fails loudly. The `db:*` npm scripts set `DATABASE_URL` inline (shell-provided → schema-anchored CLI). `tests/db-path.test.ts` pins every rule, including the Next-dev correction regression.
 - **Rationale:** One database file at `<repo>/db/custom.db` for dev, build, standalone server, and the e2e runner, regardless of CWD; every exception is detected and documented at the point of handling.
 - **Consequences:** Raw `prisma db push` relying on repo-root `.env` auto-loading lands the file one directory high (documented in README troubleshooting); schema-url hardcoding was tried and rejected (it embeds the path into the generated client and kills env-based e2e isolation).
 - **Alternatives Rejected:** Hardcoded schema url (breaks e2e `db/e2e.db` isolation — the generated client ignores env vars); absolute `.env` paths (violates the pinned requirement; machine-specific); PostgreSQL (heavier ops; the requirement is explicitly SQLite-file based).
@@ -479,7 +484,7 @@ StudyFlow is a self-hosted study-companion application: a deliberate clone — f
 **ADR-004: Tailwind v4 CSS-first with v3-pinned parity tokens**
 
 - **Context:** The reference app's CSS was compiled by Tailwind v3. Porting its markup byte-identically onto v4 produces five classes of measurable drift, catalogued in `docs/Tailwind-V4-Validation-Report.md` (transparent bare-HSL theme vars, oklch palette drift, oklab gradient interpolation, the `space-*` selector rewrite, the shadow-scale shift).
-- **Decision:** `src/app/globals.css` declares the theme under `@theme inline` with full `hsl()` colors, pins the v3 hex palette (slate/violet scales) and `--shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05)`, ships the canvas gradient as an exact `linear-gradient`, and the codebase lays out with `flex gap-*` exclusively. Parity-critical geometry is pinned by e2e computed-style assertions.
+- **Decision:** `src/app/globals.css` declares the theme under the plain `@theme` directive (never `@theme inline` — the S126/CA21 reconciliation; the `hsl(var(--x))` values keep `.dark` overrides live at runtime) with full `hsl()` colors, pins the v3 hex palette (slate/violet scales) and `--shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05)`, ships the canvas gradient as an exact `linear-gradient`, and the codebase lays out with `flex gap-*` exclusively. Parity-critical geometry is pinned by e2e computed-style assertions.
 - **Rationale:** Five one-line-ish pins versus chasing per-component drift forever; the traps are documented at the point of risk with test coverage.
 - **Consequences:** Removing a pin silently regresses parity (hence the e2e pins); `space-y/x` with margin children is banned by convention rather than lint.
 - **Alternatives Rejected:** Downgrade to Tailwind v3 (fights the scaffold and Next 16's CSS pipeline); accept v4 defaults (measurably off-palette, heavier shadows).
@@ -580,7 +585,7 @@ StudyFlow is a self-hosted study-companion application: a deliberate clone — f
 **ADR-016: The RUM observability hook + the Docker packaging (session-18)**
 
 - **Context:** With the parity backlog empty (the reference unchanged since S17 — re-verified this session: zero-data account, stable branding split, all Settings tabs matching the S17 measurements; the standing drawer check GREEN; CWV re-measured: CLS 0.00 on every scenario), the session-24 backlog items governed: real-user web-vitals telemetry (the reference has NO field monitoring — its own mobile login LCP measures 7.5-8.0s POOR) and one-command containerized deployment.
-- **Decision:** (1) `RumEvent` model (additive: metric/value/rating/navigationType/path/sessionId/userAgent; `@@unique([sessionId, metric])` + `@@index([userId, createdAt])`); `rumEventSchema`/`rumBatchSchema` in validation.ts (the enums mirror the web-vitals v6 Metric unions; 10-event batch cap); `POST /api/rum` (auth-gated, Zod-validated, `checkRateLimit("rum:" + userId, 1000)` — the budget covers the e2e suite's own ~500-750 beacon POSTs; each event UPSERTS on the unique pair so final-value-wins re-reports update in place); `GET /api/rum` (p75 per metric via nearest-rank over the last 200 events + the 10 most recent + counts). (2) `<RumBeacon />` in the authed shell (src/components/layout/rum-beacon.tsx): renders null (zero DOM — byte parity preserved), dynamic-imports web-vitals, batches per microtask into keepalive POSTs, flushes on visibilitychange-hidden/pagehide, swallows ALL failures; ONE crypto-UUID sessionId per pageload carries the upsert identity; the LOGIN route is deliberately un-instrumented (an unauthenticated metrics endpoint is an abuse surface). (3) Docker: multi-stage `Dockerfile` (deps-prod → build → bun runtime with the standalone overlay; `rm -rf /app/db` guards the output tracer's stale db snapshot out of the image), `.dockerignore`, `docker-compose.yml` (SQLite on the /data volume via the §4 form-2 ABSOLUTE `file:/data/custom.db` URL; AUTH_SECRET required at boot; an `init` profile pushes schema + seeds; healthcheck on /api/health).
+- **Decision:** (1) `RumEvent` model (additive: metric/value/rating/navigationType/path/sessionId/userAgent; `@@unique([sessionId, metric])` + `@@index([userId, createdAt])`); `rumEventSchema`/`rumBatchSchema` in validation.ts (the enums mirror the web-vitals v6 Metric unions; 10-event batch cap); `POST /api/rum` (auth-gated, Zod-validated, `checkRateLimit("rum:" + userId, 1000)` — the budget covers the e2e suite's own ~500-750 beacon POSTs; each event UPSERTS on the unique pair so final-value-wins re-reports update in place); `GET /api/rum` (p75 per metric via nearest-rank over the last 200 events [now 500 — the S126/CA reconciliation] + the 10 most recent + counts) [S126/CA reconciliation: the shipped window is take: 500 + the 50 most recent — the S124/BY4 sync updated §3.2/§6.4 but not this ADR body; the unique is also user-scoped since S120/BU4: `@@unique([userId, sessionId, metric])` + `@@index([userId])` — the latter dropped as redundant in S126/CA19]. (2) `<RumBeacon />` in the authed shell (src/components/layout/rum-beacon.tsx): renders null (zero DOM — byte parity preserved), dynamic-imports web-vitals, batches per microtask into keepalive POSTs, flushes on visibilitychange-hidden/pagehide, swallows ALL failures; ONE crypto-UUID sessionId per pageload carries the upsert identity; the LOGIN route is deliberately un-instrumented (an unauthenticated metrics endpoint is an abuse surface). (3) Docker: multi-stage `Dockerfile` (deps-prod → build → bun runtime with the standalone overlay; `rm -rf /app/db` guards the output tracer's stale db snapshot out of the image), `.dockerignore`, `docker-compose.yml` (SQLite on the /data volume via the §4 form-2 ABSOLUTE `file:/data/custom.db` URL; AUTH_SECRET required at boot; an `init` profile pushes schema + seeds; healthcheck on /api/health).
 - **Rationale:** Field telemetry is the production-observability superset a self-hosted owner cannot get any other way; the upsert-dedupe keeps the store at ~5 rows/pageload despite web-vitals' re-report semantics; the 1000/15min budget bounds the auth-gated write surface while admitting the test suite's own beacon traffic (a lower budget would 429 the suite mid-run — measured, not guessed).
 - **Consequences:** web-vitals@6 in dependencies (dynamically imported — never in the login bundle); every shell-loading e2e spec now fires real beacon POSTs (harmless — swallowed failures, upsert dedupe); the RumEvent table grows slowly on the scratch e2e db (assert-on-recency, never on absolute counts); the Docker layout was validated end-to-end OUTSIDE Docker (`scripts/docker-layout-sim-s27.sh`: prod-deps overlay → db push → seed → boot → health/login/RUM-401 checks all GREEN) — the sandbox has no Docker daemon, so the first real `docker compose --profile init up` on the owner's host is the remaining verification step (documented in DEPLOYMENT.md §8).
 - **Alternatives Rejected:** a visible RUM dashboard panel (chrome on pinned surfaces — the GET endpoint is the v1 inspection surface; a diagnostics panel stays a future option); instrumenting the login route (abuse surface; its CWV is already pinned); sendBeacon-only transport (no response handling, fires-and-forgets even when retryable); per-metric rows without the upsert constraint (web-vitals' final-value-wins semantics would duplicate every LCP/CLS re-report); pruned/retentioned storage (premature at ~5 rows/pageload; db:reset clears the scratch).
@@ -770,9 +775,12 @@ omni-study/
 │   │   ├── auth/login-surface.tsx       ← the login card (themes pre-paint)
 │   │   ├── rum/rum-panel.tsx            ← the five-CWV p75 diagnostics surface
 │   │   ├── export/export-panel.tsx      ← the portability surface (reads IMPORT_MAX_BYTES)
-│   │   ├── ui/                          ← button, card, input, dialog, select, tabs, badge, popover,
-│   │   │                                  primitives (checkbox/switch/progress/separator/skeleton),
+│   │   ├── ui/                          ← 21 primitives: button, card, input, textarea, dialog,
+│   │   │                                  alert-dialog, select, tabs, badge, popover, tooltip,
+│   │   │                                  label, avatar, slider, checkbox, switch, radio-group,
+│   │   │                                  progress, separator, skeleton, scroll-area,
 │   │   │                                  dropdown-menu, toast (zustand toaster)
+│   │   │                                  (S126/CA completed the list — 6 were unlisted)
 │   │   └── views/                       ← 20 view files + shared.tsx (ViewHeader, StatCard w/ gradient
 │   │                                      chips + blobs, SectionCard, EmptyState, SubjectChip, …)
 │   ├── instrumentation.ts               ← the AUTH_SECRET boot guard (register(), env-check bands)
@@ -804,7 +812,7 @@ omni-study/
 │   │                                      auth, validation, db-path, grade-merge, group-members, …)
 │   └── e2e/                             ← Playwright: global-setup (e2e.db), auth.setup (storageState),
 │                                          30 spec files — auth, auth-flows, navigation, tasks,
-│                                          calculator, the 9 parity-session specs, mobile-navigation,
+│                                          calculator, the 5 parity-session specs (session5–9; S126/CA corrected the count — plus greeting-clock.spec.ts, previously unlisted), mobile-navigation,
 │                                          theme-system, dark-mode, accessibility, a11y-sweep,
 │                                          resilience, s14-hardening, s16–s26, s52
 ├── docs/
@@ -812,7 +820,7 @@ omni-study/
 │   │                                      evidence frames through S125)
 │   ├── Tailwind-V4-Validation-Report.md ← the documented traps + methodology notes
 │   ├── DEPLOYMENT.md                    ← production notes (absolute DATABASE_URL, §4)
-│   ├── remediation-plan-sessionNNN.md + session_NNN.md + worklog.md ← the per-cycle record chain
+│   ├── remediation-plan-sessionNNN.md + session_NNN.md ← the per-cycle record chain (worklog.md itself lives at the REPO ROOT — the S126/CA correction)
 │   └── ssh_git_wrapper_v3.py + how-to-git-push-using-ssh-wrapper_SKILL.md
 ├── next.config.ts                       ← standalone output, 20 rewrites, allowedDevOrigins
 ├── vitest.config.ts / playwright.config.ts / eslint.config.mjs / tsconfig.json / components.json
@@ -826,16 +834,16 @@ omni-study/
 ```typescript
 // src/lib/router.ts — the single source of truth for view ↔ path mapping.
 // Pure on purpose: every consumer (page shell, sidebar, drawer, e2e specs)
-// trusts THIS map, and tests pin the round-trip.
+// trusts THIS map, and tests pin the round-trip. The FIRST path segment
+// resolves case-insensitively through NAV_ITEMS (the 20-view registry);
+// unknown or empty paths degrade to the dashboard. (S126/CA replaced a
+// v1.0-era stylized excerpt that showed a VIEWS-loop + query/slash
+// handling the shipped code never had.)
 export function viewFromPath(pathname: string): ViewId {
-  const clean = (pathname || "/").split("?")[0]!.replace(/\/+$/, "");
-  if (!clean || clean === "/") return "dashboard";
-  const segments = clean.split("/").filter(Boolean);
-  for (const segment of segments) {           // FIRST matching segment wins:
-    const hit = VIEWS.find((v) => v === segment.toLowerCase());
-    if (hit) return hit;                       // /Tasks/abc still lands on tasks
-  }
-  return "dashboard";
+  const segment = pathname.split("/").filter(Boolean)[0]?.toLowerCase();
+  if (!segment) return "dashboard";
+  const hit = NAV_ITEMS.find((item) => item.path.toLowerCase() === `/${segment}`);
+  return hit?.id ?? "dashboard";
 }
 ```
 
@@ -845,11 +853,17 @@ export function viewFromPath(pathname: string): ViewId {
 
 ```typescript
 // src/lib/server/entities.ts (excerpt) — every delegate takes userId and
-// scopes the WHERE clause; updates verify ownership BEFORE mutating.
+// scopes the WHERE clause; updates verify ownership BEFORE mutating, parse
+// through the per-entity create/update schemas, and write only the SENT
+// keys (sentKeysPatch — .partial() defaults never ride a PATCH). (S126/CA
+// replaced a stylized excerpt whose owned()/taskPatchSchema symbols never
+// existed.)
 update: async (userId, id, input) => {
-  const patch = parseWith(taskPatchSchema, input);        // Zod at the boundary
-  await owned(userId, id, () => db.task.findFirst({ where: { id, userId } }));
-  return db.task.update({ where: { id }, data: { /* …patch fields… */ } });
+  const parsed = parseWith(updateSchema, input);          // Zod at the boundary
+  const existing = await model.findFirst({ where: { id, userId } });
+  if (!existing) throw new NotFoundError();
+  if (beforeWrite) beforeWrite(existing, parsed);         // the BV1 merge guard
+  return model.update({ where: { id }, data: sentKeysPatch(parsed, input) });
 },
 ```
 
@@ -858,12 +872,15 @@ update: async (userId, id, input) => {
 **Pattern C — the db-path correction (the Next-dev trap):**
 
 ```typescript
-// src/lib/db-path.ts (excerpt) — absolute file: URLs pass through UNLESS
-// the target is missing while the schema-anchored default exists. That is
-// exactly the shape of Next.js dev's pre-resolved value (anchored at the
-// project dir, one level off the prisma/ anchor).
+// src/lib/db-path.ts (excerpt) — OUTSIDE PRODUCTION, absolute file: URLs
+// pass through UNLESS the target is missing while the schema-anchored
+// default exists (exactly the shape of Next.js dev's pre-resolved value).
+// IN PRODUCTION (the S124/BY2 gate) the fallback NEVER fires: a missing
+// absolute target passes through and fails loudly downstream — the silent
+// redirect to the seeded dev DB was the §18 "reads the WRONG database"
+// class.
 if (path.isAbsolute(raw) || /^[A-Za-z]:[\\/]/.test(raw)) {
-  if (!existsSync(raw)) {
+  if (nodeEnv !== "production" && !existsSync(raw)) {
     const fallback = path.resolve(schemaRoot, "prisma", DEFAULT_RELATIVE_DB);
     if (existsSync(fallback)) return `file:${fallback}`;
   }
@@ -879,8 +896,10 @@ if (path.isAbsolute(raw) || /^[A-Za-z]:[\\/]/.test(raw)) {
 /* src/app/globals.css — TRAP 5 pin (v4 moved the shadow scale one notch):
    the reference's cards compute 0 1px 2px 0 rgba(0,0,0,0.05); without this
    pin every `shadow-sm` renders visibly heavier. Pinned by e2e spec
-   "cards render the v3-pinned shadow-sm geometry". */
-@theme inline {
+   "cards render the v3-pinned shadow-sm geometry". (S126/CA21: the
+   shipped directive is the plain @theme — never @theme inline; the hsl(var())
+   routing keeps .dark overrides live at runtime.) */
+@theme {
   --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
 }
 ```
@@ -946,7 +965,7 @@ Single Prisma client singleton per process (`globalThis` caching in dev); query 
 
 ### 5.1 Typographic System
 
-System sans stack (`ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", …`) — matches the reference's measured `font-family`. Scale: page titles `text-2xl font-bold slate-800` (dashboard greeting / MyDay / FocusTimer `text-3xl`); section titles `text-lg font-semibold slate-800` with `h-5 w-5` accent icon; stat values `text-[30px] font-bold` (dashboard) / `text-4xl font-bold` (GradeTracker + calculator display, S5-M/H); nav labels 16px (text-base) with `w-5` icons; body text `text-sm`; the FocusTimer clock is `text-5xl font-mono` (48px, S5-E).
+System sans stack (`ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", …`) — matches the reference's measured `font-family`. Scale: page titles `text-2xl font-bold slate-800` (dashboard greeting / MyDay / FocusTimer `text-3xl`); section titles `text-lg font-semibold slate-800` with `h-5 w-5` accent icon; stat values `text-3xl font-bold` (30px — StatCard's h2, dashboard) / `text-4xl font-bold` (GradeTracker + calculator display, S5-M/H); nav labels 16px (text-base) with `w-5` icons; body text `text-sm`; the FocusTimer clock is `text-5xl font-mono` (48px, S5-E).
 
 ### 5.2 Color Tokens
 
@@ -962,7 +981,7 @@ System sans stack (`ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", �
 | `--sf-primary-gradient-to-strong` | `67 56 202` (indigo-700) | CTA gradient HOVER end (`hover:to-indigo-700` measured — S5-A) |
 | `--sf-primary-avatar-from` / `-to` | `167 139 250` / `99 102 241` | Footer avatar gradient (violet-400 → indigo-500, the LIGHTER pair — measured, S4-G) |
 | `--sf-primary-empty-from` / `-to` | `237 233 254` / `224 231 255` | Empty-state 80px block gradient (violet-100 → indigo-100 — measured, S4-C) |
-| Card surface | white / `#f1f5f9` border / 16px radius | `sf-card` + SectionCard |
+| Card surface | white / `#e2e8f0` border (slate-200) / 16px radius | `sf-card` + SectionCard |
 | Shadow | `0 1px 2px 0 rgb(0 0 0 / 0.05)` | v3 `shadow-sm` — **pinned** (trap 5) |
 | Primary CTAs | `.sf-gradient` = `linear-gradient(to right, rgb(var(--sf-primary)), rgb(var(--sf-primary-gradient-to)))` + v3 `shadow` (`.sf-gradient-shadow`); empty-state CTAs + tinted `shadow-lg` (`.sf-gradient-shadow-lg`) | Button `gradient` variant — sRGB-exact, accent-aware (S5-A) |
 | Radius scale | md 6px / lg 8px / xl 12px / 2xl 16px / 3xl 24px | v4 defaults = v3 semantics; only `--radius-sm: 0.125rem` pinned (trap 6) |
@@ -975,11 +994,11 @@ System sans stack (`ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", �
 | Login card | 448px `shadow-2xl bg-white/95 backdrop-blur-xs border-0` + gradient strip + 96px circular logo | `src/app/login/page.tsx` (S4-F) |
 | Events panel | slate-900 rounded-2xl shadow-2xl terminal panel, cyan-400 New Event link, `CW <n>` week label, slate-800/50 section headers | `events-view.tsx` — intentionally dark in BOTH themes (S5-B) |
 
-Seven accent sets (violet/blue/**emerald**/**amber**/pink/red/teal — the green/orange migrations match the reference's swatch faces, S5-F) × Light/Dark/System × 24 emoji avatars, persisted on `User` and applied by `useThemeStore.loadFromUser`.
+Seven accent sets (violet/blue/green/orange/pink/red/teal — the ACCENT IDS are green/orange while the palettes ride the reference's emerald/amber swatch faces, S5-F; S126/CA corrected the id names) × Light/Dark/System × 24 emoji avatars, persisted on `User` and applied by `useThemeStore.loadFromUser`.
 
 ### 5.3 Component Primitives
 
-Radix: dialog, select, tabs, dropdown-menu, checkbox, switch, progress, separator, tooltip, scroll-area, alert-dialog, label, popover, radio-group, slot. shadcn-style wrappers in `src/components/ui/*` themed with the `--sf-*` vars; `cva` variants on button/badge/tabs.
+Radix (18 primitive packages): dialog, alert-dialog, select, tabs, dropdown-menu, popover, tooltip, checkbox, switch, radio-group, slider, progress, separator, scroll-area, label, avatar, slot — plus the zustand-driven toast. shadcn-style wrappers in `src/components/ui/*` (21 files, S126/CA completed the count) themed with the `--sf-*` vars; `cva` variants on button/badge/tabs.
 
 ### 5.4 Motion
 
@@ -1060,7 +1079,7 @@ Single-role per-user ownership model; no admin surface. Session: `{ uid, iat, ex
 | Unit — `clear-cookie.test.ts` | 1 | 3 | `tests/clear-cookie.test.ts` |
 | Unit — `client-ip.test.ts` | 1 | 14 | `tests/client-ip.test.ts` |
 | Unit — `data-export.test.ts` | 1 | 9 | `tests/data-export.test.ts` |
-| Unit — `data-import.test.ts` | 1 | 32 | `tests/data-import.test.ts` |
+| Unit — `data-import.test.ts` | 1 | 50 | `tests/data-import.test.ts` |
 | Unit — `data-store.test.ts` | 1 | 3 | `tests/data-store.test.ts` |
 | Unit — `date.test.ts` | 1 | 28 | `tests/date.test.ts` |
 | Unit — `db-path.test.ts` | 1 | 18 | `tests/db-path.test.ts` |
@@ -1095,21 +1114,21 @@ Single-role per-user ownership model; no admin surface. Session: `{ uid, iat, ex
 | Unit — `validation.test.ts` | 1 | 98 | `tests/validation.test.ts` |
 | Unit — `view-collections.test.ts` | 1 | 6 | `tests/view-collections.test.ts` |
 | E2E — `a11y-sweep.spec.ts` | 1 | 20 | `tests/e2e/a11y-sweep.spec.ts` |
-| E2E — `accessibility.spec.ts` | 1 | 33 | `tests/e2e/accessibility.spec.ts` |
-| E2E — `auth-flows.spec.ts` | 1 | 13 | `tests/e2e/auth-flows.spec.ts` |
+| E2E — `accessibility.spec.ts` | 1 | 34 | `tests/e2e/accessibility.spec.ts` |
+| E2E — `auth-flows.spec.ts` | 1 | 14 | `tests/e2e/auth-flows.spec.ts` |
 | E2E — `auth.spec.ts` | 1 | 6 | `tests/e2e/auth.spec.ts` |
 | E2E — `calculator.spec.ts` | 1 | 13 | `tests/e2e/calculator.spec.ts` |
 | E2E — `dark-mode.spec.ts` | 1 | 27 | `tests/e2e/dark-mode.spec.ts` |
 | E2E — `greeting-clock.spec.ts` | 1 | 4 | `tests/e2e/greeting-clock.spec.ts` |
 | E2E — `mobile-navigation.spec.ts` | 1 | 18 | `tests/e2e/mobile-navigation.spec.ts` |
-| E2E — `navigation.spec.ts` | 1 | 58 | `tests/e2e/navigation.spec.ts` |
+| E2E — `navigation.spec.ts` | 1 | 59 | `tests/e2e/navigation.spec.ts` |
 | E2E — `parity-session5.spec.ts` | 1 | 45 | `tests/e2e/parity-session5.spec.ts` |
 | E2E — `parity-session6.spec.ts` | 1 | 17 | `tests/e2e/parity-session6.spec.ts` |
 | E2E — `parity-session7.spec.ts` | 1 | 51 | `tests/e2e/parity-session7.spec.ts` |
-| E2E — `parity-session8.spec.ts` | 1 | 62 | `tests/e2e/parity-session8.spec.ts` |
+| E2E — `parity-session8.spec.ts` | 1 | 64 | `tests/e2e/parity-session8.spec.ts` |
 | E2E — `parity-session9.spec.ts` | 1 | 32 | `tests/e2e/parity-session9.spec.ts` |
 | E2E — `resilience.spec.ts` | 1 | 22 | `tests/e2e/resilience.spec.ts` |
-| E2E — `s14-hardening.spec.ts` | 1 | 14 | `tests/e2e/s14-hardening.spec.ts` |
+| E2E — `s14-hardening.spec.ts` | 1 | 18 | `tests/e2e/s14-hardening.spec.ts` |
 | E2E — `s16-perf-parity.spec.ts` | 1 | 3 | `tests/e2e/s16-perf-parity.spec.ts` |
 | E2E — `s17-fresh-user.spec.ts` | 1 | 10 | `tests/e2e/s17-fresh-user.spec.ts` |
 | E2E — `s18-rum.spec.ts` | 1 | 6 | `tests/e2e/s18-rum.spec.ts` |
@@ -1125,7 +1144,7 @@ Single-role per-user ownership model; no admin surface. Session: `{ uid, iat, ex
 | E2E — `tasks.spec.ts` | 1 | 8 | `tests/e2e/tasks.spec.ts` |
 | E2E — `theme-system.spec.ts` | 1 | 14 | `tests/e2e/theme-system.spec.ts` |
 | E2E — the shared-sign-in setup project (one login; the storageState the whole suite rides; each cert chunk re-runs it) | 1 | 1 | `tests/e2e/auth.setup.ts` |
-| **Total** | **73** | **1657** | `tests/` — **1127 Vitest unit** (42 files, `vitest run` 1127/1127) + **530 e2e** (524 chromium specs in 30 files per `playwright --list` + the 1 setup × the 5 cold-cert chunks = the 529-test chunked census [139+157+71+92+70, `db/e2e.db` cold every chunk]); unit + e2e = **1656 green** (the badge sum: 1127 + 529). Re-measured S125/BZ (the previous era-grouped rows had drifted three-plus epochs — the table is now PER-FILE and script-derivable: `vitest run` per-file counts + `playwright test --list`). |
+| **Total** | **73** | **1684** | `tests/` — **1145 Vitest unit** (42 files, `vitest run` 1145/1145) + **538 e2e** (533 chromium specs in 30 files per `playwright --list` + the 1 setup × the 5 cold-cert chunks = the 538-test chunked census [142+161+71+93+71, `db/e2e.db` cold every chunk]); unit + e2e = **1683 green** (the badge sum: 1145 + 538). Re-measured S126/CA (the S125 row's "530" was a setup double-count — repaired; the previous era-grouped rows had drifted three-plus epochs — the table is now PER-FILE and script-derivable: `vitest run` per-file counts + `playwright test --list`). |
 
 ### 8.2 Test Patterns
 
@@ -1142,9 +1161,9 @@ No numeric coverage gate is configured; the standard is "every pure seam has a t
 
 - [ ] `bun run lint` clean
 - [ ] `bun run typecheck` clean
-- [ ] `bun run test` green (1127+)
+- [ ] `bun run test` green (1145+)
 - [ ] `bun run build` succeeds
-- [ ] `bun run test:e2e` green (529+; rebuild first if components changed)
+- [ ] `bun run test:e2e` green (538+; rebuild first if components changed)
 - [ ] No secrets / db files staged (`git status`)
 - [ ] Docs touched if behavior/setup changed
 
@@ -1209,7 +1228,7 @@ Enforced: ESLint flat config + `tsc --noEmit` (both gate). Convention (review-en
 | MEDIUM | `next dev` OOM-killed in ~4 GB containers under parallel load (observed: 1.6 GB RSS + headless browsers) | Dev server dies silently mid-session | Mitigated (close extra browsers; restart) — no memory cap configured |
 | LOW | "Continue with Google" renders but is not wired to OAuth | Visual parity only; email/password is the real flow | Open (honest toast; future integration point) |
 | LOW | Notifications preferences persist to localStorage only | No delivery channel exists | Open (documented in Settings UI) |
-| LOW | Zod v4 `.max()` counts code points, not UTF-16 units | `avatarEmoji` limit allows up to 8 code points (≈8 emoji) | Accepted (pinned by test with the semantics documented) |
+| LOW | Zod v4 `.max()` counts code points, not UTF-16 units | `avatarEmoji` allows only the 24-emoji vocabulary + `""` (the S124/BY9 refine); the `.max(8)` bound counts code points beneath it | Accepted (pinned by test with the semantics documented) |
 | LOW | ~~No `prefers-reduced-motion` handling~~ | ~~Motion-sensitive users still see shimmer/slide~~ | **Resolved** — the global reduced-motion collapse block landed in session-12 (ADR-010) |
 | LOW | Prisma `db push` workflow (no migrations history) | Schema changes are not versioned | Accepted for SQLite/single-user; revisit if multi-user |
 | INFO | `space-*` ban is convention, not lint rule | A new contributor could reintroduce trap 4 | Accepted (e2e parity pins would not catch spacing regressions) |
@@ -1233,9 +1252,9 @@ Enforced: ESLint flat config + `tsc --noEmit` (both gate). Convention (review-en
 <!-- Lines re-measured S124/BY (wc -l, the column had drifted multiple epochs; keep it re-derivable) -->
 | `src/app/page.tsx` | ~233 | The whole app: auth gate, shell, view switcher, popstate sync |
 | `src/lib/db-path.ts` | ~131 | The DATABASE_URL contract — pure, unit-tested, trap-corrected |
-| `src/lib/server/entities.ts` | ~535 | All 16 CRUD delegates (ownership-scoped) |
-| `src/lib/server/http.ts` | ~319 | Route factory, error envelope, Zod parse helper |
-| `src/lib/validation.ts` | ~532 | Every API boundary schema |
+| `src/lib/server/entities.ts` | 588 | All 16 CRUD delegates (ownership-scoped) |
+| `src/lib/server/http.ts` | 362 | Route factory, error envelope, Zod parse helper |
+| `src/lib/validation.ts` | 578 | Every API boundary schema |
 | `src/lib/data.ts` | ~687 | Client entity cache + typed mutations |
 | `src/lib/calculator.ts` | ~406 | Shunting-yard engine, GPA, unit converter |
 | `src/lib/auth.ts` | ~290 | scrypt, HMAC sessions, rate limiter |

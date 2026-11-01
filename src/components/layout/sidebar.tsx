@@ -14,27 +14,18 @@
 // icons sit LEFT-ALIGNED at px-4 (svg x=32).
 // ---------------------------------------------------------------------------
 
-import * as React from "react";
 import { ChevronLeft, GraduationCap } from "lucide-react";
 
 import { NavItemLink } from "@/components/layout/nav-items";
 import { UserAvatar } from "@/components/layout/user-avatar";
 import { NAV_ITEMS } from "@/lib/router";
-import { formatShortWithYear, formatTime12h } from "@/lib/date";
+import { formatShortDate, formatTime12h, useNow } from "@/lib/date";
 import { useAppStore, useThemeStore } from "@/lib/store";
 import { cn } from "@/lib/utils";
 
-/** Ticking clock — 1s interval, cleaned up on unmount. Mounted only after
- *  auth (client-only), so the first render never races SSR hydration. */
-function useNow(): Date {
-  const [now, setNow] = React.useState(() => new Date());
-  React.useEffect(() => {
-    const timer = window.setInterval(() => setNow(new Date()), 1000);
-    return () => window.clearInterval(timer);
-  }, []);
-  return now;
-}
-
+/* S126/CA13: the clock hook moved to @/lib/date (the shared useNow — a
+ * minute-gated commit; this file's private 1s-commit twin re-rendered the
+ * whole sidebar tree ~60×/min for a minute-resolution display). */
 export function Sidebar() {
   const collapsed = useAppStore((s) => s.sidebarCollapsed);
   const toggleSidebar = useAppStore((s) => s.toggleSidebar);
@@ -128,7 +119,7 @@ export function Sidebar() {
                 <p className="sf-clock-time whitespace-nowrap text-2xl font-bold">
                   {formatTime12h(now)}
                 </p>
-                <p className="sf-clock-date truncate text-xs">{formatShortWithYear(now)}</p>
+                <p className="sf-clock-date truncate text-xs">{formatShortDate(now)}</p>
               </div>
             </div>
             <div className="flex items-center gap-3 px-4 pb-4">

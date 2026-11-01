@@ -39,7 +39,7 @@ import {
 import { useToast } from "@/components/ui/toast";
 import { EmptyState } from "@/components/views/shared";
 import { mutations, useDataStore, type TimetableClassInput, type TimetableClassRow } from "@/lib/data";
-import { addDays, formatHHMMRange, formatWeekdayMonthDay, formatShortWithYear, startOfDay } from "@/lib/date";
+import { addDays, formatHHMMRange, formatWeekdayMonthDay, formatShortDate, startOfDay } from "@/lib/date";
 import { ApiError } from "@/lib/api";
 import { normalizeHhmmForInput } from "@/lib/validation";
 import { cn } from "@/lib/utils";
@@ -399,7 +399,7 @@ export function TimetableView() {
                 class — the S11 locator reads it at 390px). */}
             <div className="sf-chip-dark mb-2 flex items-center justify-between rounded-lg bg-sf-primary-soft px-3 py-2 text-sm font-medium text-sf-primary-strong dark:text-sf-primary-strong-dark">
               <span>Today</span>
-              <span>{formatShortWithYear(today)}</span>
+              <span>{formatShortDate(today)}</span>
             </div>
             <div className="flex flex-col gap-2">
               {weekDays.map((day, col) => {

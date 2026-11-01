@@ -417,7 +417,7 @@ test.describe("S79 · mobile Flashcards study mode (the full-replacement parity 
       () => document.documentElement.dataset.appHydrated === "true",
     );
 
-    // The 4-card deck's row carries the below-md Study affordance, fully
+    // The deck row's below-md Study affordance, fully
     // inside the viewport (the deck-detail toolbar's Study button is
     // clipped by the squeezed pane at 390 — the documented contained
     // squeeze, so the ROW is the mobile entry). exact: true — the deck
@@ -451,8 +451,13 @@ test.describe("S79 · mobile Flashcards study mode (the full-replacement parity 
     const scrollW = await page.evaluate(() => document.documentElement.scrollWidth);
     expect(scrollW).toBeLessThanOrEqual(390);
 
-    // The counter renders for the row's OWN deck (the ref's "1 / 4" shape).
-    await expect(study.getByText(/^1 \/ 4$/)).toBeVisible();
+    // The counter renders for the row's OWN deck. S126/CA6 re-anchored the
+    // count: the seed fix moved the 3 mislabeled biology cards OUT of
+    // "Integration rules" (they were authored [0,0,0,0,1,1] where the
+    // content implies [0,1,1,1,2,2]) — the calculus deck now carries its
+    // ONE real card, so the honest counter reads "1 / 1" (the measured
+    // shape — "N / M", spaces, no deck name — is what this pins).
+    await expect(study.getByText(/^1 \/ 1$/)).toBeVisible();
 
     // Exit Study restores the two-pane layout (the deck list returns).
     await exit.tap();

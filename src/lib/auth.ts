@@ -9,6 +9,7 @@ import {
   createHash,
   createHmac,
   randomBytes,
+  randomInt,
   randomFillSync,
   scryptSync,
   timingSafeEqual,
@@ -193,11 +194,13 @@ function evictOldestBucket(): void {
 
 // ---- S15 seams: verification codes + reset tokens -------------------------------
 
-/** Exactly 6 digits, full zero-padded range (crypto random, not string floats). */
+/** Exactly 6 digits, full zero-padded range (crypto random, not string
+ * floats). S126/CA17: randomInt replaces the getUint32 % 1_000_000 form —
+ * the modulo had a +0.023% relative bias toward codes 0-967,295 (2^32 is
+ * not a multiple of 10^6); rejection-quality sampling is free and the
+ * attempt caps make it moot in practice anyway. */
 export function generateVerificationCode(): string {
-  const bytes = randomBytes(4);
-  const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
-  const value = view.getUint32(0) % 1_000_000;
+  const value = randomInt(0, 1_000_000);
   return value.toString().padStart(6, "0");
 }
 

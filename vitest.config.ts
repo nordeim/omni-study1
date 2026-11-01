@@ -1,7 +1,7 @@
 import { defineConfig } from "vitest/config";
 import path from "node:path";
 
-// Unit-test layer for the pure domain seams — 42 files / 1127 tests
+// Unit-test layer for the pure domain seams — 42 files / 1145 tests
 // (re-anchored S125/BZ — the audit-driven hardening cycle: census 1113 →
 // 1127, +14 [grade-merge.test.ts the 42nd file, +7: the checkGradeRangeMerge
 // effective-pair legs — the single-leg score-over-stored rejection, the

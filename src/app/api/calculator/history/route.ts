@@ -23,7 +23,9 @@ export const GET = withUser(async (user) => {
   // Newest 500, served oldest-first (the rail's chronological order).
   const newest = await db.calculatorHistoryEntry.findMany({
     where: { userId: user.id },
-    orderBy: { createdAt: "desc" },
+    // S126/CA5: the id tiebreak rider (the BZ10 trim already had it; the
+    // GET window did not — same-millisecond ties were nondeterministic).
+    orderBy: [{ createdAt: "desc" }, { id: "desc" }],
     take: HISTORY_WINDOW,
   });
   return NextResponse.json(newest.reverse());

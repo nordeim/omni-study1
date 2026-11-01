@@ -89,6 +89,12 @@ export function NavItemLink({ view, collapsed = false, onNavigate, className, to
       aria-label={collapsed ? item.label : undefined}
       title={collapsed ? item.label : undefined}
       onClick={(e) => {
+        // S126/CA7: modified clicks keep the browser default (open in a
+        // new tab/window) — the hrefs are real, server-rewritten paths.
+        // The unconditional preventDefault swallowed ⌘/Ctrl/Shift-click.
+        if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) {
+          return;
+        }
         e.preventDefault();
         navigate(view);
         onNavigate?.();

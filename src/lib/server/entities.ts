@@ -55,9 +55,12 @@ import {
 type OwnedModel = {
   findMany(args: {
     where: { userId: string };
-    orderBy?: { createdAt: "asc" | "desc" };
-    // S125/BZ13: the bounded-reads ceiling (take: 500, the ai/messages
-    // convention) — every concrete Prisma delegate accepts it.
+    // S125/BZ13 added take; S126/CA5 widened orderBy to the tiebreak
+    // array form (createdAt + id, the BZ10 class) — every concrete
+    // Prisma delegate accepts both the single and array shapes.
+    orderBy?:
+      | { createdAt: "asc" | "desc" }
+      | Array<{ createdAt: "asc" | "desc" } | { id: "asc" | "desc" }>;
     take?: number;
   }): Promise<unknown[]>;
   findFirst(args: { where: Record<string, unknown> }): Promise<unknown>;
@@ -267,18 +270,18 @@ function makeOwnedDelegate(config: OwnedConfig): EntityDelegate {
       model
         .findMany({
           where: { userId },
-          orderBy: { createdAt: orderBy },
-          // S125/BZ13: the bounded-reads doctrine (S118/BS3) finally reaches
-          // the factory family — ai/messages + calculator history have
-          // shipped take: 500 since BS3 while every collection route
-          // returned unbounded rows (notes ship 100 KB content each; a
-          // 1 000-note account answered a ~100 MB JSON per GET). The
-          // asc+take convention matches the shipped seams. The export is
-          // independent (its own findManys — verified) so the completeness
-          // contract is untouched.
+          // S126/CA5: the newest-window selection (the s126 persistence
+          // audit's B-M1 note generalized to the family). The BZ13
+          // `asc + take: 500` bounded the response but selected the OLDEST
+          // window — past 500 rows the newest rows vanished from every
+          // collection GET. The calculator/messages form: fetch desc + take
+          // (the newest 500), then reverse to the configured asc
+          // presentation. The id tiebreak makes same-millisecond ties
+          // deterministic (the BZ10 class).
+          orderBy: [{ createdAt: "desc" }, { id: "desc" }],
           take: 500,
         })
-        .then((rows) => rows.map(normalize)),
+        .then((rows) => (orderBy === "desc" ? rows : rows.reverse()).map(normalize)),
 
     create: async (userId, input) => {
       const parsed = parseWith(createSchema, input);
@@ -516,7 +519,10 @@ export const flashcardCardDelegate: EntityDelegate = {
   list: (userId) =>
     db.flashcard.findMany({
       where: { deck: { userId } },
-      orderBy: { createdAt: "asc" },
+      // S126/CA5: the id tiebreak (deck-scoped and unbounded by design —
+      // the take would hide cards; the tiebreak only makes the order
+      // deterministic under same-millisecond ties, the BZ10 class).
+      orderBy: [{ createdAt: "asc" }, { id: "asc" }],
     }),
 
   create: async (userId, input) => {
