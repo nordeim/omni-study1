@@ -67,6 +67,19 @@ async function parse<T>(res: Response): Promise<T> {
   }
 }
 
+// S130/CE1 — the DEFAULT deadline family (docs/remediation-plan-session130.md).
+// The s130 FE audit's M1: the timeoutMs infrastructure existed (CD wired
+// collection GETs at 20 s, CC the auth POSTs, S13 the AI surfaces) but every
+// MUTATION write path rode no deadline — a stalled write (accepted TCP, no
+// response — no offline event fires) latched every busy state (dialog Save
+// spinners, the delete-account button, the upload button) with no error
+// branch reachable until reload. The defaults install INSIDE the seam so
+// all ~50 mutation call sites in data.ts plus the view-level twins inherit
+// them at once; an explicit timeoutMs still wins (the AI surfaces' 120 s,
+// the import POST's 120 s, the auth POSTs' 20 s).
+export const DEFAULT_GET_TIMEOUT_MS = 20_000;
+export const DEFAULT_WRITE_TIMEOUT_MS = 30_000;
+
 export async function apiGet<T>(
   path: string,
   // S128/CC7: the apiSend mirror — the boot gate's `await apiGet("/api/auth/me")`
@@ -77,9 +90,8 @@ export async function apiGet<T>(
   options?: { timeoutMs?: number },
 ): Promise<T> {
   const init: RequestInit = { method: "GET" };
-  if (options?.timeoutMs !== undefined) {
-    init.signal = AbortSignal.timeout(options.timeoutMs);
-  }
+  // S130/CE1: the default GET deadline (the CD2 collection constant's value).
+  init.signal = AbortSignal.timeout(options?.timeoutMs ?? DEFAULT_GET_TIMEOUT_MS);
   const res = await doFetch(path, init);
   return parse<T>(res);
 }
@@ -95,9 +107,10 @@ export async function apiSend<T = unknown>(
     init.headers = { "Content-Type": "application/json" };
     init.body = JSON.stringify(body);
   }
-  if (options?.timeoutMs !== undefined) {
-    init.signal = AbortSignal.timeout(options.timeoutMs);
-  }
+  // S130/CE1: the default WRITE deadline — every mutation call site that
+  // passes no options inherits the 30 s bound (a stalled write rejects
+  // through the existing catch paths instead of latching the busy state).
+  init.signal = AbortSignal.timeout(options?.timeoutMs ?? DEFAULT_WRITE_TIMEOUT_MS);
   const res = await doFetch(path, init);
   return parse<T>(res);
 }

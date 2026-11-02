@@ -186,7 +186,13 @@ export const QuillEditor = React.forwardRef<QuillEditorHandle, QuillEditorProps>
     const lastHtmlRef = React.useRef<string | null>(null);
     const timerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
 
-    onChangeRef.current = onChange;
+    // S130/CE9: the latest-ref write moves OUT of render (the
+    // NoteTitleInput sibling's idiom — the repo's own contract is
+    // event-handler/effect writes only; a render-phase ref write is a
+    // React-Compiler hazard).
+    React.useEffect(() => {
+      onChangeRef.current = onChange;
+    }, [onChange]);
 
     React.useImperativeHandle(
       forwarded,

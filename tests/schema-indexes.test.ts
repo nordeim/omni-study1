@@ -86,4 +86,12 @@ describe("the factory-list index census (S128/CC10)", () => {
     expect(body).toContain("@@index([userId])");
     expect(body).not.toContain("@@index([userId, createdAt, id])");
   });
+
+  // S130/CE9 — the parentId index (the only FK column whose parent-DELETE
+  // SetNull scan had no covering index; every sibling FK — Task.listId,
+  // Note.notebookId, FileItem.folderId, Flashcard.deckId — carries one).
+  it("FileFolder carries the [parentId] index (the sibling-FK convention)", () => {
+    const body = modelBody("FileFolder");
+    expect(body).toContain("@@index([parentId])");
+  });
 });

@@ -26,6 +26,10 @@ import {
 import { rumBatchSchema } from "@/lib/validation";
 import { buildTrends, RUM_METRIC_ORDER } from "@/lib/rum-diagnostics";
 
+// S130/CE9: the retention window — the export's own 2000 (both read
+// windows — the panel GET's 500 and the export's 2000 — sit inside it).
+const RUM_RETENTION_WINDOW = 2_000;
+
 export const POST = async (request: NextRequest) => {
   try {
     const user = await requireUser();
@@ -64,6 +68,30 @@ export const POST = async (request: NextRequest) => {
       });
     }
 
+    // S130/CE9 — the retention trim (the persistTranscriptPair form, the
+    // CA1/BW5 doctrine): RumEvent was the ONE user-growable table with no
+    // bound — the [userId, sessionId, metric] unique cannot bound growth
+    // because sessionId is caller-chosen (each budgeted POST can mint up
+    // to 20 fresh rows). Trim to the newest RUM_RETENTION_WINDOW rows
+    // (the export window — the GET's take: 500 and the export's take:
+    // 2000 both sit inside it), id-tiebroken, the stale-select bounded
+    // per write (the BW4 class — take: 1000, converging over writes).
+    const total = await db.rumEvent.count({ where: { userId: user.id } });
+    if (total > RUM_RETENTION_WINDOW) {
+      const stale = await db.rumEvent.findMany({
+        where: { userId: user.id },
+        orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+        skip: RUM_RETENTION_WINDOW,
+        take: 1000,
+        select: { id: true },
+      });
+      if (stale.length > 0) {
+        await db.rumEvent.deleteMany({
+          where: { userId: user.id, id: { in: stale.map((row) => row.id) } },
+        });
+      }
+    }
+
     return NextResponse.json({ ok: true, accepted: events.length });
   } catch (err: unknown) {
     return toErrorResponse(err);
@@ -76,7 +104,9 @@ export const GET = async () => {
 
     const events = await db.rumEvent.findMany({
     where: { userId: user.id },
-    orderBy: { createdAt: "desc" },
+    // S130/CE9: the id tiebreak — equal createdAt values paginate
+    // deterministically (the BZ10 class).
+    orderBy: [{ createdAt: "desc" }, { id: "desc" }],
     take: 500,
   });
 

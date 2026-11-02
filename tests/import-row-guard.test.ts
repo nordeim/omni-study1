@@ -34,15 +34,21 @@ describe("sanitizeImportRow (S119/BT1b — the per-row guard at the import's thi
     ).toThrow(/tasks\[0\][\s\S]*title|title[\s\S]*tasks\[0\]/);
   });
 
+  // S130/CE7 correction (the source change demands it): tasks.title now
+  // rides the registry's 200-char atom (the validation.ts mirror) — the
+  // GENERIC 1 M cap's boundary legs exercise an UNREGISTERED field.
   it("rejects a string field over the 1,000,000-char guard", () => {
     expect(() =>
-      sanitizeImportRow("tasks", { ...baseRow, title: "a".repeat(1_000_001) }),
+      sanitizeImportRow("tasks", { ...baseRow, title: "a".repeat(201) }),
+    ).toThrow();
+    expect(() =>
+      sanitizeImportRow("tasks", { ...baseRow, customNote: "a".repeat(1_000_001) }),
     ).toThrow();
   });
 
   it("accepts a string field exactly at the guard boundary", () => {
     expect(() =>
-      sanitizeImportRow("tasks", { ...baseRow, title: "a".repeat(1_000_000) }),
+      sanitizeImportRow("tasks", { ...baseRow, customNote: "a".repeat(1_000_000) }),
     ).not.toThrow();
   });
 

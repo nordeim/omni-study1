@@ -161,6 +161,11 @@ export async function persistTranscriptPair(
       where: { userId },
       orderBy: [{ createdAt: "desc" }, { id: "desc" }],
       skip: TRANSCRIPT_WINDOW,
+      // S130/CE9: the stale-select is BOUNDED per write (an unbounded
+      // skip-select inside the default 5 s interactive transaction is the
+      // BW4 class — a large imported tail P2028'd the first post-import
+      // chat; converging over successive writes is the honest shape).
+      take: 1000,
       select: { id: true },
     });
     if (stale.length > 0) {

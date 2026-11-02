@@ -452,6 +452,11 @@ model FocusSession {
   @@index([userId, createdAt, id])
 }
 
+// S130/CE9: @@index([parentId]) lands below with the model — the only FK
+// column whose parent-DELETE SetNull scan had no covering index (every
+// sibling FK — Task.listId, Note.notebookId, FileItem.folderId,
+// Flashcard.deckId — carries one; at import-minted folder counts each
+// parent delete was a full-table scan).
 model FileFolder {
   id        String       @id @default(cuid())
   userId    String
@@ -472,6 +477,11 @@ model FileFolder {
   // keeps every userId-prefixed lookup backed. Same index COUNT per
   // table — a replace, not an addition.
   @@index([userId, createdAt, id])
+  // S130/CE9: the parentId index — every sibling FK column carries one
+  // (Task.listId, Note.notebookId, FileItem.folderId, Flashcard.deckId);
+  // without it each parent-folder DELETE scans the table for SetNull
+  // children (at import-minted folder counts, a full scan per delete).
+  @@index([parentId])
 }
 
 model FileItem {

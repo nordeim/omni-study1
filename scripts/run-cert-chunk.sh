@@ -4,7 +4,7 @@
 # SIGKILL escalation → rm db/e2e.db → run the chunk), one chunk per
 # invocation so each foreground run fits the tool timeout.
 # Usage: bash /home/z/my-project/omni-study1/scripts/run-cert-chunk.sh <1-5>
-# Expected (S129/CD re-tag): 145 + 178 + 72 + 93 + 75 = 563 — the same
+# Expected (S130/CE re-tag): 146 + 179 + 72 + 93 + 77 = 567 — the same
 # census as scripts/e2e-chunked-cert.sh (machine-enforced by
 # tests/script-conventions.test.ts). This runner's pipeline is its last
 # statement, so pipefail already propagates the chunk's real status.

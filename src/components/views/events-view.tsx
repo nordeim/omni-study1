@@ -45,6 +45,7 @@ import {
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/components/ui/toast";
+import { Spinner } from "@/components/views/shared";
 import { mutations, useDataStore, type EventInput, type EventRow } from "@/lib/data";
 import { addDays, daysUntil, formatWeekdayMonthDay, referenceWeekNumber, startOfDay } from "@/lib/date";
 import { ApiError } from "@/lib/api";
@@ -94,6 +95,12 @@ function expandOccurrences(event: EventRow, windowDays: Date[]): Date[] {
 
 export function EventsView() {
   const events = useDataStore((s) => s.events);
+  // S130/CE3: the loading gate — navigating to Events while the background
+  // loadAll is still in flight rendered the 7-day strip reading "No
+  // events" per band on in-flight data (the false empty state). The
+  // terminal zero-state keeps the measured reference shape (all seven
+  // date-driven bands); only the in-flight window gates.
+  const loading = useDataStore((s) => s.loading);
   const createEvent = mutations.createEvent;
   const updateEvent = mutations.updateEvent;
   const deleteEvent = mutations.deleteEvent;
@@ -314,7 +321,15 @@ export function EventsView() {
 
           {listOpen && (
           <div className="flex flex-col">
-            {windowDays.map((day) => {
+            {/* S130/CE3: the in-flight window renders ONE spinner, never the
+                seven false "No events" bands (a stale empty list is NOT an
+                empty calendar). */}
+            {loading && events.length === 0 ? (
+              <div className="flex justify-center py-10 text-sf-primary">
+                <Spinner className="size-6" />
+              </div>
+            ) : (
+            windowDays.map((day) => {
               const dayEvents = events.flatMap((e) =>
                 expandOccurrences(e, [day]).map(() => e),
               );
@@ -396,7 +411,8 @@ export function EventsView() {
                   )}
                 </div>
               );
-            })}
+            })
+            )}
           </div>
           )}
         </section>

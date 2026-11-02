@@ -380,7 +380,20 @@ function TestDialog({
                   <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">Q{index + 1}</span>
                   <Select
                     value={draft.type}
-                    onValueChange={(value) => updateDraft(index, { type: value as QuestionType })}
+                    onValueChange={(value) =>
+                      // S130/CE2: switching TO true_false seeds the stored
+                      // default — the Select below renders
+                      // `draft.correctAnswer || "True"`, so an empty stored
+                      // value DISPLAYED "True" while the submit loop
+                      // rejected it with "needs a correct answer" (the
+                      // displayed default must be the stored default).
+                      updateDraft(
+                        index,
+                        value === "true_false" && !draft.correctAnswer.trim()
+                          ? { type: value as QuestionType, correctAnswer: "True" }
+                          : { type: value as QuestionType },
+                      )
+                    }
                   >
                     <SelectTrigger className="h-8 flex-1" aria-label={`Question ${index + 1} type`}>
                       <SelectValue />

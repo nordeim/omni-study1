@@ -51,7 +51,10 @@ export function RumPanel() {
 
   const load = React.useCallback(async () => {
     try {
-      const data = await apiGet<RumAggregate>("/api/rum");
+      // S130/CE1: the bounded GET (the default 20 s — a stalled aggregate
+      // fetch held the panel's spinner state forever; the failed branch
+      // below is reachable only when the request SETTLES).
+      const data = await apiGet<RumAggregate>("/api/rum", { timeoutMs: 20_000 });
       setAggregate(data);
       setError(null);
     } catch (err: unknown) {
@@ -96,7 +99,9 @@ export function RumPanel() {
   // hydrates the accent vars from /api/auth/me exactly like the shell.
   React.useEffect(() => {
     let cancelled = false;
-    apiGet<{ user: AppUser }>("/api/auth/me")
+    // S130/CE1: the bounded GET (the settings-view auth/me twin — the
+    // theme hydration must settle, not hang).
+    apiGet<{ user: AppUser }>("/api/auth/me", { timeoutMs: 20_000 })
       .then((response) => {
         if (!cancelled) useThemeStore.getState().loadFromUser(response.user);
       })
@@ -140,9 +145,12 @@ export function RumPanel() {
         </p>
       )}
 
-      {!rows ? (
-        <p className="py-16 text-center text-sm text-slate-500 dark:text-slate-400">Loading the field metrics…</p>
-      ) : (
+      {/* S130/CE4: the load-state machine — the no-data branch splits on
+          the error: a load in FLIGHT keeps the loading line; a load that
+          FAILED renders the retry hint instead (pre-fix both rendered the
+          loading line forever alongside the error — a UX state that
+          lied). Rows-first ordering narrows the null. */}
+      {rows ? (
         <div
           role="region"
           aria-label="Core Web Vitals at p75"
@@ -199,6 +207,12 @@ export function RumPanel() {
             );
           })}
         </div>
+      ) : error ? (
+        <p className="py-16 text-center text-sm text-slate-500 dark:text-slate-400">
+          Could not load the field metrics — use Refresh to retry.
+        </p>
+      ) : (
+        <p className="py-16 text-center text-sm text-slate-500 dark:text-slate-400">Loading the field metrics…</p>
       )}
 
       {rows && rows.recent.length > 0 && (
@@ -233,7 +247,11 @@ export function RumPanel() {
                       <span
                         className={cn(
                           "rounded-full px-2 py-0.5 text-xs font-medium",
-                          RATING_BADGE_CLASSES[sample.rating] ?? "bg-slate-100 text-slate-600",
+                          RATING_BADGE_CLASSES[sample.rating] ??
+                            // S130/CE9: the fallback gains its dark pair (the
+                            // AS1 doctrine — the cards' fallback at :167 carries
+                            // one; this later line shipped without).
+                            "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300",
                         )}
                       >
                         {RATING_LABELS[sample.rating] ?? sample.rating}

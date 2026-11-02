@@ -1,13 +1,18 @@
-# StudyFlow (Omni-Study) — Master Project Architecture Document (PAD) v1.3.37
+# StudyFlow (Omni-Study) — Master Project Architecture Document (PAD) v1.3.38
 
 **Classification:** Internal Engineering Reference
 **Status:** DEFINITIVE, PRODUCTION-LOCKED BLUEPRINT
 **Companion Documents:** `README.md` (user-facing), `AGENTS.md` (agent quick-reference), `CLAUDE.md` (agent operating conventions), `docs/Tailwind-V4-Validation-Report.md` (parity trap log)
-**Last Updated:** 2026-11-01
+**Last Updated:** 2026-11-03
 **Audience:** Senior Engineers, Tech Leads, DevOps, Onboarding Engineers, and AI Coding Agents
 **Rule:** Every architectural decision in this document traces to a specific rationale. Nothing is here "because it's popular."
 
 ---
+
+#### Revision Block — v1.3.38 (Session-130 / Batch CE, Cycle 80)
+
+- `[SR]` Current test census anchor (the v1.2.0 convention, re-anchored): **1217/1217 Vitest unit** (45 files — the S130 additions: api-timeout net +2 [+4 the CE1 default-deadline family — the structural live-signal legs, the constants, the override-wins discriminator — −2 the "does NOT time out" legs tombstoned, their patient-default premise inverted by design], data-import +7 [the CE7 length-cap family — the 64-char id atom, the per-field registry legs + key census + the unknown-field 1 M default], script-conventions +3 [the CE6 write-route budget census + the CE5 transactional merge-guard census], hue-tokens +2 [the CE8 analytics tokenization sweep + the token-presence census], schema-indexes +1 [the CE9 FileFolder parentId index pin], import-row-guard net 0 [the 1 M boundary legs corrected to an unregistered field — the registry caps tasks.title at 200 now]) + **567/567 cold-chunk e2e** (562 chromium specs in 30 files + the auth setup re-run per chunk; the 5-chunk map **146+179+72+93+77**, every chunk first-pass on the final tree; the per-file counts in §8.1 are script-derivable). Unit + e2e = **1784 green**.
+- `[SR]` The audit-driven hardening cycle (`docs/remediation-plan-session130.md`): **CE1 (M)** the default deadline family — the timeoutMs infrastructure existed (CD wired collection GETs, CC the auth POSTs, S13 the AI surfaces) but every MUTATION write path rode no deadline: a stalled write latched every busy state (dialog Save spinners, the delete-account button, the upload button) with no error branch reachable until reload; `DEFAULT_GET_TIMEOUT_MS = 20_000` + `DEFAULT_WRITE_TIMEOUT_MS = 30_000` now install INSIDE apiGet/apiSend (all ~50 mutation call sites inherit the bound at once; an explicit timeoutMs still wins — the import POST 120 s, the multipart upload signal 120 s; the login-surface timeout branch carries the honest "took too long" copy); **CE2** the True/False default answer (the editor DISPLAYED "True" while the stored draft kept "" and the submit rejected with "needs a correct answer" — the type switch seeds the stored default; verified live end-to-end); **CE3** the view loading gates (the shell pre-warms only the ACTIVE view's collections; the background loadAll window rendered FALSE empty states — notes ×2 sites, events, exams, assignments, timetable ×2, flashcards now ride the tasks-view spinner idiom, the e2e pin holds the in-flight window); **CE4** the rum-panel state machine (a FAILED initial load rendered the error alert AND the "Loading the field metrics…" line forever — the three-state render splits loading from failed-with-no-data; both GETs bounded); **CE5 (M)** the transactional merge guard (the factory update's findFirst→beforeWrite→update validated against a PRE-WRITE snapshot — two concurrent single-leg PATCHes [events {startDate} vs {endDate}, grades {score} vs stored {maxScore}, timetable {endTime} vs stored {startTime}] each passed against the old partner leg and could commit an interleaved row no single request would accept, the corrupted row then LOCKING the inversion in; the three guarded delegates re-read INSIDE db.$transaction — the BZ7 folder-cycle pattern, now the guarded family's; the construction contract fails loudly when a beforeWrite delegate lacks txModelName); **CE6 (M)** the write-budget census close (files/folders POST joins the upload: 20 bucket — previously the only table-writing POST with no budget; files/[id] DELETE + ai/messages DELETE + calculator/history DELETE + settings/preferences PATCH join the shared write: 600 key; auth/logout the one documented exemption [a cookie clear, no DB write]; the census machine-enforced by the script-conventions pin); **CE7** the import seam (the 64-char id atom shared with idField; the per-field length registry IMPORT_FIELD_LENGTHS mirroring validation.ts's atoms — a hand-edited backup can no longer persist rows the interactive routes would 400; the update branch runs the single-leg merge guards against the stored partner leg; the P2002 concurrent-create race answers a named 409, never the generic 500); **CE8** the analytics tokenization (the five `#8b5cf6` chart literals → `rgb(var(--sf-primary))`, the rum-panel sparkline's form; the S9-K pin corrected with the provenance — under the default violet accent the computed color is the measurement's own); **CE9** the sweep set (quill's render-phase ref write → the effect idiom; the studygroups dialog's stale members base → the BX10 fresh read; the RUM GET/export id tiebreaks; the http header's 413 line; the retention trims' bounded take: 1000 + the 15 s transaction timeouts on the ai/solve/calculator sites; `@@index([parentId])` on FileFolder — the only sibling-FK column without one; GRADE_LEVELS single-sourced from validation.ts; the exam duration clamp 5..600; three dark-hover pairs; the member-email sr-only Label; the duplicate createdAt line dropped — live-corrected against the reference whose Profile tab renders exactly "Account created: {date}"; the notebook rename rides the mutation seam; the RumEvent retention trim to the newest 2000 [the persistTranscriptPair form — the CA19 index decision STANDS on the trimmed table]). Four honest mid-run corrections (the CE2 pin's `input[type=text]` locator — the implicit type attribute never matches; the CE5 census pin's card-delegate assertion relaxed to the true wiring; the s17 "Account created" pin caught the wrong-sided L9 fix — the reference renders the Account-created line, NOT Member-since; the import-row-guard boundary legs corrected for the registry). The rotated audits: the FE views/components family (**0C/0H/3M/10L/6I**) and the server/persistence family (**0C/0H/3M/5L/6I**); every M finding re-verified by direct read.
 
 #### Revision Block — v1.3.37 (Session-129 / Batch CD, Cycle 79)
 
@@ -1088,13 +1093,13 @@ Single-role per-user ownership model; no admin surface. Session: `{ uid, iat, ex
 |----------|-------|-------|----------|
 | Unit — `ai-helpers.test.ts` | 1 | 15 | `tests/ai-helpers.test.ts` |
 | Unit — `api-offline.test.ts` | 1 | 5 | `tests/api-offline.test.ts` |
-| Unit — `api-timeout.test.ts` | 1 | 7 | `tests/api-timeout.test.ts` |
+| Unit — `api-timeout.test.ts` | 1 | 9 | `tests/api-timeout.test.ts` | (S130/CE1 +2 net: +4 the default-deadline family −2 the tombstoned patient-default legs)
 | Unit — `auth.test.ts` | 1 | 32 | `tests/auth.test.ts` |
 | Unit — `calculator.test.ts` | 1 | 26 | `tests/calculator.test.ts` |
 | Unit — `clear-cookie.test.ts` | 1 | 3 | `tests/clear-cookie.test.ts` |
 | Unit — `client-ip.test.ts` | 1 | 14 | `tests/client-ip.test.ts` |
 | Unit — `data-export.test.ts` | 1 | 9 | `tests/data-export.test.ts` |
-| Unit — `data-import.test.ts` | 1 | 66 | `tests/data-import.test.ts` |
+| Unit — `data-import.test.ts` | 1 | 73 | `tests/data-import.test.ts` | (S130/CE7 +7: the length-cap family)
 | Unit — `data-store.test.ts` | 1 | 8 | `tests/data-store.test.ts` | (S129/CD2 +2: the collection-GET deadline at the seam boundary)
 | Unit — `date.test.ts` | 1 | 33 | `tests/date.test.ts` |
 | Unit — `db-path.test.ts` | 1 | 18 | `tests/db-path.test.ts` |
@@ -1109,14 +1114,14 @@ Single-role per-user ownership model; no admin surface. Session: `{ uid, iat, ex
 | Unit — `group-members.test.ts` | 1 | 15 | `tests/group-members.test.ts` |
 | Unit — `http-body.test.ts` | 1 | 12 | `tests/http-body.test.ts` | (S129/CD4 +3: the BodyTooLargeError family + the 413 mapping)
 | Unit — `hue-pairs.test.ts` | 1 | 2 | `tests/hue-pairs.test.ts` |
-| Unit — `hue-tokens.test.ts` | 1 | 13 | `tests/hue-tokens.test.ts` |
+| Unit — `hue-tokens.test.ts` | 1 | 15 | `tests/hue-tokens.test.ts` | (S130/CE8 +2: the analytics tokenization sweep)
 | Unit — `import-row-guard.test.ts` | 1 | 12 | `tests/import-row-guard.test.ts` |
 | Unit — `owned-fks.test.ts` | 1 | 3 | `tests/owned-fks.test.ts` |
 | Unit — `resweep-gate.test.ts` | 1 | 6 | `tests/resweep-gate.test.ts` |
 | Unit — `router.test.ts` | 1 | 11 | `tests/router.test.ts` |
 | Unit — `rum-diagnostics.test.ts` | 1 | 34 | `tests/rum-diagnostics.test.ts` |
-| Unit — `schema-indexes.test.ts` | 1 | 4 | `tests/schema-indexes.test.ts` | (S128/CC10)
-| Unit — `script-conventions.test.ts` | 1 | 8 | `tests/script-conventions.test.ts` | (S129/CD8 +2: the api-route dynamic census)
+| Unit — `schema-indexes.test.ts` | 1 | 5 | `tests/schema-indexes.test.ts` | (S128/CC10; S130/CE9 +1: the FileFolder parentId pin)
+| Unit — `script-conventions.test.ts` | 1 | 11 | `tests/script-conventions.test.ts` | (S129/CD8 +2; S130/CE5+CE6 +3: the write-route budget + merge-guard censuses)
 | Unit — `secure-cookie.test.ts` | 1 | 9 | `tests/secure-cookie.test.ts` |
 | Unit — `seed-gate.test.ts` | 1 | 5 | `tests/seed-gate.test.ts` |
 | Unit — `sent-keys-patch.test.ts` | 1 | 12 | `tests/sent-keys-patch.test.ts` |
@@ -1138,10 +1143,10 @@ Single-role per-user ownership model; no admin surface. Session: `{ uid, iat, ex
 | E2E — `dark-mode.spec.ts` | 1 | 27 | `tests/e2e/dark-mode.spec.ts` |
 | E2E — `greeting-clock.spec.ts` | 1 | 4 | `tests/e2e/greeting-clock.spec.ts` |
 | E2E — `mobile-navigation.spec.ts` | 1 | 18 | `tests/e2e/mobile-navigation.spec.ts` |
-| E2E — `navigation.spec.ts` | 1 | 60 | `tests/e2e/navigation.spec.ts` | (S129/CD2 +1: the boot-gate stall leg)
+| E2E — `navigation.spec.ts` | 1 | 61 | `tests/e2e/navigation.spec.ts` | (S129/CD2 +1; S130/CE3 +1: the view loading-gate leg)
 | E2E — `parity-session5.spec.ts` | 1 | 46 | `tests/e2e/parity-session5.spec.ts` |
 | E2E — `parity-session6.spec.ts` | 1 | 21 | `tests/e2e/parity-session6.spec.ts` |
-| E2E — `parity-session7.spec.ts` | 1 | 54 | `tests/e2e/parity-session7.spec.ts` |
+| E2E — `parity-session7.spec.ts` | 1 | 55 | `tests/e2e/parity-session7.spec.ts` | (S130/CE2 +1: the True/False default leg)
 | E2E — `parity-session8.spec.ts` | 1 | 66 | `tests/e2e/parity-session8.spec.ts` |
 | E2E — `parity-session9.spec.ts` | 1 | 35 | `tests/e2e/parity-session9.spec.ts` |
 | E2E — `resilience.spec.ts` | 1 | 22 | `tests/e2e/resilience.spec.ts` |
@@ -1149,11 +1154,11 @@ Single-role per-user ownership model; no admin surface. Session: `{ uid, iat, ex
 | E2E — `s16-perf-parity.spec.ts` | 1 | 3 | `tests/e2e/s16-perf-parity.spec.ts` |
 | E2E — `s17-fresh-user.spec.ts` | 1 | 10 | `tests/e2e/s17-fresh-user.spec.ts` |
 | E2E — `s18-rum.spec.ts` | 1 | 6 | `tests/e2e/s18-rum.spec.ts` |
-| E2E — `s19-rum-panel.spec.ts` | 1 | 4 | `tests/e2e/s19-rum-panel.spec.ts` |
+| E2E — `s19-rum-panel.spec.ts` | 1 | 5 | `tests/e2e/s19-rum-panel.spec.ts` | (S130/CE4 +1: the load-state machine leg)
 | E2E — `s20-rum-export.spec.ts` | 1 | 4 | `tests/e2e/s20-rum-export.spec.ts` |
 | E2E — `s21-data-export.spec.ts` | 1 | 5 | `tests/e2e/s21-data-export.spec.ts` |
 | E2E — `s22-boot-guard.spec.ts` | 1 | 2 | `tests/e2e/s22-boot-guard.spec.ts` |
-| E2E — `s23-import.spec.ts` | 1 | 9 | `tests/e2e/s23-import.spec.ts` |
+| E2E — `s23-import.spec.ts` | 1 | 10 | `tests/e2e/s23-import.spec.ts` | (S130/CE7 +1: the id-length atom leg — fresh TEST-NET user)
 | E2E — `s24-change-password.spec.ts` | 1 | 5 | `tests/e2e/s24-change-password.spec.ts` |
 | E2E — `s25-delete-account.spec.ts` | 1 | 5 | `tests/e2e/s25-delete-account.spec.ts` |
 | E2E — `s26-change-email.spec.ts` | 1 | 7 | `tests/e2e/s26-change-email.spec.ts` |
@@ -1161,7 +1166,7 @@ Single-role per-user ownership model; no admin surface. Session: `{ uid, iat, ex
 | E2E — `tasks.spec.ts` | 1 | 9 | `tests/e2e/tasks.spec.ts` |
 | E2E — `theme-system.spec.ts` | 1 | 16 | `tests/e2e/theme-system.spec.ts` | (S129/CD1 +1: the overlay-animation parity leg)
 | E2E — the shared-sign-in setup project (one login; the storageState the whole suite rides; each cert chunk re-runs it) | 1 | 1 | `tests/e2e/auth.setup.ts` |
-| **Total** | **76** | **1766** | `tests/` — **1202 Vitest unit** (45 files, `vitest run` 1202/1202) + **563 e2e** (558 chromium specs in 30 files per `playwright --list` + the 1 setup × the 5 cold-cert chunks = the 563-test chunked census [145+178+72+93+75, `db/e2e.db` cold every chunk]); unit + e2e = **1765 green** (the badge sum: 1202 + 563). Re-measured S129/CD (the S128 row's counts carried forward + the CD pins incl. the 45th unit file; the table stays PER-FILE and script-derivable: `vitest run` per-file counts + `playwright test --list`). |
+| **Total** | **76** | **1785** | `tests/` — **1217 Vitest unit** (45 files, `vitest run` 1217/1217) + **567 e2e** (562 chromium specs in 30 files per `playwright --list` + the 1 setup × the 5 cold-cert chunks = the 567-test chunked census [146+179+72+93+77, `db/e2e.db` cold every chunk]); unit + e2e = **1784 green** (the badge sum: 1217 + 567). Re-measured S130/CE (the S129 row's counts carried forward + the CE pins; the table stays PER-FILE and script-derivable: `vitest run` per-file counts + `playwright test --list`). |
 
 ### 8.2 Test Patterns
 

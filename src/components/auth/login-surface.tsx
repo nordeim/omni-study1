@@ -16,7 +16,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Spinner } from "@/components/views/shared";
-import { apiSend, ApiError } from "@/lib/api";
+import { apiSend, ApiError, isTimeoutError } from "@/lib/api";
 import { useThemeStore } from "@/lib/store";
 
 type AuthView = "signin" | "signup" | "verify" | "forgot" | "reset";
@@ -124,6 +124,17 @@ export function LoginSurface() {
     window.location.replace("/Dashboard");
   };
 
+  // S130/CE1: the honest timeout copy for the auth surface — a stalled
+  // auth POST (now bounded at 20 s) rejecting with a TimeoutError would
+  // otherwise surface the generic "Something went wrong"; the deadline
+  // fired, and the copy should say so (the rum-panel precedent).
+  const authErrorMessage = (err: unknown): string =>
+    isTimeoutError(err)
+      ? "That took too long. Check your connection and try again."
+      : err instanceof ApiError
+        ? err.message
+        : "Something went wrong. Please try again.";
+
   const submitSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     if (busy) return;
@@ -137,7 +148,7 @@ export function LoginSurface() {
       await apiSend("POST", "/api/auth/login", { email, password }, { timeoutMs: 20_000 });
       finishSignIn();
     } catch (err: unknown) {
-      setError(err instanceof ApiError ? err.message : "Something went wrong. Please try again.");
+      setError(authErrorMessage(err));
       setBusy(false);
     }
   };
@@ -163,7 +174,7 @@ export function LoginSurface() {
       setStatus("");
       setView("verify");
     } catch (err: unknown) {
-      setError(err instanceof ApiError ? err.message : "Something went wrong. Please try again.");
+      setError(authErrorMessage(err));
     } finally {
       setBusy(false);
     }
@@ -179,7 +190,7 @@ export function LoginSurface() {
       // Verified = signed in — the verify endpoint sets the session cookie.
       finishSignIn();
     } catch (err: unknown) {
-      setError(err instanceof ApiError ? err.message : "Something went wrong. Please try again.");
+      setError(authErrorMessage(err));
       setBusy(false);
     }
   };
@@ -217,7 +228,7 @@ export function LoginSurface() {
       setResetUrl(res?.resetUrl ?? "");
       setForgotDone(true);
     } catch (err: unknown) {
-      setError(err instanceof ApiError ? err.message : "Something went wrong. Please try again.");
+      setError(authErrorMessage(err));
     } finally {
       setBusy(false);
     }
@@ -246,7 +257,7 @@ export function LoginSurface() {
       setStatus("Password reset successfully. Sign in with your new password.");
       setEmail(resetEmail || email);
     } catch (err: unknown) {
-      setError(err instanceof ApiError ? err.message : "Something went wrong. Please try again.");
+      setError(authErrorMessage(err));
     } finally {
       setBusy(false);
     }

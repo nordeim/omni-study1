@@ -8,8 +8,9 @@
 import { NextResponse } from "next/server";
 import { Buffer } from "node:buffer";
 
+import { checkRateLimit } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { downloadHeaders, errorResponse, withUserParams } from "@/lib/server/http";
+import { downloadHeaders, errorResponse, rateLimitedResponse, withUserParams } from "@/lib/server/http";
 
 export const GET = withUserParams(async (user, _request, id) => {
   const file = await db.fileItem.findFirst({ where: { id, userId: user.id } });
@@ -24,6 +25,12 @@ export const GET = withUserParams(async (user, _request, id) => {
 });
 
 export const DELETE = withUserParams(async (user, _request, id) => {
+  // S130/CE6: the delete budget (the CB7 class — the factory DELETEs ride
+  // write:600; this hand-written twin rode nothing).
+  const limit = checkRateLimit(`write:${user.id}`, 600);
+  if (!limit.ok) {
+    return rateLimitedResponse(limit.retryAfterSec, "Too many requests. Please slow down.");
+  }
   const file = await db.fileItem.findFirst({
     where: { id, userId: user.id },
     select: { id: true },

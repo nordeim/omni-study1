@@ -97,3 +97,35 @@ test.describe("S19 the RUM diagnostics panel", () => {
     expect(rumLinks).toBe(0);
   });
 });
+
+// ---------------------------------------------------------------------------
+// S130/CE4 — the panel's load-state machine (docs/remediation-plan-session130.md).
+//
+// The s130 FE audit: a FAILED initial load rendered the error alert AND
+// the "Loading the field metrics…" line — forever. The !rows branch could
+// not distinguish loading from failed-with-no-data, so the panel lied
+// about being mid-load after the load had already errored. The fix splits
+// the no-data branch: loading (no data, no error) keeps the loading line;
+// failed (no data, error) renders an inline retry hint instead. The pin
+// aborts the aggregate GET and asserts the failed branch — pre-fix the
+// loading line renders alongside the error (RED).
+// ---------------------------------------------------------------------------
+test.describe("S130/CE4 · the panel's load-state machine", () => {
+  test("a failed initial aggregate load renders the retry hint, never the lying 'Loading the field metrics…' line", async ({ page }) => {
+    const HELD = "**/api/rum";
+    await page.route(HELD, (route) => route.abort());
+    try {
+      await page.goto("/rum");
+      await expect(page.getByRole("heading", { name: "Performance Diagnostics" })).toBeVisible();
+      // The error alert surfaces (scoped to p[role=alert] — Next.js's route
+      // announcer is also role=alert but a div).
+      await expect(page.locator('p[role="alert"]')).toBeVisible();
+      // The failed branch: the retry hint owns the body, the loading line
+      // is GONE (pre-fix it rendered forever alongside the error).
+      await expect(page.getByText("Loading the field metrics")).toHaveCount(0);
+      await expect(page.getByText(/refresh to retry/i)).toBeVisible();
+    } finally {
+      await page.unroute(HELD);
+    }
+  });
+});

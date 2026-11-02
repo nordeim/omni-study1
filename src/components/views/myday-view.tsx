@@ -257,7 +257,10 @@ export function MyDayView() {
             type="button"
             aria-expanded={showCompleted}
             onClick={() => setShowCompleted((v) => !v)}
-            className="flex items-center gap-2 text-sm font-medium text-slate-500 hover:text-slate-600 dark:text-slate-400"
+            // S130/CE9: the dark hover pair (the dark:text-slate-400 base
+            // wins the cascade over hover:text-slate-600 in dark — zero
+            // hover affordance without it).
+            className="flex items-center gap-2 text-sm font-medium text-slate-500 hover:text-slate-600 dark:text-slate-400 dark:hover:text-slate-300"
           >
             <ChevronDown
               className={cn("size-4 transition-transform", showCompleted && "rotate-180")}
@@ -288,7 +291,7 @@ export function MyDayView() {
           aria-controls="my-day-suggestions"
           aria-expanded={showSuggestions}
           onClick={() => setShowSuggestions((v) => !v)}
-          className="flex items-center gap-2 text-slate-500 hover:text-slate-600 dark:text-slate-400"
+          className="flex items-center gap-2 text-slate-500 hover:text-slate-600 dark:text-slate-400 dark:hover:text-slate-300"
         >
           <Sparkles className="size-4" strokeWidth={2} />
           <span className="text-sm font-medium">Suggestions</span>

@@ -57,8 +57,11 @@ type AreaChartProps = {
 };
 
 /** The S9-K measured frame: day labels (12px #666), Y ticks, dashed
- *  gridlines; the slate variant fills #e2e8f0, the focus variant draws the
- *  #8b5cf6 line over the violet gradient area. */
+ *  gridlines; the slate variant fills #e2e8f0, the focus variant draws
+ *  its line over the gradient area. S130/CE8: the chart colors ride the
+ *  accent token (rgb(var(--sf-primary)) — the rum-panel sparkline's form)
+ *  instead of the measured-run's violet literal; under the default
+ *  violet accent the computed color is byte-identical to the measurement. */
 function AreaChart({ data, labels, variant, title = "7-day chart" }: AreaChartProps & { title?: string }) {
   const count = data.length;
   const max = niceMax(Math.max(...data, 0));
@@ -82,8 +85,8 @@ function AreaChart({ data, labels, variant, title = "7-day chart" }: AreaChartPr
       {variant === "focus" && (
         <defs>
           <linearGradient id="focusGradient" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#8b5cf6" stopOpacity="0.35" />
-            <stop offset="100%" stopColor="#8b5cf6" stopOpacity="0.02" />
+            <stop offset="0%" stopColor="rgb(var(--sf-primary))" stopOpacity="0.35" />
+            <stop offset="100%" stopColor="rgb(var(--sf-primary))" stopOpacity="0.02" />
           </linearGradient>
         </defs>
       )}
@@ -148,7 +151,7 @@ function AreaChart({ data, labels, variant, title = "7-day chart" }: AreaChartPr
           <path
             d={`M ${linePoints.split(" ").join(" L ")}`}
             fill="none"
-            stroke="#8b5cf6"
+            stroke="rgb(var(--sf-primary))"
             strokeWidth="2"
             strokeLinejoin="round"
             strokeLinecap="round"
@@ -203,7 +206,7 @@ function GradeTrendChart({ values }: { values: number[] }) {
         <polyline
           points={linePoints}
           fill="none"
-          stroke="#8b5cf6"
+          stroke="rgb(var(--sf-primary))"
           strokeWidth="2"
           strokeLinejoin="round"
           strokeLinecap="round"
@@ -215,7 +218,7 @@ function GradeTrendChart({ values }: { values: number[] }) {
           cx={xAt(i, count)}
           cy={yAt(v, 100)}
           r="3.5"
-          fill="#8b5cf6"
+          fill="rgb(var(--sf-primary))"
         />
       ))}
     </svg>

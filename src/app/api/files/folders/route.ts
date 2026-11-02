@@ -7,8 +7,10 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
+import { checkRateLimit } from "@/lib/auth";
 import { db } from "@/lib/db";
 import {
+  rateLimitedResponse,
   errorResponse,
   parseWith,
   readJson,
@@ -41,6 +43,15 @@ export const GET = withUser(async (user) => {
 });
 
 export const POST = withUser(async (user, request) => {
+  // S130/CE6: the folder-create budget — the file-family write path (the
+  // upload bucket: a folder is a file-system row the same way a link-file
+  // is; pre-fix this was the only table-writing POST with NO budget — an
+  // authenticated script churned folder creates at line rate on the
+  // single-node SQLite).
+  const limit = checkRateLimit(`upload:${user.id}`, 20);
+  if (!limit.ok) {
+    return rateLimitedResponse(limit.retryAfterSec, "Too many uploads. Try again shortly.");
+  }
   try {
     const { name, parentId } = parseWith(
       folderCreateSchema,

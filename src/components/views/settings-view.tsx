@@ -63,22 +63,12 @@ import { ACCENTS, ACCENT_TOKENS, AVATAR_EMOJIS, type Accent, type ThemeMode } fr
 import type { AppUser } from "@/lib/store";
 import { useThemeStore } from "@/lib/store";
 import { Spinner, ViewHeader } from "@/components/views/shared";
+import { GRADE_LEVELS } from "@/lib/validation";
 import { cn } from "@/lib/utils";
 
-const GRADE_LEVELS = [
-  "6th Grade",
-  "7th Grade",
-  "8th Grade",
-  "9th Grade",
-  "10th Grade",
-  "11th Grade",
-  "12th Grade",
-  "College Freshman",
-  "College Sophomore",
-  "College Junior",
-  "College Senior",
-  "Graduate",
-];
+// S130/CE9: GRADE_LEVELS imports validation.ts's single source (the
+// S127/CB9 ASSIGNMENT_TYPES precedent — a 12-entry twin here silently
+// 400'd a future schema-added level from this dialog).
 
 const SUBJECT_COLORS = [
   "#8b5cf6",
@@ -1107,12 +1097,22 @@ export function SettingsView() {
               <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
                 {user ? (
                   <>
-                    {user.email} · Member since {formatLongDate(new Date(user.createdAt))}
+                    {user.email} ·{" "}
+                    <span className="text-xs text-emerald-600 dark:text-emerald-400">
+                      {user.emailVerified ? "Email verified" : "Email not verified"}
+                    </span>
                   </>
                 ) : (
                   "Loading your account…"
                 )}
               </p>
+              {/* S130/CE9 (live-corrected against the reference 2026-11-03):
+                  the reference's own Profile tab renders exactly ONE
+                  createdAt line — "Account created: {date}" (measured; the
+                  s17 pin holds it). The clone's extra "Member since" line
+                  duplicated the fact back-to-back; THIS line stays (the
+                  parity shape), the Member-since line is the one that
+                  goes — the email-verified status rides the email line. */}
               <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
                 {user ? `Account created: ${formatLongDate(new Date(user.createdAt))}` : "Account created: —"}
               </p>

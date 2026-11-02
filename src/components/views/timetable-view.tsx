@@ -37,7 +37,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useToast } from "@/components/ui/toast";
-import { EmptyState } from "@/components/views/shared";
+import { EmptyState, Spinner } from "@/components/views/shared";
 import { mutations, useDataStore, type TimetableClassInput, type TimetableClassRow } from "@/lib/data";
 import { addDays, formatHHMMRange, formatWeekdayMonthDay, formatShortDate, startOfDay } from "@/lib/date";
 import { ApiError } from "@/lib/api";
@@ -69,6 +69,9 @@ const WEEK_TYPE_LABELS: Record<string, string> = {
 
 export function TimetableView() {
   const classes = useDataStore((s) => s.timetable);
+  // S130/CE3: the loading gate (the tasks-view idiom — the background
+  // loadAll window must not render the false "No classes yet").
+  const loading = useDataStore((s) => s.loading);
   const subjects = useDataStore((s) => s.subjects);
   const createTimetableClass = mutations.createTimetableClass;
   const updateTimetableClass = mutations.updateTimetableClass;
@@ -239,7 +242,11 @@ export function TimetableView() {
         </div>
       </div>
 
-      {classes.length === 0 ? (
+      {loading && classes.length === 0 ? (
+        <div className="sf-card flex justify-center py-16 text-sf-primary">
+          <Spinner className="size-6" />
+        </div>
+      ) : classes.length === 0 ? (
         <div className="sf-card">
           <EmptyState
             icon={Clock}
@@ -446,7 +453,14 @@ export function TimetableView() {
                     </button>
                     {open && (
                       <div className="flex flex-col gap-2 px-3 pb-3">
-                        {dayClasses.length === 0 ? (
+                        {/* S130/CE3: the day-detail's own gate (the calendar
+                            day-detail pattern — an in-flight timetable must
+                            not read "No classes this day."). */}
+                        {loading && classes.length === 0 ? (
+                          <div className="flex justify-center py-2 text-sf-primary">
+                            <Spinner className="size-5" />
+                          </div>
+                        ) : dayClasses.length === 0 ? (
                           <p className="py-2 text-sm text-slate-500 dark:text-slate-400">No classes this day.</p>
                         ) : (
                           dayClasses.map((c) => {

@@ -52,7 +52,7 @@ import {
 } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
 import { useToast } from "@/components/ui/toast";
-import { EmptyState, SubjectTagChip } from "@/components/views/shared";
+import { EmptyState, Spinner, SubjectTagChip } from "@/components/views/shared";
 import {
   mutations,
   useDataStore,
@@ -74,6 +74,9 @@ type StatusFilter = "all" | "active" | "completed";
 
 export function AssignmentsView() {
   const assignments = useDataStore((s) => s.assignments);
+  // S130/CE3: the loading gate (the tasks-view idiom — the background
+  // loadAll window must not render the false "No assignments yet").
+  const loading = useDataStore((s) => s.loading);
   const subjects = useDataStore((s) => s.subjects);
   const createAssignment = mutations.createAssignment;
   const updateAssignment = mutations.updateAssignment;
@@ -281,7 +284,11 @@ export function AssignmentsView() {
         </Select>
       </div>
 
-      {filtered.length === 0 ? (
+      {loading && assignments.length === 0 ? (
+        <div className="sf-card flex justify-center py-16 text-sf-primary">
+          <Spinner className="size-6" />
+        </div>
+      ) : filtered.length === 0 ? (
         <div className="sf-card">
           <EmptyState
             icon={ClipboardList}

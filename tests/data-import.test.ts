@@ -731,3 +731,97 @@ describe("S128/CC1 · the profile-patch whitelist (displayName never rides)", ()
     ]);
   });
 });
+
+// ---------------------------------------------------------------------------
+// S130/CE7 · the import length caps (docs/remediation-plan-session130.md).
+//
+// The s130 server audit's L2/L3: importRowIdError bounded the row id to
+// NON-EMPTY ONLY (every interactive boundary bounds ids at 64 — idField),
+// and the per-field cap was a flat 1 M catch-all — validation.ts's 41
+// per-field length atoms (title 200, notes 5000, front/back 2000, tags
+// 2000, room 100, description 1000/5000 ...) were NOT mirrored at the
+// third entry point, so a hand-edited backup could persist rows the
+// interactive routes would 400 (a 900-K-char tasks.notes row bloats every
+// list read; a 64+-char id bloats every index entry and FK probe).
+// The registry (IMPORT_FIELD_LENGTHS) mirrors the validation.ts atoms;
+// the flat 1 M cap remains the UNKNOWN-field default.
+// ---------------------------------------------------------------------------
+describe("S130/CE7 · the import length caps", () => {
+  it("rejects a row id longer than 64 chars (the idField atom, shared by the third entry point)", () => {
+    expect(importRowIdError("tasks", { id: "x".repeat(65) })).toContain("id");
+    expect(importRowIdError("tasks", { id: "x".repeat(64) })).toBeNull();
+  });
+
+  it("rejects a tasks.title beyond the 200-char atom", () => {
+    expect(() =>
+      sanitizeImportRow("tasks", { id: "t1", title: "x".repeat(201) }, 0),
+    ).toThrow(ImportRowError);
+  });
+
+  it("accepts a tasks.title at exactly the atom boundary (200)", () => {
+    expect(() =>
+      sanitizeImportRow("tasks", { id: "t1", title: "x".repeat(200) }, 0),
+    ).not.toThrow();
+  });
+
+  it("rejects a cards.front beyond the 2,000-char atom (the message names the cap)", () => {
+    expect(() =>
+      sanitizeImportRow("cards", { id: "c1", front: "x".repeat(2_001) }, 0),
+    ).toThrow(/2,000/);
+  });
+
+  it("rejects a notes.tags beyond the 2,000-char atom and an events.description beyond 1,000", () => {
+    expect(() =>
+      sanitizeImportRow("notes", { id: "n1", title: "T", tags: "x".repeat(2_001) }, 0),
+    ).toThrow(ImportRowError);
+    expect(() =>
+      sanitizeImportRow("events", { id: "e1", title: "T", startDate: "2026-09-01T09:00:00.000Z", description: "x".repeat(1_001) }, 0),
+    ).toThrow(ImportRowError);
+  });
+
+  it("an UNKNOWN field keeps the 1 M generic default (the registry caps only the mirrored atoms)", () => {
+    expect(() =>
+      sanitizeImportRow("focusSessions", { id: "f1", mode: "x".repeat(500) }, 0),
+    ).not.toThrow();
+  });
+
+  it("the registry covers every documented atom key (a dropped entry falls back to the 1 M default silently — this census fails loudly)", async () => {
+    const { IMPORT_FIELD_LENGTHS } = await import("../src/lib/data-import");
+    const keys = Object.keys(IMPORT_FIELD_LENGTHS).sort();
+    expect(keys).toEqual([
+      "assignments.description",
+      "assignments.title",
+      "cards.back",
+      "cards.front",
+      "events.description",
+      "events.location",
+      "events.reminders",
+      "events.title",
+      "exams.location",
+      "exams.title",
+      "exams.topics",
+      "flashcardDecks.description",
+      "flashcardDecks.name",
+      "grades.title",
+      "notebooks.name",
+      "notes.content",
+      "notes.tags",
+      "notes.title",
+      "practiceTests.questions",
+      "practiceTests.title",
+      "studyGroups.name",
+      "subjects.name",
+      "taskLists.name",
+      "tasks.notes",
+      "tasks.subtasks",
+      "tasks.title",
+      "timetableClasses.name",
+      "timetableClasses.room",
+    ]);
+    // Spot-assert the atom values (the full mirror is the provenance
+    // comment's contract — validation.ts is the single source).
+    expect(IMPORT_FIELD_LENGTHS["tasks.notes"]).toBe(5_000);
+    expect(IMPORT_FIELD_LENGTHS["notes.content"]).toBe(100_000);
+    expect(IMPORT_FIELD_LENGTHS["timetableClasses.room"]).toBe(100);
+  });
+});

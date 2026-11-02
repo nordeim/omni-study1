@@ -75,6 +75,13 @@ type Row = Record<string, unknown>;
 
 type OwnedConfig = {
   model: OwnedModel;
+  /** S130/CE5: the Prisma client property name — REQUIRED when beforeWrite
+   * is set: the transactional update path resolves the tx-scoped delegate
+   * by this name for the re-read inside db.$transaction (SQLite serializes
+   * interactive transactions, so the re-read is authoritative — the BZ7
+   * folder-cycle doctrine). Checked at construction: a guarded delegate
+   * without the name fails at import, loud. */
+  txModelName?: string;
   createSchema: ZodType<Row>;
   updateSchema: ZodType<Row>;
   /** Columns carrying date-time strings at the boundary → Date on write. */
@@ -258,6 +265,13 @@ function makeOwnedDelegate(config: OwnedConfig): EntityDelegate {
   const orderBy = config.orderBy ?? "asc";
   const ownedFks = config.ownedFks;
   const beforeWrite = config.beforeWrite;
+  // S130/CE5: the guarded-delegate construction contract (see txModelName).
+  const txModelName = config.txModelName;
+  if (beforeWrite && !txModelName) {
+    throw new Error(
+      "S130/CE5: every beforeWrite delegate must declare txModelName (the transactional re-read resolves the tx delegate by name).",
+    );
+  }
 
   const normalize = (row: unknown): unknown => (fromRow ? fromRow(row) : row);
   const toWrite = (data: Row): Row => {
@@ -315,9 +329,28 @@ function makeOwnedDelegate(config: OwnedConfig): EntityDelegate {
       // S121/BV7: the sent FKs must reference owned rows (PATCH too —
       // re-pointing a task at a foreign subject is the same hazard).
       if (ownedFks) await assertOwnedFks(ownedFks, userId, writes);
-      // S121/BV1: the cross-field merge guard sees the STORED row (a
-      // single-leg events PATCH inverts against the row's other leg).
-      if (beforeWrite) beforeWrite(existing as Row, writes);
+      if (beforeWrite && txModelName) {
+        // S130/CE5: the transactional merge guard — the cross-field guard
+        // reads the AUTHORITATIVE row INSIDE the transaction. Pre-fix the
+        // guard validated against the PRE-WRITE snapshot: two concurrent
+        // single-leg PATCHes (events {startDate} vs {endDate}, grades
+        // {score} vs stored {maxScore}, timetable {endTime} vs stored
+        // {startTime}) each passed against the old partner leg and could
+        // commit an interleaved row no single request would accept — the
+        // corrupted row then LOCKS the inversion in (the next legitimate
+        // single-leg PATCH fails its guard against the corrupt stored
+        // leg). The BZ7 folder-cycle pattern, now the guarded family's.
+        const row = await db.$transaction(async (tx) => {
+          const scoped = (tx as unknown as Record<string, OwnedModel>)[txModelName];
+          const current = await scoped.findFirst({ where: { id, userId } });
+          if (!current) throw new NotFoundError();
+          beforeWrite(current as Row, writes);
+          return scoped.update({ where: { id }, data: toWrite(writes as Row) });
+        });
+        return normalize(row);
+      }
+      // No merge guard: the plain ownership-checked write (the pre-CE5
+      // shape — unchanged for the thirteen unguarded delegates).
       const row = await model.update({
         where: { id },
         data: toWrite(writes as Row),
@@ -427,6 +460,8 @@ export const examDelegate = makeOwnedDelegate({
 
 export const eventDelegate = makeOwnedDelegate({
   model: db.event as unknown as OwnedModel,
+  // S130/CE5: the transactional merge guard's tx delegate name.
+  txModelName: "event",
   // S120/BU22: the ordering-checked shapes (the pure eventSchema stays
   // partial()-able for the base — see validation.ts). S121/BV1: the
   // beforeWrite merge guards the SINGLE-LEG PATCH against the stored row
@@ -439,6 +474,8 @@ export const eventDelegate = makeOwnedDelegate({
 
 export const timetableDelegate = makeOwnedDelegate({
   model: db.timetableClass as unknown as OwnedModel,
+  // S130/CE5: the transactional merge guard's tx delegate name.
+  txModelName: "timetableClass",
   // S122/BW7: the ordering-checked shapes + the single-leg merge — the
   // events family (BU22/BV1) applied to the hhmm atoms.
   createSchema: timetableClassCreateSchema,
@@ -485,6 +522,8 @@ export const studyGroupDelegate = makeOwnedDelegate({
 
 export const gradeDelegate = makeOwnedDelegate({
   model: db.grade as unknown as OwnedModel,
+  // S130/CE5: the transactional merge guard's tx delegate name.
+  txModelName: "grade",
   // S125/BZ6: the ordering-checked create shape (the events delegate's
   // createSchema pattern); beforeWrite owns the PATCH legs (see
   // checkGradeRangeMerge — the update schema stays .check()-free by

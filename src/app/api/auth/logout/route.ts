@@ -12,6 +12,11 @@ import { NextResponse, type NextRequest } from "next/server";
 import { secureCookieFlag } from "@/lib/auth";
 import { clearSessionCookie } from "@/lib/server/auth";
 
+// S130/CE6-EXEMPT: the one documented write-method exemption — logout
+// performs NO database write (a cookie clear only); a budget here would
+// add a limiter entry for a null operation. Every OTHER write route in
+// the tree rides checkRateLimit (the machine-enforced census in
+// tests/script-conventions.test.ts).
 export async function POST(request: NextRequest) {
   return clearSessionCookie(NextResponse.json({ ok: true }), {
     secure: secureCookieFlag(

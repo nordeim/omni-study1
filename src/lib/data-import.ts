@@ -163,6 +163,12 @@ export function importRowIdError(collection: string, row: unknown): string | nul
   if (typeof id !== "string" || id.length === 0) {
     return `Collection "${collection}" contains a row without a usable string id.`;
   }
+  // S130/CE7: the id-length atom (idField's own 64) — every interactive
+  // boundary bounds ids at 64; the third entry point must not mint a
+  // 1 M-char primary key (every index entry and FK probe carries it).
+  if (id.length > 64) {
+    return `Collection "${collection}" contains a row whose id exceeds 64 characters — the app's own boundary for ids.`;
+  }
   return null;
 }
 
@@ -399,6 +405,46 @@ export const IMPORT_FIELD_MAX_CHARS = 1_000_000;
  *  route's own MAX_UPLOAD_BYTES contract). */
 export const IMPORT_FILE_DATA_MAX_CHARS = 2_800_000;
 
+// S130/CE7 — the per-field length registry: validation.ts's own atoms,
+// mirrored at the third entry point (a hand-edited backup must not
+// persist rows the interactive routes would 400 — a 900-K-char
+// tasks.notes bloats every list read). Keyed `collection.field`; unknown
+// fields keep the generic 1 M default below. The consistency census in
+// tests/data-import.test.ts pins the key set; the atom VALUES are the
+// validation.ts single source (title/name 200, notes 5000, description
+// 1000 or 5000 per collection, front/back 2000, tags 2000, room 100,
+// location 200, the JSON-blob columns 100k).
+export const IMPORT_FIELD_LENGTHS: Record<string, number> = {
+  "subjects.name": 200,
+  "taskLists.name": 200,
+  "tasks.title": 200,
+  "tasks.notes": 5_000,
+  "tasks.subtasks": 100_000,
+  "assignments.title": 200,
+  "assignments.description": 5_000,
+  "exams.title": 200,
+  "exams.location": 200,
+  "exams.topics": 100_000,
+  "events.title": 200,
+  "events.location": 200,
+  "events.description": 1_000,
+  "events.reminders": 100_000,
+  "timetableClasses.name": 200,
+  "timetableClasses.room": 100,
+  "notebooks.name": 200,
+  "notes.title": 200,
+  "notes.content": 100_000,
+  "notes.tags": 2_000,
+  "flashcardDecks.name": 200,
+  "flashcardDecks.description": 1_000,
+  "cards.front": 2_000,
+  "cards.back": 2_000,
+  "practiceTests.title": 200,
+  "practiceTests.questions": 100_000,
+  "studyGroups.name": 200,
+  "grades.title": 200,
+};
+
 const IMPORT_FILE_URL_MAX_CHARS = 2000;
 const IMPORT_FILE_NAME_MAX_CHARS = 200;
 
@@ -412,6 +458,10 @@ export class ImportRowError extends Error {
 }
 
 function fieldCapFor(collection: string, field: string): number {
+  // S130/CE7: the registry first (the validation.ts atom), then the files
+  // special case, then the generic 1 M default.
+  const registered = IMPORT_FIELD_LENGTHS[`${collection}.${field}`];
+  if (registered !== undefined) return registered;
   if (collection === "files" && field === "data") {
     return IMPORT_FILE_DATA_MAX_CHARS;
   }

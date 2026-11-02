@@ -372,3 +372,49 @@ test.describe("S128/CC1 the displayName-bearing envelope (fresh TEST-NET user)",
     expect(user.name).not.toBe("Spliced Name");
   });
 });
+
+// S130/CE7 — the id-length atom at the import boundary (the s130 server
+// audit's L2): importRowIdError bounded the row id to NON-EMPTY ONLY while
+// every interactive boundary bounds ids at 64 (idField) — a hand-crafted
+// envelope could mint a 1 M-char primary key (every index entry and FK
+// probe carries it). The fix bounds the id at 64 through the shared seam
+// (both the perimeter guard and the write loop). Rides the FRESH TEST-NET
+// user (the BT1 convention — the demo import budget stays at its
+// documented 9/10).
+test.describe("S130/CE7 the id-length atom (fresh TEST-NET user)", () => {
+  test("a 65-char row id is rejected with the named message; a 64-char id restores clean", async ({ page }) => {
+    await registerFreshUser(page, "ce7");
+    const longId = "x".repeat(65);
+    const evil = envelope({
+      data: {
+        subjects: [],
+        tasks: [
+          {
+            id: longId,
+            title: "CE7 id-length probe",
+            createdAt: "2026-09-01T00:00:00.000Z",
+          },
+        ],
+      },
+    });
+    const res = await page.request.post("/api/import/data", { data: evil });
+    expect(res.status()).toBe(400);
+    const body = (await res.json()) as { error: string };
+    expect(body.error).toContain("id");
+    // The boundary itself imports clean (the atom's own edge).
+    const ok = envelope({
+      data: {
+        subjects: [],
+        tasks: [
+          {
+            id: "x".repeat(64),
+            title: "CE7 id-length boundary probe",
+            createdAt: "2026-09-01T00:00:00.000Z",
+          },
+        ],
+      },
+    });
+    const res2 = await page.request.post("/api/import/data", { data: ok });
+    expect(res2.status()).toBe(200);
+  });
+});

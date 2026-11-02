@@ -12,9 +12,10 @@
 
 import { NextResponse } from "next/server";
 
+import { checkRateLimit } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { TRANSCRIPT_WINDOW } from "@/lib/server/ai";
-import { withUser } from "@/lib/server/http";
+import { rateLimitedResponse, withUser } from "@/lib/server/http";
 
 export const GET = withUser(async (user) => {
   const messages = await db.aiChatMessage.findMany({
@@ -34,6 +35,12 @@ export const GET = withUser(async (user) => {
 });
 
 export const DELETE = withUser(async (user) => {
+  // S130/CE6: the transcript-clear budget (the write bucket — the shared
+  // one-budget-per-user posture; a scripted clear-all churns the table).
+  const limit = checkRateLimit(`write:${user.id}`, 600);
+  if (!limit.ok) {
+    return rateLimitedResponse(limit.retryAfterSec, "Too many requests. Please slow down.");
+  }
   await db.aiChatMessage.deleteMany({ where: { userId: user.id } });
   return NextResponse.json({ ok: true });
 });

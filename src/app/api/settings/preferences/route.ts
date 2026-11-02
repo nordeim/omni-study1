@@ -9,10 +9,12 @@
 
 import { NextResponse } from "next/server";
 
+import { checkRateLimit } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { preferencesSchema } from "@/lib/validation";
 import { publicUser } from "@/lib/server/auth";
 import {
+  rateLimitedResponse,
   errorResponse,
   parseWith,
   readJson,
@@ -23,6 +25,13 @@ import {
 type PrefsBody = { name?: unknown; displayName?: unknown };
 
 export const PATCH = withUser(async (user, request) => {
+  // S130/CE6: the preferences budget (the write bucket — one user row, but
+  // the one-budget-per-user posture is uniform: every table-writing route
+  // rides a budget; the logout no-op stays the sole documented exemption).
+  const limit = checkRateLimit(`write:${user.id}`, 600);
+  if (!limit.ok) {
+    return rateLimitedResponse(limit.retryAfterSec, "Too many requests. Please slow down.");
+  }
   try {
     // S121/BV4: a JSON `null` body is validation-invalid input, not a
     // server error (the raw.displayName deref below threw a 500).

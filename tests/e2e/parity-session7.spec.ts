@@ -1913,3 +1913,40 @@ test.describe("S127/CB13 · the analytics Assignments card renders the true aver
     await expect(assignments.getByText("0/6")).toBeVisible();
   });
 });
+
+// S130/CE2 — the True/False default answer (docs/remediation-plan-session130.md).
+//
+// The s130 FE audit: the question editor's True/False Select rendered
+// `value={draft.correctAnswer || "True"}` — the UI SHOWED "True" selected
+// while the stored draft kept correctAnswer "" — and the submit loop then
+// rejected with "Question N needs a correct answer" even though the user
+// saw an answer selected (the user had to re-pick True to unstick it).
+// The fix seeds the stored default at the type switch (switching a draft
+// TO true_false sets correctAnswer "True" — the displayed default becomes
+// the stored default). The pin builds a one-question True/False test
+// WITHOUT ever touching the correct-answer Select and asserts the save
+// succeeds — pre-fix the toast error blocks it (RED).
+test.describe("S130/CE2 · the True/False default answer", () => {
+  test("a True/False question saves without touching the correct-answer select (the displayed default is the stored default)", async ({ page }) => {
+    await page.goto("/PracticeTests");
+    await hydrated(page);
+    await page.getByRole("button", { name: "Create Test" }).first().click();
+    const dlg = page.getByRole("dialog");
+    await expect(dlg).toBeVisible();
+    await dlg.getByLabel("Test Title").fill("CE2 True/False default probe");
+    await dlg.getByLabel("Time Limit (minutes)").fill("10");
+    await dlg.getByRole("button", { name: "Add question" }).click();
+    // Switch the single question's type to True / False.
+    await dlg.getByRole("combobox", { name: "Question 1 type" }).click();
+    await page.getByRole("option", { name: "True / False" }).click();
+    await dlg.getByLabel("Question 1 text").fill("The stored default matches the displayed default.");
+    // Save WITHOUT touching the correct-answer Select — the displayed
+    // "True" must be the stored value. (The submit button inside the
+    // dialog reads "Create Test" — same name as the page's opener, so the
+    // locator is dialog-scoped.)
+    await dlg.getByRole("button", { name: "Create Test" }).click();
+    await expect(dlg).not.toBeVisible();
+    // The saved card surfaces in the list with its question count.
+    await expect(page.locator("main").getByText("CE2 True/False default probe").first()).toBeVisible();
+  });
+});

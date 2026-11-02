@@ -39,7 +39,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useToast } from "@/components/ui/toast";
-import { EmptyState, SubjectTagChip } from "@/components/views/shared";
+import { EmptyState, Spinner, SubjectTagChip } from "@/components/views/shared";
 import { mutations, useDataStore, type ExamInput, type ExamRow } from "@/lib/data";
 import { daysUntil } from "@/lib/date";
 import { ApiError } from "@/lib/api";
@@ -69,6 +69,10 @@ function urgency(row: ExamRow): { text: string; className: string } {
 
 export function ExamsView() {
   const exams = useDataStore((s) => s.exams);
+  // S130/CE3: the loading gate (the tasks-view idiom — a stale empty list
+  // is NOT an empty account; the background loadAll window must not
+  // render the false "No exams found").
+  const loading = useDataStore((s) => s.loading);
   const subjects = useDataStore((s) => s.subjects);
   const createExam = mutations.createExam;
   const updateExam = mutations.updateExam;
@@ -182,7 +186,9 @@ export function ExamsView() {
       title: form.title,
       date: fromDatetimeLocalInput(form.date),
       type: form.type as ExamInput["type"],
-      duration: Math.max(1, Math.round(Number(form.duration) || 60)),
+      // S130/CE9: the clamp mirrors the schema atom (5..600 — a 1..4 value
+        // submitted a payload the server always 400'd).
+        duration: Math.min(600, Math.max(5, Math.round(Number(form.duration) || 60))),
       subjectId: form.subjectId,
       topics: JSON.stringify(form.topics),
       location: form.location,
@@ -261,7 +267,11 @@ export function ExamsView() {
         </div>
       </div>
 
-      {sorted.length === 0 ? (
+      {loading && exams.length === 0 ? (
+        <div className="sf-card flex justify-center py-16 text-sf-primary">
+          <Spinner className="size-6" />
+        </div>
+      ) : sorted.length === 0 ? (
         <div className="sf-card">
           <EmptyState
             icon={GraduationCap}

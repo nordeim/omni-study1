@@ -118,12 +118,17 @@ export const POST = withUser(async (user, request) => {
     const lastUserMessage = [...body.messages]
       .reverse()
       .find((m) => m.role === "user");
-    const assistantRow = await db.$transaction((tx) =>
-      persistTranscriptPair(tx, user.id, {
-        userContent: lastUserMessage ? lastUserMessage.content : "",
-        assistantContent: capPersistedContent(content),
-        surface: body.surface,
-      }),
+    // S130/CE9: the explicit 15 s timeout (Prisma's interactive default
+    // is 5 s — a large imported transcript tail could P2028 the first
+    // post-import chat; the BW4 import-route precedent).
+    const assistantRow = await db.$transaction(
+      (tx) =>
+        persistTranscriptPair(tx, user.id, {
+          userContent: lastUserMessage ? lastUserMessage.content : "",
+          assistantContent: capPersistedContent(content),
+          surface: body.surface,
+        }),
+      { timeout: 15_000 },
     );
 
     return NextResponse.json({

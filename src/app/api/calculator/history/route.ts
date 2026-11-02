@@ -13,9 +13,10 @@
 
 import { NextResponse } from "next/server";
 
+import { checkRateLimit } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { calculatorHistorySchema } from "@/lib/validation";
-import { parseWith, readJson, toErrorResponse, withUser } from "@/lib/server/http";
+import { parseWith, rateLimitedResponse, readJson, toErrorResponse, withUser } from "@/lib/server/http";
 
 const HISTORY_WINDOW = 500;
 
@@ -55,6 +56,9 @@ export const POST = withUser(async (user, request) => {
           where: { userId: user.id },
           orderBy: [{ createdAt: "desc" }, { id: "desc" }],
           skip: HISTORY_WINDOW,
+          // S130/CE9: the bounded stale-select (the ai.ts twin — the BW4
+          // class on this route's own 5 s default).
+          take: 1000,
           select: { id: true },
         });
         if (stale.length > 0) {
@@ -71,6 +75,12 @@ export const POST = withUser(async (user, request) => {
 });
 
 export const DELETE = withUser(async (user) => {
+  // S130/CE6: the history-clear budget (the write bucket — the ai/messages
+  // twin; the POST stays the documented trimmed-table exception below).
+  const limit = checkRateLimit(`write:${user.id}`, 600);
+  if (!limit.ok) {
+    return rateLimitedResponse(limit.retryAfterSec, "Too many requests. Please slow down.");
+  }
   await db.calculatorHistoryEntry.deleteMany({ where: { userId: user.id } });
   return NextResponse.json({ ok: true });
 });

@@ -1,7 +1,22 @@
 import { defineConfig } from "vitest/config";
 import path from "node:path";
 
-// Unit-test layer for the pure domain seams — 45 files / 1202 tests
+// Unit-test layer for the pure domain seams — 45 files / 1217 tests
+// (re-anchored S130/CE — the audit-driven hardening cycle: census 1202 →
+// 1217, +15 net [api-timeout net +2: +4 the S130/CE1 default-deadline
+// family (the structural live-signal legs + the constants + the
+// override-wins discriminator) −2 the "does NOT time out" legs tombstoned
+// (their patient-default premise is inverted by design); data-import +7:
+// the S130/CE7 length-cap family (the 64-char id atom, the per-field
+// registry legs + the key census + the unknown-field 1 M default);
+// script-conventions +4: the S130/CE6 write-route budget census + the
+// S130/CE5 transactional merge-guard census + the re-tag tripwire pair;
+// hue-tokens +2: the S130/CE8 analytics tokenization sweep + the token-
+// presence census; schema-indexes +1: the S130/CE9 FileFolder parentId
+// index pin; import-row-guard net 0: the 1 M boundary legs corrected to
+// an unregistered field (the registry caps tasks.title at 200 now — the
+// documented correction the source change demands)]. The S129/CD
+// additions beneath:)
 // (re-anchored S129/CD — the audit-driven hardening cycle: census 1191 →
 // 1202, +11 net [overlay-animation.test.ts the 45th file, +4: the S129/CD1
 // tw-animate-css wiring pin + the overlay-class census + the dead-v3-dep

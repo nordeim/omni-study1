@@ -922,3 +922,45 @@ test.describe("S129/CD2 · the boot gate survives a stalled pre-warm", () => {
     }
   });
 });
+
+// ---------------------------------------------------------------------------
+// S130/CE3 — the view loading gates (docs/remediation-plan-session130.md).
+//
+// The s130 FE audit's finding: the shell pre-warms only the ACTIVE view's
+// collections before the Splash lifts; loadAll() then runs in the
+// BACKGROUND — so SPA-navigating to any other view during that window
+// renders its empty state on IN-FLIGHT data ("No notes yet", "No exams
+// found", ...). Eight sibling views already gate on s.loading with the
+// spinner idiom; the six ungated views (notes ×2 sites, events, exams,
+// assignments, timetable ×2, flashcards) adopt it this cycle. The pin
+// holds the /api/notes GET stalled, SPA-navigates Dashboard → Notes
+// through the sidebar, and asserts the loading branch renders while the
+// collection is in flight — pre-fix the FALSE "No notes yet" renders live
+// (RED). The terminal state after the 20 s deadline is out of scope here
+// (the load then FAILED — a different honest-state question).
+// ---------------------------------------------------------------------------
+test.describe("S130/CE3 · the view loading gates", () => {
+  test("an in-flight notes GET renders the loading branch, never the false 'No notes yet' empty state", async ({ page }) => {
+    const HELD = "**/api/notes";
+    await page.route(HELD, () => {
+      /* never fulfills — the accepted-TCP stall shape (within the 20 s window) */
+    });
+    try {
+      await page.goto("/Dashboard");
+      await page.waitForFunction(
+        () => document.documentElement.dataset.appHydrated === "true",
+      );
+      // SPA-navigate through the sidebar — the Notes view mounts while the
+      // background loadAll's notes fetch is still held.
+      await page.getByRole("link", { name: "Notes" }).first().click();
+      await expect(page.getByRole("heading", { level: 1, name: "Notes" })).toBeVisible();
+      // The in-flight window: the loading branch owns the panes, the false
+      // empty state renders NOWHERE (both the list pane and the main pane).
+      await expect(page.getByText("No notes yet")).toHaveCount(0);
+      await expect(page.locator(".animate-spin").first()).toBeVisible();
+    } finally {
+      // The S13/S14 lesson: unroute held routes in finally.
+      await page.unroute(HELD);
+    }
+  });
+});

@@ -83,7 +83,14 @@ function GroupDialog({
     if (!name.trim() || saving) return;
     setSaving(true);
     try {
-      const members = group ? parseMembers(group.members) : [];
+      // S130/CE9: the members base is read from the STORE at submit time
+      // (the BX10 idiom — the dialog's `group` prop is the snapshot from
+      // when editing OPENED; a member added in another tab between open
+      // and save would be silently dropped by the stale base).
+      const fresh = group
+        ? useDataStore.getState().studyGroups.find((g) => g.id === group.id)
+        : null;
+      const members = group ? parseMembers(fresh?.members ?? group.members) : [];
       const payload = {
         name: name.trim(),
         color,
@@ -467,6 +474,11 @@ export function StudyGroupsView() {
                     placeholder="Name"
                     className="flex-1"
                   />
+                  {/* S130/CE9: the email field's accessible name (a
+                      placeholder is not a name — §13). */}
+                  <Label htmlFor="member-email" className="sr-only">
+                    Member email
+                  </Label>
                   <Input
                     id="member-email"
                     type="email"

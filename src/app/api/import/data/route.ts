@@ -28,6 +28,7 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import type { PrismaClient } from "@prisma/client";
+import { Prisma } from "@prisma/client";
 
 import { checkRateLimit } from "@/lib/auth";
 import { DATA_EXPORT_FORMAT, DATA_EXPORT_VERSION, EXPORT_COLLECTIONS } from "@/lib/data-export";
@@ -45,6 +46,11 @@ import {
 import { db } from "@/lib/db";
 import { requireUser } from "@/lib/server/auth";
 import {
+  checkEventOrderingMerge,
+  checkGradeRangeMerge,
+  checkTimetableOrderingMerge,
+} from "@/lib/server/entities";
+import {
   assertJsonContentType,
   errorResponse,
   rateLimitedResponse,
@@ -53,6 +59,31 @@ import {
 } from "@/lib/server/http";
 
 type Row = Record<string, unknown>;
+
+// S130/CE7 — the single-leg merge guards at the third entry point: the
+// same validation.ts→entities.ts seams the factory's beforeWrite runs. A
+// one-leg update (a hand-crafted `{score: 80}` against a stored
+// `maxScore: 50`, or a single events/timetable date leg) must not
+// persist an inverted row every interactive route would reject (the
+// CB11 "the import is a first-class citizen" doctrine). The stored
+// partner legs ride the probe's select.
+const IMPORT_MERGE_GUARDS: Record<
+  string,
+  { guard: (existing: Row, writes: Row) => void; select: Row }
+> = {
+  events: {
+    guard: checkEventOrderingMerge,
+    select: { startDate: true, endDate: true },
+  },
+  grades: {
+    guard: checkGradeRangeMerge,
+    select: { score: true, maxScore: true },
+  },
+  timetableClasses: {
+    guard: checkTimetableOrderingMerge,
+    select: { startTime: true, endTime: true },
+  },
+};
 
 /** Restore order: referents before referees (folders before files, decks
  * before cards, subjects before everything subject-tagged). */
@@ -371,15 +402,42 @@ export const POST = async (request: NextRequest) => {
             collection === "cards"
               ? { id: id as string, deck: { userId: user.id } }
               : { id: id as string, userId: user.id };
+          const mergeGuard = IMPORT_MERGE_GUARDS[collection];
           const existing = await delegate.findFirst({
             where: probe,
-            select: { id: true },
+            select: mergeGuard ? { id: true, ...mergeGuard.select } : { id: true },
           });
           if (existing) {
+            // S130/CE7: the update branch runs the merge guard against the
+            // STORED partner leg (the factory's beforeWrite parity — see
+            // IMPORT_MERGE_GUARDS above).
+            if (mergeGuard) {
+              mergeGuard.guard(existing as Row, fields as Row);
+            }
             await delegate.update({ where: { id: id as string }, data });
             u += 1;
           } else {
-            await delegate.create({ data: { ...data, id } as Row });
+            try {
+              await delegate.create({ data: { ...data, id } as Row });
+            } catch (err: unknown) {
+              // S130/CE7: the concurrent-create race — the probe found no
+              // row but a concurrent write minted the id between the probe
+              // and the create. The throw propagates OUT of the transaction
+              // (the all-or-nothing rollback holds); the route's outer
+              // catch maps it to the named 409 — never the generic 500
+              // (the route's 400-class contract for bad input).
+              if (
+                err instanceof Prisma.PrismaClientKnownRequestError &&
+                err.code === "P2002"
+              ) {
+                const race = new Error(
+                  `import-p2002:${collection}:${id}`,
+                );
+                race.name = "ImportConcurrentCreateError";
+                throw race;
+              }
+              throw err;
+            }
             c += 1;
           }
         }
@@ -417,6 +475,15 @@ export const POST = async (request: NextRequest) => {
       return errorResponse(
         400,
         "That backup contains a row whose fields do not match the app's data model. Re-export a fresh backup and try again.",
+      );
+    }
+    // S130/CE7: the concurrent-create race surfaced from the transaction —
+    // the named 409 with the actionable message (see the write loop).
+    if (err instanceof Error && err.name === "ImportConcurrentCreateError") {
+      const [, collection, id] = err.message.split(":");
+      return errorResponse(
+        409,
+        `That ${collection} row (id "${id}") was created elsewhere while the import ran. Re-export a fresh backup and try again.`,
       );
     }
     return toErrorResponse(err);

@@ -268,7 +268,15 @@ export function FilesView() {
       const form = new FormData();
       form.append("file", file);
       if (currentFolderId) form.append("folderId", currentFolderId);
-      const res = await fetch("/api/files", { method: "POST", body: form });
+      // S130/CE1: the upload deadline — a bare fetch rides NO apiSend default,
+      // so a stalled upload (2 MiB body over a slow uplink) latched the
+      // disabled Upload button forever. 120 s: the AI-family budget for a
+      // body-capped transfer (the import POST's precedent).
+      const res = await fetch("/api/files", {
+        method: "POST",
+        body: form,
+        signal: AbortSignal.timeout(120_000),
+      });
       if (!res.ok) {
         let message = `Upload failed (${res.status})`;
         try {

@@ -449,7 +449,12 @@ test.describe("S9-K · Analytics chart axes + gridlines", () => {
     await hydrated(page);
     const chart = page.locator('[aria-label="Focus time chart"]');
     await expect(chart).toBeVisible();
-    await expect(chart.locator("path[stroke='#8b5cf6']")).toHaveCount(1);
+    // S130/CE8: the chart colors ride the accent token now (the rum-panel
+    // sparkline's form) — under the default violet accent the COMPUTED
+    // color is the S9-K measurement's own #8b5cf6; the pin asserts the
+    // token form (the source change's documented correction — the
+    // purpose, "the analytics line renders in the accent", is unchanged).
+    await expect(chart.locator("path[stroke='rgb(var(--sf-primary))']")).toHaveCount(1);
     await expect(chart.locator("path[fill^='url(#']")).toHaveCount(1);
     const texts = await chart.locator("text").allTextContents();
     expect(texts.some((t) => t.trim().endsWith("h"))).toBe(true); // 0h..4h ticks

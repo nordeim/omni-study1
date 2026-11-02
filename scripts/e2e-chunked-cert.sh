@@ -1,4 +1,15 @@
 #!/usr/bin/env bash
+# (S130/CE re-tag — census 563 → 567, net +4: chunk 1 +1 [the CE3 view
+# loading-gate leg in navigation — an in-flight notes GET renders the
+# spinner branch, never the false "No notes yet"]; chunk 2 +1 [the CE2
+# True/False default leg in parity-session7 — a question saves without
+# touching the correct-answer select]; chunk 5 +2 [the CE4 rum-panel
+# state-machine leg — a failed initial load renders the retry hint, never
+# the lying loading line; the CE7 id-length leg in s23-import — a 65-char
+# row id rejects with the named message]. The full CE map:
+# docs/remediation-plan-session130.md.)
+# Expected: 146 + 179 + 72 + 93 + 77 = 567 (each chunk's count includes its
+# auth setup — the current census; the historical re-tag blocks beneath.)
 # (S129/CD re-tag — census 560 → 563, net +3: chunk 1 +1 [the CD2 boot-gate
 # stall leg in navigation — all five Dashboard pre-warm keys held forever,
 # the Splash still mounted at 5 s, the shell committed by 35 s under the

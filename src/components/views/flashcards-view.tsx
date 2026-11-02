@@ -73,6 +73,9 @@ type CardDialog = { open: boolean; editing: FlashcardRow | null };
 
 export function FlashcardsView() {
   const decks = useDataStore((s) => s.flashcardDecks);
+  // S130/CE3: the loading gate (the tasks-view idiom — the background
+  // loadAll window must not render the false "No decks yet").
+  const loading = useDataStore((s) => s.loading);
   const flashcards = useDataStore((s) => s.flashcards);
   const subjects = useDataStore((s) => s.subjects);
   const createFlashcardDeck = mutations.createFlashcardDeck;
@@ -466,7 +469,13 @@ export function FlashcardsView() {
           />
         </div>
         <div role="group" className="sf-scroll mt-3 flex-1 space-y-2 overflow-y-auto" aria-label="Deck rows">
-          {filteredDecks.length === 0 ? (
+          {/* S130/CE3: the in-flight window renders the spinner, never the
+              false "No decks yet." */}
+          {loading && decks.length === 0 ? (
+            <div className="flex justify-center py-8 text-sf-primary">
+              <Spinner className="size-6" />
+            </div>
+          ) : filteredDecks.length === 0 ? (
             <p className="py-8 text-center text-sm text-slate-500 dark:text-slate-400">
               {decks.length === 0 ? "No decks yet." : "No decks match."}
             </p>
@@ -596,7 +605,13 @@ export function FlashcardsView() {
           (below): the deck-detail toolbar itself is desktop-first, like
           the Notes editor chrome. */}
       <div role="group" className="sf-scroll flex min-w-0 flex-1 flex-col overflow-y-auto" aria-label="Deck detail">
-        {decks.length === 0 ? (
+        {/* S130/CE3: the detail pane's own gate (the notes-view main-pane
+            pattern). */}
+        {loading && decks.length === 0 ? (
+          <div className="sf-card flex flex-1 items-center justify-center text-sf-primary">
+            <Spinner className="size-6" />
+          </div>
+        ) : decks.length === 0 ? (
           <div className="sf-card flex flex-1 flex-col justify-center">
             <EmptyState
               icon={Layers}

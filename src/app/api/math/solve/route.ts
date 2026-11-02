@@ -82,12 +82,15 @@ export const POST = withUser(async (user, request) => {
     // S126/CA1: the shared pair write + retention trim (the chat route's
     // twin — explicit timestamps so the pair can never tie, and the
     // transcript bounded like calculator history).
-    await db.$transaction((tx) =>
-      persistTranscriptPair(tx, user.id, {
-        userContent: capPersistedContent(problem),
-        assistantContent: capPersistedContent(solution),
-        surface: "solver",
-      }),
+    // S130/CE9: the explicit 15 s timeout (the chat route's twin).
+    await db.$transaction(
+      (tx) =>
+        persistTranscriptPair(tx, user.id, {
+          userContent: capPersistedContent(problem),
+          assistantContent: capPersistedContent(solution),
+          surface: "solver",
+        }),
+      { timeout: 15_000 },
     );
 
     return NextResponse.json({ solution });

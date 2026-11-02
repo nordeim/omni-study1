@@ -61,7 +61,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useToast } from "@/components/ui/toast";
-import { EmptyState } from "@/components/views/shared";
+import { EmptyState, Spinner } from "@/components/views/shared";
 import {
   QuillEditor,
   type EditorFont,
@@ -73,7 +73,7 @@ import {
   type NoteInput,
   type NotebookRow,
 } from "@/lib/data";
-import { apiSend, ApiError } from "@/lib/api";
+import { ApiError } from "@/lib/api";
 import { stripHtmlPreview } from "@/lib/text";
 import { cn } from "@/lib/utils";
 
@@ -170,10 +170,16 @@ const NoteTitleInput = React.forwardRef<NoteTitleInputHandle, {
 export function NotesView() {
   const notes = useDataStore((s) => s.notes);
   const notebooks = useDataStore((s) => s.notebooks);
+  // S130/CE3: the loading gate — the shell pre-warms only the ACTIVE
+  // view's collections; loadAll runs in the BACKGROUND, so navigating to
+  // Notes mid-flight rendered "No notes yet" on in-flight data (the false
+  // empty state). The tasks-view idiom (the 8 gated views' pattern).
+  const loading = useDataStore((s) => s.loading);
   const createNote = mutations.createNote;
   const updateNote = mutations.updateNote;
   const deleteNote = mutations.deleteNote;
   const createNotebook = mutations.createNotebook;
+  const updateNotebook = mutations.updateNotebook;
   const deleteNotebook = mutations.deleteNotebook;
   const { toast } = useToast();
 
@@ -362,10 +368,10 @@ export function NotesView() {
         autosaveFailedRef.current = false;
       } else {
         if (dialog.editing) {
-          // Notebooks ride the generic API through apiSend — the store keeps
-          // notebooks only as create; rename is a direct PATCH.
-          await apiSend("PATCH", `/api/notebooks/${dialog.editing.id}`, { name });
-          await useDataStore.getState().loadCollections(["notebooks"]);
+          // S130/CE9: the rename rides the mutation seam
+          // (mutations.updateNotebook — the BW8 single-source doctrine;
+          // the inline twin duplicated it while the seam sat dead).
+          await updateNotebook(dialog.editing.id, { name });
         } else {
           await createNotebook({ name });
         }
@@ -586,7 +592,8 @@ export function NotesView() {
               <PopoverTrigger asChild>
                 <button
                   type="button"
-                  className="mt-2 flex items-center gap-1 text-xs font-medium text-slate-500 dark:text-slate-400 outline-none hover:text-slate-600 focus-visible:ring-2 focus-visible:ring-sf-primary/40"
+                  // S130/CE9: the dark hover pair (the myday pair's twin).
+                  className="mt-2 flex items-center gap-1 text-xs font-medium text-slate-500 dark:text-slate-400 outline-none hover:text-slate-600 dark:hover:text-slate-300 focus-visible:ring-2 focus-visible:ring-sf-primary/40"
                 >
                   <Pencil className="size-3" strokeWidth={2} />
                   Manage notebooks
@@ -648,7 +655,14 @@ export function NotesView() {
         </div>
 
         <div className="sf-scroll mt-3 flex-1 space-y-2 overflow-y-auto">
-          {filtered.length === 0 ? (
+          {/* S130/CE3: the in-flight window renders the spinner, never the
+              false "No notes yet." (a stale empty list is NOT an empty
+              account). */}
+          {loading && notes.length === 0 ? (
+            <div className="flex justify-center py-8 text-sf-primary">
+              <Spinner className="size-6" />
+            </div>
+          ) : filtered.length === 0 ? (
             <p className="py-8 text-center text-sm text-slate-500 dark:text-slate-400">
               {notes.length === 0 ? "No notes yet." : "No notes match."}
             </p>
@@ -705,7 +719,13 @@ export function NotesView() {
             the ref at 390×844: the w-80 list + a squeezed right pane) — the
             h1 is reachable at every breakpoint, so the drawer-flow heading
             contract holds without the mobile-only h2 it previously needed. */}
-        {notes.length === 0 ? (
+        {/* S130/CE3: the main pane's own gate (the e2e pin holds BOTH
+            empty-state sites). */}
+        {loading && notes.length === 0 ? (
+          <div className="sf-card flex flex-1 items-center justify-center text-sf-primary">
+            <Spinner className="size-6" />
+          </div>
+        ) : notes.length === 0 ? (
           <div className="sf-card flex flex-1 flex-col justify-center">
             <EmptyState
               icon={BookOpen}

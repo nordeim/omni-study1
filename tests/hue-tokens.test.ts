@@ -297,7 +297,7 @@ describe("the canonical consumer sites ride the utilities (S92/AS1 leg 3)", () =
 const RESIDUALS: ReadonlyArray<{ file: string; line: number; why: string }> = [
   { file: "src/components/auth/login-surface.tsx", line: 28, why: "the bg-red-50/70 translucent alert (the reference's measured login chrome)" },
   { file: "src/components/views/dashboard-view.tsx", line: 197, why: "the overdue icon chip (bg-only pair — the icon carries its own text color)" },
-  { file: "src/components/rum/rum-panel.tsx", line: 138, why: "the borderless red-600 alert (the /rum owner panel's measured style; line re-anchored S129/CD3 — the exhaustive-deps comment above shifted it)" },
+  { file: "src/components/rum/rum-panel.tsx", line: 143, why: "the borderless red-600 alert (the /rum owner panel's measured style; line re-anchored S130/CE4 — the load-state machine comments above shifted it)" },
 ];
 
 function listSrcFiles(dir: string): string[] {
@@ -410,5 +410,37 @@ describe("the connectivity amber pins (S94/AU1 leg 5)", () => {
     expect(banner, "the banner must USE sf-connectivity-pill in a class string (not just mention it)").toMatch(
       /["']sf-connectivity-pill["'\s]/,
     );
+  });
+});
+
+// ---------------------------------------------------------------------------
+// S130/CE8 · the analytics accent tokenization (docs/remediation-plan-session130.md).
+//
+// The s130 FE audit's I5, promoted: analytics-view hardcoded the violet
+// accent literal `#8b5cf6` at five chart sites (the gradient stops, two
+// line strokes, the bar fill) — the last hardcoded accent hexes on a
+// themed surface outside the button's documented measured literals. The
+// rum-panel sparkline already showed the token form
+// (`stroke="rgb(var(--sf-primary))"`). CE8 tokenizes the five sites; the
+// S9-K e2e pin (which asserted the old hex) is corrected with the
+// provenance in-line. This sweep machine-guards the regression.
+// ---------------------------------------------------------------------------
+describe("the analytics accent tokenization (S130/CE8)", () => {
+  it("carries ZERO #8b5cf6 literals in analytics-view (the accent rides rgb(var(--sf-primary)))", () => {
+    const src = readConsumer("src/components/views/analytics-view.tsx");
+    const offenders: string[] = [];
+    src.split("\n").forEach((lineText, i) => {
+      if (lineText.includes("#8b5cf6")) offenders.push(`line ${i + 1}`);
+    });
+    expect(
+      offenders,
+      `raw violet literals remaining (the accent system owns the chart colors): ${offenders.join(", ")}`,
+    ).toEqual([]);
+  });
+
+  it("the five chart surfaces reference the primary token", () => {
+    const src = readConsumer("src/components/views/analytics-view.tsx");
+    const tokens = src.split("\n").filter((l) => l.includes("rgb(var(--sf-primary))")).length;
+    expect(tokens, "the gradient stops ×2, two line strokes, and the bar fill").toBeGreaterThanOrEqual(5);
   });
 });

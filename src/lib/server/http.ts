@@ -5,8 +5,10 @@
 // factories (AGENTS.md "API pattern").
 //
 // Error contract (PAD §6.2): Zod → 400, Prisma P2002 → 409, P2025 → 404,
-// unauthed → 401, unknown → 500 with the detail logged server-side ONLY
-// (the response never carries a stack or provider message).
+// unauthed → 401, body-too-large → 413 (S129/CD4's BodyTooLargeError — a
+// subclass of ValidationError, checked FIRST), unknown → 500 with the
+// detail logged server-side ONLY (the response never carries a stack or
+// provider message).
 // ---------------------------------------------------------------------------
 
 import { NextResponse, type NextRequest } from "next/server";

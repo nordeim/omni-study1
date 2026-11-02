@@ -47,27 +47,101 @@ describe("apiSend timeoutMs", () => {
     }
   });
 
-  it("does NOT time out when no timeoutMs is passed (a hanging fetch stays pending)", async () => {
-    const hang = vi.fn(() => new Promise<Response>(() => {}));
+  // S130/CE1 REMOVED (the documented correction the source change demands):
+  // the pre-CE1 leg "does NOT time out when no timeoutMs is passed" pinned
+  // the patient-default premise that CE1 inverts BY DESIGN — apiSend now
+  // installs DEFAULT_WRITE_TIMEOUT_MS (30 s) when the caller passes no
+  // options. The replacement legs below pin the new contract structurally
+  // (the captured init carries a live AbortSignal) — a 30 s behavioral
+  // wait would dominate the suite's runtime for zero discrimination.
+  it("isTimeoutError rejects ordinary errors", () => {
+    expect(isTimeoutError(new TypeError("fetch failed"))).toBe(false);
+    expect(isTimeoutError(new Error("boom"))).toBe(false);
+    expect(isTimeoutError(null)).toBe(false);
+  });
+});
+
+// S130/CE1 — the DEFAULT deadline family (docs/remediation-plan-session130.md).
+//
+// The s130 FE audit's M1: the timeoutMs infrastructure existed (CD wired
+// collection GETs, CC the auth POSTs, S13 the AI surfaces) but EVERY
+// mutation write path rode no deadline — all ~50 apiSend calls in
+// data.ts's mutations plus the view-level twins. A stalled write (accepted
+// TCP, no response — no offline event fires) latched every busy state
+// (dialog Save spinners, the delete-account button, the upload button)
+// with no error branch reachable until reload. The fix installs defaults
+// INSIDE the seam: apiSend → DEFAULT_WRITE_TIMEOUT_MS (30 s), apiGet →
+// DEFAULT_GET_TIMEOUT_MS (20 s — the CD2 collection constant's value);
+// an explicit timeoutMs still wins. Pinned structurally: the captured
+// init carries a LIVE AbortSignal (installed, un-aborted) — the behavioral
+// rejection legs above already pin the mechanism, and waiting 30 s here
+// would add runtime without discrimination.
+describe("apiSend/apiGet default deadlines (S130/CE1)", () => {
+  // A holder object + a reader function — direct `captured.init?.signal`
+  // reads narrow to `never` (the test body's `= undefined` assignments
+  // are visible to control flow; the stub's assignment is not), so the
+  // read goes through a function boundary where the union stays honest.
+  const captured: { init?: RequestInit } = {};
+  const signalOf = (c: { init?: RequestInit }): AbortSignal | null | undefined =>
+    c.init?.signal;
+  const capturingFetch = () =>
+    vi.fn(
+      (_path: string | URL | Request, init?: RequestInit) =>
+        new Promise<Response>(() => {
+          captured.init = init;
+        }),
+    );
+
+  it("apiSend installs a live default-write deadline when no options ride", async () => {
+    captured.init = undefined;
+    const hang = capturingFetch();
     vi.stubGlobal("fetch", hang);
     try {
-      let rejected = false;
-      const sent = apiSend("POST", "/api/test").catch(() => {
-        rejected = true;
-      });
-      // Give any (wrongly installed) default timeout ample time to fire.
-      await new Promise((r) => setTimeout(r, 150));
-      expect(rejected).toBe(false);
+      const sent = apiSend("POST", "/api/test", { a: 1 });
+      await new Promise((r) => setTimeout(r, 25));
+      expect(signalOf(captured)).toBeInstanceOf(AbortSignal);
+      expect(signalOf(captured)?.aborted).toBe(false);
       void sent;
     } finally {
       vi.unstubAllGlobals();
     }
   });
 
-  it("isTimeoutError rejects ordinary errors", () => {
-    expect(isTimeoutError(new TypeError("fetch failed"))).toBe(false);
-    expect(isTimeoutError(new Error("boom"))).toBe(false);
-    expect(isTimeoutError(null)).toBe(false);
+  it("apiGet installs a live default-get deadline when no options ride", async () => {
+    captured.init = undefined;
+    const hang = capturingFetch();
+    vi.stubGlobal("fetch", hang);
+    try {
+      const got = apiGet("/api/health");
+      await new Promise((r) => setTimeout(r, 25));
+      expect(signalOf(captured)).toBeInstanceOf(AbortSignal);
+      expect(signalOf(captured)?.aborted).toBe(false);
+      void got;
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
+  it("an explicit timeoutMs still wins over the default (the caller's signal timing governs)", async () => {
+    captured.init = undefined;
+    const hang = capturingFetch();
+    vi.stubGlobal("fetch", hang);
+    try {
+      const sent = apiSend("POST", "/api/test", undefined, { timeoutMs: 25 });
+      await new Promise((r) => setTimeout(r, 60));
+      // The explicit 25 ms deadline has FIRED by now — the default (30 s)
+      // would not have. This is the override discriminating leg.
+      expect(signalOf(captured)?.aborted).toBe(true);
+      void sent;
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
+  it("the default constants are the documented values (30 s write / 20 s get — the CD2 collection constant's value)", async () => {
+    const api = await import("@/lib/api");
+    expect(api.DEFAULT_WRITE_TIMEOUT_MS).toBe(30_000);
+    expect(api.DEFAULT_GET_TIMEOUT_MS).toBe(20_000);
   });
 });
 
@@ -111,19 +185,7 @@ describe("apiGet timeoutMs (S128/CC7)", () => {
     }
   });
 
-  it("does NOT time out when no timeoutMs is passed (the default stays patient)", async () => {
-    const hang = hangingFetch();
-    vi.stubGlobal("fetch", hang);
-    try {
-      let rejected = false;
-      const got = apiGet("/api/health").catch(() => {
-        rejected = true;
-      });
-      await new Promise((r) => setTimeout(r, 150));
-      expect(rejected).toBe(false);
-      void got;
-    } finally {
-      vi.unstubAllGlobals();
-    }
-  });
+  // S130/CE1 REMOVED (the apiGet twin of the apiSend tombstone above — the
+  // patient-default premise this leg pinned is inverted by design; the
+  // structural default-install legs in the S130/CE1 describe replace it).
 });
