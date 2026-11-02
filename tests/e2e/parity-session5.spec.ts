@@ -822,15 +822,18 @@ test.describe("S5-AB · the populated-surface drift layer (measured on the POPUL
   test("S5-AB7 GradeTracker: per-subject cards render chip + avg + the Progress-to-A row", async ({ page }) => {
     await page.goto("/GradeTracker");
     await hydrated(page);
-    // Seed: Mathematics 92+85 → 89, Chemistry 78, English 88, Physics 95 —
-    // four populated subject cards (the ref's card anatomy measured with
-    // one probe subject; the grid cell measured ≈547px on a 1116px canvas
-    // = sm:grid-cols-2). The measured logic: progress = avg/90 (50 → 56%).
+    // Seed (S127/CB4 — the weighted mean): Mathematics 92×1 + 85×0.5 →
+    // weighted (92 + 42.5)/1.5 = 89.67 → 90 (was the unweighted 88.5 → 89;
+    // the seed's weights are real data the card now honors), Chemistry 78,
+    // English 88, Physics 95 — four populated subject cards (the ref's card
+    // anatomy measured with one probe subject; the grid cell measured
+    // ≈547px on a 1116px canvas = sm:grid-cols-2). The measured logic:
+    // progress = avg/90 (50 → 56%).
     const cards = page.getByTestId("gt-subject-card");
     await expect(cards).toHaveCount(4);
     const math = cards.filter({ hasText: "Mathematics" });
     await expect(math).toHaveCount(1);
-    await expect(math.getByText("89%")).toBeVisible();
+    await expect(math.getByText("90%", { exact: true })).toBeVisible();
     await expect(math.getByText("Progress to A (90%)")).toBeVisible();
     // Chemistry has ONE seeded grade (78/100), so its avg and its Recent
     // Grades pill are both "78%" — the ref dodges the collision with a 1dp
@@ -878,6 +881,41 @@ test.describe("S123/BX6: an early manual complete records the elapsed duration",
     // Pre-fix this was exactly 1500 (the nominal 25:00) — any early
     // complete must record the ELAPSED time.
     expect(row.durationSeconds).toBeLessThan(1500);
+    // Zero residue on the shared demo user.
+    await page.request.delete(`/api/focus-sessions/${row.id}`);
+  });
+});
+
+// S127/CB1 — the focus-timer stale closure (the s127 FE audit's H-1):
+// `complete`'s useCallback dep array omitted `remaining`, so the memoized
+// callback closed over the MOUNT-time value — `durations.focus - remaining`
+// was always 0 and the schema's min-1 floored EVERY session (auto AND
+// manual paths) to durationSeconds: 1. The BX6 elapsed fix was dead code
+// behind the closure, and the BX6 pin above is blind to it (1 satisfies
+// >= 1 && < 1500). This pin drives the AUTO path — the full 25:00 elapsed
+// on the fake clock — and demands the exact nominal duration.
+test.describe("S127/CB1: the auto-path completion records the full duration", () => {
+  test("a 25:00 focus session run to zero logs exactly 1500s (was 1)", async ({ page }) => {
+    test.setTimeout(90_000);
+    // Fake timers BEFORE boot — the 1s interval rides the fake clock.
+    await page.clock.install();
+    await page.goto("/FocusTimer");
+    await hydrated(page);
+    await page.getByRole("button", { name: /start timer/i }).click();
+    const saved = page.waitForResponse(
+      (r) => r.request().method() === "POST" && r.url().includes("/api/focus-sessions"),
+    );
+    // Run the full 25:00 — remaining reaches 0, the deferred complete
+    // fires (its setTimeout is fake-timer scheduled too), and the POST
+    // hits the real network. runFor (NOT fastForward — the jump fires
+    // each timer at most ONCE, so the 1s interval would decrement a single
+    // step) drains all 1500 interval firings.
+    await page.clock.runFor(25 * 60 * 1000);
+    const res = await saved;
+    expect(res.ok()).toBe(true);
+    const row = (await res.json()) as { id: string; durationSeconds: number };
+    // Pre-fix: the stale closure computed 1500 - 1500 = 0 → max(1, 0) = 1.
+    expect(row.durationSeconds).toBe(1500);
     // Zero residue on the shared demo user.
     await page.request.delete(`/api/focus-sessions/${row.id}`);
   });

@@ -37,6 +37,7 @@ import {
   IMPORT_REQUIRED_FKS,
   ImportRowError,
   NEVER_IMPORT_FIELDS,
+  importProfilePatch,
   importRowIdError,
   sanitizeImportRow,
   sortFoldersParentsFirst,
@@ -169,6 +170,7 @@ export const POST = async (request: NextRequest) => {
       format?: unknown;
       version?: unknown;
       data?: unknown;
+      user?: unknown;
     };
 
     // Format identity.
@@ -384,6 +386,17 @@ export const POST = async (request: NextRequest) => {
         imported[collection] = { created: c, updated: u };
         created += c;
         updated += u;
+      }
+
+      // S127/CB19: the envelope's user profile block — the export
+      // deliberately carries a hashless publicUser, and the pre-CB19
+      // import silently dropped it (the ADR-019 "own your data" round-trip
+      // restored content but lost the profile). The patch rides the SAME
+      // all-or-nothing transaction; identity (email, name, id) never
+      // rides; a garbage or absent block stays ignored.
+      const profilePatch = importProfilePatch(envelope.user);
+      if (profilePatch) {
+        await tx.user.update({ where: { id: user.id }, data: profilePatch });
       }
       },
       { timeout: 60_000 },

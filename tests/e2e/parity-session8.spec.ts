@@ -1556,3 +1556,78 @@ test.describe("S126/CA9 · the Google sign-in unavailability is visible", () => 
     ).toBeVisible();
   });
 });
+
+// S127/CB8 — the AI post-send refresh split (the s127 FE audit's M-5): the
+// send POST and the post-success transcript refresh shared ONE try — a
+// refresh failure ran the SEND-failure rollback: the delivered message
+// bounced back into the composer with a false "could not respond" toast
+// (the solver twin toasted "could not solve" while the solution was on
+// screen; a flashcards retry duplicated the drafted cards). The pin mocks
+// the send as a SUCCESS and aborts the transcript GET — the exact S13
+// flaky-network condition — and demands the composer stay empty.
+test.describe("S127/CB8 · a failed post-send refresh is not a failed send", () => {
+  test("a refresh failure after a delivered message never bounces the composer", async ({ page }) => {
+    await page.goto("/AIAssistant");
+    await hydrated(page);
+    // The send is a SUCCESS — the message IS delivered server-side.
+    await page.route("**/api/ai/chat", (route) =>
+      route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({
+          message: {
+            id: "s127-cb8-probe",
+            role: "assistant",
+            content: "delivered",
+            createdAt: new Date().toISOString(),
+          },
+        }),
+      }),
+    );
+    // The transcript refresh fails (the flaky-network condition).
+    await page.route("**/api/ai/messages*", (route) => route.abort("failed"));
+    const composer = page.getByLabel("Message the assistant");
+    await composer.fill("S127-CB8 delivered probe");
+    await composer.press("Enter");
+    // Let the flow settle — the rollback (pre-fix) or the refresh retry
+    // (post-fix) lands within the window; toasts outlive it.
+    await page.waitForTimeout(1500);
+    // Pre-fix: the rollback bounced the text back into the composer (the
+    // failure snapshot of the RED run showed exactly that). Post-fix: the
+    // composer stays empty.
+    await expect(composer).toHaveValue("");
+    // The false send-failure toast NEVER appears; the honest soft toast
+    // does (the retry leg of the refresh also aborts).
+    await expect(page.getByText("The assistant could not respond. Try again.")).toHaveCount(0);
+    await expect(page.getByText(/refresh/i)).toBeVisible();
+  });
+});
+
+// S127/CB17 — the Add Link dialog's dead required contract (the s127 FE
+// audit's L-3): the form declared noValidate, which killed the native
+// constraint validation on BOTH required inputs — an empty submit
+// round-tripped to the server and surfaced as a raw 400 toast. The JS
+// guard (trim + non-empty name and URL, inline error) now owns the
+// contract noValidate promised.
+test.describe("S127/CB17 · the Add Link dialog guards its own required fields", () => {
+  test("an empty submit fires no POST and shows the inline error", async ({ page }) => {
+    await page.goto("/Files");
+    await hydrated(page);
+    let posts = 0;
+    await page.route("**/api/files", (route) => {
+      if (route.request().method() === "POST") posts += 1;
+      return route.continue();
+    });
+    await page.getByLabel("Add link").click();
+    const dlg = page.getByRole("dialog");
+    await expect(dlg).toBeVisible();
+    // Empty name + empty URL, straight to submit.
+    await dlg.getByRole("button", { name: "Save Link" }).click();
+    // Pre-fix: the empty pair POSTed and the server's 400 surfaced as a
+    // toast. Post-fix: the guard blocks before any request.
+    await expect(dlg.getByText("Name and URL are both required.")).toBeVisible();
+    await page.waitForTimeout(400);
+    expect(posts).toBe(0);
+    await dlg.getByRole("button", { name: "Close" }).click();
+  });
+});

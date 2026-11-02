@@ -1852,3 +1852,64 @@ test.describe("S125/BZ1 · the Add Card dialog on the auto-selected deck", () =>
     if (mine) await page.request.delete(`/api/flashcards/cards/${mine.id}`);
   });
 });
+
+// S127/CB6 — the timetable hour-band parity (the s127 reference battery):
+// the reference's desktop week grid renders FOURTEEN hour rows — 7 AM
+// through 8 PM (measured live 2026-11-02); the clone rendered twelve
+// (7 AM–6 PM). The band guard (CB6b, the FE audit's M-4) rides the same
+// fix: a class whose start hour falls outside the rendered band matches no
+// row and silently VANISHED from the grid — the dialog's start input now
+// carries the band bounds so no new class can be saved outside it.
+test.describe("S127/CB6 · the timetable renders the reference's 14 hour rows", () => {
+  test("the week grid renders 7 AM through 8 PM — 14 hour rows, was 12", async ({ page }) => {
+    await page.goto("/Timetable");
+    await hydrated(page);
+    // The hour-cells container is FLAT: each hour renders one label div +
+    // seven day-cell divs as direct children (12 hours × 8 = 96 pre-fix).
+    // The hour ROWS are the label divs — count those.
+    const labels = await page
+      .locator('[aria-label="Week grid"] [aria-label="Hour cells"] > div')
+      .evaluateAll((els) =>
+        els
+          .map((el) => el.textContent?.trim() ?? "")
+          .filter((t) => /^(1?[0-9]|2[0-3]) (AM|PM)$/.test(t)),
+      );
+    expect(labels.length).toBe(14);
+    expect(labels[0]).toBe("7 AM");
+    expect(labels[13]).toBe("8 PM");
+  });
+
+  test("the Add Class dialog bounds the start time to the rendered band", async ({ page }) => {
+    await page.goto("/Timetable");
+    await hydrated(page);
+    await page.getByRole("button", { name: "Add Class" }).first().click();
+    const start = page.locator("#class-start");
+    await expect(start).toBeVisible();
+    // Pre-fix: no bounds — a 06:30 or 21:00 start saved fine and then
+    // matched no rendered row (perceived data loss on the primary surface).
+    await expect(start).toHaveAttribute("min", "07:00");
+    await expect(start).toHaveAttribute("max", "20:59");
+  });
+});
+
+// S127/CB13 — the analytics "avg progress" derivation (the s127 FE audit's
+// M-7): the caption computed the completion RATIO (the share of
+// assignments at 100%) while the label promises the average progress. The
+// seeded state: 80/40/45/25/60/0 → mean 41.67 → "42% avg progress" (the
+// pre-fix completion ratio rendered "0% avg progress" — 0 of 6 at 100%).
+// The reference's own populated semantics are unmeasurable (its demo data
+// carries no assignments — verified live 2026-11-02: its Tasks view reads
+// 0 tasks, its calendar only the one Nov 12 exam), so the label-honest
+// derivation ships.
+test.describe("S127/CB13 · the analytics Assignments card renders the true average progress", () => {
+  test("the seeded state renders the mean of progress (42%), not the completion ratio", async ({ page }) => {
+    await page.goto("/Analytics");
+    await hydrated(page);
+    const stats = page.locator('[aria-label="Analytics stats"]');
+    const assignments = stats.locator("> *", { hasText: "Assignments" }).first();
+    await expect(assignments.getByText("42% avg progress")).toBeVisible();
+    // The fraction stays the completion census: 0 of 6 seeded assignments
+    // sit at 100%.
+    await expect(assignments.getByText("0/6")).toBeVisible();
+  });
+});

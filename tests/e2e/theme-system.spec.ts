@@ -336,3 +336,35 @@ test.describe("light regression guard (S11)", () => {
     expect(color).toBe(STRONG_LIGHT);
   });
 });
+
+// S127/CB15 — the appearance pickers' failed-save rollback (the s127 FE
+// audit's L-1): pickTheme/pickAccent/pickAvatar applied the new value to
+// the theme store (and the localStorage cache) BEFORE the PATCH and only
+// toasted on failure — the visible selection lied about what would
+// persist until the next /api/auth/me hydration silently reverted it. The
+// pin aborts the preferences PATCH and demands the pressed selection
+// revert to the persisted value.
+test.describe("S127/CB15 · a failed theme save reverts the visible selection", () => {
+  test("aborted PATCH leaves Light pressed (was: Dark stayed pressed, lying about persistence)", async ({ page }) => {
+    // Normalise the persisted mode to light first (the pin's baseline).
+    await page.request.patch("/api/settings/preferences", { data: { themeMode: "light" } });
+    await page.goto("/Settings");
+    await hydrated(page);
+    // The Appearance pane's mode buttons.
+    const pane = page.locator('[aria-label="Appearance"]');
+    await expect(pane).toBeVisible();
+    const light = pane.getByRole("button", { name: "Light" });
+    await expect(light).toHaveAttribute("aria-pressed", "true");
+
+    // The save fails (the flaky-network condition).
+    await page.route("**/api/settings/preferences", (route) => route.abort("failed"));
+
+    // Pick Dark — pre-fix the button flipped to pressed with no rollback.
+    await pane.getByRole("button", { name: "Dark" }).click();
+    // Post-fix: the revert restores the persisted selection.
+    await expect(light).toHaveAttribute("aria-pressed", "true", { timeout: 5_000 });
+    // Restore the route so later state is honest.
+    await page.unroute("**/api/settings/preferences");
+    await page.request.patch("/api/settings/preferences", { data: { themeMode: "light" } });
+  });
+});

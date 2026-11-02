@@ -281,17 +281,32 @@ export function GradeTrackerView() {
     [subjects],
   );
 
-  const percents = grades.map(percentOf);
-  const overallAvg =
-    percents.length > 0 ? Math.round(percents.reduce((a, b) => a + b, 0) / percents.length) : 0;
+  // S127/CB4: the WEIGHTED mean — the form collects weight (0-100) and the
+  // seed carries real weights (0.5-2), but both averages were unweighted:
+  // a 2-credit midterm counted exactly as much as a half-credit quiz. The
+  // weight is clamped at >= 0 (the schema floor); grades with a zero weight
+  // drop out of the numerator AND the denominator (weight 0 = does not
+  // count), and a set whose weights sum to zero falls back to the
+  // unweighted mean (zero-weight grades never zero out an average).
+  const weightedPercent = (rows: GradeRow[]): number | null => {
+    if (rows.length === 0) return null;
+    let weightedSum = 0;
+    let weightSum = 0;
+    for (const g of rows) {
+      const w = Math.max(0, g.weight);
+      weightedSum += percentOf(g) * w;
+      weightSum += w;
+    }
+    if (weightSum > 0) return Math.round(weightedSum / weightSum);
+    return Math.round(rows.reduce((acc, g) => acc + percentOf(g), 0) / rows.length);
+  };
+
+  const overallAvg = weightedPercent(grades) ?? 0;
 
   const bySubject = subjects
     .map((subject) => {
       const rows = grades.filter((g) => g.subjectId === subject.id);
-      const avg =
-        rows.length > 0
-          ? Math.round(rows.reduce((acc, g) => acc + percentOf(g), 0) / rows.length)
-          : null;
+      const avg = weightedPercent(rows);
       return { subject, count: rows.length, avg, rows };
     })
     .filter((row) => row.count > 0);

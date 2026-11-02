@@ -78,29 +78,47 @@ export function AIAssistantView() {
     const localId = `local-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
     setPending((list) => [...list, { id: localId, role: "user", content }]);
     setInput("");
+    // S127/CB8: the send and the post-send refresh are SEPARATE failure
+    // domains — the pre-CB8 single try treated a flaky refresh as a failed
+    // send: the DELIVERED message bounced back into the composer with a
+    // false "could not respond" toast (and a retry duplicated the row).
     try {
-      const history = [...persisted.map((m) => ({ role: m.role, content: m.content }))];
-      await apiSend(
-        "POST",
-        "/api/ai/chat",
-        { messages: [...history, { role: "user", content }].slice(-20), surface: "assistant" },
-        { timeoutMs: CHAT_TIMEOUT_MS },
-      );
-      await mutations.refreshAiMessages();
+      try {
+        const history = [...persisted.map((m) => ({ role: m.role, content: m.content }))];
+        await apiSend(
+          "POST",
+          "/api/ai/chat",
+          { messages: [...history, { role: "user", content }].slice(-20), surface: "assistant" },
+          { timeoutMs: CHAT_TIMEOUT_MS },
+        );
+      } catch (err: unknown) {
+        // The send itself failed — rollback: remove the optimistic bubble,
+        // bounce the text back.
+        setPending((list) => list.filter((m) => m.id !== localId));
+        setInput(content);
+        const offline =
+          typeof navigator !== "undefined" && !navigator.onLine;
+        toast.error(
+          offline
+            ? "You appear to be offline. Check your connection and try again."
+            : isTimeoutError(err)
+              ? "The assistant took too long to respond. Please try again."
+              : errorMessage(err, "The assistant could not respond. Try again."),
+        );
+        return;
+      }
+      // The message IS delivered server-side. A refresh failure gets one
+      // retry, then the honest soft toast — never a send rollback.
+      try {
+        await mutations.refreshAiMessages();
+      } catch {
+        try {
+          await mutations.refreshAiMessages();
+        } catch {
+          toast.error("Sent — but the history didn't refresh. Reload to catch up.");
+        }
+      }
       setPending((list) => list.filter((m) => m.id !== localId));
-    } catch (err: unknown) {
-      // Rollback: remove the optimistic bubble, bounce the text back.
-      setPending((list) => list.filter((m) => m.id !== localId));
-      setInput(content);
-      const offline =
-        typeof navigator !== "undefined" && !navigator.onLine;
-      toast.error(
-        offline
-          ? "You appear to be offline. Check your connection and try again."
-          : isTimeoutError(err)
-            ? "The assistant took too long to respond. Please try again."
-            : errorMessage(err, "The assistant could not respond. Try again."),
-      );
     } finally {
       setBusy(false);
     }

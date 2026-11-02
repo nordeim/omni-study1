@@ -44,6 +44,22 @@ export async function POST(request: NextRequest) {
       // leaves this handler (publicUser selects its own fields).
       where: { email: email.toLowerCase() },
     });
+    // S127/CB12 — the per-account budget (the S123/BX2 doctrine applied to
+    // the credential exchange): the per-IP limiter below is the only brake
+    // a correct password guess faces, and its key material is client-
+    // forgeable in the default TRUSTED_PROXY_HOPS-unset posture (the first
+    // x-forwarded-for hop). When the account exists, the account bucket
+    // (10/15-min) is checked BEFORE the scrypt burn; an EXHAUSTED bucket
+    // answers the SAME uniform 401 (never a distinguishable 429 — the
+    // no-user branch never budgets, so a per-account 429 would be an
+    // account-existence oracle, the exact BX2 discipline) and the correct
+    // password fails with it, so guessing is bounded per account.
+    if (user) {
+      const accountLimit = checkRateLimit(`loginAcct:${user.id}`, 10);
+      if (!accountLimit.ok) {
+        return errorResponse(401, INVALID_CREDENTIALS);
+      }
+    }
     // Uniform rejection for both "no such user" and "wrong password" — and
     // (S117/BR3) the SAME scrypt burn either way: the helper runs BEFORE the
     // null check, so the miss branch verifies against the dummy hash and
@@ -59,7 +75,10 @@ export async function POST(request: NextRequest) {
     // Successful sign-ins RESET the IP limiter (the documented progressive-
     // throttling model — only FAILED attempts consume budget; a legitimate
     // user's later logins must never inherit an attacker's spent bucket).
+    // S127/CB12: the account bucket resets too — successes never accumulate
+    // (the same progressive model on the harder key).
     resetRateLimit(`login:${ip}`);
+    resetRateLimit(`loginAcct:${user.id}`);
 
     return setSessionCookie(NextResponse.json({ user: publicUser(user) }), user.id, {
       // S120/BU15: the proxy-aware derivation (see verify-email).

@@ -4,6 +4,8 @@ import {
   CARD_DIFFICULTIES,
   CHAT_ROLES,
   CHAT_SURFACES,
+  hhmmMinutes,
+  preferencesSchema,
   REPEATS,
   TASK_PRIORITIES,
 } from "./validation";
@@ -508,6 +510,130 @@ function checkDomainCaps(collection: string, row: ImportRow, index: number): voi
     }
   }
 
+  // S127/CB11: the CA14 contract completed — the remaining cheap,
+  // time-independent invariants every route's Zod boundary enforces, so
+  // the third entry point can no longer store rows the interactive ones
+  // reject (each cap mirrors its route's atom verbatim).
+  if (collection === "exams") {
+    const duration = row.duration;
+    if (duration !== undefined && duration !== null) {
+      if (typeof duration !== "number" || !Number.isInteger(duration) || duration < 5 || duration > 600) {
+        throw new ImportRowError(
+          collection,
+          index,
+          'field "duration" must be a whole number of minutes between 5 and 600.',
+        );
+      }
+    }
+  }
+
+  if (collection === "practiceTests") {
+    const durationMinutes = row.durationMinutes;
+    if (durationMinutes !== undefined && durationMinutes !== null) {
+      if (
+        typeof durationMinutes !== "number" ||
+        !Number.isInteger(durationMinutes) ||
+        durationMinutes < 1 ||
+        durationMinutes > 600
+      ) {
+        throw new ImportRowError(
+          collection,
+          index,
+          'field "durationMinutes" must be a whole number between 1 and 600.',
+        );
+      }
+    }
+  }
+
+  if (collection === "focusSessions") {
+    const durationSeconds = row.durationSeconds;
+    if (durationSeconds !== undefined && durationSeconds !== null) {
+      if (
+        typeof durationSeconds !== "number" ||
+        !Number.isInteger(durationSeconds) ||
+        durationSeconds < 1 ||
+        durationSeconds > 86_400
+      ) {
+        throw new ImportRowError(
+          collection,
+          index,
+          'field "durationSeconds" must be a whole number between 1 and 86400 (it feeds every focus stat).',
+        );
+      }
+    }
+  }
+
+  if (collection === "grades") {
+    const weight = row.weight;
+    if (weight !== undefined && weight !== null) {
+      if (typeof weight !== "number" || weight < 0 || weight > 100) {
+        throw new ImportRowError(
+          collection,
+          index,
+          'field "weight" must be a number between 0 and 100 (it feeds the weighted average).',
+        );
+      }
+    }
+  }
+
+  if (collection === "events") {
+    const startDate = row.startDate;
+    const endDate = row.endDate;
+    if (typeof startDate === "string" && typeof endDate === "string") {
+      // The BU22 ordering guard: Date.parse values, never raw string
+      // ordering (the BV10 mixed-offset lesson).
+      const startMs = Date.parse(startDate);
+      const endMs = Date.parse(endDate);
+      if (
+        !Number.isNaN(startMs) &&
+        !Number.isNaN(endMs) &&
+        endMs < startMs
+      ) {
+        throw new ImportRowError(
+          collection,
+          index,
+          'field "endDate" must be after "startDate" (the same guard every events route enforces).',
+        );
+      }
+    }
+  }
+
+  if (collection === "timetableClasses") {
+    const startTime = row.startTime;
+    const endTime = row.endTime;
+    if (startTime !== undefined && startTime !== null) {
+      if (typeof startTime !== "string" || hhmmMinutes(startTime) === null) {
+        throw new ImportRowError(
+          collection,
+          index,
+          'field "startTime" must be a HH:MM time (the route atom admits padded or unpadded hours, 00:00-23:59).',
+        );
+      }
+    }
+    if (endTime !== undefined && endTime !== null) {
+      if (typeof endTime !== "string" || hhmmMinutes(endTime) === null) {
+        throw new ImportRowError(
+          collection,
+          index,
+          'field "endTime" must be a HH:MM time (the route atom admits padded or unpadded hours, 00:00-23:59).',
+        );
+      }
+    }
+    if (
+      typeof startTime === "string" &&
+      typeof endTime === "string" &&
+      hhmmMinutes(startTime) !== null &&
+      hhmmMinutes(endTime) !== null &&
+      (hhmmMinutes(endTime) as number) <= (hhmmMinutes(startTime) as number)
+    ) {
+      throw new ImportRowError(
+        collection,
+        index,
+        'field "endTime" must be after "startTime" (the BW7/BX1 minutes compare — never raw strings).',
+      );
+    }
+  }
+
   for (const [field, vocabulary] of Object.entries(ENUM_VOCABULARIES)) {
     const [owner, key] = field.split(".");
     if (owner !== collection) continue;
@@ -534,8 +660,9 @@ function checkDomainCaps(collection: string, row: ImportRow, index: number): voi
           `field "${field}" must be a JSON string (the export format serializes the array).`,
         );
       }
+      let parsed: unknown;
       try {
-        JSON.parse(value);
+        parsed = JSON.parse(value);
       } catch {
         throw new ImportRowError(
           collection,
@@ -543,8 +670,52 @@ function checkDomainCaps(collection: string, row: ImportRow, index: number): voi
           `field "${field}" is not valid JSON — re-export a fresh backup and try again.`,
         );
       }
+      // S127/CB11: the studyGroups members array cap (<= 50, the route's
+      // own bound) — the JSON-parse check alone admitted a 10^4-member
+      // group the view then rendered wholesale.
+      if (collection === "studyGroups" && field === "members") {
+        if (!Array.isArray(parsed) || parsed.length > 50) {
+          throw new ImportRowError(
+            collection,
+            index,
+            'field "members" must be a JSON array of at most 50 members.',
+          );
+        }
+      }
     }
   }
+}
+
+// ---------------------------------------------------------------------------
+// S127/CB19 — the envelope's user profile block, restored. The export
+// deliberately carries a hashless publicUser block; the import route never
+// read it, so school, grade level, study goal, theme, accent, avatar, and
+// notifications silently dropped on restore — a quiet violation of the
+// ADR-019 "own your data" round-trip. The patch extracts ONLY the
+// preference fields (identity — id, email, name — never rides); a garbage
+// or absent block stays ignored (the pre-CB19 tolerance contract).
+// ---------------------------------------------------------------------------
+
+export function importProfilePatch(
+  user: unknown,
+): Partial<{
+  themeMode: "light" | "dark" | "system";
+  accentColor: string;
+  avatarEmoji: string;
+  notificationsEnabled: boolean;
+  schoolName: string;
+  gradeLevel: string;
+  studyGoalHours: number;
+}> | null {
+  if (typeof user !== "object" || user === null) return null;
+  const parsed = preferencesSchema.safeParse(user);
+  if (!parsed.success) return null;
+  // Strip undefined legs — the patch carries only what the envelope set.
+  const patch: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(parsed.data)) {
+    if (value !== undefined) patch[key] = value;
+  }
+  return Object.keys(patch).length > 0 ? patch : null;
 }
 
 /** Validate one imported row against the export format's primitive-value

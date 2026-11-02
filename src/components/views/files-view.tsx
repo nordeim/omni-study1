@@ -177,6 +177,8 @@ export function FilesView() {
   const [folderDialogOpen, setFolderDialogOpen] = React.useState(false);
   const [viewMode, setViewMode] = React.useState<"grid" | "list">("grid");
   const [linkDialogOpen, setLinkDialogOpen] = React.useState(false);
+  // S127/CB17: the Add Link dialog's inline required error.
+  const [linkError, setLinkError] = React.useState("");
   const [linkName, setLinkName] = React.useState("");
   const [linkUrl, setLinkUrl] = React.useState("");
   const [linkBusy, setLinkBusy] = React.useState(false);
@@ -286,14 +288,26 @@ export function FilesView() {
 
   const submitLink = async () => {
     if (linkBusy) return;
+    // S127/CB17: the form's noValidate kills the native constraint
+    // validation, so BOTH required attributes were dead — an empty submit
+    // round-tripped to the server's 400 and surfaced as a raw toast. The
+    // guard owns the contract by hand: trim + non-empty, inline error,
+    // no wasted request.
+    const name = linkName.trim();
+    const url = linkUrl.trim();
+    if (!name || !url) {
+      setLinkError("Name and URL are both required.");
+      return;
+    }
+    setLinkError("");
     setLinkBusy(true);
     try {
       await apiSend("POST", "/api/files", {
-        name: linkName,
-        url: linkUrl,
+        name,
+        url,
         ...(currentFolderId ? { folderId: currentFolderId } : {}),
       });
-      toast.success(`${linkName} added`);
+      toast.success(`${name} added`);
       setLinkDialogOpen(false);
       await refresh();
     } catch (err: unknown) {
@@ -360,6 +374,7 @@ export function FilesView() {
               onClick={() => {
                 setLinkName("");
                 setLinkUrl("");
+                setLinkError("");
                 setLinkDialogOpen(true);
               }}
             >
@@ -569,6 +584,7 @@ export function FilesView() {
               <Label htmlFor="link-url">URL</Label>
               <Input id="link-url" type="url" value={linkUrl} onChange={(e) => setLinkUrl(e.target.value)} placeholder="https://…" required />
             </div>
+            {linkError ? <p className="text-sm text-red-600 dark:text-red-400">{linkError}</p> : null}
             <Button type="submit" variant="gradient" className="sf-gradient-shadow" disabled={linkBusy}>
               {linkBusy ? <Spinner className="size-4" /> : <Link2 className="size-4" strokeWidth={2} />}
               Save Link

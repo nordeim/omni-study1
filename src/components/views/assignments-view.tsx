@@ -59,11 +59,15 @@ import {
   type AssignmentInput,
   type AssignmentRow,
 } from "@/lib/data";
-import { daysUntil, startOfDay } from "@/lib/date";
+import { daysUntil, fromDueDateInput, startOfDay, toDateInputValue } from "@/lib/date";
 import { ApiError } from "@/lib/api";
+import { ASSIGNMENT_TYPES } from "@/lib/validation";
 import { cn } from "@/lib/utils";
 
-const TYPES = ["homework", "essay", "project", "reading", "lab", "presentation", "other"];
+// S127/CB9: the shared vocabulary (the CA14 single-source) — the local
+// 7-value twin was missing "worksheet", so Edit on the seeded worksheet
+// rows blanked the Type select and the type was un-creatable from the UI.
+const TYPES = ASSIGNMENT_TYPES;
 const PRIORITIES = ["low", "medium", "high", "urgent"];
 
 type StatusFilter = "all" | "active" | "completed";
@@ -127,7 +131,10 @@ export function AssignmentsView() {
       type: row.type,
       priority: row.priority,
       progress: String(row.progress),
-      dueDate: row.dueDate ? row.dueDate.slice(0, 10) : "",
+      // S127/CB2: the LOCAL wall-clock extraction (never the UTC slice —
+      // `row.dueDate.slice(0, 10)` hands a different day in any non-UTC
+      // zone, and the untouched edit then drifts the stored day).
+      dueDate: toDateInputValue(row.dueDate),
       subjectId: row.subjectId ?? "",
     });
     setError("");
@@ -144,7 +151,10 @@ export function AssignmentsView() {
       type: form.type as AssignmentInput["type"],
       priority: form.priority as AssignmentInput["priority"],
       progress: Math.max(0, Math.min(100, Math.round(Number(form.progress) || 0))),
-      dueDate: form.dueDate,
+      // S127/CB2: the local-noon stamp (the tasks-view pattern, now the
+      // shared atom) — the raw yyyy-mm-dd was stored as a UTC-midnight
+      // instant and drifted a day in every UTC-negative zone.
+      dueDate: fromDueDateInput(form.dueDate),
       subjectId: form.subjectId,
     };
     try {

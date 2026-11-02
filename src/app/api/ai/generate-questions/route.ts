@@ -13,7 +13,7 @@ import ZAI from "z-ai-web-dev-sdk";
 
 import { checkRateLimit } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { idField } from "@/lib/validation";
+import { nullableId } from "@/lib/validation";
 import {
   errorResponse,
   parseWith,
@@ -32,11 +32,13 @@ import {
 const QUESTION_TYPES = ["multiple_choice", "true_false", "short_answer"] as const;
 
 // S119/BT4: the shared idField bound on subjectId (was unbounded).
+// S127/CB3: the S123/BX5 fix reached this third route — the hand-rolled
+// `idField.nullish().transform("" → null)` was a DEAD transform (idField's
+// min(1) rejected "" first), so the no-subject default path 400'd at the
+// boundary. The shared nullableId atom owns the dialog clear convention.
 const generateQuestionsSchema = z.object({
   title: z.string().min(1).max(200),
-  subjectId: idField
-    .nullish()
-    .transform((v) => (v === "" ? null : v)),
+  subjectId: nullableId,
   count: z.number().int().min(1).max(20).optional().default(10),
   topics: z.string().max(2000).optional().default(""),
   // persist=false: draft-only generation for the Create Test dialog (the

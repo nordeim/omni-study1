@@ -225,6 +225,10 @@ export function FlashcardsView() {
     // S125/BZ1: the render-derived selection (the submitCard twin).
     if (!effectiveDeckId || generating) return;
     setGenerating(true);
+    // S127/CB8: the generation and the post-generate refresh are SEPARATE
+    // failure domains — the pre-CB8 single try toasted "Generation failed"
+    // after the cards were already drafted server-side, and a RETRY then
+    // duplicated them.
     try {
       await apiSend(
         "POST",
@@ -232,7 +236,17 @@ export function FlashcardsView() {
         { deckId: effectiveDeckId, topic: selectedDeck?.name },
         { timeoutMs: 120_000 },
       );
-      await useDataStore.getState().loadCollections(["flashcards"]);
+      // The cards ARE drafted server-side; a flaky refresh is not a
+      // failed generation — one retry, then the honest soft toast.
+      try {
+        await useDataStore.getState().loadCollections(["flashcards"]);
+      } catch {
+        try {
+          await useDataStore.getState().loadCollections(["flashcards"]);
+        } catch {
+          toast.error("Drafted — but the deck didn't refresh. Reload to see the new cards.");
+        }
+      }
       toast.success("AI drafted new cards for this deck.");
     } catch (err: unknown) {
       toast.error(

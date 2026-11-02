@@ -127,3 +127,59 @@ test.describe("S121/BV7: owned-FK guards", () => {
     });
   });
 });
+
+// S127/CB16 — the toggleTask read-modify-write race (the s127 FE audit's
+// L-2, the BX10 class closed at the store): two rapid toggles before the
+// first refetch landed both read the SAME stale base and both PATCHed the
+// same value — the second toggle was silently lost (a double-click that
+// should net to unchecked left the task checked). The fix chains per-id:
+// each toggle re-reads the store AFTER the previous one settles. The pin
+// HOLDS the tasks GET so the race window is deterministic, then asserts
+// the persisted final state through the API.
+test.describe("S127/CB16 · a rapid double toggle nets to the original state", () => {
+  test("two unchecked-to-checked-to-unchecked clicks persist completed=false (was: true)", async ({ page }) => {
+    const stamp = Date.now();
+    const created = await page.request.post("/api/tasks", {
+      data: { title: `E2E — double toggle ${stamp}` },
+    });
+    expect(created.ok()).toBe(true);
+    const { id } = (await created.json()) as { id: string };
+
+    await page.goto("/Tasks");
+    const row = page.locator('[aria-label="Task rows"] > div', {
+      hasText: `E2E — double toggle ${stamp}`,
+    });
+    await expect(row).toBeVisible();
+
+    // Hold every tasks GET — the first toggle's refetch cannot land
+    // between the two clicks, so the race window is deterministic.
+    let release: () => void = () => {};
+    const gate = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    await page.route("**/api/tasks*", async (route) => {
+      if (route.request().method() === "GET") await gate;
+      return route.continue();
+    });
+
+    // The double click — no await of any refetch between them.
+    const box = row.getByRole("checkbox");
+    await box.click();
+    await box.click();
+
+    // Let the held GETs drain, then read the persisted truth.
+    release();
+    await page.waitForTimeout(800);
+    const rows = (await (await page.request.get("/api/tasks")).json()) as {
+      id: string;
+      completed: boolean;
+    }[];
+    const mine = rows.find((r) => r.id === id);
+    // Pre-fix: both toggles read completed=false and both PATCHed true —
+    // the net-zero double toggle persisted completed=true.
+    expect(mine?.completed).toBe(false);
+
+    // Zero residue on the shared demo user.
+    await page.request.delete(`/api/tasks/${id}`);
+  });
+});

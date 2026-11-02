@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   authSecretBootStatus,
   DEV_FALLBACK_SECRET,
+  inBandDeliveryProdWarning,
 } from "@/lib/env-check";
 
 // The S22 boot-guard seam (ADR-020): production boots refuse to sign
@@ -129,5 +130,47 @@ describe("DEV_FALLBACK_SECRET (the single-source pin)", () => {
     // If this value ever changes, src/lib/auth.ts's import keeps the two in
     // lockstep by construction; the pin documents the historical contract.
     expect(DEV_FALLBACK_SECRET).toBe("dev-only-insecure-session-secret");
+  });
+});
+
+// ---------------------------------------------------------------------------
+// S127/CB14 — the in-band delivery production warning posture (the s127
+// server audit's C-1, adjudicated against ADR-013): with the delivery
+// off-switches unset (the default), forgot-password returns the live
+// one-shot takeover link in the response body to any caller who knows the
+// email — the documented single-user no-SMTP posture, but one an
+// internet-facing deployment must opt OUT of consciously. ADR-013 stands
+// (no default flip — there is no mail transport to flip TO), but the BT5
+// precedent applies: the boot guard now WARNS in production when either
+// in-band channel is enabled, pointing at the two env gates.
+// ---------------------------------------------------------------------------
+describe("S127/CB14 · inBandDeliveryProdWarning (the BT5 posture precedent)", () => {
+  it("warns in production when in-band delivery is enabled", () => {
+    expect(
+      inBandDeliveryProdWarning({ NODE_ENV: "production" }, {}),
+    ).toBe(true);
+  });
+
+  it("still warns while ANY channel stays in-band (one gate is not both)", () => {
+    expect(
+      inBandDeliveryProdWarning(
+        { NODE_ENV: "production" },
+        { DISABLE_IN_APP_RESET: "1" },
+      ),
+    ).toBe(true);
+  });
+
+  it("is silent when both gates are set", () => {
+    expect(
+      inBandDeliveryProdWarning(
+        { NODE_ENV: "production" },
+        { DISABLE_IN_APP_RESET: "1", DISABLE_IN_APP_OTP: "1" },
+      ),
+    ).toBe(false);
+  });
+
+  it("is silent outside production (the dev/test quickstart posture)", () => {
+    expect(inBandDeliveryProdWarning({ NODE_ENV: "development" }, {})).toBe(false);
+    expect(inBandDeliveryProdWarning({}, {})).toBe(false);
   });
 });

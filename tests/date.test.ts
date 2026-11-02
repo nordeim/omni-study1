@@ -3,6 +3,8 @@ import {
   addDays,
   addMonths,
   fromDatetimeLocalInput,
+  fromDueDateInput,
+  toDateInputValue,
   toDatetimeLocalValue,
   dayBucketLabel,
   daysUntil,
@@ -281,5 +283,44 @@ describe("S123/BX3: the datetime-local round-trip helpers", () => {
     // form's required + min/max gates own the rest. Only UNPARSEABLE
     // input yields "".
     expect(toDatetimeLocalValue("2031-03-15")).toMatch(/^2031-03-1[45]T/);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// S127/CB2 — the date-only input twins, promoted to shared date.ts atoms
+// (the BX3 doctrine for the date-only family): tasks shipped the local-
+// noon pair as view-local helpers while assignments submitted the RAW
+// yyyy-mm-dd (the server stores a UTC-midnight instant — a one-day drift
+// in every UTC-negative zone) and edit-populated via the UTC slice. One
+// source now serves tasks, assignments, and the holidays dialog.
+// ---------------------------------------------------------------------------
+describe("S127/CB2 · the date-only input twins (the local-noon round-trip)", () => {
+  it("fromDueDateInput produces the local-noon ISO instant from yyyy-mm-dd", () => {
+    // The expected wire form is computed in the TEST's zone — the same
+    // zone the browser serializes in (the runner and browser share the
+    // host clock): noon local, anchored to UTC by toISOString.
+    expect(fromDueDateInput("2031-03-15")).toBe(
+      new Date("2031-03-15T12:00:00").toISOString(),
+    );
+  });
+
+  it("fromDueDateInput maps the cleared input to the empty string", () => {
+    expect(fromDueDateInput("")).toBe("");
+  });
+
+  it("toDateInputValue extracts the LOCAL wall-clock date — never the UTC slice", () => {
+    // 03:00 LOCAL on Mar 15 is Mar 14 in UTC for any positive offset —
+    // a .slice(0, 10) implementation returns 2031-03-14 here.
+    const iso = new Date(2031, 2, 15, 3, 0).toISOString();
+    expect(toDateInputValue(iso)).toBe("2031-03-15");
+  });
+
+  it("round-trips: toDateInputValue(fromDueDateInput(x)) === x", () => {
+    expect(toDateInputValue(fromDueDateInput("2031-06-09"))).toBe("2031-06-09");
+  });
+
+  it("toDateInputValue maps null/invalid to the empty string", () => {
+    expect(toDateInputValue(null)).toBe("");
+    expect(toDateInputValue("garbage")).toBe("");
   });
 });

@@ -136,7 +136,12 @@ export function FocusTimerView() {
       })
       .catch((err: unknown) => toast.error(errorMessage(err, "Could not save the focus session.")))
       .finally(() => setSaving(false));
-  }, [mode, durations, subjectId, toast, mutations]);
+    // S127/CB1: `remaining` joins the deps — the pre-CB1 array omitted it,
+    // so the memoized callback closed over the MOUNT-time value and
+    // `durations.focus - remaining` was always 0: every session (auto AND
+    // manual paths) logged durationSeconds: 1, and the BX6 elapsed fix was
+    // dead code behind the stale closure.
+  }, [mode, durations, remaining, subjectId, toast, mutations]);
 
   React.useEffect(() => {
     if (!running || remaining > 0) return;

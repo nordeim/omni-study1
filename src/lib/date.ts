@@ -255,6 +255,36 @@ export function formatHHMMRange(start: string, end: string): string {
 }
 
 /**
+ * S127/CB2 — yyyy-mm-dd → a local-noon ISO stamp (safe against timezone
+ * drift). The tasks-view pattern, promoted to a shared atom (the BX3
+ * doctrine for the date-only family): a RAW date-only string is parsed as
+ * a UTC-midnight instant by every server-side Date.parse, so a due date
+ * renders one day early in any UTC-negative zone and every untouched edit
+ * cycle drifts the stored day. Noon local is within the same calendar day
+ * for every offset up to ±12h. The cleared input maps to "" (the form's
+ * required gate owns the rest).
+ */
+export function fromDueDateInput(value: string): string {
+  if (!value) return "";
+  return new Date(`${value}T12:00:00`).toISOString();
+}
+
+/**
+ * S127/CB2 — a stored UTC instant → the LOCAL wall-clock yyyy-mm-dd for
+ * <input type="date"> (never the UTC slice — `iso.slice(0, 10)` hands the
+ * user a different day in any non-UTC zone). The toDateInputValue twin of
+ * fromDueDateInput. Malformed input returns "".
+ */
+export function toDateInputValue(iso: string | null): string {
+  if (!iso) return "";
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "";
+  const month = (d.getMonth() + 1).toString().padStart(2, "0");
+  const day = d.getDate().toString().padStart(2, "0");
+  return `${d.getFullYear()}-${month}-${day}`;
+}
+
+/**
  * S123/BX3 — a stored UTC instant → the datetime-local string for the
  * USER's wall-clock (the tasks-view local-noon pattern, adapted for
  * datetime-local). The exams/events edit dialogs previously populated with

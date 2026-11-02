@@ -53,7 +53,10 @@ const DAY_NAMES = [
   "Saturday",
   "Sunday",
 ];
-const HOURS = Array.from({ length: 12 }, (_, i) => i + 7); // 7 AM … 6 PM
+// S127/CB6: FOURTEEN rows — 7 AM … 8 PM (measured live on the reference
+// 2026-11-02: its desktop week grid renders 14 hour rows; the clone
+// rendered 12, cutting the 7 PM and 8 PM bands).
+const HOURS = Array.from({ length: 14 }, (_, i) => i + 7); // 7 AM … 8 PM
 
 /** Sunday-first display column → ISO weekday (0=Monday). */
 const columnToIso = (col: number): number => (col + 6) % 7;
@@ -587,6 +590,16 @@ export function TimetableView() {
                   value={form.startTime}
                   onChange={(e) => setForm((f) => ({ ...f, startTime: e.target.value }))}
                   required
+                  // S127/CB6b: the band guard — a class whose start hour
+                  // falls outside the rendered band (7 AM…8 PM) matched no
+                  // row and silently VANISHED from the desktop grid after
+                  // save (perceived data loss on the primary surface; the
+                  // mobile accordion and My Classes cards still showed
+                  // it). The native constraint keeps every new/edited
+                  // start inside the band; legacy/imported out-of-band
+                  // rows still render in the accordion + cards.
+                  min="07:00"
+                  max="20:59"
                 />
               </div>
               <div className="flex flex-col gap-1.5">

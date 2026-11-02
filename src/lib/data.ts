@@ -436,6 +436,9 @@ const SUBJECT_TOUCHED: CollectionKey[] = [
   "notes",
 ];
 
+// S127/CB16: the per-task in-flight toggle chains (see toggleTask).
+const taskToggleChains = new Map<string, Promise<void>>();
+
 export const mutations = {
   // ---- tasks (the S6 reference flows) --------------------------------------
   createTask: async (input: TaskInput): Promise<void> => {
@@ -446,11 +449,22 @@ export const mutations = {
     await apiSend("PATCH", `${PATHS.tasks}/${id}`, patch);
     await fetchAndSet("tasks");
   },
+  // S127/CB16: the per-id chain — two rapid toggles before the first
+  // refetch landed both read the SAME stale base and both PATCHed the same
+  // value (the second toggle was silently lost; the BX10 stale-base class
+  // closed at the store). Each toggle re-reads the store AFTER the
+  // previous one for the SAME id settles. The chain entry itself never
+  // rejects (a failed toggle must not poison the chain); the CALLER
+  // still gets the real rejection.
   toggleTask: async (id: string): Promise<void> => {
-    const task = useDataStore.getState().tasks.find((t) => t.id === id);
-    if (!task) return;
-    await apiSend("PATCH", `${PATHS.tasks}/${id}`, { completed: !task.completed });
-    await fetchAndSet("tasks");
+    const chained = (taskToggleChains.get(id) ?? Promise.resolve()).then(async () => {
+      const task = useDataStore.getState().tasks.find((t) => t.id === id);
+      if (!task) return;
+      await apiSend("PATCH", `${PATHS.tasks}/${id}`, { completed: !task.completed });
+      await fetchAndSet("tasks");
+    });
+    taskToggleChains.set(id, chained.catch(() => undefined));
+    await chained;
   },
   deleteTask: async (id: string): Promise<void> => {
     await apiSend("DELETE", `${PATHS.tasks}/${id}`);
@@ -672,10 +686,6 @@ export const mutations = {
   // ---- calculator history ---------------------------------------------------------------
   createCalculatorEntry: async (input: CalculatorHistoryInput): Promise<void> => {
     await apiSend("POST", PATHS.calculatorHistory, input);
-    await fetchAndSet("calculatorHistory");
-  },
-  deleteCalculatorEntry: async (id: string): Promise<void> => {
-    await apiSend("DELETE", `${PATHS.calculatorHistory}/${id}`);
     await fetchAndSet("calculatorHistory");
   },
 

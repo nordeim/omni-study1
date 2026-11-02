@@ -95,6 +95,32 @@ export function inAppDeliveryGates(env: {
   return { otp: on(env.DISABLE_IN_APP_OTP), reset: on(env.DISABLE_IN_APP_RESET) };
 }
 
+// ---- S127/CB14: the in-band delivery production warning posture ---------------
+//
+// The s127 server audit's C-1, adjudicated against ADR-013: with the gates
+// unset (the default), forgot-password returns the live one-shot takeover
+// link IN the response body to any caller who knows the email, and the
+// OTP-family routes return the code — the documented single-user no-SMTP
+// posture (there is no mail transport to flip the default TO), but one an
+// internet-facing deployment must opt OUT of consciously. The BT5
+// precedent (the weak-secret warn band) applies: production boots WARN
+// while either channel delivers in-band, pointing at the two env gates.
+// The body shape is also an account-state oracle in this posture (a code
+// present ⟺ an unverified account exists; a resetUrl ⟺ any account
+// exists) — inherent to in-band delivery, stated honestly in the routes.
+
+export function inBandDeliveryProdWarning(
+  // The index signature accepts the whole ProcessEnv at the instrumentation
+  // call site (a weak-type-only parameter would reject it — TS2559, the
+  // inAppDeliveryGates precedent).
+  env: { NODE_ENV?: string; [key: string]: string | undefined },
+  gates: { DISABLE_IN_APP_OTP?: string; DISABLE_IN_APP_RESET?: string; [key: string]: string | undefined },
+): boolean {
+  if (env.NODE_ENV !== "production") return false;
+  const g = inAppDeliveryGates(gates);
+  return !g.otp || !g.reset;
+}
+
 // ---- S120/BU21: the demo-seed gate ------------------------------------------
 //
 // The documented Docker first-run (`init` profile) seeds the

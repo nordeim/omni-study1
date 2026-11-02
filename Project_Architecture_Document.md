@@ -1,4 +1,4 @@
-# StudyFlow (Omni-Study) — Master Project Architecture Document (PAD) v1.3.34
+# StudyFlow (Omni-Study) — Master Project Architecture Document (PAD) v1.3.35
 
 **Classification:** Internal Engineering Reference
 **Status:** DEFINITIVE, PRODUCTION-LOCKED BLUEPRINT
@@ -8,6 +8,11 @@
 **Rule:** Every architectural decision in this document traces to a specific rationale. Nothing is here "because it's popular."
 
 ---
+
+#### Revision Block — v1.3.35 (Session-127 / Batch CB, Cycle 77)
+
+- `[SR]` Current test census anchor (the v1.2.0 convention, re-anchored): **1171/1171 Vitest unit** (42 files — the S127 additions: date +5 [the date-only local-noon twins], data-import +13 [the completed domain-cap family + the profile-patch contract], calculator +4 [the tokenizer exponent leg], env-check +4 [the in-band delivery production-warning posture]) + **559/559 cold-chunk e2e** (554 chromium specs in 30 files + the auth setup re-run per chunk; the 5-chunk map **144+177+72+93+73**, every chunk first-pass on the final tree; the per-file counts in §8.1 are script-derivable). Unit + e2e = **1730 green**.
+- `[SR]` The audit-driven hardening cycle (`docs/remediation-plan-session127.md`): **CB1** the focus-timer stale closure (`complete`'s dep array omitted `remaining` — the memoized callback closed over the mount-time value, `durations.focus - remaining` was always 0, and the schema's min-1 floored EVERY session to `durationSeconds: 1`; the BX6 elapsed fix was dead code behind the closure and its pin blind to it — pinned by the clock-accelerated auto path: a full 25:00 run logs exactly 1500); **CB2** the assignments TZ round-trip (the raw yyyy-mm-dd submitted — stored as a UTC-midnight instant, one day early in every UTC-negative zone, drifting on each untouched edit; the tasks-view local-noon pattern promoted to shared date.ts atoms `fromDueDateInput`/`toDateInputValue`, adopted by tasks + assignments + the holidays dialog); **CB3** the generate-questions dead transform (the BX5 twin at the third route — `idField.nullish().transform(""→null)` rejected `""` at `min(1)` before the transform, so the no-subject default path 400'd; the shared `nullableId` atom); **CB4** the weighted-mean grade averages (the form collects weight and the seed carries 0.5–2, but both averages were unweighted — a 2-credit midterm counted as much as a half-credit quiz; weights clamped ≥ 0, zero-weight grades drop from numerator AND denominator, an all-zero set falls back to the unweighted mean; the Math card re-anchored 89% → 90%); **CB5** the calendar category-dot parity (measured live: the reference renders one `w-1.5 h-1.5 rounded-full` dot per PRESENT category — Tasks=blue-500, Assignments=amber-500, Exams=red-500, Classes=emerald-500 — and EVENTS ARE DOTLESS, dots white `bg-white` on the selected fill; the day detail groups by uppercase category label over tinted border-l-4 rows; the empty copy "No events for this day"; the clone's own legend already promised the mapping its event dots contradicted); **CB6** the timetable 14-row parity (7 AM–8 PM, measured live; + the start-time band guard — a class saved outside the rendered band matched no row and silently vanished from the desktop grid); **CB7** the mutate write budget (PATCH + DELETE join the shared `write:${user.id}` 600/15-min — the BZ5 mirror closing its own documented next-cycle candidate); **CB8** the AI post-send refresh split (the send POST and the transcript refresh shared one try — a flaky refresh bounced the DELIVERED message back into the composer with a false "could not respond" toast, and a flashcards retry duplicated the drafted cards; separate failure domains, one refresh retry, then the honest soft toast — all three surfaces); **CB9** the assignments type single-source (the local 7-value TYPES array was missing "worksheet" — Edit on the seeded worksheet rows blanked the Type select; the shared `ASSIGNMENT_TYPES` vocabulary); **CB10** the file-family bounded windows (the two hand-written GETs — files + folders — join the CA5 desc+id-tiebreak+take:500 convention; the import can mint ~10⁵ rows in one envelope); **CB11** the import domain caps completed (exams.duration 5–600, practiceTests.durationMinutes 1–600, focusSessions.durationSeconds 1–86 400, studyGroups.members ≤ 50, grades.weight 0–100, events start≤end, timetable hhmm shape + minutes ordering — the third entry point stores nothing every interactive route rejects); **CB12** the login per-account budget (the BX2 doctrine applied to the credential exchange: `loginAcct:${user.id}` 10/15-min checked before the scrypt burn when the account exists, the exhausted branch answering the SAME uniform 401 — a distinguishable 429 would be an account-existence oracle; successes reset both buckets); **CB13** the analytics avg-progress derivation (the caption computed the completion ratio — 1 of 2 done at 10% rendered "50% avg progress" when the mean is 55%; the true mean of `a.progress`); **CB14** the in-band delivery production warning (the s127 server audit's Critical, adjudicated against ADR-013: the single-user no-SMTP default STANDS — there is no mail transport to flip to — but the BT5 posture precedent now applies: production boots WARN while either channel delivers in-band, the three delivery routes' "no enumeration" comments state the body-shape oracle honestly, and DEPLOYMENT.md §8 + .env.example carry the multi-user guidance); **CB15** the appearance pickers' failed-save rollback; **CB16** the toggleTask per-id chain (two rapid toggles both read the stale base — the second was silently lost; the BX10 class closed at the store); **CB17** the Add-Link dialog's hand-wired required guard (noValidate had killed both native gates); **CB18** the calculator tokenizer's exponent leg (the engine reads its own display format — "2e+15" re-tokenizes as ONE number; a bare `e` stays Euler); **CB19** the export/import profile round-trip (the envelope's hashless publicUser block now restores the seven preference fields — identity never rides; the ADR-019 "own your data" promise); **CB20** the twin link-file size unification (both entry points store `url.length`); **CB21** the dead `deleteCalculatorEntry` mutation removed (zero callers; the advertised-but-nonexistent route contract retired). The docs set: §8.1's Total row + §8.4's checklist floors re-anchored (1171+/559+), the revision block you are reading. Two honest pin-side mid-run corrections (the CB1 clock API's `runFor` vs `fastForward` semantics — the jump fires each timer at most once; the CB9 textContent-vs-CSS-capitalization form).
 
 #### Revision Block — v1.3.34 (Session-126 / Batch CA, Cycle 76)
 
@@ -1075,18 +1080,18 @@ Single-role per-user ownership model; no admin surface. Session: `{ uid, iat, ex
 | Unit — `api-offline.test.ts` | 1 | 5 | `tests/api-offline.test.ts` |
 | Unit — `api-timeout.test.ts` | 1 | 4 | `tests/api-timeout.test.ts` |
 | Unit — `auth.test.ts` | 1 | 32 | `tests/auth.test.ts` |
-| Unit — `calculator.test.ts` | 1 | 21 | `tests/calculator.test.ts` |
+| Unit — `calculator.test.ts` | 1 | 25 | `tests/calculator.test.ts` |
 | Unit — `clear-cookie.test.ts` | 1 | 3 | `tests/clear-cookie.test.ts` |
 | Unit — `client-ip.test.ts` | 1 | 14 | `tests/client-ip.test.ts` |
 | Unit — `data-export.test.ts` | 1 | 9 | `tests/data-export.test.ts` |
-| Unit — `data-import.test.ts` | 1 | 50 | `tests/data-import.test.ts` |
+| Unit — `data-import.test.ts` | 1 | 63 | `tests/data-import.test.ts` |
 | Unit — `data-store.test.ts` | 1 | 3 | `tests/data-store.test.ts` |
-| Unit — `date.test.ts` | 1 | 28 | `tests/date.test.ts` |
+| Unit — `date.test.ts` | 1 | 33 | `tests/date.test.ts` |
 | Unit — `db-path.test.ts` | 1 | 18 | `tests/db-path.test.ts` |
 | Unit — `delivery-gate.test.ts` | 1 | 6 | `tests/delivery-gate.test.ts` |
 | Unit — `dep-audit.test.ts` | 1 | 15 | `tests/dep-audit.test.ts` |
 | Unit — `dev-preflight.test.ts` | 1 | 11 | `tests/dev-preflight.test.ts` |
-| Unit — `env-check.test.ts` | 1 | 17 | `tests/env-check.test.ts` |
+| Unit — `env-check.test.ts` | 1 | 21 | `tests/env-check.test.ts` |
 | Unit — `event-merge.test.ts` | 1 | 12 | `tests/event-merge.test.ts` |
 | Unit — `files.test.ts` | 1 | 5 | `tests/files.test.ts` |
 | Unit — `folder-tree.test.ts` | 1 | 16 | `tests/folder-tree.test.ts` |
@@ -1115,20 +1120,20 @@ Single-role per-user ownership model; no admin surface. Session: `{ uid, iat, ex
 | Unit — `view-collections.test.ts` | 1 | 6 | `tests/view-collections.test.ts` |
 | E2E — `a11y-sweep.spec.ts` | 1 | 20 | `tests/e2e/a11y-sweep.spec.ts` |
 | E2E — `accessibility.spec.ts` | 1 | 34 | `tests/e2e/accessibility.spec.ts` |
-| E2E — `auth-flows.spec.ts` | 1 | 14 | `tests/e2e/auth-flows.spec.ts` |
+| E2E — `auth-flows.spec.ts` | 1 | 16 | `tests/e2e/auth-flows.spec.ts` |
 | E2E — `auth.spec.ts` | 1 | 6 | `tests/e2e/auth.spec.ts` |
 | E2E — `calculator.spec.ts` | 1 | 13 | `tests/e2e/calculator.spec.ts` |
 | E2E — `dark-mode.spec.ts` | 1 | 27 | `tests/e2e/dark-mode.spec.ts` |
 | E2E — `greeting-clock.spec.ts` | 1 | 4 | `tests/e2e/greeting-clock.spec.ts` |
 | E2E — `mobile-navigation.spec.ts` | 1 | 18 | `tests/e2e/mobile-navigation.spec.ts` |
 | E2E — `navigation.spec.ts` | 1 | 59 | `tests/e2e/navigation.spec.ts` |
-| E2E — `parity-session5.spec.ts` | 1 | 45 | `tests/e2e/parity-session5.spec.ts` |
-| E2E — `parity-session6.spec.ts` | 1 | 17 | `tests/e2e/parity-session6.spec.ts` |
-| E2E — `parity-session7.spec.ts` | 1 | 51 | `tests/e2e/parity-session7.spec.ts` |
-| E2E — `parity-session8.spec.ts` | 1 | 64 | `tests/e2e/parity-session8.spec.ts` |
-| E2E — `parity-session9.spec.ts` | 1 | 32 | `tests/e2e/parity-session9.spec.ts` |
+| E2E — `parity-session5.spec.ts` | 1 | 46 | `tests/e2e/parity-session5.spec.ts` |
+| E2E — `parity-session6.spec.ts` | 1 | 21 | `tests/e2e/parity-session6.spec.ts` |
+| E2E — `parity-session7.spec.ts` | 1 | 54 | `tests/e2e/parity-session7.spec.ts` |
+| E2E — `parity-session8.spec.ts` | 1 | 66 | `tests/e2e/parity-session8.spec.ts` |
+| E2E — `parity-session9.spec.ts` | 1 | 35 | `tests/e2e/parity-session9.spec.ts` |
 | E2E — `resilience.spec.ts` | 1 | 22 | `tests/e2e/resilience.spec.ts` |
-| E2E — `s14-hardening.spec.ts` | 1 | 18 | `tests/e2e/s14-hardening.spec.ts` |
+| E2E — `s14-hardening.spec.ts` | 1 | 22 | `tests/e2e/s14-hardening.spec.ts` |
 | E2E — `s16-perf-parity.spec.ts` | 1 | 3 | `tests/e2e/s16-perf-parity.spec.ts` |
 | E2E — `s17-fresh-user.spec.ts` | 1 | 10 | `tests/e2e/s17-fresh-user.spec.ts` |
 | E2E — `s18-rum.spec.ts` | 1 | 6 | `tests/e2e/s18-rum.spec.ts` |
@@ -1141,10 +1146,10 @@ Single-role per-user ownership model; no admin surface. Session: `{ uid, iat, ex
 | E2E — `s25-delete-account.spec.ts` | 1 | 5 | `tests/e2e/s25-delete-account.spec.ts` |
 | E2E — `s26-change-email.spec.ts` | 1 | 7 | `tests/e2e/s26-change-email.spec.ts` |
 | E2E — `s52-sidebar-collapse.spec.ts` | 1 | 8 | `tests/e2e/s52-sidebar-collapse.spec.ts` |
-| E2E — `tasks.spec.ts` | 1 | 8 | `tests/e2e/tasks.spec.ts` |
-| E2E — `theme-system.spec.ts` | 1 | 14 | `tests/e2e/theme-system.spec.ts` |
+| E2E — `tasks.spec.ts` | 1 | 9 | `tests/e2e/tasks.spec.ts` |
+| E2E — `theme-system.spec.ts` | 1 | 15 | `tests/e2e/theme-system.spec.ts` |
 | E2E — the shared-sign-in setup project (one login; the storageState the whole suite rides; each cert chunk re-runs it) | 1 | 1 | `tests/e2e/auth.setup.ts` |
-| **Total** | **73** | **1684** | `tests/` — **1145 Vitest unit** (42 files, `vitest run` 1145/1145) + **538 e2e** (533 chromium specs in 30 files per `playwright --list` + the 1 setup × the 5 cold-cert chunks = the 538-test chunked census [142+161+71+93+71, `db/e2e.db` cold every chunk]); unit + e2e = **1683 green** (the badge sum: 1145 + 538). Re-measured S126/CA (the S125 row's "530" was a setup double-count — repaired; the previous era-grouped rows had drifted three-plus epochs — the table is now PER-FILE and script-derivable: `vitest run` per-file counts + `playwright test --list`). |
+| **Total** | **73** | **1731** | `tests/` — **1171 Vitest unit** (42 files, `vitest run` 1171/1171) + **559 e2e** (554 chromium specs in 30 files per `playwright --list` + the 1 setup × the 5 cold-cert chunks = the 559-test chunked census [144+177+72+93+73, `db/e2e.db` cold every chunk]); unit + e2e = **1730 green** (the badge sum: 1171 + 559). Re-measured S127/CB (the S126 row's counts carried forward + the CB pins; the table stays PER-FILE and script-derivable: `vitest run` per-file counts + `playwright test --list`). |
 
 ### 8.2 Test Patterns
 
@@ -1161,9 +1166,9 @@ No numeric coverage gate is configured; the standard is "every pure seam has a t
 
 - [ ] `bun run lint` clean
 - [ ] `bun run typecheck` clean
-- [ ] `bun run test` green (1145+)
+- [ ] `bun run test` green (1171+)
 - [ ] `bun run build` succeeds
-- [ ] `bun run test:e2e` green (538+; rebuild first if components changed)
+- [ ] `bun run test:e2e` green (559+; rebuild first if components changed)
 - [ ] No secrets / db files staged (`git status`)
 - [ ] Docs touched if behavior/setup changed
 

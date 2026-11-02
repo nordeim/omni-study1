@@ -58,7 +58,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/components/ui/toast";
 import { apiGet, apiSend } from "@/lib/api";
 import { mutations, useDataStore, type HolidayRow, type SubjectRow } from "@/lib/data";
-import { formatLongDate } from "@/lib/date";
+import { formatLongDate, fromDueDateInput } from "@/lib/date";
 import { ACCENTS, ACCENT_TOKENS, AVATAR_EMOJIS, type Accent, type ThemeMode } from "@/lib/theme";
 import type { AppUser } from "@/lib/store";
 import { useThemeStore } from "@/lib/store";
@@ -143,25 +143,36 @@ function AppearanceCard() {
     { value: "system", label: "System", icon: Monitor },
   ];
 
+  // S127/CB15: the failed-save rollback — the pickers applied the new
+  // value to the theme store (and the localStorage cache) BEFORE the
+  // PATCH and only toasted on failure, so the pressed selection lied
+  // about what would persist until the next /api/auth/me hydration
+  // silently reverted it. The local selection now reverts with the toast.
   const pickTheme = (next: ThemeMode) => {
+    const prev = mode;
     setMode(next);
-    patchPreferences({ themeMode: next }).catch((err: unknown) =>
-      toast.error(errorMessage(err, "Could not save the theme preference.")),
-    );
+    patchPreferences({ themeMode: next }).catch((err: unknown) => {
+      setMode(prev);
+      toast.error(errorMessage(err, "Could not save the theme preference."));
+    });
   };
 
   const pickAccent = (next: Accent) => {
+    const prev = accent;
     setAccent(next);
-    patchPreferences({ accentColor: next }).catch((err: unknown) =>
-      toast.error(errorMessage(err, "Could not save the accent color.")),
-    );
+    patchPreferences({ accentColor: next }).catch((err: unknown) => {
+      setAccent(prev);
+      toast.error(errorMessage(err, "Could not save the accent color."));
+    });
   };
 
   const pickAvatar = (emoji: string) => {
+    const prev = avatar;
     setAvatar(emoji);
-    patchPreferences({ avatarEmoji: emoji }).catch((err: unknown) =>
-      toast.error(errorMessage(err, "Could not save the avatar.")),
-    );
+    patchPreferences({ avatarEmoji: emoji }).catch((err: unknown) => {
+      setAvatar(prev);
+      toast.error(errorMessage(err, "Could not save the avatar."));
+    });
   };
 
   const saveAll = () => {
@@ -877,7 +888,9 @@ function HolidayDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (o
     if (!name.trim() || !date || saving) return;
     setSaving(true);
     try {
-      await mutations.createHoliday({ name: name.trim(), date: new Date(`${date}T12:00:00`).toISOString() });
+      // S127/CB2: the shared local-noon atom (the inline twin retired —
+      // one source for every date-only input).
+      await mutations.createHoliday({ name: name.trim(), date: fromDueDateInput(date) });
       toast.success("Holiday added");
       onOpenChange(false);
     } catch (err: unknown) {

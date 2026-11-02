@@ -616,3 +616,102 @@ test.describe("S123/BX9: the assignment progress field holds the empty string", 
     await expect(dlg).toHaveCount(0);
   });
 });
+
+// S127/CB2 — the assignments TZ round-trip (the s127 FE audit's H-2): the
+// view submitted the RAW yyyy-mm-dd from the date input (the server stores
+// the date-only string as a UTC-midnight instant) and edit-populated via
+// row.dueDate.slice(0, 10) — the UTC wall-clock. In any UTC-negative zone
+// the due date rendered one day early and every untouched edit cycle
+// drifted the stored day. Tasks and the holidays dialog already shipped
+// the local-noon pattern; assignments was the straggler. The pin creates
+// an assignment through the real dialog and demands the stored instant be
+// the LOCAL NOON of the picked day (computed in the test's own zone — the
+// browser, the runner, and the server share the host clock).
+test.describe("S127/CB2 · the assignments due date round-trips at local noon", () => {
+  test("a created assignment stores the picked day's local-noon instant (was UTC midnight)", async ({ page }) => {
+    await page.goto("/Assignments");
+    await hydrated(page);
+    const rows = page.locator('[aria-label="Assignment rows"] > *');
+    await expect(rows.first()).toBeVisible();
+    await page.getByRole("button", { name: "Add Assignment" }).first().click();
+    const dlg = page.getByRole("dialog");
+    await expect(dlg).toBeVisible();
+    // A due date 20 days out (beyond every seeded label bucket; the row
+    // list sorts by daysUntil so it lands last and cannot disturb the
+    // earlier pinned rows' order).
+    const due = new Date();
+    due.setDate(due.getDate() + 20);
+    const yyyy = due.getFullYear();
+    const mm = String(due.getMonth() + 1).padStart(2, "0");
+    const dd = String(due.getDate()).padStart(2, "0");
+    await dlg.getByLabel("Title").fill("S127-CB2 local-noon probe");
+    await dlg.locator("#assignment-due").fill(`${yyyy}-${mm}-${dd}`);
+    const saved = page.waitForResponse(
+      (r) => r.request().method() === "POST" && r.url().includes("/api/assignments"),
+    );
+    await dlg.getByRole("button", { name: "Add Assignment" }).click();
+    const res = await saved;
+    expect(res.ok()).toBe(true);
+    const row = (await res.json()) as { id: string; dueDate: string };
+    // The local-noon convention (the tasks-view pattern): the picked day
+    // at 12:00 LOCAL, serialized to UTC — same calendar day in every zone.
+    const expected = new Date(`${yyyy}-${mm}-${dd}T12:00:00`).toISOString();
+    expect(row.dueDate).toBe(expected);
+    // Zero residue on the shared demo user.
+    await page.request.delete(`/api/assignments/${row.id}`);
+  });
+});
+
+// S127/CB9 — the assignments type single-source (the s127 FE audit's
+// M-6): the view carried a LOCAL 7-value TYPES array missing "worksheet"
+// while the shared ASSIGNMENT_TYPES vocabulary (the schema, the import
+// seam, and the seed's own "Problem set 6" worksheet row) carries 8 — Edit
+// on a seeded worksheet row blanked the Type select, and the type was
+// un-creatable from the UI.
+test.describe("S127/CB9 · the assignments Type select is the shared 8-value vocabulary", () => {
+  test("the Create dialog offers every ASSIGNMENT_TYPES value incl. Worksheet", async ({ page }) => {
+    await page.goto("/Assignments");
+    await hydrated(page);
+    await page.getByRole("button", { name: "Add Assignment" }).first().click();
+    const dlg = page.getByRole("dialog");
+    await expect(dlg).toBeVisible();
+    const trigger = dlg.getByLabel("Type");
+    await trigger.click();
+    // The eight vocabulary values — Worksheet was missing pre-fix.
+    for (const option of [
+      "Homework",
+      "Essay",
+      "Project",
+      "Reading",
+      "Lab",
+      "Presentation",
+      "Other",
+      "Worksheet",
+    ]) {
+      await expect(page.getByRole("option", { name: option })).toBeVisible();
+    }
+    await page.keyboard.press("Escape");
+  });
+
+  test("Edit on the seeded worksheet row shows Worksheet selected", async ({ page }) => {
+    await page.goto("/Assignments");
+    await hydrated(page);
+    const rows = page.locator('[aria-label="Assignment rows"] > *');
+    await expect(rows.first()).toBeVisible();
+    // The seeded worksheet row ("Problem set 6") — the status filter
+    // defaults to Active and its progress is 40, so it is listed.
+    const worksheetRow = rows.filter({ hasText: "Problem set 6" }).first();
+    await worksheetRow
+      .getByRole("button", { name: "Actions for Problem set 6" })
+      .click();
+    await page.getByRole("menuitem", { name: "Edit" }).click();
+    const dlg = page.getByRole("dialog");
+    await expect(dlg).toBeVisible();
+    // Pre-fix: the Radix select had no matching item → the trigger
+    // rendered EMPTY. The SelectValue renders the RAW stored value (the
+    // "capitalize" class is CSS-only — the textContent stays lowercase).
+    await expect(dlg.getByLabel("Type")).toContainText("worksheet");
+    await dlg.getByRole("button", { name: "Cancel" }).click();
+    await expect(dlg).toHaveCount(0);
+  });
+});

@@ -27,9 +27,15 @@ const folderCreateSchema = z.object({
 });
 
 export const GET = withUser(async (user) => {
+  // S127/CB10: the CA5 bounded window, asc-shaped (the tree's roots-first
+  // order preserved) + the id tiebreak — the import route can mint ~10^5
+  // folder rows in a single envelope, the exact growth vector CA5 bounded
+  // for the 16 factory collections; these two hand-written file-family
+  // GETs were the stragglers.
   const folders = await db.fileFolder.findMany({
     where: { userId: user.id },
-    orderBy: { createdAt: "asc" },
+    orderBy: [{ createdAt: "asc" }, { id: "asc" }],
+    take: 500,
   });
   return NextResponse.json(folders);
 });

@@ -322,8 +322,18 @@ export function AnalyticsView() {
   const completedTasks = tasks.filter((t) => t.completed).length;
   const taskRate = tasks.length > 0 ? Math.round((completedTasks / tasks.length) * 100) : 0;
   const completedAssignments = assignments.filter((a) => a.progress >= 100).length;
+  // S127/CB13: the true average progress — the caption promises "avg
+  // progress" but the pre-CB13 derivation computed the completion RATIO
+  // (the share of rows at 100%): 1 of 2 assignments fully done, the other
+  // at 10%, rendered "50% avg progress" when the average is 55%. The
+  // fraction value above stays the completion census; only the sub
+  // becomes the mean of a.progress.
   const assignmentRate =
-    assignments.length > 0 ? Math.round((completedAssignments / assignments.length) * 100) : 0;
+    assignments.length > 0
+      ? Math.round(
+          assignments.reduce((acc, a) => acc + a.progress, 0) / assignments.length,
+        )
+      : 0;
   const focusSecondsWeek = focusSessions
     .filter((s) => week.some((d) => isSameDay(new Date(s.startedAt), d)))
     .reduce((acc, s) => acc + s.durationSeconds, 0);

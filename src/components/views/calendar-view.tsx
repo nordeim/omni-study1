@@ -26,17 +26,33 @@ import {
   CALENDAR_WEEKDAYS,
   formatLongDate,
   formatLongDateWithWeekday,
+  formatHHMMRange,
   isSameDay,
+  isoWeekday,
   monthGrid,
 } from "@/lib/date";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/components/ui/toast";
 
-const EVENT_DOT_COLORS = 3; // max dots before the "+N" overflow chip
+// S127/CB5: the month grid renders per-CATEGORY presence dots (measured
+// live on the reference 2026-11-02: the Nov 12 exam cell carried exactly
+// one w-1.5 h-1.5 rounded-full bg-red-500, and EVENTS ARE DOTLESS — the
+// legend's four categories are the only dot sources). One dot per PRESENT
+// category, in legend order; the selected cell renders its dots white
+// (the reference's own convention — bg-white on the accent fill).
+const CATEGORY_DOTS = [
+  { key: "tasks", className: "bg-blue-500" },
+  { key: "assignments", className: "bg-amber-500" },
+  { key: "exams", className: "bg-red-500" },
+  { key: "classes", className: "bg-emerald-500" },
+] as const;
 
 export function CalendarView() {
   const tasks = useDataStore((s) => s.tasks);
   const events = useDataStore((s) => s.events);
+  const assignments = useDataStore((s) => s.assignments);
+  const exams = useDataStore((s) => s.exams);
+  const timetable = useDataStore((s) => s.timetable);
   const toggleTask = mutations.toggleTask;
   const { toast } = useToast();
 
@@ -64,6 +80,22 @@ export function CalendarView() {
       tasks.filter((t) => t.dueDate && isSameDay(new Date(t.dueDate), day)),
     [tasks],
   );
+  // S127/CB5: the three remaining dot sources — assignments due that day,
+  // exams dated that day, and the recurring weekday timetable classes (the
+  // ISO weekday convention the timetable grid uses).
+  const assignmentsFor = React.useCallback(
+    (day: Date) =>
+      assignments.filter((a) => a.dueDate && isSameDay(new Date(a.dueDate), day)),
+    [assignments],
+  );
+  const examsFor = React.useCallback(
+    (day: Date) => exams.filter((e) => isSameDay(new Date(e.date), day)),
+    [exams],
+  );
+  const classesFor = React.useCallback(
+    (day: Date) => timetable.filter((c) => c.dayOfWeek === isoWeekday(day)),
+    [timetable],
+  );
 
   const shift = (delta: number) => {
     const next = addMonths(new Date(cursor.year, cursor.month, 1), delta);
@@ -72,6 +104,15 @@ export function CalendarView() {
 
   const selectedEvents = eventsFor(selected);
   const selectedTasks = tasksFor(selected);
+  const selectedAssignments = assignmentsFor(selected);
+  const selectedExams = examsFor(selected);
+  const selectedClasses = classesFor(selected);
+  const dayEmpty =
+    selectedEvents.length === 0 &&
+    selectedTasks.length === 0 &&
+    selectedAssignments.length === 0 &&
+    selectedExams.length === 0 &&
+    selectedClasses.length === 0;
   const monthLabel = new Intl.DateTimeFormat("en-US", {
     month: "long",
     year: "numeric",
@@ -231,7 +272,15 @@ export function CalendarView() {
             className="mt-1 grid grid-cols-7 gap-1"
           >
             {cells.map((cell) => {
-              const dayEvents = eventsFor(cell.date);
+              // S127/CB5: the category-presence computation (events are
+              // dotless by design — the reference measured it).
+              const present: Record<string, boolean> = {
+                tasks: tasksFor(cell.date).length > 0,
+                assignments: assignmentsFor(cell.date).length > 0,
+                exams: examsFor(cell.date).length > 0,
+                classes: classesFor(cell.date).length > 0,
+              };
+              const dotCount = CATEGORY_DOTS.filter((c) => present[c.key]).length;
               const isSelected = isSameDay(cell.date, selected);
               const isToday = isSameDay(cell.date, today);
               return (
@@ -264,32 +313,20 @@ export function CalendarView() {
                   >
                     {cell.date.getDate()}
                   </span>
-                  {cell.inMonth && dayEvents.length > 0 && (
+                  {cell.inMonth && dotCount > 0 && (
+                    // The reference's dot row: a plain flex gap-0.5 strip
+                    // of w-1.5 h-1.5 rounded-full category dots (the
+                    // button's own gap-1 provides the vertical offset).
                     <span className="flex items-center gap-0.5" aria-hidden>
-                      {dayEvents.slice(0, EVENT_DOT_COLORS).map((e) => (
+                      {CATEGORY_DOTS.filter((c) => present[c.key]).map((c) => (
                         <span
-                          key={e.id}
+                          key={c.key}
                           className={cn(
                             "size-1.5 rounded-full",
-                            isSelected && "bg-white/90",
+                            isSelected ? "bg-white" : c.className,
                           )}
-                          style={
-                            isSelected
-                              ? undefined
-                              : { backgroundColor: e.color }
-                          }
                         />
                       ))}
-                      {dayEvents.length > EVENT_DOT_COLORS && (
-                        <span
-                          className={cn(
-                            "text-[9px] leading-none",
-                            isSelected ? "text-white/90" : "text-slate-400",
-                          )}
-                        >
-                          +{dayEvents.length - EVENT_DOT_COLORS}
-                        </span>
-                      )}
                     </span>
                   )}
                 </button>
@@ -322,61 +359,151 @@ export function CalendarView() {
             {formatLongDateWithWeekday(selected)}
           </h3>
 
-          {selectedEvents.length === 0 && selectedTasks.length === 0 ? (
+          {dayEmpty ? (
             <p className="py-8 text-center text-slate-500 dark:text-slate-400">
-              No events this day
+              No events for this day
             </p>
           ) : (
-            <div className="mt-4 flex flex-col gap-3">
-              {selectedEvents.map((e) => (
-                <article
-                  key={e.id}
-                  className="rounded-lg border-l-4 bg-slate-50 p-3 dark:bg-slate-800/60"
-                  style={{ borderLeftColor: e.color }}
-                >
-                  <p className="font-medium text-slate-700 dark:text-slate-200">
-                    {e.title}
+            /* S127/CB5: the reference's grouped day detail (measured live
+               2026-11-02 on its Nov 12 exam day): an uppercase category
+               label per present group — text-xs font-semibold uppercase —
+               over a gap-2 stack of tinted p-3 border-l-4 rows; the groups
+               themselves gap-4 apart. The clone keeps its task rows'
+               checkbox superset (the S6-G pin) and appends the Events
+               group the reference's calendar does not carry. */
+            <div className="mt-4 flex flex-col gap-4">
+              {selectedTasks.length > 0 && (
+                <div className="flex flex-col gap-2">
+                  <p className="text-xs font-semibold uppercase text-slate-500 dark:text-slate-400">
+                    Tasks
                   </p>
-                  <p className="mt-0.5 flex items-center gap-1 text-xs text-slate-500 dark:text-slate-400">
-                    <CalendarIcon className="size-3" strokeWidth={2} />
-                    {e.allDay
-                      ? "All day"
-                      : new Date(e.startDate).toLocaleTimeString("en-US", {
-                          hour: "numeric",
-                          minute: "2-digit",
-                        })}
-                    {e.location ? ` · ${e.location}` : ""}
-                  </p>
-                </article>
-              ))}
-              {selectedTasks.map((t) => (
-                <div
-                  key={t.id}
-                  className="flex items-center gap-3 rounded-lg border-l-4 border-l-blue-500 bg-blue-50 p-3 dark:bg-slate-800/60"
-                >
-                  <PriorityCheckbox
-                    checked={t.completed}
-                    priority={t.priority}
-                    label={`Mark "${t.title}" ${t.completed ? "incomplete" : "complete"}`}
-                    onToggle={() =>
-                      toggleTask(t.id).catch((err: unknown) =>
-                        toast.error(
-                          err instanceof Error ? err.message : "Update failed",
-                        ),
-                      )
-                    }
-                  />
-                  <p
-                    className={cn(
-                      "text-sm font-medium text-slate-700 dark:text-slate-200",
-                      t.completed && "line-through text-slate-400",
-                    )}
-                  >
-                    {t.title}
-                  </p>
-                  <SquareCheckBig className="ml-auto size-4 text-slate-300" strokeWidth={2} />
+                  <div className="flex flex-col gap-2">
+                    {selectedTasks.map((t) => (
+                      <div
+                        key={t.id}
+                        className="flex items-center gap-3 rounded-lg border-l-4 border-l-blue-500 bg-blue-50 p-3 dark:bg-slate-800/60"
+                      >
+                        <PriorityCheckbox
+                          checked={t.completed}
+                          priority={t.priority}
+                          label={`Mark "${t.title}" ${t.completed ? "incomplete" : "complete"}`}
+                          onToggle={() =>
+                            toggleTask(t.id).catch((err: unknown) =>
+                              toast.error(
+                                err instanceof Error ? err.message : "Update failed",
+                              ),
+                            )
+                          }
+                        />
+                        <p
+                          className={cn(
+                            "text-sm font-medium text-slate-700 dark:text-slate-200",
+                            t.completed && "line-through text-slate-400",
+                          )}
+                        >
+                          {t.title}
+                        </p>
+                        <SquareCheckBig className="ml-auto size-4 text-slate-300" strokeWidth={2} />
+                      </div>
+                    ))}
+                  </div>
                 </div>
-              ))}
+              )}
+
+              {selectedAssignments.length > 0 && (
+                <div className="flex flex-col gap-2">
+                  <p className="text-xs font-semibold uppercase text-slate-500 dark:text-slate-400">
+                    Assignments
+                  </p>
+                  <div className="flex flex-col gap-2">
+                    {selectedAssignments.map((a) => (
+                      <div
+                        key={a.id}
+                        className="rounded-lg border-l-4 border-l-amber-500 bg-amber-50 p-3 dark:bg-slate-800/60"
+                      >
+                        <p className="font-medium text-slate-700 dark:text-slate-200">
+                          {a.title}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {selectedExams.length > 0 && (
+                <div className="flex flex-col gap-2">
+                  <p className="text-xs font-semibold uppercase text-slate-500 dark:text-slate-400">
+                    Exams
+                  </p>
+                  <div className="flex flex-col gap-2">
+                    {selectedExams.map((e) => (
+                      <div
+                        key={e.id}
+                        className="rounded-lg border-l-4 border-l-red-500 bg-red-50 p-3 dark:bg-slate-800/60"
+                      >
+                        <p className="font-medium text-slate-700 dark:text-slate-200">
+                          {e.title}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {selectedClasses.length > 0 && (
+                <div className="flex flex-col gap-2">
+                  <p className="text-xs font-semibold uppercase text-slate-500 dark:text-slate-400">
+                    Classes
+                  </p>
+                  <div className="flex flex-col gap-2">
+                    {selectedClasses.map((c) => (
+                      <div
+                        key={c.id}
+                        className="rounded-lg border-l-4 border-l-emerald-500 bg-emerald-50 p-3 dark:bg-slate-800/60"
+                      >
+                        <p className="font-medium text-slate-700 dark:text-slate-200">
+                          {c.name}
+                        </p>
+                        <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
+                          {formatHHMMRange(c.startTime, c.endTime)}
+                          {c.room ? ` · ${c.room}` : ""}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {selectedEvents.length > 0 && (
+                <div className="flex flex-col gap-2">
+                  <p className="text-xs font-semibold uppercase text-slate-500 dark:text-slate-400">
+                    Events
+                  </p>
+                  <div className="flex flex-col gap-2">
+                    {selectedEvents.map((e) => (
+                      <article
+                        key={e.id}
+                        className="rounded-lg border-l-4 bg-slate-50 p-3 dark:bg-slate-800/60"
+                        style={{ borderLeftColor: e.color }}
+                      >
+                        <p className="font-medium text-slate-700 dark:text-slate-200">
+                          {e.title}
+                        </p>
+                        <p className="mt-0.5 flex items-center gap-1 text-xs text-slate-500 dark:text-slate-400">
+                          <CalendarIcon className="size-3" strokeWidth={2} />
+                          {e.allDay
+                            ? "All day"
+                            : new Date(e.startDate).toLocaleTimeString("en-US", {
+                                hour: "numeric",
+                                minute: "2-digit",
+                              })}
+                          {e.location ? ` · ${e.location}` : ""}
+                        </p>
+                      </article>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </section>

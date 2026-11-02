@@ -494,3 +494,85 @@ test.describe("S126/CA11 · the reset screen explains a missing token", () => {
     ).toBeVisible();
   });
 });
+
+// S127/CB12 — the login per-account budget (the s127 server audit's M-10,
+// the BX2 doctrine applied to the credential exchange): login's only brake
+// was the per-IP limiter, whose key is client-forgeable in the default
+// TRUSTED_PROXY_HOPS-unset posture — while a correct password guess SIGNS
+// THE CALLER IN. The route now checks `loginAcct:${user.id}` (10/15-min)
+// when the account exists, BEFORE the scrypt burn; an exhausted bucket
+// answers the SAME uniform 401 (never a distinguishable 429 — the same
+// no-oracle discipline as BX2), and a successful sign-in resets BOTH
+// buckets (the progressive model). The pins burn the account bucket from
+// DISTINCT TEST-NET IPs so the per-IP limiter never fires first.
+test.describe("S127/CB12: the per-account login attempt cap", () => {
+  test("after 10 wrong passwords the CORRECT password also fails (the uniform 401 lockout)", async ({ page }) => {
+    const email = `s127-cb12-${Date.now()}@studyflow.app`;
+    const reg = await page.request.post("/api/auth/register", {
+      headers: { "x-forwarded-for": "192.0.2.141" },
+      data: { email, password: "Fresh1234!", name: "CB12 Lockout Probe" },
+    });
+    expect(reg.ok()).toBe(true);
+    const { code } = (await reg.json()) as { code: string };
+    const verify = await page.request.post("/api/auth/verify-email", {
+      headers: { "x-forwarded-for": "192.0.2.141" },
+      data: { email, code },
+    });
+    expect(verify.ok()).toBe(true);
+
+    // Burn the ACCOUNT bucket with 10 wrong passwords, each from a
+    // DISTINCT TEST-NET IP (the per-IP buckets stay at 1 charge each —
+    // pre-fix these were the ONLY gate and the correct password worked).
+    for (let i = 1; i <= 10; i++) {
+      const wrong = await page.request.post("/api/auth/login", {
+        headers: { "x-forwarded-for": `192.0.2.${150 + i}` },
+        data: { email, password: "WrongPass123!" },
+      });
+      expect(wrong.status()).toBe(401);
+    }
+
+    // THE LOCKOUT: the CORRECT password must now fail with the SAME
+    // uniform 401 — pre-fix this was 200 (signed in).
+    const correct = await page.request.post("/api/auth/login", {
+      headers: { "x-forwarded-for": "192.0.2.170" },
+      data: { email, password: "Fresh1234!" },
+    });
+    expect(correct.status()).toBe(401);
+    const body = (await correct.json()) as { error?: string };
+    // The SAME uniform copy — no oracle, no new message shape.
+    expect(body.error).toBe("Invalid email or password");
+  });
+
+  test("a successful sign-in resets the account bucket (the progressive model)", async ({ page }) => {
+    const email = `s127-cb12r-${Date.now()}@studyflow.app`;
+    const reg = await page.request.post("/api/auth/register", {
+      headers: { "x-forwarded-for": "192.0.2.171" },
+      data: { email, password: "Fresh1234!", name: "CB12 Reset Probe" },
+    });
+    expect(reg.ok()).toBe(true);
+    const { code } = (await reg.json()) as { code: string };
+    const verify = await page.request.post("/api/auth/verify-email", {
+      headers: { "x-forwarded-for": "192.0.2.171" },
+      data: { email, code },
+    });
+    expect(verify.ok()).toBe(true);
+
+    // 5 wrong → a CORRECT sign-in resets → 5 wrong again → still able to
+    // sign in (post-fix the reset keeps legitimate users forever
+    // unlocked — the progressive model).
+    for (let round = 0; round < 2; round++) {
+      for (let i = 1; i <= 5; i++) {
+        const wrong = await page.request.post("/api/auth/login", {
+          headers: { "x-forwarded-for": `192.0.2.${180 + round * 10 + i}` },
+          data: { email, password: "WrongPass123!" },
+        });
+        expect(wrong.status()).toBe(401);
+      }
+      const ok = await page.request.post("/api/auth/login", {
+        headers: { "x-forwarded-for": `192.0.2.${200 + round}` },
+        data: { email, password: "Fresh1234!" },
+      });
+      expect(ok.status()).toBe(200);
+    }
+  });
+});

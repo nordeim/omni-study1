@@ -52,7 +52,9 @@ import { cn } from "@/lib/utils";
 import {
   daysUntil,
   formatDueDateShort,
+  fromDueDateInput,
   startOfDay,
+  toDateInputValue,
 } from "@/lib/date";
 import {
   DuePill,
@@ -80,22 +82,6 @@ export function parseSubtasks(json: string): Subtask[] {
   } catch {
     return [];
   }
-}
-
-/** Local-date → yyyy-mm-dd for <input type="date">. */
-function toDateInputValue(iso: string | null): string {
-  if (!iso) return "";
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return "";
-  const month = (d.getMonth() + 1).toString().padStart(2, "0");
-  const day = d.getDate().toString().padStart(2, "0");
-  return `${d.getFullYear()}-${month}-${day}`;
-}
-
-/** yyyy-mm-dd → a local-noon ISO stamp (safe against timezone drift). */
-function fromDueDateInput(value: string): string {
-  if (!value) return "";
-  return new Date(`${value}T12:00:00`).toISOString();
 }
 
 function errorMessage(err: unknown, fallback: string): string {

@@ -29,6 +29,7 @@ import {
   IMPORT_OPTIONAL_FKS,
   IMPORT_REQUIRED_FKS,
   ImportRowError,
+  importProfilePatch,
   importRowIdError,
   parseImportEnvelope,
   sanitizeImportRow,
@@ -499,5 +500,169 @@ describe("S126/CA14 · the import domain caps", () => {
     expect(() =>
       sanitizeImportRow("tasks", { id: "t1", subtasks: '[{"title":"a","done":false}]' }, 0),
     ).not.toThrow();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// S127/CB11 · the import domain caps completed (the s127 server audit's
+// M-9): the CA14 contract covers "the CHEAP time-independent invariants" —
+// several route-enforced ones were still missing, so a hand-edited backup
+// persisted rows every interactive route rejects. Each cap below mirrors
+// its route's Zod bound verbatim.
+// ---------------------------------------------------------------------------
+describe("S127/CB11 · the completed import domain caps", () => {
+  it("rejects an exam duration outside 5..600 (the route's atom)", () => {
+    expect(() =>
+      sanitizeImportRow("exams", { id: "e1", duration: 601 }, 0),
+    ).toThrow(ImportRowError);
+    expect(() =>
+      sanitizeImportRow("exams", { id: "e1", duration: 4 }, 0),
+    ).toThrow(ImportRowError);
+  });
+
+  it("accepts the exam duration boundaries (5, 600) and the absent leg", () => {
+    expect(() => sanitizeImportRow("exams", { id: "e1", duration: 5 }, 0)).not.toThrow();
+    expect(() => sanitizeImportRow("exams", { id: "e1", duration: 600 }, 0)).not.toThrow();
+    expect(() => sanitizeImportRow("exams", { id: "e1" }, 0)).not.toThrow();
+  });
+
+  it("rejects a practice-test durationMinutes outside 1..600", () => {
+    expect(() =>
+      sanitizeImportRow("practiceTests", { id: "p1", durationMinutes: 0 }, 0),
+    ).toThrow(ImportRowError);
+    expect(() =>
+      sanitizeImportRow("practiceTests", { id: "p1", durationMinutes: 601 }, 0),
+    ).toThrow(ImportRowError);
+  });
+
+  it("rejects a focus-session durationSeconds outside 1..86400 (it feeds every focus stat)", () => {
+    expect(() =>
+      sanitizeImportRow("focusSessions", { id: "f1", durationSeconds: 0 }, 0),
+    ).toThrow(ImportRowError);
+    expect(() =>
+      sanitizeImportRow("focusSessions", { id: "f1", durationSeconds: 86401 }, 0),
+    ).toThrow(ImportRowError);
+    expect(() =>
+      sanitizeImportRow("focusSessions", { id: "f1", durationSeconds: 86400 }, 0),
+    ).not.toThrow();
+  });
+
+  it("rejects a study-group members array beyond the 50-member cap", () => {
+    const members = JSON.stringify(
+      Array.from({ length: 51 }, (_, i) => ({ name: `M${i}`, email: `m${i}@x.y` })),
+    );
+    expect(() =>
+      sanitizeImportRow("studyGroups", { id: "g1", members }, 0),
+    ).toThrow(ImportRowError);
+    const fifty = JSON.stringify(
+      Array.from({ length: 50 }, (_, i) => ({ name: `M${i}`, email: `m${i}@x.y` })),
+    );
+    expect(() =>
+      sanitizeImportRow("studyGroups", { id: "g1", members: fifty }, 0),
+    ).not.toThrow();
+  });
+
+  it("rejects a grade weight outside 0..100 (it feeds the weighted mean)", () => {
+    expect(() =>
+      sanitizeImportRow("grades", { id: "g1", score: 50, weight: 101 }, 0),
+    ).toThrow(ImportRowError);
+    expect(() =>
+      sanitizeImportRow("grades", { id: "g1", score: 50, weight: -0.5 }, 0),
+    ).toThrow(ImportRowError);
+    expect(() =>
+      sanitizeImportRow("grades", { id: "g1", score: 50, weight: 100 }, 0),
+    ).not.toThrow();
+  });
+
+  it("rejects an event whose endDate precedes its startDate (the BU22 guard)", () => {
+    expect(() =>
+      sanitizeImportRow("events", {
+        id: "v1",
+        startDate: "2031-03-15T14:00:00.000Z",
+        endDate: "2031-03-15T13:00:00.000Z",
+      }, 0),
+    ).toThrow(ImportRowError);
+    expect(() =>
+      sanitizeImportRow("events", {
+        id: "v1",
+        startDate: "2031-03-15T13:00:00.000Z",
+        endDate: "2031-03-15T14:00:00.000Z",
+      }, 0),
+    ).not.toThrow();
+  });
+
+  it("rejects a malformed timetable hhmm leg (the atom's own shape)", () => {
+    expect(() =>
+      sanitizeImportRow("timetableClasses", { id: "c1", startTime: "banana" }, 0),
+    ).toThrow(ImportRowError);
+    expect(() =>
+      sanitizeImportRow("timetableClasses", { id: "c1", startTime: "25:00" }, 0),
+    ).toThrow(ImportRowError);
+  });
+
+  it("rejects an inverted timetable span (minutes compare, never raw strings)", () => {
+    expect(() =>
+      sanitizeImportRow("timetableClasses", { id: "c1", startTime: "10:00", endTime: "09:00" }, 0),
+    ).toThrow(ImportRowError);
+  });
+
+  it("accepts the legacy unpadded hour (the atom admits '9:00')", () => {
+    expect(() =>
+      sanitizeImportRow("timetableClasses", { id: "c1", startTime: "9:00", endTime: "10:30" }, 0),
+    ).not.toThrow();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// S127/CB19 · the export/import profile round-trip (the s127 server
+// audit's L-5): the export envelope deliberately carries a hashless
+// publicUser block, but the import route never read it — school, grade
+// level, study goal, theme, accent, avatar, and notifications silently
+// dropped on restore (a quiet violation of the ADR-019 "own your data"
+// round-trip). importProfilePatch extracts the validated preference
+// fields; identity (email, name, id) NEVER rides the patch; a garbage
+// block stays ignored (the existing tolerance contract).
+// ---------------------------------------------------------------------------
+describe("S127/CB19 · the envelope user-profile patch", () => {
+  it("extracts the validated preference fields from a publicUser-shaped block", () => {
+    const patch = importProfilePatch({
+      id: "u1",
+      email: "someone@example.com",
+      name: "Someone",
+      emailVerified: true,
+      createdAt: "2031-01-01T00:00:00.000Z",
+      updatedAt: "2031-01-01T00:00:00.000Z",
+      themeMode: "dark",
+      accentColor: "violet",
+      avatarEmoji: "",
+      notificationsEnabled: false,
+      schoolName: "Springfield High",
+      gradeLevel: "11th Grade",
+      studyGoalHours: 6,
+    });
+    expect(patch).toEqual({
+      themeMode: "dark",
+      accentColor: "violet",
+      avatarEmoji: "",
+      notificationsEnabled: false,
+      schoolName: "Springfield High",
+      gradeLevel: "11th Grade",
+      studyGoalHours: 6,
+    });
+    // Identity NEVER rides the patch.
+    expect(patch).not.toHaveProperty("id");
+    expect(patch).not.toHaveProperty("email");
+    expect(patch).not.toHaveProperty("name");
+  });
+
+  it("ignores a garbage block (the tolerance contract holds)", () => {
+    expect(importProfilePatch("garbage")).toBeNull();
+    expect(importProfilePatch({ themeMode: "neon" })).toBeNull();
+    expect(importProfilePatch({ studyGoalHours: 99 })).toBeNull();
+  });
+
+  it("returns null for an absent block (the pre-CB19 behavior)", () => {
+    expect(importProfilePatch(undefined)).toBeNull();
+    expect(importProfilePatch(null)).toBeNull();
   });
 });

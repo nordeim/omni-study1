@@ -45,9 +45,14 @@ export const GET = withUser(async (user) => {
   // consumes the data column from the list. With the 2 MiB-per-file cap,
   // including it would add ~2.7 MiB of base64 to EVERY list fetch — an
   // unbounded payload as the library grows (the upload-edge audit's C8).
+  // S127/CB10: the CA5 bounded window (desc + the id tiebreak + take:
+  // 500) — the two hand-written file-family GETs were the only collection
+  // enumerations without it, and the import route can mint ~10^5 rows in
+  // a single envelope (the growth vector CA5 bounded for the factory).
   const files = await db.fileItem.findMany({
     where: { userId: user.id },
-    orderBy: { createdAt: "desc" },
+    orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+    take: 500,
     select: FILE_METADATA,
   });
   return NextResponse.json(files);
@@ -80,7 +85,11 @@ export const POST = withUser(async (user, request: NextRequest) => {
         userId: user.id,
         name,
         mime: "text/uri-list",
-        size: 0,
+        // S127/CB20: the twin entry points agree — the dedicated
+        // files/link route stores url.length (an informative proxy for a
+        // link's footprint); the JSON leg here stored 0, so identical user
+        // actions produced rows that rendered different sizes.
+        size: url.length,
         data: null,
         url,
         folderId: folderIdOrNull,

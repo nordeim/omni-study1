@@ -25,7 +25,7 @@ tags:
 
 > **What this is:** the single-source-of-truth reference for working in
 > `nordeim/omni-study1`. Every fact below is verified against the codebase
-> (1683 tests green, re-anchored at the S126 update: 1145 Vitest unit [42 files] + 538 Playwright e2e [the 5-chunk census: 533 chromium specs + the per-chunk setup re-runs — 142+161+71+93+71]) — the census re-anchored through
+> (1730 tests green, re-anchored at the S127 update: 1171 Vitest unit [42 files] + 559 Playwright e2e [the 5-chunk census: 554 chromium specs + the per-chunk setup re-runs — 144+177+72+93+73]) — the census re-anchored through
 > the s117–s124 hardening cycles; the 2.0 baseline was 834 + 299 in six
 > chunks after the parity re-application + account-flow completion +
 > regression hardening).
@@ -608,13 +608,13 @@ tail -40 dev.log                            # request traces + prisma queries
 ```bash
 bun run lint && bun run typecheck && bun run test && bun run build && bun run test:e2e
 ```
-Current green state (re-anchored at S126/CA): lint ✓ · tsc ✓ (`noImplicitAny` + `noUnusedLocals`/`noUnusedParameters` — the BV16 machine guard) · 1145 unit ✓ · build ✓ (the type gate live — `ignoreBuildErrors` removed) · 538 e2e ✓ (1683 green).
+Current green state (re-anchored at S127/CB): lint ✓ · tsc ✓ (`noImplicitAny` + `noUnusedLocals`/`noUnusedParameters` — the BV16 machine guard) · 1171 unit ✓ · build ✓ (the type gate live — `ignoreBuildErrors` removed) · 559 e2e ✓ (1730 green).
 
 **Full-suite chunk map** (one server-boot per chunk; the 10-min tool cap makes
 one-shot full runs unreliable — the 2.0 six-chunk map: chrome+s14 104 ·
 S5+calc+S6 46 · S7+S8+S9 79 · tasks/resilience/s16/s17 20 · auth+s18–s23 35 ·
 s24–s26 18. Re-anchored at 2.2: the FIVE-chunk cold map of
-`scripts/e2e-chunked-cert.sh` — 139+157+71+92+70 = 529 (re-anchored S125/BZ; the pre-S125 line said 523 [137+153+71+92+70], the S124-era map, always run COLD
+`scripts/e2e-chunked-cert.sh` — 144+177+72+93+73 = 559 (re-anchored S127/CB; the pre-S127 line said 538 [142+161+71+93+71], the S126-era map, always run COLD
 [`rm -f db/e2e.db`]: the s23 round-trip posts a FIXED-id envelope and the
 seed's idempotent upserts never refresh day-relative dates).
 

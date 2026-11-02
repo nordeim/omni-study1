@@ -653,3 +653,194 @@ test.describe("S126/CA8 · the input placeholder meets AA contrast", () => {
     expect(color).toBe("rgb(107, 114, 128)"); // gray-500 — 4.83:1 on white
   });
 });
+
+// ---------------------------------------------------------------------------
+// S127/CB3 · generate-questions accepts the cleared-subject empty string
+// (the s127 server audit's H-3 — the BX5 dead-transform twin at the third
+// route): `subjectId: idField.nullish().transform(v => v === "" ? null : v)`
+// — idField's min(1) rejected "" BEFORE the transform, so the no-subject
+// default path (practicetests-view sends subjectId: "") 400'd at the
+// validation boundary and the Create Test dialog's AI generation failed
+// whenever no subject was selected. The fix is the shared nullableId atom.
+// The pin rides a FRESH TEST-NET user (the BZ5 doctrine — the demo user's
+// AI budget is never touched; the C1 pin's exact 20-then-429 count stays
+// deterministic).
+// ---------------------------------------------------------------------------
+test.describe("S127/CB3: generate-questions accepts subjectId \"\"", () => {
+  test("the cleared-subject path passes validation (pre-fix: the dead transform 400'd)", async ({ request }) => {
+    test.setTimeout(150_000);
+    const email = `s127-cb3-${Date.now()}@studyflow.app`;
+    const reg = await request.post("/api/auth/register", {
+      headers: { "x-forwarded-for": "192.0.2.127" },
+      data: { email, password: "Fresh1234!", name: "S127 CB3 Probe" },
+    });
+    expect(reg.ok(), `register failed: ${reg.status()}`).toBe(true);
+    const { code } = (await reg.json()) as { code: string };
+    const verify = await request.post("/api/auth/verify-email", {
+      headers: { "x-forwarded-for": "192.0.2.127" },
+      data: { email, code },
+    });
+    expect(verify.ok(), `verify failed: ${verify.status()}`).toBe(true);
+    const login = await request.post("/api/auth/login", {
+      headers: { "x-forwarded-for": "192.0.2.127" },
+      data: { email, password: "Fresh1234!" },
+    });
+    expect(login.ok(), `login failed: ${login.status()}`).toBe(true);
+
+    // The default no-subject shape. Pre-fix: 400 at the validation
+    // boundary (the dead transform). Post-fix: validation passes and the
+    // AI layer answers on its own merits — 201 with a live backend, a
+    // clean 5xx when the sandbox lacks AI credentials. Anything but the
+    // validation 400.
+    const res = await request.post("/api/ai/generate-questions", {
+      data: { title: "S127 CB3 probe", subjectId: "", count: 1, persist: false },
+    });
+    expect([201, 200, 408, 429, 500, 502, 503, 504]).toContain(res.status());
+  });
+});
+
+// ---------------------------------------------------------------------------
+// S127/CB7 · the mutate write budget (the BZ5 mirror, the s127 cycle's
+// documented next-cycle candidate): the factory write budget covered only
+// the collection POSTs — PATCH and DELETE rode unthrottled (the http.ts
+// comment's own "next-cycle candidate"). Both now join the SAME shared
+// `write:${user.id}` 600/15-min bucket (after auth, BEFORE readJson — the
+// C1 convention). The e2e census: the demo user's per-chunk mutation
+// volume is tens — far below 600 — so no legitimate spec trips. Both legs
+// ride FRESH TEST-NET users (the BZ5 lesson — the demo user is never
+// mutated; the BZ5 POST-leg pin's own budget stays untouched).
+// ---------------------------------------------------------------------------
+test.describe("S127/CB7: the mutate write budget (PATCH + DELETE, 600/15-min shared)", () => {
+  test("rapid PATCHes exhaust to 429 + Retry-After; anon still 401s (RED pre-fix: 620x 200, never 429)", async ({ request }) => {
+    test.setTimeout(180_000);
+    const email = `s127-cb7a-${Date.now()}@studyflow.app`;
+    const reg = await request.post("/api/auth/register", {
+      headers: { "x-forwarded-for": "192.0.2.129" },
+      data: { email, password: "Fresh1234!", name: "S127 CB7a Probe" },
+    });
+    expect(reg.ok()).toBe(true);
+    const { code } = (await reg.json()) as { code: string };
+    await request.post("/api/auth/verify-email", {
+      headers: { "x-forwarded-for": "192.0.2.129" },
+      data: { email, code },
+    });
+    const login = await request.post("/api/auth/login", {
+      headers: { "x-forwarded-for": "192.0.2.129" },
+      data: { email, password: "Fresh1234!" },
+    });
+    expect(login.ok()).toBe(true);
+
+    // One row to mutate (the create also rides the shared bucket).
+    const created = await request.post("/api/tasks", {
+      data: { title: `S127 CB7 anchor ${Date.now()}` },
+    });
+    expect(created.status()).toBe(201);
+    const { id } = (await created.json()) as { id: string };
+
+    // Self-calibrating: PATCH until the shared budget trips (cap 620 —
+    // 1 create consumed, 619 PATCHes remain inside the window).
+    let tripped = false;
+    for (let i = 0; i < 620; i++) {
+      const res = await request.patch(`/api/tasks/${id}`, {
+        data: { completed: i % 2 === 0 },
+      });
+      if (res.status() === 429) {
+        expect(res.headers()["retry-after"]).toBeTruthy();
+        tripped = true;
+        break;
+      }
+      expect(res.status()).toBe(200);
+    }
+    // RED pre-fix: the loop ran 620 all-200 iterations and never tripped.
+    expect(tripped).toBe(true);
+
+    // The limiter sits AFTER auth: unauthenticated requests still 401.
+    const anon = await request.patch(`/api/tasks/${id}`, {
+      data: { completed: true },
+      headers: { cookie: "" },
+      maxRedirects: 0,
+    });
+    expect(anon.status()).toBe(401);
+  });
+
+  test("create+delete pairs exhaust to 429 (RED pre-fix: the deletes never trip)", async ({ request }) => {
+    test.setTimeout(180_000);
+    const email = `s127-cb7b-${Date.now()}@studyflow.app`;
+    const reg = await request.post("/api/auth/register", {
+      headers: { "x-forwarded-for": "192.0.2.130" },
+      data: { email, password: "Fresh1234!", name: "S127 CB7b Probe" },
+    });
+    expect(reg.ok()).toBe(true);
+    const { code } = (await reg.json()) as { code: string };
+    await request.post("/api/auth/verify-email", {
+      headers: { "x-forwarded-for": "192.0.2.130" },
+      data: { email, code },
+    });
+    const login = await request.post("/api/auth/login", {
+      headers: { "x-forwarded-for": "192.0.2.130" },
+      data: { email, password: "Fresh1234!" },
+    });
+    expect(login.ok()).toBe(true);
+
+    // Each pair consumes TWO budget units (the create + the delete) —
+    // the shared bucket trips around pair 300. The cap is 310 pairs: the
+    // RED state stays under the EXISTING POST-only budget (310 creates <
+    // 600 — pre-fix the loop must finish without tripping on either leg).
+    const stamp = Date.now();
+    let tripped = false;
+    for (let i = 0; i < 310; i++) {
+      const create = await request.post("/api/tasks", {
+        data: { title: `S127 CB7 del ${stamp} ${i}` },
+      });
+      if (create.status() === 429) {
+        tripped = true;
+        break;
+      }
+      expect(create.status()).toBe(201);
+      const { id } = (await create.json()) as { id: string };
+      const del = await request.delete(`/api/tasks/${id}`);
+      if (del.status() === 429) {
+        tripped = true;
+        break;
+      }
+      expect(del.status()).toBe(200);
+    }
+    expect(tripped).toBe(true);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// S127/CB20 · the twin link-file entry points agree on size (the s127
+// server audit's L-6): files/link stored `url.length` while the files POST
+// JSON leg stored 0 — identical user actions produced rows that render
+// different sizes. Both now store url.length (the dedicated route's
+// semantics). Fresh TEST-NET user (the demo user is never mutated).
+// ---------------------------------------------------------------------------
+test.describe("S127/CB20: both link-file paths store url.length", () => {
+  test("the files POST JSON leg stores the URL length (pre-fix: 0)", async ({ request }) => {
+    const email = `s127-cb20-${Date.now()}@studyflow.app`;
+    const reg = await request.post("/api/auth/register", {
+      headers: { "x-forwarded-for": "192.0.2.131" },
+      data: { email, password: "Fresh1234!", name: "S127 CB20 Probe" },
+    });
+    expect(reg.ok()).toBe(true);
+    const { code } = (await reg.json()) as { code: string };
+    await request.post("/api/auth/verify-email", {
+      headers: { "x-forwarded-for": "192.0.2.131" },
+      data: { email, code },
+    });
+    const login = await request.post("/api/auth/login", {
+      headers: { "x-forwarded-for": "192.0.2.131" },
+      data: { email, password: "Fresh1234!" },
+    });
+    expect(login.ok()).toBe(true);
+
+    const url = "https://example.com/s127-cb20";
+    const res = await request.post("/api/files", {
+      data: { name: "S127 CB20 probe", url },
+    });
+    expect(res.status()).toBe(201);
+    const row = (await res.json()) as { size: number };
+    expect(row.size).toBe(url.length);
+  });
+});

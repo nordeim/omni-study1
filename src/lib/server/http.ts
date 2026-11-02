@@ -301,9 +301,8 @@ export function makeCollectionRoutes(delegate: EntityDelegate) {
     // writes/min — 12x the heaviest realistic human burst; a flooding
     // script consumes it in seconds. After auth, BEFORE readJson (the C1
     // convention: the limiter never parses a flooded body); unauthenticated
-    // requests still 401. PATCH/DELETE stay unthrottled (bounded by
-    // existing rows — the growth vector is creates; the next-cycle
-    // candidate).
+    // requests still 401. S127/CB7: PATCH/DELETE now ride the SAME shared
+    // bucket (makeItemRoutes below) — the one-budget-per-user posture.
     const limit = checkRateLimit(`write:${user.id}`, 600);
     if (!limit.ok) {
       return rateLimitedResponse(
@@ -317,13 +316,36 @@ export function makeCollectionRoutes(delegate: EntityDelegate) {
   return { GET, POST };
 }
 
-/** Item routes: PATCH update + DELETE remove. */
+/** Item routes: PATCH update + DELETE remove.
+ * S127/CB7: both mutations join the SHARED write budget (`write:${user.id}`
+ * 600/15-min) — the BZ5 collection-POST budget's documented next-cycle
+ * candidate, closed. Before this, an authenticated script could churn
+ * PATCH/DELETE at line rate (bounded only by existing rows, but unbounded
+ * in REQUEST rate — the same single-node SQLite exposure). After auth,
+ * BEFORE readJson (the C1 convention: the limiter never parses a flooded
+ * body); unauthenticated requests still 401. ONE bucket per user across
+ * all write endpoints — a flooded leg exhausts the whole write budget,
+ * which is exactly the point. */
 export function makeItemRoutes(delegate: EntityDelegate) {
   const PATCH = withUserParams(async (user, request, id) => {
+    const limit = checkRateLimit(`write:${user.id}`, 600);
+    if (!limit.ok) {
+      return rateLimitedResponse(
+        limit.retryAfterSec,
+        "Too many requests. Please slow down.",
+      );
+    }
     const row = await delegate.update(user.id, id, await readJson(request));
     return NextResponse.json(row);
   });
   const DELETE = withUserParams(async (user, _request, id) => {
+    const limit = checkRateLimit(`write:${user.id}`, 600);
+    if (!limit.ok) {
+      return rateLimitedResponse(
+        limit.retryAfterSec,
+        "Too many requests. Please slow down.",
+      );
+    }
     await delegate.remove(user.id, id);
     return NextResponse.json({ ok: true });
   });

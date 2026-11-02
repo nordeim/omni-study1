@@ -176,3 +176,33 @@ describe("mapPhysicalKey (S15 physical-keyboard superset)", () => {
     expect(evaluate(mapPhysicalKey("5")! + mapPhysicalKey("/") + mapPhysicalKey("8")!)).toBe(0.625);
   });
 });
+
+// ---------------------------------------------------------------------------
+// S127/CB18 — the tokenizer's exponent leg (the s127 FE audit's L-4): an
+// "=" press chains formatCalcResult's output back in as the expression,
+// but the exponential form ("2e+15" for |n| >= 1e15, "1e-10" for tiny
+// magnitudes) mis-tokenized — the bare `e` read as Euler's constant and
+// `+` as addition, so chained arithmetic silently evaluated wrong. The
+// number token now carries the optional exponent leg (the standard
+// scientific-notation convention); a bare `e` (no digits) stays Euler.
+// ---------------------------------------------------------------------------
+describe("S127/CB18 · the exponent leg reads the engine's own display format", () => {
+  it("tokenizes a chained positive-exponential result as ONE number", () => {
+    expect(evaluate("2e+15")).toBe(2e15);
+    expect(evaluate("2e15")).toBe(2e15);
+  });
+
+  it("tokenizes a chained tiny-exponential result as ONE number", () => {
+    expect(evaluate("1e-10")).toBe(1e-10);
+  });
+
+  it("chains arithmetic onto the exponential form", () => {
+    expect(evaluate("2e+15 + 3")).toBe(2e15 + 3);
+    expect(evaluate("1e-10 * 2")).toBe(2e-10);
+  });
+
+  it("keeps the bare e as Euler's constant (the exponent leg requires digits)", () => {
+    expect(evaluate("e")).toBeCloseTo(Math.E, 10);
+    expect(evaluate("2 * e")).toBeCloseTo(2 * Math.E, 10);
+  });
+});

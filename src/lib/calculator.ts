@@ -57,7 +57,13 @@ function tokenize(input: string): Token[] {
       continue;
     }
     if (/[0-9.]/.test(ch)) {
-      const match = /^(\d+(\.\d+)?|\.\d+)/.exec(src.slice(i));
+      // S127/CB18: the optional exponent leg — the engine's OWN display
+      // format (formatCalcResult renders |n| >= 1e15 or < 1e-9 as
+      // "2e+15"/"1e-10") is chained back in as the expression after "=",
+      // and the pre-CB18 grammar mis-tokenized it (bare `e` = Euler, `+`
+      // = addition). The exponent leg requires digits after e/E — a bare
+      // "2e"/"e5" still reads as the Euler-constant juxtaposition.
+      const match = /^(\d+(\.\d+)?|\.\d+)([eE][+-]?\d+)?/.exec(src.slice(i));
       if (!match) throw new Error(`malformed number at position ${i}`);
       tokens.push({ t: "num", v: Number.parseFloat(match[0]) });
       i += match[0].length;

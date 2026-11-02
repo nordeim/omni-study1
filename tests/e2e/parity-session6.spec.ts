@@ -398,3 +398,120 @@ test.describe("S80 · the Tasks h1 survives the 768px band (AG7)", () => {
     await expect(page.locator('[aria-label="Task views"]')).toBeVisible();
   });
 });
+
+// S127/CB5 — the calendar category-dot parity (the s127 reference battery's
+// L-4 promotion, measured live 2026-11-02: the reference's month grid
+// renders per-CATEGORY presence dots — the Nov 12 exam cell carried exactly
+// one `w-1.5 h-1.5 rounded-full bg-red-500` inside a `div.flex.gap-0.5`,
+// and EVENTS ARE DOTLESS: the legend's four categories are the only dot
+// sources; an event's own #8b5cf6 color never reaches the grid. The clone
+// rendered per-EVENT color dots (max 3 + a "+N" chip) while its own legend
+// already promised Tasks/Assignments/Exams/Classes — the dots contradicted
+// it. The pins ride the seed's relative layout: day+1 carries a task
+// ("Outline history essay"), an assignment ("Physics reading — ch. 12"),
+// the Calculus II Midterm, and (Mon–Fri) a class; day+2 carries a task, an
+// assignment, a class AND the 13:00 Advisor-meeting event — which must
+// contribute NOTHING.
+const CATEGORY_DOTS = {
+  tasks: "rgb(59, 130, 246)", // blue-500
+  assignments: "rgb(245, 158, 11)", // amber-500
+  exams: "rgb(239, 68, 68)", // red-500
+  classes: "rgb(16, 185, 129)", // emerald-500
+};
+
+function dayCellLocator(page: Page, date: Date) {
+  // The clone's cells carry aria-label = formatLongDate(date) —
+  // "November 3, 2026" (month long, day numeric, year numeric).
+  const label = date.toLocaleDateString("en-US", {
+    month: "long",
+    day: "numeric",
+    year: "numeric",
+  });
+  return page.locator(`[aria-label="Calendar days"] button[aria-label="${label}"]`);
+}
+
+async function gotoMonthOf(page: Page, date: Date) {
+  await page.goto("/Calendar");
+  await hydrated(page);
+  // Dots only render on in-month cells — flip the calendar forward when
+  // the target date leaves the displayed month (today's month at boot).
+  if (date.getMonth() !== new Date().getMonth()) {
+    await page.getByLabel("Next month").click();
+  }
+}
+
+test.describe("S127/CB5 · the calendar grid renders category presence dots", () => {
+  test("day+1 renders one dot per present category, in legend order", async ({ page }) => {
+    const d1 = new Date();
+    d1.setDate(d1.getDate() + 1);
+    await gotoMonthOf(page, d1);
+    const cell = dayCellLocator(page, d1);
+    await expect(cell).toBeVisible();
+    const dots = await cell.locator("span.rounded-full").evaluateAll((els) =>
+      els.map((el) => getComputedStyle(el).backgroundColor),
+    );
+    // The seed: task "Outline history essay" + assignment "Physics
+    // reading — ch. 12" + the Calculus II Midterm, and a class when
+    // day+1 is a weekday (classes run Mon–Fri). Pre-fix: day+1 carries
+    // NO events, so the event-dot renderer produced ZERO dots.
+    const weekday = d1.getDay() !== 0 && d1.getDay() !== 6;
+    expect(dots).toEqual(
+      weekday
+        ? [CATEGORY_DOTS.tasks, CATEGORY_DOTS.assignments, CATEGORY_DOTS.exams, CATEGORY_DOTS.classes]
+        : [CATEGORY_DOTS.tasks, CATEGORY_DOTS.assignments, CATEGORY_DOTS.exams],
+    );
+  });
+
+  test("day+2's Advisor-meeting EVENT adds no dot (events are dotless)", async ({ page }) => {
+    const d2 = new Date();
+    d2.setDate(d2.getDate() + 2);
+    await gotoMonthOf(page, d2);
+    const cell = dayCellLocator(page, d2);
+    await expect(cell).toBeVisible();
+    const dots = await cell.locator("span.rounded-full").evaluateAll((els) =>
+      els.map((el) => getComputedStyle(el).backgroundColor),
+    );
+    // day+2: task "Annotate Keats ode" + assignment "Problem set 7 —
+    // integrals" + (Mon–Fri) World History. The 13:00 Advisor-meeting
+    // event must contribute NOTHING — pre-fix it rendered its default
+    // #8b5cf6 violet dot here.
+    const weekday = d2.getDay() !== 0 && d2.getDay() !== 6;
+    expect(dots).toEqual(
+      weekday
+        ? [CATEGORY_DOTS.tasks, CATEGORY_DOTS.assignments, CATEGORY_DOTS.classes]
+        : [CATEGORY_DOTS.tasks, CATEGORY_DOTS.assignments],
+    );
+  });
+
+  test("the selected cell renders its dots white on the accent fill (the reference's bg-white)", async ({ page }) => {
+    const d1 = new Date();
+    d1.setDate(d1.getDate() + 1);
+    await gotoMonthOf(page, d1);
+    const cell = dayCellLocator(page, d1);
+    await cell.click();
+    const dots = await cell.locator("span.rounded-full").evaluateAll((els) =>
+      els.map((el) => getComputedStyle(el).backgroundColor),
+    );
+    // The reference's selected Nov 12 cell rendered its dot `bg-white`
+    // (measured 2026-11-02). Pre-fix: day+1 selected carried no dots.
+    expect(dots.length).toBeGreaterThanOrEqual(3);
+    for (const c of dots) expect(c).toBe("rgb(255, 255, 255)");
+  });
+
+  test("an empty day's detail reads the reference's \"No events for this day\"", async ({ page }) => {
+    // A seed-free Saturday ≥ 13 days out (every seed lands within +12;
+    // the classes run Mon–Fri) — walk to the next Saturday and flip the
+    // month when it leaves the displayed one.
+    let d = new Date();
+    d.setDate(d.getDate() + 13);
+    while (d.getDay() !== 6) d.setDate(d.getDate() + 1);
+    await gotoMonthOf(page, d);
+    const cell = dayCellLocator(page, d);
+    await cell.click();
+    const detail = page.locator('[aria-label="Day detail"]');
+    await expect(detail).toBeVisible();
+    // Pre-fix the clone read "No events this day" — the measured
+    // reference copy is "No events for this day".
+    await expect(detail.getByText("No events for this day")).toBeVisible();
+  });
+});

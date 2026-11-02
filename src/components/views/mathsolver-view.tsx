@@ -89,6 +89,9 @@ export function MathSolverView() {
     const text = problem.trim();
     if (!text || busy) return;
     setBusy(true);
+    // S127/CB8: the solve and the post-solve history refresh are SEPARATE
+    // failure domains — the pre-CB8 single try toasted "could not solve
+    // that problem" while the solution was already rendered on screen.
     try {
       const response = await apiSend<{ solution: string }>(
         "POST",
@@ -99,7 +102,17 @@ export function MathSolverView() {
       setSolution(response.solution);
       setProblem("");
       setImage(null);
-      await mutations.refreshAiMessages();
+      // The problem IS solved server-side; a flaky refresh is not a
+      // failed solve — one retry, then the honest soft toast.
+      try {
+        await mutations.refreshAiMessages();
+      } catch {
+        try {
+          await mutations.refreshAiMessages();
+        } catch {
+          toast.error("Solved — but the history didn't refresh. Reload to catch up.");
+        }
+      }
     } catch (err: unknown) {
       toast.error(
         isTimeoutError(err)

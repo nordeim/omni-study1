@@ -10,7 +10,7 @@
 //   - warn (weak production secret / dev without a secret): console.warn.
 // ---------------------------------------------------------------------------
 
-import { authSecretBootStatus } from "./lib/env-check";
+import { authSecretBootStatus, inBandDeliveryProdWarning } from "./lib/env-check";
 
 export async function register(): Promise<void> {
   const status = authSecretBootStatus(
@@ -24,5 +24,22 @@ export async function register(): Promise<void> {
   }
   if (status.level === "warn" && status.message) {
     console.warn(status.message);
+  }
+
+  // S127/CB14: the in-band delivery production warning (the BT5 posture
+  // precedent — ADR-013's single-user default stands, but an
+  // internet-facing boot must at least be TOLD it is handing one-shot
+  // takeover links and OTP codes to any caller who knows an email).
+  if (inBandDeliveryProdWarning(process.env, process.env)) {
+    console.warn(
+      "[boot] WARNING: in-band OTP/reset delivery is ENABLED in production — " +
+        "forgot-password returns the live reset link and the OTP routes return " +
+        "the code in the response body (the ADR-013 single-user posture: any " +
+        "caller who knows an email receives the account's one-shot takeover " +
+        "token, and the response shape is an account-existence oracle). " +
+        "Multi-user or exposed deployments MUST set DISABLE_IN_APP_RESET=1 and " +
+        "DISABLE_IN_APP_OTP=1 and provide real mail transport — see " +
+        "DEPLOYMENT.md §8.",
+    );
   }
 }
