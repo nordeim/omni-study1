@@ -111,7 +111,14 @@ model Subject {
   focusSessions  FocusSession[]
   notes          Note[]
 
-  @@index([userId])
+  // S128/CC10: the composite REPLACES the bare [userId] index — the
+  // factory list query (where userId, orderBy [createdAt desc, id desc],
+  // take: 500) sorts EVERY owned row in a temp b-tree under the bare
+  // index (measured 34.6 ms median at 100k imported rows); the composite
+  // covers the full ORDER BY (0.27 ms, 128x) and its leftmost column
+  // keeps every userId-prefixed lookup backed. Same index COUNT per
+  // table — a replace, not an addition.
+  @@index([userId, createdAt, id])
 }
 
 model TaskList {
@@ -123,7 +130,14 @@ model TaskList {
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   tasks     Task[]
 
-  @@index([userId])
+  // S128/CC10: the composite REPLACES the bare [userId] index — the
+  // factory list query (where userId, orderBy [createdAt desc, id desc],
+  // take: 500) sorts EVERY owned row in a temp b-tree under the bare
+  // index (measured 34.6 ms median at 100k imported rows); the composite
+  // covers the full ORDER BY (0.27 ms, 128x) and its leftmost column
+  // keeps every userId-prefixed lookup backed. Same index COUNT per
+  // table — a replace, not an addition.
+  @@index([userId, createdAt, id])
 }
 
 model Task {
@@ -147,7 +161,14 @@ model Task {
   list      TaskList? @relation(fields: [listId], references: [id], onDelete: SetNull)
   subject   Subject?  @relation(fields: [subjectId], references: [id], onDelete: SetNull)
 
-  @@index([userId])
+  // S128/CC10: the composite REPLACES the bare [userId] index — the
+  // factory list query (where userId, orderBy [createdAt desc, id desc],
+  // take: 500) sorts EVERY owned row in a temp b-tree under the bare
+  // index (measured 34.6 ms median at 100k imported rows); the composite
+  // covers the full ORDER BY (0.27 ms, 128x) and its leftmost column
+  // keeps every userId-prefixed lookup backed. Same index COUNT per
+  // table — a replace, not an addition.
+  @@index([userId, createdAt, id])
   @@index([listId])
 }
 
@@ -167,7 +188,14 @@ model Assignment {
   user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   subject     Subject?  @relation(fields: [subjectId], references: [id], onDelete: SetNull)
 
-  @@index([userId])
+  // S128/CC10: the composite REPLACES the bare [userId] index — the
+  // factory list query (where userId, orderBy [createdAt desc, id desc],
+  // take: 500) sorts EVERY owned row in a temp b-tree under the bare
+  // index (measured 34.6 ms median at 100k imported rows); the composite
+  // covers the full ORDER BY (0.27 ms, 128x) and its leftmost column
+  // keeps every userId-prefixed lookup backed. Same index COUNT per
+  // table — a replace, not an addition.
+  @@index([userId, createdAt, id])
 }
 
 model Exam {
@@ -188,7 +216,14 @@ model Exam {
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   subject   Subject? @relation(fields: [subjectId], references: [id], onDelete: SetNull)
 
-  @@index([userId])
+  // S128/CC10: the composite REPLACES the bare [userId] index — the
+  // factory list query (where userId, orderBy [createdAt desc, id desc],
+  // take: 500) sorts EVERY owned row in a temp b-tree under the bare
+  // index (measured 34.6 ms median at 100k imported rows); the composite
+  // covers the full ORDER BY (0.27 ms, 128x) and its leftmost column
+  // keeps every userId-prefixed lookup backed. Same index COUNT per
+  // table — a replace, not an addition.
+  @@index([userId, createdAt, id])
 }
 
 model Event {
@@ -208,7 +243,14 @@ model Event {
   updatedAt DateTime  @updatedAt
   user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@index([userId])
+  // S128/CC10: the composite REPLACES the bare [userId] index — the
+  // factory list query (where userId, orderBy [createdAt desc, id desc],
+  // take: 500) sorts EVERY owned row in a temp b-tree under the bare
+  // index (measured 34.6 ms median at 100k imported rows); the composite
+  // covers the full ORDER BY (0.27 ms, 128x) and its leftmost column
+  // keeps every userId-prefixed lookup backed. Same index COUNT per
+  // table — a replace, not an addition.
+  @@index([userId, createdAt, id])
 }
 
 model TimetableClass {
@@ -226,7 +268,14 @@ model TimetableClass {
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   subject   Subject? @relation(fields: [subjectId], references: [id], onDelete: SetNull)
 
-  @@index([userId])
+  // S128/CC10: the composite REPLACES the bare [userId] index — the
+  // factory list query (where userId, orderBy [createdAt desc, id desc],
+  // take: 500) sorts EVERY owned row in a temp b-tree under the bare
+  // index (measured 34.6 ms median at 100k imported rows); the composite
+  // covers the full ORDER BY (0.27 ms, 128x) and its leftmost column
+  // keeps every userId-prefixed lookup backed. Same index COUNT per
+  // table — a replace, not an addition.
+  @@index([userId, createdAt, id])
 }
 
 model Notebook {
@@ -238,7 +287,14 @@ model Notebook {
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   notes     Note[]
 
-  @@index([userId])
+  // S128/CC10: the composite REPLACES the bare [userId] index — the
+  // factory list query (where userId, orderBy [createdAt desc, id desc],
+  // take: 500) sorts EVERY owned row in a temp b-tree under the bare
+  // index (measured 34.6 ms median at 100k imported rows); the composite
+  // covers the full ORDER BY (0.27 ms, 128x) and its leftmost column
+  // keeps every userId-prefixed lookup backed. Same index COUNT per
+  // table — a replace, not an addition.
+  @@index([userId, createdAt, id])
 }
 
 model Note {
@@ -255,7 +311,14 @@ model Note {
   notebook   Notebook? @relation(fields: [notebookId], references: [id], onDelete: SetNull)
   subject    Subject?  @relation(fields: [subjectId], references: [id], onDelete: SetNull)
 
-  @@index([userId])
+  // S128/CC10: the composite REPLACES the bare [userId] index — the
+  // factory list query (where userId, orderBy [createdAt desc, id desc],
+  // take: 500) sorts EVERY owned row in a temp b-tree under the bare
+  // index (measured 34.6 ms median at 100k imported rows); the composite
+  // covers the full ORDER BY (0.27 ms, 128x) and its leftmost column
+  // keeps every userId-prefixed lookup backed. Same index COUNT per
+  // table — a replace, not an addition.
+  @@index([userId, createdAt, id])
   @@index([notebookId])
 }
 
@@ -272,7 +335,14 @@ model FlashcardDeck {
   subject     Subject? @relation(fields: [subjectId], references: [id], onDelete: SetNull)
   cards       Flashcard[]
 
-  @@index([userId])
+  // S128/CC10: the composite REPLACES the bare [userId] index — the
+  // factory list query (where userId, orderBy [createdAt desc, id desc],
+  // take: 500) sorts EVERY owned row in a temp b-tree under the bare
+  // index (measured 34.6 ms median at 100k imported rows); the composite
+  // covers the full ORDER BY (0.27 ms, 128x) and its leftmost column
+  // keeps every userId-prefixed lookup backed. Same index COUNT per
+  // table — a replace, not an addition.
+  @@index([userId, createdAt, id])
 }
 
 // S7 nesting: Flashcard carries NO userId — ownership scopes through its deck.
@@ -302,7 +372,14 @@ model PracticeTest {
   user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   subject         Subject? @relation(fields: [subjectId], references: [id], onDelete: SetNull)
 
-  @@index([userId])
+  // S128/CC10: the composite REPLACES the bare [userId] index — the
+  // factory list query (where userId, orderBy [createdAt desc, id desc],
+  // take: 500) sorts EVERY owned row in a temp b-tree under the bare
+  // index (measured 34.6 ms median at 100k imported rows); the composite
+  // covers the full ORDER BY (0.27 ms, 128x) and its leftmost column
+  // keeps every userId-prefixed lookup backed. Same index COUNT per
+  // table — a replace, not an addition.
+  @@index([userId, createdAt, id])
 }
 
 model StudyGroup {
@@ -319,7 +396,14 @@ model StudyGroup {
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   subject   Subject? @relation(fields: [subjectId], references: [id], onDelete: SetNull)
 
-  @@index([userId])
+  // S128/CC10: the composite REPLACES the bare [userId] index — the
+  // factory list query (where userId, orderBy [createdAt desc, id desc],
+  // take: 500) sorts EVERY owned row in a temp b-tree under the bare
+  // index (measured 34.6 ms median at 100k imported rows); the composite
+  // covers the full ORDER BY (0.27 ms, 128x) and its leftmost column
+  // keeps every userId-prefixed lookup backed. Same index COUNT per
+  // table — a replace, not an addition.
+  @@index([userId, createdAt, id])
 }
 
 model Grade {
@@ -335,7 +419,14 @@ model Grade {
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   subject   Subject? @relation(fields: [subjectId], references: [id], onDelete: SetNull)
 
-  @@index([userId])
+  // S128/CC10: the composite REPLACES the bare [userId] index — the
+  // factory list query (where userId, orderBy [createdAt desc, id desc],
+  // take: 500) sorts EVERY owned row in a temp b-tree under the bare
+  // index (measured 34.6 ms median at 100k imported rows); the composite
+  // covers the full ORDER BY (0.27 ms, 128x) and its leftmost column
+  // keeps every userId-prefixed lookup backed. Same index COUNT per
+  // table — a replace, not an addition.
+  @@index([userId, createdAt, id])
 }
 
 model FocusSession {
@@ -351,7 +442,14 @@ model FocusSession {
   user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   subject         Subject? @relation(fields: [subjectId], references: [id], onDelete: SetNull)
 
-  @@index([userId])
+  // S128/CC10: the composite REPLACES the bare [userId] index — the
+  // factory list query (where userId, orderBy [createdAt desc, id desc],
+  // take: 500) sorts EVERY owned row in a temp b-tree under the bare
+  // index (measured 34.6 ms median at 100k imported rows); the composite
+  // covers the full ORDER BY (0.27 ms, 128x) and its leftmost column
+  // keeps every userId-prefixed lookup backed. Same index COUNT per
+  // table — a replace, not an addition.
+  @@index([userId, createdAt, id])
 }
 
 model FileFolder {
@@ -366,7 +464,14 @@ model FileFolder {
   children  FileFolder[] @relation("FolderNesting")
   items     FileItem[]
 
-  @@index([userId])
+  // S128/CC10: the composite REPLACES the bare [userId] index — the
+  // factory list query (where userId, orderBy [createdAt desc, id desc],
+  // take: 500) sorts EVERY owned row in a temp b-tree under the bare
+  // index (measured 34.6 ms median at 100k imported rows); the composite
+  // covers the full ORDER BY (0.27 ms, 128x) and its leftmost column
+  // keeps every userId-prefixed lookup backed. Same index COUNT per
+  // table — a replace, not an addition.
+  @@index([userId, createdAt, id])
 }
 
 model FileItem {
@@ -383,7 +488,14 @@ model FileItem {
   user      User        @relation(fields: [userId], references: [id], onDelete: Cascade)
   folder    FileFolder? @relation(fields: [folderId], references: [id], onDelete: SetNull)
 
-  @@index([userId])
+  // S128/CC10: the composite REPLACES the bare [userId] index — the
+  // factory list query (where userId, orderBy [createdAt desc, id desc],
+  // take: 500) sorts EVERY owned row in a temp b-tree under the bare
+  // index (measured 34.6 ms median at 100k imported rows); the composite
+  // covers the full ORDER BY (0.27 ms, 128x) and its leftmost column
+  // keeps every userId-prefixed lookup backed. Same index COUNT per
+  // table — a replace, not an addition.
+  @@index([userId, createdAt, id])
   @@index([folderId])
 }
 
@@ -397,7 +509,14 @@ model AiChatMessage {
   updatedAt DateTime @updatedAt
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@index([userId])
+  // S128/CC10: the composite REPLACES the bare [userId] index — the
+  // factory list query (where userId, orderBy [createdAt desc, id desc],
+  // take: 500) sorts EVERY owned row in a temp b-tree under the bare
+  // index (measured 34.6 ms median at 100k imported rows); the composite
+  // covers the full ORDER BY (0.27 ms, 128x) and its leftmost column
+  // keeps every userId-prefixed lookup backed. Same index COUNT per
+  // table — a replace, not an addition.
+  @@index([userId, createdAt, id])
 }
 
 model CalculatorHistoryEntry {
@@ -410,7 +529,14 @@ model CalculatorHistoryEntry {
   updatedAt  DateTime @updatedAt
   user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@index([userId])
+  // S128/CC10: the composite REPLACES the bare [userId] index — the
+  // factory list query (where userId, orderBy [createdAt desc, id desc],
+  // take: 500) sorts EVERY owned row in a temp b-tree under the bare
+  // index (measured 34.6 ms median at 100k imported rows); the composite
+  // covers the full ORDER BY (0.27 ms, 128x) and its leftmost column
+  // keeps every userId-prefixed lookup backed. Same index COUNT per
+  // table — a replace, not an addition.
+  @@index([userId, createdAt, id])
 }
 
 model Holiday {
@@ -422,7 +548,14 @@ model Holiday {
   updatedAt DateTime @updatedAt
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@index([userId])
+  // S128/CC10: the composite REPLACES the bare [userId] index — the
+  // factory list query (where userId, orderBy [createdAt desc, id desc],
+  // take: 500) sorts EVERY owned row in a temp b-tree under the bare
+  // index (measured 34.6 ms median at 100k imported rows); the composite
+  // covers the full ORDER BY (0.27 ms, 128x) and its leftmost column
+  // keeps every userId-prefixed lookup backed. Same index COUNT per
+  // table — a replace, not an addition.
+  @@index([userId, createdAt, id])
 }
 
 model RumEvent {

@@ -145,7 +145,12 @@ export default function Home() {
         .catch(() => {});
 
       try {
-        const { user } = await apiGet<{ user: AppUser }>("/api/auth/me");
+        // S128/CC7: the boot gate's deadline — a stalled connection must
+        // reach the gate's error branch (the retry affordance) instead of
+        // holding the Splash for the browser's own connection timeout.
+        const { user } = await apiGet<{ user: AppUser }>("/api/auth/me", {
+          timeoutMs: 20_000,
+        });
         if (cancelled) return;
 
         const theme = useThemeStore.getState();

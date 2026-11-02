@@ -877,12 +877,16 @@ test.describe("S123/BX6: an early manual complete records the elapsed duration",
     const res = await saved;
     expect(res.ok()).toBe(true);
     const row = (await res.json()) as { id: string; durationSeconds: number };
-    expect(row.durationSeconds).toBeGreaterThanOrEqual(1);
-    // Pre-fix this was exactly 1500 (the nominal 25:00) — any early
-    // complete must record the ELAPSED time.
-    expect(row.durationSeconds).toBeLessThan(1500);
-    // Zero residue on the shared demo user.
-    await page.request.delete(`/api/focus-sessions/${row.id}`);
+    try {
+      expect(row.durationSeconds).toBeGreaterThanOrEqual(1);
+      // Pre-fix this was exactly 1500 (the nominal 25:00) — any early
+      // complete must record the ELAPSED time.
+      expect(row.durationSeconds).toBeLessThan(1500);
+    } finally {
+      // Zero residue on the shared demo user — in a FINALLY (S128/CC4,
+      // the AR3 convention).
+      await page.request.delete(`/api/focus-sessions/${row.id}`);
+    }
   });
 });
 
@@ -914,9 +918,14 @@ test.describe("S127/CB1: the auto-path completion records the full duration", ()
     const res = await saved;
     expect(res.ok()).toBe(true);
     const row = (await res.json()) as { id: string; durationSeconds: number };
-    // Pre-fix: the stale closure computed 1500 - 1500 = 0 → max(1, 0) = 1.
-    expect(row.durationSeconds).toBe(1500);
-    // Zero residue on the shared demo user.
-    await page.request.delete(`/api/focus-sessions/${row.id}`);
+    try {
+      // Pre-fix: the stale closure computed 1500 - 1500 = 0 → max(1, 0) = 1.
+      expect(row.durationSeconds).toBe(1500);
+    } finally {
+      // Zero residue on the shared demo user — in a FINALLY (S128/CC4, the
+      // AR3 convention): a red assertion must not leak the row into the
+      // chunk-shared db.
+      await page.request.delete(`/api/focus-sessions/${row.id}`);
+    }
   });
 });

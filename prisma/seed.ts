@@ -2,8 +2,17 @@
 // StudyFlow seed — idempotent demo data.
 //
 // Contract (AGENTS.md / omni-study_SKILL.md §7): early-returns when the demo
-// user already exists. Changing seed VALUES requires deleting the target db
-// (db/custom.db or db/e2e.db) first — the upsert will not refresh them.
+// user already exists (S128/CC12 wording fix: the seed has no upserts — the
+// early return freezes day-relative dates at FIRST seed). Changing seed
+// VALUES requires deleting the target db (db/custom.db or db/e2e.db) first —
+// the early-return will not refresh them.
+//
+// S128/CC12 — the deliberate vocabulary coverage: the seeded assignment rows
+// carry 6 of the 8 ASSIGNMENT_TYPES (no presentation/other) and the exam
+// rows 4 of the 6 exam types (no test/oral/practical). The FULL vocabularies
+// are pinned end-to-end elsewhere (the CB9 dialog pin asserts all 8 options
+// + the worksheet round-trip), so nothing is untested — the omission keeps
+// the seeded list lean; extend it only with the count-pin re-anchors.
 // Run via `bun run db:seed` (the script sets DATABASE_URL inline, schema-
 // anchored; this file resolves the same env var through src/lib/db.ts).
 //

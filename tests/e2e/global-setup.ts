@@ -21,14 +21,19 @@ export default function globalSetup(): void {
 
   const run = (cmd: string) => execSync(cmd, { cwd: repo, env, stdio: "pipe" }).toString();
 
+  // S128/CC12: log the PRIMARY failure before each fallback — a schema-drift
+  // error from the bunx leg used to surface only as the fallback's own
+  // unrelated npx error (the cause masked, the diagnosis misdirected).
   try {
     run("bunx prisma db push --skip-generate");
-  } catch {
+  } catch (err) {
+    console.error("[global-setup] bunx prisma db push failed — retrying with npx:", err);
     run("npx prisma db push --skip-generate");
   }
   try {
     run("bun prisma/seed.ts");
-  } catch {
+  } catch (err) {
+    console.error("[global-setup] bun prisma/seed.ts failed — retrying with npx tsx:", err);
     run("npx tsx prisma/seed.ts");
   }
 }

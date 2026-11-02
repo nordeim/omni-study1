@@ -653,12 +653,16 @@ test.describe("S127/CB2 · the assignments due date round-trips at local noon", 
     const res = await saved;
     expect(res.ok()).toBe(true);
     const row = (await res.json()) as { id: string; dueDate: string };
-    // The local-noon convention (the tasks-view pattern): the picked day
-    // at 12:00 LOCAL, serialized to UTC — same calendar day in every zone.
-    const expected = new Date(`${yyyy}-${mm}-${dd}T12:00:00`).toISOString();
-    expect(row.dueDate).toBe(expected);
-    // Zero residue on the shared demo user.
-    await page.request.delete(`/api/assignments/${row.id}`);
+    try {
+      // The local-noon convention (the tasks-view pattern): the picked day
+      // at 12:00 LOCAL, serialized to UTC — same calendar day in every zone.
+      const expected = new Date(`${yyyy}-${mm}-${dd}T12:00:00`).toISOString();
+      expect(row.dueDate).toBe(expected);
+    } finally {
+      // Zero residue on the shared demo user — in a FINALLY (S128/CC4,
+      // the AR3 convention).
+      await page.request.delete(`/api/assignments/${row.id}`);
+    }
   });
 });
 

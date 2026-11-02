@@ -666,3 +666,68 @@ describe("S127/CB19 · the envelope user-profile patch", () => {
     expect(importProfilePatch(null)).toBeNull();
   });
 });
+
+// ---------------------------------------------------------------------------
+// S128/CC1 · the profile-patch whitelist (the s128 client-layer audit's M-1).
+//
+// The CB19 seam parsed the envelope's user block with preferencesSchema and
+// copied EVERY defined parsed key into the tx.user.update patch — but that
+// schema legitimately carries a `displayName` leg (the Settings alias for
+// the fullName column), and the User model has NO displayName column: a
+// hand-edited envelope carrying it triggered PrismaClientValidationError
+// inside the all-or-nothing transaction, rolling back the ENTIRE restore
+// with the misleading "row whose fields do not match" 400. The fix is a
+// WHITELIST: only the seven preference keys ride the patch — displayName
+// is name-shaped identity and never rides (the seam's own contract).
+// ---------------------------------------------------------------------------
+describe("S128/CC1 · the profile-patch whitelist (displayName never rides)", () => {
+  it("a displayName-bearing block produces a patch WITHOUT it (the preferences still ride)", () => {
+    const patch = importProfilePatch({
+      name: "Someone",
+      displayName: "Spliced Name",
+      themeMode: "dark",
+      accentColor: "blue",
+      schoolName: "Springfield High",
+    });
+    // Pre-fix: displayName rode the patch verbatim (the nonexistent column).
+    expect(patch).not.toHaveProperty("displayName");
+    expect(patch).toEqual({
+      themeMode: "dark",
+      accentColor: "blue",
+      schoolName: "Springfield High",
+    });
+  });
+
+  it("a displayName-ONLY block yields null (nothing applicable to restore)", () => {
+    expect(importProfilePatch({ displayName: "Just A Name" })).toBeNull();
+  });
+
+  it("the seven-key vocabulary is closed — no key outside it can ever ride", () => {
+    const patch = importProfilePatch({
+      themeMode: "system",
+      accentColor: "violet",
+      avatarEmoji: "🦊",
+      notificationsEnabled: true,
+      schoolName: "S",
+      gradeLevel: "",
+      studyGoalHours: 4,
+      // Every other preferencesSchema-legal or envelope-carried key:
+      displayName: "X",
+      id: "u1",
+      email: "e@example.com",
+      name: "N",
+      emailVerified: true,
+      createdAt: "2031-01-01T00:00:00.000Z",
+      updatedAt: "2031-01-01T00:00:00.000Z",
+    });
+    expect(Object.keys(patch as object).sort()).toEqual([
+      "accentColor",
+      "avatarEmoji",
+      "gradeLevel",
+      "notificationsEnabled",
+      "schoolName",
+      "studyGoalHours",
+      "themeMode",
+    ]);
+  });
+});

@@ -1,3 +1,4 @@
+import { execSync } from "node:child_process";
 import { readdirSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
@@ -90,5 +91,38 @@ describe("the re-tag script-class runner convention (S98/AY1)", () => {
       stale,
       `scripts whose Usage line still names bun (or names no runner) — the S97/AX2 class convention is node ≥ 23.6; fix the usage line: ${stale.join(" | ")}`,
     ).toEqual([]);
+  });
+});
+
+// S128/CC2 — the cert-script truth pair (the s128 test-layer audit's M-tier).
+//
+// (a) The chunked cert runner's header is the operator's census anchor —
+//     the CB cycle's +21 pins (538 → 559) never re-tagged it, the exact
+//     stale-header class the file's own S118 re-tag note repairs. This pin
+//     ties the header to the CURRENT census so the re-tag discipline is
+//     machine-enforced: a cycle that adds pins without re-tagging fails
+//     here BEFORE the operator certifies against a wrong expectation.
+// (b) The runner must PROPAGATE a failing chunk's exit code — the pre-CC2
+//     loop (`set -uo pipefail`, no -e, no accumulation) discarded every
+//     chunk pipeline's status and the trailing echo returned 0
+//     unconditionally: a cert script that cannot fail is the resweep-gate
+//     trap class (tests/resweep-gate.test.ts) reborn at the cert layer.
+describe("the chunked cert runner's truth contract (S128/CC2)", () => {
+  const CERT_SCRIPT = path.join(SCRIPTS_DIR, "e2e-chunked-cert.sh");
+  const certSource = readFileSync(CERT_SCRIPT, "utf8");
+
+  it("parses as bash (syntax integrity)", () => {
+    execSync(`bash -n ${JSON.stringify(CERT_SCRIPT)}`);
+  });
+
+  it("names the CURRENT per-chunk census in its header (the re-tag tripwire)", () => {
+    // The topmost Expected line — re-tagged by every census-changing cycle.
+    expect(certSource).toContain("Expected: 144 + 177 + 72 + 93 + 74 = 560");
+  });
+
+  it("propagates a failing chunk's exit code (never a green cert on a red run)", () => {
+    // The rc accumulation + terminal exit — the resweep-gate doctrine.
+    expect(certSource).toMatch(/rc=\$\(\(rc \|/);
+    expect(certSource).toMatch(/exit "\$rc"/);
   });
 });

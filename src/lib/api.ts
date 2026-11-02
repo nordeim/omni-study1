@@ -67,8 +67,20 @@ async function parse<T>(res: Response): Promise<T> {
   }
 }
 
-export async function apiGet<T>(path: string): Promise<T> {
-  const res = await doFetch(path, { method: "GET" });
+export async function apiGet<T>(
+  path: string,
+  // S128/CC7: the apiSend mirror — the boot gate's `await apiGet("/api/auth/me")`
+  // had no deadline, so a stalled connection (accepted TCP, no response — no
+  // `offline` event fires) held the Splash spinner for the browser's own
+  // connection timeout while the retry affordance sat in the gate's error
+  // branch, unreachable.
+  options?: { timeoutMs?: number },
+): Promise<T> {
+  const init: RequestInit = { method: "GET" };
+  if (options?.timeoutMs !== undefined) {
+    init.signal = AbortSignal.timeout(options.timeoutMs);
+  }
+  const res = await doFetch(path, init);
   return parse<T>(res);
 }
 

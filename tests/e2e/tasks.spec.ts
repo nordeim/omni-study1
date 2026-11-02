@@ -170,16 +170,19 @@ test.describe("S127/CB16 · a rapid double toggle nets to the original state", (
     // Let the held GETs drain, then read the persisted truth.
     release();
     await page.waitForTimeout(800);
-    const rows = (await (await page.request.get("/api/tasks")).json()) as {
-      id: string;
-      completed: boolean;
-    }[];
-    const mine = rows.find((r) => r.id === id);
-    // Pre-fix: both toggles read completed=false and both PATCHed true —
-    // the net-zero double toggle persisted completed=true.
-    expect(mine?.completed).toBe(false);
-
-    // Zero residue on the shared demo user.
-    await page.request.delete(`/api/tasks/${id}`);
+    try {
+      const rows = (await (await page.request.get("/api/tasks")).json()) as {
+        id: string;
+        completed: boolean;
+      }[];
+      const mine = rows.find((r) => r.id === id);
+      // Pre-fix: both toggles read completed=false and both PATCHed true —
+      // the net-zero double toggle persisted completed=true.
+      expect(mine?.completed).toBe(false);
+    } finally {
+      // Zero residue on the shared demo user — in a FINALLY (S128/CC4,
+      // the AR3 convention).
+      await page.request.delete(`/api/tasks/${id}`);
+    }
   });
 });

@@ -1,4 +1,4 @@
-# StudyFlow (Omni-Study) — Master Project Architecture Document (PAD) v1.3.35
+# StudyFlow (Omni-Study) — Master Project Architecture Document (PAD) v1.3.36
 
 **Classification:** Internal Engineering Reference
 **Status:** DEFINITIVE, PRODUCTION-LOCKED BLUEPRINT
@@ -8,6 +8,11 @@
 **Rule:** Every architectural decision in this document traces to a specific rationale. Nothing is here "because it's popular."
 
 ---
+
+#### Revision Block — v1.3.36 (Session-128 / Batch CC, Cycle 78)
+
+- `[SR]` Current test census anchor (the v1.2.0 convention, re-anchored): **1191/1191 Vitest unit** (44 files — the S128 additions: toast +3 [the 43rd file — the CC8 deterministic-identity/cap/auto-dismiss family], schema-indexes +4 [the 44th file — the CC10 factory-list composite-index census], api-timeout +3 [the CC7 apiGet timeoutMs mirror], data-import +3 [the CC1 profile-patch whitelist], data-store +3 [the CC11 loading-flag in-flight counts], script-conventions +3 [the CC2 cert-runner truth pair], calculator +1 [the CC13 unary-minus-vs-^ convention lock], date net 0 [+1 the CC6 NaN-guard pin −1 the dead minutesToHHMM leg removed with its export]) + **560/560 cold-chunk e2e** (555 chromium specs in 30 files + the auth setup re-run per chunk; the 5-chunk map **144+177+72+93+74**, every chunk first-pass on the final tree; the per-file counts in §8.1 are script-derivable). Unit + e2e = **1751 green**.
+- `[SR]` The audit-driven hardening cycle (`docs/remediation-plan-session128.md`): **CC1** the import profile-patch whitelist (the CB19 seam parsed the envelope's user block with `preferencesSchema` — which legitimately carries a `displayName` leg, the Settings alias — and copied EVERY defined key into the `tx.user.update` patch; the User model has no `displayName` column, so a hand-edited envelope carrying it died with `PrismaClientValidationError` inside the all-or-nothing transaction: the ENTIRE restore rolled back behind a misleading "row whose fields do not match" 400, and a name-shaped field rode a seam whose contract says identity never rides; the closed seven-key whitelist, unit-pinned + the route-level pin on a fresh TEST-NET user); **CC2** the cert-runner truth pair (the chunked cert script's header still said 538 while the census was 559 — the re-tag discipline is now MACHINE-ENFORCED by a script-conventions pin tying the header to the live census; and the script always exited 0 — `set -uo pipefail` with no accumulation discarded every chunk pipeline's status, a green cert on a red run, the resweep-gate trap class reborn at the cert layer — rc accumulation + `exit "$rc"`); **CC3** the CB5 calendar-dot pins' data-settle wait (`evaluateAll` does not retry and the dots render from the async store after shell commit — the cold-race class, closed with the `first().toBeVisible()` gate); **CC4** the CB pins' try/finally cleanup (the CB1 focus session, CB2 assignment, CB16 task, and the BX6 twin issued their demo-row DELETEs only on the success path — a red assertion leaked rows into the chunk-shared db; the AR3 convention restored); **CC5** the `taskToggleChains` eviction on settle (hygiene — a deleted task's settled chain lived for the page session); **CC6** the `fromDueDateInput` NaN guard (the one date atom without it — malformed input threw `RangeError` from `.toISOString()`; the sibling guard mirrored, "" on garbage); **CC7** the `apiGet` timeoutMs leg (the S13 deadline seam existed only on apiSend — the boot gate's `/api/auth/me` could hold the Splash for the browser's own connection timeout on a stalled connection with the retry affordance unreachable; the mirror + a 20 s gate deadline); **CC8** the toaster's deterministic identity + bounded stack (`Date.now()+random` ids collided same-tick ~1/1000 with duplicate React keys, the auto-dismiss timer sat inside the `set` reducer, and the stack was uncapped — a module counter, the timer outside `set`, a 5-toast cap dropping the oldest); **CC9** the dead-code removals (the store's `addRow`/`updateRow`/`removeRow` trio — zero callers since refresh-after-write, and they bypassed the fetchSeq stale-guard, a trap surface for future optimistic-update misuse — plus the `RowOf` helper and the dead `minutesToHHMM` export with its pin leg); **CC10** the factory-list composite indexes (REPLACE `@@index([userId])` → `@@index([userId, createdAt, id])` on the 19 factory-listed models — the list query sorted EVERY owned row in a temp b-tree under the bare index: **measured 34.6 ms median per GET at 100k imported rows vs 0.27 ms under the composite (128×)**; the composite's leftmost column keeps every userId-prefixed lookup backed, same index COUNT per table; `PasswordResetToken` keeps the bare index [lookup-by-token, never listed], `Flashcard` [deck-scoped] and `RumEvent` [CA19's deliberate removal] untouched; schema-census-pinned); **CC11** the loading flag's in-flight counts (one shared boolean flipped false by the FIRST finisher of overlapping loads while the second fetch was still in flight — masked today, but 8 views branch skeleton-vs-empty on it; a per-key count map derives the boolean, both overlap shapes covered); **CC12** the seed/global-setup doc set (the fallback logs the PRIMARY failure before retrying — a schema-drift error no longer surfaces as the fallback's own unrelated npx error; the seed header's stale "upsert" wording → the early-return truth; the deliberate 6/8 + 4/6 vocabulary coverage documented); **CC13** the calculator's unary-minus-vs-`^` precedence convention locked by pin (the Excel/Sheets family — `-2^2` = 4 — was real unpinned behavior one refactor away from silently flipping); **CC14** the docs chain (this block + the §8.1 rows/Total + §8.4 floors + the cert-script re-tags + the count-keeper anchors). The rotated audits: the client state/transport/lib layer + UI primitives (**0C/0H/1M/7L/6I**) and the test layer itself + schema/seed (**0C/0H/4M/5L/5I** — including the independent census derivation 144/177/72/93/73=559 ✅ and the full budget-math enumeration); every M finding re-verified by direct read, the CC10 win MEASURED not assumed. Two honest mid-run corrections (the CC1 e2e pin's first design reused the demo session's fixed row ids — the global PK P2002'd a 409 before the profile patch; the unique-id BT1/S117 convention applied — and the export evidence frame first captured a 404 [the path is lowercase `/export`]).
 
 #### Revision Block — v1.3.35 (Session-127 / Batch CB, Cycle 77)
 
@@ -1078,14 +1083,14 @@ Single-role per-user ownership model; no admin surface. Session: `{ uid, iat, ex
 |----------|-------|-------|----------|
 | Unit — `ai-helpers.test.ts` | 1 | 15 | `tests/ai-helpers.test.ts` |
 | Unit — `api-offline.test.ts` | 1 | 5 | `tests/api-offline.test.ts` |
-| Unit — `api-timeout.test.ts` | 1 | 4 | `tests/api-timeout.test.ts` |
+| Unit — `api-timeout.test.ts` | 1 | 7 | `tests/api-timeout.test.ts` |
 | Unit — `auth.test.ts` | 1 | 32 | `tests/auth.test.ts` |
-| Unit — `calculator.test.ts` | 1 | 25 | `tests/calculator.test.ts` |
+| Unit — `calculator.test.ts` | 1 | 26 | `tests/calculator.test.ts` |
 | Unit — `clear-cookie.test.ts` | 1 | 3 | `tests/clear-cookie.test.ts` |
 | Unit — `client-ip.test.ts` | 1 | 14 | `tests/client-ip.test.ts` |
 | Unit — `data-export.test.ts` | 1 | 9 | `tests/data-export.test.ts` |
-| Unit — `data-import.test.ts` | 1 | 63 | `tests/data-import.test.ts` |
-| Unit — `data-store.test.ts` | 1 | 3 | `tests/data-store.test.ts` |
+| Unit — `data-import.test.ts` | 1 | 66 | `tests/data-import.test.ts` |
+| Unit — `data-store.test.ts` | 1 | 6 | `tests/data-store.test.ts` |
 | Unit — `date.test.ts` | 1 | 33 | `tests/date.test.ts` |
 | Unit — `db-path.test.ts` | 1 | 18 | `tests/db-path.test.ts` |
 | Unit — `delivery-gate.test.ts` | 1 | 6 | `tests/delivery-gate.test.ts` |
@@ -1105,13 +1110,15 @@ Single-role per-user ownership model; no admin surface. Session: `{ uid, iat, ex
 | Unit — `resweep-gate.test.ts` | 1 | 6 | `tests/resweep-gate.test.ts` |
 | Unit — `router.test.ts` | 1 | 11 | `tests/router.test.ts` |
 | Unit — `rum-diagnostics.test.ts` | 1 | 34 | `tests/rum-diagnostics.test.ts` |
-| Unit — `script-conventions.test.ts` | 1 | 3 | `tests/script-conventions.test.ts` |
+| Unit — `schema-indexes.test.ts` | 1 | 4 | `tests/schema-indexes.test.ts` | (S128/CC10)
+| Unit — `script-conventions.test.ts` | 1 | 6 | `tests/script-conventions.test.ts` |
 | Unit — `secure-cookie.test.ts` | 1 | 9 | `tests/secure-cookie.test.ts` |
 | Unit — `seed-gate.test.ts` | 1 | 5 | `tests/seed-gate.test.ts` |
 | Unit — `sent-keys-patch.test.ts` | 1 | 12 | `tests/sent-keys-patch.test.ts` |
 | Unit — `site.test.ts` | 1 | 5 | `tests/site.test.ts` |
 | Unit — `suite-verdict.test.ts` | 1 | 556 | `tests/suite-verdict.test.ts` |
 | Unit — `text.test.ts` | 1 | 14 | `tests/text.test.ts` |
+| Unit — `toast.test.ts` | 1 | 3 | `tests/toast.test.ts` | (S128/CC8)
 | Unit — `theme-cache.test.ts` | 1 | 8 | `tests/theme-cache.test.ts` |
 | Unit — `theme.test.ts` | 1 | 16 | `tests/theme.test.ts` |
 | Unit — `timetable-merge.test.ts` | 1 | 14 | `tests/timetable-merge.test.ts` |
@@ -1141,7 +1148,7 @@ Single-role per-user ownership model; no admin surface. Session: `{ uid, iat, ex
 | E2E — `s20-rum-export.spec.ts` | 1 | 4 | `tests/e2e/s20-rum-export.spec.ts` |
 | E2E — `s21-data-export.spec.ts` | 1 | 5 | `tests/e2e/s21-data-export.spec.ts` |
 | E2E — `s22-boot-guard.spec.ts` | 1 | 2 | `tests/e2e/s22-boot-guard.spec.ts` |
-| E2E — `s23-import.spec.ts` | 1 | 8 | `tests/e2e/s23-import.spec.ts` |
+| E2E — `s23-import.spec.ts` | 1 | 9 | `tests/e2e/s23-import.spec.ts` |
 | E2E — `s24-change-password.spec.ts` | 1 | 5 | `tests/e2e/s24-change-password.spec.ts` |
 | E2E — `s25-delete-account.spec.ts` | 1 | 5 | `tests/e2e/s25-delete-account.spec.ts` |
 | E2E — `s26-change-email.spec.ts` | 1 | 7 | `tests/e2e/s26-change-email.spec.ts` |
@@ -1149,7 +1156,7 @@ Single-role per-user ownership model; no admin surface. Session: `{ uid, iat, ex
 | E2E — `tasks.spec.ts` | 1 | 9 | `tests/e2e/tasks.spec.ts` |
 | E2E — `theme-system.spec.ts` | 1 | 15 | `tests/e2e/theme-system.spec.ts` |
 | E2E — the shared-sign-in setup project (one login; the storageState the whole suite rides; each cert chunk re-runs it) | 1 | 1 | `tests/e2e/auth.setup.ts` |
-| **Total** | **73** | **1731** | `tests/` — **1171 Vitest unit** (42 files, `vitest run` 1171/1171) + **559 e2e** (554 chromium specs in 30 files per `playwright --list` + the 1 setup × the 5 cold-cert chunks = the 559-test chunked census [144+177+72+93+73, `db/e2e.db` cold every chunk]); unit + e2e = **1730 green** (the badge sum: 1171 + 559). Re-measured S127/CB (the S126 row's counts carried forward + the CB pins; the table stays PER-FILE and script-derivable: `vitest run` per-file counts + `playwright test --list`). |
+| **Total** | **75** | **1752** | `tests/` — **1191 Vitest unit** (44 files, `vitest run` 1191/1191) + **560 e2e** (555 chromium specs in 30 files per `playwright --list` + the 1 setup × the 5 cold-cert chunks = the 560-test chunked census [144+177+72+93+74, `db/e2e.db` cold every chunk]); unit + e2e = **1751 green** (the badge sum: 1191 + 560). Re-measured S128/CC (the S127 row's counts carried forward + the CC pins incl. the two new unit files; the table stays PER-FILE and script-derivable: `vitest run` per-file counts + `playwright test --list`). |
 
 ### 8.2 Test Patterns
 
@@ -1166,9 +1173,9 @@ No numeric coverage gate is configured; the standard is "every pure seam has a t
 
 - [ ] `bun run lint` clean
 - [ ] `bun run typecheck` clean
-- [ ] `bun run test` green (1171+)
+- [ ] `bun run test` green (1191+)
 - [ ] `bun run build` succeeds
-- [ ] `bun run test:e2e` green (559+; rebuild first if components changed)
+- [ ] `bun run test:e2e` green (560+; rebuild first if components changed)
 - [ ] No secrets / db files staged (`git status`)
 - [ ] Docs touched if behavior/setup changed
 

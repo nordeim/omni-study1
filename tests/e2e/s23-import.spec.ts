@@ -320,3 +320,55 @@ test.describe("S119/BT1 the import perimeter (fresh TEST-NET user)", () => {
     expect(body.error).toContain("http(s)");
   });
 });
+
+// S128/CC1 — the profile-patch whitelist's route-level leg (the s128
+// client-layer audit's M-1, demonstrated at the HTTP boundary). A
+// hand-edited envelope whose user block carries `displayName` (the
+// preferencesSchema alias for the fullName column — a column the User
+// model does not have) rolled back the ENTIRE restore with a misleading
+// "row whose fields do not match" 400 (PrismaClientValidationError inside
+// the all-or-nothing transaction). The whitelist keeps name-shaped
+// identity off the patch: the restore succeeds and the seven preference
+// fields still apply. Rides a FRESH TEST-NET user (the BT1 convention —
+// the demo import budget stays at its documented 9/10).
+test.describe("S128/CC1 the displayName-bearing envelope (fresh TEST-NET user)", () => {
+  test("a spliced displayName in the user block restores 200 — preferences apply, the name never does", async ({ page }) => {
+    await registerFreshUser(page, "cc1");
+    // UNIQUE row ids: the base envelope's s23-* ids were already minted in
+    // the demo session's data this run — the id is the GLOBAL primary key,
+    // so a same-id import under the fresh user P2002s with a 409 long
+    // before the profile patch (the BT1b/S117 unique-id convention).
+    const spliced = envelope({
+      user: {
+        id: "u-old",
+        email: "old@account.dev",
+        name: "Old Account",
+        displayName: "Spliced Name",
+        themeMode: "dark",
+        accentColor: "blue",
+      },
+      data: {
+        subjects: [
+          {
+            id: "s128-cc1-subject",
+            name: "S128 CC1 Probe Subject",
+            color: "#8b5cf6",
+            createdAt: "2026-09-01T00:00:00.000Z",
+          },
+        ],
+        tasks: [],
+      },
+    });
+    const res = await page.request.post("/api/import/data", { data: spliced });
+    // Pre-fix: 400 "row whose fields do not match" — the whole restore died.
+    expect(res.status()).toBe(200);
+
+    // The preferences rode the whitelist; the name-shaped field did not.
+    const me = await page.request.get("/api/auth/me");
+    expect(me.ok()).toBe(true);
+    const { user } = (await me.json()) as { user: { themeMode: string; accentColor: string; name: string } };
+    expect(user.themeMode).toBe("dark");
+    expect(user.accentColor).toBe("blue");
+    expect(user.name).not.toBe("Spliced Name");
+  });
+});

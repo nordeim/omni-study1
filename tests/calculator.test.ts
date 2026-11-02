@@ -205,4 +205,13 @@ describe("S127/CB18 · the exponent leg reads the engine's own display format", 
     expect(evaluate("e")).toBeCloseTo(Math.E, 10);
     expect(evaluate("2 * e")).toBeCloseTo(2 * Math.E, 10);
   });
+
+  it("binds unary minus TIGHTER than ^ (the Excel/Sheets family, S128/CC13 — the convention locked)", () => {
+    // -2^2 is (-2)^2 = 4 in Excel and Google Sheets, but -(2^2) = -4 in
+    // math notation and Python. The engine has always followed the
+    // spreadsheet family (unary minus binds tightest); this pin locks the
+    // choice deliberately so a precedence refactor cannot flip it silently.
+    expect(evaluate("-2^2")).toBe(4);
+    expect(evaluate("2^-2")).toBe(0.25); // the negative exponent stays an exponent operand
+  });
 });

@@ -305,14 +305,11 @@ export type EntityMap = {
   aiMessages: AiChatMessageRow[];
 };
 
-type RowOf<K extends CollectionKey> = EntityMap[K][number];
-
+// S128/CC9: the RowOf helper left with its dead consumers (addRow/
+// updateRow/removeRow — zero callers; see the store body).
 type DataState = EntityMap & {
   loading: boolean;
   setSlice: <K extends CollectionKey>(key: K, rows: EntityMap[K]) => void;
-  addRow: <K extends CollectionKey>(key: K, row: RowOf<K>) => void;
-  updateRow: <K extends CollectionKey>(key: K, id: string, patch: Partial<RowOf<K>>) => void;
-  removeRow: <K extends CollectionKey>(key: K, id: string) => void;
   loadAll: () => Promise<void>;
   /** Fetch ONLY the given collections in parallel (the pre-warm path). */
   loadCollections: (keys: ReadonlyArray<CollectionKey>) => Promise<void>;
@@ -335,6 +332,33 @@ async function fetchAndSet<K extends CollectionKey>(key: K): Promise<void> {
   const rows = await apiGet<EntityMap[K]>(PATHS[key]);
   if (fetchSeq[key] !== ticket) return; // a newer GET superseded this one
   useDataStore.getState().setSlice(key, rows);
+}
+
+// S128/CC11 — the in-flight COUNTS behind the `loading` boolean. The
+// pre-CC11 store flipped ONE shared boolean in every loadAll/loadCollections
+// finally, so the FIRST finisher of two overlapping loads cleared it while
+// the second fetch was still in flight (masked today — the view-side
+// loadCollections callers don't read s.loading — but 8 views branch
+// skeleton-vs-empty on that boolean). A count per key handles BOTH overlap
+// shapes: different keys (the masked cross-key race) and the same key
+// (two loadCollections(["tasks"]) — the second add increments to 2 and the
+// first finisher's decrement lands at 1, still loading).
+const loadingCounts = new Map<CollectionKey, number>();
+
+function trackLoadStart(keys: ReadonlyArray<CollectionKey>): void {
+  for (const key of keys) loadingCounts.set(key, (loadingCounts.get(key) ?? 0) + 1);
+  setLoadingDerived();
+}
+
+function trackLoadSettle(key: CollectionKey): void {
+  const n = (loadingCounts.get(key) ?? 1) - 1;
+  if (n <= 0) loadingCounts.delete(key);
+  else loadingCounts.set(key, n);
+  setLoadingDerived();
+}
+
+function setLoadingDerived(): void {
+  useDataStore.setState({ loading: loadingCounts.size > 0 });
 }
 
 export const useDataStore = create<DataState>((set) => ({
@@ -361,41 +385,27 @@ export const useDataStore = create<DataState>((set) => ({
 
   setSlice: (key, rows) => set((state) => ({ ...state, [key]: rows }) as DataState),
 
-  addRow: (key, row) =>
-    set(
-      (state) => ({ ...state, [key]: [...state[key], row] }) as DataState,
-    ),
-
-  updateRow: (key, id, patch) =>
-    set((state) => {
-      const rows = state[key].map((row) =>
-        row.id === id ? { ...row, ...patch } : row,
-      );
-      return { ...state, [key]: rows } as DataState;
-    }),
-
-  removeRow: (key, id) =>
-    set((state) => {
-      const rows = state[key].filter((row) => row.id !== id);
-      return { ...state, [key]: rows } as DataState;
-    }),
+  // S128/CC9: the addRow/updateRow/removeRow trio REMOVED — zero callers
+  // since the refresh-after-write pattern landed (every mutation goes
+  // apiSend → fetchAndSet), and they bypassed the fetchSeq stale-guard: a
+  // future caller doing optimistic updateRow + refresh would reintroduce
+  // the S119 ordering hazard through the back door.
 
   loadAll: async () => {
-    set({ loading: true });
-    try {
-      await Promise.all(ALL_KEYS.map((key) => fetchAndSet(key)));
-    } finally {
-      set({ loading: false });
-    }
+    trackLoadStart(ALL_KEYS);
+    // Each fetch's own finally owns its decrement — a rejected fetchAndSet
+    // still decrements (no count ever leaks), and overlapping loads never
+    // clear the flag while a sibling fetch is still in flight.
+    await Promise.all(
+      ALL_KEYS.map((key) => fetchAndSet(key).finally(() => trackLoadSettle(key))),
+    );
   },
 
   loadCollections: async (keys) => {
-    set({ loading: true });
-    try {
-      await Promise.all(keys.map((key) => fetchAndSet(key)));
-    } finally {
-      set({ loading: false });
-    }
+    trackLoadStart(keys);
+    await Promise.all(
+      keys.map((key) => fetchAndSet(key).finally(() => trackLoadSettle(key))),
+    );
   },
 }));
 
@@ -463,7 +473,14 @@ export const mutations = {
       await apiSend("PATCH", `${PATHS.tasks}/${id}`, { completed: !task.completed });
       await fetchAndSet("tasks");
     });
-    taskToggleChains.set(id, chained.catch(() => undefined));
+    // S128/CC5: evict on settle when still latest — a deleted task's settled
+    // chain otherwise lives in the module map for the whole page session
+    // (hygiene; the settled-promise entry is tiny but never reclaimed).
+    const stored = chained.catch(() => undefined);
+    taskToggleChains.set(id, stored);
+    stored.finally(() => {
+      if (taskToggleChains.get(id) === stored) taskToggleChains.delete(id);
+    });
     await chained;
   },
   deleteTask: async (id: string): Promise<void> => {

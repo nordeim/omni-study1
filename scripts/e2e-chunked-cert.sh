@@ -1,4 +1,27 @@
 #!/usr/bin/env bash
+# (S128/CC re-tag — census 559 → 560, net +1: chunk 5 +1 [the CC1
+# displayName-bearing envelope pin in s23-import — a spliced displayName
+# in the user block restores 200 (the whitelist keeps name-shaped identity
+# off the profile patch) with the preferences still applying, on a FRESH
+# TEST-NET user per the BT1 convention; the demo import budget stays at
+# its documented 9/10]. ALSO S128/CC2: this runner now PROPAGATES a failing
+# chunk's exit code (rc accumulation + exit "$rc" — the pre-CC2 loop
+# discarded every chunk pipeline's status and the trailing echo returned 0
+# unconditionally: a cert script that cannot fail is the resweep-gate trap
+# class reborn at the cert layer; pinned by tests/script-conventions.test.ts)
+# and the header census is machine-enforced against the same pin.)
+# (S127/CB re-tag — census 538 → 559, net +21: chunk 1 +3 [the CB1
+# clock-accelerated focus-completion pin in parity-session5 was chunk 3;
+# chunk 1's +3 are the CB8 AI-refresh pins in parity-session8]; chunk 2 +16
+# [the CB5 calendar category-dot family in parity-session6 + the CB4
+# weighted-mean re-anchor + CB6 timetable 14-row pin in parity-session7 +
+# the CB2 assignment TZ round-trip + CB9 worksheet pins in parity-session9
+# + the CB16 toggle-chain pin in tasks + the CB3/CB7/CB20 pins in
+# s14-hardening]; chunk 3 +1 [the CB1 focus-timer pin]; chunk 4 +0; chunk 5
+# +1 [the CB12 login per-account lockout pin in auth-flows]. The full CB
+# map: docs/remediation-plan-session127.md.)
+# Expected: 144 + 177 + 72 + 93 + 74 = 560 (each chunk's count includes its
+# auth setup — the current census; the historical re-tag blocks beneath.)
 # (S125/BZ re-tag — census 523 → 529, net +6: chunk 1 +2 [parity-session8
 # +2: the BZ3 manage-notebooks popover keyboard pin (the content renders
 # role=dialog with NO menuitem, Tab reaches the action buttons, Escape
@@ -196,6 +219,7 @@ declare -a CHUNKS=(
 )
 
 i=1
+rc=0
 for chunk in "${CHUNKS[@]}"; do
   # stale-server kill (AP-70/AP-95: kill by exact match, never blanket pkill).
   # S91/AR2 (the s90 audit's M1): the standalone server RETITLES its process
@@ -229,7 +253,13 @@ for chunk in "${CHUNKS[@]}"; do
   fi
   rm -f db/e2e.db
   echo "=== CHUNK $i: $(echo $chunk | wc -w) files ==="
+  # S128/CC2: accumulate the chunk pipeline's REAL exit status — the
+  # pre-CC2 loop discarded it (a red chunk never failed the script; the
+  # trailing echo returned 0 unconditionally). pipefail is set above, so
+  # the pipeline's status is playwright's own even through grep/tail.
   bunx playwright test $chunk --reporter=list 2>&1 | grep -E "^ *[0-9]+ (passed|failed)|passed|failed" | tail -3
+  rc=$((rc | PIPESTATUS[0]))
   i=$((i + 1))
 done
 echo "=== DONE — chunked certification complete ==="
+exit "$rc"

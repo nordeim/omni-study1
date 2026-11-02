@@ -696,6 +696,25 @@ function checkDomainCaps(collection: string, row: ImportRow, index: number): voi
 // or absent block stays ignored (the pre-CB19 tolerance contract).
 // ---------------------------------------------------------------------------
 
+// S128/CC1: the WHITELIST — only these seven preference keys ride the
+// patch. preferencesSchema legitimately carries a `displayName` leg (the
+// Settings alias for the fullName COLUMN), but the User model has no
+// displayName field: the pre-CC1 copy-everything loop put it in the
+// tx.user.update data, PrismaClientValidationError rolled back the ENTIRE
+// all-or-nothing restore with a misleading "row whose fields do not match"
+// 400, and a name-shaped field rode a seam whose contract says identity
+// never rides. The whitelist makes the declared return type the enforced
+// truth (displayName, id, email, name are all silently dropped).
+const PROFILE_PATCH_KEYS = [
+  "themeMode",
+  "accentColor",
+  "avatarEmoji",
+  "notificationsEnabled",
+  "schoolName",
+  "gradeLevel",
+  "studyGoalHours",
+] as const;
+
 export function importProfilePatch(
   user: unknown,
 ): Partial<{
@@ -710,9 +729,11 @@ export function importProfilePatch(
   if (typeof user !== "object" || user === null) return null;
   const parsed = preferencesSchema.safeParse(user);
   if (!parsed.success) return null;
-  // Strip undefined legs — the patch carries only what the envelope set.
+  // Strip undefined legs — the patch carries only what the envelope set,
+  // through the closed whitelist above.
   const patch: Record<string, unknown> = {};
-  for (const [key, value] of Object.entries(parsed.data)) {
+  for (const key of PROFILE_PATCH_KEYS) {
+    const value = (parsed.data as Record<string, unknown>)[key];
     if (value !== undefined) patch[key] = value;
   }
   return Object.keys(patch).length > 0 ? patch : null;

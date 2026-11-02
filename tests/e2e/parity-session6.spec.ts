@@ -447,6 +447,11 @@ test.describe("S127/CB5 · the calendar grid renders category presence dots", ()
     await gotoMonthOf(page, d1);
     const cell = dayCellLocator(page, d1);
     await expect(cell).toBeVisible();
+    // S128/CC3: settle on the DATA, not the shell — the month grid renders
+    // at shell commit while the dots render from the async-loaded store;
+    // evaluateAll does not retry, so a pre-data read returns [] and the
+    // exact-equality assertion false-reds (the cold-race class).
+    await expect(cell.locator("span.rounded-full").first()).toBeVisible();
     const dots = await cell.locator("span.rounded-full").evaluateAll((els) =>
       els.map((el) => getComputedStyle(el).backgroundColor),
     );
@@ -468,6 +473,8 @@ test.describe("S127/CB5 · the calendar grid renders category presence dots", ()
     await gotoMonthOf(page, d2);
     const cell = dayCellLocator(page, d2);
     await expect(cell).toBeVisible();
+    // S128/CC3: the data-settle wait (see the day+1 pin above).
+    await expect(cell.locator("span.rounded-full").first()).toBeVisible();
     const dots = await cell.locator("span.rounded-full").evaluateAll((els) =>
       els.map((el) => getComputedStyle(el).backgroundColor),
     );
@@ -488,6 +495,9 @@ test.describe("S127/CB5 · the calendar grid renders category presence dots", ()
     d1.setDate(d1.getDate() + 1);
     await gotoMonthOf(page, d1);
     const cell = dayCellLocator(page, d1);
+    // S128/CC3: settle BEFORE the click too — the click's selected-fill
+    // re-render must not race the store landing.
+    await expect(cell.locator("span.rounded-full").first()).toBeVisible();
     await cell.click();
     const dots = await cell.locator("span.rounded-full").evaluateAll((els) =>
       els.map((el) => getComputedStyle(el).backgroundColor),

@@ -19,7 +19,6 @@ import {
   isSameMonth,
   isoWeekNumber,
   isoWeekday,
-  minutesToHHMM,
   monthGrid,
   parseHHMM,
   referenceWeekNumber,
@@ -205,11 +204,6 @@ describe("HH:MM helpers", () => {
     expect(parseHHMM("")).toBeNull();
   });
 
-  it("minutesToHHMM zero-pads", () => {
-    expect(minutesToHHMM(540)).toBe("09:00");
-    expect(minutesToHHMM(1439)).toBe("23:59");
-  });
-
   it("formatHHMMRange renders the span between two stamps", () => {
     expect(formatHHMMRange("09:00", "10:30")).toBe("1h 30m");
     expect(formatHHMMRange("10:30", "09:00")).toBe("0m"); // reversed clamps to 0
@@ -306,6 +300,16 @@ describe("S127/CB2 · the date-only input twins (the local-noon round-trip)", ()
 
   it("fromDueDateInput maps the cleared input to the empty string", () => {
     expect(fromDueDateInput("")).toBe("");
+  });
+
+  it("fromDueDateInput maps MALFORMED input to the empty string (the sibling NaN guard, S128/CC6)", () => {
+    // Pre-fix: `new Date("garbageT12:00:00")` is Invalid and .toISOString()
+    // THREW RangeError; "2031-13-45" likewise. The three siblings in this
+    // atom family all guard Number.isNaN — this closes the asymmetry
+    // (the Feb-30 silent rollover is inherent to Date and stays).
+    expect(fromDueDateInput("garbage")).toBe("");
+    expect(fromDueDateInput("2031-13-45")).toBe("");
+    expect(fromDueDateInput("2031-02-30T99:99")).toBe("");
   });
 
   it("toDateInputValue extracts the LOCAL wall-clock date — never the UTC slice", () => {

@@ -1,7 +1,17 @@
 import { defineConfig } from "vitest/config";
 import path from "node:path";
 
-// Unit-test layer for the pure domain seams — 42 files / 1145 tests
+// Unit-test layer for the pure domain seams — 44 files / 1191 tests
+// (re-anchored S128/CC — the audit-driven hardening cycle: census 1171 →
+// 1191, +20 net [toast.test.ts the 43rd file, +3: the S128/CC8 toaster
+// identity/cap/auto-dismiss family; schema-indexes.test.ts the 44th, +4:
+// the S128/CC10 factory-list composite-index census; api-timeout +3: the
+// CC7 apiGet timeoutMs mirror; data-import +3: the CC1 profile-patch
+// whitelist; data-store +3: the CC11 loading-flag in-flight counts;
+// script-conventions +3: the CC2 cert-runner truth pair; calculator +1:
+// the CC13 unary-minus-vs-^ convention lock; date net 0: +1 CC6 NaN-guard
+// pin −1 the dead minutesToHHMM leg removed with its export]. The S127/CB
+// additions beneath:)
 // (re-anchored S125/BZ — the audit-driven hardening cycle: census 1113 →
 // 1127, +14 [grade-merge.test.ts the 42nd file, +7: the checkGradeRangeMerge
 // effective-pair legs — the single-leg score-over-stored rejection, the

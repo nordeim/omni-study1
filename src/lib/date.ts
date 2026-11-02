@@ -240,12 +240,6 @@ export function parseHHMM(value: string): number | null {
   return hours * 60 + minutes;
 }
 
-/** 540 → "09:00" */
-export function minutesToHHMM(totalMinutes: number): string {
-  const m = Math.min(1439, Math.max(0, Math.round(totalMinutes)));
-  return `${Math.floor(m / 60).toString().padStart(2, "0")}:${(m % 60).toString().padStart(2, "0")}`;
-}
-
 /** The span between two HH:MM stamps — "1h 30m"; reversed clamps to "0m". */
 export function formatHHMMRange(start: string, end: string): string {
   const a = parseHHMM(start);
@@ -266,7 +260,12 @@ export function formatHHMMRange(start: string, end: string): string {
  */
 export function fromDueDateInput(value: string): string {
   if (!value) return "";
-  return new Date(`${value}T12:00:00`).toISOString();
+  // S128/CC6: the sibling NaN guard — a malformed string constructs an
+  // Invalid Date whose .toISOString() THREW RangeError (the three siblings
+  // in this family all guard). "" keeps the form's required-gate contract.
+  const d = new Date(`${value}T12:00:00`);
+  if (Number.isNaN(d.getTime())) return "";
+  return d.toISOString();
 }
 
 /**

@@ -71,3 +71,53 @@ describe("fetchAndSet sequence guard (S119/BT8 — out-of-order GETs)", () => {
     expect(useDataStore.getState().tasks).toEqual([{ id: "t1" }]);
   });
 });
+
+// S128/CC11 — the loading flag's in-flight truth (the s128 client-layer
+// audit's L-tier). The pre-CC11 store set ONE shared boolean around every
+// loadAll/loadCollections: two overlapping loads let the FIRST finisher's
+// finally flip `loading` to false while the second fetch was still in
+// flight. Currently masked (the view-side loadCollections callers don't
+// read s.loading), but 8 views branch skeleton-vs-empty on that boolean —
+// one new consumer away from a flash-of-empty-state. The fix tracks the
+// in-flight KEYS (a module Set) and derives the boolean at each transition.
+describe("the loading flag under overlapping loads (S128/CC11)", () => {
+  beforeEach(() => {
+    apiGetMock.mockReset();
+    useDataStore.setState({ loading: false });
+  });
+
+  it("stays true until the LAST overlapping load settles", async () => {
+    let releaseHeld: ((rows: unknown[]) => void) | undefined;
+    const held = new Promise<unknown[]>((resolve) => {
+      releaseHeld = resolve;
+    });
+    // call 1 (tasks — held) then call 2 (notes — immediate)
+    apiGetMock.mockReturnValueOnce(held);
+    apiGetMock.mockReturnValueOnce(Promise.resolve([{ id: "n1" }]));
+
+    const tasksP = useDataStore.getState().loadCollections(["tasks"]);
+    const notesP = useDataStore.getState().loadCollections(["notes"]);
+    await notesP; // the FIRST finisher settles
+    // Pre-fix: the shared boolean already flipped false here.
+    expect(useDataStore.getState().loading).toBe(true);
+
+    releaseHeld?.([{ id: "t1" }]);
+    await tasksP;
+    expect(useDataStore.getState().loading).toBe(false);
+  });
+
+  it("a single load still clears the flag (the normal path)", async () => {
+    apiGetMock.mockReturnValueOnce(Promise.resolve([{ id: "t1" }]));
+    await useDataStore.getState().loadCollections(["tasks"]);
+    expect(useDataStore.getState().loading).toBe(false);
+  });
+
+  it("a REJECTED load still clears the flag (the finally path)", async () => {
+    apiGetMock.mockReturnValueOnce(Promise.reject(new Error("offline")));
+    await useDataStore
+      .getState()
+      .loadCollections(["notes"])
+      .catch(() => undefined);
+    expect(useDataStore.getState().loading).toBe(false);
+  });
+});

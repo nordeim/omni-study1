@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 
-import { apiSend, isTimeoutError } from "@/lib/api";
+import { apiGet, apiSend, isTimeoutError } from "@/lib/api";
 
 // S13-A2: the AI surfaces need a request deadline. apiSend gains an optional
 // { timeoutMs } opt (implemented with AbortSignal.timeout) so a hung backend
@@ -68,5 +68,62 @@ describe("apiSend timeoutMs", () => {
     expect(isTimeoutError(new TypeError("fetch failed"))).toBe(false);
     expect(isTimeoutError(new Error("boom"))).toBe(false);
     expect(isTimeoutError(null)).toBe(false);
+  });
+});
+
+// S128/CC7: the apiGet mirror — the S13 deadline seam existed ONLY on
+// apiSend, so the boot gate's `await apiGet("/api/auth/me")` could hold the
+// Splash spinner for the browser's own connection timeout (minutes) on a
+// stalled connection (accepted TCP, no response — no `offline` event fires,
+// and the retry affordance lives in the gate's error branch).
+describe("apiGet timeoutMs (S128/CC7)", () => {
+  const hangingFetch = () =>
+    vi.fn(
+      (_path: string | URL | Request, init?: RequestInit) =>
+        new Promise<Response>((_, reject) => {
+          init?.signal?.addEventListener("abort", () => reject(init.signal!.reason), { once: true });
+        }),
+    );
+
+  it("rejects a hung GET once timeoutMs elapses", async () => {
+    const hang = hangingFetch();
+    vi.stubGlobal("fetch", hang);
+    try {
+      const got = apiGet("/api/auth/me", { timeoutMs: 25 });
+      await expect(got).rejects.toThrow();
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
+  it("flags the timeout via isTimeoutError (the gate's error branch is reachable)", async () => {
+    const hang = hangingFetch();
+    vi.stubGlobal("fetch", hang);
+    try {
+      let caught: unknown = null;
+      await apiGet("/api/auth/me", { timeoutMs: 25 }).catch((err: unknown) => {
+        caught = err;
+      });
+      expect(caught).not.toBeNull();
+      expect(isTimeoutError(caught)).toBe(true);
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
+  it("does NOT time out when no timeoutMs is passed (the default stays patient)", async () => {
+    const hang = hangingFetch();
+    vi.stubGlobal("fetch", hang);
+    try {
+      let rejected = false;
+      const got = apiGet("/api/health").catch(() => {
+        rejected = true;
+      });
+      await new Promise((r) => setTimeout(r, 150));
+      expect(rejected).toBe(false);
+      void got;
+    } finally {
+      vi.unstubAllGlobals();
+    }
   });
 });
