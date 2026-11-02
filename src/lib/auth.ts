@@ -218,6 +218,16 @@ export function hashResetToken(token: string): string {
   return createHash("sha256").update(token).digest("hex");
 }
 
+/** S131/CF7: the timing-safe string compare — the codebase's ONE idiom for
+ *  comparing secret material (verifyPassword and the session-MAC check each
+ *  dance this inline; the OTP digest compare was the last plaintext
+ *  short-circuit). Length-mismatched inputs answer false WITHOUT feeding
+ *  timingSafeEqual (it throws on unequal lengths). */
+export function timingSafeEqualBuffer(a: string, b: string): boolean {
+  if (a.length !== b.length) return false;
+  return timingSafeEqual(Buffer.from(a), Buffer.from(b));
+}
+
 /** Tolerate pasted formatting; reject non-digit garbage and wrong lengths. */
 export function normalizeVerificationCode(
   input: string | null | undefined,

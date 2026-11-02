@@ -12,7 +12,12 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { z } from "zod";
 
-import { checkRateLimit, normalizeVerificationCode } from "@/lib/auth";
+import {
+  checkRateLimit,
+  hashResetToken,
+  normalizeVerificationCode,
+  timingSafeEqualBuffer,
+} from "@/lib/auth";
 import { db } from "@/lib/db";
 import { secureCookieFlag } from "@/lib/auth";
 import { clientIp, publicUser, setSessionCookie } from "@/lib/server/auth";
@@ -77,11 +82,21 @@ export async function POST(request: NextRequest) {
       return errorResponse(400, "That code is invalid or has expired.");
     }
 
+    // S131/CF7: the compare runs on the SHA-256 DIGESTS — the token stores
+    // the digest (the BR6 posture: a DB read never yields a live sign-in
+    // credential) and the presented code digests through the same seam.
+    // timingSafeEqualBuffer is the codebase's one timing-safe compare
+    // idiom (passwords, session MACs); the OTP was the last plaintext
+    // short-circuit compare. Both sides are 64-char hex, equal length.
+    const presentedDigest = hashResetToken(normalized);
     const token = await db.verificationToken.findFirst({
       where: { userId: user.id, expiresAt: { gt: new Date() } },
       orderBy: { createdAt: "desc" },
     });
-    if (!token || token.code !== normalized) {
+    if (
+      !token ||
+      !timingSafeEqualBuffer(token.code, presentedDigest)
+    ) {
       return errorResponse(400, "That code is invalid or has expired.");
     }
 
@@ -94,7 +109,7 @@ export async function POST(request: NextRequest) {
     const consumed = await db.verificationToken.deleteMany({
       where: {
         userId: user.id,
-        code: normalized,
+        code: presentedDigest,
         expiresAt: { gt: new Date() },
       },
     });

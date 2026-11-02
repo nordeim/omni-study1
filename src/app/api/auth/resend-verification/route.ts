@@ -9,7 +9,11 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { z } from "zod";
 
-import { checkRateLimit, generateVerificationCode } from "@/lib/auth";
+import {
+  checkRateLimit,
+  generateVerificationCode,
+  hashResetToken,
+} from "@/lib/auth";
 import { db } from "@/lib/db";
 import { inAppDeliveryGates } from "@/lib/env-check";
 import { clientIp } from "@/lib/server/auth";
@@ -37,6 +41,24 @@ export async function POST(request: NextRequest) {
     }
 
     const { email } = parseWith(resendSchema, await readJson(request));
+
+    // S131/CF1: the per-EMAIL budget — the payload-keyed CB12/BX2 pattern
+    // (a 429 answers identically for known and unknown emails — the
+    // anti-enumeration shape holds). The per-IP key above is forgeable
+    // under the legacy XFF posture; without this budget a rotated-XFF
+    // flood minted unlimited live code rows for a known unverified email.
+    // Checked BEFORE the user lookup — an over-budget ask reads nothing.
+    const emailLimit = checkRateLimit(
+      `resendAcct:${email.toLowerCase()}`,
+      5,
+    );
+    if (!emailLimit.ok) {
+      return rateLimitedResponse(
+        emailLimit.retryAfterSec,
+        "Too many verification requests. Try again shortly.",
+      );
+    }
+
     const user = await db.user.findUnique({
       where: { email: email.toLowerCase() },
       select: { id: true, emailVerified: true },
@@ -44,6 +66,10 @@ export async function POST(request: NextRequest) {
 
     if (user && !user.emailVerified) {
       const code = generateVerificationCode();
+      // S131/CF7: the digest at rest — the BR6 posture extended to the OTP
+      // (a DB read must never yield a live sign-in credential; a correct
+      // code SIGNS THE CALLER IN). The RESPONSE still carries the plaintext
+      // code (the ADR-013 in-band delivery); only the at-rest form changes.
       // S121/BV8: the register route's own pruning, mirrored here — the
       // account's EXPIRED tokens never outlive a resend either (bounded
       // auth tables; the shipped branch only ever created, so abandoned
@@ -54,7 +80,7 @@ export async function POST(request: NextRequest) {
       await db.verificationToken.create({
         data: {
           userId: user.id,
-          code,
+          code: hashResetToken(code),
           expiresAt: new Date(Date.now() + CODE_TTL_MS),
         },
       });

@@ -15,7 +15,7 @@
     "db:reset": "DATABASE_URL=\"file:../db/custom.db\" prisma migrate reset",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:e2e": "playwright test",
+    "test:e2e": "bash scripts/e2e-cold-reset.sh && playwright test",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

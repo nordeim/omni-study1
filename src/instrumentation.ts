@@ -10,7 +10,11 @@
 //   - warn (weak production secret / dev without a secret): console.warn.
 // ---------------------------------------------------------------------------
 
-import { authSecretBootStatus, inBandDeliveryProdWarning } from "./lib/env-check";
+import {
+  authSecretBootStatus,
+  directExposureProdWarning,
+  inBandDeliveryProdWarning,
+} from "./lib/env-check";
 import { resolveProcessDatabaseUrl } from "./lib/db-path";
 
 export async function register(): Promise<void> {
@@ -57,6 +61,24 @@ export async function register(): Promise<void> {
         "Multi-user or exposed deployments MUST set DISABLE_IN_APP_RESET=1 and " +
         "DISABLE_IN_APP_OTP=1 and provide real mail transport — see " +
         "DEPLOYMENT.md §8.",
+    );
+  }
+
+  // S131/CF2: the direct-exposure posture's shared-bucket bound (the s131
+  // crypto-core audit's M1). TRUSTED_PROXY_HOPS=0 ignores x-forwarded-for
+  // entirely — every request derives the SAME "local" rate-limit key, so
+  // 10 anonymous requests lock out sitewide login/register/verify/resend/
+  // forgot/reset for 15-minute windows (the per-ACCOUNT budgets contain the
+  // guessing halves; the availability half is this posture's inherent
+  // bound — the App Router exposes no per-connection address).
+  if (directExposureProdWarning(process.env)) {
+    console.warn(
+      "[boot] WARNING: TRUSTED_PROXY_HOPS=0 in production — every per-IP " +
+        "auth rate budget shares ONE bucket (the direct-connection key): ten " +
+        "anonymous requests lock out sitewide login/registration/verification " +
+        "for 15-minute windows. Front the app with a reverse proxy that appends " +
+        "the client to x-forwarded-for and declare the hop depth " +
+        "(TRUSTED_PROXY_HOPS=N) — see DEPLOYMENT.md §3.",
     );
   }
 }

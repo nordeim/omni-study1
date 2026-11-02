@@ -609,3 +609,60 @@ test.describe("S129/CD6a · bare /reset-password renders the reset screen", () =
     await expect(page.getByRole("button", { name: "Sign in", exact: true })).toHaveCount(0);
   });
 });
+
+// S131/CF8 — the resend 429 honesty (docs/remediation-plan-session131.md).
+//
+// The s131 shell audit's L1: the resend catch rendered the SUCCESS status
+// on a real 429 (the "uniform-200 endpoint — never an error surface"
+// comment was factually wrong — the route answers 429 once the resend
+// budget is exhausted), so a user who clicked Resend past the budget was
+// told a code was on its way while the request was rejected. The leg
+// burns the per-EMAIL budget (CF1's resendAcct — 5 asks) through direct
+// API posts riding a UNIQUE client IP (the spec family's own technique —
+// no interplay with the shared per-IP budget), then the UI click surfaces
+// the route's own 429 copy, never the success line. (Own describe — this
+// file's S15 block stays WELL under its own budget accounting.)
+test.describe("S131/CF8 · the resend 429 honesty", () => {
+  test("a rate-limited Resend surfaces the 429 copy, never the success line", async ({ page }) => {
+    const ip = { "x-forwarded-for": "192.0.2.181" };
+    const email = `cf8-resend-${Date.now()}@example.com`;
+    const body = JSON.stringify({ name: "CF8 Leg", email, password: PASSWORD });
+
+    // The account (register rides the same fresh IP budget: 10 — 2 asks).
+    const reg = await page.request.post("/api/auth/register", {
+      data: body,
+      headers: { "content-type": "application/json", ...ip },
+    });
+    expect(reg.status()).toBe(200);
+
+    // Burn resendAcct:email to its cap (5 asks — the 5th passes, the 6th
+    // blocks; the per-IP budget stays untouched at 6 < 10).
+    for (let i = 0; i < 5; i++) {
+      const res = await page.request.post("/api/auth/resend-verification", {
+        data: { email },
+        headers: { "content-type": "application/json", ...ip },
+      });
+      expect(res.status()).toBe(200); // every ask so far is under the cap
+    }
+
+    // The UI journey to the verify screen's Resend button: sign up with the
+    // same (now-existing, unverified) email → the verify view renders.
+    await page.goto("/login");
+    await page.getByRole("button", { name: /sign up/i }).click();
+    await page.getByLabel("Email", { exact: true }).fill(email);
+    await page.getByLabel("Password", { exact: true }).fill(PASSWORD);
+    await page.getByLabel("Confirm Password").fill(PASSWORD);
+    await page.getByRole("button", { name: /create account/i }).click();
+    await expect(page.getByRole("heading", { name: /verify/i })).toBeVisible();
+
+    // The 6th ask — through the UI. The per-email budget answers 429 and
+    // the honest copy renders (pre-fix: the success line rendered).
+    await page.getByRole("button", { name: "Resend code" }).click();
+    await expect(
+      page.getByRole("status").filter({ hasText: "Too many verification requests. Try again shortly." }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole("status").filter({ hasText: "a new code is on its way" }),
+    ).toHaveCount(0);
+  });
+});

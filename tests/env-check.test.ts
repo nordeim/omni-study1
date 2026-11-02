@@ -1,8 +1,11 @@
 import { describe, expect, it } from "vitest";
+import { readFileSync } from "node:fs";
+import path from "node:path";
 
 import {
   authSecretBootStatus,
   DEV_FALLBACK_SECRET,
+  directExposureProdWarning,
   inBandDeliveryProdWarning,
 } from "@/lib/env-check";
 
@@ -172,5 +175,55 @@ describe("S127/CB14 · inBandDeliveryProdWarning (the BT5 posture precedent)", (
   it("is silent outside production (the dev/test quickstart posture)", () => {
     expect(inBandDeliveryProdWarning({ NODE_ENV: "development" }, {})).toBe(false);
     expect(inBandDeliveryProdWarning({}, {})).toBe(false);
+  });
+});
+
+// S131/CF2 — the direct-exposure production warning
+// (docs/remediation-plan-session131.md).
+//
+// The s131 crypto-core audit's M1: clientIp() returns the constant "local"
+// whenever the XFF policy yields no usable header (TRUSTED_PROXY_HOPS=0,
+// absent header, or a short header under N>=1) — every such request shares
+// ONE bucket per auth family (login:local, register:local, ...), so 10
+// anonymous requests sitewide-lockout the auth families for 15-minute
+// windows. The per-ACCOUNT budgets (CB12/BX2) contain the guessing-critical
+// halves; the availability half is the direct-exposure posture's inherent
+// bound. The App Router exposes no socket/remote-address accessor
+// (verified against Next 16's NextRequest typings — request.ip was removed
+// upstream after the 15.x deprecation), so the honest remediation is the
+// audit's own alternative: the boot warning (the CB14 precedent).
+describe("S131/CF2 · directExposureProdWarning (the shared-bucket posture made loud)", () => {
+  it("warns in production under the explicit direct-exposure posture (TRUSTED_PROXY_HOPS=0)", () => {
+    expect(
+      directExposureProdWarning({ NODE_ENV: "production", TRUSTED_PROXY_HOPS: "0" }),
+    ).toBe(true);
+  });
+
+  it("is silent in production under any other hop posture (unset or N>=1 — a proxy may front the app)", () => {
+    expect(
+      directExposureProdWarning({ NODE_ENV: "production" }),
+    ).toBe(false);
+    expect(
+      directExposureProdWarning({ NODE_ENV: "production", TRUSTED_PROXY_HOPS: "1" }),
+    ).toBe(false);
+    expect(
+      directExposureProdWarning({ NODE_ENV: "production", TRUSTED_PROXY_HOPS: "" }),
+    ).toBe(false);
+  });
+
+  it("is silent outside production (the dev/LAN posture is the documented default)", () => {
+    expect(
+      directExposureProdWarning({ NODE_ENV: "development", TRUSTED_PROXY_HOPS: "0" }),
+    ).toBe(false);
+    expect(directExposureProdWarning({ TRUSTED_PROXY_HOPS: "0" })).toBe(false);
+  });
+
+  it("the boot wiring carries the warning (the instrumentation call site)", () => {
+    const src = readFileSync(
+      path.resolve(process.cwd(), "src/instrumentation.ts"),
+      "utf8",
+    );
+    expect(src).toMatch(/directExposureProdWarning/);
+    expect(src).toMatch(/TRUSTED_PROXY_HOPS/i);
   });
 });

@@ -121,6 +121,31 @@ export function inBandDeliveryProdWarning(
   return !g.otp || !g.reset;
 }
 
+// ---- S131/CF2: the direct-exposure production warning --------------------------
+//
+// The s131 crypto-core audit's M1: clientIp() returns the constant "local"
+// whenever the XFF policy yields no usable header — under the EXPLICIT
+// TRUSTED_PROXY_HOPS=0 posture (and under any posture when no proxy fronts
+// the app), every such request shares ONE bucket per auth family
+// (login:local, register:local, …), so 10 anonymous requests sitewide-lock
+// out the auth families for 15-minute windows. The per-ACCOUNT budgets
+// (CB12/BX2) contain the guessing-critical halves; the availability half
+// is this posture's inherent bound — the App Router exposes no
+// socket/remote-address accessor (verified against Next 16's NextRequest
+// typings; request.ip was removed upstream after the 15.x deprecation), so
+// the honest remediation is the boot warning (the CB14 precedent), not a
+// silent key that pretends to be per-connection.
+
+export function directExposureProdWarning(
+  env: { NODE_ENV?: string; TRUSTED_PROXY_HOPS?: string; [key: string]: string | undefined },
+): boolean {
+  if (env.NODE_ENV !== "production") return false;
+  // Only the EXPLICIT direct-exposure posture warns: the unset default is
+  // ambiguous at boot (a proxy setting XFF may front the app — the legacy
+  // first-hop posture reads it), and N>=1 declares a trusted proxy chain.
+  return env.TRUSTED_PROXY_HOPS === "0";
+}
+
 // ---- S120/BU21: the demo-seed gate ------------------------------------------
 //
 // The documented Docker first-run (`init` profile) seeds the

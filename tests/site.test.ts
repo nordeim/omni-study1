@@ -42,3 +42,32 @@ describe("siteUrl", () => {
     );
   });
 });
+
+// S131/CF10 — the siteUrl self-heal (docs/remediation-plan-session131.md).
+//
+// The s131 shell audit's I4: siteUrl() accepted any non-empty string, so a
+// malformed NEXT_PUBLIC_SITE_URL ("studyflow", no scheme) reached
+// `new URL(siteUrl())` at layout module scope and threw — every route 500s
+// at evaluation. The guard: URL.canParse self-heals to the localhost
+// default (the sitemap build-time consumption already catches most cases;
+// this makes the runtime path degrade, not crash).
+describe("siteUrl rejects malformed origins (S131/CF10)", () => {
+  it("falls back to the default when the env var is not a parseable URL (no scheme)", () => {
+    process.env.NEXT_PUBLIC_SITE_URL = "studyflow";
+    expect(siteUrl()).toBe("http://localhost:3000");
+  });
+
+  it("falls back to the default on other malformed shapes", () => {
+    process.env.NEXT_PUBLIC_SITE_URL = "https://"; // scheme with no host
+    expect(siteUrl()).toBe("http://localhost:3000");
+    process.env.NEXT_PUBLIC_SITE_URL = "://missing-scheme.example.com";
+    expect(siteUrl()).toBe("http://localhost:3000");
+  });
+
+  it("keeps every valid origin (http, https, custom port, path)", () => {
+    process.env.NEXT_PUBLIC_SITE_URL = "https://study.example.com";
+    expect(siteUrl()).toBe("https://study.example.com");
+    process.env.NEXT_PUBLIC_SITE_URL = "http://192.168.1.10:8080/";
+    expect(siteUrl()).toBe("http://192.168.1.10:8080");
+  });
+});

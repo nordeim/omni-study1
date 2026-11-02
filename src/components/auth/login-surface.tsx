@@ -208,9 +208,18 @@ export function LoginSurface() {
       const res = await apiSend<{ code?: string }>("POST", "/api/auth/resend-verification", { email }, { timeoutMs: 20_000 });
       if (res?.code) setSurfacedCode(res.code);
       setStatus("If that account needs verification, a new code is on its way.");
-    } catch {
-      // uniform-200 endpoint — never an error surface
-      setStatus("If that account needs verification, a new code is on its way.");
+    } catch (err: unknown) {
+      // S131/CF8: the endpoint is uniform-200 for every ACCOUNT state, but
+      // the rate budgets answer a REAL 429 — the old catch swallowed it and
+      // rendered the success line for a request the server rejected (the
+      // user waited for a code that never came). The route's own copy now
+      // rides the status channel; every other failure keeps the uniform
+      // no-enumeration line.
+      if (err instanceof ApiError && err.status === 429) {
+        setStatus("Too many verification requests. Try again shortly.");
+      } else {
+        setStatus("If that account needs verification, a new code is on its way.");
+      }
     } finally {
       setResending(false);
     }
@@ -255,7 +264,11 @@ export function LoginSurface() {
       setView("signin");
       setError("");
       setStatus("Password reset successfully. Sign in with your new password.");
-      setEmail(resetEmail || email);
+      // S131/CF10: the prefill line dropped — in the dominant flow (the
+      // reset LINK is a full page load of /reset-password?token=…, which
+      // remounts this surface with fresh state) both resetEmail and email
+      // are "" here, so the line never fired; it only worked on the rare
+      // /login?view=reset entry. Dead code removed, nothing replaced.
     } catch (err: unknown) {
       setError(authErrorMessage(err));
     } finally {
@@ -294,12 +307,17 @@ export function LoginSurface() {
     // needs the one-main landmark (Lighthouse landmark-one-main, session 61).
     <main className="sf-canvas flex min-h-dvh items-center justify-center p-4">
       <div className="relative w-full max-w-md overflow-hidden rounded-2xl bg-white/95 p-8 shadow-2xl backdrop-blur-xs dark:bg-slate-900/95">
+        {/* S131/CF11: the card's top hairline — the class pair replaces the
+            inline style so the strip re-themes in dark (the reference's
+            login page is LIGHT-ONLY — live-measured — so there is no parity
+            constraint; the clone's own dark-OS login pin creates the dark
+            surface, and the repo's dark contract [S10-1] says it re-themes).
+            The exact sRGB light stops are kept (the trap-5 convention); the
+            dark stops are the slate-800/700 divider family (the card's own
+            border-slate-800 dark idiom). */}
         <div
           aria-hidden
-          className="absolute inset-x-0 top-0 h-1"
-          style={{
-            backgroundImage: "linear-gradient(to right, #e2e8f0, #cbd5e1, #e2e8f0)",
-          }}
+          className="absolute inset-x-0 top-0 h-1 bg-[linear-gradient(to_right,#e2e8f0,#cbd5e1,#e2e8f0)] dark:bg-[linear-gradient(to_right,#1e293b,#334155,#1e293b)]"
         />
         {view === "signin" && (
           <>

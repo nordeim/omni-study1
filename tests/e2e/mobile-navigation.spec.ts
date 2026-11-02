@@ -502,3 +502,43 @@ test.describe("S124/BY10 · browser Back follows the URL and closes the drawer (
     ).toBeVisible();
   });
 });
+
+// S131/CF9 — the drawer focus restore across the lg breakpoint
+// (docs/remediation-plan-session131.md).
+//
+// The s131 shell audit's L4: the BS4 focus-restore contract handed focus
+// back to the opener (the hamburger), but at the lg breakpoint crossing
+// the drawer closes while the hamburger is display:none (lg:hidden) —
+// document.contains() passes, focus() on a hidden element silently
+// no-ops, and focus drops to <body>. The guard: checkVisibility(), with
+// the now-relevant desktop chrome (the sidebar's first nav link) as the
+// fallback. (Sits OUTSIDE the file's beforeEach describe — the BY10
+// precedent.)
+test.describe("S131/CF9 · the drawer focus restore across the lg breakpoint", () => {
+  test("crossing the lg breakpoint restores focus into the desktop chrome, never body", async ({ page }) => {
+    // This describe sits OUTSIDE the file's beforeEach describe — navigate
+    // explicitly (the BY10 blank-page lesson).
+    await page.goto("/Dashboard");
+    await expect(page.getByRole("banner")).toBeVisible();
+    await page.getByRole("button", { name: "Open navigation menu" }).click();
+    const drawer = page.getByRole("dialog", { name: "Navigation menu" });
+    await expect(drawer).toBeVisible();
+
+    // Cross the breakpoint: the matchMedia change closes the drawer and
+    // runs the focus-restore cleanup.
+    await page.setViewportSize({ width: 1280, height: 800 });
+    await expect(drawer).toBeHidden();
+
+    // The desktop sidebar is the now-relevant chrome — the first nav link
+    // holds focus (pre-fix: document.activeElement === <body>).
+    const firstSidebarLink = page.locator("aside").getByRole("link").first();
+    await expect(firstSidebarLink).toBeVisible();
+    const active = await page.evaluate(() => ({
+      tag: document.activeElement?.tagName ?? "none",
+      text: document.activeElement?.textContent?.trim() ?? "",
+      hidden: document.activeElement ? document.activeElement === document.body : true,
+    }));
+    expect(active.hidden, `focus landed on <body>, not the desktop chrome — got ${active.tag}`).toBe(false);
+    expect(active.tag).toBe("A");
+  });
+});

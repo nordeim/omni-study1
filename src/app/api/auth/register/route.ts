@@ -13,6 +13,7 @@ import {
   checkRateLimit,
   generateVerificationCode,
   hashPassword,
+  hashResetToken,
   verifyPassword,
   DUMMY_LOGIN_HASH,
 } from "@/lib/auth";
@@ -56,7 +57,23 @@ export async function POST(request: NextRequest) {
         : raw;
     const { fullName, email, password } = parseWith(registerSchema, body);
 
+    // S131/CF1: the per-EMAIL budget — the CB12/BX2 per-account pattern,
+    // keyed by the request PAYLOAD (a 429 answers identically for known
+    // and unknown emails — no enumeration oracle). The per-IP key above is
+    // forgeable under the legacy XFF posture (a rotated header mints a
+    // fresh key per request), and every register branch burns scryptSync —
+    // a rotated-XFF flood was a single-worker CPU DoS plus unbounded
+    // unauthenticated User/VerificationToken growth. Checked BEFORE the
+    // user lookup and every scrypt burn: an over-budget ask costs neither.
     const normalizedEmail = email.toLowerCase();
+    const emailLimit = checkRateLimit(`registerAcct:${normalizedEmail}`, 5);
+    if (!emailLimit.ok) {
+      return rateLimitedResponse(
+        emailLimit.retryAfterSec,
+        "Too many registration attempts. Try again shortly.",
+      );
+    }
+
     const existing = await db.user.findUnique({
       where: { email: normalizedEmail },
       select: { id: true, emailVerified: true },
@@ -75,8 +92,15 @@ export async function POST(request: NextRequest) {
     }
 
     const code = generateVerificationCode();
+    // S131/CF7: the digest at rest — the BR6 posture extended to the OTP (a
+    // DB read must never yield a live sign-in credential; a correct code
+    // SIGNS THE CALLER IN). The RESPONSE still carries the plaintext code
+    // (the ADR-013 in-band delivery); only the at-rest form changes.
+    // Pre-existing rows hold plaintext codes that will never match a
+    // digest — the 15-min TTL + the re-issue paths bound the impact to
+    // "resend once"; no data migration.
     const tokenData = {
-      code,
+      code: hashResetToken(code),
       expiresAt: new Date(Date.now() + CODE_TTL_MS),
     };
 

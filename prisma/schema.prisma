@@ -71,7 +71,7 @@ model User {
 model VerificationToken {
   id        String   @id @default(cuid())
   userId    String
-  code      String // 6-digit OTP
+  code      String // S131/CF7: SHA-256 digest of the 6-digit OTP (the BR6 pattern — never the live code at rest)
   expiresAt DateTime // 15-minute window
   createdAt DateTime @default(now())
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)

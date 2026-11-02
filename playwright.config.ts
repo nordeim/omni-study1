@@ -67,6 +67,18 @@ export default defineConfig({
       // suite's own boot. The setup project re-signs-in each run, so the
       // value change invalidates nothing.
       AUTH_SECRET: "5f3a9c1e7b2d4f6a8c0e3b5d7f9a1c3e5b7d9f1a3c5e7b9d1f3a5c7e9b1d3f",
+      // S131/CF4: the posture pins. Only AUTH_SECRET was pinned before — an
+      // operator who exports SEED_DEMO=0 (a documented Docker workflow)
+      // skipped the demo account auth.setup logs in as, DISABLE_IN_APP_*
+      // stripped the in-band codes the auth-flows specs read, and
+      // TRUSTED_PROXY_HOPS=0 flipped every XFF-keyed limiter spec: all red,
+      // none with a diagnosable cause. The suite's green depends on THIS
+      // posture, so it is asserted here regardless of the operator's shell
+      // (the AP2/AUTH_SECRET precedent extended to every posture var).
+      SEED_DEMO: "1",
+      DISABLE_IN_APP_OTP: "",
+      DISABLE_IN_APP_RESET: "",
+      TRUSTED_PROXY_HOPS: "",
     } as Record<string, string>,
   },
 });

@@ -117,7 +117,7 @@ describe("the chunked cert runner's truth contract (S128/CC2)", () => {
 
   it("names the CURRENT per-chunk census in its header (the re-tag tripwire)", () => {
     // The topmost Expected line — re-tagged by every census-changing cycle.
-    expect(certSource).toContain("Expected: 146 + 179 + 72 + 93 + 77 = 567");
+    expect(certSource).toContain("Expected: 147 + 179 + 72 + 94 + 78 = 570");
   });
 
   it("propagates a failing chunk's exit code (never a green cert on a red run)", () => {
@@ -282,5 +282,196 @@ describe("the transactional merge-guard census (S130/CE5)", () => {
       expect(block, `${name} declares txModelName`).toMatch(/txModelName:\s*"/);
       expect(block, `${name} carries a merge guard`).toMatch(/beforeWrite:/);
     }
+  });
+});
+
+// S131/CF1 — the per-email auth budget census (docs/remediation-plan-session131.md).
+//
+// The s131 shell/auth audit's M1: register + resend were gated ONLY by the
+// forgeable per-IP key (a rotated x-forwarded-for mints a fresh key per
+// request under the legacy posture) while EVERY register branch burns
+// scryptSync — a rotated-XFF flood was a single-worker CPU DoS plus
+// unbounded unauthenticated User/VerificationToken growth. CF1 adds the
+// per-EMAIL budgets (the CB12/BX2 per-account pattern keyed by the request
+// PAYLOAD — a 429 answers identically for known and unknown emails, no
+// enumeration oracle), checked BEFORE any DB work or scrypt burn.
+describe("the per-email auth budget census (S131/CF1)", () => {
+  const REGISTER = path.resolve(process.cwd(), "src/app/api/auth/register/route.ts");
+  const RESEND = path.resolve(
+    process.cwd(),
+    "src/app/api/auth/resend-verification/route.ts",
+  );
+
+  it("register carries the per-email budget, checked before the first scrypt burn and the user lookup", () => {
+    const src = readFileSync(REGISTER, "utf8");
+    // Pre-CF1: no registerAcct key existed — this is the RED discriminator.
+    expect(src).toMatch(/registerAcct:\$\{/);
+    const budgetAt = src.indexOf("registerAcct:");
+    const firstBurn = Math.min(
+      ...["verifyPassword(", "hashPassword(", "findUnique("]
+        .map((needle) => src.indexOf(needle))
+        .filter((i) => i !== -1),
+    );
+    expect(
+      budgetAt,
+      "the per-email check precedes every scrypt burn and the DB lookup (the no-oracle + no-burn-on-budget shape)",
+    ).toBeLessThan(firstBurn);
+  });
+
+  it("resend carries the per-email budget, checked before the user lookup", () => {
+    const src = readFileSync(RESEND, "utf8");
+    // Pre-CF1: no resendAcct key existed — this is the RED discriminator.
+    expect(src).toMatch(/resendAcct:\$\{/);
+    const budgetAt = src.indexOf("resendAcct:");
+    const lookupAt = src.indexOf("findUnique(");
+    expect(
+      budgetAt,
+      "the per-email check precedes the user lookup (a 429 must not depend on DB state — the anti-enumeration shape)",
+    ).toBeLessThan(lookupAt);
+  });
+
+  it("both Acct keys normalize the email the same way (the lowercased payload, the schema's own form)", () => {
+    const register = readFileSync(REGISTER, "utf8");
+    const resend = readFileSync(RESEND, "utf8");
+    expect(register).toMatch(/registerAcct:\$\{normalizedEmail\}/);
+    expect(resend).toMatch(/resendAcct:\$\{email\.toLowerCase\(\)\}/);
+  });
+});
+
+// S131/CF7 — the OTP digest-at-rest census (docs/remediation-plan-session131.md).
+//
+// The s131 crypto-core audit's L1/L2: VerificationToken.code stored the
+// live 6-digit code verbatim while PasswordResetToken stores a SHA-256
+// digest (BR6: "a DB read must never yield a live account-takeover
+// credential" — and a correct code both verifies AND signs the caller
+// in), and the compare was the one secret compare in the codebase that
+// was not timing-safe. CF7 stores hashResetToken(code) at both create
+// sites and compares digests via timingSafeEqual.
+describe("the OTP digest-at-rest census (S131/CF7)", () => {
+  const REGISTER = path.resolve(process.cwd(), "src/app/api/auth/register/route.ts");
+  const RESEND = path.resolve(
+    process.cwd(),
+    "src/app/api/auth/resend-verification/route.ts",
+  );
+  const VERIFY = path.resolve(process.cwd(), "src/app/api/auth/verify-email/route.ts");
+  const SCHEMA = path.resolve(process.cwd(), "prisma/schema.prisma");
+
+  it("every token-minting route persists the digest, never the raw code", () => {
+    for (const file of [REGISTER, RESEND]) {
+      const src = readFileSync(file, "utf8");
+      expect(
+        src.match(/verificationToken\.create\(/g)?.length ?? 0,
+        `${path.basename(path.dirname(file))} mints a token`,
+      ).toBeGreaterThan(0);
+      // Post-CF7 the mint shape is `code: hashResetToken(code)` (register
+      // rides a tokenData object, resend an inline create — the file-level
+      // census covers both). Pre-CF1 the shorthand `code,` rode the data.
+      expect(
+        src,
+        `${file} persists the digest (hashResetToken), never the plaintext shorthand`,
+      ).toMatch(/code:\s*hashResetToken\(code\)/);
+      expect(src, `${file} carries no bare code shorthand into storage`).not.toMatch(
+        /[{,]\s*code\s*,/,
+      );
+    }
+  });
+
+  it("verify-email compares the presented code through hashResetToken + timingSafeEqual — never the raw !==", () => {
+    const src = readFileSync(VERIFY, "utf8");
+    // Pre-CF7: `token.code !== normalized` — the short-circuit compare.
+    expect(src).not.toMatch(/token\.code\s*!==\s*normalized/);
+    expect(src).toMatch(/hashResetToken\(normalized\)/);
+    expect(src).toMatch(/timingSafeEqual/);
+  });
+
+  it("the schema documents the digest contract on the code column", () => {
+    const src = readFileSync(SCHEMA, "utf8");
+    const colAt = src.indexOf("code      String");
+    expect(colAt).toBeGreaterThan(-1);
+    // The contract rides the column's OWN line (an inline prisma comment) —
+    // the CE9(5) re-anchoring lesson: line-scoped, not window-scoped.
+    const line = src.slice(colAt, src.indexOf("\n", colAt));
+    expect(line).toMatch(/digest/i);
+  });
+});
+
+// S131/CF4+CF5 — the e2e posture + always-cold censuses
+// (docs/remediation-plan-session131.md).
+//
+// CF4 (the s131 test-infra audit's L5): the playwright webServer env
+// spread ...process.env with only AUTH_SECRET pinned — an operator who
+// exports SEED_DEMO=0 or the in-band gates or TRUSTED_PROXY_HOPS=0
+// red-hazed the suite with no diagnosis. The four posture vars are pinned
+// now (the AP2/AUTH_SECRET precedent). CF5 (L6): global-setup never reset
+// db/e2e.db — the ALWAYS-COLD doctrine (AGENTS.md S46) was cert-path-only;
+// the default runner now carries the same port-guard + unlink.
+describe("the e2e posture + always-cold censuses (S131/CF4+CF5)", () => {
+  const PW_CONFIG = path.resolve(process.cwd(), "playwright.config.ts");
+  const GLOBAL_SETUP = path.resolve(process.cwd(), "tests/e2e/global-setup.ts");
+
+  it("the webServer env pins every posture var the suite's green depends on", () => {
+    const src = readFileSync(PW_CONFIG, "utf8");
+    for (const pin of [
+      'SEED_DEMO: "1"',
+      'DISABLE_IN_APP_OTP: ""',
+      'DISABLE_IN_APP_RESET: ""',
+      'TRUSTED_PROXY_HOPS: ""',
+    ]) {
+      expect(src, `playwright.config.ts must pin ${pin}`).toContain(pin);
+    }
+  });
+
+  it("the always-cold reset rides the pre-boot seam: the cold-reset script, chained into test:e2e (the design correction — Playwright boots the webServer BEFORE globalSetup)", () => {
+    // The reset MUST NOT live in global-setup (it would race the live
+    // listener it just watched boot); it MUST precede playwright itself.
+    const coldReset = path.resolve(process.cwd(), "scripts/e2e-cold-reset.sh");
+    const script = readFileSync(coldReset, "utf8");
+    // The cert-script port-guard procedure (kill by port, health-verify,
+    // SIGKILL escalation) + the cold deletion.
+    expect(script).toMatch(/api\/health/);
+    expect(script).toMatch(/kill -9/);
+    expect(script).toMatch(/rm -f db\/e2e\.db/);
+
+    // package.json chains it BEFORE playwright test.
+    const pkg = JSON.parse(readFileSync(path.resolve(process.cwd(), "package.json"), "utf8"));
+    expect(pkg.scripts["test:e2e"]).toContain("e2e-cold-reset.sh");
+    expect(pkg.scripts["test:e2e"]).toMatch(/e2e-cold-reset\.sh && playwright test/);
+
+    // And global-setup keeps only the safe half (push + seed + the SEED_DEMO
+    // posture pin — no rm, no port kill: the first CF5 shape killed the
+    // suite's own server).
+    const setup = readFileSync(GLOBAL_SETUP, "utf8");
+    expect(setup).toMatch(/SEED_DEMO:\s*"1"/);
+    expect(setup).not.toMatch(/rmSync\(/);
+    expect(setup).not.toMatch(/SIGKILL/);
+  });
+});
+
+// S131/CF6 — the cert-script truth pair, extended: the per-chunk runner
+// must stay census-identical to the chunked cert script (the same CHUNKS
+// arrays, the same Expected header) and must exit on the PLAYWRIGHT
+// status, never a downstream grep's (a no-match grep false-REDs a green
+// run; PIPESTATUS[0] is the honest exit).
+describe("the per-chunk cert-runner truth pair (S131/CF6)", () => {
+  const MAIN = path.resolve(process.cwd(), "scripts/e2e-chunked-cert.sh");
+  const RUNNER = path.resolve(process.cwd(), "scripts/run-cert-chunk.sh");
+
+  function chunksArray(src: string): string {
+    const at = src.indexOf("declare -a CHUNKS=(");
+    expect(at).toBeGreaterThan(-1);
+    const end = src.indexOf(")", at);
+    return src.slice(at, end);
+  }
+
+  it("the runner's CHUNKS array is byte-identical to the censused cert script's", () => {
+    const main = chunksArray(readFileSync(MAIN, "utf8"));
+    const runner = chunksArray(readFileSync(RUNNER, "utf8"));
+    expect(runner).toBe(main);
+  });
+
+  it("the runner exits on the playwright status (PIPESTATUS), never the trailing grep's", () => {
+    const src = readFileSync(RUNNER, "utf8");
+    expect(src).toMatch(/PIPESTATUS\[0\]/);
+    expect(src).toMatch(/exit "\$rc"/);
   });
 });

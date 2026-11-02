@@ -4,10 +4,11 @@
 # SIGKILL escalation → rm db/e2e.db → run the chunk), one chunk per
 # invocation so each foreground run fits the tool timeout.
 # Usage: bash /home/z/my-project/omni-study1/scripts/run-cert-chunk.sh <1-5>
-# Expected (S130/CE re-tag): 146 + 179 + 72 + 93 + 77 = 567 — the same
+# Expected (S131/CF re-tag): 147 + 179 + 72 + 94 + 78 = 570 — the same
 # census as scripts/e2e-chunked-cert.sh (machine-enforced by
-# tests/script-conventions.test.ts). This runner's pipeline is its last
-# statement, so pipefail already propagates the chunk's real status.
+# tests/script-conventions.test.ts, including the identical-CHUNKS pin).
+# S131/CF6: the exit is PIPESTATUS[0] (the playwright status), never the
+# trailing grep's.
 set -uo pipefail
 cd "$(dirname "$0")/.."
 
@@ -38,4 +39,11 @@ if curl -s -o /dev/null --max-time 2 "http://localhost:${port}/api/health"; then
 fi
 rm -f db/e2e.db
 echo "=== CHUNK $n: $(echo $chunk | wc -w) files ==="
+# S131/CF6: exit on the PLAYWRIGHT status, never the trailing grep's —
+# pipefail made this script's status the last pipeline's, so a grep that
+# matched NOTHING (an all-skipped run, a reporter-format change) exited 1
+# despite a green run (the safe direction, but a false RED). PIPESTATUS[0]
+# is the honest exit; a red run still propagates.
 bunx playwright test $chunk --reporter=list 2>&1 | grep -E "passed|failed|Error" | tail -5
+rc=${PIPESTATUS[0]}
+exit "$rc"

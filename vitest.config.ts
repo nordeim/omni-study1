@@ -1,7 +1,22 @@
 import { defineConfig } from "vitest/config";
 import path from "node:path";
 
-// Unit-test layer for the pure domain seams — 45 files / 1217 tests
+// Unit-test layer for the pure domain seams — 45 files / 1236 tests
+// (re-anchored S131/CF — the audit-driven hardening cycle: census 1217 →
+// 1236, +19 net [script-conventions +10: the S131/CF1 per-email auth
+// budget census (register/resend Acct keys before every DB read/scrypt
+// burn, the payload-normalized no-oracle shape) + the S131/CF7 OTP
+// digest-at-rest census (the digest mint at both create sites, the
+// timingSafeEqual compare, the schema comment) + the S131/CF4+CF5 e2e
+// posture + always-cold censuses (the four pinned webServer env vars; the
+// cold-reset script chained into test:e2e — the DESIGN CORRECTION leg:
+// global-setup must carry NO rm/port-kill, Playwright boots the webServer
+// before globalSetup) + the S131/CF6 per-chunk cert-runner truth pair
+// (byte-identical CHUNKS + the PIPESTATUS exit); env-check +4: the S131/CF2
+// directExposureProdWarning truth table + the instrumentation wiring; site
+// +3: the S131/CF10 siteUrl canParse self-heal matrix; auth +2: the
+// S131/CF7 OTP digest family behavior pins (deterministic 64-hex, the
+// normalize-then-digest pipeline)]. The S130/CE additions beneath:)
 // (re-anchored S130/CE — the audit-driven hardening cycle: census 1202 →
 // 1217, +15 net [api-timeout net +2: +4 the S130/CE1 default-deadline
 // family (the structural live-signal legs + the constants + the

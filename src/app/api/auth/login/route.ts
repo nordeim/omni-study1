@@ -20,8 +20,11 @@ import {
   toErrorResponse,
 } from "@/lib/server/http";
 
-export const INVALID_CREDENTIALS = "Invalid email or password";
-export const UNVERIFIED_COPY =
+// S131/CF10: un-exported — route files cannot export shared symbols (the
+// http.ts layering rule; nothing in src/ or tests/ imports these), and the
+// copy is pinned at the e2e layer (tests/e2e/auth-flows.spec.ts).
+const INVALID_CREDENTIALS = "Invalid email or password";
+const UNVERIFIED_COPY =
   "Please verify your email before logging in. Check your email for the verification code.";
 
 export async function POST(request: NextRequest) {

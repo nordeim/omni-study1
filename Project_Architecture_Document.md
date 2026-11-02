@@ -1,4 +1,4 @@
-# StudyFlow (Omni-Study) — Master Project Architecture Document (PAD) v1.3.38
+# StudyFlow (Omni-Study) — Master Project Architecture Document (PAD) v1.3.39
 
 **Classification:** Internal Engineering Reference
 **Status:** DEFINITIVE, PRODUCTION-LOCKED BLUEPRINT
@@ -8,6 +8,11 @@
 **Rule:** Every architectural decision in this document traces to a specific rationale. Nothing is here "because it's popular."
 
 ---
+
+#### Revision Block — v1.3.39 (Session-131 / Batch CF, Cycle 81)
+
+- `[SR]` Current test census anchor (the v1.2.0 convention, re-anchored): **1236/1236 Vitest unit** (45 files — the S131 additions: script-conventions +10 [the CF1 per-email auth budget census — register/resend Acct keys before every DB read/scrypt burn, the payload-normalized no-oracle shape; the CF7 OTP digest-at-rest census — the digest mint at both create sites, the timingSafeEqual compare, the schema comment; the CF4+CF5 e2e posture + always-cold censuses — the four pinned webServer env vars, the cold-reset script chained into test:e2e with the DESIGN CORRECTION leg that global-setup must carry NO rm/port-kill; the CF6 per-chunk cert-runner truth pair — byte-identical CHUNKS + the PIPESTATUS exit], env-check +4 [the CF2 directExposureProdWarning truth table + the instrumentation wiring], site +3 [the CF10 siteUrl canParse self-heal matrix], auth +2 [the CF7 OTP digest family behavior pins]) + **570/570 cold-chunk e2e** (565 chromium specs in 30 files + the auth setup re-run per chunk; the 5-chunk map **147+179+72+94+78**, every chunk first-pass on the final tree; the per-file counts in §8.1 are script-derivable). Unit + e2e = **1806 green**.
+- `[SR]` The audit-driven hardening cycle (`docs/remediation-plan-session131.md`): **CF1 (M)** the per-email auth budgets — register + resend were gated ONLY by the forgeable per-IP key (a rotated x-forwarded-for mints a fresh key per request under the legacy posture) while EVERY register branch burns scryptSync: a rotated-XFF flood was a single-worker CPU DoS plus unbounded unauthenticated User/VerificationToken growth, and resend minted unlimited live code rows for a known unverified email; `registerAcct:`/`resendAcct:` payload-keyed 5/15-min budgets now precede every DB read and scrypt burn (a 429 answers identically for known and unknown emails — the CB12/BX2 pattern with the no-enumeration shape provable at the source level); **CF2 (M)** the shared-bucket posture made loud — clientIp()'s "local" fallback collapses every per-IP auth budget into ONE bucket (10 anonymous requests sitewide-lockout the auth families for 15-min windows under the hops=0/no-XFF postures); socket access is NOT implementable in the Next 16 App Router (verified against the NextRequest typings — request.ip was removed upstream after the 15.x deprecation), so the honest remediation is the CB14-precedent production boot warning (directExposureProdWarning + the DEPLOYMENT.md/AGENTS.md notes + the unit pins); **CF3** the reseed_e2e footgun (the script deleted the DEV database under Bun's `.env` auto-load — hard-targeted to db/e2e.db before the client construction, the resolved absolute path printed); **CF4** the e2e posture pins (SEED_DEMO/DISABLE_IN_APP_OTP/DISABLE_IN_APP_RESET/TRUSTED_PROXY_HOPS pinned in the webServer env — an operator's exported deployment env red-hazed the suite with no diagnosable cause; the AP2/AUTH_SECRET precedent extended); **CF5** the always-cold default runner (scripts/e2e-cold-reset.sh — port-guard + rm — chained into test:e2e BEFORE playwright boots: the S46 ALWAYS-COLD doctrine was cert-path-only; the first shape in global-setup KILLED THE SUITE'S OWN SERVER, the honest mid-run correction — Playwright boots the webServer before globalSetup, so the pre-boot npm-script seam is the only honest position); **CF6** the cert-runner truth pair extended (run-cert-chunk.sh exits on PIPESTATUS[0] — a no-match grep false-REDed green runs; the two cert scripts' CHUNKS arrays byte-identical by machine pin); **CF7** the OTP digest at rest + the timing-safe compare (VerificationToken.code stored the LIVE 6-digit code verbatim while PasswordResetToken hashes — the BR6 "a DB read must never yield a live account-takeover credential" posture extended to the OTP family [a correct code SIGNS THE CALLER IN]: hashResetToken at both mints, the new timingSafeEqualBuffer seam for the compare, the BV11a conditional consumption carries the digest; pre-existing rows are bounded by the 15-min TTL + the re-issue paths — no data migration); **CF8** the resend 429 honesty (the catch rendered the SUCCESS line on a real 429 — the "uniform-200 endpoint" comment was factually wrong; the route's own 429 copy now rides the status channel); **CF9** the drawer focus restore at the lg breakpoint (document.contains() passes while the hamburger is display:none — focus() silently no-ops and drops to <body>; checkVisibility() guards, the desktop sidebar's first nav link is the fallback); **CF10** the dead-code sweep + the siteUrl self-heal (the dead post-reset prefill line — the state never survives the full-page reset-link load; the login-route consts un-exported per the http.ts layering rule; URL.canParse guards siteUrl() — a malformed NEXT_PUBLIC_SITE_URL threw at layout module scope, 500-ing every route); **CF11** the login-card hairline dark pair (the arbitrary-value class pair — the exact sRGB light stops kept, the slate-800/700 dark stops added; settled by a LIVE reference probe: its login page is LIGHT-ONLY under dark-OS, so the clone's dark hairline is a clone-side dark-correctness item [the clone's own dark-OS login pin creates the surface], never a parity constraint). Deferrals documented with rationale: the scrypt KDF parameter/versioning migration (the format is pinned at auth.test.ts:233, the DUMMY equalizer must be regenerated at the new cost, and the N-raise is an availability trade-off needing measurement — the next-cycle candidate) and the Docker non-root runtime (a build-time chown never reaches the runtime-mounted volume — an untested USER switch breaks existing deployments; needs the deploy-axis verification pass). Two honest mid-run corrections (the CF5 globalSetup/webServer ordering — the design correction above; the CF7 schema pin's look-back window missed the inline column comment — re-scoped to the line itself). The rotated audits: the app shell + routing + design tokens + auth screens family (**0C/0H/1M/5L/4I**) + the crypto/auth core + infrastructure configs + test-infra family (**0C/0H/1M/8L/6I**); every M finding re-verified by direct read.
 
 #### Revision Block — v1.3.38 (Session-130 / Batch CE, Cycle 80)
 
@@ -1094,7 +1099,7 @@ Single-role per-user ownership model; no admin surface. Session: `{ uid, iat, ex
 | Unit — `ai-helpers.test.ts` | 1 | 15 | `tests/ai-helpers.test.ts` |
 | Unit — `api-offline.test.ts` | 1 | 5 | `tests/api-offline.test.ts` |
 | Unit — `api-timeout.test.ts` | 1 | 9 | `tests/api-timeout.test.ts` | (S130/CE1 +2 net: +4 the default-deadline family −2 the tombstoned patient-default legs)
-| Unit — `auth.test.ts` | 1 | 32 | `tests/auth.test.ts` |
+| Unit — `auth.test.ts` | 1 | 34 | `tests/auth.test.ts` (S131/CF7 +2: the OTP digest family behavior pins) |
 | Unit — `calculator.test.ts` | 1 | 26 | `tests/calculator.test.ts` |
 | Unit — `clear-cookie.test.ts` | 1 | 3 | `tests/clear-cookie.test.ts` |
 | Unit — `client-ip.test.ts` | 1 | 14 | `tests/client-ip.test.ts` |
@@ -1106,7 +1111,7 @@ Single-role per-user ownership model; no admin surface. Session: `{ uid, iat, ex
 | Unit — `delivery-gate.test.ts` | 1 | 6 | `tests/delivery-gate.test.ts` |
 | Unit — `dep-audit.test.ts` | 1 | 15 | `tests/dep-audit.test.ts` |
 | Unit — `dev-preflight.test.ts` | 1 | 11 | `tests/dev-preflight.test.ts` |
-| Unit — `env-check.test.ts` | 1 | 21 | `tests/env-check.test.ts` |
+| Unit — `env-check.test.ts` | 1 | 25 | `tests/env-check.test.ts` (S131/CF2 +4: the directExposureProdWarning truth table + the wiring census) |
 | Unit — `event-merge.test.ts` | 1 | 12 | `tests/event-merge.test.ts` |
 | Unit — `files.test.ts` | 1 | 5 | `tests/files.test.ts` |
 | Unit — `folder-tree.test.ts` | 1 | 16 | `tests/folder-tree.test.ts` |
@@ -1121,11 +1126,11 @@ Single-role per-user ownership model; no admin surface. Session: `{ uid, iat, ex
 | Unit — `router.test.ts` | 1 | 11 | `tests/router.test.ts` |
 | Unit — `rum-diagnostics.test.ts` | 1 | 34 | `tests/rum-diagnostics.test.ts` |
 | Unit — `schema-indexes.test.ts` | 1 | 5 | `tests/schema-indexes.test.ts` | (S128/CC10; S130/CE9 +1: the FileFolder parentId pin)
-| Unit — `script-conventions.test.ts` | 1 | 11 | `tests/script-conventions.test.ts` | (S129/CD8 +2; S130/CE5+CE6 +3: the write-route budget + merge-guard censuses)
+| Unit — `script-conventions.test.ts` | 1 | 21 | `tests/script-conventions.test.ts` | (S129/CD8 +2; S130/CE5+CE6 +3: the write-route budget + merge-guard censuses) (S131/CF1/CF6/CF7/CF4+5 +10: the per-email budget census, the OTP digest census, the cert-runner truth pair, the e2e posture + always-cold censuses) |
 | Unit — `secure-cookie.test.ts` | 1 | 9 | `tests/secure-cookie.test.ts` |
 | Unit — `seed-gate.test.ts` | 1 | 5 | `tests/seed-gate.test.ts` |
 | Unit — `sent-keys-patch.test.ts` | 1 | 12 | `tests/sent-keys-patch.test.ts` |
-| Unit — `site.test.ts` | 1 | 5 | `tests/site.test.ts` |
+| Unit — `site.test.ts` | 1 | 8 | `tests/site.test.ts` (S131/CF10 +3: the siteUrl canParse self-heal matrix) |
 | Unit — `suite-verdict.test.ts` | 1 | 556 | `tests/suite-verdict.test.ts` |
 | Unit — `text.test.ts` | 1 | 14 | `tests/text.test.ts` |
 | Unit — `toast.test.ts` | 1 | 3 | `tests/toast.test.ts` | (S128/CC8)
@@ -1137,12 +1142,12 @@ Single-role per-user ownership model; no admin surface. Session: `{ uid, iat, ex
 | Unit — `view-collections.test.ts` | 1 | 6 | `tests/view-collections.test.ts` |
 | E2E — `a11y-sweep.spec.ts` | 1 | 20 | `tests/e2e/a11y-sweep.spec.ts` |
 | E2E — `accessibility.spec.ts` | 1 | 34 | `tests/e2e/accessibility.spec.ts` |
-| E2E — `auth-flows.spec.ts` | 1 | 17 | `tests/e2e/auth-flows.spec.ts` | (S129/CD6a +1: the bare-/reset-password default)
+| E2E — `auth-flows.spec.ts` | 1 | 18 | `tests/e2e/auth-flows.spec.ts` | (S129/CD6a +1: the bare-/reset-password default) (S131/CF8 +1: the resend 429 honesty leg — the per-email budget burn on a unique XFF) |
 | E2E — `auth.spec.ts` | 1 | 6 | `tests/e2e/auth.spec.ts` |
 | E2E — `calculator.spec.ts` | 1 | 13 | `tests/e2e/calculator.spec.ts` |
-| E2E — `dark-mode.spec.ts` | 1 | 27 | `tests/e2e/dark-mode.spec.ts` |
+| E2E — `dark-mode.spec.ts` | 1 | 28 | `tests/e2e/dark-mode.spec.ts` (S131/CF11 +1: the login-card hairline dark-pair leg) |
 | E2E — `greeting-clock.spec.ts` | 1 | 4 | `tests/e2e/greeting-clock.spec.ts` |
-| E2E — `mobile-navigation.spec.ts` | 1 | 18 | `tests/e2e/mobile-navigation.spec.ts` |
+| E2E — `mobile-navigation.spec.ts` | 1 | 19 | `tests/e2e/mobile-navigation.spec.ts` (S131/CF9 +1: the lg-breakpoint focus-restore leg) |
 | E2E — `navigation.spec.ts` | 1 | 61 | `tests/e2e/navigation.spec.ts` | (S129/CD2 +1; S130/CE3 +1: the view loading-gate leg)
 | E2E — `parity-session5.spec.ts` | 1 | 46 | `tests/e2e/parity-session5.spec.ts` |
 | E2E — `parity-session6.spec.ts` | 1 | 21 | `tests/e2e/parity-session6.spec.ts` |
@@ -1166,7 +1171,7 @@ Single-role per-user ownership model; no admin surface. Session: `{ uid, iat, ex
 | E2E — `tasks.spec.ts` | 1 | 9 | `tests/e2e/tasks.spec.ts` |
 | E2E — `theme-system.spec.ts` | 1 | 16 | `tests/e2e/theme-system.spec.ts` | (S129/CD1 +1: the overlay-animation parity leg)
 | E2E — the shared-sign-in setup project (one login; the storageState the whole suite rides; each cert chunk re-runs it) | 1 | 1 | `tests/e2e/auth.setup.ts` |
-| **Total** | **76** | **1785** | `tests/` — **1217 Vitest unit** (45 files, `vitest run` 1217/1217) + **567 e2e** (562 chromium specs in 30 files per `playwright --list` + the 1 setup × the 5 cold-cert chunks = the 567-test chunked census [146+179+72+93+77, `db/e2e.db` cold every chunk]); unit + e2e = **1784 green** (the badge sum: 1217 + 567). Re-measured S130/CE (the S129 row's counts carried forward + the CE pins; the table stays PER-FILE and script-derivable: `vitest run` per-file counts + `playwright test --list`). |
+| **Total** | **76** | **1807** | `tests/` — **1236 Vitest unit** (45 files, `vitest run` 1236/1236) + **570 e2e** (565 chromium specs in 30 files per `playwright test --list` + the 1 setup × the 5 cold-cert chunks = the 570-test chunked census [147+179+72+94+78, `db/e2e.db` cold every chunk]); unit + e2e = **1806 green** (the badge sum: 1236 + 570). Re-measured S131/CF (the S130 row's counts carried forward + the CF pins; the table stays PER-FILE and script-derivable: `vitest run` per-file counts + `playwright test --list`). |
 
 ### 8.2 Test Patterns
 

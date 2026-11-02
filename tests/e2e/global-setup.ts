@@ -11,12 +11,28 @@ import path from "node:path";
  * `file:../db/e2e.db` targets <repo>/db/e2e.db (empirically verified; see
  * prisma/schema.prisma's DATABASE PATH CONTRACT note). The seed resolves
  * the same env var at runtime through src/lib/db-path.ts.
+ *
+ * S131/CF5 (the design correction): the COLD reset (port-guard + rm of the
+ * scratch db) does NOT live here — Playwright boots the webServer BEFORE
+ * globalSetup (empirically verified the hard way: the first CF5 shape
+ * killed the suite's own server mid-run), so deleting the db from here
+ * would race a live listener and strand its connection pool on a deleted
+ * inode. The reset rides scripts/e2e-cold-reset.sh, chained into the
+ * `test:e2e` npm script BEFORE playwright boots anything — the only
+ * pre-boot seam in the default runner (the cert scripts own their whole
+ * lifecycle already). This file keeps the schema push + seed (writes to
+ * the same inode the server pool holds — proven safe by every prior run).
  */
 export default function globalSetup(): void {
   const repo = path.resolve(__dirname, "..", "..");
+
   const env = {
     ...process.env,
     DATABASE_URL: "file:../db/e2e.db",
+    // S131/CF4: the demo account is auth.setup's login — an operator's
+    // exported SEED_DEMO=0 must not skip it (the config pins the server
+    // posture; the seed leg pins its own).
+    SEED_DEMO: "1",
   } as NodeJS.ProcessEnv;
 
   const run = (cmd: string) => execSync(cmd, { cwd: repo, env, stdio: "pipe" }).toString();

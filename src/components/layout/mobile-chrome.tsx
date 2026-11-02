@@ -102,7 +102,25 @@ export function MobileChrome() {
       desktop.removeEventListener("change", onBreakpoint);
       // BS4: hand focus back to the opener (the hamburger) — the modal's
       // exit contract. The opener may be gone (a view unmount); guard it.
-      if (opener && document.contains(opener)) opener.focus();
+      // S131/CF9: `contains` is not enough at the lg breakpoint crossing —
+      // the drawer closes while the hamburger is display:none (lg:hidden),
+      // contains() passes, and focus() on a hidden element silently no-ops
+      // (focus drops to <body>). checkVisibility() guards the hidden case;
+      // the fallback hands focus to the now-relevant desktop chrome (the
+      // sidebar's first nav link, then #main-content when the sidebar is
+      // collapsed).
+      if (opener && document.contains(opener) && opener.checkVisibility()) {
+        opener.focus();
+      } else {
+        const sidebarLink = document.querySelector<HTMLElement>(
+          "aside a[href], nav a[href]",
+        );
+        if (sidebarLink?.checkVisibility()) {
+          sidebarLink.focus();
+        } else {
+          document.getElementById("main-content")?.focus();
+        }
+      }
     };
   }, [mobileMenuOpen, close]);
 

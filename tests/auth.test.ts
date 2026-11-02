@@ -361,3 +361,30 @@ describe("rate-limiter hard cap under an all-live flood (S121/BV9)", () => {
     }
   });
 });
+
+// S131/CF7 — the OTP digest family (docs/remediation-plan-session131.md).
+//
+// The BR6 posture extended to the OTP: a DB read must never yield a live
+// sign-in credential, and a correct code SIGNS THE CALLER IN
+// (verify-email sets the session cookie). hashResetToken (the existing
+// SHA-256 seam) now digests codes at rest; these pins hold the digest
+// family's behavior on the OTP shape.
+describe("the OTP digest family (S131/CF7)", () => {
+  it("digests a 6-digit code deterministically to the 64-hex form (the BR6 shape)", () => {
+    const code = generateVerificationCode();
+    expect(code).toMatch(/^\d{6}$/);
+    const digest = hashResetToken(code);
+    expect(digest).toMatch(/^[0-9a-f]{64}$/);
+    expect(hashResetToken(code)).toBe(digest); // deterministic (DB-matchable)
+    const normalized = normalizeVerificationCode(` ${code} `);
+    expect(normalized).toBe(code); // the whitespace-tolerant intake
+    expect(hashResetToken(normalized as string)).toBe(digest); // the normalize-then-digest pipeline verifies
+  });
+
+  it("two different codes never collide in digest space (the 6-digit space stays distinguishable)", () => {
+    const a = generateVerificationCode();
+    let b = generateVerificationCode();
+    if (a === b) b = a === "000000" ? "000001" : "000000";
+    expect(hashResetToken(a)).not.toBe(hashResetToken(b));
+  });
+});

@@ -657,3 +657,37 @@ test.describe("S94 · the connectivity banner + the residual dark guards (AU3)",
     }
   });
 });
+
+// S131/CF11 — the login-card hairline dark pair
+// (docs/remediation-plan-session131.md).
+//
+// The s131 shell audit's L3, settled by the live reference probe: the
+// reference's login page is LIGHT-ONLY under dark-OS emulation (its
+// hairline never renders dark), so the clone's dark hairline is a
+// clone-side dark-correctness question — the clone's own dark-OS login
+// pin (session-11) creates the surface, and the repo's own dark contract
+// (S10-1: every token that must re-theme carries a dark pair) says the
+// strip re-themes. The fix: the arbitrary-value class pair keeps the
+// exact sRGB light stops and adds the slate-800/700 dark family.
+test.describe("S131/CF11 · the login-card hairline dark pair", () => {
+  test("the login card's top hairline re-themes in dark (the dark-OS login surface)", async ({ browser }) => {
+    const context = await browser.newContext({
+      colorScheme: "dark",
+      storageState: { cookies: [], origins: [] },
+    });
+    const page = await context.newPage();
+    try {
+      await page.goto("/login");
+      await page.waitForFunction(() => document.documentElement.classList.contains("dark"));
+      const strip = page.locator("div[aria-hidden].h-1").first();
+      await expect(strip).toBeVisible();
+      const bg = await strip.evaluate((el) => getComputedStyle(el).backgroundImage);
+      // The dark stops (slate-800 #1e293b → slate-700 #334155) — pre-fix
+      // the light slate-200/300 gradient rode the dark card.
+      expect(bg).toContain("rgb(30, 41, 59)");
+      expect(bg).not.toContain("rgb(226, 232, 240)");
+    } finally {
+      await context.close();
+    }
+  });
+});
