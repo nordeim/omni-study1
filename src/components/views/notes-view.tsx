@@ -236,7 +236,10 @@ export function NotesView() {
           }
         });
     },
-    [toast],
+    // S129/CD3: `updateNote` joins the deps (the stable mutations member —
+    // `const updateNote = mutations.updateNote` above; naming it is the
+    // exhaustive-deps truth, no identity churn).
+    [updateNote, toast],
   );
 
   const allTags = React.useMemo(() => {
@@ -591,7 +594,7 @@ export function NotesView() {
               </PopoverTrigger>
               <PopoverContent
                 align="start"
-                className="flex w-auto min-w-[8rem] flex-col gap-0 overflow-hidden rounded-md border-border p-1 shadow-md data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95"
+                className="flex w-auto min-w-[8rem] flex-col gap-0 overflow-hidden rounded-md border-border p-1 shadow-md data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95"
               >
                 {notebooks.map((nb) => (
                   <div

@@ -121,3 +121,42 @@ describe("the loading flag under overlapping loads (S128/CC11)", () => {
     expect(useDataStore.getState().loading).toBe(false);
   });
 });
+
+// S129/CD2 — the collection GET deadline (docs/remediation-plan-session129.md).
+//
+// The audit's M1: CC7 gave the boot gate's /api/auth/me a 20 s deadline, but
+// the gate ALSO awaits the pre-warm, whose fetchAndSet called apiGet with NO
+// timeout — a stalled connection (accepted TCP, no response — no offline
+// event fires) never settles, the prewarm .catch(() => {}) never fires (a
+// non-rejection), and the Splash pulses forever with the retry affordance
+// unreachable. The fix threads COLLECTION_GET_TIMEOUT_MS through EVERY
+// collection GET (the pre-warm, loadAll, the view refreshes, the
+// post-mutation refresh) — pinned here at the seam boundary: fetchAndSet
+// must hand apiGet the deadline option (the mechanism itself —
+// AbortSignal.timeout — is pinned by tests/api-timeout.test.ts, the CC7
+// family).
+describe("the collection GET deadline (S129/CD2)", () => {
+  beforeEach(() => {
+    apiGetMock.mockReset();
+    useDataStore.setState({ loading: false });
+  });
+
+  it("fetchAndSet hands apiGet the 20 s deadline (pre-fix: the bare path — a stalled GET held the Splash forever)", async () => {
+    apiGetMock.mockReturnValue(Promise.resolve([{ id: "t1" }]));
+    await useDataStore.getState().loadCollections(["tasks"]);
+    expect(apiGetMock).toHaveBeenCalledWith("/api/tasks", {
+      timeoutMs: 20_000,
+    });
+  });
+
+  it("the deadline rides loadAll's fetches too (the background refresh is bounded the same way)", async () => {
+    apiGetMock.mockReturnValue(Promise.resolve([]));
+    await useDataStore.getState().loadAll();
+    // Every collection key was fetched, every one with the deadline option.
+    const calls = apiGetMock.mock.calls as unknown as [string, unknown][];
+    expect(calls.length).toBeGreaterThan(10);
+    for (const call of calls) {
+      expect(call[1]).toEqual({ timeoutMs: 20_000 });
+    }
+  });
+});

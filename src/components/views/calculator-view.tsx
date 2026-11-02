@@ -118,13 +118,17 @@ export function CalculatorView() {
   React.useEffect(() => {
     if (!historyOpen) return;
     historyPanelRef.current?.focus();
+    // S129/CD3: copy the ref BEFORE the cleanup captures it — the cleanup
+    // runs after the panel unmounts, by which time historyToggleRef.current
+    // may have changed (the exhaustive-deps ref-in-cleanup class).
+    const toggle = historyToggleRef.current;
     const onKey = (event: KeyboardEvent) => {
       if (event.key === "Escape") setHistoryOpen(false);
     };
     window.addEventListener("keydown", onKey);
     return () => {
       window.removeEventListener("keydown", onKey);
-      historyToggleRef.current?.focus();
+      toggle?.focus();
     };
   }, [historyOpen]);
   const [lastGood, setLastGood] = React.useState("");

@@ -199,13 +199,12 @@ export default function Home() {
     // S124/BY11: NO skip link on the splash/error surfaces — <main
     // id="main-content"> renders only in the ready branch, so the anchor
     // focused nothing here (the first Tab stop became a no-op).
+    // S129/CD6f: the needless single-child fragment left post-BY11 removed.
     return (
-      <>
-        <Splash
-          error={status === "error" ? gateError : undefined}
-          onRetry={status === "error" ? () => setAttempt((n) => n + 1) : undefined}
-        />
-      </>
+      <Splash
+        error={status === "error" ? gateError : undefined}
+        onRetry={status === "error" ? () => setAttempt((n) => n + 1) : undefined}
+      />
     );
   }
 

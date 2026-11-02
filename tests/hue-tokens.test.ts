@@ -297,7 +297,7 @@ describe("the canonical consumer sites ride the utilities (S92/AS1 leg 3)", () =
 const RESIDUALS: ReadonlyArray<{ file: string; line: number; why: string }> = [
   { file: "src/components/auth/login-surface.tsx", line: 28, why: "the bg-red-50/70 translucent alert (the reference's measured login chrome)" },
   { file: "src/components/views/dashboard-view.tsx", line: 197, why: "the overdue icon chip (bg-only pair — the icon carries its own text color)" },
-  { file: "src/components/rum/rum-panel.tsx", line: 134, why: "the borderless red-600 alert (the /rum owner panel's measured style)" },
+  { file: "src/components/rum/rum-panel.tsx", line: 138, why: "the borderless red-600 alert (the /rum owner panel's measured style; line re-anchored S129/CD3 — the exhaustive-deps comment above shifted it)" },
 ];
 
 function listSrcFiles(dir: string): string[] {

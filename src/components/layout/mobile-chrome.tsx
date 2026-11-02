@@ -154,7 +154,11 @@ export function MobileChrome() {
             type="button"
             aria-label="Close navigation menu"
             onClick={close}
-            className="absolute inset-0 bg-black/20 backdrop-blur-xs"
+            // S129/CD6e: the focus-visible ring — this backdrop button is
+            // the dialog's FIRST focusable (the S118/BS4 pinned cycle), and
+            // one Tab stop was focus-invisible (WCAG 2.4.7). The pinned
+            // cycle asserts order, not styling — untouched.
+            className="absolute inset-0 bg-black/20 backdrop-blur-xs outline-none focus-visible:ring-2 focus-visible:ring-sf-primary/40 focus-visible:ring-inset"
           />
           <div className="absolute inset-y-0 left-0 flex w-72 max-w-[85vw] flex-col bg-white shadow-2xl dark:bg-slate-950">
             {/* S3-L (measured s68): the reference brand block is p-6 with a

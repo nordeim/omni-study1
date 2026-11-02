@@ -195,9 +195,12 @@ test.describe("S15 auth flows", () => {
     await page.getByLabel("Email", { exact: true }).fill(email);
     await page.getByRole("button", { name: /send reset link/i }).click();
 
-    // Check your email (measured): green alert + full-width Back.
+    // Check your email (measured): green banner + full-width Back.
+    // S129/CD6b: the banner is role="status" (the surface's success channel
+    // — its InlineStatus; role="alert" is the ERROR channel). The pin's
+    // text purpose is unchanged; the role follows the corrected semantics.
     await expect(page.getByRole("heading", { name: "Check your email" })).toBeVisible();
-    const alert = page.locator("div.shadow-2xl").getByRole("alert");
+    const alert = page.locator("div.shadow-2xl").getByRole("status");
     await expect(alert).toContainText(
       "Please check your email for the password reset link. It may take a few minutes to arrive.",
     );
@@ -418,14 +421,17 @@ test.describe("S15 auth flows", () => {
     expect(Number(retryAfter)).toBeGreaterThan(0);
   });
 
-  test("an oversized JSON body is rejected before the read (S118/BS2)", async ({ request }) => {
+  test("an oversized JSON body is rejected before the read (S118/BS2; status corrected 400→413 by S129/CD4)", async ({ request }) => {
     // The shared readJson cap (10 MiB): an 11 MiB login POST answers the
-    // actionable 400 from the DECLARED Content-Length check — BEFORE the
-    // body is read (bounded memory), and before any validation. The error
-    // copy distinguishes the cap from the schema's own rejection.
+    // 413 from the DECLARED Content-Length check — BEFORE the body is read
+    // (bounded memory), and before any validation. The error copy
+    // distinguishes the cap from the schema's own rejection. (S129/CD4
+    // corrected the status: the same fault answered 400 here but 413 on the
+    // import route — 413 is the correct signal, and no retry fixes
+    // too-large; the pin's bounded-memory PURPOSE is unchanged.)
     const big = { email: `x@${"y".repeat(11 * 1024 * 1024)}.com`, password: "Whatever123!" };
     const res = await request.post("/api/auth/login", { data: big });
-    expect(res.status()).toBe(400);
+    expect(res.status()).toBe(413);
     const body = (await res.json()) as { error: string };
     expect(body.error).toContain("too large");
   });
@@ -574,5 +580,32 @@ test.describe("S127/CB12: the per-account login attempt cap", () => {
       });
       expect(ok.status()).toBe(200);
     }
+  });
+});
+
+// ---------------------------------------------------------------------------
+// S129/CD6a — the /reset-password route defaults to the reset view (the
+// s129 shell audit's A-L2): the initial view keyed ONLY on query params, so
+// a user whose email client stripped the token off
+// /reset-password?token=… landed on the SIGN-IN form at the /reset-password
+// URL — the CA11 missing-token explanation was reachable only via
+// /login?view=reset, never on the route it was written for. The fix: the
+// route-aware default — usePathname() sees /reset-password and the initial
+// view is "reset" regardless of query (the missing-token guard + disabled
+// submit render there); /login keeps the param-keyed behavior.
+// ---------------------------------------------------------------------------
+test.describe("S129/CD6a · bare /reset-password renders the reset screen", () => {
+  test("a stripped query on the reset route shows the missing-token explanation, not the sign-in form (RED pre-fix: the sign-in form)", async ({ page }) => {
+    await page.goto("/reset-password");
+    await page.waitForLoadState("networkidle");
+    await expect(
+      page.getByText(/missing its token/i),
+    ).toBeVisible();
+    // And NOT the sign-in form (the pre-fix surface at this URL). The
+    // sign-in screen's identity is its Welcome heading; the button check
+    // needs exact:true — getByRole name matching is substring-based, and
+    // "Sign in" also matches the reset screen's "Back to sign in".
+    await expect(page.getByRole("heading", { name: "Welcome to StudyFlow" })).toHaveCount(0);
+    await expect(page.getByRole("button", { name: "Sign in", exact: true })).toHaveCount(0);
   });
 });

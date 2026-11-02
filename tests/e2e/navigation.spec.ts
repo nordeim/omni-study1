@@ -860,3 +860,65 @@ test.describe("S126/CA7 · nav links honor modified clicks", () => {
     expect(new URL(page.url()).pathname).toBe("/Tasks");
   });
 });
+
+// ---------------------------------------------------------------------------
+// S129/CD2 — the boot-gate pre-warm deadline (docs/remediation-plan-session129.md).
+//
+// The audit's M1: CC7 gave the boot gate's /api/auth/me a 20 s deadline,
+// but the gate ALSO awaits the pre-warm, whose fetchAndSet called apiGet
+// with NO timeout. A stalled connection (accepted TCP, no response — no
+// offline event fires, so the connectivity banner stays down) never
+// settles, the prewarm .catch(() => {}) never fires (a non-rejection), and
+// the Splash pulses FOREVER with the retry affordance unreachable (it
+// renders only in the error branch). The fix threads
+// COLLECTION_GET_TIMEOUT_MS (20 s) through every collection GET.
+//
+// The pin holds ALL FIVE Dashboard pre-warm keys (INITIAL_COLLECTIONS) —
+// the honest stall shape (every collection request stalls) — while
+// /api/auth/me answers normally. Two-phase assertion: at 5 s the Splash is
+// STILL the mounted surface (the stall holds the gate — the pre-fix
+// shape), and by 35 s the shell has committed (the deadline released it).
+// Pre-fix: the second phase never happens — the leg times out RED.
+// ---------------------------------------------------------------------------
+test.describe("S129/CD2 · the boot gate survives a stalled pre-warm", () => {
+  test("a permanently stalled collection GET releases the Splash within the 20 s deadline (RED pre-fix: the Splash pulses forever)", async ({ page }) => {
+    // Hold every Dashboard pre-warm collection; let everything else (incl.
+    // /api/auth/me) answer normally.
+    const HELD = [
+      "**/api/tasks",
+      "**/api/assignments",
+      "**/api/exams",
+      "**/api/focus-sessions",
+      "**/api/subjects",
+    ];
+    for (const pattern of HELD) {
+      await page.route(pattern, () => {
+        /* never fulfills — the accepted-TCP stall shape */
+      });
+    }
+    try {
+      await page.goto("/Dashboard");
+      // Phase 1 — at 5 s the stall still holds the gate (the Splash is the
+      // mounted surface; the shell heading has not rendered).
+      await page.waitForTimeout(5_000);
+      const splash = page.locator(".animate-pulse");
+      await expect(splash).toBeVisible();
+      await expect(page.getByRole("heading", { level: 1 })).toHaveCount(0);
+
+      // Phase 2 — the deadline releases the gate: the shell commits (the
+      // appHydrated marker rides the shell commit, ADR-014).
+      await page.waitForFunction(
+        () => document.documentElement.dataset.appHydrated === "true",
+        undefined,
+        { timeout: 35_000 },
+      );
+    } finally {
+      // The S13/S14 lessons: unroute held routes in finally — a held GET
+      // unroutes harmlessly (no write side effects), and the page close
+      // kills the pending requests.
+      for (const pattern of HELD) {
+        await page.unroute(pattern);
+      }
+    }
+  });
+});

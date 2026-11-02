@@ -19,6 +19,11 @@ const DialogOverlay = React.forwardRef<
     ref={ref}
     className={cn(
       "fixed inset-0 z-50 bg-black/80",
+      // S129/CD1: the reference-measured overlay fade set (the reference's
+      // overlay carries exactly these four — it fades IN and OUT at the
+      // family's 150 ms; pre-CD1 the clone's overlay appeared and vanished
+      // instantly).
+      "data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=closed]:animate-out data-[state=closed]:fade-out-0",
       className,
     )}
     {...props}
@@ -38,7 +43,12 @@ const DialogContent = React.forwardRef<
       ref={ref}
       className={cn(
         "fixed left-1/2 top-1/2 z-50 grid w-full max-w-md -translate-x-1/2 -translate-y-1/2 gap-4 rounded-lg border border-border bg-card p-6 shadow-lg",
-        "duration-200 data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95",
+        // S129/CD1: duration-200 DROPPED — v4's duration-* writes
+        // --tw-duration, which tw-animate-css reads, so the class pushed the
+        // enter animation to 0.2s while the reference measures 0.15s (its
+        // v3 duration-200 feeds only an inert transition-duration — nothing
+        // transitions on a mounted dialog). Measured on both hosts.
+        "data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95",
         "data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95",
         className,
       )}

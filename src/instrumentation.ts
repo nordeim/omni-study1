@@ -11,6 +11,7 @@
 // ---------------------------------------------------------------------------
 
 import { authSecretBootStatus, inBandDeliveryProdWarning } from "./lib/env-check";
+import { resolveProcessDatabaseUrl } from "./lib/db-path";
 
 export async function register(): Promise<void> {
   const status = authSecretBootStatus(
@@ -25,6 +26,22 @@ export async function register(): Promise<void> {
   if (status.level === "warn" && status.message) {
     console.warn(status.message);
   }
+
+  // S129/CD5: the affirmative startup line (the §17 boot observable). The
+  // three-anchor DATABASE_URL contract is the repo's most fragile invariant
+  // — AGENTS.md's own troubleshooting guidance says "check the startup log
+  // line" — so the happy path emits one: node_env + the RESOLVED db anchor
+  // through the SAME seam the app uses (never a re-derivation). Only the
+  // safe shape rides the line: a file: URL prints its path (no credentials
+  // exist in a sqlite path), anything else prints just the protocol — a
+  // PostgreSQL URL carries credentials and never reaches the log.
+  const dbUrl = resolveProcessDatabaseUrl();
+  const dbShape = dbUrl.startsWith("file:")
+    ? dbUrl
+    : `${dbUrl.split(":")[0]}:<redacted>`;
+  console.log(
+    `[boot] studyflow up — node_env=${process.env.NODE_ENV ?? "unknown"} db=${dbShape}`,
+  );
 
   // S127/CB14: the in-band delivery production warning (the BT5 posture
   // precedent — ADR-013's single-user default stands, but an

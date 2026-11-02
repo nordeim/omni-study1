@@ -15,7 +15,9 @@ import { describe, expect, it } from "vitest";
 
 import {
   assertJsonContentType,
+  BodyTooLargeError,
   readBodyCapped,
+  toErrorResponse,
   ValidationError,
 } from "@/lib/server/http";
 
@@ -106,6 +108,41 @@ describe("readBodyCapped (S119/BT2 — the counting reader)", () => {
     await expect(readBodyCapped(request, 2)).rejects.toThrow(
       /too large/i,
     );
+  });
+});
+
+// S129/CD4 — the body-cap status truth (docs/remediation-plan-session129.md).
+//
+// The audit's L4: the same client fault (an oversized body) answered 400
+// through the shared cap (ValidationError → toErrorResponse → 400) but 413
+// on the import route — internally inconsistent, and 413 is the correct
+// signal (no retry fixes too-large; the repo's own import contract uses
+// it). The fix: BodyTooLargeError — a ValidationError SUBCLASS (the family
+// shape the existing legs assert is preserved) that toErrorResponse maps to
+// 413 BEFORE the generic 400 branch. The import route's own catch (its
+// route-specific copy) predates this and stays.
+describe("the body-cap status (S129/CD4 — BodyTooLargeError → 413)", () => {
+  it("the shared cap throws the BodyTooLargeError family (still a ValidationError — the existing family shape holds)", async () => {
+    const pulls = { count: 0 };
+    const request = streamingRequest(["abcdef"], pulls);
+    const rejection = readBodyCapped(request, 3);
+    await expect(rejection).rejects.toBeInstanceOf(BodyTooLargeError);
+    await expect(rejection).rejects.toBeInstanceOf(ValidationError);
+    await expect(rejection).rejects.toThrow(/too large/i);
+  });
+
+  it("toErrorResponse maps BodyTooLargeError to 413 (pre-fix: the shared cap answered the semantically wrong 400)", () => {
+    const res = toErrorResponse(
+      new BodyTooLargeError("The request body is too large."),
+    );
+    expect(res.status).toBe(413);
+  });
+
+  it("a plain ValidationError still maps to 400 (the schema-rejection contract unchanged)", () => {
+    const res = toErrorResponse(
+      new ValidationError("email: Expected string, received number"),
+    );
+    expect(res.status).toBe(400);
   });
 });
 

@@ -117,12 +117,73 @@ describe("the chunked cert runner's truth contract (S128/CC2)", () => {
 
   it("names the CURRENT per-chunk census in its header (the re-tag tripwire)", () => {
     // The topmost Expected line — re-tagged by every census-changing cycle.
-    expect(certSource).toContain("Expected: 144 + 177 + 72 + 93 + 74 = 560");
+    expect(certSource).toContain("Expected: 145 + 178 + 72 + 93 + 75 = 563");
   });
 
   it("propagates a failing chunk's exit code (never a green cert on a red run)", () => {
     // The rc accumulation + terminal exit — the resweep-gate doctrine.
     expect(certSource).toMatch(/rc=\$\(\(rc \|/);
     expect(certSource).toMatch(/exit "\$rc"/);
+  });
+});
+
+// S129/CD8 — the api-route dynamic census (docs/remediation-plan-session129.md).
+//
+// The audit's L2: `export const dynamic = "force-dynamic"` is declared on
+// exactly 1 of 61 route files (health). Every data route is
+// dynamic-by-construction — 33 files route through the makeCollectionRoutes/
+// makeItemRoutes factories (→ requireUser → cookies()), 8 use requireUser
+// directly, and the auth family sets/reads cookies through the server auth
+// seam — and Next 15+ does not cache route handlers by default, so this is
+// a letter-of-rubric gap, not a live bug. Rather than a 60-file mechanical
+// sweep, the census pins the INVARIANT: every route file must either
+// declare force-dynamic or import one of the dynamic-by-construction seams
+// (the http factories, the server auth seam, the crypto/limiter seam, or
+// next/headers itself). A future route that dodges every seam — the exact
+// shape that could silently gain a static-cache posture — fails here before
+// it ships.
+describe("the api-route dynamic census (S129/CD8)", () => {
+  const API_DIR = path.resolve(process.cwd(), "src/app/api");
+
+  function routeFiles(): string[] {
+    const out: string[] = [];
+    const walk = (dir: string) => {
+      for (const entry of readdirSync(dir, { withFileTypes: true })) {
+        const full = path.join(dir, entry.name);
+        if (entry.isDirectory()) walk(full);
+        else if (entry.name === "route.ts") out.push(full);
+      }
+    };
+    walk(API_DIR);
+    return out.sort();
+  }
+
+  // The dynamic-by-construction seams: importing any of these makes the
+  // route per-request (cookies() is a dynamic API).
+  const DYNAMIC_SEAMS = [
+    'from "@/lib/server/http"',
+    'from "@/lib/server/auth"',
+    'from "@/lib/auth"',
+    'from "next/headers"',
+  ];
+
+  it("censused the route tree (a shrinking count means the walk broke)", () => {
+    expect(routeFiles().length).toBeGreaterThan(50);
+  });
+
+  it("every api route declares force-dynamic or routes through a dynamic-by-construction seam", () => {
+    const offenders: string[] = [];
+    for (const file of routeFiles()) {
+      const src = readFileSync(file, "utf8");
+      const dynamic =
+        src.includes('export const dynamic = "force-dynamic"') ||
+        DYNAMIC_SEAMS.some((seam) => src.includes(seam));
+      if (!dynamic) offenders.push(path.relative(process.cwd(), file));
+    }
+    expect(
+      offenders,
+      "routes with neither force-dynamic nor a dynamic seam — an authenticated payload could silently gain a cache posture: " +
+        offenders.join(" | "),
+    ).toEqual([]);
   });
 });

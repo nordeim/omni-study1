@@ -1,4 +1,15 @@
 #!/usr/bin/env bash
+# (S129/CD re-tag — census 560 → 563, net +3: chunk 1 +1 [the CD2 boot-gate
+# stall leg in navigation — all five Dashboard pre-warm keys held forever,
+# the Splash still mounted at 5 s, the shell committed by 35 s under the
+# 20 s COLLECTION_GET_TIMEOUT_MS]; chunk 2 +1 [the CD1 overlay-animation
+# parity leg in theme-system — the Add Task dialog's overlay AND content
+# compute animation-name enter / 0.15s, the reference-measured values];
+# chunk 5 +1 [the CD6a bare-/reset-password default leg in auth-flows —
+# the route renders the missing-token explanation, not the sign-in form].
+# The full CD map: docs/remediation-plan-session129.md.)
+# Expected: 145 + 178 + 72 + 93 + 75 = 563 (each chunk's count includes its
+# auth setup — the current census; the historical re-tag blocks beneath.)
 # (S128/CC re-tag — census 559 → 560, net +1: chunk 5 +1 [the CC1
 # displayName-bearing envelope pin in s23-import — a spliced displayName
 # in the user block restores 200 (the whitelist keeps name-shaped identity

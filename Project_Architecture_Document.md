@@ -1,4 +1,4 @@
-# StudyFlow (Omni-Study) — Master Project Architecture Document (PAD) v1.3.36
+# StudyFlow (Omni-Study) — Master Project Architecture Document (PAD) v1.3.37
 
 **Classification:** Internal Engineering Reference
 **Status:** DEFINITIVE, PRODUCTION-LOCKED BLUEPRINT
@@ -8,6 +8,11 @@
 **Rule:** Every architectural decision in this document traces to a specific rationale. Nothing is here "because it's popular."
 
 ---
+
+#### Revision Block — v1.3.37 (Session-129 / Batch CD, Cycle 79)
+
+- `[SR]` Current test census anchor (the v1.2.0 convention, re-anchored): **1202/1202 Vitest unit** (45 files — the S129 additions: overlay-animation +4 [the 45th file — the CD1 tw-animate-css wiring pin + the overlay-class census + the dead-v3-dep guard], data-store +2 [the CD2 collection-GET deadline at the seam boundary — loadCollections AND loadAll both hand apiGet the 20 s COLLECTION_GET_TIMEOUT_MS], http-body +3 [the CD4 BodyTooLargeError family + the 413 mapping + the plain-ValidationError 400 hold], script-conventions +2 [the CD8 api-route dynamic census — every route declares force-dynamic or routes through a dynamic-by-construction seam]) + **563/563 cold-chunk e2e** (558 chromium specs in 30 files + the auth setup re-run per chunk; the 5-chunk map **145+178+72+93+75**, every chunk first-pass on the final tree; the per-file counts in §8.1 are script-derivable). Unit + e2e = **1765 green**.
+- `[SR]` The audit-driven hardening cycle (`docs/remediation-plan-session129.md`): **CD1 (M, parity)** the Radix overlay animation family WIRED — `tw-animate-css` was declared since the scaffold and documented in the design tables but never imported, so Tailwind v4 silently dropped every animate-in/out class and all dialogs/dropdowns/selects opened instantly while the REFERENCE measured `animation-name: enter / 0.15s` on both its overlay and content (live-measured on both hosts this cycle); the import + the reference's overlay fade classes restored on Dialog/AlertDialog overlays, the notes popover's exit family added, `duration-200` DROPPED from the two primitives (v4's `--tw-duration` feeds tw-animate-css — the class pushed the enter to 0.2s vs the reference's measured 0.15s), the dead v3 `tailwindcss-animate` dep removed; the clone now computes enter/0.15s on BOTH nodes (the parity e2e leg + the unit census pin); **CD2 (M)** the boot-gate pre-warm deadline — CC7 bounded `/api/auth/me` but the gate ALSO awaits the pre-warm whose fetchAndSet had NO timeout: a stalled collection GET held the Splash FOREVER (a non-settling fetch is not a failure — the prewarm `.catch` never fired, the retry affordance sat unreachable in the error branch); `COLLECTION_GET_TIMEOUT_MS = 20_000` now rides EVERY collection GET through fetchAndSet (the pre-warm, loadAll, view refreshes, post-mutation refreshes — all bounded); the e2e stall leg holds ALL five Dashboard pre-warm keys (the Splash still mounted at 5 s, the shell committed by 35 s); **CD3 (L-promoted)** `react-hooks/exhaustive-deps` re-enabled as an ERROR + the 6 live violations fixed (rum-panel's `[load]`→`[refresh]`, calculator-view's ref-in-cleanup copy, files-view's stable-`toast` ×2, focustimer's outer-scope `mutations` dropped, notes-view's stable `updateNote` — all zero-behavior-change or mechanical, verified by read; the remaining scaffold disables documented as the deliberate posture in the SKILL doc with the compensating controls named); **CD4 (L)** the body-cap truth pair (the corrupted `JSON_BODY_MAX_BYTES` comment repaired + `BodyTooLargeError extends ValidationError` → **413** in toErrorResponse — the same fault answered 400 through the shared cap but 413 on the import route; the BS2 e2e pin's status corrected with the rationale in-line); **CD5 (L)** the affirmative boot line (`[boot] studyflow up — node_env=… db=…` through the same db-path seam the app uses — a file: URL prints its path, anything else redacts to its protocol: a PostgreSQL URL carries credentials and never reaches the log); **CD6 (L)** the auth-surface set (bare `/reset-password` defaults to the reset view via usePathname — the CA11 missing-token explanation finally renders on the route it was written for; the forgot-success banner role=status; the six auth POSTs get the 20 s deadline; the two byte-identical route pages deduplicated into the shared AuthRoutePage; the drawer backdrop's focus-visible ring; the needless post-BY11 fragment; the OTP select-on-focus); **CD7 (L)** the doc-drift set (CLAUDE.md 15→17-var with the S88/S121 provenance; AGENTS.md's rate-limiter census line refreshed to the CB7 truth — the PATCH/DELETE "next-cycle candidate" clause was three cycles stale); **CD8 (I)** the api-route dynamic census pin (zero production diff — every route already routes through a dynamic-by-construction seam; the invariant machine-guarded so a future seam-dodging route fails the unit layer). The rotated audits: the app shell + routing + design tokens + auth screens (**0C/0H/2M/6L/6I**, last deep-covered CA three cycles back) + the persistence + crypto/auth core + infrastructure configs (**0C/0H/0M/4L/4I** — every prior-cycle fix verified HOLDING at the line level; the one brief-vs-code divergence was the code AHEAD: CB7's PATCH/DELETE budget had landed while the docs still called it the next-cycle candidate). Three honest mid-run corrections (the overlay-class unit pin's first shape was non-discriminating — a whole-file includes() matched the CONTENT's classes, re-scoped to the overlay component blocks; the e2e overlay locator used a `data-radix-dialog-overlay` attribute this Radix version never sets — re-scoped to the scrim class shape; the CD6a pin's "Sign in" count-0 assertion hit the documented substring-matching quirk ["Back to sign in"] — exact:true + the Welcome-heading identity).
 
 #### Revision Block — v1.3.36 (Session-128 / Batch CC, Cycle 78)
 
@@ -1090,7 +1095,7 @@ Single-role per-user ownership model; no admin surface. Session: `{ uid, iat, ex
 | Unit — `client-ip.test.ts` | 1 | 14 | `tests/client-ip.test.ts` |
 | Unit — `data-export.test.ts` | 1 | 9 | `tests/data-export.test.ts` |
 | Unit — `data-import.test.ts` | 1 | 66 | `tests/data-import.test.ts` |
-| Unit — `data-store.test.ts` | 1 | 6 | `tests/data-store.test.ts` |
+| Unit — `data-store.test.ts` | 1 | 8 | `tests/data-store.test.ts` | (S129/CD2 +2: the collection-GET deadline at the seam boundary)
 | Unit — `date.test.ts` | 1 | 33 | `tests/date.test.ts` |
 | Unit — `db-path.test.ts` | 1 | 18 | `tests/db-path.test.ts` |
 | Unit — `delivery-gate.test.ts` | 1 | 6 | `tests/delivery-gate.test.ts` |
@@ -1102,7 +1107,7 @@ Single-role per-user ownership model; no admin surface. Session: `{ uid, iat, ex
 | Unit — `folder-tree.test.ts` | 1 | 16 | `tests/folder-tree.test.ts` |
 | Unit — `grade-merge.test.ts` | 1 | 7 | `tests/grade-merge.test.ts` |
 | Unit — `group-members.test.ts` | 1 | 15 | `tests/group-members.test.ts` |
-| Unit — `http-body.test.ts` | 1 | 9 | `tests/http-body.test.ts` |
+| Unit — `http-body.test.ts` | 1 | 12 | `tests/http-body.test.ts` | (S129/CD4 +3: the BodyTooLargeError family + the 413 mapping)
 | Unit — `hue-pairs.test.ts` | 1 | 2 | `tests/hue-pairs.test.ts` |
 | Unit — `hue-tokens.test.ts` | 1 | 13 | `tests/hue-tokens.test.ts` |
 | Unit — `import-row-guard.test.ts` | 1 | 12 | `tests/import-row-guard.test.ts` |
@@ -1111,7 +1116,7 @@ Single-role per-user ownership model; no admin surface. Session: `{ uid, iat, ex
 | Unit — `router.test.ts` | 1 | 11 | `tests/router.test.ts` |
 | Unit — `rum-diagnostics.test.ts` | 1 | 34 | `tests/rum-diagnostics.test.ts` |
 | Unit — `schema-indexes.test.ts` | 1 | 4 | `tests/schema-indexes.test.ts` | (S128/CC10)
-| Unit — `script-conventions.test.ts` | 1 | 6 | `tests/script-conventions.test.ts` |
+| Unit — `script-conventions.test.ts` | 1 | 8 | `tests/script-conventions.test.ts` | (S129/CD8 +2: the api-route dynamic census)
 | Unit — `secure-cookie.test.ts` | 1 | 9 | `tests/secure-cookie.test.ts` |
 | Unit — `seed-gate.test.ts` | 1 | 5 | `tests/seed-gate.test.ts` |
 | Unit — `sent-keys-patch.test.ts` | 1 | 12 | `tests/sent-keys-patch.test.ts` |
@@ -1127,13 +1132,13 @@ Single-role per-user ownership model; no admin surface. Session: `{ uid, iat, ex
 | Unit — `view-collections.test.ts` | 1 | 6 | `tests/view-collections.test.ts` |
 | E2E — `a11y-sweep.spec.ts` | 1 | 20 | `tests/e2e/a11y-sweep.spec.ts` |
 | E2E — `accessibility.spec.ts` | 1 | 34 | `tests/e2e/accessibility.spec.ts` |
-| E2E — `auth-flows.spec.ts` | 1 | 16 | `tests/e2e/auth-flows.spec.ts` |
+| E2E — `auth-flows.spec.ts` | 1 | 17 | `tests/e2e/auth-flows.spec.ts` | (S129/CD6a +1: the bare-/reset-password default)
 | E2E — `auth.spec.ts` | 1 | 6 | `tests/e2e/auth.spec.ts` |
 | E2E — `calculator.spec.ts` | 1 | 13 | `tests/e2e/calculator.spec.ts` |
 | E2E — `dark-mode.spec.ts` | 1 | 27 | `tests/e2e/dark-mode.spec.ts` |
 | E2E — `greeting-clock.spec.ts` | 1 | 4 | `tests/e2e/greeting-clock.spec.ts` |
 | E2E — `mobile-navigation.spec.ts` | 1 | 18 | `tests/e2e/mobile-navigation.spec.ts` |
-| E2E — `navigation.spec.ts` | 1 | 59 | `tests/e2e/navigation.spec.ts` |
+| E2E — `navigation.spec.ts` | 1 | 60 | `tests/e2e/navigation.spec.ts` | (S129/CD2 +1: the boot-gate stall leg)
 | E2E — `parity-session5.spec.ts` | 1 | 46 | `tests/e2e/parity-session5.spec.ts` |
 | E2E — `parity-session6.spec.ts` | 1 | 21 | `tests/e2e/parity-session6.spec.ts` |
 | E2E — `parity-session7.spec.ts` | 1 | 54 | `tests/e2e/parity-session7.spec.ts` |
@@ -1154,9 +1159,9 @@ Single-role per-user ownership model; no admin surface. Session: `{ uid, iat, ex
 | E2E — `s26-change-email.spec.ts` | 1 | 7 | `tests/e2e/s26-change-email.spec.ts` |
 | E2E — `s52-sidebar-collapse.spec.ts` | 1 | 8 | `tests/e2e/s52-sidebar-collapse.spec.ts` |
 | E2E — `tasks.spec.ts` | 1 | 9 | `tests/e2e/tasks.spec.ts` |
-| E2E — `theme-system.spec.ts` | 1 | 15 | `tests/e2e/theme-system.spec.ts` |
+| E2E — `theme-system.spec.ts` | 1 | 16 | `tests/e2e/theme-system.spec.ts` | (S129/CD1 +1: the overlay-animation parity leg)
 | E2E — the shared-sign-in setup project (one login; the storageState the whole suite rides; each cert chunk re-runs it) | 1 | 1 | `tests/e2e/auth.setup.ts` |
-| **Total** | **75** | **1752** | `tests/` — **1191 Vitest unit** (44 files, `vitest run` 1191/1191) + **560 e2e** (555 chromium specs in 30 files per `playwright --list` + the 1 setup × the 5 cold-cert chunks = the 560-test chunked census [144+177+72+93+74, `db/e2e.db` cold every chunk]); unit + e2e = **1751 green** (the badge sum: 1191 + 560). Re-measured S128/CC (the S127 row's counts carried forward + the CC pins incl. the two new unit files; the table stays PER-FILE and script-derivable: `vitest run` per-file counts + `playwright test --list`). |
+| **Total** | **76** | **1766** | `tests/` — **1202 Vitest unit** (45 files, `vitest run` 1202/1202) + **563 e2e** (558 chromium specs in 30 files per `playwright --list` + the 1 setup × the 5 cold-cert chunks = the 563-test chunked census [145+178+72+93+75, `db/e2e.db` cold every chunk]); unit + e2e = **1765 green** (the badge sum: 1202 + 563). Re-measured S129/CD (the S128 row's counts carried forward + the CD pins incl. the 45th unit file; the table stays PER-FILE and script-derivable: `vitest run` per-file counts + `playwright test --list`). |
 
 ### 8.2 Test Patterns
 

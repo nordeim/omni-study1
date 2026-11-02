@@ -1,7 +1,18 @@
 import { defineConfig } from "vitest/config";
 import path from "node:path";
 
-// Unit-test layer for the pure domain seams — 44 files / 1191 tests
+// Unit-test layer for the pure domain seams — 45 files / 1202 tests
+// (re-anchored S129/CD — the audit-driven hardening cycle: census 1191 →
+// 1202, +11 net [overlay-animation.test.ts the 45th file, +4: the S129/CD1
+// tw-animate-css wiring pin + the overlay-class census + the dead-v3-dep
+// guard; data-store +2: the S129/CD2 collection-GET deadline at the seam
+// boundary (loadCollections + loadAll both hand apiGet the 20 s
+// COLLECTION_GET_TIMEOUT_MS); http-body +3: the S129/CD4 BodyTooLargeError
+// family + the 413 mapping + the plain-ValidationError 400 hold;
+// script-conventions +2: the S129/CD8 api-route dynamic census (every
+// route declares force-dynamic or routes through a dynamic-by-construction
+// seam — a holds-class pin on the current tree)]. The S128/CC additions
+// beneath:)
 // (re-anchored S128/CC — the audit-driven hardening cycle: census 1171 →
 // 1191, +20 net [toast.test.ts the 43rd file, +3: the S128/CC8 toaster
 // identity/cap/auto-dismiss family; schema-indexes.test.ts the 44th, +4:

@@ -141,7 +141,11 @@ export function FocusTimerView() {
     // `durations.focus - remaining` was always 0: every session (auto AND
     // manual paths) logged durationSeconds: 1, and the BX6 elapsed fix was
     // dead code behind the stale closure.
-  }, [mode, durations, remaining, subjectId, toast, mutations]);
+    // S129/CD3: `mutations` LEAVES the array — it is the module-level import
+    // (an outer-scope value, not a reactive dependency; the exhaustive-deps
+    // unnecessary-dependency class). No behavior change: its identity never
+    // changes, so the callback identity is unaffected.
+  }, [mode, durations, remaining, subjectId, toast]);
 
   React.useEffect(() => {
     if (!running || remaining > 0) return;

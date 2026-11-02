@@ -104,13 +104,26 @@ export function parseWith<T>(schema: ZodType<T>, input: unknown): T {
 
 /** The shared JSON body cap (S118/BS2). 10 MiB (the import route alone
  *  carries the higher 25 MiB ceiling — S124/BY3, the export/import
- *  reconciliation; every other JSON route keeps this shared cap).
- * route enforces (its own 413 contract predates this and stays). The largest
- * legitimate JSON body is the math solver's photographed-problem image
- * (base64, schema-bounded at 7,000,000 chars); everything else is bounded
- * far below. The cap converts an unbounded request.text() into a bounded
- * read (memory) with an actionable 400. */
+ *  reconciliation; every other JSON route keeps this shared cap; the
+ *  import route's own catch answers its route-specific copy). The largest
+ *  legitimate JSON body is the math solver's photographed-problem image
+ *  (base64, schema-bounded at 7,000,000 chars); everything else is bounded
+ *  far below. The cap converts an unbounded request.text() into a bounded
+ *  read (memory) with an actionable 413 (S129/CD4 corrected the status: the
+ *  same fault answered 400 here but 413 on the import route — 413 is the
+ *  correct signal, and no retry fixes too-large). */
 const JSON_BODY_MAX_BYTES = 10 * 1024 * 1024;
+
+/** S129/CD4 — the oversized-body error. A ValidationError SUBCLASS (the
+ *  family shape the existing pins assert holds) that toErrorResponse maps
+ *  to 413 — the semantically correct status for a body the server will not
+ *  read, matching the import route's own over-cap contract. */
+export class BodyTooLargeError extends ValidationError {
+  constructor(message = "The request body is too large.") {
+    super(message);
+    this.name = "BodyTooLargeError";
+  }
+}
 
 /** The BR5 Content-Type policy as a shared seam (S119/BT1a): a non-JSON
  * Content-Type is unparseable-by-policy — a form POST with `text/plain`
@@ -143,7 +156,7 @@ export async function readBytesCapped(
 ): Promise<Uint8Array> {
   const declaredLength = Number(request.headers.get("content-length") ?? "0");
   if (Number.isFinite(declaredLength) && declaredLength > maxBytes) {
-    throw new ValidationError("The request body is too large.");
+    throw new BodyTooLargeError();
   }
   const body = request.body;
   if (!body) return new Uint8Array(0);
@@ -170,7 +183,7 @@ export async function readBytesCapped(
     await reader.cancel().catch(() => {});
   }
   if (oversized) {
-    throw new ValidationError("The request body is too large.");
+    throw new BodyTooLargeError();
   }
   const out = new Uint8Array(received);
   let offset = 0;
@@ -214,6 +227,11 @@ export async function readJson(request: NextRequest): Promise<unknown> {
 export function toErrorResponse(err: unknown): NextResponse {
   if (err instanceof UnauthorizedError) {
     return errorResponse(401, err.message);
+  }
+  // S129/CD4: the subclass checks FIRST (a BodyTooLargeError IS a
+  // ValidationError — the generic 400 branch must not shadow the 413).
+  if (err instanceof BodyTooLargeError) {
+    return errorResponse(413, err.message);
   }
   if (err instanceof ValidationError) {
     return errorResponse(400, err.message);

@@ -326,10 +326,26 @@ const ALL_KEYS = Object.keys(PATHS) as CollectionKey[];
 // latest — a late stale resolution is dropped on the floor.
 const fetchSeq: Partial<Record<CollectionKey, number>> = {};
 
+// S129/CD2 — the collection GET deadline. CC7 gave the boot gate's
+// /api/auth/me a 20 s timeout, but the gate ALSO awaits the pre-warm, and
+// fetchAndSet called apiGet with NO deadline: a stalled connection (accepted
+// TCP, no response — no offline event fires) never settled, the prewarm's
+// .catch(() => {}) never fired (a non-rejection), and the Splash pulsed
+// forever with the retry affordance unreachable (it renders only in the
+// gate's error branch). Every collection GET now carries this deadline —
+// the pre-warm, loadAll, the view refreshes, and the post-mutation
+// refreshes all become bounded (a stall rejects through the existing catch
+// paths; the e2e pin holds the boot gate's stall release end-to-end).
+// Exported like IMPORT_MAX_BYTES (the BY3 panel-pre-check precedent): the
+// seam's consumers and pins read the SAME constant, never a copy.
+export const COLLECTION_GET_TIMEOUT_MS = 20_000;
+
 async function fetchAndSet<K extends CollectionKey>(key: K): Promise<void> {
   const ticket = (fetchSeq[key] ?? 0) + 1;
   fetchSeq[key] = ticket;
-  const rows = await apiGet<EntityMap[K]>(PATHS[key]);
+  const rows = await apiGet<EntityMap[K]>(PATHS[key], {
+    timeoutMs: COLLECTION_GET_TIMEOUT_MS,
+  });
   if (fetchSeq[key] !== ticket) return; // a newer GET superseded this one
   useDataStore.getState().setSlice(key, rows);
 }

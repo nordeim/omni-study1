@@ -86,7 +86,11 @@ export function RumPanel() {
       refresh();
     }, REFRESH_INTERVAL_MS);
     return () => window.clearInterval(id);
-  }, [load]);
+    // S129/CD3: the interval calls refresh — the deps array names it (the
+    // effect re-subscribes exactly when refresh's identity changes, i.e.
+    // when load's does; pre-fix the array said [load] while the body called
+    // refresh, the exhaustive-deps stale-closure class).
+  }, [refresh]);
 
   // The production theme path: the boot script pre-paints; the store
   // hydrates the accent vars from /api/auth/me exactly like the shell.

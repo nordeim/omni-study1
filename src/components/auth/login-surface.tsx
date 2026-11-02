@@ -9,7 +9,7 @@
 // ---------------------------------------------------------------------------
 
 import * as React from "react";
-import { useSearchParams } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import { Chrome, GraduationCap, ShieldCheck } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -45,9 +45,21 @@ function InlineStatus({ message }: { message: string }) {
 
 export function LoginSurface() {
   const params = useSearchParams();
+  const pathname = usePathname();
 
+  // S129/CD6a: the route-aware default. Pre-fix the initial view keyed ONLY
+  // on query params, so a user whose email client stripped the token off
+  // /reset-password?token=… landed on the SIGN-IN form at the /reset-password
+  // URL — the CA11 missing-token explanation was reachable only via
+  // /login?view=reset, never on the route it was written for. The route
+  // defaults to "reset" regardless of query; /login keeps the param-keyed
+  // behavior (the e2e pins for /login?view=… are untouched).
   const [view, setView] = React.useState<AuthView>(() =>
-    params.get("view") === "reset" || params.get("token") ? "reset" : "signin",
+    pathname === "/reset-password" ||
+    params.get("view") === "reset" ||
+    params.get("token")
+      ? "reset"
+      : "signin",
   );
   const [email, setEmail] = React.useState(params.get("email") ?? "");
   const [password, setPassword] = React.useState("");
@@ -118,7 +130,11 @@ export function LoginSurface() {
     setBusy(true);
     setError("");
     try {
-      await apiSend("POST", "/api/auth/login", { email, password });
+      // S129/CD6c: the 20 s deadline on every auth POST (the CC7 class on
+      // the app's one unauthenticated surface — a stalled connection held
+      // the disabled-busy button forever with the inline error channel
+      // unreachable).
+      await apiSend("POST", "/api/auth/login", { email, password }, { timeoutMs: 20_000 });
       finishSignIn();
     } catch (err: unknown) {
       setError(err instanceof ApiError ? err.message : "Something went wrong. Please try again.");
@@ -140,6 +156,7 @@ export function LoginSurface() {
         "POST",
         "/api/auth/register",
         { fullName: "", email, password },
+        { timeoutMs: 20_000 },
       );
       setSurfacedCode(res?.code ?? "");
       setCode(Array(6).fill(""));
@@ -158,7 +175,7 @@ export function LoginSurface() {
     setBusy(true);
     setError("");
     try {
-      await apiSend("POST", "/api/auth/verify-email", { email, code: code.join("") });
+      await apiSend("POST", "/api/auth/verify-email", { email, code: code.join("") }, { timeoutMs: 20_000 });
       // Verified = signed in — the verify endpoint sets the session cookie.
       finishSignIn();
     } catch (err: unknown) {
@@ -177,7 +194,7 @@ export function LoginSurface() {
     setResending(true);
     setError("");
     try {
-      const res = await apiSend<{ code?: string }>("POST", "/api/auth/resend-verification", { email });
+      const res = await apiSend<{ code?: string }>("POST", "/api/auth/resend-verification", { email }, { timeoutMs: 20_000 });
       if (res?.code) setSurfacedCode(res.code);
       setStatus("If that account needs verification, a new code is on its way.");
     } catch {
@@ -196,7 +213,7 @@ export function LoginSurface() {
     try {
       const res = await apiSend<{ resetUrl?: string }>("POST", "/api/auth/forgot-password", {
         email: resetEmail,
-      });
+      }, { timeoutMs: 20_000 });
       setResetUrl(res?.resetUrl ?? "");
       setForgotDone(true);
     } catch (err: unknown) {
@@ -219,7 +236,7 @@ export function LoginSurface() {
       await apiSend("POST", "/api/auth/reset-password", {
         token: params.get("token") ?? "",
         password: newPassword,
-      });
+      }, { timeoutMs: 20_000 });
       useThemeStore.getState().clearThemeCache();
       // S126/CA11: the consumed token leaves the URL (a refresh used to
       // re-land the user on the reset screen with a spent token).
@@ -494,6 +511,11 @@ export function LoginSurface() {
                     className="h-12 text-center text-lg font-semibold"
                     aria-label={`Digit ${i + 1}`}
                     value={digit}
+                    // S129/CD6g: select-on-focus — typing over an existing
+                    // digit now replaces it (maxLength=1 otherwise blocks
+                    // the insert; correction needed a Backspace first). The
+                    // BW9 paste path is untouched.
+                    onFocus={(e) => e.target.select()}
                     onChange={(e) => setBox(i, e.target.value)}
                     onPaste={(e) => onBoxPaste(i, e)}
                     onKeyDown={(e) => {
@@ -556,7 +578,10 @@ export function LoginSurface() {
             {forgotDone ? (
               <div className="mt-6 flex flex-col gap-4">
                 <div
-                  role="alert"
+                  // S129/CD6b: role="status" (the surface's own success
+                  // channel — its InlineStatus; role="alert" is the ERROR
+                  // channel and interrupts assertively for a confirmation).
+                  role="status"
                   className="sf-alert-emerald rounded-xl px-3 py-2 text-sm"
                 >
                   Please check your email for the password reset link. It may take a few minutes to arrive.

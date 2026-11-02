@@ -368,3 +368,46 @@ test.describe("S127/CB15 · a failed theme save reverts the visible selection", 
     await page.request.patch("/api/settings/preferences", { data: { themeMode: "light" } });
   });
 });
+
+// S129/CD1 — the overlay animation parity (docs/remediation-plan-session129.md).
+//
+// The audit's M2, measured LIVE on both hosts: the reference's dialog
+// overlay AND content run animation-name "enter" at animation-duration
+// "0.15s" (the tailwindcss-animate family present in its stylesheets —
+// .animate-in { animation: enter 0.15s }, .fade-in-0, .zoom-in-95), while
+// the clone's animate-in/out classes were INERT (tw-animate-css declared in
+// package.json but never imported; Tailwind v4 silently drops unknown
+// utilities) — every dialog/dropdown/select opened and closed instantly.
+// The fix wires the v4 port (@import "tw-animate-css") and restores the
+// overlay fade classes. This pin holds the clone to the reference-measured
+// computed values on BOTH nodes of the Add Task dialog.
+test.describe("S129/CD1 · the Radix overlay animation parity (the reference-measured enter family)", () => {
+  test("the Add Task dialog's overlay and content run the enter animation at the reference's 0.15s (pre-fix: none/0s — the family was inert)", async ({ page }) => {
+    await page.goto("/Tasks");
+    await hydrated(page);
+    await page.getByRole("button", { name: "Add Task" }).click();
+
+    // The dialog content — the zoom+fade enter family.
+    const content = page.getByRole("dialog");
+    await expect(content).toBeVisible();
+    const contentAnim = await content.evaluate((el) => {
+      const s = getComputedStyle(el);
+      return { name: s.animationName, duration: s.animationDuration };
+    });
+    expect(contentAnim.name).toBe("enter");
+    expect(contentAnim.duration).toBe("0.15s");
+
+    // The overlay — the reference's fade-in family (pre-CD1 the clone's
+    // DialogOverlay carried NO animation classes at all). This Radix
+    // version sets no data-radix-dialog-overlay attribute; the overlay is
+    // the full-screen scrim div (the bg-black/80 class shape).
+    const overlay = page.locator('div[class*="bg-black/80"]');
+    await expect(overlay).toBeVisible();
+    const overlayAnim = await overlay.evaluate((el) => {
+      const s = getComputedStyle(el);
+      return { name: s.animationName, duration: s.animationDuration };
+    });
+    expect(overlayAnim.name).toBe("enter");
+    expect(overlayAnim.duration).toBe("0.15s");
+  });
+});

@@ -66,7 +66,7 @@ Key decisions that shape everything else: **Next.js 16 App Router as a one-page 
 - Primary CTAs use the Button `gradient` variant (`.sf-gradient` + `.sf-gradient-shadow` in globals.css) — sRGB-exact stops through the accent tokens; empty-state CTAs add `.sf-gradient-shadow-lg`. Never render solid-violet primary buttons.
 
 **State (Zustand)**
-- `useAppStore` (view/sidebar/drawer), `useThemeStore` (mode/accent/avatar), `useDataStore` + `mutations` (entity cache; every mutation refreshes the touched collections). No React Context for app state, no new state libraries. Theme vars go to `<html>` through `accentCssVars` — the COMPLETE 15-var token set (dropping tokens silently leaves stale violet values under other accents; the S4-G gradient/avatar/empty tokens and the S5 gradient hover stop are part of the set).
+- `useAppStore` (view/sidebar/drawer), `useThemeStore` (mode/accent/avatar), `useDataStore` + `mutations` (entity cache; every mutation refreshes the touched collections). No React Context for app state, no new state libraries. Theme vars go to `<html>` through `accentCssVars` — the COMPLETE 17-var token set (S88/AO5 added `--sf-primary-clock-date-dark`; S121/BV15 added the solid `--sf-primary-empty` step; dropping tokens silently leaves stale violet values under other accents; the S4-G gradient/avatar/empty tokens and the S5 gradient hover stop are part of the set).
 
 **Prisma / SQLite**
 - Schema edits: update `prisma/schema.prisma`, then `bun run db:push`. Seeds stay idempotent (`bun run db:seed` is safe to re-run).

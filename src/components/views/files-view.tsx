@@ -211,7 +211,10 @@ export function FilesView() {
     } finally {
       setLoading(false);
     }
-  }, [loadFileRows]);
+    // S129/CD3: `toast` joins the deps (the useToast object — stable via its
+    // useMemo over the store's push, so the identity never churns; naming it
+    // is the exhaustive-deps truth, not a behavior change).
+  }, [loadFileRows, toast]);
 
   // Initial fetch is INLINED in the effect (setStates run after the await —
   // the set-state-in-effect lint contract flags wrapped loaders).
@@ -232,7 +235,9 @@ export function FilesView() {
     return () => {
       cancelled = true;
     };
-  }, [loadFileRows]);
+    // S129/CD3: `toast` joins the deps (the stable useToast memo — the
+    // exhaustive-deps truth; no re-run churn).
+  }, [loadFileRows, toast]);
 
   // Breadcrumb: walk parents from the current folder to the root (the
   // pure seam — S84/AK1: the visited-set guard bounds the walk over ANY

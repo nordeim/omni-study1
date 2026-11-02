@@ -1,4 +1,15 @@
 @import "tailwindcss";
+/* S129/CD1: the Radix overlay animation family, WIRED at last. The deps
+   were declared since the scaffold and the PAD's design-system table
+   documented them as "Radix enter/exit transitions" — but the import never
+   existed, so Tailwind v4 silently dropped every animate-in/out class and
+   all overlays opened/closed instantly while the reference measured
+   animation-name: enter / 0.15s on BOTH its overlay and content (the
+   tailwindcss-animate family — tw-animate-css is its v4 port: same class
+   names, same enter/exit keyframes, same 150 ms default). The e2e parity
+   leg (theme-system, S129/CD1) holds the computed values; the unit census
+   (tests/overlay-animation.test.ts) guards the wiring. */
+@import "tw-animate-css";
 
 @custom-variant dark (&:is(.dark *));
 
