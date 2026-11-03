@@ -36,6 +36,33 @@ export async function POST(request: NextRequest) {
     // S118/BS2: the shared validation.ts schema (the inline twin is gone —
     // its z.string().email() lacked the trim/max atoms).
     const { email } = parseWith(forgotPasswordSchema, await readJson(request));
+
+    // S132/CG3: the per-EMAIL budget — the CF1 pattern completed across the
+    // three siblings (register/resend got *Acct: keys in s131; forgot rode
+    // only the forgeable per-IP key). Keyed by the request PAYLOAD so the
+    // 429 answers identically for known and unknown emails (the CF1
+    // no-enumeration shape — both burn the same budget; only a DB-keyed
+    // budget could distinguish). This bounds the supersede-DoS: under the
+    // legacy XFF posture a rotated header minted a fresh per-IP key per
+    // request, and each flood request deleteMany'd the victim's just-issued
+    // one-shot reset link (the newest link is the one the user clicks) plus
+    // unauthenticated PasswordResetToken write churn. Checked BEFORE the
+    // user lookup — an over-budget ask reads nothing.
+    //
+    // HONEST CORRECTION against the plan's §2 (recorded in §5): the
+    // exhausted branch answers the HONEST 429 — the CF1 siblings' own
+    // shipped shape (registerAcct:/resendAcct: both 429) — not the uniform
+    // {ok:true}. Pretending a reset email is coming on a rejected request
+    // is the exact CF8 "resend 429 honesty" defect class; and the
+    // payload-keyed budget keeps the no-oracle property regardless.
+    const emailLimit = checkRateLimit(`forgotAcct:${email.toLowerCase()}`, 5);
+    if (!emailLimit.ok) {
+      return rateLimitedResponse(
+        emailLimit.retryAfterSec,
+        "Too many reset requests. Try again shortly.",
+      );
+    }
+
     const user = await db.user.findUnique({
       where: { email: email.toLowerCase() },
       select: { id: true },

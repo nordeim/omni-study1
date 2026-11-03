@@ -30,6 +30,14 @@ attributes derive the right scheme (S120/BU15 — the app reads it), and
 declare `TRUSTED_PROXY_HOPS` so the auth rate-limiter's per-IP budgets
 key on the REAL client address, not a forged `x-forwarded-for` hop
 (S120/BU3 — the PAD §6.4 proxy-hop reopen trigger's off-switch).
+**S132/CG10 — the port-isolation presumption:** `TRUSTED_PROXY_HOPS≥1`
+presumes the app's port is reachable ONLY through the declared proxies.
+Bind the app to loopback / an internal interface (or firewall the port)
+so clients cannot reach it directly — a DIRECTLY-reachable app accepts a
+wholly forged `x-forwarded-for`, including the trusted rightmost hop, and
+every per-IP budget keys on attacker-chosen strings. The hop count
+declares your proxy chain's depth; the network boundary is what makes the
+declaration true.
 
 ## 3. Environment variables
 
@@ -39,7 +47,7 @@ key on the REAL client address, not a forged `x-forwarded-for` hop
 | `AUTH_SECRET` | **Yes in production — enforced at boot** | HMAC secret for session cookies. Generate with `openssl rand -hex 32`. **The session-22 boot guard refuses to start the production server without a real secret** (missing/empty/the public dev constant → the process exits with the remedy message; dev/test keep the zero-config fallback with a one-line boot warning). |
 | `NEXT_PUBLIC_SITE_URL` | Recommended | Canonical public origin, used for metadata URLs and `sitemap.xml` (e.g. `https://orbital.example.com`). |
 | `SEED_DEMO` | No (default: on) | `0` skips the demo account in `bun run db:seed` and the Docker `init` profile — see §8 "The demo account" (S120/BU21; fail-safe: unrecognized values skip too). |
-| `TRUSTED_PROXY_HOPS` | No (behind a proxy: recommended) | The `x-forwarded-for` hop depth for the auth limiter's per-IP keys: unset → first-hop default; `0` → never trust; `N≥1` → Nth hop from the right, failing closed (S120/BU3). NOTE (S131/CF2): `0` in production boots with a WARNING — the direct-exposure posture shares ONE rate-limit bucket per auth family (login/register/verify/resend/forgot/reset), so ten anonymous requests lock out sitewide auth for 15-minute windows; the App Router exposes no per-connection address, so the remedy is the proxy + hop depth, not a code change. The per-ACCOUNT budgets (login/verify) still contain the credential-guessing halves. |
+| `TRUSTED_PROXY_HOPS` | No (behind a proxy: recommended) | The `x-forwarded-for` hop depth for the auth limiter's per-IP keys: unset → first-hop default; `0` → never trust; `N≥1` → Nth hop from the right, failing closed (S120/BU3). NOTE (S132/CG10): N≥1 presumes PORT ISOLATION — the app port must be reachable only through the declared proxies (bind loopback / an internal interface, or firewall it); a directly-reachable app accepts a wholly forged x-forwarded-for, including the trusted rightmost hop. NOTE (S131/CF2): `0` in production boots with a WARNING — the direct-exposure posture shares ONE rate-limit bucket per auth family (login/register/verify/resend/forgot/reset), so ten anonymous requests lock out sitewide auth for 15-minute windows; the App Router exposes no per-connection address, so the remedy is the proxy + hop depth, not a code change. The per-ACCOUNT budgets (login/verify) still contain the credential-guessing halves. |
 | `DISABLE_IN_APP_OTP` / `DISABLE_IN_APP_RESET` | No (exposed deployments: REQUIRED) | Gate the in-response OTP/reset-link delivery (the ADR-013 posture's off-switch — responses become shape-identical `{ok:true}`, S120/BU2). All four gates are declared in `docker-compose.yml`'s environments (S121/BV3) — the host env reaches the container. **S127/CB14**: with either gate unset in production, the server boot WARNS — the in-band channels hand the one-shot takeover link / OTP code to any caller who knows an email, and the response shape is an account-existence oracle. Registration is open, so any internet-facing deployment is multi-user BY CONSTRUCTION: set both gates and provide real mail transport before exposing the app. |
 
 ## 4. Database location (§4 — the `.env.example` reference)

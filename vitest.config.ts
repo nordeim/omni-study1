@@ -1,9 +1,24 @@
 import { defineConfig } from "vitest/config";
 import path from "node:path";
 
-// Unit-test layer for the pure domain seams — 45 files / 1236 tests
-// (re-anchored S131/CF — the audit-driven hardening cycle: census 1217 →
-// 1236, +19 net [script-conventions +10: the S131/CF1 per-email auth
+// Unit-test layer for the pure domain seams — 45 files / 1251 tests
+// (re-anchored S132/CG — the audit-driven hardening cycle: census 1236 →
+// 1251, +15 net [auth +4: the S132/CG2 peppered OTP digest family
+// (deterministic 64-hex, the pepper property, the secret-change
+// brute-force-resistance property, the no-collision leg);
+// script-conventions +4: the S132/CG1+CG3+CG11 auth-hardening census
+// (login's exhausted loginAcct scrypt burn before the uniform 401;
+// forgotAcct: per-email budget before the lookup + the honest-429 shape;
+// registerGlobal: containment budget before the per-IP key) — the two
+// S131/CF7 census legs RE-ANCHORED in place to the hashOtpCode mint/compare
+// (no count change); env-check +4: the S132/CG4 parse-seam truth table
+// (" 0"/"00"/"-1"/"two" all warn; " 1"/unset silent) + the relocation
+// census (env-check hosts parseTrustedProxyHops, auth re-exports) + the
+// re-run S120/BU3 behavior pins at the new home; theme-cache +3: the
+// S132/CG9 BOOT_TOKEN_SUFFIXES derivation pins (the single source, the
+// per-accent deep-equal alignment, the 17-token census)].
+// (prior cycle — re-anchored S131/CF — the audit-driven hardening cycle:
+// census 1217 → 1236, +19 net [script-conventions +10: the S131/CF1 per-email auth
 // budget census (register/resend Acct keys before every DB read/scrypt
 // burn, the payload-normalized no-oracle shape) + the S131/CF7 OTP
 // digest-at-rest census (the digest mint at both create sites, the

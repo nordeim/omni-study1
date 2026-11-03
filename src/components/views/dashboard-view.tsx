@@ -61,6 +61,13 @@ function SectionLink({ href, view, label, onNavigate }: { href: string; view: Vi
     <a
       href={href}
       onClick={(e) => {
+        // S132/CG7: modified clicks keep the browser default (open in a
+        // new tab/window) — the CA7 NavItemLink guard mirrored here. The
+        // unconditional preventDefault swallowed ⌘/Ctrl/Shift-click on every
+        // section action.
+        if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) {
+          return;
+        }
         e.preventDefault();
         onNavigate(view);
       }}
@@ -178,6 +185,11 @@ export function DashboardView() {
           <a
             href="/MyDay"
             onClick={(e) => {
+              // S132/CG7: the CA7 modified-click guard (⌘/Ctrl-click opens
+              // a new tab; the SPA stands down).
+              if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) {
+                return;
+              }
               e.preventDefault();
               navigate("myday");
             }}
@@ -208,6 +220,11 @@ export function DashboardView() {
           <a
             href="/Tasks"
             onClick={(e) => {
+              // S132/CG7: the CA7 modified-click guard (the third CTA site —
+              // the overdue banner's View All).
+              if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) {
+                return;
+              }
               e.preventDefault();
               navigate("tasks");
             }}

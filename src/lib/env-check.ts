@@ -135,6 +135,12 @@ export function inBandDeliveryProdWarning(
 // typings; request.ip was removed upstream after the 15.x deprecation), so
 // the honest remediation is the boot warning (the CB14 precedent), not a
 // silent key that pretends to be per-connection.
+//
+// S132/CG4: the decision rides parseTrustedProxyHops (below) — the RAW
+// string compare answered "0" but silently missed " 0", "00", "-1", and
+// every other string the parser maps to the direct-exposure posture
+// (exactly the operators most in need of the shared-bucket caution). The
+// warning and the limiter's key derivation now read the SAME parse.
 
 export function directExposureProdWarning(
   env: { NODE_ENV?: string; TRUSTED_PROXY_HOPS?: string; [key: string]: string | undefined },
@@ -143,7 +149,34 @@ export function directExposureProdWarning(
   // Only the EXPLICIT direct-exposure posture warns: the unset default is
   // ambiguous at boot (a proxy setting XFF may front the app — the legacy
   // first-hop posture reads it), and N>=1 declares a trusted proxy chain.
-  return env.TRUSTED_PROXY_HOPS === "0";
+  // S132/CG4: decided through the parser — every posture-0 spelling warns
+  // ("0", " 0", "00", "-1", "two" — unparsable fails closed to 0).
+  return parseTrustedProxyHops(env.TRUSTED_PROXY_HOPS) === 0;
+}
+
+// ---- S120/BU3: the declared proxy-hop contract ------------------------------------
+//
+// clientIp() trusted the raw FIRST x-forwarded-for hop — every per-IP budget
+// was bypassable with a per-request forged header (the PAD §6.4 documented
+// reopen trigger). TRUSTED_PROXY_HOPS declares the reverse-proxy depth:
+//   unset  → the legacy first-hop posture (single-node dev/demo — the e2e
+//            suite's own XFF pins keep their semantics);
+//   0      → the header is never trusted (direct-exposure posture);
+//   N >= 1 → the Nth hop FROM THE RIGHT (the client-supplied left side is
+//            never trusted); a header shorter than the declared depth fails
+//            CLOSED (null — the caller falls back to the direct address);
+//   unparsable → 0 (fail closed: the skill §16 "unparsable fails closed").
+//
+// S132/CG4 relocated this from src/lib/auth.ts so env-check is the single
+// source for the whole proxy-hop contract (the warning above and the
+// limiter key derivation in server/auth.ts read the SAME parse — the drift
+// class this closes). auth.ts re-exports it for its existing importers.
+
+export function parseTrustedProxyHops(raw: string | undefined): number | undefined {
+  if (raw === undefined || raw.trim() === "") return undefined; // legacy posture
+  const n = Number(raw.trim());
+  if (!Number.isInteger(n) || n < 0) return 0; // fail closed
+  return n;
 }
 
 // ---- S120/BU21: the demo-seed gate ------------------------------------------

@@ -852,3 +852,103 @@ test.describe("S123/BX5: the folder parentId clear-to-root at the wire", () => {
     expect(after.some((r) => r.id === id)).toBe(false);
   });
 });
+
+// ---------------------------------------------------------------------------
+// S132/CG5 — the boot data-failure surface (docs/remediation-plan-session132.md,
+// the BT12 residual closed).
+//
+// The s132 audit's M5: a boot where the pre-warm AND the background
+// loadAll BOTH fail left every view in false empty states ("No tasks
+// yet" on data that simply never loaded) with NO error surface and NO
+// retry — the Splash had already lifted (a failed pre-warm never blocks
+// the shell, ADR-014) and the loadAll rejection vanished into the bare
+// .catch(() => {}). The fix tracks the first loadAll result: a failure
+// renders a non-blocking bottom-center bar (the connectivity-banner
+// family — role="alert", amber, z-[70]) with honest copy and a Retry
+// that re-runs loadAll and clears the bar on success.
+//
+// The pin: every /api/* route EXCEPT /api/auth/me aborts (the
+// authenticated boot with a dead data plane — the gate itself succeeds
+// so the Splash lifts), the shell commits, the bar appears; then the
+// routes unroute, Retry re-runs loadAll, and the bar clears. Pre-CG5:
+// the shell commits into silent false-empty states — the bar never
+// renders (RED).
+// ---------------------------------------------------------------------------
+test.describe("S132/CG5 · the boot data-failure surface", () => {
+  test("a dead data plane at boot surfaces the failure bar, and Retry heals it (RED pre-fix: silent false-empty states)", async ({ page }) => {
+    await page.route("**/api/*", (route) => {
+      const url = new URL(route.request().url());
+      if (url.pathname === "/api/auth/me") return route.continue();
+      return route.abort("failed");
+    });
+    try {
+      await page.goto("/Dashboard");
+      // The gate itself succeeded (/api/auth/me passed) — the shell
+      // commits even though every data route is dead.
+      await page.waitForFunction(
+        () => document.documentElement.dataset.appHydrated === "true",
+        undefined,
+        { timeout: 30_000 },
+      );
+      // The failure bar: role="alert", honest copy, a Retry affordance.
+      const bar = page.getByRole("alert").filter({ hasText: /couldn't load/i });
+      await expect(bar).toBeVisible({ timeout: 15_000 });
+      await expect(bar.getByRole("button", { name: "Retry" })).toBeVisible();
+    } finally {
+      await page.unroute("**/api/*");
+    }
+
+    // The heal: Retry re-runs loadAll over the now-live routes and the
+    // bar clears on success.
+    await page.getByRole("alert").filter({ hasText: /couldn't load/i }).getByRole("button", { name: "Retry" }).click();
+    await expect(
+      page.getByRole("alert").filter({ hasText: /couldn't load/i }),
+    ).toHaveCount(0, { timeout: 15_000 });
+    // And the data actually arrived — the KPI row renders real counts
+    // (the false-empty state healed, not just the bar dismissed).
+    await expect(page.getByText("Today's Progress")).toBeVisible();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// S132/CG6 — the CE3 gate sweep, Settings leg (docs/remediation-plan-session132.md).
+//
+// The s130 CE3 sweep gated eight sibling views' empty states on
+// s.loading; the s132 audit found four more: the Settings Subjects and
+// Holidays tabs, the Analytics stat row (false zero-stats on in-flight
+// data), and the Calendar empty messages. The pin holds the Settings
+// view's own pre-warmed /api/subjects GET stalled (the accepted-TCP
+// shape within the 20 s window — the S129/CD2 deadline releases the
+// gate), then asserts the Subjects tab renders the loading branch while
+// the collection is in flight. Pre-CG6: the FALSE "No subjects yet"
+// renders live (RED).
+// ---------------------------------------------------------------------------
+test.describe("S132/CG6 · the Settings loading gates", () => {
+  test("an in-flight subjects GET renders the Subjects tab loading branch, never the false 'No subjects yet' empty state (RED pre-fix)", async ({ page }) => {
+    const HELD = "**/api/subjects";
+    await page.route(HELD, () => {
+      /* never fulfills — the accepted-TCP stall shape (within the 20 s window) */
+    });
+    try {
+      // /Settings pre-warms subjects + holidays — the held subjects fetch
+      // holds the Splash until the CD2 deadline (~20 s) releases it; the
+      // background loadAll's subjects fetch is STILL held, so the tab
+      // renders with s.loading true and an empty collection.
+      await page.goto("/Settings");
+      await page.waitForFunction(
+        () => document.documentElement.dataset.appHydrated === "true",
+        undefined,
+        { timeout: 35_000 },
+      );
+      await page.getByRole("tab", { name: "Subjects" }).click();
+      await expect(page.getByRole("heading", { level: 2, name: "Subjects" })).toBeVisible();
+      // The in-flight window: the loading branch owns the tab pane, the
+      // false empty state renders NOWHERE.
+      await expect(page.getByText("No subjects yet")).toHaveCount(0);
+      await expect(page.locator(".animate-spin").first()).toBeVisible();
+    } finally {
+      // The S13/S14 lesson: unroute held routes in finally.
+      await page.unroute(HELD);
+    }
+  });
+});

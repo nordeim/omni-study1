@@ -260,6 +260,36 @@ export const AVATAR_EMOJIS: string[] = [
 
 export const THEME_CACHE_KEY = "sf-theme";
 
+// S132/CG9: the boot script's token-name list — the SINGLE derived source.
+// The script previously embedded SEVEN hand-maintained per-accent name
+// arrays paired positionally with Object.values(ACCENT_TOKENS[accent]) — a
+// mid-object token insertion in AccentToken silently mis-mapped every
+// later --sf-primary-* var pre-paint on every accent, and nothing failed
+// (the script is a string; the presence pins never checked alignment).
+// The suffix list derives from the SAME kebab-case suffixes accentCssVars
+// emits (the S8 lesson), and tests/theme-cache.test.ts reconstructs the
+// script's var list from it and deep-equals accentCssVars's keys for every
+// accent — the positional alignment is machine-enforced now.
+export const BOOT_TOKEN_SUFFIXES: readonly string[] = [
+  "primary",
+  "foreground",
+  "strong",
+  "strong-dark",
+  "deep",
+  "soft",
+  "soft-dark",
+  "softest",
+  "softest-adjacent",
+  "gradient-to",
+  "gradient-to-strong",
+  "avatar-from",
+  "avatar-to",
+  "clock-date-dark", // S88/AO5
+  "empty-from",
+  "empty-to",
+  "empty", // S121/BV15
+];
+
 export function themeCachePayload(mode: ThemeMode, accent: Accent): string {
   return JSON.stringify({ mode, accent });
 }
@@ -309,20 +339,14 @@ export const THEME_BOOT_SCRIPT = `
     // S81/AH9: the boot script mirrors applyToDocument's doctrine attribute
     // — the accent sweeps read dataset.accent as their mode proof.
     document.documentElement.dataset.accent = accent;
-    var TOKENS = {
-      violet: ["primary","foreground","strong","strong-dark","deep","soft","soft-dark","softest","softest-adjacent","gradient-to","gradient-to-strong","avatar-from","avatar-to","clock-date-dark","empty-from","empty-to","empty"],
-      blue: ["primary","foreground","strong","strong-dark","deep","soft","soft-dark","softest","softest-adjacent","gradient-to","gradient-to-strong","avatar-from","avatar-to","clock-date-dark","empty-from","empty-to","empty"],
-      green: ["primary","foreground","strong","strong-dark","deep","soft","soft-dark","softest","softest-adjacent","gradient-to","gradient-to-strong","avatar-from","avatar-to","clock-date-dark","empty-from","empty-to","empty"],
-      orange: ["primary","foreground","strong","strong-dark","deep","soft","soft-dark","softest","softest-adjacent","gradient-to","gradient-to-strong","avatar-from","avatar-to","clock-date-dark","empty-from","empty-to","empty"],
-      pink: ["primary","foreground","strong","strong-dark","deep","soft","soft-dark","softest","softest-adjacent","gradient-to","gradient-to-strong","avatar-from","avatar-to","clock-date-dark","empty-from","empty-to","empty"],
-      red: ["primary","foreground","strong","strong-dark","deep","soft","soft-dark","softest","softest-adjacent","gradient-to","gradient-to-strong","avatar-from","avatar-to","clock-date-dark","empty-from","empty-to","empty"],
-      teal: ["primary","foreground","strong","strong-dark","deep","soft","soft-dark","softest","softest-adjacent","gradient-to","gradient-to-strong","avatar-from","avatar-to","clock-date-dark","empty-from","empty-to","empty"]
-    };
+    var SUFFIXES = ${JSON.stringify(BOOT_TOKEN_SUFFIXES)};
     var VALUES = ${JSON.stringify(Object.fromEntries(ACCENTS.map((a) => [a, Object.values(ACCENT_TOKENS[a])])))};
     var st = document.documentElement.style;
-    var names = TOKENS[accent] || TOKENS.violet;
-    var vals = VALUES[accent] || VALUES.violet;
-    for (var i = 0; i < names.length; i++) st.setProperty("--sf-primary" + (names[i] === "primary" ? "" : "-" + names[i]), vals[i]);
+    // S132/CG9: the names derive from the SINGLE BOOT_TOKEN_SUFFIXES source
+    // (embedded above) — the seven hand-maintained per-accent arrays are
+    // gone; the alignment with Object.values' positional order is pinned by
+    // tests/theme-cache.test.ts for every accent.
+    for (var i = 0; i < SUFFIXES.length; i++) st.setProperty("--sf-primary" + (SUFFIXES[i] === "primary" ? "" : "-" + SUFFIXES[i]), (VALUES[accent] || VALUES.violet)[i]);
     var meta = document.createElement("meta");
     meta.name = "theme-color";
     meta.content = dark ? "#020617" : "#ffffff";

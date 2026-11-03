@@ -1,4 +1,18 @@
 #!/usr/bin/env bash
+# (S132/CG re-tag — census 570 → 575, net +5: chunk 1 +2 [the two CG7
+# modified-click legs in navigation — a synthetic ctrl-click on the
+# section-action View All CTA and on the Start My Day hero CTA never fires
+# the SPA navigation, the CA7 guard mirrored on the dashboard CTAs]; chunk
+# 3 +2 [the CG5 boot data-failure bar leg in resilience — every /api/* but
+# /api/auth/me aborts, the shell commits, the amber role=alert bar
+# surfaces, Retry heals it; and the CG6 Settings loading-gate leg — a held
+# /api/subjects renders the Subjects tab spinner, never the false
+# "No subjects yet"]; chunk 5 +1 [the CG3 forgot per-email budget leg in
+# auth-flows — a rotated-XFF flood on one email trips forgotAcct: the 6th
+# ask 429s with the honest copy, known and unknown emails
+# identically]. The full CG map: docs/remediation-plan-session132.md.)
+# Expected: 149 + 179 + 74 + 94 + 79 = 575 (each chunk's count includes its
+# auth setup — the current census; the historical re-tag blocks beneath.)
 # (S131/CF re-tag — census 567 → 570, net +3: chunk 1 +1 [the CF9
 # drawer focus-restore leg in mobile-navigation — crossing the lg
 # breakpoint hands focus to the desktop chrome, never <body>]; chunk 4 +1

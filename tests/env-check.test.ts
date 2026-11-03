@@ -7,6 +7,7 @@ import {
   DEV_FALLBACK_SECRET,
   directExposureProdWarning,
   inBandDeliveryProdWarning,
+  parseTrustedProxyHops,
 } from "@/lib/env-check";
 
 // The S22 boot-guard seam (ADR-020): production boots refuse to sign
@@ -225,5 +226,78 @@ describe("S131/CF2 · directExposureProdWarning (the shared-bucket posture made 
     );
     expect(src).toMatch(/directExposureProdWarning/);
     expect(src).toMatch(/TRUSTED_PROXY_HOPS/i);
+  });
+});
+
+// S132/CG4 — the warning/posture parse-seam unification
+// (docs/remediation-plan-session132.md).
+//
+// The s132 audit's L4: directExposureProdWarning compared the RAW string
+// (env.TRUSTED_PROXY_HOPS === "0"), so " 0", "00", and "-1" all silently
+// parsed to the direct-exposure posture WITHOUT the warning — the exact
+// operators most in need of the shared-bucket caution got none. CG4 moves
+// the decision through parseTrustedProxyHops (relocated to env-check, the
+// single source; auth.ts re-exports it for its existing importers): every
+// string the PARSER maps to 0 now warns.
+describe("S132/CG4 · directExposureProdWarning decides through the parse seam (the raw-string compare closed)", () => {
+  it("warns on every production value that PARSES to posture 0 — whitespace, zero-padded, negative, and non-numeric all fail closed to the warning", () => {
+    expect(
+      directExposureProdWarning({ NODE_ENV: "production", TRUSTED_PROXY_HOPS: " 0" }),
+    ).toBe(true);
+    expect(
+      directExposureProdWarning({ NODE_ENV: "production", TRUSTED_PROXY_HOPS: "00" }),
+    ).toBe(true);
+    expect(
+      directExposureProdWarning({ NODE_ENV: "production", TRUSTED_PROXY_HOPS: "-1" }),
+    ).toBe(true);
+    expect(
+      directExposureProdWarning({ NODE_ENV: "production", TRUSTED_PROXY_HOPS: "two" }),
+    ).toBe(true);
+  });
+
+  it("stays silent on N>=1 and unset — the honest rows of the truth table are unchanged", () => {
+    expect(
+      directExposureProdWarning({ NODE_ENV: "production", TRUSTED_PROXY_HOPS: "1" }),
+    ).toBe(false);
+    // " 1" parses to 1 (a declared proxy chain) — silent, same as "1".
+    expect(
+      directExposureProdWarning({ NODE_ENV: "production", TRUSTED_PROXY_HOPS: " 1" }),
+    ).toBe(false);
+    expect(
+      directExposureProdWarning({ NODE_ENV: "production", TRUSTED_PROXY_HOPS: "" }),
+    ).toBe(false);
+    expect(directExposureProdWarning({ NODE_ENV: "production" })).toBe(false);
+  });
+
+  it("parseTrustedProxyHops is sourced from env-check (the relocation) and auth.ts re-exports it (no importer churn)", () => {
+    // The relocation makes env-check the single source for the whole
+    // proxy-hop contract — the warning and the limiter key derivation read
+    // the SAME parse (the drift class this closes).
+    const envCheck = readFileSync(
+      path.resolve(process.cwd(), "src/lib/env-check.ts"),
+      "utf8",
+    );
+    expect(envCheck).toMatch(/export function parseTrustedProxyHops/);
+    const auth = readFileSync(
+      path.resolve(process.cwd(), "src/lib/auth.ts"),
+      "utf8",
+    );
+    // auth.ts IMPORTS the seam from env-check (the existing dependency
+    // direction — no cycle) and re-exports it so server/auth.ts and
+    // tests/client-ip.test.ts keep working unchanged.
+    expect(auth).toMatch(/parseTrustedProxyHops/);
+    expect(auth).not.toMatch(/export function parseTrustedProxyHops/);
+  });
+
+  it("the parse seam's own truth table holds at the relocation (the S120/BU3 behavior pins, re-run at the new home)", () => {
+    expect(parseTrustedProxyHops(undefined)).toBeUndefined();
+    expect(parseTrustedProxyHops("")).toBeUndefined();
+    expect(parseTrustedProxyHops("0")).toBe(0);
+    expect(parseTrustedProxyHops(" 0")).toBe(0);
+    expect(parseTrustedProxyHops("00")).toBe(0);
+    expect(parseTrustedProxyHops("-1")).toBe(0);
+    expect(parseTrustedProxyHops("two")).toBe(0);
+    expect(parseTrustedProxyHops("2")).toBe(2);
+    expect(parseTrustedProxyHops(" 2 ")).toBe(2);
   });
 });

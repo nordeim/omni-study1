@@ -12,7 +12,7 @@ import { z } from "zod";
 import {
   checkRateLimit,
   generateVerificationCode,
-  hashResetToken,
+  hashOtpCode,
 } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { inAppDeliveryGates } from "@/lib/env-check";
@@ -66,9 +66,11 @@ export async function POST(request: NextRequest) {
 
     if (user && !user.emailVerified) {
       const code = generateVerificationCode();
-      // S131/CF7: the digest at rest — the BR6 posture extended to the OTP
-      // (a DB read must never yield a live sign-in credential; a correct
-      // code SIGNS THE CALLER IN). The RESPONSE still carries the plaintext
+      // S131/CF7 → S132/CG2: the PEPPERED digest at rest — the BR6 posture
+      // extended to the OTP (a DB read must never yield a live sign-in
+      // credential; a correct code SIGNS THE CALLER IN), now HMAC-keyed by
+      // AUTH_SECRET (the 10^6 code space made the unkeyed digest
+      // brute-forceable in <1 s). The RESPONSE still carries the plaintext
       // code (the ADR-013 in-band delivery); only the at-rest form changes.
       // S121/BV8: the register route's own pruning, mirrored here — the
       // account's EXPIRED tokens never outlive a resend either (bounded
@@ -80,7 +82,7 @@ export async function POST(request: NextRequest) {
       await db.verificationToken.create({
         data: {
           userId: user.id,
-          code: hashResetToken(code),
+          code: hashOtpCode(code),
           expiresAt: new Date(Date.now() + CODE_TTL_MS),
         },
       });

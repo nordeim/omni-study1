@@ -764,6 +764,11 @@ function SubjectDialog({
 function SubjectsTab() {
   const { toast } = useToast();
   const subjects = useDataStore((s) => s.subjects);
+  // S132/CG6: the CE3 loading gate — the empty state must not render on
+  // in-flight data (the s130 sweep missed the Settings tabs; /Settings
+  // pre-warms subjects + holidays, but the background loadAll's re-fetch
+  // can still be in flight on a slow transport).
+  const loading = useDataStore((s) => s.loading);
   const [dialogOpen, setDialogOpen] = React.useState(false);
   const [editing, setEditing] = React.useState<SubjectRow | null>(null);
   const [deleting, setDeleting] = React.useState<SubjectRow | null>(null);
@@ -785,7 +790,11 @@ function SubjectsTab() {
         </Button>
       </div>
       <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">Manage your subjects and classes</p>
-      {subjects.length === 0 ? (
+      {loading && subjects.length === 0 ? (
+        <div className="flex justify-center py-8 text-sf-primary">
+          <Spinner className="size-6" />
+        </div>
+      ) : subjects.length === 0 ? (
         <p className="py-8 text-center text-sm text-slate-500 dark:text-slate-400">
           No subjects yet. Add your first subject to get started!
         </p>
@@ -935,6 +944,8 @@ function HolidayDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (o
 function HolidaysTab() {
   const { toast } = useToast();
   const holidays = useDataStore((s) => s.holidays);
+  // S132/CG6: the CE3 loading gate (the SubjectsTab twin).
+  const loading = useDataStore((s) => s.loading);
   const [dialogOpen, setDialogOpen] = React.useState(false);
 
   const sorted = [...holidays].sort(
@@ -959,7 +970,11 @@ function HolidaysTab() {
           <Plus className="size-4" strokeWidth={2} /> Add Holiday
         </Button>
       </div>
-      {sorted.length === 0 ? (
+      {loading && sorted.length === 0 ? (
+        <div className="flex justify-center py-8 text-sf-primary">
+          <Spinner className="size-6" />
+        </div>
+      ) : sorted.length === 0 ? (
         <p className="py-8 text-center text-sm text-slate-500 dark:text-slate-400">
           No holidays set. Add your school holidays!
         </p>

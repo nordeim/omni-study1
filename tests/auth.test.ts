@@ -7,6 +7,7 @@ import {
   DUMMY_LOGIN_HASH,
   generateResetToken,
   generateVerificationCode,
+  hashOtpCode,
   hashPassword,
   hashResetToken,
   normalizeVerificationCode,
@@ -386,5 +387,49 @@ describe("the OTP digest family (S131/CF7)", () => {
     let b = generateVerificationCode();
     if (a === b) b = a === "000000" ? "000001" : "000000";
     expect(hashResetToken(a)).not.toBe(hashResetToken(b));
+  });
+});
+
+// S132/CG2 — the PEPPERED OTP digest family
+// (docs/remediation-plan-session132.md).
+//
+// The s132 crypto audit's M2: hashResetToken is unkeyed SHA-256, and the
+// 6-digit OTP space (10^6) is exhaustively hashed offline in under a
+// second — CF7's "a DB read must never yield a live sign-in credential"
+// guarantee was mathematically void for the OTP family (it holds for the
+// 24-byte reset token, whose entropy makes the offline search
+// infeasible). The peppered seam HMACs the code with the session secret:
+// offline brute force now requires AUTH_SECRET, which a DB read does not
+// include. Deterministic per-process so the DB lookups still match.
+describe("the peppered OTP digest family (S132/CG2)", () => {
+  it("digests a 6-digit code deterministically to the 64-hex form (the BR6 shape, DB-matchable)", () => {
+    const code = generateVerificationCode();
+    const digest = hashOtpCode(code);
+    expect(digest).toMatch(/^[0-9a-f]{64}$/);
+    expect(hashOtpCode(code)).toBe(digest); // deterministic
+    const normalized = normalizeVerificationCode(` ${code} `);
+    expect(normalized).toBe(code); // the whitespace-tolerant intake
+    expect(hashOtpCode(normalized as string)).toBe(digest); // the normalize-then-digest pipeline verifies
+  });
+
+  it("is PEPPERED — never equal to the unkeyed reset-token digest of the same input", () => {
+    const code = "042981";
+    expect(hashOtpCode(code)).not.toBe(hashResetToken(code));
+  });
+
+  it("changes with the secret (offline brute force requires AUTH_SECRET — the brute-force-resistance property)", () => {
+    const code = "042981";
+    const withA = hashOtpCode(code, "a".repeat(32));
+    const withB = hashOtpCode(code, "b".repeat(32));
+    expect(withA).not.toBe(withB);
+    expect(withA).toMatch(/^[0-9a-f]{64}$/);
+    expect(withB).toMatch(/^[0-9a-f]{64}$/);
+  });
+
+  it("two different codes never collide in digest space under one secret", () => {
+    const secret = "c".repeat(32);
+    const a = "000000";
+    const b = "000001";
+    expect(hashOtpCode(a, secret)).not.toBe(hashOtpCode(b, secret));
   });
 });

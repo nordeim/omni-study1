@@ -296,7 +296,7 @@ describe("the canonical consumer sites ride the utilities (S92/AS1 leg 3)", () =
 // register's second direction would fail on the stale entry).
 const RESIDUALS: ReadonlyArray<{ file: string; line: number; why: string }> = [
   { file: "src/components/auth/login-surface.tsx", line: 28, why: "the bg-red-50/70 translucent alert (the reference's measured login chrome)" },
-  { file: "src/components/views/dashboard-view.tsx", line: 197, why: "the overdue icon chip (bg-only pair — the icon carries its own text color)" },
+  { file: "src/components/views/dashboard-view.tsx", line: 209, why: "the overdue icon chip (bg-only pair — the icon carries its own text color)" },
   { file: "src/components/rum/rum-panel.tsx", line: 143, why: "the borderless red-600 alert (the /rum owner panel's measured style; line re-anchored S130/CE4 — the load-state machine comments above shifted it)" },
 ];
 

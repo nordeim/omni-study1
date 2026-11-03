@@ -13,7 +13,7 @@ import {
   checkRateLimit,
   generateVerificationCode,
   hashPassword,
-  hashResetToken,
+  hashOtpCode,
   verifyPassword,
   DUMMY_LOGIN_HASH,
 } from "@/lib/auth";
@@ -36,6 +36,26 @@ type RegisterBody = { name?: unknown; fullName?: unknown };
 
 export async function POST(request: NextRequest) {
   try {
+    // S132/CG11: the GLOBAL containment budget — the honest bound on the
+    // CF1 residual. The per-IP and per-email keys below are individually
+    // forgeable/bypassable under the legacy XFF posture (a rotated header
+    // mints a fresh per-IP key per request; a distinct-email flood passes
+    // every per-email key), and each passing request costs one scrypt burn
+    // + up to two unauthenticated rows (User + VerificationToken) from ONE
+    // host. 40/15-min process-wide bounds that churn (generous: the e2e
+    // fresh-user journeys register ≤ 3 per chunk and each chunk re-boots
+    // the server, so the in-process bucket never trips in tests; a
+    // legitimate multi-user deploy fronted by a proxy with
+    // TRUSTED_PROXY_HOPS≥1 derives per-IP keys that never sum here). A
+    // volume-containment 429 leaks nothing the per-IP 429 doesn't already.
+    const globalLimit = checkRateLimit("registerGlobal:", 40);
+    if (!globalLimit.ok) {
+      return rateLimitedResponse(
+        globalLimit.retryAfterSec,
+        "Too many registration attempts. Try again shortly.",
+      );
+    }
+
     const ip = clientIp(request);
     const limit = checkRateLimit(`register:${ip}`, 10);
     if (!limit.ok) {
@@ -57,14 +77,18 @@ export async function POST(request: NextRequest) {
         : raw;
     const { fullName, email, password } = parseWith(registerSchema, body);
 
-    // S131/CF1: the per-EMAIL budget — the CB12/BX2 per-account pattern,
-    // keyed by the request PAYLOAD (a 429 answers identically for known
-    // and unknown emails — no enumeration oracle). The per-IP key above is
-    // forgeable under the legacy XFF posture (a rotated header mints a
-    // fresh key per request), and every register branch burns scryptSync —
-    // a rotated-XFF flood was a single-worker CPU DoS plus unbounded
-    // unauthenticated User/VerificationToken growth. Checked BEFORE the
-    // user lookup and every scrypt burn: an over-budget ask costs neither.
+    // S131/CF1 (narrowed S132/CG11): the per-EMAIL budget — the CB12/BX2
+    // per-account pattern, keyed by the request PAYLOAD (a 429 answers
+    // identically for known and unknown emails — no enumeration oracle).
+    // The per-IP key above is forgeable under the legacy XFF posture (a
+    // rotated header mints a fresh key per request), and every register
+    // branch burns scryptSync — a rotated-XFF flood was a single-worker CPU
+    // DoS plus unbounded unauthenticated User/VerificationToken growth.
+    // Checked BEFORE the user lookup and every scrypt burn: an over-budget
+    // ask costs neither. RESIDUAL (honest): distinct-email floods pass this
+    // key too — the registerGlobal: bucket above is the containment bound;
+    // adopt TRUSTED_PROXY_HOPS≥1 (front the app with a proxy that appends
+    // the real client) before any exposure.
     const normalizedEmail = email.toLowerCase();
     const emailLimit = checkRateLimit(`registerAcct:${normalizedEmail}`, 5);
     if (!emailLimit.ok) {
@@ -92,15 +116,18 @@ export async function POST(request: NextRequest) {
     }
 
     const code = generateVerificationCode();
-    // S131/CF7: the digest at rest — the BR6 posture extended to the OTP (a
-    // DB read must never yield a live sign-in credential; a correct code
-    // SIGNS THE CALLER IN). The RESPONSE still carries the plaintext code
-    // (the ADR-013 in-band delivery); only the at-rest form changes.
-    // Pre-existing rows hold plaintext codes that will never match a
-    // digest — the 15-min TTL + the re-issue paths bound the impact to
-    // "resend once"; no data migration.
+    // S131/CF7 → S132/CG2: the PEPPERED digest at rest — the BR6 posture
+    // extended to the OTP (a DB read must never yield a live sign-in
+    // credential; a correct code SIGNS THE CALLER IN), now HMAC-keyed by
+    // AUTH_SECRET: the 10^6 code space made the unkeyed SHA-256 digest
+    // offline-brute-forceable in <1 s from any DB read, voiding CF7's
+    // guarantee. The RESPONSE still carries the plaintext code (the
+    // ADR-013 in-band delivery); only the at-rest form changes.
+    // Pre-existing rows hold unkeyed-SHA digests that never match an HMAC
+    // — bounded by the 15-min TTL + the re-issue paths, exactly CF7's own
+    // rollout (no data migration).
     const tokenData = {
-      code: hashResetToken(code),
+      code: hashOtpCode(code),
       expiresAt: new Date(Date.now() + CODE_TTL_MS),
     };
 

@@ -15,9 +15,14 @@ import {
   timingSafeEqual,
 } from "node:crypto";
 
-import { DEV_FALLBACK_SECRET } from "./env-check";
+import { DEV_FALLBACK_SECRET, parseTrustedProxyHops } from "./env-check";
 
 export { DEV_FALLBACK_SECRET };
+// S132/CG4: parseTrustedProxyHops relocated to env-check (the single source
+// for the proxy-hop contract — the direct-exposure warning and the limiter
+// key derivation read the SAME parse). Re-exported here so server/auth.ts
+// and tests/client-ip.test.ts keep their existing @/lib/auth imports.
+export { parseTrustedProxyHops };
 
 const SCRYPT_KEYLEN = 64;
 export const SESSION_TTL_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
@@ -218,6 +223,22 @@ export function hashResetToken(token: string): string {
   return createHash("sha256").update(token).digest("hex");
 }
 
+/** S132/CG2: the PEPPERED OTP digest — HMAC-SHA-256 over the 6-digit code,
+ *  keyed by the session secret (AUTH_SECRET; the dev fallback outside
+ *  production). The unkeyed hashResetToken form was fine for the 24-byte
+ *  reset token (offline search over 2^192 is infeasible) but WRONG for the
+ *  10^6 OTP space: any DB read yields the whole space in under a second,
+ *  voiding CF7's "a DB read must never yield a live sign-in credential"
+ *  guarantee — a correct code both verifies AND signs the caller in. The
+ *  HMAC form moves the offline brute force behind AUTH_SECRET, which a DB
+ *  read does not include. Deterministic per-process (DB-matchable); the
+ *  explicit `secret` parameter keeps the seam unit-pinnable (the
+ *  env-check precedent). The 24-byte reset token KEEPS hashResetToken —
+ *  its entropy needs no pepper. */
+export function hashOtpCode(code: string, secret: string = sessionSecret()): string {
+  return createHmac("sha256", secret).update(code).digest("hex");
+}
+
 /** S131/CF7: the timing-safe string compare — the codebase's ONE idiom for
  *  comparing secret material (verifyPassword and the session-MAC check each
  *  dance this inline; the OTP digest compare was the last plaintext
@@ -239,23 +260,8 @@ export function normalizeVerificationCode(
 
 // ---- S120/BU3: the declared proxy-hop contract ------------------------------------
 //
-// clientIp() trusted the raw FIRST x-forwarded-for hop — every per-IP budget
-// was bypassable with a per-request forged header (the PAD §6.4 documented
-// reopen trigger). TRUSTED_PROXY_HOPS declares the reverse-proxy depth:
-//   unset  → the legacy first-hop posture (single-node dev/demo — the e2e
-//            suite's own XFF pins keep their semantics);
-//   0      → the header is never trusted (direct-exposure posture);
-//   N >= 1 → the Nth hop FROM THE RIGHT (the client-supplied left side is
-//            never trusted); a header shorter than the declared depth fails
-//            CLOSED (null — the caller falls back to the direct address);
-//   unparsable → 0 (fail closed: the skill §16 "unparsable fails closed").
-
-export function parseTrustedProxyHops(raw: string | undefined): number | undefined {
-  if (raw === undefined || raw.trim() === "") return undefined; // legacy posture
-  const n = Number(raw.trim());
-  if (!Number.isInteger(n) || n < 0) return 0; // fail closed
-  return n;
-}
+// (The contract's parse seam lives in env-check since S132/CG4 — see its
+// comment there for the full posture table; re-exported above.)
 
 /** Extract the client IP from an x-forwarded-for value under a declared
  *  proxy-hop policy. Returns null when the policy says "do not trust the

@@ -964,3 +964,56 @@ test.describe("S130/CE3 · the view loading gates", () => {
     }
   });
 });
+
+// ---------------------------------------------------------------------------
+// S132/CG7 · the dashboard CTAs honor modified clicks
+// (docs/remediation-plan-session132.md).
+//
+// The s132 FE audit's L: the three dashboard CTA anchors (SectionLink —
+// the shared section-action component — "Start My Day", and the overdue
+// "View All") called preventDefault() unconditionally, the exact CA7
+// defect the sidebar nav links shed in s126: ⌘/Ctrl/Shift-click could
+// never open the destination in a new tab. The fix mirrors NavItemLink's
+// guard (modified click → early return BEFORE preventDefault). The pin
+// mirrors the CA7 e2e technique: a synthetic ctrl-click's default action
+// never fires navigation in the harness, so the discriminator is the SPA
+// route — pre-fix the handler navigated (URL moves off /Dashboard);
+// post-fix the handler stands down (URL stays).
+// ---------------------------------------------------------------------------
+test.describe("S132/CG7 · the dashboard CTAs honor modified clicks", () => {
+  test("a ctrl-click on the section-action 'View All' CTA does NOT fire the SPA navigation (RED pre-fix: the URL moves)", async ({ page }) => {
+    await page.goto("/Dashboard");
+    await page.waitForFunction(() =>
+      document.documentElement.dataset.appHydrated === "true",
+    );
+    // The first section-action anchor on the dashboard (the My Day
+    // section's View All — or the overdue banner's View All when the seed
+    // carries overdue items; the guard covers every SectionLink + banner
+    // instance, so either discriminator works identically).
+    const cta = page.getByRole("link", { name: /^View All/ }).first();
+    await expect(cta).toBeVisible();
+    await cta.evaluate((el) =>
+      el.dispatchEvent(
+        new MouseEvent("click", { bubbles: true, cancelable: true, ctrlKey: true }),
+      ),
+    );
+    await page.waitForTimeout(600);
+    expect(new URL(page.url()).pathname).toBe("/Dashboard");
+  });
+
+  test("a ctrl-click on the 'Start My Day' hero CTA does NOT fire the SPA navigation (RED pre-fix: the URL moves)", async ({ page }) => {
+    await page.goto("/Dashboard");
+    await page.waitForFunction(() =>
+      document.documentElement.dataset.appHydrated === "true",
+    );
+    const cta = page.getByRole("link", { name: "Start My Day" });
+    await expect(cta).toBeVisible();
+    await cta.evaluate((el) =>
+      el.dispatchEvent(
+        new MouseEvent("click", { bubbles: true, cancelable: true, ctrlKey: true }),
+      ),
+    );
+    await page.waitForTimeout(600);
+    expect(new URL(page.url()).pathname).toBe("/Dashboard");
+  });
+});

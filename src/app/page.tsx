@@ -103,7 +103,11 @@ function Splash({ error, onRetry }: { error?: string; onRetry?: () => void }) {
         <GraduationCap className="h-7 w-7" strokeWidth={2} />
       </span>
       {error && (
-        <div className="flex flex-col items-center gap-2 text-center">
+        // S132/CG8: role="alert" — the gate-failure message becomes
+        // announceable (WCAG 4.1.3 status messages; the loading→error
+        // transition inserts this node, and role="alert" is what makes an
+        // inserted node spoken — the S14 ambient-status convention).
+        <div role="alert" className="flex flex-col items-center gap-2 text-center">
           <p className="text-sm text-slate-500 dark:text-slate-400">{error}</p>
           {onRetry && (
             <button
@@ -120,12 +124,50 @@ function Splash({ error, onRetry }: { error?: string; onRetry?: () => void }) {
   );
 }
 
+/** S132/CG5: the boot data-failure bar — the BT12 residual closed. A boot
+ *  where the pre-warm AND the background loadAll both fail previously left
+ *  every view in false empty states with no error surface and no retry (the
+ *  loadAll rejection vanished into the bare .catch(() => {})). Non-blocking
+ *  bottom-center amber bar (the connectivity-banner family — role="alert",
+ *  z-[70]) stacked ABOVE the offline pill (bottom-16 vs bottom-4: both can
+ *  co-occur — offline AND a failed load), with a Retry that re-runs loadAll
+ *  and clears the bar on success. */
+function BootDataFailureBar({ onRetry }: { onRetry: () => void }) {
+  return (
+    <div
+      role="alert"
+      className="sf-connectivity-pill fixed bottom-16 left-1/2 z-[70] flex w-max max-w-[calc(100vw-2rem)] -translate-x-1/2 items-center gap-3 rounded-full px-4 py-2 text-sm font-medium shadow-lg print:hidden"
+    >
+      <span>Couldn&apos;t load your workspace data.</span>
+      <button
+        type="button"
+        onClick={onRetry}
+        className="rounded-md font-semibold underline underline-offset-2 outline-none focus-visible:ring-2 focus-visible:ring-sf-primary/40"
+      >
+        Retry
+      </button>
+    </div>
+  );
+}
+
 export default function Home() {
   const [status, setStatus] = React.useState<GateStatus>("loading");
   const [gateError, setGateError] = React.useState<string>("");
   const [attempt, setAttempt] = React.useState(0);
+  // S132/CG5: the first loadAll's outcome — false-empty states were the
+  // BT12 residual; the flag drives the BootDataFailureBar below.
+  const [bootDataFailed, setBootDataFailed] = React.useState(false);
   const view = useAppStore((s) => s.view);
   const sidebarCollapsed = useAppStore((s) => s.sidebarCollapsed);
+
+  // S132/CG5: the Retry affordance — re-runs the full loadAll with the
+  // same result tracking (clears the bar on success, keeps it on failure).
+  const retryBootData = React.useCallback(() => {
+    void useDataStore.getState().loadAll().then(
+      () => setBootDataFailed(false),
+      () => setBootDataFailed(true),
+    );
+  }, []);
 
   React.useEffect(() => {
     let cancelled = false;
@@ -165,14 +207,21 @@ export default function Home() {
         // rest of the cache fills without gating the first paint. S118/BS9:
         // a failed fetch must never reject into an unhandled rejection —
         // the offline state surfaces through the connectivity banner.
-        // S119/BT12 (the honest residual): a boot where BOTH the pre-warm
-        // and this loadAll fail leaves the collections empty until the
-        // next mutation refreshes its slice or the user reloads (the
-        // earlier comment claimed a view-switch healing that never
-        // existed — navigate() loads nothing; loadCollections is called
-        // only here at boot plus three post-mutation sites). The Splash's
-        // own retry affordance is the manual reload.
-        void useDataStore.getState().loadAll().catch(() => {});
+        // S132/CG5: the outcome is TRACKED now — a boot where the pre-warm
+        // AND this loadAll both fail previously rendered silent false-empty
+        // states (the BT12 residual: the earlier comment claimed a
+        // view-switch healing that never existed — navigate() loads
+        // nothing; loadCollections is called only here at boot plus three
+        // post-mutation sites). The failure surfaces through the
+        // BootDataFailureBar with a Retry; success clears it.
+        void useDataStore.getState().loadAll().then(
+          () => {
+            if (!cancelled) setBootDataFailed(false);
+          },
+          () => {
+            if (!cancelled) setBootDataFailed(true);
+          },
+        );
       } catch (err: unknown) {
         if (cancelled) return;
         if (err instanceof ApiError && err.status === 401) {
@@ -219,6 +268,9 @@ export default function Home() {
       <HydrationMarker />
       <MobileChrome />
       <ConnectivityBanner />
+      {/* S132/CG5: the boot data-failure surface (stacked above the
+          connectivity pill — both can co-occur). */}
+      {bootDataFailed && <BootDataFailureBar onRetry={retryBootData} />}
       <RumBeacon />
       <main
         id="main-content"

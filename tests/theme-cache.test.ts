@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
+import { readFileSync } from "node:fs";
+import path from "node:path";
+
 import {
+  ACCENTS,
+  accentCssVars,
+  BOOT_TOKEN_SUFFIXES,
   THEME_BOOT_SCRIPT,
   THEME_CACHE_KEY,
   parseThemeCache,
@@ -76,5 +82,57 @@ describe("THEME_BOOT_SCRIPT (S12-C1 — the print handlers, pinned)", () => {
     expect(THEME_BOOT_SCRIPT).toContain('var KEY = "sf-theme"');
     expect(THEME_BOOT_SCRIPT).toContain("localStorage.getItem(KEY)");
     expect(THEME_BOOT_SCRIPT).toContain("classList.add(\"dark\")");
+  });
+});
+
+// S132/CG9 — the boot-script token derivation + pin
+// (docs/remediation-plan-session132.md).
+//
+// The s132 FE audit's L: THEME_BOOT_SCRIPT paired seven hand-maintained
+// TOKENS name arrays with Object.values(ACCENT_TOKENS[a]) POSITIONALLY — a
+// mid-object token insertion in AccentToken silently mis-mapped every
+// later --sf-primary-* var pre-paint on every accent, and nothing failed
+// (the script is a string; the presence pins never checked alignment).
+// CG9 replaces the seven arrays with ONE exported BOOT_TOKEN_SUFFIXES list
+// embedded into the script; this pin reconstructs the var list the script
+// would emit and deep-equals it against accentCssVars's ACTUAL keys for
+// EVERY accent — the positional alignment is now machine-enforced.
+describe("S132/CG9 · THEME_BOOT_SCRIPT token derivation (the positional alignment pinned)", () => {
+  it("derives the boot var list from the single BOOT_TOKEN_SUFFIXES source — the hand-maintained per-accent arrays are gone", () => {
+    const src = readFileSync(
+      path.resolve(process.cwd(), "src/lib/theme.ts"),
+      "utf8",
+    );
+    // Pre-CG9: no exported suffix list existed — the RED discriminator.
+    expect(src).toContain("export const BOOT_TOKEN_SUFFIXES");
+    // The script embeds the derived list (no hand-maintained names).
+    expect(THEME_BOOT_SCRIPT).toContain("var SUFFIXES =");
+    expect(THEME_BOOT_SCRIPT).not.toMatch(/var TOKENS = \{/);
+  });
+
+  it("for EVERY accent, the SUFFIXES-derived var list deep-equals accentCssVars's keys (a mid-object insertion fails loudly)", () => {
+    // The script's own reconstruction rule, pinned: "--sf-primary" for the
+    // bare primary token, "--sf-primary-<suffix>" for every other entry.
+    const reconstruct = (suffixes: readonly string[]): string[] =>
+      suffixes.map((s) => (s === "primary" ? "--sf-primary" : `--sf-primary-${s}`));
+    for (const accent of ACCENTS) {
+      expect(
+        reconstruct(BOOT_TOKEN_SUFFIXES),
+        `${accent}: the boot script's derived var list must match accentCssVars's keys exactly — a token insertion without updating BOOT_TOKEN_SUFFIXES fails HERE before it ships a silent pre-paint mis-map`,
+      ).toEqual(Object.keys(accentCssVars(accent)));
+    }
+  });
+
+  it("the suffix list carries the full 17-token census (the count the sweeps depend on)", () => {
+    expect(BOOT_TOKEN_SUFFIXES.length).toBe(17);
+    // The derived list contains the two historically-late additions the
+    // hand-maintained arrays once missed risk on: clock-date-dark (S88/AO5)
+    // and empty (S121/BV15).
+    expect(BOOT_TOKEN_SUFFIXES).toContain("clock-date-dark");
+    expect(BOOT_TOKEN_SUFFIXES).toContain("empty");
+    // kebab-case only (the S8 e2e lesson: camelCase suffixes resolve no var).
+    for (const s of BOOT_TOKEN_SUFFIXES) {
+      expect(s).toMatch(/^[a-z]+(-[a-z]+)*$/);
+    }
   });
 });

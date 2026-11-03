@@ -117,7 +117,7 @@ describe("the chunked cert runner's truth contract (S128/CC2)", () => {
 
   it("names the CURRENT per-chunk census in its header (the re-tag tripwire)", () => {
     // The topmost Expected line — re-tagged by every census-changing cycle.
-    expect(certSource).toContain("Expected: 147 + 179 + 72 + 94 + 78 = 570");
+    expect(certSource).toContain("Expected: 149 + 179 + 74 + 94 + 79 = 575");
   });
 
   it("propagates a failing chunk's exit code (never a green cert on a red run)", () => {
@@ -363,24 +363,35 @@ describe("the OTP digest-at-rest census (S131/CF7)", () => {
         src.match(/verificationToken\.create\(/g)?.length ?? 0,
         `${path.basename(path.dirname(file))} mints a token`,
       ).toBeGreaterThan(0);
-      // Post-CF7 the mint shape is `code: hashResetToken(code)` (register
+      // Post-CG2 the mint shape is `code: hashOtpCode(code)` — the
+      // S132/CG2 peppered seam (HMAC-SHA-256 keyed by AUTH_SECRET; offline
+      // brute force of the 10^6 OTP space now requires the secret, which a
+      // DB read does not include — CF7's guarantee made real). Register
       // rides a tokenData object, resend an inline create — the file-level
-      // census covers both). Pre-CF1 the shorthand `code,` rode the data.
+      // census covers both. Pre-CF1 the shorthand `code,` rode the data.
       expect(
         src,
-        `${file} persists the digest (hashResetToken), never the plaintext shorthand`,
-      ).toMatch(/code:\s*hashResetToken\(code\)/);
+        `${file} persists the PEPPERED digest (hashOtpCode), never the plaintext shorthand`,
+      ).toMatch(/code:\s*hashOtpCode\(code\)/);
       expect(src, `${file} carries no bare code shorthand into storage`).not.toMatch(
         /[{,]\s*code\s*,/,
       );
+      // The unkeyed seam is gone from the mint sites (the CG2 flip — a
+      // regression to hashResetToken here silently reopens the <1 s offline
+      // brute force).
+      expect(src).not.toMatch(/code:\s*hashResetToken\(code\)/);
     }
   });
 
-  it("verify-email compares the presented code through hashResetToken + timingSafeEqual — never the raw !==", () => {
+  it("verify-email compares the presented code through hashOtpCode + timingSafeEqual — never the raw !==", () => {
     const src = readFileSync(VERIFY, "utf8");
     // Pre-CF7: `token.code !== normalized` — the short-circuit compare.
     expect(src).not.toMatch(/token\.code\s*!==\s*normalized/);
-    expect(src).toMatch(/hashResetToken\(normalized\)/);
+    // Post-CG2: the presented side digests through the PEPPERED seam — the
+    // same function that minted the row (an HMAC digest only matches under
+    // the same process secret).
+    expect(src).toMatch(/hashOtpCode\(normalized\)/);
+    expect(src).not.toMatch(/hashResetToken\(normalized\)/);
     expect(src).toMatch(/timingSafeEqual/);
   });
 
@@ -473,5 +484,81 @@ describe("the per-chunk cert-runner truth pair (S131/CF6)", () => {
     const src = readFileSync(RUNNER, "utf8");
     expect(src).toMatch(/PIPESTATUS\[0\]/);
     expect(src).toMatch(/exit "\$rc"/);
+  });
+});
+
+// S132/CG — the Batch CG auth-hardening census (docs/remediation-plan-session132.md).
+//
+// The s132 rotated audits' three auth M/L findings, machine-guarded at the
+// source level (the CF1/CF7 precedent — a census pin fails BEFORE the next
+// cycle certifies against a silently-regressed posture):
+//   CG1  login's exhausted per-account bucket answered the uniform 401 with
+//        ZERO scrypt work while the no-user branch burned DUMMY_LOGIN_HASH —
+//        a ~30-36 ms timing account-existence oracle (the BX4 class reopened
+//        on the CB12 account bucket).
+//   CG3  forgot-password rode NO per-email budget while its two siblings
+//        (register/resend) got CF1's *Acct: keys — a rotated-XFF flood
+//        superseded the victim's just-issued reset link (each request
+//        deleteMany's it) plus unauthenticated write churn.
+//   CG11 register's CF1 containment comment overstated: distinct-email
+//        floods passed every budget (one scrypt burn + two rows per request
+//        from a single host). The global registerGlobal: bucket is the
+//        honest bound; the comment now states the residual.
+describe("the Batch CG auth-hardening census (S132/CG1+CG3+CG11)", () => {
+  const LOGIN = path.resolve(process.cwd(), "src/app/api/auth/login/route.ts");
+  const FORGOT = path.resolve(process.cwd(), "src/app/api/auth/forgot-password/route.ts");
+  const REGISTER = path.resolve(process.cwd(), "src/app/api/auth/register/route.ts");
+
+  it("login's exhausted loginAcct branch burns scrypt BEFORE the uniform 401 (the timing equalizer on the account bucket)", () => {
+    const src = readFileSync(LOGIN, "utf8");
+    const exhaustedAt = src.indexOf("loginAcct:");
+    expect(exhaustedAt, "the CB12 per-account key exists").toBeGreaterThan(-1);
+    const returnAt = src.indexOf("errorResponse(401", exhaustedAt);
+    expect(returnAt, "the exhausted branch answers the uniform 401").toBeGreaterThan(-1);
+    const branch = src.slice(exhaustedAt, returnAt);
+    // Pre-CG1 the branch returned with ZERO scrypt work — the RED
+    // discriminator is the dummy-hash burn INSIDE the branch.
+    expect(
+      branch,
+      "the exhausted branch burns verifyPassword(password, DUMMY_LOGIN_HASH) before the return",
+    ).toMatch(/verifyPassword\(password,\s*DUMMY_LOGIN_HASH\)/);
+  });
+
+  it("forgot carries the forgotAcct per-email budget, checked before the user lookup (the CF1 pattern completed across the three siblings)", () => {
+    const src = readFileSync(FORGOT, "utf8");
+    // Pre-CG3: no forgotAcct key existed — the RED discriminator.
+    expect(src).toMatch(/forgotAcct:\$\{email\.toLowerCase\(\)\}/);
+    const budgetAt = src.indexOf("forgotAcct:");
+    const lookupAt = src.indexOf("findUnique(");
+    expect(
+      budgetAt,
+      "the per-email check precedes the user lookup (an over-budget ask reads nothing — the no-oracle shape)",
+    ).toBeLessThan(lookupAt);
+  });
+
+  it("forgot's exhausted branch answers the HONEST 429 — the CF1 siblings' shape (the plan §2's uniform-{ok:true} was the honest correction, recorded in §5)", () => {
+    const src = readFileSync(FORGOT, "utf8");
+    const budgetAt = src.indexOf("forgotAcct:");
+    const branch = src.slice(budgetAt, src.indexOf("findUnique(", budgetAt));
+    // The honest 429 with the route's own copy — the registerAcct:/resendAcct:
+    // precedent (and the CF8 "resend 429 honesty" doctrine: never a success
+    // shape on a rejected request). The budget keys the REQUEST PAYLOAD, so
+    // the 429 fires identically for known and unknown emails (the e2e pin's
+    // known+unknown legs) — no enumeration either way.
+    expect(branch, "the exhausted branch answers the honest 429").toMatch(
+      /rateLimitedResponse\(\s*emailLimit\.retryAfterSec,\s*"Too many reset requests\. Try again shortly\."/,
+    );
+  });
+
+  it("register carries the registerGlobal containment budget BEFORE the per-IP key (the honest CF1 residual bound)", () => {
+    const src = readFileSync(REGISTER, "utf8");
+    // Pre-CG11: no registerGlobal key existed — the RED discriminator.
+    expect(src).toMatch(/checkRateLimit\("registerGlobal:", 40\)/);
+    const globalAt = src.indexOf("registerGlobal:");
+    const ipKeyAt = src.indexOf("register:${ip}");
+    expect(
+      globalAt,
+      "the global bucket precedes the per-IP key (a distinct-email flood trips the containment bucket FIRST)",
+    ).toBeLessThan(ipKeyAt);
   });
 });

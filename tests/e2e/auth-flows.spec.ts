@@ -666,3 +666,86 @@ test.describe("S131/CF8 · the resend 429 honesty", () => {
     ).toHaveCount(0);
   });
 });
+
+// ---------------------------------------------------------------------------
+// S132/CG3 — the forgot per-email budget (docs/remediation-plan-session132.md).
+//
+// The s132 audit's M3: forgot-password rode NO per-email budget while its
+// two siblings (register/resend) got CF1's *Acct: keys — under the legacy
+// XFF posture a rotated x-forwarded-for flood minted a fresh per-IP
+// `forgot:` key per request, so NOTHING bounded the flood: each request
+// deleteMany'd the victim's just-issued one-shot reset link (the
+// supersede-DoS — the newest link is the one the user clicks, and an
+// attacker rotating faster than the victim reads email owns the mailbox
+// window) plus unauthenticated PasswordResetToken write churn. The fix is
+// the CF1 pattern: `forgotAcct:${email}` (5/15-min) checked BEFORE the
+// user lookup, answering the SAME uniform {ok:true} an unknown email gets
+// (a distinguishable 429 for KNOWN emails would be an account oracle —
+// the budget keys the payload, so known and unknown burn identically).
+//
+// The pin rides the spec family's own forged-XFF technique: five asks
+// under five DISTINCT client IPs never touch the per-IP budget (10) — the
+// sixth (a sixth distinct IP, same email) trips ONLY the per-email key.
+// Pre-CG3: the sixth answers 200 {ok:true} (RED — no per-email brake
+// existed); post-CG3: 429 with the route's own honest copy.
+// ---------------------------------------------------------------------------
+test.describe("S132/CG3 · the forgot per-email budget", () => {
+  test("a rotated-XFF flood on ONE email trips forgotAcct: the 6th ask 429s with the honest copy (RED pre-fix: 200 — no per-email brake)", async ({
+    page,
+  }) => {
+    const email = `cg3-forgot-${Date.now()}@example.com`;
+
+    // Five asks, five DISTINCT forged client IPs — the per-IP `forgot:`
+    // budget (10) stays untouched; every ask answers the uniform 200.
+    for (let i = 1; i <= 5; i++) {
+      const res = await page.request.post("/api/auth/forgot-password", {
+        data: { email },
+        headers: {
+          "content-type": "application/json",
+          "x-forwarded-for": `198.51.100.${i}`,
+        },
+      });
+      expect(res.status(), `ask ${i} (distinct IP ${i}) is under every budget`).toBe(200);
+    }
+
+    // The sixth — a sixth distinct IP, the SAME email: only the per-EMAIL
+    // key can answer. Pre-CG3 this was 200 (the supersede-DoS window).
+    const blocked = await page.request.post("/api/auth/forgot-password", {
+      data: { email },
+      headers: {
+        "content-type": "application/json",
+        "x-forwarded-for": "198.51.100.99",
+      },
+    });
+    expect(blocked.status()).toBe(429);
+    const body = (await blocked.json()) as { error?: string };
+    expect(body.error).toContain("Too many reset requests");
+    // The anti-enumeration shape holds under the budget: known and unknown
+    // emails answer IDENTICALLY (the budget keys the payload, not the DB).
+    const known = `cg3-known-${Date.now()}@example.com`;
+    const reg = await page.request.post("/api/auth/register", {
+      data: { name: "CG3 Known", email: known, password: PASSWORD },
+      headers: { "content-type": "application/json", "x-forwarded-for": "198.51.100.120" },
+    });
+    expect(reg.status()).toBe(200);
+    for (let i = 1; i <= 5; i++) {
+      await page.request.post("/api/auth/forgot-password", {
+        data: { email: known },
+        headers: {
+          "content-type": "application/json",
+          "x-forwarded-for": `198.51.100.${130 + i}`,
+        },
+      });
+    }
+    const blockedKnown = await page.request.post("/api/auth/forgot-password", {
+      data: { email: known },
+      headers: {
+        "content-type": "application/json",
+        "x-forwarded-for": "198.51.100.199",
+      },
+    });
+    expect(blockedKnown.status()).toBe(429);
+    const bodyKnown = (await blockedKnown.json()) as { error?: string };
+    expect(bodyKnown.error).toBe(body.error);
+  });
+});

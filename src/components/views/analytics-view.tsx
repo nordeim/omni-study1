@@ -23,7 +23,7 @@ import {
 
 import { useDataStore } from "@/lib/data";
 import { addDays, formatMinutes, isSameDay, startOfDay } from "@/lib/date";
-import { SectionCard, ViewHeader } from "@/components/views/shared";
+import { SectionCard, Spinner, ViewHeader } from "@/components/views/shared";
 import { cn } from "@/lib/utils";
 
 // ---- the 7-day chart frame ----------------------------------------------------------
@@ -313,6 +313,13 @@ export function AnalyticsView() {
   const grades = useDataStore((s) => s.grades);
   const focusSessions = useDataStore((s) => s.focusSessions);
   const subjects = useDataStore((s) => s.subjects);
+  // S132/CG6: the CE3 loading gate — the stat row renders fraction values
+  // (0/N — never an EmptyState, the S17 fresh-user contract), so an
+  // in-flight boot rendered FALSE zero-stats. The gate mirrors the tasks-
+  // view idiom: spinner while loading AND every stat source is still
+  // empty (tasks + grades + subjects — the three stat families' sources;
+  // a fresh user's settled state skips the gate, keeping the S17 contract).
+  const loading = useDataStore((s) => s.loading);
 
   const today = startOfDay(new Date());
 
@@ -395,7 +402,12 @@ export function AnalyticsView() {
   return (
     <div className="flex flex-col gap-6">
       <ViewHeader title="Analytics" subtitle="Insights across your study activity" icon={ChartColumn} />
-      {/* ---- stat cards (icon-block, S8-I) ---- */}
+      {/* ---- stat cards (icon-block, S8-I) — gated on in-flight data (S132/CG6) ---- */}
+      {loading && tasks.length === 0 && grades.length === 0 && subjects.length === 0 ? (
+        <div className="flex justify-center py-16 text-sf-primary">
+          <Spinner className="size-6" />
+        </div>
+      ) : (
       <div role="group" className="grid grid-cols-2 gap-4 lg:grid-cols-4" aria-label="Analytics stats">
         <StatBlock
           icon={SquareCheckBig}
@@ -426,6 +438,7 @@ export function AnalyticsView() {
           sub={`${upcomingExams} exams scheduled`}
         />
       </div>
+      )}
 
       {/* ---- 7-day area charts ---- */}
       <div className="grid gap-4 lg:grid-cols-2">

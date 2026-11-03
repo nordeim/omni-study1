@@ -14,7 +14,7 @@ import { z } from "zod";
 
 import {
   checkRateLimit,
-  hashResetToken,
+  hashOtpCode,
   normalizeVerificationCode,
   timingSafeEqualBuffer,
 } from "@/lib/auth";
@@ -82,13 +82,16 @@ export async function POST(request: NextRequest) {
       return errorResponse(400, "That code is invalid or has expired.");
     }
 
-    // S131/CF7: the compare runs on the SHA-256 DIGESTS — the token stores
-    // the digest (the BR6 posture: a DB read never yields a live sign-in
-    // credential) and the presented code digests through the same seam.
+    // S131/CF7 → S132/CG2: the compare runs on the PEPPERED HMAC DIGESTS —
+    // the token stores the digest (the BR6 posture: a DB read never yields
+    // a live sign-in credential) and the presented code digests through
+    // the SAME peppered seam (an HMAC digest only matches under the same
+    // process secret — an unkeyed digest of the 10^6 space would fall to
+    // a <1 s offline sweep).
     // timingSafeEqualBuffer is the codebase's one timing-safe compare
     // idiom (passwords, session MACs); the OTP was the last plaintext
     // short-circuit compare. Both sides are 64-char hex, equal length.
-    const presentedDigest = hashResetToken(normalized);
+    const presentedDigest = hashOtpCode(normalized);
     const token = await db.verificationToken.findFirst({
       where: { userId: user.id, expiresAt: { gt: new Date() } },
       orderBy: { createdAt: "desc" },

@@ -3,6 +3,7 @@ import {
   ACCENTS,
   ACCENT_TOKENS,
   AVATAR_EMOJIS,
+  BOOT_TOKEN_SUFFIXES,
   NAV_ACTIVE_GRADIENT_STOPS,
   THEME_BOOT_SCRIPT,
   accentCssVars,
@@ -201,63 +202,54 @@ describe("AVATAR_EMOJIS", () => {
 });
 
 describe("THEME_BOOT_SCRIPT", () => {
-  it("S89/AP3 — the seven hand-maintained TOKENS lists stay index-synced with accentCssVars and Object.values (the insertion-order contract)", () => {
+  it("S89/AP3 (re-anchored S132/CG9) — the boot script's DERIVED suffix list stays index-synced with accentCssVars and Object.values (the insertion-order contract)", () => {
     // The boot script cannot import this module (it is an inline string),
-    // so its seven TOKENS name-lists ride the Object.values(ACCENT_TOKENS[a])
-    // insertion-order sync contract BY HAND — AO5 extended all seven at
-    // the same index manually; a value-equal misalignment would stay green
-    // forever (the s88 audit's I2: every accent's clockDateDark === avatarFrom
-    // today, so an index slip between those two never shows). This pin is
-    // the mechanical guard the contract never had: for every accent, the
-    // parsed TOKENS list must equal the accentCssVars key sequence's
-    // --sf-primary(-...) suffixes AND its length must equal Object.values'
-    // — any future token add/drop that misses ANY of the three sites (the
-    // AccentToken interface, accentCssVars, the script's lists) goes RED
-    // here. Green-by-design: the current state IS synced (verified live).
-    const m = THEME_BOOT_SCRIPT.match(/var TOKENS = \{([\s\S]*?)\n    \};/);
-    expect(m, "the TOKENS literal is parseable").not.toBeNull();
-    const lists: Record<string, string[]> = {};
-    for (const line of m![1].split("\n")) {
-      const lm = line.match(/^\s*(\w+): \[(.*)\],?$/);
-      if (lm) lists[lm[1]] = lm[2].split(",").map((s) => s.trim().replace(/^"|"$/g, ""));
-    }
-    expect(Object.keys(lists).sort()).toEqual([...ACCENTS].sort());
+    // so its name list rode the Object.values(ACCENT_TOKENS[a])
+    // insertion-order sync contract BY HAND through s131 — seven
+    // per-accent TOKENS arrays, each extended at the same index manually;
+    // a value-equal misalignment would stay green forever (the s88 audit's
+    // I2: every accent's clockDateDark === avatarFrom today, so an index
+    // slip between those two never shows). S132/CG9 collapsed the seven
+    // arrays into the ONE exported BOOT_TOKEN_SUFFIXES list the script
+    // embeds — the contract now has a single source, and this pin is its
+    // mechanical guard: the list must equal the accentCssVars key
+    // sequence's --sf-primary(-...) suffixes AND its length must equal
+    // Object.values' — any future token add/drop that misses ANY of the
+    // three sites (the AccentToken interface, accentCssVars, the suffix
+    // list) goes RED here.
+    expect(THEME_BOOT_SCRIPT).toContain("var SUFFIXES = ");
+    expect(THEME_BOOT_SCRIPT).not.toMatch(/var TOKENS = \{/);
+    const cssVarSuffixes = Object.keys(accentCssVars("violet")).map((k) =>
+      k === "--sf-primary" ? "primary" : k.replace("--sf-primary-", ""),
+    );
+    expect([...BOOT_TOKEN_SUFFIXES], "the suffix list matches the accentCssVars key order").toEqual(cssVarSuffixes);
     for (const a of ACCENTS) {
-      const cssVarSuffixes = Object.keys(accentCssVars(a)).map((k) =>
-        k === "--sf-primary" ? "primary" : k.replace("--sf-primary-", ""),
-      );
-      expect(lists[a], `${a}: the TOKENS list matches the accentCssVars key order`).toEqual(cssVarSuffixes);
-      expect(lists[a].length, `${a}: the TOKENS list length matches Object.values`).toBe(
+      expect(BOOT_TOKEN_SUFFIXES.length, `${a}: the suffix list length matches Object.values`).toBe(
         Object.values(ACCENT_TOKENS[a]).length,
       );
     }
   });
 
-  it("S90/AQ1 — the script TOKENS lists equal the ACCENT_TOKENS literals' own key insertion order (the Object.values ride — the third leg)", () => {
-    // The s90 audit's L3: the AP3 pin above pins script-names ↔
-    // accentCssVars key-order (accentCssVars reads the literal BY NAME, so
-    // its key order is fixed by the accentCssVars code, NOT the literal's
-    // line order) and length ↔ Object.values length — but it never pinned
-    // the ACCENT_TOKENS literal's OWN key insertion order, the exact order
+  it("S90/AQ1 (re-anchored S132/CG9) — the suffix list equals the ACCENT_TOKENS literals' own key insertion order (the Object.values ride — the third leg)", () => {
+    // The s90 audit's L3: the AP3 pin pins script-names ↔ accentCssVars
+    // key-order (accentCssVars reads the literal BY NAME, so its key order
+    // is fixed by the accentCssVars code, NOT the literal's line order)
+    // and length ↔ Object.values length — but it never pinned the
+    // ACCENT_TOKENS literal's OWN key insertion order, the exact order
     // `Object.values(ACCENT_TOKENS[a])` (the boot script's VALUES
     // generator, theme.ts) emits. A value-equal key REORDER inside a
     // literal (e.g. emptyTo moved above emptyFrom) keeps BOTH existing
     // assertions green while the pre-paint script pairs names with wrong
     // values — the misalignment ships a visibly wrong accent with the
     // "mechanical guard" green. This third leg closes the triangle
-    // transitively: accentCssVars keys == script names == literal
-    // insertion order == Object.values order. MUTATION-PROVEN live in the
-    // s90 cycle: reordering two adjacent keys in the violet literal turned
-    // EXACTLY this pin RED while the AP3 pin above stayed green — the
-    // blind spot demonstrated, then reverted to green.
-    const m = THEME_BOOT_SCRIPT.match(/var TOKENS = \{([\s\S]*?)\n    \};/);
-    expect(m, "the TOKENS literal is parseable").not.toBeNull();
-    const lists: Record<string, string[]> = {};
-    for (const line of m![1].split("\n")) {
-      const lm = line.match(/^\s*(\w+): \[(.*)\],?$/);
-      if (lm) lists[lm[1]] = lm[2].split(",").map((s) => s.trim().replace(/^"|"$/g, ""));
-    }
-    expect(Object.keys(lists).sort()).toEqual([...ACCENTS].sort());
+    // transitively: accentCssVars keys == suffix list == literal insertion
+    // order == Object.values order. MUTATION-PROVEN live in the s90 cycle:
+    // reordering two adjacent keys in the violet literal turned EXACTLY
+    // this pin RED while the AP3 pin above stayed green — the blind spot
+    // demonstrated, then reverted to green. S132/CG9 re-anchor: the seven
+    // per-accent TOKENS arrays are gone; the ONE BOOT_TOKEN_SUFFIXES list
+    // carries the same third-leg contract.
+    expect(THEME_BOOT_SCRIPT).toContain("var SUFFIXES = ");
     for (const a of ACCENTS) {
       // The vocabulary exception (verified against accentCssVars): the
       // literal key `primaryFg` reads --sf-primary-foreground — the ONE
@@ -268,8 +260,8 @@ describe("THEME_BOOT_SCRIPT", () => {
         k === "primaryFg" ? "foreground" : k.replace(/[A-Z]/g, (c) => "-" + c.toLowerCase()),
       );
       expect(
-        lists[a],
-        `${a}: the TOKENS list matches the ACCENT_TOKENS literal's own key insertion order (the Object.values ride)`,
+        [...BOOT_TOKEN_SUFFIXES],
+        `${a}: the suffix list matches the ACCENT_TOKENS literal's own key insertion order (the Object.values ride)`,
       ).toEqual(literalKeys);
     }
   });

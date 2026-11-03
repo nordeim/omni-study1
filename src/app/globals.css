@@ -266,6 +266,14 @@
    Raw triplet tokens (:root / .dark) — consumed through hsl(var(--x)) inside
    @theme above, so .dark overrides actually reach the utilities
    (trap 13: a literal in @theme inlines at build time).
+   S132/CG9 (the B-I11 note): the coupling runs through <html> — .dark MUST
+   stay a class on document.documentElement (never scoped deeper): the
+   plain-@theme hsl(var(--x)) routing resolves at RUNTIME against whatever
+   element owns the var, and every dark override here rides the .dark
+   ancestor the boot script toggles on <html>. Scoping .dark anywhere else
+   (a wrapper div, a portal subtree) silently strands descendants outside
+   the override — the same runtime-resolution coupling the trap documents,
+   stated for the DOM side of it.
 --------------------------------------------------------------------------- */
 :root {
   /* the violet accent's runtime defaults (pre-apply state; the theme store

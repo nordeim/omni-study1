@@ -7,7 +7,7 @@
 
 import { NextResponse, type NextRequest } from "next/server";
 
-import { checkRateLimit, resetRateLimit, verifyLoginCredentials } from "@/lib/auth";
+import { checkRateLimit, resetRateLimit, verifyLoginCredentials, verifyPassword, DUMMY_LOGIN_HASH } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { loginSchema } from "@/lib/validation";
 import { secureCookieFlag } from "@/lib/auth";
@@ -60,6 +60,14 @@ export async function POST(request: NextRequest) {
     if (user) {
       const accountLimit = checkRateLimit(`loginAcct:${user.id}`, 10);
       if (!accountLimit.ok) {
+        // S132/CG1: burn the SAME scrypt work the no-user branch pays —
+        // the exhausted branch answered the uniform 401 with ZERO crypto
+        // work while the miss branch burned DUMMY_LOGIN_HASH, a ~30-36 ms
+        // timing account-existence oracle (the BX4 class reopened on the
+        // CB12 account bucket; the register route's own verified-exists
+        // branch already equalizes this way). Response shape and status
+        // are unchanged — only the timing equalizes.
+        verifyPassword(password, DUMMY_LOGIN_HASH);
         return errorResponse(401, INVALID_CREDENTIALS);
       }
     }

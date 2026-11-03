@@ -18,7 +18,7 @@ import {
   SquareCheckBig,
 } from "lucide-react";
 
-import { PriorityCheckbox } from "@/components/views/shared";
+import { PriorityCheckbox, Spinner } from "@/components/views/shared";
 import { Button } from "@/components/ui/button";
 import { mutations, useDataStore } from "@/lib/data";
 import {
@@ -53,6 +53,11 @@ export function CalendarView() {
   const assignments = useDataStore((s) => s.assignments);
   const exams = useDataStore((s) => s.exams);
   const timetable = useDataStore((s) => s.timetable);
+  // S132/CG6: the CE3 loading gate — both empty messages ("No events this
+  // month" / "No events for this day") must not render on in-flight data
+  // (the s130 sweep missed the Calendar; a slow transport at boot painted
+  // false empties over the day/timeline the collections were filling).
+  const loading = useDataStore((s) => s.loading);
   const toggleTask = mutations.toggleTask;
   const { toast } = useToast();
 
@@ -182,7 +187,11 @@ export function CalendarView() {
           <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100">
             {monthLabel}
           </h2>
-          {timelineDays.length === 0 ? (
+          {loading && events.length === 0 ? (
+            <div className="flex justify-center py-8 text-sf-primary">
+              <Spinner className="size-6" />
+            </div>
+          ) : timelineDays.length === 0 ? (
             <p className="py-8 text-center text-slate-500 dark:text-slate-400">
               No events this month
             </p>
@@ -359,7 +368,11 @@ export function CalendarView() {
             {formatLongDateWithWeekday(selected)}
           </h3>
 
-          {dayEmpty ? (
+          {loading && events.length === 0 ? (
+            <div className="flex justify-center py-8 text-sf-primary">
+              <Spinner className="size-6" />
+            </div>
+          ) : dayEmpty ? (
             <p className="py-8 text-center text-slate-500 dark:text-slate-400">
               No events for this day
             </p>
