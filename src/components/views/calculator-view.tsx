@@ -103,6 +103,14 @@ const SCIENTIFIC_EXTRA: CalcKey[] = [
 export function CalculatorView() {
   const { toast } = useToast();
   const history = useDataStore((s) => s.calculatorHistory);
+  // S134/CI5 (audit B-M2): the CE3 loading gate — the calculator's pre-warm
+  // entry is [] ("the three no-data views gate on auth alone"), so the
+  // history slice fills only via the background loadAll; the panel
+  // previously rendered its empty copy on IN-FLIGHT data (the S130/CE3
+  // class the CG6 sweep closed for eleven sibling surfaces — the one view
+  // it missed). The tasks-view idiom: the spinner owns the zero branch
+  // while the collection loads.
+  const loading = useDataStore((s) => s.loading);
 
   const [tab, setTab] = React.useState("basic");
   const [expression, setExpression] = React.useState("");
@@ -413,7 +421,11 @@ export function CalculatorView() {
               heading-order contract owns the level (h1 → h2, no skip) */}
           <h2 className="text-base font-bold text-slate-800 dark:text-slate-100">Calculation History</h2>
           <div className="mt-4 flex flex-col gap-3">
-            {history.length === 0 ? (
+            {loading && history.length === 0 ? (
+              <div className="flex justify-center py-8 text-sf-primary" role="status" aria-label="Loading calculation history">
+                <Spinner className="size-6" />
+              </div>
+            ) : history.length === 0 ? (
               <p className="text-sm text-slate-500 dark:text-slate-400">
                 Your calculations will appear here.
               </p>

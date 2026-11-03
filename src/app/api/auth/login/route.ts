@@ -7,7 +7,7 @@
 
 import { NextResponse, type NextRequest } from "next/server";
 
-import { checkRateLimit, resetRateLimit, verifyLoginCredentials, verifyPassword, DUMMY_LOGIN_HASH } from "@/lib/auth";
+import { checkRateLimit, resetRateLimit, verifyLoginCredentials, burnLoginScryptWork, needsRehash, hashPassword } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { loginSchema } from "@/lib/validation";
 import { secureCookieFlag } from "@/lib/auth";
@@ -67,7 +67,11 @@ export async function POST(request: NextRequest) {
         // CB12 account bucket; the register route's own verified-exists
         // branch already equalizes this way). Response shape and status
         // are unchanged — only the timing equalizes.
-        verifyPassword(password, DUMMY_LOGIN_HASH);
+        // S134/CI1: the burn is the UNIFORM PAIR now — burnLoginScryptWork
+        // burns the dummy verify PLUS the transition complement, exactly
+        // the work every other login attempt pays (the raw
+        // verifyPassword+DUMMY form would burn one parameter set short).
+        burnLoginScryptWork(password);
         return errorResponse(401, INVALID_CREDENTIALS);
       }
     }
@@ -78,6 +82,18 @@ export async function POST(request: NextRequest) {
     const credentialsOk = verifyLoginCredentials(user, password);
     if (!user || !credentialsOk) {
       return errorResponse(401, INVALID_CREDENTIALS);
+    }
+
+    // S134/CI1 — the rehash drain: a successful login on a legacy-format
+    // stored hash upgrades the row to the current parameter set in place
+    // (the standard rehash-on-login migration). The password proof already
+    // completed, so the drain is safe to run before the unverified gate;
+    // the sessionVersion is NEVER bumped (a rehash is not a rotation).
+    if (needsRehash(user.passwordHash)) {
+      await db.user.update({
+        where: { id: user.id },
+        data: { passwordHash: hashPassword(password) },
+      });
     }
     if (!user.emailVerified) {
       return errorResponse(403, UNVERIFIED_COPY);

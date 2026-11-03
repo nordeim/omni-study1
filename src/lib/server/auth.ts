@@ -17,14 +17,18 @@ import {
   createSessionToken,
   parseTrustedProxyHops,
   readSessionToken,
+  SESSION_TTL_MS,
 } from "../auth";
 import { UnauthorizedError } from "./http";
 
 // ---- the session cookie contract ------------------------------------------------
 
 export const SESSION_COOKIE_NAME = "sf_session";
-/** 7 days — mirrors SESSION_TTL_MS in the pure seam. */
-export const SESSION_TTL_SECONDS = 7 * 24 * 60 * 60;
+/** 7 days — DERIVED from SESSION_TTL_MS in the pure seam (S134/CI6b, audit
+ *  A-L3: the hand-mirrored literal could drift — a future TTL edit touching
+ *  one constant desyncs the cookie maxAge from the token exp with no failing
+ *  test; the derivation is single-sourced and lockstep-pinned). */
+export const SESSION_TTL_SECONDS = SESSION_TTL_MS / 1000;
 
 // ---- the session user (hashless by construction) -----------------------------
 

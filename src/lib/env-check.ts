@@ -154,6 +154,28 @@ export function directExposureProdWarning(
   return parseTrustedProxyHops(env.TRUSTED_PROXY_HOPS) === 0;
 }
 
+/** S134/CI6c (audit A-L4) — the over-declared hop depth made loud. With
+ *  TRUSTED_PROXY_HOPS=10 behind a real 2-hop chain, EVERY request's
+ *  x-forwarded-for is shorter than the declared depth, clientIpFromForwarded
+ *  fails closed to null, and ALL clients collapse into the ONE shared
+ *  "local" bucket — the exact CF2 sitewide-lockout posture — while the boot
+ *  warning above stays silent because the parse returned 10, not 0. The
+ *  operator most likely to misconfigure (declaring more hops than the chain
+ *  has) gets precisely the availability failure the warning exists to make
+ *  loud. Real proxy chains are 1-3 hops; anything beyond 4 is almost
+ *  certainly a misconfiguration. The runtime fail-closed behavior is
+ *  UNCHANGED (the documented safe posture — a short XFF chain under an
+ *  over-declared depth must not fall back to the forgeable first hop). */
+export function overdeclaredProxyHopsWarning(
+  env: { NODE_ENV?: string; TRUSTED_PROXY_HOPS?: string; [key: string]: string | undefined },
+): boolean {
+  if (env.NODE_ENV !== "production") return false;
+  const hops = parseTrustedProxyHops(env.TRUSTED_PROXY_HOPS);
+  // undefined = the legacy first-hop posture (not a declaration); 0 owns
+  // its own direct-exposure warning above; 1-4 are plausible chains.
+  return hops !== undefined && hops > 4;
+}
+
 // ---- S120/BU3: the declared proxy-hop contract ------------------------------------
 //
 // clientIp() trusted the raw FIRST x-forwarded-for hop — every per-IP budget

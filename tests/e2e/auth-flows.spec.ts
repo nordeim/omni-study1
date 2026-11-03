@@ -749,3 +749,112 @@ test.describe("S132/CG3 · the forgot per-email budget", () => {
     expect(bodyKnown.error).toBe(body.error);
   });
 });
+
+// ---------------------------------------------------------------------------
+// S134/CI3 (audit A-M2) — the per-IP 429 behavioral pins for the four
+// routes whose availability brake had only STATIC source pins (the key
+// spellings in script-conventions) but no behavioral leg: login, register,
+// forgot, reset. The verify-email 429 pin above (S117/BR2) is the shape;
+// these four ride their own RFC 5737 TEST-NET IPs (the budget-isolation
+// convention — the localhost budgets the journeys share stay untouched).
+// Each route's per-IP budget is 10/15-min (checked BEFORE validation per
+// the C1 convention — invalid payloads consume budget too), so the 11th
+// request from one IP answers 429 + Retry-After + the route's own copy.
+// The login leg doubles as the S134/CI1 timing-equalizer soak: ten
+// dummy-branch attempts, each burning the full 2^14+2^17 scrypt pair.
+// ---------------------------------------------------------------------------
+test.describe("S134/CI3 · the per-IP 429 budgets (login / register / forgot / reset)", () => {
+  test("login: the 11th attempt from one IP answers 429 + Retry-After + the login copy", async ({
+    request,
+  }) => {
+    const headers = { "x-forwarded-for": "192.0.2.201" };
+    const data = { email: "ci3-no-such-user@example.com", password: "WrongPassword1!" };
+    for (let i = 0; i < 10; i++) {
+      const res = await request.post("/api/auth/login", { headers, data });
+      // The uniform 401 — no account-state oracle, budget consumed.
+      expect(res.status()).toBe(401);
+    }
+    const blocked = await request.post("/api/auth/login", { headers, data });
+    expect(blocked.status()).toBe(429);
+    const body = (await blocked.json()) as { error: string };
+    expect(body.error).toContain("Too many login attempts");
+    const retryAfter = blocked.headers()["retry-after"];
+    expect(retryAfter).toBeTruthy();
+    expect(Number(retryAfter)).toBeGreaterThan(0);
+  });
+
+  test("register: the 11th attempt from one IP answers 429 + Retry-After + the register copy", async ({
+    request,
+  }) => {
+    const headers = { "x-forwarded-for": "192.0.2.202" };
+    // A DISTINCT email per request: the route's registerAcct: per-EMAIL
+    // budget (5/15-min) would otherwise trip at the 6th request — this pin
+    // measures the per-IP `register:${ip}` key (10/15-min), the outer
+    // availability brake.
+    for (let i = 0; i < 10; i++) {
+      const res = await request.post("/api/auth/register", {
+        headers,
+        data: { email: `ci3-register-${i}@example.com`, password: "Fresh1234!", name: "CI3 Probe" },
+      });
+      // The uniform 200 (the no-enumeration family — the unverified
+      // re-register branch answers the same shape).
+      expect(res.status()).toBe(200);
+    }
+    const blocked = await request.post("/api/auth/register", {
+      headers,
+      data: { email: "ci3-register-final@example.com", password: "Fresh1234!", name: "CI3 Probe" },
+    });
+    expect(blocked.status()).toBe(429);
+    const body = (await blocked.json()) as { error: string };
+    expect(body.error).toContain("Too many registration attempts");
+    const retryAfter = blocked.headers()["retry-after"];
+    expect(retryAfter).toBeTruthy();
+    expect(Number(retryAfter)).toBeGreaterThan(0);
+  });
+
+  test("forgot: the 11th request from one IP answers 429 + Retry-After + the reset-request copy", async ({
+    request,
+  }) => {
+    const headers = { "x-forwarded-for": "192.0.2.203" };
+    // Distinct emails per request — the forgotAcct: per-EMAIL budget (5)
+    // must not shadow the per-IP `forgot:${ip}` key (10) this pin measures.
+    for (let i = 0; i < 10; i++) {
+      const res = await request.post("/api/auth/forgot-password", {
+        headers,
+        data: { email: `ci3-forgot-${i}@example.com` },
+      });
+      // The always-200 no-enumeration shape.
+      expect(res.status()).toBe(200);
+    }
+    const blocked = await request.post("/api/auth/forgot-password", {
+      headers,
+      data: { email: "ci3-forgot-final@example.com" },
+    });
+    expect(blocked.status()).toBe(429);
+    const body = (await blocked.json()) as { error: string };
+    expect(body.error).toContain("Too many reset requests");
+    const retryAfter = blocked.headers()["retry-after"];
+    expect(retryAfter).toBeTruthy();
+    expect(Number(retryAfter)).toBeGreaterThan(0);
+  });
+
+  test("reset: the 11th request from one IP answers 429 + Retry-After + the reset copy (the limiter precedes validation)", async ({
+    request,
+  }) => {
+    const headers = { "x-forwarded-for": "192.0.2.204" };
+    const data = { token: "0".repeat(48), password: "Fresh1234!" };
+    for (let i = 0; i < 10; i++) {
+      const res = await request.post("/api/auth/reset-password", { headers, data });
+      // The invalid-token 400 — the C1 convention sits the limiter BEFORE
+      // validation, so garbage payloads consume the per-IP budget.
+      expect(res.status()).toBe(400);
+    }
+    const blocked = await request.post("/api/auth/reset-password", { headers, data });
+    expect(blocked.status()).toBe(429);
+    const body = (await blocked.json()) as { error: string };
+    expect(body.error).toContain("Too many reset attempts");
+    const retryAfter = blocked.headers()["retry-after"];
+    expect(retryAfter).toBeTruthy();
+    expect(Number(retryAfter)).toBeGreaterThan(0);
+  });
+});

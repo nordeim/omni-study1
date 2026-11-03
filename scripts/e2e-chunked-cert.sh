@@ -15,7 +15,12 @@
 # blank-title e2e pin in tasks.spec], chunk 5 +2 [the S133/CH2 import-parity
 # pin + the S133/CH7 counts-refresh pin in s23-import.spec — both on fresh
 # TEST-NET users, the demo import budget untouched].)
-# Expected: 149 + 180 + 74 + 94 + 81 = 578 (each chunk's count includes its
+# (S134/CI re-tag — census 578 → 584, net +6: chunk 1 +1 [the S134/CI5
+# calculator-history loading-gate pin in navigation.spec], chunk 2 +1 [the
+# S134/CI4 MyDay quick-add in-flight-guard pin in tasks.spec], chunk 5 +4
+# [the S134/CI3 per-IP 429 quartet in auth-flows — login/register/forgot/
+# reset, each on its own TEST-NET IP].)
+# Expected: 150 + 181 + 74 + 94 + 85 = 584 (each chunk's count includes its
 # auth setup — the current census; the historical re-tag blocks beneath.)
 # (S131/CF re-tag — census 567 → 570, net +3: chunk 1 +1 [the CF9
 # drawer focus-restore leg in mobile-navigation — crossing the lg

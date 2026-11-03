@@ -14,6 +14,7 @@ import {
   authSecretBootStatus,
   directExposureProdWarning,
   inBandDeliveryProdWarning,
+  overdeclaredProxyHopsWarning,
 } from "./lib/env-check";
 import { resolveProcessDatabaseUrl } from "./lib/db-path";
 
@@ -79,6 +80,26 @@ export async function register(): Promise<void> {
         "for 15-minute windows. Front the app with a reverse proxy that appends " +
         "the client to x-forwarded-for and declare the hop depth " +
         "(TRUSTED_PROXY_HOPS=N) — see DEPLOYMENT.md §3.",
+    );
+  }
+
+  // S134/CI6c (audit A-L4): the over-declared hop depth's IDENTICAL shared-
+  // bucket collapse, made loud. A declared depth deeper than the real chain
+  // (e.g. 10 behind 2 hops) fails every request's XFF parse closed to null —
+  // all clients share the one "local" key, the CF2 sitewide-lockout posture,
+  // with no warning because the parse itself succeeded. Real chains are 1-3
+  // hops; > 4 is almost certainly a misconfiguration.
+  if (overdeclaredProxyHopsWarning(process.env)) {
+    console.warn(
+      "[boot] WARNING: TRUSTED_PROXY_HOPS=" +
+        process.env.TRUSTED_PROXY_HOPS +
+        " exceeds any plausible proxy chain (real chains are 1-3 hops). A " +
+        "declared depth deeper than the actual x-forwarded-for chain fails " +
+        "EVERY request closed to the direct-connection key — every per-IP " +
+        "auth rate budget shares ONE bucket (the same sitewide lockout as " +
+        "TRUSTED_PROXY_HOPS=0, but silent). Declare the chain's TRUE depth " +
+        "(TRUSTED_PROXY_HOPS=N, the count of proxies that append entries) — " +
+        "see DEPLOYMENT.md §3.",
     );
   }
 }

@@ -25,7 +25,11 @@ export const INITIAL_COLLECTIONS: Record<ViewId, CollectionKey[]> = {
   assignments: ["assignments", "subjects"],
   exams: ["exams", "subjects"],
   notes: ["notes", "notebooks", "subjects"],
-  flashcards: ["flashcardDecks", "flashcards"],
+  // S134/CI7a (audit B-L1, the S118/BS8 class): "subjects" joined the
+  // flashcards entry — the deck dialog's Subject select reads s.subjects
+  // (flashcards-view.tsx), so a cold /Flashcards boot showed a bare "No
+  // subject" until the background loadAll landed.
+  flashcards: ["flashcardDecks", "flashcards", "subjects"],
   practicetests: ["practiceTests", "subjects"],
   studygroups: ["studyGroups", "subjects"],
   gradetracker: ["grades", "subjects"],

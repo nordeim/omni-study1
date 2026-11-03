@@ -381,10 +381,20 @@ export function AssignmentsView() {
                     aria-label={`Progress for ${a.title}`}
                     onValueCommit={(value) =>
                       updateAssignment(a.id, { progress: value[0] ?? a.progress }).catch(
-                        (err: unknown) =>
+                        (err: unknown) => {
                           toast.error(
                             err instanceof ApiError ? err.message : "Progress update failed.",
-                          ),
+                          );
+                          // S134/CI7d (audit B-L5): the controlled thumb keeps
+                          // the DRAGGED position after a failed commit while
+                          // the % label reads the unchanged store — resync by
+                          // refetching the collection (the fetchAndSet
+                          // sequence guard makes the refresh safe; the thumb
+                          // snaps back to a.progress).
+                          void useDataStore
+                            .getState()
+                            .loadCollections(["assignments"]);
+                        },
                       )
                     }
                   />

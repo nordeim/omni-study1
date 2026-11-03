@@ -597,7 +597,7 @@ export function FilesView() {
               <Label htmlFor="link-url">URL</Label>
               <Input id="link-url" type="url" value={linkUrl} onChange={(e) => setLinkUrl(e.target.value)} placeholder="https://…" required />
             </div>
-            {linkError ? <p className="text-sm text-red-600 dark:text-red-400">{linkError}</p> : null}
+            {linkError ? <p role="alert" className="text-sm text-red-600 dark:text-red-400">{linkError}</p> : null}
             <Button type="submit" variant="gradient" className="sf-gradient-shadow" disabled={linkBusy}>
               {linkBusy ? <Spinner className="size-4" /> : <Link2 className="size-4" strokeWidth={2} />}
               Save Link

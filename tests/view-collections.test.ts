@@ -72,3 +72,18 @@ describe("the settings pre-warm carries the Holidays tab's collection (S118/BS8)
     expect(INITIAL_COLLECTIONS.settings).toEqual(["subjects", "holidays"]);
   });
 });
+
+// ---------------------------------------------------------------------------
+// S134/CI7a (audit B-L1, the S118/BS8 class) — the flashcards pre-warm
+// carries the deck dialog's Subject select. The view reads s.subjects
+// (flashcards-view.tsx:80) for the New/Edit Deck dialog's dropdown, but the
+// pre-warm entry carried only the two flashcard collections — a cold
+// /Flashcards boot showed a bare "No subject" until the background loadAll
+// landed. The settings/Holidays precedent (S118/BS8) fixed the identical
+// class for the Holidays tab.
+// ---------------------------------------------------------------------------
+describe("the flashcards pre-warm carries the deck dialog's Subject select (S134/CI7a)", () => {
+  it("flashcards pre-warms flashcardDecks, flashcards, AND subjects", () => {
+    expect(INITIAL_COLLECTIONS.flashcards).toEqual(["flashcardDecks", "flashcards", "subjects"]);
+  });
+});

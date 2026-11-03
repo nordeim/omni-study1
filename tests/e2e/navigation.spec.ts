@@ -1017,3 +1017,39 @@ test.describe("S132/CG7 · the dashboard CTAs honor modified clicks", () => {
     expect(new URL(page.url()).pathname).toBe("/Dashboard");
   });
 });
+
+// ---------------------------------------------------------------------------
+// S134/CI5 (audit B-M2) — the calculator History panel's CE3 loading gate.
+// The calculator's INITIAL_COLLECTIONS entry is [] ("the three no-data
+// views declare empty sets — they gate on auth alone"), so the history
+// slice fills only via the background loadAll; the panel rendered its
+// empty copy on IN-FLIGHT data — the exact S130/CE3 class the CG6 sweep
+// closed for eleven sibling surfaces (the one view the sweep missed). The
+// pin holds the /api/calculator/history GET, opens the panel, and asserts
+// the loading branch owns the pane while the collection is in flight.
+// ---------------------------------------------------------------------------
+test.describe("S134/CI5 · the calculator History loading gate", () => {
+  test("an in-flight calculator-history GET renders the loading branch, never the false 'Your calculations will appear here.' empty copy", async ({ page }) => {
+    const HELD = "**/api/calculator/history";
+    await page.route(HELD, () => {
+      /* never fulfills — the accepted-TCP stall shape (within the 20 s window) */
+    });
+    try {
+      await page.goto("/Calculator");
+      await page.waitForFunction(
+        () => document.documentElement.dataset.appHydrated === "true",
+      );
+      // Open the slide-in History panel (the header toggle).
+      await page.getByRole("button", { name: "History", exact: true }).click();
+      await expect(
+        page.getByRole("heading", { name: "Calculation History" }),
+      ).toBeVisible();
+      // The in-flight window: the loading branch owns the panel, the false
+      // empty state renders NOWHERE.
+      await expect(page.getByText("Your calculations will appear here.")).toHaveCount(0);
+      await expect(page.locator(".animate-spin").first()).toBeVisible();
+    } finally {
+      await page.unroute(HELD);
+    }
+  });
+});

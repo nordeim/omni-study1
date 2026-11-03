@@ -1,5 +1,37 @@
 import { describe, expect, it, vi } from "vitest";
+
+// S134/CI1 — the scrypt burn census instrument. The mock wraps the REAL
+// scryptSync (behavior identical, every other node:crypto export passes
+// through untouched) and records each invocation's N — the module-load
+// DUMMY mint included (each census pin resets the array first). This is
+// the machine guard for the transition equalizer: every login attempt
+// must burn EXACTLY one 2^14-scrypt and one 2^17-scrypt, on every branch
+// (a dropped complement burn — the naive-migration mutant that reopens
+// the ~8× timing account-existence oracle — fails the census).
+const scryptBurns = vi.hoisted(() => [] as number[]);
+vi.mock("node:crypto", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("node:crypto")>();
+  return {
+    ...actual,
+    scryptSync: (
+      password: unknown,
+      salt: unknown,
+      keylen: number,
+      options?: { N?: number },
+    ) => {
+      scryptBurns.push(options?.N ?? 16384);
+      return actual.scryptSync(password as never, salt as never, keylen, options);
+    },
+  };
+});
+
+import { scryptSync, createHmac } from "node:crypto";
 import {
+  needsRehash,
+  burnLoginScryptWork,
+  SCRYPT_N,
+  SCRYPT_R,
+  SCRYPT_P,
   checkRateLimit,
   rateLimitBucketCount,
   resetAllRateLimits,
@@ -20,7 +52,11 @@ import {
 describe("password hashing (scrypt)", () => {
   it("hashes and verifies round-trip", () => {
     const hash = hashPassword("Demo1234!");
-    expect(hash).toMatch(/^scrypt\$[0-9a-f]{32}\$[0-9a-f]{128}$/);
+    // S134/CI1: the 6-part parameter-carrying form — scrypt$N$r$p$salt$key.
+    // The round-trip at N=2^17 is ALSO the maxmem regression pin: without
+    // the explicit cap both Node and Bun THROW (verified — 128·N·r exceeds
+    // the 32 MiB default), so a dropped maxmem fails this pin loudly.
+    expect(hash).toMatch(/^scrypt\$131072\$8\$1\$[0-9a-f]{32}\$[0-9a-f]{128}$/);
     expect(verifyPassword("Demo1234!", hash)).toBe(true);
     expect(verifyPassword("WrongPassword", hash)).toBe(false);
   });
@@ -64,6 +100,43 @@ describe("session tokens (HMAC)", () => {
     process.env.AUTH_SECRET = "a-completely-different-key";
     try {
       expect(readSessionToken(token)).toBeNull();
+    } finally {
+      if (previous === undefined) delete process.env.AUTH_SECRET;
+      else process.env.AUTH_SECRET = previous;
+    }
+  });
+
+  // S134/CI2 (audit A-M1): the expiry branch was unpinned at every layer —
+  // a regression in `if (exp <= Date.now()) return null` (inverted,
+  // dropped, off-by-sign) would ship immortal session tokens with a fully
+  // green gate. The 7-day TTL is the session-lifecycle guarantee; these
+  // pins forge VALIDLY-SIGNED tokens with expired payloads (the tampered-
+  // payload technique — the MAC covers the forged body because we sign it
+  // ourselves with the same secret, so ONLY the expiry check can reject).
+  it("rejects a validly-signed token whose exp is in the past (S134/CI2)", () => {
+    const previous = process.env.AUTH_SECRET;
+    process.env.AUTH_SECRET = "expiry-pin-secret";
+    try {
+      const body = Buffer.from(
+        JSON.stringify({ uid: "user-123", iat: 0, exp: Date.now() - 1000, v: 0 }),
+      ).toString("base64url");
+      const mac = createHmac("sha256", "expiry-pin-secret").update(body).digest("base64url");
+      expect(readSessionToken(`${body}.${mac}`)).toBeNull();
+    } finally {
+      if (previous === undefined) delete process.env.AUTH_SECRET;
+      else process.env.AUTH_SECRET = previous;
+    }
+  });
+
+  it("rejects at the exact boundary (exp === now — `<=`, not `<`) (S134/CI2)", () => {
+    const previous = process.env.AUTH_SECRET;
+    process.env.AUTH_SECRET = "expiry-pin-secret";
+    try {
+      const body = Buffer.from(
+        JSON.stringify({ uid: "user-123", iat: 0, exp: Date.now(), v: 0 }),
+      ).toString("base64url");
+      const mac = createHmac("sha256", "expiry-pin-secret").update(body).digest("base64url");
+      expect(readSessionToken(`${body}.${mac}`)).toBeNull();
     } finally {
       if (previous === undefined) delete process.env.AUTH_SECRET;
       else process.env.AUTH_SECRET = previous;
@@ -231,7 +304,10 @@ describe("verifyLoginCredentials (S117/BR3 — the timing equalizer)", () => {
     // The mutant "dummy = a malformed/empty string" fails here: verifyPassword
     // would early-return false WITHOUT running scrypt, silently reinstating
     // the timing oracle while keeping the helper's boolean contract green.
-    expect(DUMMY_LOGIN_HASH).toMatch(/^scrypt\$[0-9a-f]{32}\$[0-9a-f]{128}$/);
+    // S134/CI1 re-anchor: the dummy rides the 6-part current-parameter form.
+    expect(DUMMY_LOGIN_HASH).toMatch(
+      /^scrypt\$131072\$8\$1\$[0-9a-f]{32}\$[0-9a-f]{128}$/,
+    );
     expect(verifyPassword("not-the-dummy-password", DUMMY_LOGIN_HASH)).toBe(false);
   });
 });
@@ -431,5 +507,128 @@ describe("the peppered OTP digest family (S132/CG2)", () => {
     const a = "000000";
     const b = "000001";
     expect(hashOtpCode(a, secret)).not.toBe(hashOtpCode(b, secret));
+  });
+});
+
+// ---------------------------------------------------------------------------
+// S134/CI1 — the scrypt KDF parameter/versioning migration (B-L3, deferred
+// the sixth time — this cycle is its measured availability close).
+//
+// The pre-migration seam used Node's scryptSync DEFAULTS (N=16384/2^14,
+// r=8, p=1 — 16 MiB) — 8× below the OWASP Password Storage Cheat Sheet
+// floor (N >= 2^17 = 128 MiB) — and the stored format carried NO parameter
+// discriminator, so a silent N-raise would lock out every pre-migration
+// row (byte-shape-identical hashes, no parse error). The migration: the
+// 6-part parameter-carrying format (scrypt$N$r$p$salt$key), dual-verify of
+// the legacy 3-part form at the Node-default set, rehash-on-login as the
+// drain, the explicit maxmem at every call site (verified: both Node 24 and
+// Bun 1.3.14 THROW at N=2^17 without it — 128·N·r exceeds the 32 MiB
+// default), and the TRANSITION EQUALIZER: while legacy rows drain, every
+// login attempt burns exactly ONE 2^14-scrypt and ONE 2^17-scrypt so the
+// {no-user, legacy-row, current-row} branches stay timing-identical (the
+// naive migration would reopen the ~8× account-existence oracle the
+// S117/BR3 + S132/CG1 lineage closed).
+// ---------------------------------------------------------------------------
+
+/** The pre-S134 mint shape, hand-built at the Node-default parameter set —
+ *  exactly what the 3-part legacy rows in an aged deployment carry. */
+function legacyHash(password: string): string {
+  const salt = Buffer.from("a1b2c3d4e5f60718a1b2c3d4e5f60718", "hex"); // 16 bytes
+  const derived = scryptSync(password, salt, 64); // no options — the defaults
+  return `scrypt$${salt.toString("hex")}$${derived.toString("hex")}`;
+}
+
+describe("the S134/CI1 scrypt KDF migration", () => {
+  it("exports the current OWASP-floor parameter set (N=2^17, r=8, p=1)", () => {
+    expect(SCRYPT_N).toBe(131072);
+    expect(SCRYPT_R).toBe(8);
+    expect(SCRYPT_P).toBe(1);
+  });
+
+  it("hashPassword embeds its parameters in the 6-part form (the discriminator a silent N-raise needs)", () => {
+    const hash = hashPassword("Demo1234!");
+    const parts = hash.split("$");
+    expect(parts).toHaveLength(6);
+    expect(parts[0]).toBe("scrypt");
+    expect(Number(parts[1])).toBe(SCRYPT_N);
+    expect(Number(parts[2])).toBe(SCRYPT_R);
+    expect(Number(parts[3])).toBe(SCRYPT_P);
+    // the legacy mint never carried params — the two forms are distinguishable
+    expect(legacyHash("Demo1234!").split("$")).toHaveLength(3);
+  });
+
+  it("verifies a LEGACY 3-part hash at the Node-default set (dual-verify — the migration never locks out aged rows)", () => {
+    const stored = legacyHash("AgedPassword1!");
+    expect(verifyPassword("AgedPassword1!", stored)).toBe(true);
+    expect(verifyPassword("WrongPassword", stored)).toBe(false);
+  });
+
+  it("needsRehash: the legacy form upgrades, the current form does not, malformed rows fail safe", () => {
+    expect(needsRehash(legacyHash("x"))).toBe(true);
+    expect(needsRehash(hashPassword("x"))).toBe(false);
+    expect(needsRehash("not-a-hash")).toBe(true);
+    expect(needsRehash("scrypt$only")).toBe(true);
+  });
+
+  it("fails CLOSED on 6-part rows whose parameters are not the shipped current set (hostile/corrupt rows cannot induce oversized allocs)", () => {
+    const minted = hashPassword("Demo1234!");
+    const parts = minted.split("$");
+    const rebuild = (n: string, r: string, p: string) =>
+      ["scrypt", n, r, p, parts[4], parts[5]].join("$");
+    // legacy numbers inside the 6-part form (never minted that way)
+    expect(verifyPassword("Demo1234!", rebuild("16384", "8", "1"))).toBe(false);
+    // a future/hypothetical raise, not yet accepted by this build
+    expect(verifyPassword("Demo1234!", rebuild("262144", "8", "1"))).toBe(false);
+    // parameter drift on r/p
+    expect(verifyPassword("Demo1234!", rebuild("131072", "16", "1"))).toBe(false);
+    expect(verifyPassword("Demo1234!", rebuild("131072", "8", "2"))).toBe(false);
+    // non-numeric / non-hex / wrong-length payloads
+    expect(verifyPassword("Demo1234!", rebuild("notanumber", "8", "1"))).toBe(false);
+    expect(verifyPassword("Demo1234!", ["scrypt", "131072", "8", "1", "zzzz", parts[5]].join("$"))).toBe(false);
+    expect(verifyPassword("Demo1234!", ["scrypt", "131072", "8", "1", parts[4], "a1b2c3d4"].join("$"))).toBe(false);
+    // 4- and 5-part shapes (neither form)
+    expect(verifyPassword("Demo1234!", ["scrypt", parts[4], parts[5], "extra"].join("$"))).toBe(false);
+  });
+
+  it("the burn census: a login attempt against a CURRENT-hash user burns exactly one 2^17 verify + one 2^14 complement (the transition equalizer)", () => {
+    scryptBurns.length = 0;
+    const stored = hashPassword("census-password");
+    scryptBurns.length = 0; // the mint's burn excluded — the ATTEMPT is the unit
+    expect(verifyLoginCredentials({ passwordHash: stored }, "census-password")).toBe(true);
+    expect(scryptBurns).toEqual([131072, 16384]);
+    scryptBurns.length = 0;
+    expect(verifyLoginCredentials({ passwordHash: stored }, "wrong-password")).toBe(false);
+    expect(scryptBurns).toEqual([131072, 16384]);
+  });
+
+  it("the burn census: a login attempt against a LEGACY-hash user burns the mirrored pair (2^14 verify + 2^17 complement) — the SAME total", () => {
+    const stored = legacyHash("legacy-census");
+    scryptBurns.length = 0;
+    expect(verifyLoginCredentials({ passwordHash: stored }, "legacy-census")).toBe(true);
+    expect(scryptBurns).toEqual([16384, 131072]);
+    scryptBurns.length = 0;
+    expect(verifyLoginCredentials({ passwordHash: stored }, "wrong-password")).toBe(false);
+    expect(scryptBurns).toEqual([16384, 131072]);
+  });
+
+  it("the burn census: the no-user miss branch burns the dummy's current pair — identical totals across the branch matrix (no reopened oracle)", () => {
+    scryptBurns.length = 0;
+    expect(verifyLoginCredentials(null, "anything")).toBe(false);
+    expect(scryptBurns).toEqual([131072, 16384]);
+    scryptBurns.length = 0;
+    expect(verifyLoginCredentials(undefined, "anything")).toBe(false);
+    expect(scryptBurns).toEqual([131072, 16384]);
+  });
+
+  it("the burn census: a MALFORMED stored row still burns the full pair (verify burns nothing parseable — the complement burns both sets)", () => {
+    scryptBurns.length = 0;
+    expect(verifyLoginCredentials({ passwordHash: "corrupt-row" }, "anything")).toBe(false);
+    expect(scryptBurns).toEqual([16384, 131072]);
+  });
+
+  it("burnLoginScryptWork (the exhausted-account branch's burn, S132/CG1 upgraded) costs the same pair as every other login attempt", () => {
+    scryptBurns.length = 0;
+    burnLoginScryptWork("probe-password");
+    expect(scryptBurns).toEqual([131072, 16384]);
   });
 });

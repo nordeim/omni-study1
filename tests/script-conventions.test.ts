@@ -117,7 +117,7 @@ describe("the chunked cert runner's truth contract (S128/CC2)", () => {
 
   it("names the CURRENT per-chunk census in its header (the re-tag tripwire)", () => {
     // The topmost Expected line — re-tagged by every census-changing cycle.
-    expect(certSource).toContain("Expected: 149 + 180 + 74 + 94 + 81 = 578");
+    expect(certSource).toContain("Expected: 150 + 181 + 74 + 94 + 85 = 584");
   });
 
   it("propagates a failing chunk's exit code (never a green cert on a red run)", () => {
@@ -517,11 +517,20 @@ describe("the Batch CG auth-hardening census (S132/CG1+CG3+CG11)", () => {
     expect(returnAt, "the exhausted branch answers the uniform 401").toBeGreaterThan(-1);
     const branch = src.slice(exhaustedAt, returnAt);
     // Pre-CG1 the branch returned with ZERO scrypt work — the RED
-    // discriminator is the dummy-hash burn INSIDE the branch.
+    // discriminator was the dummy-hash burn INSIDE the branch. S134/CI1
+    // re-anchors the pin to the upgraded idiom: the branch now burns
+    // burnLoginScryptWork(password) — the dummy verify PLUS the transition
+    // complement — so the exhausted 401 costs EXACTLY the same scrypt work
+    // as every other login attempt (the raw verifyPassword+DUMMY form would
+    // burn one parameter set short of the credential branch's pair).
     expect(
       branch,
-      "the exhausted branch burns verifyPassword(password, DUMMY_LOGIN_HASH) before the return",
-    ).toMatch(/verifyPassword\(password,\s*DUMMY_LOGIN_HASH\)/);
+      "the exhausted branch burns burnLoginScryptWork(password) before the return (the S134/CI1 uniform pair)",
+    ).toMatch(/burnLoginScryptWork\(password\)/);
+    expect(
+      branch,
+      "the exhausted branch no longer burns the raw single-set form (the S134/CI1 re-anchor)",
+    ).not.toMatch(/verifyPassword\(password,\s*DUMMY_LOGIN_HASH\)/);
   });
 
   it("forgot carries the forgotAcct per-email budget, checked before the user lookup (the CF1 pattern completed across the three siblings)", () => {
@@ -638,5 +647,62 @@ describe("the route-file shared-symbol census (S133/CH9)", () => {
       "route files exporting shared symbols (the S125/BZ8 rule — route modules are the runtime's export surface, shared constants live in lib): " +
         offenders.join(" | "),
     ).toEqual([]);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// S134/CI1 — the KDF migration's route-side censuses. The login route owns
+// two of the migration's three route-side obligations: (1) the rehash drain
+// — a successful login on a legacy-format hash upgrades the stored row to
+// the current parameter set in place (the standard rehash-on-login
+// migration; without it, legacy rows would ride the dual-verify path
+// forever); (2) the exhausted-account branch's upgraded burn (re-anchored
+// above). The reset route owns (3): the mint hoisted ABOVE the
+// $transaction — at the current parameter set the burn is ~0.5-0.9 s, and
+// inside the transaction it would hold the SQLite write lock (and inflate
+// the S119/BT3 replay-pair window) for its whole duration.
+// ---------------------------------------------------------------------------
+describe("the S134/CI1 KDF-migration route censuses", () => {
+  const LOGIN = path.resolve(process.cwd(), "src/app/api/auth/login/route.ts");
+  const RESET = path.resolve(process.cwd(), "src/app/api/auth/reset-password/route.ts");
+
+  it("login rehashes a legacy-format hash after a successful credential check (the drain)", () => {
+    const src = readFileSync(LOGIN, "utf8");
+    // The drain seam: the needsRehash guard + the in-place update.
+    expect(src, "the needsRehash guard exists").toMatch(/needsRehash\(user\.passwordHash\)/);
+    expect(src, "the upgrade write mints at the current parameter set").toMatch(
+      /passwordHash:\s*hashPassword\(password\)/,
+    );
+    const guardAt = src.indexOf("needsRehash(user.passwordHash)");
+    const updateAt = src.indexOf("passwordHash: hashPassword(password)");
+    expect(guardAt, "the guard precedes the update").toBeLessThan(updateAt);
+    // The drain runs AFTER the credentials check (a wrong password never
+    // rehashes — the guard sits below the uniform-401 early return).
+    const credsAt = src.indexOf("verifyLoginCredentials(user, password)");
+    expect(credsAt, "the drain sits after the credential check").toBeLessThan(guardAt);
+    // ...and BEFORE the unverified gate is fine either way, but the session
+    // response must still embed the CURRENT sessionVersion (the rehash
+    // never bumps the version — it is not a rotation).
+    expect(src).toMatch(/sessionVersion:\s*user\.sessionVersion/);
+  });
+
+  it("reset-password mints the new hash OUTSIDE the transaction (the write lock is never held across the KDF burn)", () => {
+    const src = readFileSync(RESET, "utf8");
+    const mintAt = src.indexOf("hashPassword(password)");
+    const txAt = src.indexOf("db.$transaction");
+    expect(mintAt, "the mint exists").toBeGreaterThan(-1);
+    expect(txAt, "the transaction exists").toBeGreaterThan(-1);
+    expect(
+      mintAt,
+      "the mint is hoisted above the $transaction (the S134/CI1 leg of audit A-L1: the ~0.5-0.9 s burn must not hold the SQLite write lock)",
+    ).toBeLessThan(txAt);
+    // the transaction's user.update consumes the pre-computed value, not a
+    // nested hashPassword call — the body spans to the consumption guard
+    // (the first "});" closes the inner updateMany, not the transaction)
+    const txBody = src.slice(txAt, src.indexOf("if (!consumed)", txAt));
+    expect(txBody, "the transaction body carries the pre-computed hash").toMatch(
+      /passwordHash:\s*(newPasswordHash|upgradedHash)/,
+    );
+    expect(txBody, "no KDF burn inside the transaction body").not.toMatch(/hashPassword\(/);
   });
 });

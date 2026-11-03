@@ -10,7 +10,6 @@ import {
   createHmac,
   randomBytes,
   randomInt,
-  randomFillSync,
   scryptSync,
   timingSafeEqual,
 } from "node:crypto";
@@ -28,22 +27,129 @@ const SCRYPT_KEYLEN = 64;
 export const SESSION_TTL_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
 
 // ---- password hashing (scrypt) ----------------------------------------------
+//
+// S134/CI1 — the parameter/versioning migration (B-L3, deferred the sixth
+// time; this cycle is its measured availability close). The pre-S134 seam
+// used scryptSync's DEFAULTS (N=16384/2^14, r=8, p=1 — 16 MiB), 8× below
+// the OWASP Password Storage Cheat Sheet floor (N ≥ 2^17 = 128 MiB), and
+// the stored format carried NO parameter discriminator. The migration:
+//
+//   • the 6-part form `scrypt$<N>$<r>$<p>$<salt-hex>$<key-hex>` — the
+//     discriminator a parameter raise needs (the legacy 3-part form is
+//     byte-shape-identical under any N, so a silent raise would lock out
+//     every pre-migration row with no parse error);
+//   • the legacy 3-part form still VERIFIES at the Node-default set (the
+//     dual-verify window) and upgrades in place on the next successful
+//     login (needsRehash + the login route's rehash drain);
+//   • every call site passes an explicit maxmem — VERIFIED on Node 24 and
+//     Bun 1.3.14: at N=2^17 the 128·N·r working set exceeds the 32 MiB
+//     default and BOTH runtimes throw ("memory limit exceeded");
+//   • cross-runtime byte-equality VERIFIED (Node and Bun derive identical
+//     scrypt bytes for both parameter sets — the seed writes under Bun,
+//     dev/e2e verify under either);
+//   • the transition equalizer (below) keeps the login branch matrix
+//     timing-identical while legacy rows drain.
+//
+// The measured availability record (this machine): legacy burn ~63 ms
+// (Node) / ~98 ms (Bun); current burn ~537 ms / ~857 ms; a login attempt
+// (one of each — the equalizer) ~0.6–0.95 s; register/change-password/
+// reset burn once. All imperceptible interactively and bounded by the
+// 10/IP/15-min + 10/account/15-min budgets.
 
-/** Format: scrypt$<16-byte salt hex>$<64-byte derived key hex> */
+/** The current parameter set — the OWASP floor (N=2^17, r=8, p=1). */
+export const SCRYPT_N = 131_072;
+export const SCRYPT_R = 8;
+export const SCRYPT_P = 1;
+
+/** maxmem sized for the parameter set it accompanies: 128·N·r + slack. */
+const SCRYPT_MAXMEM = 128 * SCRYPT_N * SCRYPT_R + 64 * 1024 * 1024;
+
+/** The pre-S134 parameter set (the scryptSync defaults the legacy 3-part
+ *  rows were minted under — still VERIFIED, upgraded on login). */
+const LEGACY_SCRYPT_N = 16_384;
+const LEGACY_SCRYPT_R = 8;
+const LEGACY_SCRYPT_P = 1;
+const LEGACY_SCRYPT_MAXMEM = 128 * LEGACY_SCRYPT_N * LEGACY_SCRYPT_R + 64 * 1024 * 1024;
+
+type ScryptCall = { N: number; r: number; p: number; maxmem: number };
+
+const CURRENT_CALL: ScryptCall = {
+  N: SCRYPT_N,
+  r: SCRYPT_R,
+  p: SCRYPT_P,
+  maxmem: SCRYPT_MAXMEM,
+};
+const LEGACY_CALL: ScryptCall = {
+  N: LEGACY_SCRYPT_N,
+  r: LEGACY_SCRYPT_R,
+  p: LEGACY_SCRYPT_P,
+  maxmem: LEGACY_SCRYPT_MAXMEM,
+};
+
+function scryptAt(password: string, salt: Buffer, call: ScryptCall): Buffer {
+  return scryptSync(password, salt, SCRYPT_KEYLEN, {
+    N: call.N,
+    r: call.r,
+    p: call.p,
+    maxmem: call.maxmem,
+  });
+}
+
+/** Format: `scrypt$<N>$<r>$<p>$<16-byte salt hex>$<64-byte derived key hex>`
+ *  (S134/CI1 — the parameter-carrying form; the legacy 3-part form
+ *  `scrypt$<salt>$<key>` carried none). */
 export function hashPassword(password: string): string {
   const salt = randomBytes(16);
-  const derived = scryptSync(password, salt, SCRYPT_KEYLEN);
-  return `scrypt$${salt.toString("hex")}$${derived.toString("hex")}`;
+  const derived = scryptAt(password, salt, CURRENT_CALL);
+  return `scrypt$${SCRYPT_N}$${SCRYPT_R}$${SCRYPT_P}$${salt.toString("hex")}$${derived.toString("hex")}`;
+}
+
+type StoredFormat = { call: ScryptCall; legacy: boolean; salt: Buffer; expected: Buffer };
+
+/** The single parser for both shipped forms. The accepted set is EXACTLY
+ *  the two: the legacy 3-part form (the Node-default set) and the 6-part
+ *  form carrying the CURRENT parameters — a 6-part row with any other
+ *  N/r/p fails CLOSED (a hostile or corrupt row can never induce an
+ *  oversized allocation; future raises widen the accepted set explicitly,
+ *  never silently). */
+function parseStoredFormat(stored: string): StoredFormat | null {
+  const parts = stored.split("$");
+  if (parts[0] !== "scrypt") return null;
+  let call: ScryptCall;
+  let legacy = false;
+  if (parts.length === 3) {
+    call = LEGACY_CALL;
+    legacy = true;
+  } else if (
+    parts.length === 6 &&
+    parts[1] === String(SCRYPT_N) &&
+    parts[2] === String(SCRYPT_R) &&
+    parts[3] === String(SCRYPT_P)
+  ) {
+    call = CURRENT_CALL;
+  } else {
+    return null; // unknown arity or a non-shipped parameter set — fail closed
+  }
+  const salt = Buffer.from(parts[parts.length - 2], "hex");
+  const expected = Buffer.from(parts[parts.length - 1], "hex");
+  if (salt.length !== 16 || expected.length !== SCRYPT_KEYLEN) return null;
+  return { call, legacy, salt, expected };
 }
 
 export function verifyPassword(password: string, stored: string): boolean {
-  const parts = stored.split("$");
-  if (parts.length !== 3 || parts[0] !== "scrypt") return false;
-  const salt = Buffer.from(parts[1], "hex");
-  const expected = Buffer.from(parts[2], "hex");
-  if (salt.length !== 16 || expected.length !== SCRYPT_KEYLEN) return false;
-  const derived = scryptSync(password, salt, SCRYPT_KEYLEN);
-  return timingSafeEqual(derived, expected);
+  const parsed = parseStoredFormat(stored);
+  if (!parsed) return false;
+  const derived = scryptAt(password, parsed.salt, parsed.call);
+  return timingSafeEqual(derived, parsed.expected);
+}
+
+/** S134/CI1 — the rehash drain's decision: a stored hash minted before the
+ *  migration (or a malformed row — harmless: the drain only runs after a
+ *  SUCCESSFUL verify) upgrades to the current parameter set on the next
+ *  successful login. */
+export function needsRehash(stored: string): boolean {
+  const parsed = parseStoredFormat(stored);
+  return parsed === null || parsed.legacy;
 }
 
 // ---- login timing equalizer (S117/BR3) ---------------------------------------
@@ -53,17 +159,64 @@ export function verifyPassword(password: string, stored: string): boolean {
  * "wrong password" (no remotely measurable enumeration oracle under the
  * uniform 401). Unit-pinned by tests/auth.test.ts (the shape pin is what
  * fails the "dummy = malformed string" mutant that would silently restore
- * the oracle while keeping the boolean contract green). */
+ * the oracle while keeping the boolean contract green). S134/CI1: minted
+ * at the CURRENT parameter set (auto-follows hashPassword — one ~0.5–0.9 s
+ * burn at module load, per process). */
 export const DUMMY_LOGIN_HASH: string = hashPassword(generateResetToken());
+
+/** S134/CI1 — the transition equalizer's complement salt (per-process,
+ * unknowable — the DUMMY pattern). */
+const COMPLEMENT_SALT = randomBytes(16);
+
+/** S134/CI1 — the transition equalizer. While legacy-format rows drain
+ * (rehash-on-login), a login attempt against a LEGACY stored hash would
+ * burn 2^14 work while the no-user miss branch burns the dummy's 2^17 —
+ * an ~8× remotely measurable account-existence oracle, the exact BX4/CG1
+ * class REOPENED BY the migration itself. The complement burn closes it:
+ * every login attempt burns exactly ONE 2^14-scrypt and ONE 2^17-scrypt,
+ * identically across {no-user, legacy-row, current-row, malformed-row} ×
+ * {right, wrong} — the branch matrix's totals are invariant. The census
+ * (tests/auth.test.ts, the scryptBurns instrument) machine-guards it: a
+ * dropped complement burn fails loudly. */
+function burnComplement(password: string, stored: string): void {
+  const parsed = parseStoredFormat(stored);
+  if (parsed && !parsed.legacy) {
+    // a current-format row: the verify already burned 2^17 — burn the 2^14
+    scryptAt(password, COMPLEMENT_SALT, LEGACY_CALL);
+  } else if (parsed) {
+    // a legacy row: the verify already burned 2^14 — burn the 2^17
+    scryptAt(password, COMPLEMENT_SALT, CURRENT_CALL);
+  } else {
+    // a malformed row: the verify burned nothing — burn BOTH halves so even
+    // the corrupt-row branch pays the full uniform pair
+    scryptAt(password, COMPLEMENT_SALT, LEGACY_CALL);
+    scryptAt(password, COMPLEMENT_SALT, CURRENT_CALL);
+  }
+}
+
+/** S134/CI1 — the uniform login scrypt burn (the verify + the complement):
+ * the single idiom every login-attempt branch consumes so the 401/200
+ * responses cost identical scrypt work. The login route's exhausted-account
+ * branch (S132/CG1) calls this with NO stored hash — the dummy stands in. */
+export function burnLoginScryptWork(
+  password: string,
+  stored: string | null | undefined = null,
+): boolean {
+  const hash = stored ?? DUMMY_LOGIN_HASH;
+  const ok = verifyPassword(password, hash);
+  burnComplement(password, hash);
+  return ok;
+}
 
 /** The login credential check WITH the timing equalizer: the scrypt burn
  * happens for every attempt (real hash or the dummy); the result is true
- * only when the user exists AND the password matches. */
+ * only when the user exists AND the password matches. S134/CI1: the burn
+ * rides burnLoginScryptWork — the full 2^14+2^17 pair on every branch. */
 export function verifyLoginCredentials(
   user: { passwordHash: string } | null | undefined,
   password: string,
 ): boolean {
-  const ok = verifyPassword(password, user?.passwordHash ?? DUMMY_LOGIN_HASH);
+  const ok = burnLoginScryptWork(password, user?.passwordHash);
   return ok && user != null;
 }
 
@@ -300,10 +453,6 @@ export function secureCookieFlag(xForwardedProto: string | null, requestProtocol
 }
 
 // ---- misc -----------------------------------------------------------------------
-
-/** Cryptographically fill a buffer (shared helper for one-shot seams). */
-export function secureRandomBytes(size: number): Buffer {
-  const buf = Buffer.alloc(size);
-  randomFillSync(buf);
-  return buf;
-}
+// (S134/CI6a: the secureRandomBytes helper was RETIRED — zero callers since
+// its introduction; a dead export in the most security-sensitive module is
+// exactly the surface the dependency-discipline doctrine retires.)

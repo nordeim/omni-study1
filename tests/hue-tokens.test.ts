@@ -444,3 +444,61 @@ describe("the analytics accent tokenization (S130/CE8)", () => {
     expect(tokens, "the gradient stops ×2, two line strokes, and the bar fill").toBeGreaterThanOrEqual(5);
   });
 });
+
+// ---------------------------------------------------------------------------
+// S134/CI8 (audit B-L2) — the accent-semantic violet register. Four sites
+// hardcode violet on surfaces whose hue SHOULD follow the user's chosen
+// accent (the S121/BV15 family): the tasks row-card hover border
+// (undocumented), the flashcards study-card back border (undocumented), the
+// notes selected-row tint (a documented measured value), and the analytics
+// Tasks-Completed chip (a documented measured value). No byte-identical
+// accent-token equivalent exists for a violet-200 border (--sf-primary-soft
+// is violet-100, not 200) — inventing a token family is a parity-measured
+// change of its own (deferred, plan §4). The register machine-guards the
+// ledger: the negative leg fails when a FIFTH border-violet-200 site
+// appears unregistered; the anchored leg fails when a registered site
+// moves or sheds its class.
+// ---------------------------------------------------------------------------
+const VIOLET_RESIDUALS: ReadonlyArray<{ file: string; line: number; pattern: RegExp; why: string }> = [
+  { file: "src/components/views/tasks-view.tsx", line: 115, pattern: /hover:border-violet-200/, why: "the row-card hover border (undocumented accent-semantic drift, audit B-L2)" },
+  { file: "src/components/views/flashcards-view.tsx", line: 394, pattern: /border-violet-200/, why: "the study-card back border (undocumented accent-semantic drift, audit B-L2)" },
+  { file: "src/components/views/notes-view.tsx", line: 686, pattern: /border-violet-200/, why: "the selected-note row tint (documented measured parity value, never swept into the accent-token doctrine; line re-anchored S134/CI7b — the patchSelected mirror comments above shifted it)" },
+  { file: "src/components/views/analytics-view.tsx", line: 414, pattern: /bg-violet-100/, why: "the Tasks-Completed stat chip (documented measured parity value — the anchored-only leg; bg-violet-100 is unsweepable, the empty-state/KPI families share it)" },
+];
+
+describe("the accent-semantic violet register (S134/CI8)", () => {
+  it("carries ZERO unregistered border-violet-200 sites in the views (a fifth site fails this leg)", () => {
+    const family = /border-violet-200/;
+    const viewFiles = listSrcFiles(
+      path.resolve(process.cwd(), "src/components/views"),
+    );
+    expect(viewFiles.length, "the views census ran").toBeGreaterThan(20);
+    const offenders: string[] = [];
+    for (const file of viewFiles) {
+      const src = readConsumer(file);
+      const rel = path.relative(process.cwd(), file);
+      src.split("\n").forEach((lineText, i) => {
+        if (!family.test(lineText)) return;
+        const residual = VIOLET_RESIDUALS.find(
+          (r) => r.file === rel && r.line === i + 1,
+        );
+        if (!residual) offenders.push(`${rel}:${i + 1}`);
+      });
+    }
+    expect(
+      offenders,
+      `border-violet-200 sites outside the register (accent-semantic surfaces ride the accent tokens or join the register with a why): ${offenders.join(", ")}`,
+    ).toEqual([]);
+  });
+
+  it("the register stays anchored (every registered site still carries its violet class at the recorded line)", () => {
+    for (const r of VIOLET_RESIDUALS) {
+      const src = readConsumer(path.resolve(process.cwd(), r.file));
+      const lineText = src.split("\n")[r.line - 1];
+      expect(
+        lineText,
+        `${r.file}:${r.line} — the registered site must keep its violet class (${r.why})`,
+      ).toMatch(r.pattern);
+    }
+  });
+});

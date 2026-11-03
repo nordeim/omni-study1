@@ -4,9 +4,11 @@
 # SIGKILL escalation → rm db/e2e.db → run the chunk), one chunk per
 # invocation so each foreground run fits the tool timeout.
 # Usage: bash /home/z/my-project/omni-study1/scripts/run-cert-chunk.sh <1-5>
-# Expected (S133/CH re-tag): 149 + 180 + 74 + 94 + 81 = 578 — the same
+# Expected (S134/CI re-tag): 150 + 181 + 74 + 94 + 85 = 584 — the same
 # census as scripts/e2e-chunked-cert.sh (machine-enforced by
 # tests/script-conventions.test.ts, including the identical-CHUNKS pin).
+# (S134/CI net +6: chunk 1 +1 [CI5 calculator gate], chunk 2 +1 [CI4 MyDay
+# guard], chunk 5 +4 [CI3 per-IP 429 quartet].)
 # S131/CF6: the exit is PIPESTATUS[0] (the playwright status), never the
 # trailing grep's.
 set -uo pipefail

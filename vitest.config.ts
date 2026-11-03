@@ -1,8 +1,28 @@
 import { defineConfig } from "vitest/config";
 import path from "node:path";
 
-// Unit-test layer for the pure domain seams — 45 files / 1291 tests
-// (re-anchored S133/CH — the audit-driven hardening cycle: census 1251 →
+// Unit-test layer for the pure domain seams — 45 files / 1314 tests
+// (re-anchored S134/CI — the audit-driven hardening cycle + the KDF
+// migration: census 1291 → 1314, +23 net [auth +14: the S134/CI1 scrypt
+// KDF migration family (the 6-part format round-trip — which is ALSO the
+// maxmem regression pin, both runtimes throw at N=2^17 without the
+// explicit cap; the legacy 3-part dual-verify; the needsRehash semantics;
+// the 6-part fail-closed family; the scryptBurns census — the transition
+// equalizer's exactly-one-2^14-and-one-2^17-per-login-attempt invariant
+// across the branch matrix, via a vi.hoisted+vi.mock node:crypto wrapper
+// around the REAL scryptSync; the burnLoginScryptWork pair; the CI2
+// session-expiry pair — the forged-signed-expired-payload pins) — plus the
+// three format pins re-anchored in place (the round-trip regex, the
+// DUMMY_LOGIN_HASH regex, the malformed legs); script-conventions +3: the
+// S134/CI1 route censuses (the login rehash drain + the CG1 exhausted
+// branch re-anchored to burnLoginScryptWork + the reset-password mint
+// hoisted outside the $transaction); secure-cookie +2: the SESSION_TTL
+// lockstep pair (the derivation + the value); view-collections +1: the
+// S134/CI7a flashcards pre-warm subjects leg; env-check +4: the S134/CI6c
+// overdeclaredProxyHopsWarning family; hue-tokens +2: the S134/CI8
+// accent-semantic violet register (the negative sweep + the anchored
+// legs)].)
+// (prior cycle — re-anchored S133/CH — the audit-driven hardening cycle: census 1251 →
 // 1291, +40 net [data-import +29: the S133/CH1 manifest-key family (the
 // dead flashcardDecks.* keys renamed to decks.*, the deck-cap behavior
 // pin, the five-registry manifest-consistency census) + the S133/CH2

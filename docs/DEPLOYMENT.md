@@ -87,6 +87,23 @@ bun run db:seed        # idempotent demo workspace (wipes domain tables)
 `db/*.db` is gitignored; every fresh clone recreates it from the two
 commands above.
 
+## 4b. Password hashing (S134/CI1 — the scrypt KDF contract)
+
+Stored password hashes ride the versioned 6-part format
+`scrypt$<N>$<r>$<p>$<salt>$<key>` at the OWASP floor (N=2^17, r=8, p=1).
+Two operational facts:
+
+- **Aged deployments (pre-S134 rows, the legacy 3-part form) need NO
+  migration step**: the legacy form still verifies, and every successful
+  login upgrades the row in place (the rehash-on-login drain). The drain
+  is transparent and per-account.
+- **The login path costs ~0.5–1 s of scrypt per attempt by design** (the
+  timing-equalizer pair: one legacy-parameter burn + one current-parameter
+  burn on every branch — the account-existence timing-oracle closure).
+  This is imperceptible interactively and bounded by the 10/IP/15-min and
+  10/account/15-min budgets; do NOT "optimize" it away. Register /
+  change-password / reset burn once (~0.5–0.9 s).
+
 ## 5. Updating
 
 ```bash

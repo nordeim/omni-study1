@@ -51,6 +51,12 @@ export function MyDayView() {
   const loading = useDataStore((s) => s.loading);
 
   const [quickAdd, setQuickAdd] = React.useState("");
+  // S134/CI4 (audit B-M1): the quick-add in-flight guard — a second Enter
+  // inside the POST window previously fired a SECOND create (two identical
+  // tasks from one typed title). Every sibling composer guards (TaskDialog
+  // saving, the events/exams/assignments busy early-returns, the AI send()
+  // busy check); this is the lone composer that didn't.
+  const [adding, setAdding] = React.useState(false);
   const [dialogOpen, setDialogOpen] = React.useState(false);
   const [dialogMyDay, setDialogMyDay] = React.useState(false);
   const [editing, setEditing] = React.useState<TaskRow | null>(null);
@@ -105,13 +111,16 @@ export function MyDayView() {
   const quickAddSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     const title = quickAdd.trim();
-    if (!title) return;
+    if (!title || adding) return;
+    setAdding(true);
     try {
       await mutations.createTask({ title, myDay: true });
       setQuickAdd("");
       toast.success("Added to My Day");
     } catch (err: unknown) {
       toast.error(errorMessage(err, "Could not add the task."));
+    } finally {
+      setAdding(false);
     }
   };
 

@@ -63,7 +63,13 @@ export async function POST(request: NextRequest) {
     // the loser reads count 0 and takes the invalid-token 400.
     // S118/BS1: the sessionVersion bump rides the same transaction too —
     // a pre-reset cookie cannot outlive the reset it predates.
+    // S134/CI1 (audit A-L1): the KDF mint is HOISTED above the transaction
+    // — at the current parameter set the burn is ~0.5-0.9 s, and inside
+    // the transaction it would hold the SQLite write lock (and inflate the
+    // BT3 replay window) for its whole duration. The pre-computed hash is
+    // behaviorally identical (the mint never touches the DB).
     const now = new Date();
+    const upgradedHash = hashPassword(password);
     const consumed = await db.$transaction(async (tx) => {
       const res = await tx.passwordResetToken.updateMany({
         where: { id: record.id, usedAt: null, expiresAt: { gt: now } },
@@ -73,7 +79,7 @@ export async function POST(request: NextRequest) {
       await tx.user.update({
         where: { id: record.userId },
         data: {
-          passwordHash: hashPassword(password),
+          passwordHash: upgradedHash,
           sessionVersion: { increment: 1 },
         },
       });

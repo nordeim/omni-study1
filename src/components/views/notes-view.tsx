@@ -404,9 +404,15 @@ export function NotesView() {
 
   const patchSelected = async (patch: Partial<NoteInput>) => {
     if (!selected) return;
+    // S134/CI7b (audit B-L4, the AG6/AH2 surface-lie class): capture the
+    // note id — a PATCH that settles after the user switched notes must
+    // not toast onto the NEW note's surface (the title/content/Save
+    // siblings already mirror through selectedIdRef).
+    const noteId = selected.id;
     try {
-      await updateNote(selected.id, patch);
+      await updateNote(noteId, patch);
     } catch (err: unknown) {
+      if (selectedIdRef.current !== noteId) return;
       toast.error(err instanceof ApiError ? err.message : "Save failed.");
     }
   };

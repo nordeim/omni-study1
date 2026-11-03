@@ -7,6 +7,7 @@ import {
   DEV_FALLBACK_SECRET,
   directExposureProdWarning,
   inBandDeliveryProdWarning,
+  overdeclaredProxyHopsWarning,
   parseTrustedProxyHops,
 } from "@/lib/env-check";
 
@@ -299,5 +300,57 @@ describe("S132/CG4 · directExposureProdWarning decides through the parse seam (
     expect(parseTrustedProxyHops("two")).toBe(0);
     expect(parseTrustedProxyHops("2")).toBe(2);
     expect(parseTrustedProxyHops(" 2 ")).toBe(2);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// S134/CI6c (audit A-L4) — the over-declared TRUSTED_PROXY_HOPS posture made
+// loud. With TRUSTED_PROXY_HOPS=10 behind a real 2-hop chain, EVERY request's
+// x-forwarded-for is shorter than the declared depth, clientIpFromForwarded
+// fails closed to null, and ALL clients collapse into the ONE shared
+// "local" bucket — the exact CF2 sitewide-lockout posture — while the boot
+// warning stays silent because the parse returned 10, not 0. The operator
+// most likely to misconfigure (declaring more hops than the chain has) gets
+// precisely the availability failure the warning was built to make loud.
+// The fix: a sibling boot warning for implausibly-large declared depths
+// (> 4 — real proxy chains are 1-3 hops; the RFC 7239 space never exceeds a
+// handful). The runtime fail-closed behavior is UNCHANGED (the documented
+// safe posture).
+// ---------------------------------------------------------------------------
+describe("S134/CI6c · overdeclaredProxyHopsWarning (the silent shared-bucket collapse made loud)", () => {
+  it("warns in production on an implausibly-large declared depth (> 4 hops)", () => {
+    expect(
+      overdeclaredProxyHopsWarning({ NODE_ENV: "production", TRUSTED_PROXY_HOPS: "10" }),
+    ).toBe(true);
+    expect(
+      overdeclaredProxyHopsWarning({ NODE_ENV: "production", TRUSTED_PROXY_HOPS: "5" }),
+    ).toBe(true);
+  });
+
+  it("is silent on plausible declared depths (1-4 hops — real chains), on unset, and on the direct-exposure posture (0 owns its own warning)", () => {
+    for (const hops of ["1", "2", "3", "4"]) {
+      expect(
+        overdeclaredProxyHopsWarning({ NODE_ENV: "production", TRUSTED_PROXY_HOPS: hops }),
+      ).toBe(false);
+    }
+    expect(overdeclaredProxyHopsWarning({ NODE_ENV: "production" })).toBe(false);
+    expect(
+      overdeclaredProxyHopsWarning({ NODE_ENV: "production", TRUSTED_PROXY_HOPS: "0" }),
+    ).toBe(false);
+  });
+
+  it("is silent outside production (the dev posture never declares hop depths)", () => {
+    expect(
+      overdeclaredProxyHopsWarning({ NODE_ENV: "development", TRUSTED_PROXY_HOPS: "10" }),
+    ).toBe(false);
+    expect(overdeclaredProxyHopsWarning({ TRUSTED_PROXY_HOPS: "10" })).toBe(false);
+  });
+
+  it("the boot wiring carries the warning beside the direct-exposure warning (the instrumentation call site)", () => {
+    const src = readFileSync(
+      path.resolve(process.cwd(), "src/instrumentation.ts"),
+      "utf8",
+    );
+    expect(src).toMatch(/overdeclaredProxyHopsWarning\(process\.env\)/);
   });
 });

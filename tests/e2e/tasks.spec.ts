@@ -210,3 +210,36 @@ test.describe("S133/CH8: the blank-title guard", () => {
     await request.delete(`/api/tasks/${((await legal.json()) as { id: string }).id}`);
   });
 });
+
+// ---------------------------------------------------------------------------
+// S134/CI4 (audit B-M1) — the MyDay quick-add in-flight guard. The composer
+// had no busy state: the input kept its text until the POST settled, so a
+// second Enter inside the in-flight window fired a SECOND create — two
+// identical tasks from one typed title (easy on a slow uplink; every
+// sibling composer guards: TaskDialog saving, the events/exams/assignments
+// busy early-returns, the AI send() busy check). The pin holds the POST so
+// the window is deterministic: two rapid Enters, then the route releases —
+// pre-fix TWO rows carry the title (the RED discriminator), post-fix ONE.
+// ---------------------------------------------------------------------------
+test.describe("S134/CI4 · the MyDay quick-add in-flight guard", () => {
+  test("a double-Enter inside the POST window creates exactly ONE task (the busy guard stands the second submit down)", async ({ page }) => {
+    const title = `E2E — my day double enter ${stamp}`;
+    const HELD = "**/api/tasks";
+    await page.route(HELD, (route) => {
+      // hold: the first createTask POST stays in flight long enough for
+      // the second Enter to land inside the window
+      setTimeout(() => route.continue(), 1500);
+    });
+    try {
+      await page.goto("/MyDay");
+      await page.getByLabel("Add a task for today").fill(title);
+      await page.getByLabel("Add a task for today").press("Enter");
+      await page.getByLabel("Add a task for today").press("Enter");
+      // release the held POST(s) and wait for the row to settle
+      await expect(page.getByText(title)).toBeVisible({ timeout: 10_000 });
+      await expect(page.getByText(title)).toHaveCount(1);
+    } finally {
+      await page.unroute(HELD);
+    }
+  });
+});
