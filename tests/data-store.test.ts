@@ -15,6 +15,10 @@ const apiGetMock = vi.fn();
 vi.mock("@/lib/api", () => ({
   apiGet: (...args: unknown[]) => apiGetMock(...(args as [])),
   apiSend: vi.fn(),
+  // S133/CH10: data.ts now derives COLLECTION_GET_TIMEOUT_MS from this
+  // export (the single source) — the mock carries the real value so the
+  // CD2 deadline pin keeps asserting timeoutMs: 20_000.
+  DEFAULT_GET_TIMEOUT_MS: 20_000,
 }));
 
 import { useDataStore } from "@/lib/data";

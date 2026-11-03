@@ -170,6 +170,7 @@ model Task {
   // table — a replace, not an addition.
   @@index([userId, createdAt, id])
   @@index([listId])
+  @@index([subjectId])
 }
 
 model Assignment {
@@ -196,6 +197,7 @@ model Assignment {
   // keeps every userId-prefixed lookup backed. Same index COUNT per
   // table — a replace, not an addition.
   @@index([userId, createdAt, id])
+  @@index([subjectId])
 }
 
 model Exam {
@@ -224,6 +226,7 @@ model Exam {
   // keeps every userId-prefixed lookup backed. Same index COUNT per
   // table — a replace, not an addition.
   @@index([userId, createdAt, id])
+  @@index([subjectId])
 }
 
 model Event {
@@ -276,6 +279,7 @@ model TimetableClass {
   // keeps every userId-prefixed lookup backed. Same index COUNT per
   // table — a replace, not an addition.
   @@index([userId, createdAt, id])
+  @@index([subjectId])
 }
 
 model Notebook {
@@ -320,6 +324,7 @@ model Note {
   // table — a replace, not an addition.
   @@index([userId, createdAt, id])
   @@index([notebookId])
+  @@index([subjectId])
 }
 
 model FlashcardDeck {
@@ -343,6 +348,7 @@ model FlashcardDeck {
   // keeps every userId-prefixed lookup backed. Same index COUNT per
   // table — a replace, not an addition.
   @@index([userId, createdAt, id])
+  @@index([subjectId])
 }
 
 // S7 nesting: Flashcard carries NO userId — ownership scopes through its deck.
@@ -380,6 +386,7 @@ model PracticeTest {
   // keeps every userId-prefixed lookup backed. Same index COUNT per
   // table — a replace, not an addition.
   @@index([userId, createdAt, id])
+  @@index([subjectId])
 }
 
 model StudyGroup {
@@ -404,6 +411,7 @@ model StudyGroup {
   // keeps every userId-prefixed lookup backed. Same index COUNT per
   // table — a replace, not an addition.
   @@index([userId, createdAt, id])
+  @@index([subjectId])
 }
 
 model Grade {
@@ -427,6 +435,7 @@ model Grade {
   // keeps every userId-prefixed lookup backed. Same index COUNT per
   // table — a replace, not an addition.
   @@index([userId, createdAt, id])
+  @@index([subjectId])
 }
 
 model FocusSession {
@@ -450,13 +459,19 @@ model FocusSession {
   // keeps every userId-prefixed lookup backed. Same index COUNT per
   // table — a replace, not an addition.
   @@index([userId, createdAt, id])
+  @@index([subjectId])
 }
 
-// S130/CE9: @@index([parentId]) lands below with the model — the only FK
-// column whose parent-DELETE SetNull scan had no covering index (every
-// sibling FK — Task.listId, Note.notebookId, FileItem.folderId,
+// S130/CE9: @@index([parentId]) lands below with the model — at CE9 the
+// only FK column whose parent-DELETE SetNull scan had no covering index
+// (every sibling FK — Task.listId, Note.notebookId, FileItem.folderId,
 // Flashcard.deckId — carries one; at import-minted folder counts each
-// parent delete was a full-table scan).
+// parent delete was a full-table scan). S133/CH3 corrected the claim's
+// blind spot: the TEN subjectId columns carried none either (every
+// Subject DELETE ran ten unindexed SetNull scans) — all ten now carry
+// @@index([subjectId]), and tests/schema-indexes.test.ts's FK-column
+// census machine-checks EVERY relation column instead of the hand-asserted
+// sibling list this comment used to carry.
 model FileFolder {
   id        String       @id @default(cuid())
   userId    String

@@ -1,13 +1,17 @@
 import {
   ASSIGNMENT_PRIORITIES,
   ASSIGNMENT_TYPES,
+  CALCULATOR_MODES,
   CARD_DIFFICULTIES,
   CHAT_ROLES,
   CHAT_SURFACES,
+  EXAM_TYPES,
+  FOCUS_SESSION_MODES,
   hhmmMinutes,
   preferencesSchema,
   REPEATS,
   TASK_PRIORITIES,
+  WEEK_TYPES,
 } from "./validation";
 
 // ---------------------------------------------------------------------------
@@ -241,58 +245,118 @@ export function sortFoldersParentsFirst(folders: ImportRow[]): ImportRow[] | str
     const offenders = folders
       .map((row) => String(row.id))
       .filter((id) => !emitted.has(id));
-    return `folders contains a parentId cycle involving: ${offenders.join(", ")}. Fix the folder tree in the source account and re-export.`;
+    // S133/CH6: the offender list is attacker-controlled — a 25 MiB cyclic
+    // folder envelope would otherwise echo every un-emitted id back in the
+    // 400 body (a ~30 MB error string). First 10 + the count; the operator
+    // still finds the cycle in their file.
+    const shown = offenders.slice(0, 10);
+    const rest =
+      offenders.length > shown.length
+        ? ` …and ${offenders.length - shown.length} more`
+        : "";
+    return `folders contains a parentId cycle involving: ${shown.join(", ")}${rest}. Fix the folder tree in the source account and re-export.`;
   }
   return ordered;
 }
 
-/** Parse + normalize an import envelope, or name the first offender. */
-export function parseImportEnvelope(
-  input: unknown,
-): ImportParseResult {
-  if (!isPlainObject(input)) {
-    return {
-      ok: false,
-      error:
-        "This file is not a StudyFlow data export (expected a JSON object envelope).",
-    };
-  }
+/** S133/CH4 — the stateless envelope validator, THE single source the
+ * production route consumes (the S126 lesson-2 hazard closed: the
+ * pre-CH4 seam's parseImportEnvelope had ZERO production callers while
+ * the route ran a drifted inline twin — the seam tolerated a missing
+ * data block and split the version 400s differently). The messages and
+ * behaviors are the ROUTE's shipped contract (the e2e-visible behavior
+ * wins): a missing data block 400s, a non-integer version folds into
+ * the newer-version 400, unknown collections reject by name, and every
+ * declared collection must be an array. The account-aware halves (the
+ * FK resolution against envelope ∪ owned-existing rows, the secrets
+ * re-attachment) stay route-side BY DESIGN — a pure seam cannot see the
+ * database. */
+export type ImportEnvelopeCheck =
+  | { ok: true; data: Record<string, unknown> }
+  | { ok: false; error: string };
 
+export function validateImportEnvelope(
+  input: unknown,
+): ImportEnvelopeCheck {
+  if (!isPlainObject(input)) {
+    return { ok: false, error: `Expected a ${DATA_EXPORT_FORMAT} envelope.` };
+  }
   if (input.format !== DATA_EXPORT_FORMAT) {
     return {
       ok: false,
-      error: `This file is not a ${DATA_EXPORT_FORMAT} envelope. Export your data from StudyFlow and import that file.`,
+      error: `Unrecognized export format — expected "${DATA_EXPORT_FORMAT}".`,
     };
   }
-
+  // The route's folding: a non-number, non-integer, or future version all
+  // answer the actionable newer-version 400 (a garbled version is
+  // indistinguishable from an incompatible one at the restore boundary).
   const version = input.version;
-  if (typeof version !== "number" || !Number.isInteger(version)) {
+  if (
+    typeof version !== "number" ||
+    !Number.isInteger(version) ||
+    version > DATA_EXPORT_VERSION
+  ) {
     return {
       ok: false,
-      error: "The export envelope has no readable version number.",
-    };
-  }
-  if (version > DATA_EXPORT_VERSION) {
-    return {
-      ok: false,
-      error: `This export was written by a newer version of StudyFlow (v${version}); this app understands v${DATA_EXPORT_VERSION}. Update the app and try again.`,
+      error: `This export was written by a newer version of StudyFlow (version ${String(
+        version,
+      )} > ${DATA_EXPORT_VERSION}). Update the app before restoring it.`,
     };
   }
   if (version < DATA_EXPORT_VERSION) {
     return {
       ok: false,
-      error: `This export is from an unsupported older version (v${version}).`,
+      error: `This export is from an unsupported older version (v${String(version)}).`,
     };
   }
+  if (!isPlainObject(input.data)) {
+    return { ok: false, error: "The envelope carries no data object." };
+  }
+  // Unknown collections are rejected BY NAME (S117/BR1).
+  for (const key of Object.keys(input.data)) {
+    if (!KNOWN_COLLECTIONS.has(key)) {
+      return {
+        ok: false,
+        error: `Unknown collection "${key}" in the export file. This app imports exactly: ${EXPORT_COLLECTIONS.join(", ")}.`,
+      };
+    }
+  }
+  // Every declared collection must be an array.
+  for (const collection of EXPORT_COLLECTIONS) {
+    const rows = input.data[collection];
+    if (rows === undefined) continue;
+    if (!Array.isArray(rows)) {
+      return {
+        ok: false,
+        error: `The "${collection}" collection must be an array.`,
+      };
+    }
+  }
+  return { ok: true, data: input.data };
+}
 
-  const rawData = input.data;
-  if (rawData === undefined) {
-    return finish({} as Record<string, unknown>);
+/** S133/CH4 — the ONE duplicate-id message (the route's shipped phrasing,
+ * previously the second half of the twin: the seam said "Collection "X"
+ * contains duplicate rows…" while the route said "X: duplicate id …").
+ * Both callers now share this. */
+export function duplicateIdError(collection: string, id: string): string {
+  return `${collection}: duplicate id "${id}" — every row needs a unique id.`;
+}
+
+/** Parse + normalize an import envelope, or name the first offender.
+ * S133/CH4: the stateless stages delegate to validateImportEnvelope (the
+ * production-consumed single source above); this wrapper keeps the richer
+ * row normalization + envelope-only FK pre-emption that the unit pins
+ * exercise (the account-aware FK resolution is route-side by design —
+ * see the seam header). */
+export function parseImportEnvelope(
+  input: unknown,
+): ImportParseResult {
+  const check = validateImportEnvelope(input);
+  if (!check.ok) {
+    return { ok: false, error: check.error };
   }
-  if (!isPlainObject(rawData)) {
-    return { ok: false, error: 'The envelope\'s "data" block must be an object keyed by collection.' };
-  }
-  return finish(rawData);
+  return finish(check.data);
 }
 
 function finish(rawData: Record<string, unknown>): ImportParseResult {
@@ -328,10 +392,8 @@ function finish(rawData: Record<string, unknown>): ImportParseResult {
       if (idError !== null) return { ok: false, error: idError };
       const id = (row as ImportRow).id as string;
       if (seen.has(id)) {
-        return {
-          ok: false,
-          error: `Collection "${collection}" contains duplicate rows for id "${id}". Re-export your data and try again.`,
-        };
+        // S133/CH4: the shared message (the route's shipped phrasing).
+        return { ok: false, error: duplicateIdError(collection, id) };
       }
       seen.add(id);
       normalized.push(stripSecrets(row));
@@ -435,14 +497,25 @@ export const IMPORT_FIELD_LENGTHS: Record<string, number> = {
   "notes.title": 200,
   "notes.content": 100_000,
   "notes.tags": 2_000,
-  "flashcardDecks.name": 200,
-  "flashcardDecks.description": 1_000,
+  // S133/CH1: keyed by the MANIFEST collection name ("decks" — the name
+  // the route iterates) — the pre-CH1 "flashcardDecks.*" keys were dead
+  // their whole life (fieldCapFor looked up "decks.name", missed, and
+  // fell to the 1 M generic default — the deck caps were INERT while the
+  // census pin machine-enforced the wrong key list).
+  "decks.name": 200,
+  "decks.description": 1_000,
   "cards.front": 2_000,
   "cards.back": 2_000,
   "practiceTests.title": 200,
   "practiceTests.questions": 100_000,
   "studyGroups.name": 200,
   "grades.title": 200,
+  // S133/CH2: the four atoms the parity contract was missing.
+  "holidays.name": 200,
+  "folders.name": 200,
+  "calcHistory.expression": 500,
+  "calcHistory.result": 500,
+  "chatMessages.content": 100_000,
 };
 
 const IMPORT_FILE_URL_MAX_CHARS = 2000;
@@ -479,8 +552,11 @@ function fieldCapFor(collection: string, field: string): number {
 // dependence — and the vocabularies come from validation.ts's single
 // source (the enums the routes themselves enforce).
 
-/** Enum vocabularies keyed by collection.field (validation.ts's own sets). */
-const ENUM_VOCABULARIES: Record<string, readonly string[]> = {
+/** Enum vocabularies keyed by collection.field (validation.ts's own sets).
+ * S133/CH2: exported for the manifest-consistency census; the five
+ * missing fields added — every route-enforced enum now mirrored (the
+ * vocabularies themselves single-sourced in validation.ts). */
+export const ENUM_VOCABULARIES: Record<string, readonly string[]> = {
   "tasks.priority": TASK_PRIORITIES,
   "tasks.repeat": REPEATS,
   "assignments.type": ASSIGNMENT_TYPES,
@@ -488,16 +564,65 @@ const ENUM_VOCABULARIES: Record<string, readonly string[]> = {
   "cards.difficulty": CARD_DIFFICULTIES,
   "chatMessages.role": CHAT_ROLES,
   "chatMessages.surface": CHAT_SURFACES,
+  "events.repeat": REPEATS,
+  "exams.type": EXAM_TYPES,
+  "timetableClasses.weekType": WEEK_TYPES,
+  "focusSessions.mode": FOCUS_SESSION_MODES,
+  "calcHistory.mode": CALCULATOR_MODES,
 };
 
 /** The JSON-string columns (the schema's `// JSON ...` family) — the
- *  client JSON.parses every one of them. */
-const JSON_STRING_FIELDS: Record<string, readonly string[]> = {
+ *  client JSON.parses every one of them.
+ *  S133/CH5: the phantom practiceTests.topics dropped (PracticeTest's
+ *  only JSON column is questions), the real exams.topics added, and the
+ *  check itself now enforces the jsonArray atom's ARRAY-ness contract
+ *  below. Exported for the registry census. */
+export const JSON_STRING_FIELDS: Record<string, readonly string[]> = {
   tasks: ["subtasks"],
-  practiceTests: ["questions", "topics"],
+  practiceTests: ["questions"],
+  exams: ["topics"],
   events: ["reminders"],
   notes: ["tags"],
   studyGroups: ["members"],
+};
+
+/** S133/CH2: the hexColor atoms (validation.ts's `^#[0-9a-fA-F]{6}$`
+ * regex) — the four color columns every interactive route validates.
+ * Keyed collection.field; a present non-null string must match. */
+export const HEX_COLOR_FIELDS: ReadonlySet<string> = new Set([
+  "subjects.color",
+  "events.color",
+  "decks.color",
+  "studyGroups.color",
+]);
+
+/** S133/CH2: the min-1 atoms (validation.ts's `.min(1)` on the
+ * title/name family — CH8 tightens them to trim().min(1), and this
+ * registry mirrors the trim-aware blank check: a whitespace-ONLY value
+ * rejects, a padded-but-nonblank value imports VERBATIM (no silent
+ * trim-mutation of the user's backup rows — the parity contract is "no
+ * row the interactive routes would REJECT", not "store what they would
+ * have transformed"). */
+export const IMPORT_FIELD_MIN_LENGTHS: Record<string, number> = {
+  "subjects.name": 1,
+  "taskLists.name": 1,
+  "tasks.title": 1,
+  "assignments.title": 1,
+  "exams.title": 1,
+  "events.title": 1,
+  "timetableClasses.name": 1,
+  "notebooks.name": 1,
+  "notes.title": 1,
+  "decks.name": 1,
+  "cards.front": 1,
+  "cards.back": 1,
+  "practiceTests.title": 1,
+  "studyGroups.name": 1,
+  "grades.title": 1,
+  "holidays.name": 1,
+  "folders.name": 1,
+  "calcHistory.expression": 1,
+  "calcHistory.result": 1,
 };
 
 function checkDomainCaps(collection: string, row: ImportRow, index: number): void {
@@ -510,12 +635,29 @@ function checkDomainCaps(collection: string, row: ImportRow, index: number): voi
     if (typeof score === "number" && score < 0) {
       throw new ImportRowError(collection, index, 'field "score" must be 0 or greater.');
     }
+    // S133/CH2: the atom's own ceiling (validation.ts bounds score and
+    // maxScore at 1000) — the pre-CH2 import only checked the pair
+    // ordering, so a 99999/99999 grade imported and fed the GPA math.
+    if (typeof score === "number" && score > 1000) {
+      throw new ImportRowError(
+        collection,
+        index,
+        'field "score" cannot be higher than 1000 (the same ceiling every grade route enforces).',
+      );
+    }
     if (maxScore !== undefined && maxScore !== null) {
       if (typeof maxScore !== "number" || maxScore <= 0) {
         throw new ImportRowError(
           collection,
           index,
           'field "maxScore" must be a number greater than 0 (the Grade Tracker divides by it).',
+        );
+      }
+      if (maxScore > 1000) {
+        throw new ImportRowError(
+          collection,
+          index,
+          'field "maxScore" cannot be higher than 1000 (the same ceiling every grade route enforces).',
         );
       }
       if (typeof score === "number" && score > maxScore) {
@@ -698,6 +840,24 @@ function checkDomainCaps(collection: string, row: ImportRow, index: number): voi
     }
   }
 
+  // S133/CH2: the hexColor atoms — the four color columns every
+  // interactive route validates through validation.ts's regex (an
+  // out-of-pattern color breaks the badge/color meta maps exactly like
+  // an out-of-vocabulary enum).
+  for (const field of HEX_COLOR_FIELDS) {
+    const [owner, key] = field.split(".");
+    if (owner !== collection) continue;
+    const value = row[key];
+    if (value === undefined || value === null) continue;
+    if (typeof value !== "string" || !/^#[0-9a-fA-F]{6}$/.test(value)) {
+      throw new ImportRowError(
+        collection,
+        index,
+        `field "${key}" must be a 6-digit hex color like "#8b5cf6" (the same format every route enforces).`,
+      );
+    }
+  }
+
   const jsonFields = JSON_STRING_FIELDS[collection];
   if (jsonFields) {
     for (const field of jsonFields) {
@@ -720,11 +880,22 @@ function checkDomainCaps(collection: string, row: ImportRow, index: number): voi
           `field "${field}" is not valid JSON — re-export a fresh backup and try again.`,
         );
       }
+      // S133/CH5: the jsonArray atom's contract generalized — every JSON
+      // column must parse to an ARRAY (the pre-CH5 check only proved it
+      // parsed, so `'{"a":1}'` rode a column the client JSON.parses and
+      // then iterated as a list).
+      if (!Array.isArray(parsed)) {
+        throw new ImportRowError(
+          collection,
+          index,
+          `field "${field}" must be a JSON array (the same shape every route's JSON column enforces).`,
+        );
+      }
       // S127/CB11: the studyGroups members array cap (<= 50, the route's
       // own bound) — the JSON-parse check alone admitted a 10^4-member
       // group the view then rendered wholesale.
       if (collection === "studyGroups" && field === "members") {
-        if (!Array.isArray(parsed) || parsed.length > 50) {
+        if (parsed.length > 50) {
           throw new ImportRowError(
             collection,
             index,
@@ -792,6 +963,20 @@ export function importProfilePatch(
 /** Validate one imported row against the export format's primitive-value
  *  contract + the files-specific link rules. Throws ImportRowError (the
  *  route maps it to a 400 with the message as the actionable copy). */
+
+/** S133/CH6: the raw JSON key rides several error messages verbatim — cap
+ *  the interpolation so a hand-edited 100k-char key cannot amplify the
+ *  400 body (the idField bound is 64; real field names are ~20). */
+function capFieldName(field: string): string {
+  return field.length > 64 ? `${field.slice(0, 64)}…` : field;
+}
+
+/** S133/CH2: JSON object keys are bounded at the idField length (64) —
+ *  the longest real field name is ~20 chars; a longer key is garbage no
+ *  Prisma column answers, previously dying only as an opaque
+ *  PrismaClientValidationError deep in the transaction. */
+const IMPORT_KEY_MAX_CHARS = 64;
+
 export function sanitizeImportRow(
   collection: string,
   row: ImportRow,
@@ -799,13 +984,20 @@ export function sanitizeImportRow(
 ): ImportRow {
   checkDomainCaps(collection, row, index);
   for (const [field, value] of Object.entries(row)) {
+    if (field.length > IMPORT_KEY_MAX_CHARS) {
+      throw new ImportRowError(
+        collection,
+        index,
+        `field names are capped at ${IMPORT_KEY_MAX_CHARS} characters — "${capFieldName(field)}" is ${field.length}.`,
+      );
+    }
     if (value === null) continue;
     const kind = typeof value;
     if (kind !== "string" && kind !== "number" && kind !== "boolean") {
       throw new ImportRowError(
         collection,
         index,
-        `field "${field}" must be a string, number, boolean, or null — the export format serializes every value to a primitive.`,
+        `field "${capFieldName(field)}" must be a string, number, boolean, or null — the export format serializes every value to a primitive.`,
       );
     }
     if (typeof value === "string") {
@@ -814,7 +1006,19 @@ export function sanitizeImportRow(
         throw new ImportRowError(
           collection,
           index,
-          `field "${field}" is ${value.length} characters — the import caps it at ${cap.toLocaleString("en-US")}.`,
+          `field "${capFieldName(field)}" is ${value.length} characters — the import caps it at ${cap.toLocaleString("en-US")}.`,
+        );
+      }
+      // S133/CH2: the min-1 atoms — a whitespace-ONLY value rejects (the
+      // CH8 trim-before-check mirror: the interactive boundary rejects
+      // blank titles, so the import must too); a padded-but-nonblank value
+      // imports VERBATIM (documented in IMPORT_FIELD_MIN_LENGTHS above).
+      const min = IMPORT_FIELD_MIN_LENGTHS[`${collection}.${field}`];
+      if (min !== undefined && value.trim().length < min) {
+        throw new ImportRowError(
+          collection,
+          index,
+          `field "${field}" must be a non-empty string (whitespace-only is rejected by every route).`,
         );
       }
     }

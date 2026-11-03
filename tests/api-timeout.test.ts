@@ -1,3 +1,5 @@
+import { readFileSync } from "node:fs";
+import path from "node:path";
 import { describe, expect, it, vi } from "vitest";
 
 import { apiGet, apiSend, isTimeoutError } from "@/lib/api";
@@ -188,4 +190,33 @@ describe("apiGet timeoutMs (S128/CC7)", () => {
   // S130/CE1 REMOVED (the apiGet twin of the apiSend tombstone above — the
   // patient-default premise this leg pinned is inverted by design; the
   // structural default-install legs in the S130/CE1 describe replace it).
+});
+
+// S133/CH10 — the 20 s GET deadline single-sourced. The value previously
+// lived as THREE literals in three files (api.ts DEFAULT_GET_TIMEOUT_MS,
+// data.ts COLLECTION_GET_TIMEOUT_MS, page.tsx's inline timeoutMs: 20_000)
+// while data.ts's comment claimed "consumers and pins read the SAME
+// constant, never a copy" — only two-thirds true. The fix: api.ts is the
+// single source (the lower layer — data.ts already imports api.ts, so no
+// cycle), data.ts re-exports it as COLLECTION_GET_TIMEOUT_MS, page.tsx
+// consumes the api.ts export. This pin holds the identity.
+describe("the 20 s GET deadline single-source (S133/CH10)", () => {
+  it("COLLECTION_GET_TIMEOUT_MS IS api.ts's DEFAULT_GET_TIMEOUT_MS (the identity, not a copy)", async () => {
+    const { DEFAULT_GET_TIMEOUT_MS } = await import("@/lib/api");
+    const { COLLECTION_GET_TIMEOUT_MS } = await import("@/lib/data");
+    expect(DEFAULT_GET_TIMEOUT_MS).toBe(20_000);
+    expect(COLLECTION_GET_TIMEOUT_MS).toBe(DEFAULT_GET_TIMEOUT_MS);
+  });
+
+  it("data.ts DERIVES its constant from api.ts (the source-level single-sourcing)", () => {
+    const src = readFileSync(path.resolve(process.cwd(), "src/lib/data.ts"), "utf8");
+    expect(src).not.toMatch(/COLLECTION_GET_TIMEOUT_MS\s*=\s*20_000/);
+    expect(src).toMatch(/DEFAULT_GET_TIMEOUT_MS/);
+  });
+
+  it("page.tsx consumes the shared deadline constant, not an inline literal", () => {
+    const src = readFileSync(path.resolve(process.cwd(), "src/app/page.tsx"), "utf8");
+    expect(src).not.toMatch(/timeoutMs:\s*20_000/);
+    expect(src).toMatch(/DEFAULT_GET_TIMEOUT_MS|COLLECTION_GET_TIMEOUT_MS/);
+  });
 });

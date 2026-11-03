@@ -11,7 +11,11 @@
 # auth-flows — a rotated-XFF flood on one email trips forgotAcct: the 6th
 # ask 429s with the honest copy, known and unknown emails
 # identically]. The full CG map: docs/remediation-plan-session132.md.)
-# Expected: 149 + 179 + 74 + 94 + 79 = 575 (each chunk's count includes its
+# (S133/CH re-tag — census 575 → 578, net +3: chunk 2 +1 [the S133/CH8
+# blank-title e2e pin in tasks.spec], chunk 5 +2 [the S133/CH2 import-parity
+# pin + the S133/CH7 counts-refresh pin in s23-import.spec — both on fresh
+# TEST-NET users, the demo import budget untouched].)
+# Expected: 149 + 180 + 74 + 94 + 81 = 578 (each chunk's count includes its
 # auth setup — the current census; the historical re-tag blocks beneath.)
 # (S131/CF re-tag — census 567 → 570, net +3: chunk 1 +1 [the CF9
 # drawer focus-restore leg in mobile-navigation — crossing the lg

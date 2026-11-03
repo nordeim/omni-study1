@@ -33,6 +33,7 @@ import {
   importRowIdError,
   parseImportEnvelope,
   sanitizeImportRow,
+  sortFoldersParentsFirst,
 } from "../src/lib/data-import";
 import { EXPORT_COLLECTIONS } from "../src/lib/data-export";
 
@@ -68,13 +69,29 @@ describe("the envelope identity (shared with the export seam)", () => {
     expect(res.totalRows).toBe(2);
   });
 
-  it("treats a MISSING data key and missing collection keys as empty (the never-branch-on-presence promise)", () => {
+  // S133/CH4 re-anchor: the pre-CH4 seam TOLERATED a missing data key
+  // (imported zero rows, ok:true) while the production route 400'd — the
+  // drifted twin this cycle closed. The envelope validator now REJECTS the
+  // missing data block with the route's shipped message; missing
+  // COLLECTION keys inside a present data object still import as empty.
+  it("rejects a MISSING data key with the route's shipped 400 (the drifted tolerance removed)", () => {
     const res = parseImportEnvelope({ format: "studyflow-data-export", version: 1 });
+    expect(res.ok).toBe(false);
+    if (res.ok) return;
+    expect(res.error).toContain("no data object");
+  });
+
+  it("treats missing collection keys as empty (the never-branch-on-presence promise)", () => {
+    const res = parseImportEnvelope({
+      format: "studyflow-data-export",
+      version: 1,
+      data: { subjects: [{ id: "s1", name: "Math" }] },
+    });
     expect(res.ok).toBe(true);
     if (!res.ok) return;
-    expect(res.rows.subjects).toEqual([]);
+    expect(res.rows.subjects).toHaveLength(1);
     expect(res.rows.holidays).toEqual([]);
-    expect(res.totalRows).toBe(0);
+    expect(res.totalRows).toBe(1);
   });
 
   it("rejects a wrong format identity", () => {
@@ -780,19 +797,31 @@ describe("S130/CE7 · the import length caps", () => {
   });
 
   it("an UNKNOWN field keeps the 1 M generic default (the registry caps only the mirrored atoms)", () => {
+    // S133/CH2 re-anchor: the leg used focusSessions.mode as its "unknown"
+    // example — mode is now a mirrored enum+vocabulary field, so the
+    // contract moves to a genuinely unknown field name.
     expect(() =>
-      sanitizeImportRow("focusSessions", { id: "f1", mode: "x".repeat(500) }, 0),
+      sanitizeImportRow("focusSessions", { id: "f1", nickname: "x".repeat(500) }, 0),
     ).not.toThrow();
   });
 
   it("the registry covers every documented atom key (a dropped entry falls back to the 1 M default silently — this census fails loudly)", async () => {
     const { IMPORT_FIELD_LENGTHS } = await import("../src/lib/data-import");
     const keys = Object.keys(IMPORT_FIELD_LENGTHS).sort();
+    // S133/CH1+CH2 re-anchor: the dead "flashcardDecks.*" keys renamed to
+    // the manifest name ("decks.*"), and the four parity-contract atoms
+    // added (calcHistory.expression/result, holidays.name, folders.name,
+    // chatMessages.content).
     expect(keys).toEqual([
       "assignments.description",
       "assignments.title",
+      "calcHistory.expression",
+      "calcHistory.result",
       "cards.back",
       "cards.front",
+      "chatMessages.content",
+      "decks.description",
+      "decks.name",
       "events.description",
       "events.location",
       "events.reminders",
@@ -800,9 +829,9 @@ describe("S130/CE7 · the import length caps", () => {
       "exams.location",
       "exams.title",
       "exams.topics",
-      "flashcardDecks.description",
-      "flashcardDecks.name",
+      "folders.name",
       "grades.title",
+      "holidays.name",
       "notebooks.name",
       "notes.content",
       "notes.tags",
@@ -823,5 +852,350 @@ describe("S130/CE7 · the import length caps", () => {
     expect(IMPORT_FIELD_LENGTHS["tasks.notes"]).toBe(5_000);
     expect(IMPORT_FIELD_LENGTHS["notes.content"]).toBe(100_000);
     expect(IMPORT_FIELD_LENGTHS["timetableClasses.room"]).toBe(100);
+    expect(IMPORT_FIELD_LENGTHS["decks.name"]).toBe(200);
+    expect(IMPORT_FIELD_LENGTHS["calcHistory.expression"]).toBe(500);
+    expect(IMPORT_FIELD_LENGTHS["chatMessages.content"]).toBe(100_000);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// S133/CH1 — the registry keys ride the MANIFEST collection names.
+// The CE7 entry shipped `"flashcardDecks.name"/"flashcardDecks.description"`
+// while the import route iterates the MANIFEST name "decks" (IMPORT_ORDER /
+// EXPORT_COLLECTIONS carry "decks", never "flashcardDecks") — fieldCapFor
+// looks up `${collection}.${field}` with the manifest name, so the two keys
+// were dead their whole life and the deck caps were INERT (a hand-edited
+// backup stored a 999,999-char deck name every interactive route 400s at
+// 200). Worse, the census pin above machine-enforced the WRONG key list.
+// ---------------------------------------------------------------------------
+describe("S133/CH1 · the registry keys ride the manifest collection names", () => {
+  it("the deck caps are keyed by the manifest name \"decks\" — the flashcardDecks.* twins are gone", async () => {
+    const { IMPORT_FIELD_LENGTHS } = await import("../src/lib/data-import");
+    expect(IMPORT_FIELD_LENGTHS["decks.name"]).toBe(200);
+    expect(IMPORT_FIELD_LENGTHS["decks.description"]).toBe(1_000);
+    expect(IMPORT_FIELD_LENGTHS["flashcardDecks.name"]).toBeUndefined();
+    expect(IMPORT_FIELD_LENGTHS["flashcardDecks.description"]).toBeUndefined();
+  });
+
+  it("a deck name beyond the 200-char atom is rejected (the cap the dead key never enforced)", () => {
+    expect(() =>
+      sanitizeImportRow("decks", { id: "d1", name: "x".repeat(201) }, 0),
+    ).toThrow(ImportRowError);
+    expect(() =>
+      sanitizeImportRow("decks", { id: "d1", description: "y".repeat(1_001) }, 0),
+    ).toThrow(ImportRowError);
+    expect(() =>
+      sanitizeImportRow("decks", { id: "d1", name: "x".repeat(200) }, 0),
+    ).not.toThrow();
+  });
+
+  it("the manifest-consistency census: every registry key's collection prefix is a real manifest collection", async () => {
+    const mod = await import("../src/lib/data-import");
+    const manifest = new Set<string>(EXPORT_COLLECTIONS);
+    const registries: Array<[string, string[] | null]> = [
+      ["IMPORT_FIELD_LENGTHS", mod.IMPORT_FIELD_LENGTHS ? Object.keys(mod.IMPORT_FIELD_LENGTHS) : null],
+      ["ENUM_VOCABULARIES", mod.ENUM_VOCABULARIES ? Object.keys(mod.ENUM_VOCABULARIES) : null],
+      ["JSON_STRING_FIELDS", mod.JSON_STRING_FIELDS ? Object.keys(mod.JSON_STRING_FIELDS) : null],
+      ["HEX_COLOR_FIELDS", mod.HEX_COLOR_FIELDS ? [...mod.HEX_COLOR_FIELDS] : null],
+      ["IMPORT_FIELD_MIN_LENGTHS", mod.IMPORT_FIELD_MIN_LENGTHS ? Object.keys(mod.IMPORT_FIELD_MIN_LENGTHS) : null],
+    ];
+    const offenders: string[] = [];
+    for (const [name, keys] of registries) {
+      if (!keys) throw new Error(`${name} is not exported — the census cannot run`);
+      for (const key of keys) {
+        const prefix = key.includes(".") ? key.split(".")[0] : key;
+        if (!manifest.has(prefix)) offenders.push(`${name}: "${key}"`);
+      }
+    }
+    expect(
+      offenders,
+      `registry keys whose collection prefix is not a manifest collection (the CH1 class — the key can never match at the call site): ${offenders.join(", ")}`,
+    ).toEqual([]);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// S133/CH2 — the import parity contract completed (the CA14 doctrine's
+// missing atoms): the five unmirrored enum vocabularies, the four hexColor
+// fields, the four missing length atoms, the grades 1000 ceiling, the
+// min-1 lengths, and the JSON key bound.
+// ---------------------------------------------------------------------------
+describe("S133/CH2 · the import parity contract completed", () => {
+  it("rejects an out-of-vocabulary events.repeat", () => {
+    expect(() =>
+      sanitizeImportRow("events", { id: "e1", title: "T", repeat: "hourly" }, 0),
+    ).toThrow(ImportRowError);
+  });
+
+  it("rejects an out-of-vocabulary exams.type", () => {
+    expect(() =>
+      sanitizeImportRow("exams", { id: "x1", title: "T", type: "viva" }, 0),
+    ).toThrow(ImportRowError);
+  });
+
+  it("rejects an out-of-vocabulary timetableClasses.weekType (the Z-week class invisible in every week view)", () => {
+    expect(() =>
+      sanitizeImportRow("timetableClasses", { id: "c1", name: "N", weekType: "Z" }, 0),
+    ).toThrow(ImportRowError);
+  });
+
+  it("rejects an out-of-vocabulary focusSessions.mode (the row the focus stats drop)", () => {
+    expect(() =>
+      sanitizeImportRow("focusSessions", { id: "f1", durationSeconds: 60, mode: "nap" }, 0),
+    ).toThrow(ImportRowError);
+  });
+
+  it("rejects an out-of-vocabulary calcHistory.mode", () => {
+    expect(() =>
+      sanitizeImportRow("calcHistory", { id: "h1", expression: "1+1", result: "2", mode: "programmer" }, 0),
+    ).toThrow(ImportRowError);
+  });
+
+  it("accepts the legal vocabulary members on every new field (the boundary legs)", () => {
+    expect(() =>
+      sanitizeImportRow("events", { id: "e1", title: "T", repeat: "weekly" }, 0),
+    ).not.toThrow();
+    expect(() =>
+      sanitizeImportRow("exams", { id: "x1", title: "T", type: "midterm" }, 0),
+    ).not.toThrow();
+    expect(() =>
+      sanitizeImportRow("timetableClasses", { id: "c1", name: "N", weekType: "B" }, 0),
+    ).not.toThrow();
+    expect(() =>
+      sanitizeImportRow("focusSessions", { id: "f1", durationSeconds: 60, mode: "long-break" }, 0),
+    ).not.toThrow();
+    expect(() =>
+      sanitizeImportRow("calcHistory", { id: "h1", expression: "1+1", result: "2", mode: "gpa" }, 0),
+    ).not.toThrow();
+  });
+
+  it("rejects a subjects.color that is not a 6-digit hex string", () => {
+    expect(() =>
+      sanitizeImportRow("subjects", { id: "s1", name: "Math", color: "violet" }, 0),
+    ).toThrow(ImportRowError);
+    expect(() =>
+      sanitizeImportRow("subjects", { id: "s1", name: "Math", color: "#8b5c" }, 0),
+    ).toThrow(ImportRowError);
+    expect(() =>
+      sanitizeImportRow("subjects", { id: "s1", name: "Math", color: "#8b5cf6" }, 0),
+    ).not.toThrow();
+  });
+
+  it("rejects a bad hex on the events/decks/studyGroups color fields too", () => {
+    expect(() =>
+      sanitizeImportRow("events", { id: "e1", title: "T", color: "red" }, 0),
+    ).toThrow(ImportRowError);
+    expect(() =>
+      sanitizeImportRow("decks", { id: "d1", name: "D", color: "#12345" }, 0),
+    ).toThrow(ImportRowError);
+    expect(() =>
+      sanitizeImportRow("studyGroups", { id: "g1", name: "G", color: "rainbow" }, 0),
+    ).toThrow(ImportRowError);
+    expect(() =>
+      sanitizeImportRow("decks", { id: "d1", name: "D", color: "#abcdef" }, 0),
+    ).not.toThrow();
+  });
+
+  it("rejects a calcHistory.expression/result beyond the 500-char atom", () => {
+    expect(() =>
+      sanitizeImportRow("calcHistory", { id: "h1", expression: "x".repeat(501), result: "2" }, 0),
+    ).toThrow(ImportRowError);
+    expect(() =>
+      sanitizeImportRow("calcHistory", { id: "h1", expression: "1+1", result: "y".repeat(501) }, 0),
+    ).toThrow(ImportRowError);
+    expect(() =>
+      sanitizeImportRow("calcHistory", { id: "h1", expression: "x".repeat(500), result: "y".repeat(500) }, 0),
+    ).not.toThrow();
+  });
+
+  it("rejects a holidays.name / folders.name / chatMessages.content beyond their atoms", () => {
+    expect(() =>
+      sanitizeImportRow("holidays", { id: "hol1", name: "h".repeat(201) }, 0),
+    ).toThrow(ImportRowError);
+    expect(() =>
+      sanitizeImportRow("folders", { id: "fo1", name: "f".repeat(201) }, 0),
+    ).toThrow(ImportRowError);
+    expect(() =>
+      sanitizeImportRow("chatMessages", { id: "m1", role: "user", surface: "assistant", content: "c".repeat(100_001) }, 0),
+    ).toThrow(ImportRowError);
+    expect(() =>
+      sanitizeImportRow("folders", { id: "fo1", name: "f".repeat(200) }, 0),
+    ).not.toThrow();
+  });
+
+  it("rejects a grade score or maxScore above the 1000 ceiling (the atom's own bound)", () => {
+    expect(() =>
+      sanitizeImportRow("grades", { id: "g1", title: "T", score: 99999, maxScore: 99999 }, 0),
+    ).toThrow(ImportRowError);
+    expect(() =>
+      sanitizeImportRow("grades", { id: "g1", title: "T", score: 100, maxScore: 1001 }, 0),
+    ).toThrow(ImportRowError);
+    expect(() =>
+      sanitizeImportRow("grades", { id: "g1", title: "T", score: 1000, maxScore: 1000 }, 0),
+    ).not.toThrow();
+  });
+
+  it("rejects a whitespace-only or empty title/name (the trim-before-check mirror of CH8)", () => {
+    expect(() =>
+      sanitizeImportRow("tasks", { id: "t1", title: "   " }, 0),
+    ).toThrow(ImportRowError);
+    expect(() =>
+      sanitizeImportRow("tasks", { id: "t1", title: "" }, 0),
+    ).toThrow(ImportRowError);
+    expect(() =>
+      sanitizeImportRow("subjects", { id: "s1", name: " " }, 0),
+    ).toThrow(ImportRowError);
+    expect(() =>
+      sanitizeImportRow("folders", { id: "fo1", name: "   " }, 0),
+    ).toThrow(ImportRowError);
+  });
+
+  it("accepts a padded-but-nonblank title VERBATIM (no silent trim-mutation of the backup rows)", () => {
+    const row = sanitizeImportRow("tasks", { id: "t1", title: " padded " }, 0);
+    expect(row.title).toBe(" padded ");
+  });
+
+  it("rejects a row whose JSON key exceeds the 64-char idField bound", () => {
+    const longKey = "k".repeat(65);
+    expect(() =>
+      sanitizeImportRow("tasks", { id: "t1", title: "T", [longKey]: 1 }, 0),
+    ).toThrow(ImportRowError);
+    expect(() =>
+      sanitizeImportRow("tasks", { id: "t1", title: "T", ["k".repeat(64)]: 1 }, 0),
+    ).not.toThrow();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// S133/CH5 — the JSON-column registry corrected (exams.topics unguarded,
+// the phantom practiceTests.topics, the missing array-ness).
+// ---------------------------------------------------------------------------
+describe("S133/CH5 · the JSON-column registry corrected + the array-ness mirrored", () => {
+  it("rejects a non-JSON exams.topics string (the real column the registry missed)", () => {
+    expect(() =>
+      sanitizeImportRow("exams", { id: "x1", title: "T", topics: "not json" }, 0),
+    ).toThrow(ImportRowError);
+  });
+
+  it("rejects an exams.topics that parses to a non-array (the jsonArray atom's contract)", () => {
+    expect(() =>
+      sanitizeImportRow("exams", { id: "x1", title: "T", topics: '{"a":1}' }, 0),
+    ).toThrow(ImportRowError);
+    expect(() =>
+      sanitizeImportRow("exams", { id: "x1", title: "T", topics: '["Algebra"]' }, 0),
+    ).not.toThrow();
+  });
+
+  it("rejects a tasks.subtasks / events.reminders that parses to a non-array", () => {
+    expect(() =>
+      sanitizeImportRow("tasks", { id: "t1", title: "T", subtasks: "{}" }, 0),
+    ).toThrow(ImportRowError);
+    expect(() =>
+      sanitizeImportRow("events", { id: "e1", title: "T", reminders: '{"a":1}' }, 0),
+    ).toThrow(ImportRowError);
+    expect(() =>
+      sanitizeImportRow("tasks", { id: "t1", title: "T", subtasks: "[]" }, 0),
+    ).not.toThrow();
+  });
+
+  it("the registry census: the phantom practiceTests.topics is gone, exams.topics present", async () => {
+    const { JSON_STRING_FIELDS } = await import("../src/lib/data-import");
+    expect(JSON_STRING_FIELDS).toEqual({
+      tasks: ["subtasks"],
+      practiceTests: ["questions"],
+      exams: ["topics"],
+      events: ["reminders"],
+      notes: ["tags"],
+      studyGroups: ["members"],
+    });
+  });
+});
+
+// ---------------------------------------------------------------------------
+// S133/CH6 — the 400-body echo bounded: the folder-cycle offender list and
+// the ImportRowError field-name interpolation are attacker-controlled
+// strings that rode the 400 body verbatim (a 25 MiB cyclic-folder envelope
+// amplified into a ~30 MB error body).
+// ---------------------------------------------------------------------------
+describe("S133/CH6 · the 400-body echo bounded", () => {
+  it("a 15-folder cycle lists the first 10 offenders + \"and N more\"", () => {
+    const folders = Array.from({ length: 15 }, (_, i) => ({
+      id: `cycle-folder-${String(i).padStart(4, "0")}`,
+      name: `F${i}`,
+      parentId: `cycle-folder-${String((i + 1) % 15).padStart(4, "0")}`,
+    }));
+    const res = sortFoldersParentsFirst(folders);
+    expect(typeof res).toBe("string");
+    const message = res as string;
+    expect(message).toContain("and 5 more");
+    expect(message).not.toContain("cycle-folder-0014, ");
+    expect(message.length).toBeLessThan(1_000);
+  });
+
+  it("a row error's field-name interpolation caps at 64 chars", () => {
+    const longKey = "f".repeat(100);
+    let message = "";
+    try {
+      sanitizeImportRow("tasks", { id: "t1", title: "T", [longKey]: [] }, 0);
+    } catch (err: unknown) {
+      message = err instanceof Error ? err.message : "";
+    }
+    expect(message).toContain("f".repeat(64));
+    expect(message).not.toContain("f".repeat(65));
+  });
+});
+
+// ---------------------------------------------------------------------------
+// S133/CH4 — the envelope-validator twin closed: the stateless stages move
+// into the seam (aligned to the route's SHIPPED contract — the e2e-visible
+// behavior wins), and the route consumes validateImportEnvelope so the
+// unit pins guard production behavior.
+// ---------------------------------------------------------------------------
+describe("S133/CH4 · the envelope validator twin closed (the route consumes the seam)", () => {
+  it("validateImportEnvelope rejects a non-object input with the route's message", async () => {
+    const { validateImportEnvelope } = await import("../src/lib/data-import");
+    const res = validateImportEnvelope("not an envelope");
+    expect(res.ok).toBe(false);
+    if (res.ok) return;
+    expect(res.error).toContain("studyflow-data-export envelope");
+  });
+
+  it("validateImportEnvelope rejects a missing data object (the drifted tolerance removed)", async () => {
+    const { validateImportEnvelope } = await import("../src/lib/data-import");
+    const res = validateImportEnvelope({ format: "studyflow-data-export", version: 1 });
+    expect(res.ok).toBe(false);
+    if (res.ok) return;
+    expect(res.error).toContain("no data object");
+  });
+
+  it("validateImportEnvelope folds a non-integer version into the newer-version 400 (the route's folding)", async () => {
+    const { validateImportEnvelope } = await import("../src/lib/data-import");
+    const res = validateImportEnvelope({
+      format: "studyflow-data-export",
+      version: "one",
+      data: {},
+    });
+    expect(res.ok).toBe(false);
+    if (res.ok) return;
+    expect(res.error).toContain("newer version");
+  });
+
+  it("validateImportEnvelope accepts a valid envelope and returns the data block", async () => {
+    const { validateImportEnvelope } = await import("../src/lib/data-import");
+    const res = validateImportEnvelope(validEnvelope());
+    expect(res.ok).toBe(true);
+    if (!res.ok) return;
+    expect(res.data.subjects).toHaveLength(1);
+  });
+
+  it("parseImportEnvelope folds a non-integer version into the newer-version 400 too (the twin reconciled)", () => {
+    const res = parseImportEnvelope({
+      format: "studyflow-data-export",
+      version: "one",
+      data: {},
+    });
+    expect(res.ok).toBe(false);
+    if (res.ok) return;
+    expect(res.error).toContain("newer version");
   });
 });

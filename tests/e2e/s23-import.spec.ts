@@ -418,3 +418,85 @@ test.describe("S130/CE7 the id-length atom (fresh TEST-NET user)", () => {
     expect(res2.status()).toBe(200);
   });
 });
+
+// S133/CH2 + CH7 — the import-parity completion and the counts-refresh,
+// on FRESH TEST-NET users (the S119/BT1 budget-isolation precedent: the
+// demo user's 9-of-10 import budget above is untouched — each leg
+// registers its own user, so the 10/15-min bucket starts at zero).
+test.describe("S133/CH2+CH7 the import parity + the counts refresh (fresh TEST-NET users)", () => {
+  test("CH2: a hand-edited timetable class with an out-of-vocabulary weekType answers the actionable 400", async ({
+    page,
+  }) => {
+    await registerFreshUser(page, "ch2");
+    // A stamped id — the pin stays re-run-safe against a non-cold scratch
+    // db (the fixed-id S46 re-run class the cold-reset exists for).
+    const probeId = `s133-ch2-weektype-${Date.now()}`;
+    const evil = envelope({
+      data: {
+        subjects: [],
+        timetableClasses: [
+          {
+            id: probeId,
+            name: "Z-Week Class",
+            dayOfWeek: 1,
+            startTime: "09:00",
+            endTime: "10:00",
+            weekType: "Z",
+          },
+        ],
+      },
+    });
+    const res = await page.request.post("/api/import/data", { data: evil });
+    expect(res.status()).toBe(400);
+    const body = (await res.json()) as { error: string };
+    expect(body.error).toContain("weekType");
+    // The row never landed (the all-or-nothing contract).
+    const classes = await page.request.get("/api/timetable");
+    const rows = (await classes.json()) as Array<{ id: string }>;
+    expect(rows.some((c) => c.id === probeId)).toBe(false);
+  });
+
+  test("CH7: the /export count grid refreshes after an in-panel import (no stale pre-import numbers)", async ({
+    page,
+  }) => {
+    await registerFreshUser(page, "ch7");
+    // The fresh user's grid starts at zero Tasks (the chip's count pill).
+    await page.goto("/export");
+    const grid = page.locator('section[aria-label="What\'s included"]');
+    const tasksChip = grid.locator("span.inline-flex", { hasText: /^Tasks/ });
+    await expect(tasksChip).toHaveCount(1);
+    await expect(tasksChip).toContainText("0");
+
+    // A unique-id task envelope through the panel's real file input.
+    const unique = `s133-ch7-${Date.now()}`;
+    const env = envelope({
+      data: {
+        subjects: [],
+        tasks: [
+          {
+            id: unique,
+            title: "CH7 counts-refresh probe",
+            createdAt: "2026-09-01T00:00:00.000Z",
+          },
+        ],
+      },
+    });
+    const fileInput = page.locator('input[type="file"]');
+    await fileInput.setInputFiles({
+      name: "studyflow-data-ch7.json",
+      mimeType: "application/json",
+      buffer: Buffer.from(JSON.stringify(env)),
+    });
+    await page.getByRole("button", { name: "Import" }).click();
+
+    // The success summary renders…
+    const result = page.getByRole("status");
+    await expect(result).toBeVisible();
+    await expect(result).toContainText("1");
+
+    // …and the server-rendered count grid goes honest WITHOUT a reload:
+    // the Tasks chip flips 0 → 1 (router.refresh() re-runs the page's
+    // 20 db counts; pre-CH7 the grid kept showing the pre-import zero).
+    await expect(tasksChip).toContainText("1", { timeout: 10_000 });
+  });
+});

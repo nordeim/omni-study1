@@ -1,8 +1,30 @@
 import { defineConfig } from "vitest/config";
 import path from "node:path";
 
-// Unit-test layer for the pure domain seams — 45 files / 1251 tests
-// (re-anchored S132/CG — the audit-driven hardening cycle: census 1236 →
+// Unit-test layer for the pure domain seams — 45 files / 1291 tests
+// (re-anchored S133/CH — the audit-driven hardening cycle: census 1251 →
+// 1291, +40 net [data-import +29: the S133/CH1 manifest-key family (the
+// dead flashcardDecks.* keys renamed to decks.*, the deck-cap behavior
+// pin, the five-registry manifest-consistency census) + the S133/CH2
+// parity-contract family (five enum vocabularies, the hexColor atoms,
+// the four length atoms, the grades 1000 ceiling, the min-1 trim mirror,
+// the 64-char key bound) + the S133/CH5 JSON-registry correction (the
+// phantom practiceTests.topics dropped, exams.topics added, the
+// array-ness census) + the S133/CH6 echo-bound pins + the S133/CH4
+// validateImportEnvelope family (the seam twin closed — the drifted
+// missing-data pin re-anchored to the route's 400, the version-folding
+// pin, the direct seam legs) — the CE7 key census re-anchored in place
+// to the 33-key registry, the "unknown field" leg re-anchored in place;
+// schema-indexes +1: the S133/CH3 FK-column index census (every relation
+// column machine-checked for leftmost index coverage — the ten subjectId
+// additions); script-conventions +3: the S133/CH4 caller census (the
+// route consumes validateImportEnvelope, no inline twin) + the S133/CH9
+// route-file shared-symbol census; api-timeout +3: the S133/CH10
+// deadline single-source legs (the identity, the data.ts derivation, the
+// page.tsx source); validation +4: the S133/CH8 trim-before-check pins
+// + the S133/CH2 exported-vocabulary atoms; the data-store mock widened
+// for the DEFAULT_GET_TIMEOUT_MS export (no count change)].
+// (prior cycle — re-anchored S132/CG — the audit-driven hardening cycle: census 1236 →
 // 1251, +15 net [auth +4: the S132/CG2 peppered OTP digest family
 // (deterministic 64-hex, the pepper property, the secret-change
 // brute-force-resistance property, the no-collision leg);

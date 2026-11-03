@@ -21,7 +21,7 @@ import { sentKeysPatch } from "@/lib/server/entities";
 // transform was DEAD CODE (idField's min(1) rejected "" first, so the
 // clear-to-root convention every other entity FK honors 400'd here).
 const folderUpdateSchema = z.object({
-  name: z.string().min(1).max(200).optional(),
+  name: z.string().trim().min(1).max(200).optional(), // S133/CH8: trim-before-check
   parentId: nullableId.optional(),
 });
 

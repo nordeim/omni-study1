@@ -55,6 +55,13 @@ function modelBody(name: string): string {
   return SCHEMA.slice(start, end);
 }
 
+// S133/CH3: every model in the schema, derived from the text itself — a
+// new model joins the FK-column census automatically (no hand-maintained
+// list to drift; the FACTORY_LISTED_MODELS lesson).
+const ALL_MODELS = [...SCHEMA.matchAll(/^model ([A-Za-z0-9_]+) \{/gm)].map(
+  (m) => m[1],
+);
+
 describe("the factory-list index census (S128/CC10)", () => {
   it("censused the factory-listed family — 19 models, all present in the schema", () => {
     expect(FACTORY_LISTED_MODELS.length).toBe(19);
@@ -93,5 +100,40 @@ describe("the factory-list index census (S128/CC10)", () => {
   it("FileFolder carries the [parentId] index (the sibling-FK convention)", () => {
     const body = modelBody("FileFolder");
     expect(body).toContain("@@index([parentId])");
+  });
+
+  // S133/CH3 — the FK-column index census (the CE9 "every sibling FK
+  // carries one" claim, machine-checked for EVERY relation column in the
+  // schema instead of hand-asserted). A parent-DELETE SetNull/Cascade scan
+  // is `UPDATE ... SET fk = NULL WHERE fk = ?` — backed only by an index
+  // whose LEFTMOST column is the FK. The ten subjectId columns shipped
+  // unindexed (the CE9 class 10x wider): every Subject DELETE ran ten
+  // full-table scans. userId rides the composites (leftmost) everywhere
+  // except RumEvent, whose user-scoped @@unique([userId, sessionId,
+  // metric]) serves the same leftmost-prefix scans (the CA19 removal's own
+  // documented rationale).
+  it("every FK relation column is the leftmost column of an index or unique (the SetNull/Cascade scan family)", () => {
+    // Comment lines are stripped first — the schema carries documented
+    // REMOVED-index comments (the CA19 RumEvent note) that would otherwise
+    // satisfy the census as phantom coverage.
+    const FK_FIELD_RE = /@relation\((?:[^)]*?\s)?fields:\s*\[([A-Za-z0-9_]+)\]/g;
+    const FIRST_COL_RE = /@@(?:index|unique)\(\[([A-Za-z0-9_]+)/g;
+    const missing: string[] = [];
+
+    for (const model of ALL_MODELS) {
+      const body = modelBody(model)
+        .split("\n")
+        .filter((line) => !line.trimStart().startsWith("//"))
+        .join("\n");
+      const firstColumns = new Set<string>();
+      for (const m of body.matchAll(FIRST_COL_RE)) firstColumns.add(m[1]);
+      for (const m of body.matchAll(FK_FIELD_RE)) {
+        if (!firstColumns.has(m[1])) missing.push(`${model}.${m[1]}`);
+      }
+    }
+    expect(
+      missing,
+      `FK columns with no leftmost index coverage (every parent-DELETE SetNull/Cascade scan on these is a full-table scan): ${missing.join(", ")}`,
+    ).toEqual([]);
   });
 });

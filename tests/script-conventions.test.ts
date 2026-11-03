@@ -117,7 +117,7 @@ describe("the chunked cert runner's truth contract (S128/CC2)", () => {
 
   it("names the CURRENT per-chunk census in its header (the re-tag tripwire)", () => {
     // The topmost Expected line — re-tagged by every census-changing cycle.
-    expect(certSource).toContain("Expected: 149 + 179 + 74 + 94 + 79 = 575");
+    expect(certSource).toContain("Expected: 149 + 180 + 74 + 94 + 81 = 578");
   });
 
   it("propagates a failing chunk's exit code (never a green cert on a red run)", () => {
@@ -560,5 +560,83 @@ describe("the Batch CG auth-hardening census (S132/CG1+CG3+CG11)", () => {
       globalAt,
       "the global bucket precedes the per-IP key (a distinct-email flood trips the containment bucket FIRST)",
     ).toBeLessThan(ipKeyAt);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// S133/CH4 — the import-route caller census: the stateless envelope
+// validator (validateImportEnvelope) lives in the seam, and the ROUTE must
+// consume it. The pre-CH4 shape — a unit-pinned parseImportEnvelope with
+// ZERO production callers while the route ran a drifted inline twin — is
+// the AGENTS.md S126 lesson-2 hazard class (the tests gave false assurance
+// about code that never ran). This census is the machine guard: the seam
+// can never silently go dead again.
+// ---------------------------------------------------------------------------
+describe("the import-route envelope-validator caller census (S133/CH4)", () => {
+  const IMPORT_ROUTE = path.resolve(process.cwd(), "src/app/api/import/data/route.ts");
+
+  it("the import route consumes the seam's validateImportEnvelope (no inline twin)", () => {
+    const src = readFileSync(IMPORT_ROUTE, "utf8");
+    expect(src).toContain("validateImportEnvelope(");
+  });
+
+  it("the route no longer carries the inline format-identity twin (the drifted stage)", () => {
+    const src = readFileSync(IMPORT_ROUTE, "utf8");
+    // The inline stage's signature: a direct `envelope.format !==` compare
+    // that duplicates the seam's check. Post-CH4 the route delegates; the
+    // seam's own compare lives in data-import.ts.
+    expect(src).not.toMatch(/envelope\.format\s*!==\s*DATA_EXPORT_FORMAT/);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// S133/CH9 — the route-file shared-symbol census: Next validates route
+// module exports (the S125/BZ8 lesson — FILE_METADATA moved OUT of
+// files/route.ts for exactly this rule, and login/route.ts cites it too),
+// yet files/route.ts still exported MAX_UPLOAD_BYTES. The census: no
+// route.ts under src/app/api may export anything beyond the Next
+// handler/config surface.
+// ---------------------------------------------------------------------------
+describe("the route-file shared-symbol census (S133/CH9)", () => {
+  const API_DIR = path.resolve(process.cwd(), "src/app/api");
+  // The Next App Router route-module surface: HTTP method handlers + the
+  // recognized segment config exports. Anything else exported from a
+  // route.ts is a shared symbol living where the runtime validates
+  // exports — the S125/BZ8 rule.
+  const ALLOWED_EXPORTS =
+    /^(GET|POST|PATCH|PUT|DELETE|HEAD|OPTIONS|dynamic|revalidate|runtime|preferredRegion|maxDuration|fetchCache|dynamicParams|generateStaticParams)$/;
+
+  function routeFiles(): string[] {
+    const out: string[] = [];
+    const walk = (dir: string) => {
+      for (const entry of readdirSync(dir, { withFileTypes: true })) {
+        const full = path.join(dir, entry.name);
+        if (entry.isDirectory()) walk(full);
+        else if (entry.name === "route.ts") out.push(full);
+      }
+    };
+    walk(API_DIR);
+    return out.sort();
+  }
+
+  it("no route file exports a symbol beyond the Next handler/config surface", () => {
+    const offenders: string[] = [];
+    const EXPORT_RE = /^export\s+(?:async\s+)?(?:function|const|let|var)\s+([A-Za-z0-9_]+)/gm;
+    for (const file of routeFiles()) {
+      const src = readFileSync(file, "utf8")
+        .split("\n")
+        .filter((line) => !line.trimStart().startsWith("//"))
+        .join("\n");
+      for (const m of src.matchAll(EXPORT_RE)) {
+        if (!ALLOWED_EXPORTS.test(m[1])) {
+          offenders.push(`${path.relative(process.cwd(), file)}: export ${m[1]}`);
+        }
+      }
+    }
+    expect(
+      offenders,
+      "route files exporting shared symbols (the S125/BZ8 rule — route modules are the runtime's export surface, shared constants live in lib): " +
+        offenders.join(" | "),
+    ).toEqual([]);
   });
 });

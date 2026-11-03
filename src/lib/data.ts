@@ -14,7 +14,7 @@
 import { create } from "zustand";
 import type { z } from "zod";
 
-import { apiGet, apiSend } from "./api";
+import { apiGet, apiSend, DEFAULT_GET_TIMEOUT_MS } from "./api";
 import type { GroupMember } from "./group-members";
 import {
   assignmentSchema,
@@ -338,7 +338,11 @@ const fetchSeq: Partial<Record<CollectionKey, number>> = {};
 // paths; the e2e pin holds the boot gate's stall release end-to-end).
 // Exported like IMPORT_MAX_BYTES (the BY3 panel-pre-check precedent): the
 // seam's consumers and pins read the SAME constant, never a copy.
-export const COLLECTION_GET_TIMEOUT_MS = 20_000;
+// S133/CH10: DERIVED from api.ts's DEFAULT_GET_TIMEOUT_MS (the lower layer
+// — this module already imports api.ts, so no cycle). The pre-CH10 comment
+// claimed "the SAME constant, never a copy" while the value lived as three
+// literals in three files; the claim is now true.
+export const COLLECTION_GET_TIMEOUT_MS = DEFAULT_GET_TIMEOUT_MS;
 
 async function fetchAndSet<K extends CollectionKey>(key: K): Promise<void> {
   const ticket = (fetchSeq[key] ?? 0) + 1;

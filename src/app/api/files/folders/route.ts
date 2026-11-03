@@ -20,7 +20,9 @@ import {
 import { nullableId } from "@/lib/validation";
 
 const folderCreateSchema = z.object({
-  name: z.string().min(1).max(200),
+  // S133/CH8: trim-before-check (the AM1/BS5 doctrine — a blank folder
+  // name is rejected, a padded one stores trimmed).
+  name: z.string().trim().min(1).max(200),
   // S123/BX5: the shared nullableId atom — the route-local twin's
   // ""→null transform was DEAD CODE (idField's min(1) rejected "" first,
   // so the clear-to-root convention every other entity FK honors 400'd

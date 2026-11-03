@@ -20,6 +20,7 @@ import { db } from "@/lib/db";
 import { linkFileSchema } from "@/lib/validation";
 import {
   FILE_METADATA,
+  MAX_UPLOAD_BYTES,
   errorResponse,
   parseWith,
   rateLimitedResponse,
@@ -28,7 +29,10 @@ import {
   withUser,
 } from "@/lib/server/http";
 
-export const MAX_UPLOAD_BYTES = 2 * 1024 * 1024; // 2 MiB
+// S133/CH9: MAX_UPLOAD_BYTES now lives in http.ts (the S125/BZ8 rule —
+// route files cannot export shared symbols; it sat exported here, the
+// repo's own documented layering violation, with a hand-copied client
+// twin in files-view.tsx).
 
 // S82/AI6: the shared metadata select — the LIST (S81/AH13) and BOTH
 // create responses (S82/AI6) carry the same shape: the base64 `data`

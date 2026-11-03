@@ -10,6 +10,8 @@
 
 import * as React from "react";
 
+import { useRouter } from "next/navigation";
+
 import { apiSend } from "@/lib/api";
 import { Spinner } from "@/components/views/shared";
 import { IMPORT_MAX_BYTES } from "@/lib/data-import";
@@ -65,6 +67,11 @@ export function ExportPanel({
   const [busy, setBusy] = React.useState(false);
   const [result, setResult] = React.useState<ImportSummary | null>(null);
   const [error, setError] = React.useState("");
+  // S133/CH7: the App Router refresh seam — after a successful import the
+  // server-rendered "What's included" count grid re-runs its 20 db counts
+  // (pre-CH7 the grid showed stale pre-import numbers while the panel said
+  // "Import complete — 3 created").
+  const router = useRouter();
 
   const onImport = async () => {
     if (!file || busy) return;
@@ -82,6 +89,8 @@ export function ExportPanel({
         timeoutMs: 120_000,
       });
       setResult(summary);
+      // S133/CH7: the counts go honest without a reload.
+      router.refresh();
     } catch (err: unknown) {
       setError(errorMessage(err, "The import failed. Check the file and try again."));
     } finally {

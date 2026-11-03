@@ -31,17 +31,20 @@ import type { PrismaClient } from "@prisma/client";
 import { Prisma } from "@prisma/client";
 
 import { checkRateLimit } from "@/lib/auth";
-import { DATA_EXPORT_FORMAT, DATA_EXPORT_VERSION, EXPORT_COLLECTIONS } from "@/lib/data-export";
+// S133/CH4: the envelope constants moved behind the seam —
+// validateImportEnvelope owns the format/version/collection identity.
 import {
   IMPORT_MAX_BYTES,
   IMPORT_OPTIONAL_FKS,
   IMPORT_REQUIRED_FKS,
   ImportRowError,
   NEVER_IMPORT_FIELDS,
+  duplicateIdError,
   importProfilePatch,
   importRowIdError,
   sanitizeImportRow,
   sortFoldersParentsFirst,
+  validateImportEnvelope,
 } from "@/lib/data-import";
 import { db } from "@/lib/db";
 import { requireUser } from "@/lib/server/auth";
@@ -194,66 +197,27 @@ export const POST = async (request: NextRequest) => {
     } catch {
       raw = null;
     }
-    if (typeof raw !== "object" || raw === null) {
-      return errorResponse(400, `Expected a ${DATA_EXPORT_FORMAT} envelope.`);
-    }
-    const envelope = raw as {
-      format?: unknown;
-      version?: unknown;
-      data?: unknown;
-      user?: unknown;
-    };
 
-    // Format identity.
-    if (envelope.format !== DATA_EXPORT_FORMAT) {
-      return errorResponse(
-        400,
-        `Unrecognized export format — expected "${DATA_EXPORT_FORMAT}".`,
-      );
+    // ---- S133/CH4: the stateless envelope stages ride the SEAM -------------
+    // (the S126 lesson-2 hazard closed: this inline twin had drifted from
+    // the unit-pinned parseImportEnvelope — the seam tolerated a missing
+    // data block, split the version 400s, and carried a second copy of
+    // every message. validateImportEnvelope is now the single source; the
+    // messages below are byte-identical to the pre-CH4 shipped contract,
+    // so the s23 e2e legs stay green untouched.)
+    const envelopeCheck = validateImportEnvelope(raw);
+    if (!envelopeCheck.ok) {
+      return errorResponse(400, envelopeCheck.error);
     }
-
-    // Version floor + ceiling (S117/BR1 — the floor restored with the seam's copy).
-    if (
-      typeof envelope.version !== "number" ||
-      !Number.isInteger(envelope.version) ||
-      envelope.version > DATA_EXPORT_VERSION
-    ) {
-      return errorResponse(
-        400,
-        `This export was written by a newer version of StudyFlow (version ${String(
-          envelope.version,
-        )} > ${DATA_EXPORT_VERSION}). Update the app before restoring it.`,
-      );
-    }
-    if (envelope.version < DATA_EXPORT_VERSION) {
-      return errorResponse(
-        400,
-        `This export is from an unsupported older version (v${String(envelope.version)}).`,
-      );
-    }
-
-    if (typeof envelope.data !== "object" || envelope.data === null) {
-      return errorResponse(400, "The envelope carries no data object.");
-    }
-    const data = envelope.data as Record<string, unknown>;
-
-    // Unknown collections are rejected BY NAME (S117/BR1 — the seam's copy).
-    const knownCollections = new Set<string>(EXPORT_COLLECTIONS);
-    for (const key of Object.keys(data)) {
-      if (!knownCollections.has(key)) {
-        return errorResponse(
-          400,
-          `Unknown collection "${key}" in the export file. This app imports exactly: ${EXPORT_COLLECTIONS.join(", ")}.`,
-        );
-      }
-    }
+    const data = envelopeCheck.data;
 
     // ---- per-collection validation -------------------------------------
     // S126/CA2: the row-id rule rides the SEAM's shared validator (the
     // BW8 single-source doctrine — the route's inline twin had dropped the
     // empty-id guard and minted rows no detail route could address), and a
-    // `null` collection is now rejected like the seam's contract (it is
-    // not an array — the pre-CA2 route silently skipped it).
+    // `null` collection is rejected like the seam's contract (the
+    // array-ness itself is already guaranteed by validateImportEnvelope
+    // above — this loop keeps the per-row id + duplicate rules).
     const parsed = new Map<Collection, Row[]>();
     for (const collection of IMPORT_ORDER) {
       const rows = data[collection];
@@ -269,10 +233,8 @@ export const POST = async (request: NextRequest) => {
         }
         const id = (row as Row).id as string;
         if (seen.has(id)) {
-          return errorResponse(
-            400,
-            `${collection}: duplicate id "${id}" — every row needs a unique id.`,
-          );
+          // S133/CH4: the shared message (the seam's helper).
+          return errorResponse(400, duplicateIdError(collection, id));
         }
         seen.add(id);
       }
@@ -452,7 +414,9 @@ export const POST = async (request: NextRequest) => {
       // restored content but lost the profile). The patch rides the SAME
       // all-or-nothing transaction; identity (email, name, id) never
       // rides; a garbage or absent block stays ignored.
-      const profilePatch = importProfilePatch(envelope.user);
+      // S133/CH4: validateImportEnvelope proved raw is a plain object —
+      // the user block reads off it directly.
+      const profilePatch = importProfilePatch((raw as { user?: unknown }).user);
       if (profilePatch) {
         await tx.user.update({ where: { id: user.id }, data: profilePatch });
       }

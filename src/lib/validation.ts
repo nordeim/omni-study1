@@ -24,7 +24,11 @@ export const nullableId = z
   .union([idField, z.literal("")])
   .nullish()
   .transform((v) => (v === "" ? null : (v ?? null)));
-const boundedTitle = z.string().min(1).max(200);
+// S133/CH8: trim BEFORE the checks — the AM1/BS5 doctrine (members,
+// link-file names, multipart uploads already trimmed) applied to the whole
+// title/name family: a whitespace-only title is REJECTED here, never
+// persisted as a visually blank row; a padded title stores trimmed.
+const boundedTitle = z.string().trim().min(1).max(200);
 const passwordField = z.string().min(8).max(200);
 const hexColor = z.string().regex(/^#[0-9a-fA-F]{6}$/);
 // S118/BS2: the shared email atom — trimmed (a padded paste normalizes
@@ -112,6 +116,13 @@ export const ASSIGNMENT_TYPES = [
 export const CARD_DIFFICULTIES = ["easy", "medium", "hard"] as const;
 export const CHAT_ROLES = ["user", "assistant"] as const;
 export const CHAT_SURFACES = ["assistant", "solver"] as const;
+// S133/CH2: the four remaining inline vocabularies promoted to the same
+// single-source contract — the import seam's ENUM_VOCABULARIES mirrors
+// these arrays instead of re-typing them (the CA14 doctrine completed).
+export const EXAM_TYPES = ["test", "quiz", "midterm", "final", "oral", "practical"] as const;
+export const WEEK_TYPES = ["ALL", "A", "B"] as const;
+export const FOCUS_SESSION_MODES = ["focus", "short-break", "long-break"] as const;
+export const CALCULATOR_MODES = ["basic", "scientific", "gpa", "unit"] as const;
 
 // ---- auth ------------------------------------------------------------------
 
@@ -259,10 +270,8 @@ export const examSchema = z.object({
   title: boundedTitle,
   date: requiredDate,
   subjectId: nullableId,
-  type: z
-    .enum(["test", "quiz", "midterm", "final", "oral", "practical"])
-    .optional()
-    .default("test"),
+  // S133/CH2: the promoted single-source array (was inline).
+  type: z.enum(EXAM_TYPES).optional().default("test"),
   duration: z.number().int().min(5).max(600).optional().default(60),
   topics: jsonArray.optional().default("[]"),
   // S76/AC5 (measured on the reference): the Add Exam dialog carries a
@@ -327,7 +336,8 @@ export const timetableClassSchema = z.object({
   endTime: hhmm,
   subjectId: nullableId,
   room: z.string().max(100).optional().default(""),
-  weekType: z.enum(["ALL", "A", "B"]).optional().default("ALL"),
+  // S133/CH2: the promoted single-source array (was inline).
+  weekType: z.enum(WEEK_TYPES).optional().default("ALL"),
 });
 
 // S122/BW7 + S123/BX1: the timetable ordering guard — the events family
@@ -498,7 +508,8 @@ export const focusSessionSchema = z.object({
   subjectId: nullableId,
   startedAt: requiredDate,
   durationSeconds: z.number().int().min(1).max(86_400),
-  mode: z.enum(["focus", "short-break", "long-break"]).optional().default("focus"),
+  // S133/CH2: the promoted single-source array (was inline).
+  mode: z.enum(FOCUS_SESSION_MODES).optional().default("focus"),
   completed: z.boolean().optional().default(true),
 });
 
@@ -574,5 +585,6 @@ export const rumBatchSchema = z.object({
 export const calculatorHistorySchema = z.object({
   expression: z.string().min(1).max(500),
   result: z.string().min(1).max(500),
-  mode: z.enum(["basic", "scientific", "gpa", "unit"]).optional().default("basic"),
+  // S133/CH2: the promoted single-source array (was inline).
+  mode: z.enum(CALCULATOR_MODES).optional().default("basic"),
 });

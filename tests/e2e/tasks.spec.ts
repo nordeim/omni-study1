@@ -186,3 +186,27 @@ test.describe("S127/CB16 · a rapid double toggle nets to the original state", (
     }
   });
 });
+
+// S133/CH8 — the trim-before-check on the title/name family. A
+// whitespace-only title passed min(1) untrimmed and persisted as a
+// visually blank row (the AM1/BS5 doctrine's gap — members, link-file
+// names, and multipart uploads already trimmed). The interactive boundary
+// now rejects the blank title with the field's own 400 shape.
+test.describe("S133/CH8: the blank-title guard", () => {
+  test("a task POST with a whitespace-only title answers the validation 400 (no blank row persists)", async ({
+    request,
+  }) => {
+    const blank = await request.post("/api/tasks", {
+      data: { title: "   " },
+    });
+    expect(blank.status()).toBe(400);
+    const body = (await blank.json()) as { error?: string };
+    expect(body.error).toContain("title");
+    // The legal path is untouched (a normal title still creates).
+    const legal = await request.post("/api/tasks", {
+      data: { title: `E2E — CH8 legal title ${stamp}` },
+    });
+    expect(legal.ok()).toBe(true);
+    await request.delete(`/api/tasks/${((await legal.json()) as { id: string }).id}`);
+  });
+});

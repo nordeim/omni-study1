@@ -95,6 +95,12 @@ export const FILE_METADATA = {
   updatedAt: true,
 } as const;
 
+/** S133/CH9: the per-file upload ceiling, moved here from files/route.ts —
+ * the same S125/BZ8 rule that moved FILE_METADATA (route files cannot
+ * export shared symbols; the route was the only exporter and the client
+ * twin in files-view.tsx carries a documented mirror). */
+export const MAX_UPLOAD_BYTES = 2 * 1024 * 1024; // 2 MiB
+
 /** Parse a request body through its Zod schema; failure → ValidationError. */
 export function parseWith<T>(schema: ZodType<T>, input: unknown): T {
   const result = schema.safeParse(input);

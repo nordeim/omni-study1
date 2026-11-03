@@ -13,10 +13,12 @@ import {
   flashcardSchema,
   forgotPasswordSchema,
   gradeCreateSchema,
+  gradeSchema,
   holidaySchema,
   linkFileSchema,
   loginSchema,
   mathSolveSchema,
+  noteSchema,
   practiceTestSchema,
   preferencesSchema,
   timetableClassCreateSchema,
@@ -1177,5 +1179,55 @@ describe("S125/BZ6: the grade score ≤ maxScore guard (the create shape)", () =
 
   it("rejects a bare 900 (the defaulted 100 denominator — the honest create semantics)", () => {
     expect(gradeCreateSchema.safeParse({ title: "Final", score: 900 }).success).toBe(false);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// S133/CH8 — the trim-before-check on the title/name family (the AM1/BS5
+// doctrine applied to boundedTitle + the folder-name schemas). A
+// whitespace-only `{"title": "   "}` passed min(1) and persisted as a
+// visually blank row; a padded `"  x  "` stored untrimmed. The interactive
+// boundary now normalizes exactly like the members/link-file/multipart
+// names the doctrine already covered.
+// ---------------------------------------------------------------------------
+describe("the boundedTitle trim-before-check (S133/CH8)", () => {
+  it("rejects a whitespace-only title (blank rows no longer persist)", () => {
+    expect(taskSchema.safeParse({ title: "   " }).success).toBe(false);
+    expect(noteSchema.safeParse({ title: " \t " }).success).toBe(false);
+    expect(eventSchema.safeParse({ title: " " }).success).toBe(false);
+    expect(examSchema.safeParse({ title: "   " }).success).toBe(false);
+    expect(subjectSchema.safeParse({ name: "   " }).success).toBe(false);
+    expect(studyGroupSchema.safeParse({ name: "   " }).success).toBe(false);
+    expect(gradeSchema.safeParse({ title: "   ", score: 1 }).success).toBe(false);
+  });
+
+  it("stores a padded title TRIMMED (the AM1 normalization)", () => {
+    expect(taskSchema.parse({ title: "  Read chapter 4  " }).title).toBe("Read chapter 4");
+    expect(subjectSchema.parse({ name: "  Math  " }).name).toBe("Math");
+  });
+
+  it("the 200-char cap applies to the TRIMMED value (a padded-at-boundary title rejects on the untrimmed length first — the atom's own order)", () => {
+    // 199 chars + 2 spaces = 201 raw: min passes after trim (199), and the
+    // z.string().trim() chain trims BEFORE max applies — 199 <= 200 passes.
+    const padded = "x".repeat(199) + "  ";
+    expect(taskSchema.safeParse({ title: padded }).success).toBe(true);
+    expect(taskSchema.safeParse({ title: "x".repeat(201) }).success).toBe(false);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// S133/CH2's vocabulary single-source — the four inline z.enum literals
+// (exams.type, timetableClasses.weekType, focusSessions.mode,
+// calculatorHistory.mode) became exported arrays (the TASK_PRIORITIES
+// precedent) so the import seam can mirror them without re-typing the
+// vocabularies.
+// ---------------------------------------------------------------------------
+describe("the exported vocabulary atoms (S133/CH2 single-source)", () => {
+  it("EXAM_TYPES / WEEK_TYPES / FOCUS_SESSION_MODES / CALCULATOR_MODES carry the route vocabularies verbatim", async () => {
+    const { EXAM_TYPES, WEEK_TYPES, FOCUS_SESSION_MODES, CALCULATOR_MODES } = await import("@/lib/validation");
+    expect([...EXAM_TYPES]).toEqual(["test", "quiz", "midterm", "final", "oral", "practical"]);
+    expect([...WEEK_TYPES]).toEqual(["ALL", "A", "B"]);
+    expect([...FOCUS_SESSION_MODES]).toEqual(["focus", "short-break", "long-break"]);
+    expect([...CALCULATOR_MODES]).toEqual(["basic", "scientific", "gpa", "unit"]);
   });
 });

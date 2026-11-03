@@ -20,7 +20,7 @@ import { MobileChrome } from "@/components/layout/mobile-chrome";
 import { RumBeacon } from "@/components/layout/rum-beacon";
 import { Sidebar } from "@/components/layout/sidebar";
 import { GraduationCap } from "lucide-react";
-import { apiGet, ApiError } from "@/lib/api";
+import { apiGet, ApiError, DEFAULT_GET_TIMEOUT_MS } from "@/lib/api";
 import { useDataStore } from "@/lib/data";
 import { INITIAL_COLLECTIONS } from "@/lib/view-collections";
 import type { ViewId } from "@/lib/router";
@@ -190,8 +190,9 @@ export default function Home() {
         // S128/CC7: the boot gate's deadline — a stalled connection must
         // reach the gate's error branch (the retry affordance) instead of
         // holding the Splash for the browser's own connection timeout.
+        // S133/CH10: the shared constant (was the third inline literal).
         const { user } = await apiGet<{ user: AppUser }>("/api/auth/me", {
-          timeoutMs: 20_000,
+          timeoutMs: DEFAULT_GET_TIMEOUT_MS,
         });
         if (cancelled) return;
 
