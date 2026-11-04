@@ -152,8 +152,10 @@ export const POST = async (request: NextRequest) => {
       return errorResponse(400, "Upload the backup as a JSON file.");
     }
 
-    // ---- the 25 MiB body cap (S117/BR1 — the documented 413 contract;
-    // S124/BY3 moved it 10 → 25 MiB, the export/import reconciliation) ------
+    // ---- the IMPORT_MAX_BYTES body cap (S117/BR1 — the documented 413
+    // contract; the cap's full 10 → 25 → 64 MiB history and arithmetic
+    // live at the seam's own doc block — the size is never re-stated
+    // here, S138/CM5's machine census holds every other site to that) ------
     // S119/BT2: the capped read now walks the stream chunk-by-chunk (the
     // declared-length pre-read lives inside readBodyCapped) so a chunked
     // body is counted AS it is read, never buffered past the cap.
@@ -337,6 +339,9 @@ export const POST = async (request: NextRequest) => {
     // fields; many small rows) could exceed it → P2028 → the shared mapper's
     // 500, violating this route's own 400-contract for bad input (the
     // rollback itself was always correct — only the timeout was missing).
+    // S138/CM4: the shared mapper's P2028 copy went SOURCE-NEUTRAL (it is
+    // shared by the retention-trim transactions too) — THIS route's catch
+    // owns the backup-specific remedy below.
     await db.$transaction(
       async (tx) => {
       for (const collection of IMPORT_ORDER) {
@@ -458,6 +463,17 @@ export const POST = async (request: NextRequest) => {
       return errorResponse(
         409,
         `That ${collection} row (id "${id}") collides with an existing record — either it was created while this import ran, or this backup's ids already belong to another account. Edit the backup's ids or restore into the original account.`,
+      );
+    }
+    // S137/CL10 (audit A-L2) + S138/CM4: P2028 — the 60 s window expired
+    // mid-restore (a legal many-rows envelope; the many-rows tail). The
+    // rollback HOLDS. The route-local copy (not the shared mapper's
+    // source-neutral one) because the remedy here is specifically "split
+    // the backup" — pinned by the script-conventions census.
+    if (typeof err === "object" && err !== null && "code" in err && (err as { code?: unknown }).code === "P2028") {
+      return errorResponse(
+        413,
+        "That backup was too large or slow to restore in one pass and was fully rolled back. Try again, or split the backup and retry the halves.",
       );
     }
     return toErrorResponse(err);

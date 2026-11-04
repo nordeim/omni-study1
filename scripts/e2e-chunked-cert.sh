@@ -59,7 +59,16 @@
 # pin landing GREEN on the pre-fix tree (the CK3 designed expectation —
 # the finding was the missing pin, not a defect)]. The full CL map:
 # docs/remediation-plan-session137.md.)
-# Expected: 150 + 184 + 81 + 95 + 86 = 596 (each chunk's count includes its
+# (S138/CM re-tag — census 596 → 597, net +1: chunk 3 +1 [the S138/CM2
+# dashboard KPI OR-form held-route leg in resilience — holding ONLY
+# /api/focus-sessions while the other four dashboard families resolve:
+# the mixed-landing state where the pre-fix AND-form (tasks alone) let
+# the Focus Time card render its false "0h" — the S137/CL7 OR-form
+# doctrine extended to the KPI row; MID-file, the CK1 flood pin stays
+# TERMINAL in s16 (the chunk's alphabetically-last file); rides the demo
+# session, no registrations, no import budget]. The full CM map:
+# docs/remediation-plan-session138.md.)
+# Expected: 150 + 184 + 82 + 95 + 86 = 597 (each chunk's count includes its
 # auth setup — the current census; the historical re-tag blocks beneath.)
 # (S131/CF re-tag — census 567 → 570, net +3: chunk 1 +1 [the CF9
 # drawer focus-restore leg in mobile-navigation — crossing the lg

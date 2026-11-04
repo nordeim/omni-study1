@@ -117,7 +117,9 @@ describe("the chunked cert runner's truth contract (S128/CC2)", () => {
 
   it("names the CURRENT per-chunk census in its header (the re-tag tripwire)", () => {
     // The topmost Expected line — re-tagged by every census-changing cycle.
-    expect(certSource).toContain("Expected: 150 + 184 + 81 + 95 + 86 = 596");
+    // S138/CM: chunk 3 81 → 82 (the S138/CM2 dashboard KPI OR-form
+    // held-route leg) — 596 → 597.
+    expect(certSource).toContain("Expected: 150 + 184 + 82 + 95 + 86 = 597");
   });
 
   it("propagates a failing chunk's exit code (never a green cert on a red run)", () => {
@@ -589,10 +591,13 @@ describe("the Batch CG auth-hardening census (S132/CG1+CG3+CG11)", () => {
     // global-vs-per-IP response shape (no new oracle, the CG11 doctrine).
     const globalBlock = src.slice(globalAt, src.indexOf("}", src.indexOf("if (!globalLimit.ok)")));
     expect(globalBlock).toContain("Too many login attempts. Try again shortly.");
-    // The SUCCESS-RESET: the progressive model extended to the global budget
+    // The SUCCESS-DISCHARGE: the progressive model on the global budget
     // (the mid-run correction — an interleaved legitimate burst never
-    // inherits a flood's spend; the attack shape never succeeds).
-    expect(src).toMatch(/resetRateLimit\("loginGlobal:"\)/);
+    // inherits a flood's spend one-for-one). S138/CM3: the discharge is a
+    // DECREMENT, never a reset — the bucket is an aggregate across every
+    // requester, and one scripted success must not erase the window's
+    // other spends (the wire census + the auth seam pins own the shape).
+    expect(src).toMatch(/decrementRateLimit\("loginGlobal:"\)/);
   });
 
   it("verify-email re-checks emailVerified BEFORE consuming the token (S136/CK10 — the A-L5 resend/verify race edge: a resend whose user read raced a concurrent verification can leave one live token on a now-verified account)", () => {
@@ -842,5 +847,175 @@ describe("the S137/CL source censuses", () => {
     const src = readFileSync(IMPORT_ROUTE, "utf8");
     expect(src).toContain("already belong to another account");
     expect(src).not.toContain("was created elsewhere while the import ran. Re-export");
+  });
+});
+
+// ---------------------------------------------------------------------------
+// S138/CM source censuses (the audit-driven hardening cycle — the
+// exemption-hardening + containment-decrement + honest-form set).
+// ---------------------------------------------------------------------------
+describe("the S138/CM source censuses", () => {
+  const LOGIN = path.resolve(process.cwd(), "src/app/api/auth/login/route.ts");
+  const IMPORT_ROUTE = path.resolve(process.cwd(), "src/app/api/import/data/route.ts");
+  const EXPORT_PANEL = path.resolve(process.cwd(), "src/components/export/export-panel.tsx");
+  const ANALYTICS_VIEW = path.resolve(process.cwd(), "src/components/views/analytics-view.tsx");
+  const TIMETABLE_VIEW = path.resolve(process.cwd(), "src/components/views/timetable-view.tsx");
+  const ENTITIES = path.resolve(process.cwd(), "src/lib/server/entities.ts");
+  const DOCKERFILE = path.resolve(process.cwd(), "Dockerfile");
+  const NEXT_CONFIG = path.resolve(process.cwd(), "next.config.ts");
+  const PACKAGE_JSON = path.resolve(process.cwd(), "package.json");
+  const SRC_ROOT = path.resolve(process.cwd(), "src");
+  const UI_DIR = path.resolve(process.cwd(), "src/components/ui");
+
+  it("the login success path DECREMENTS the aggregate global budget, never resets it (S138/CM3 — the CK1 containment wire)", () => {
+    // S138/CM3 (audit AI-2): resetRateLimit("loginGlobal:") fully deleted
+    // the aggregate bucket on every success — under the default in-band
+    // posture a credentialed attacker alternated 39 fails + 1 success and
+    // kept the process-wide CPU containment at zero forever. The wire now
+    // rides decrementRateLimit for the GLOBAL (aggregate) key while the
+    // per-IP and per-account keys still reset (their key material IS the
+    // proven requester).
+    const src = readFileSync(LOGIN, "utf8");
+    expect(src).toContain('decrementRateLimit("loginGlobal:")');
+    expect(src).not.toContain('resetRateLimit("loginGlobal:")');
+    // The requester-scoped resets survive (the progressive model's other
+    // half — a legitimate user never inherits their own spent buckets).
+    expect(src).toContain("resetRateLimit(`login:${ip}`)");
+    expect(src).toContain("resetRateLimit(`loginAcct:${user.id}`)");
+  });
+
+  it("the import route carries the backup-specific P2028 copy route-locally (S138/CM4 — the shared mapper went source-neutral)", () => {
+    // S138/CM4 (Mode-C F2 + AI-6): the shared toErrorResponse emitted
+    // "split the backup and retry the halves" for EVERY P2028 source,
+    // including the ai/math/rum/calculator retention-trim transactions.
+    // The route's own catch now owns the backup-specific remedy; the
+    // shared mapper's copy is source-neutral (pinned in http-body).
+    const src = readFileSync(IMPORT_ROUTE, "utf8");
+    expect(src).toContain("split the backup and retry the halves");
+  });
+
+  it("NO stale '25 MiB' prose outside the cap's own doc block (S138/CM5 — the recurring stale-cap class gets its machine check)", () => {
+    // S137/CL2 moved the cap 25 → 64 MiB and re-seeded stale "25 MiB"
+    // prose in the SAME commit (five sites — the audit's two plus three
+    // more the census walk itself surfaced: the route comment, the export
+    // panel, the CH6 attack narrative, and two "25 MiB since S124/BY3"
+    // current-cap claims in the seam's own guard comments). The machine
+    // line: the 25 MiB ERA may be narrated in exactly ONE place — the
+    // IMPORT_MAX_BYTES doc block (the cap's own history, where the
+    // 10→25→64 arithmetic lives) — and NOWHERE else: every other site
+    // references IMPORT_MAX_BYTES or 64 MiB, never the bare old boundary.
+    const SEAM = readFileSync(path.resolve(process.cwd(), "src/lib/data-import.ts"), "utf8");
+    const blockStart = SEAM.indexOf("/** The documented body cap.");
+    expect(blockStart, "the IMPORT_MAX_BYTES doc block exists").toBeGreaterThan(-1);
+    const blockEnd = SEAM.indexOf("*/", blockStart);
+    const seamOutsideBlock = SEAM.slice(0, blockStart) + SEAM.slice(blockEnd + 2);
+    expect(
+      seamOutsideBlock.includes("25 MiB"),
+      "data-import.ts outside the cap's doc block still narrates the old boundary",
+    ).toBe(false);
+    // And every OTHER src file is clean of it too.
+    const walk = (dir: string): string[] =>
+      readdirSync(dir, { withFileTypes: true }).flatMap((e) =>
+        e.isDirectory() ? walk(path.join(dir, e.name)) : [path.join(dir, e.name)],
+      );
+    const offenders = walk(SRC_ROOT)
+      .filter((f) => /\.(ts|tsx|css)$/.test(f))
+      .filter((f) => !f.endsWith("src/lib/data-import.ts"))
+      .filter((f) => readFileSync(f, "utf8").includes("25 MiB"));
+    expect(offenders, `stale '25 MiB' prose in: ${offenders.join(", ")}`).toEqual([]);
+    // The two known cap consumers reference the symbol, not a number.
+    expect(readFileSync(IMPORT_ROUTE, "utf8")).toContain("IMPORT_MAX_BYTES");
+    expect(readFileSync(EXPORT_PANEL, "utf8")).toContain("IMPORT_MAX_BYTES");
+  });
+
+  it("the analytics loading-const comment matches the OR/six-family gate it sits above (S138/CM5 — the CG6 comment was still the AND/three-family form)", () => {
+    // S137/CL7 fixed the gate to the OR-form over six families; the older
+    // CG6 comment 90 lines up still documented "loading AND every stat
+    // source is still empty (tasks + grades + subjects — the three stat
+    // families' sources)" — the mis-describing-comment half of the MC-F4
+    // finding CL7 was meant to close.
+    const src = readFileSync(ANALYTICS_VIEW, "utf8");
+    expect(src).not.toContain("the three stat families' sources");
+  });
+
+  it("the cards 5000-window comment states its contract honestly — honest BELOW the window (S138/CM5 — 'deck counts stay honest' overstated past it)", () => {
+    // Mode-C F5: the window is global-across-decks, not per-deck; past a
+    // user's 5000th card the oldest silently leave every deck's study set
+    // and count. The comment now owns the boundary instead of claiming
+    // unconditional honesty.
+    const src = readFileSync(ENTITIES, "utf8");
+    expect(src).not.toContain("deck counts stay honest");
+  });
+
+  it("the timetable Grid Builder carries no lying pressed-state or dead attribute (S138/CM6 — the reference's own button is a no-op; behavior parity holds)", () => {
+    // S138/CM6 (audit FE-2): `builder` state + aria-pressed + data-builder
+    // produced NO functional or visible change while announcing a state
+    // that does not exist (a WCAG 4.1.2 state-vs-actual mismatch). The
+    // reference's own Grid Builder (measured live this cycle) is a no-op
+    // with no pressed semantics — the honest clone form is the pinned
+    // outline button with no state.
+    const src = readFileSync(TIMETABLE_VIEW, "utf8");
+    expect(src).toContain("Grid Builder");
+    expect(src).not.toContain("aria-pressed");
+    expect(src).not.toContain("data-builder");
+    expect(src).not.toContain("setBuilder");
+  });
+
+  it("the ui/ directory is exactly the 14 CONSUMED primitives (S138/CM7 — seven scaffold-dead files deleted)", () => {
+    // S138/CM7 (audit FE-3): card/skeleton/avatar/checkbox/tooltip/badge/
+    // separator had ZERO consumers repo-wide (every view uses the sf-card
+    // utility and hand-rolled checkboxes); their five Radix deps were
+    // equally dead (radio-group/scroll-area had no component file at
+    // all). The S125/BZ14 dead-code doctrine applies.
+    const files = readdirSync(UI_DIR)
+      .filter((f) => f.endsWith(".tsx"))
+      .sort();
+    expect(files).toEqual([
+      "alert-dialog.tsx",
+      "button.tsx",
+      "dialog.tsx",
+      "dropdown-menu.tsx",
+      "input.tsx",
+      "label.tsx",
+      "popover.tsx",
+      "progress.tsx",
+      "select.tsx",
+      "slider.tsx",
+      "switch.tsx",
+      "tabs.tsx",
+      "textarea.tsx",
+      "toast.tsx",
+    ]);
+    // And the five dead Radix deps are gone from the manifest.
+    const pkg = readFileSync(PACKAGE_JSON, "utf8");
+    expect(pkg).not.toContain("@radix-ui/react-avatar");
+    expect(pkg).not.toContain("@radix-ui/react-checkbox");
+    expect(pkg).not.toContain("@radix-ui/react-tooltip");
+    expect(pkg).not.toContain("@radix-ui/react-radio-group");
+    expect(pkg).not.toContain("@radix-ui/react-scroll-area");
+  });
+
+  it("the Docker runtime stage drops to a non-root user (S138/CM8 — no USER directive shipped root)", () => {
+    // S138/CM8 (audit AI-3): the runtime stage ran as root with write
+    // access to /data and the app tree. The bun base image ships a
+    // non-root `bun` user; the runtime now chowns /data and drops to it
+    // before the CMD.
+    const src = readFileSync(DOCKERFILE, "utf8");
+    expect(src).toMatch(/^USER /m);
+    expect(src).toContain("chown");
+  });
+
+  it("a conservative Content-Security-Policy ships on every route (S138/CM9 — the undocumented omission, unlike HSTS)", () => {
+    // S138/CM9 (audit AI-4): HSTS is deliberately deferred to the TLS
+    // terminator (documented at BU16); CSP had no such note and no
+    // header. The conservative profile (matched to the verified
+    // same-origin resource surface) blocks external script/style/img/
+    // font/connect vectors, plugins, and framing while allowing Next's
+    // inline bootstrap + the theme boot script + inline styles.
+    const src = readFileSync(NEXT_CONFIG, "utf8");
+    expect(src).toContain("Content-Security-Policy");
+    expect(src).toContain("default-src 'self'");
+    expect(src).toContain("object-src 'none'");
+    expect(src).toContain("frame-ancestors 'none'");
   });
 });

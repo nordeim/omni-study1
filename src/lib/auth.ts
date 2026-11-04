@@ -309,6 +309,22 @@ export function resetRateLimit(key: string): void {
   buckets.delete(key);
 }
 
+/** S138/CM3: the AGGREGATE-budget discharge — a success decrements the
+ *  window's spend by one instead of deleting the bucket. The login route
+ *  calls this for `loginGlobal:` (its per-IP and per-account keys still
+ *  fully reset — their key material IS the proven requester); the GLOBAL
+ *  aggregates every requester, so ONE requester's success must not
+ *  discharge the other spends (the S136/CK1 CPU containment was
+ *  resettable to zero by any credentialed caller under the default
+ *  in-band posture — 39 fails + 1 scripted success, forever). The
+ *  net-of-successes model: only FAILED logins accumulate; consecutive
+ *  successes oscillate just under the budget and never trip. No-op on a
+ *  missing/expired key; never re-arms a window; floors at zero. */
+export function decrementRateLimit(key: string): void {
+  const bucket = buckets.get(key);
+  if (bucket && bucket.count > 0) bucket.count -= 1;
+}
+
 /** S120/BU6: the size observable — the eviction contract's test/ops probe. */
 export function rateLimitBucketCount(): number {
   return buckets.size;
@@ -344,16 +360,25 @@ function sweepExpiredBuckets(now: number): void {
  * (a rotated-XFF flood on the per-IP-only routes — verify/resend/forgot —
  * fills the map and the eviction would delete a global bucket mid-flood,
  * restarting its count at 1: the CK1 CPU-DoS bound quietly re-arming).
- * The exemption is safe because the globals are a FIXED, tiny, always-live
- * set (at most 2 keys), so the eviction always finds a non-global oldest;
- * an EXPIRED global is swept by sweepExpiredBuckets before this runs. The
- * map's bound stays MAX_BUCKETS — the exemption only chooses the eviction
- * VICTIM, never skips the eviction itself. */
+ * S138/CM1 (audits AI-1 + Mode-C F1 — the CL8 residual): the exemption
+ * is an EXACT-KEY whitelist of the two real budget keys, NOT a substring
+ * test — the per-IP key material embeds the raw, forgeable first
+ * x-forwarded-for entry under the default (unset TRUSTED_PROXY_HOPS)
+ * posture, and `key.includes("Global:")` let a forged
+ * `X-Forwarded-For: Global:<unique>` mint `verify:Global:<unique>`-shaped
+ * buckets that were ALL eviction-exempt: once the live map was all-exempt
+ * the eviction found no victim and the unconditional insert grew the map
+ * past this cap without bound (the S121/BV9 invariant itself). The exact
+ * set restores the bound mathematically: at most 2 exempt keys can ever
+ * be live, so the eviction always finds a non-global victim; an EXPIRED
+ * global is swept by sweepExpiredBuckets before this runs. */
+const PROTECTED_BUCKETS = new Set(["loginGlobal:", "registerGlobal:"]);
+
 function evictOldestBucket(): void {
   let oldestKey: string | null = null;
   let oldestStart = Infinity;
   for (const [key, bucket] of buckets) {
-    if (key.includes("Global:")) continue; // the CL8 containment exemption
+    if (PROTECTED_BUCKETS.has(key)) continue; // the exact-key exemption (S138/CM1)
     if (bucket.windowStart < oldestStart) {
       oldestStart = bucket.windowStart;
       oldestKey = key;

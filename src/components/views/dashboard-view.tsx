@@ -237,7 +237,14 @@ export function DashboardView() {
       )}
 
       {/* ---- KPI cards ---- */}
-      {loading && tasks.length === 0 ? (
+      {/* S138/CM2 (audit FE-1): the OR-form doctrine (S137/CL7) — this 4-stat
+          row is fed by TWO collections (tasks → the first three stats;
+          focusSessions → Focus Time), so the in-flight gate is the OR-form:
+          any primary source empty while loading owns the row. The AND-form
+          (tasks alone) rendered a false "0h" Focus Time whenever tasks had
+          landed but focusSessions was still in flight (a boot at any route
+          whose pre-warm excludes focusSessions, then navigating here). */}
+      {loading && (tasks.length === 0 || focusSessions.length === 0) ? (
         <div className="flex justify-center py-16 text-sf-primary">
           <Spinner className="size-6" />
         </div>

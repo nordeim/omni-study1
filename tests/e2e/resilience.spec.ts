@@ -1190,3 +1190,50 @@ test.describe("S137/CL7: the analytics OR-form stat gate (the mixed-landing fals
     }
   });
 });
+
+// ---------------------------------------------------------------------------
+// S138/CM2 (audit FE-1) — the dashboard KPI stat row's OR-form gate. The
+// 4-stat KPI row is fed by TWO collections (tasks → 3 stats;
+// focusSessions → the Focus Time card), but the gate tested only
+// `tasks.length === 0` — the exact mixed-landing shape the S137/CL7
+// doctrine was written for: booting anywhere whose pre-warm excludes
+// focusSessions, then navigating to /Dashboard while the background
+// focusSessions GET is in flight rendered a false "0h" Focus Time (up to
+// the 20 s GET deadline on a stalled transport). The wire pin holds ONLY
+// /api/focus-sessions (the other four dashboard families resolve) — the
+// pre-fix gate passed on tasks and the false zero rendered; the OR-form
+// owns the row. Same held-route idiom as the CK4/CL7 legs; rides the demo
+// session (no registrations, no import budget); MID-file by design (the
+// CK1 flood pin stays TERMINAL in s16 — resilience sorts before it).
+// ---------------------------------------------------------------------------
+test.describe("S138/CM2: the dashboard KPI OR-form gate (the mixed-landing false '0h')", () => {
+  test("an in-flight focusSessions load owns the KPI row, never the false '0h' Focus Time card (RED pre-fix)", async ({ page }) => {
+    const HELD = "**/api/focus-sessions";
+    await page.route(HELD, () => {
+      /* never fulfills — the accepted-TCP stall shape */
+    });
+    try {
+      // The dashboard pre-warms tasks+assignments+exams+focusSessions+
+      // subjects — the held focus-sessions fetch holds the Splash until
+      // the CD2 deadline (~20 s), then the app commits with the other
+      // four landed and focusSessions still loading: the mixed-landing
+      // state where the pre-fix gate passed on tasks.length > 0 and the
+      // Focus Time card rendered its false "0h".
+      await page.goto("/Dashboard");
+      await page.waitForFunction(
+        () => document.documentElement.dataset.appHydrated === "true",
+        undefined,
+        { timeout: 35_000 },
+      );
+      // The in-flight window: the OR-form gate owns the KPI row — the
+      // Focus Time card renders NOWHERE (pre-fix: visible, "0h").
+      await expect(page.locator("main").getByText("Focus Time", { exact: true })).toHaveCount(0);
+      // And its false zero renders nowhere in the main column.
+      await expect(page.locator("main").getByText(/^0h$/)).toHaveCount(0);
+      // The gate's spinner IS visible (the row's honest in-flight form).
+      await expect(page.locator(".animate-spin").first()).toBeVisible();
+    } finally {
+      await page.unroute(HELD);
+    }
+  });
+});

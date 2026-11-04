@@ -1,7 +1,21 @@
 import { defineConfig } from "vitest/config";
 import path from "node:path";
 
-// Unit-test layer for the pure domain seams — 45 files / 1356 tests
+// Unit-test layer for the pure domain seams — 45 files / 1369 tests
+// (re-anchored S138/CM — the audit-driven hardening cycle: the exemption-
+// hardening + KPI-gate + containment-decrement + honest-form set: census
+// 1356 → 1369, +13 net [auth +4: the S138/CM1 crafted-key injection leg
+// (a 'Global:'-substring forged-per-IP flood cannot grow the map past the
+// cap — the exact-key whitelist's pin) + the S138/CM3 decrementRateLimit
+// seam trio (decrement-without-re-arm + the zero floor + the missing-key
+// no-op); http-body ±0: the S137/CL10 P2028 leg re-tagged in place to the
+// source-neutral copy; script-conventions +9: the S138/CM censuses (the
+// login decrement wire + the import route's route-local P2028 copy + the
+// no-stale-'25 MiB'-outside-the-doc-block walk + the analytics OR-form
+// comment + the entities window-honesty comment + the timetable stateless
+// Grid Builder + the 14-consumed-ui-directory listing + the Dockerfile
+// non-root USER + the conservative CSP profile)]. The prior S137/CL
+// re-anchor block follows.)
 // (re-anchored S137/CL — the audit-driven hardening cycle: the import-
 // symmetry + cap-sizing + cards-bound + honest-copy set: census
 // 1344 → 1356, +12 net [data-import +7: the S137/CL1 equal-times

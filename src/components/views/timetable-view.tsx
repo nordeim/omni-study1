@@ -85,7 +85,12 @@ export function TimetableView() {
   const sundayOffset = today.getDay();
   const [weekStart, setWeekStart] = React.useState(() => addDays(today, -sundayOffset));
   const [weekType, setWeekType] = React.useState<"ALL" | "A" | "B">("ALL");
-  const [builder, setBuilder] = React.useState(false);
+  // S138/CM6 (audit FE-2): the Grid Builder's toggle state, pressed
+  // semantics, and dead canvas attribute produced NO functional or
+  // visible change — a control announcing a state that does not exist
+  // (WCAG 4.1.2). The reference's own button (measured live, S138) is a
+  // no-op with no pressed semantics; the honest clone form is the
+  // parity-pinned outline button, stateless.
   // The mobile accordion opens on today's COLUMN (Sunday-first display:
   // column === getDay()). The old ISO-index math pointed one column off
   // under the Sunday-first heads — part of the session-63 misalignment.
@@ -227,12 +232,7 @@ export function TimetableView() {
               <SelectItem value="B">Week B</SelectItem>
             </SelectContent>
           </Select>
-          <Button
-            type="button"
-            variant="outline"
-            aria-pressed={builder}
-            onClick={() => setBuilder((b) => !b)}
-          >
+          <Button type="button" variant="outline">
             Grid Builder
           </Button>
           <Button type="button" variant="gradient" className="sf-gradient-shadow" onClick={() => openCreate()}>
@@ -304,7 +304,7 @@ export function TimetableView() {
           {/* Desktop week grid */}
           <section className="sf-card overflow-hidden p-6 max-md:hidden">
             <div role="group" className="sf-timetable-canvas min-w-[900px] overflow-x-auto" aria-label="Week grid">
-              <div role="group" className="grid grid-cols-8" data-builder={builder ? "true" : undefined} aria-label="Week header">
+              <div role="group" className="grid grid-cols-8" aria-label="Week header">
                 <div />
                 {weekDays.map((day, col) => {
                   const isTodayCol = isThisWeek && day.toDateString() === today.toDateString();

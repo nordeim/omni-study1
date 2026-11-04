@@ -567,10 +567,12 @@ export const flashcardCardDelegate: EntityDelegate = {
         // — after which every boot transferred the entire card table. The
         // BZ13 sibling form (desc + take, reversed to the configured asc
         // presentation) at 5000: the deck-completeness contract (study
-        // mode runs a deck's full card set; the deck counts stay honest)
-        // keeps the bound 10× the sibling window, past which the
-        // newest-5000 window applies exactly like every sibling. The id
-        // tiebreak keeps same-millisecond ties deterministic (BZ10).
+        // mode runs a deck's full card set; the deck counts are honest
+        // BELOW the window — S138/CM5: the window is global-across-decks,
+        // not per-deck, so past a user's 5000th card the oldest silently
+        // leave every deck's study set and count exactly like the sibling
+        // newest-500 doctrine) keeps the bound 10× the sibling window. The
+        // id tiebreak keeps same-millisecond ties deterministic (BZ10).
         orderBy: [{ createdAt: "desc" }, { id: "desc" }],
         take: 5000,
       })

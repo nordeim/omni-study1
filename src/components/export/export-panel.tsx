@@ -82,9 +82,9 @@ export function ExportPanel({
       const text = await file.text();
       const envelope: unknown = JSON.parse(text);
       // S130/CE1: the explicit 120 s deadline — the envelope may carry the
-      // full 25 MiB body cap and the route's own transaction runs 60 s;
-      // the 30 s default would cut a legitimate large restore short (the
-      // AI surfaces' 120 s precedent).
+      // full IMPORT_MAX_BYTES body cap (64 MiB, S137/CL2) and the route's
+      // own transaction runs 60 s; the 30 s default would cut a legitimate
+      // large restore short (the AI surfaces' 120 s precedent).
       const summary = await apiSend<ImportSummary>("POST", "/api/import/data", envelope, {
         timeoutMs: 120_000,
       });

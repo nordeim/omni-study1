@@ -49,6 +49,21 @@ const nextConfig: NextConfig = {
   // destructive surfaces), no page-level nosniff, no Referrer-Policy. HSTS
   // is deliberately absent: the documented Docker posture terminates TLS
   // upstream (add it where TLS ends at the app itself — DEPLOYMENT.md).
+  // S138/CM9 (audit AI-4): a conservative Content-Security-Policy joins
+  // the set — the omission, unlike HSTS, was never documented as
+  // deliberate. The profile is matched to the app's VERIFIED resource
+  // surface (all scripts/styles/fonts/images same-origin or inline — the
+  // only same-origin fetch surface, no blob:/media/worker usage anywhere
+  // in src/): 'unsafe-inline' on script/style is required by Next's
+  // inline bootstrap, the theme boot script, and the app's inline style
+  // attributes (a nonce-based profile needs middleware plumbing the
+  // single-page architecture does not warrant); the profile still blocks
+  // every EXTERNAL script/style/img/font/connect load, plugins
+  // (object-src 'none'), base-url hijacks, framing, and off-origin form
+  // posts. PRODUCTION-CONDITIONAL: `next dev`'s HMR websocket and dev
+  // chunks stay ungated (the header is baked at `next build`, which sets
+  // NODE_ENV=production); the standalone production server — and therefore
+  // the full e2e certification — exercises the policy on every route.
   async headers() {
     return [
       {
@@ -57,6 +72,25 @@ const nextConfig: NextConfig = {
           { key: "X-Content-Type-Options", value: "nosniff" },
           { key: "X-Frame-Options", value: "DENY" },
           { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+          ...(process.env.NODE_ENV === "production"
+            ? [
+                {
+                  key: "Content-Security-Policy",
+                  value: [
+                    "default-src 'self'",
+                    "script-src 'self' 'unsafe-inline'",
+                    "style-src 'self' 'unsafe-inline'",
+                    "img-src 'self' data:",
+                    "font-src 'self' data:",
+                    "connect-src 'self'",
+                    "object-src 'none'",
+                    "base-uri 'self'",
+                    "frame-ancestors 'none'",
+                    "form-action 'self'",
+                  ].join("; "),
+                },
+              ]
+            : []),
         ],
       },
     ];

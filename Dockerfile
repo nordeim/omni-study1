@@ -84,7 +84,14 @@ COPY --from=build /app/package.json ./package.json
 
 # /data is the SQLite volume; create it so a bare `docker run` without a
 # volume still boots (the db lands inside the container's own layer).
-RUN mkdir -p /data
+# S138/CM8 (audit AI-3): the runtime drops to the bun base image's
+# non-root `bun` user — the app tree stays root-owned read-only for it,
+# and /data (the only writable the server needs) is chowned. The init
+# profile (db push + seed) still runs as root: creating and seeding the
+# volume before the first server start is exactly its one-shot job.
+RUN mkdir -p /data && chown -R bun:bun /data
+
+USER bun
 
 EXPOSE 3000
 HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \

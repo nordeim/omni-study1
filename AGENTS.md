@@ -9,9 +9,9 @@ High-signal instructions for coding agents working in this repo. Everything here
 | `bun install` | Install deps (Bun ≥ 1.3) |
 | `bun run dev` | Dev server on :3000 (Turbopack), logs tee'd to `dev.log` |
 | `bun run lint` / `bun run typecheck` | ESLint / `tsc --noEmit` — both must be clean |
-| `bun run test` | Vitest unit layer (1356 tests; `*.test.ts` only — never picks up e2e specs) |
+| `bun run test` | Vitest unit layer (1369 tests; `*.test.ts` only — never picks up e2e specs) |
 | `bun run build` | Production build → `.next/standalone` (**required before e2e**) |
-| `bun run test:e2e` | Playwright vs the standalone build on :3100 with `db/e2e.db` (596 tests across the 5-chunk cold map — 150+184+81+95+86, 30 spec files; a single-process full run trips the register rate-limiter budget by design, the chunked map re-boots the server per chunk). NOTE (S45, the day-boundary lesson): the global setup re-seeds every run, but the seed's IDEMPOTENT UPSERTS do NOT refresh day-relative dates on existing rows — a scratch `db/e2e.db` that ages across a UTC midnight keeps its original day-relative dates (today's tasks, the +1-day exam badge, the due-in pills, the import round-trip dates each read one day stale → 4 deterministic failures in parity-session6/parity-session9/s23-import). Delete `db/e2e.db` when a run crosses a day boundary — the global setup re-creates it fresh with current dates. NOTE (S46, TWO more aged-scratch-db classes + a build-input one): (1) ALWAYS run e2e COLD — S131/CF5 chained `scripts/e2e-cold-reset.sh` into `bun run test:e2e` (port-guard + `rm -f db/e2e.db` BEFORE playwright boots anything — global-setup is TOO LATE: Playwright starts the webServer before globalSetup), so the default runner self-colds; any DIRECT `playwright test` invocation still needs the manual `rm -f db/e2e.db` before every full run: the s23-import round-trip posts a FIXED-id envelope, so a second consecutive run against the aged db reads `created: 0, updated: 1` instead of `created: 1, updated: 0` and fails — not just across midnights, across ANY re-run; (2) the s22 negative-spawn spec reads the BUNDLED `.env` — Next's standalone output COPIES the repo-root `.env` into `.next/standalone/.env` at build time, so a REAL AUTH_SECRET in the dev `.env` leaks into the bundle and the guard CORRECTLY boots (the spec times out waiting for the exit) — keep the repo-root `.env`'s AUTH_SECRET EMPTY (the `.env.example` dev posture: `AUTH_SECRET=""` — dev falls back to the local constant with the boot warning) when building for e2e |
+| `bun run test:e2e` | Playwright vs the standalone build on :3100 with `db/e2e.db` (597 tests across the 5-chunk cold map — 150+184+82+95+86, 30 spec files; a single-process full run trips the register rate-limiter budget by design, the chunked map re-boots the server per chunk). NOTE (S45, the day-boundary lesson): the global setup re-seeds every run, but the seed's IDEMPOTENT UPSERTS do NOT refresh day-relative dates on existing rows — a scratch `db/e2e.db` that ages across a UTC midnight keeps its original day-relative dates (today's tasks, the +1-day exam badge, the due-in pills, the import round-trip dates each read one day stale → 4 deterministic failures in parity-session6/parity-session9/s23-import). Delete `db/e2e.db` when a run crosses a day boundary — the global setup re-creates it fresh with current dates. NOTE (S46, TWO more aged-scratch-db classes + a build-input one): (1) ALWAYS run e2e COLD — S131/CF5 chained `scripts/e2e-cold-reset.sh` into `bun run test:e2e` (port-guard + `rm -f db/e2e.db` BEFORE playwright boots anything — global-setup is TOO LATE: Playwright starts the webServer before globalSetup), so the default runner self-colds; any DIRECT `playwright test` invocation still needs the manual `rm -f db/e2e.db` before every full run: the s23-import round-trip posts a FIXED-id envelope, so a second consecutive run against the aged db reads `created: 0, updated: 1` instead of `created: 1, updated: 0` and fails — not just across midnights, across ANY re-run; (2) the s22 negative-spawn spec reads the BUNDLED `.env` — Next's standalone output COPIES the repo-root `.env` into `.next/standalone/.env` at build time, so a REAL AUTH_SECRET in the dev `.env` leaks into the bundle and the guard CORRECTLY boots (the spec times out waiting for the exit) — keep the repo-root `.env`'s AUTH_SECRET EMPTY (the `.env.example` dev posture: `AUTH_SECRET=""` — dev falls back to the local constant with the boot warning) when building for e2e |
 | `node scripts/capture-studyflow.mjs` | Refresh all 31 `docs/screenshots/` captures from the dev server (24 light + 7 dark) |
 | `node scripts/dark-sweep.mjs` | Dark-mode contrast audit over all 20 views (flashbulb/unreadable detector). S27: sets dark mode through the settings API (the real lifecycle) and SELF-VERIFIES the precondition — fails loudly (exit 1, no findings) if the dark class is not applied; the applied mode rides the JSON envelope. Never force the class directly (the session-10 approach silently rotted after S11) |
 | `node scripts/accent-dark-sweep.mjs` | Accent × dark-mode audit (S38-extended): all 7 accents × 20 desktop views × 20 MOBILE views at 390×844 + the drawer per accent (FAIL <2.2, WARN <3.2 for accent text; the mobile records also carry scrollWidth — >390 is a finding). The S38 shape is unit-pinned anti-phantom: every view recorded EXPLICITLY on both surfaces (clean views carry empty detector arrays), the per-accent `applied` self-verified readings + `mode: "dark"` + `mobileViewport` ride the envelope, and the seam's ALL-ACCENTS + ALL-VIEWS + drawer-present guards make every silently-skipped dimension a LOUD shape-error (the pre-S38 mobile pass swept only 6 views — MOBILE_VIEWS — and the omission-means-clean recording could not distinguish "clean because measured" from "clean because never rendered") |
@@ -1566,3 +1566,67 @@ Hover-parity probing must run in Playwright, not a touch-emulating browser — v
    reproduces standalone). Lesson: one flake + a passing standalone
    re-run + the signature visible elsewhere = machine load; anything
    else gets investigated as a regression, never assumed.
+
+## S138 lessons (Batch CM — the audit-driven hardening cycle: the exemption-hardening + KPI-gate + containment-decrement + honest-form set)
+
+1. **A security exemption over attacker-influenceable key material must be
+   an EXACT identity, never a substring.** The CL8 residual (AI-1, H):
+   `key.includes("Global:")` exempted the two real budget keys — but the
+   per-IP key material embeds the raw forgeable first x-forwarded-for hop
+   under the default posture, so a forged `Global:<unique>` header
+   manufactured unlimited DISTINCT exempt keys (`verify:Global:7`, ...),
+   and once the live map was all-exempt the eviction deleted nothing while
+   the insert kept growing it past the hard cap. The S137 comment's safety
+   premise ("a fixed, tiny, attacker-unreachable set") was falsified by
+   exactly the flood class it cited — the pin flooded with `cl8-flood-${i}`
+   keys that never contained the substring, so the hole was unpinned.
+   Lesson: when an exemption's justification is "the exempt set is small
+   and fixed," ENUMERATE the set (exact-key whitelist) and pin the
+   CRAFTED-key flood — the attacker will shape their material into the
+   exemption's match space, and only identity comparison keeps them out.
+2. **An aggregate budget's discharge must be scoped to what the actor can
+   PROVE — one requester's success proves only their own key.** The CK1
+   residual (AI-2, M): `resetRateLimit("loginGlobal:")` let ANY successful
+   login erase the process-wide containment budget; under the default
+   in-band posture credentials are scriptable, so 39 fails + 1 scripted
+   success reset the bound to zero forever. The requester-scoped keys
+   (per-IP, per-account) still fully reset — their key material IS the
+   proven requester — while the aggregate DECREMENTS. Lesson: rate-limit
+   keys fall into two classes (requester-scoped vs aggregate) and their
+   success-discharge semantics must differ; a reset on an aggregate is a
+   privilege escalation for whoever can manufacture one success.
+3. **A doctrinal fix family stays open until EVERY sibling site is swept —
+   and the machine census is what finds the siblings the audit
+   undercounted.** The stale-"25 MiB" finding was reported as TWO sites;
+   the census WALK found FIVE (three more "current cap is 25" claims in
+   seam guard comments). Symmetrically, the dashboard KPI row was the ONE
+   remaining AND-form loading gate after CL7 fixed analytics — the same
+   doctrine, one view over. Lesson: when a cycle establishes a doctrine
+   (OR-form gates, symbol-referenced caps), close the family with a
+   machine census that walks the whole tree, not with the audit's
+   hand-listed sites — the audit finds exemplars, the census finds the
+   class.
+4. **Measure the reference BEFORE "fixing" a parity-pinned surface — the
+   defect may be honesty, not behavior.** The Grid Builder probe: the
+   clone's toggle looked like a missing feature, but the reference's own
+   button is a measured no-op (no pressed semantics, no dialog, no cell
+   affordances) — behavioral parity already held; the real defect was the
+   LYING aria-pressed announcing a state that never existed. The analytics
+   caption nit inverted the same way: the reference's own copy reads
+   "total study hours," so the clone's copy is parity-exact and the
+   honesty nit defers. Lesson: for any reference-shared surface, the
+   reference measurement decides fix vs. defer BEFORE the design —
+   superset territory is where the clone ALONE owns the behavior.
+5. **The background-process lifecycle is part of the cert's validity: a
+   surviving dev daemon from an EARLIER tool call is the chunk-3 flake
+   source.** The re-cert's chunk 3 failed three consecutive runs on three
+   DIFFERENT tests (a 500, a vacuous 200, a rename prefill) — each passed
+   standalone, the socket-timeout signature in the server log — and the
+   real cause was the drawer-check dev daemon (spawned an hour earlier)
+   surviving its tool call and co-residing with the cert's standalone
+   server. Killing it → 82/82 first-pass. Lesson (the S137 lesson-5
+   corollary): before diagnosing "the machine" as the contention source,
+   inventory YOUR OWN surviving processes — `(cmd &)` inside a tool call
+   can outlive it; every daemon used for a check must be killed before
+   any cert chunk runs, and the standalone re-run after the kill is the
+   discriminator.

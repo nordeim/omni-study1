@@ -145,15 +145,21 @@ describe("the body-cap status (S129/CD4 — BodyTooLargeError → 413)", () => {
     expect(res.status).toBe(400);
   });
 
-  it("toErrorResponse maps P2028 (interactive-transaction timeout) to the named 413 — the import many-rows tail (S137/CL10, pre-fix: the opaque 500)", async () => {
+  it("toErrorResponse maps P2028 (interactive-transaction timeout) to the named 413 with SOURCE-NEUTRAL copy (S137/CL10 + S138/CM4 re-scope, pre-fix: the opaque 500)", async () => {
     // S137/CL10 (audit A-L2): a LEGAL envelope (under the byte cap) can
     // carry enough rows that the 60 s interactive transaction expires —
     // Prisma throws P2028, the rollback HOLDS, but the generic 500 branch
     // answered an opaque copy for a shape with a named, actionable remedy.
     // The honest 413 framing: the body was under the byte cap; the TIME
-    // budget is the binding constraint; "split the backup" is the remedy.
-    // The real Prisma error class (constructor-verified this cycle), so
-    // the mapping is exercised on the genuine instance shape.
+    // budget is the binding constraint; "split the work" is the remedy.
+    // The real Prisma error class (constructor-verified at S137), so the
+    // mapping is exercised on the genuine instance shape.
+    // S138/CM4 (Mode-C F2 + AI-6): the mapper is SHARED — nine non-import
+    // $transaction sites (the ai/math/rum/calculator retention trims, the
+    // merge guards) can also throw P2028, and the import-specific "split
+    // the backup" copy was nonsense for them. The shared copy is now
+    // source-neutral; the import route's own catch carries the
+    // backup-specific copy (pinned by the script-conventions census).
     const { Prisma } = await import("@prisma/client");
     const err = new Prisma.PrismaClientKnownRequestError(
       "Transaction already closed: a timeout occurred",
@@ -163,6 +169,7 @@ describe("the body-cap status (S129/CD4 — BodyTooLargeError → 413)", () => {
     expect(res.status).toBe(413);
     const body = await res.json();
     expect(body.error).toContain("fully rolled back");
+    expect(body.error).toContain("split the work into smaller passes");
   });
 });
 

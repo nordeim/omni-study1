@@ -7,7 +7,7 @@
 
 import { NextResponse, type NextRequest } from "next/server";
 
-import { checkRateLimit, resetRateLimit, verifyLoginCredentials, burnLoginScryptWork, needsRehash, hashPassword } from "@/lib/auth";
+import { checkRateLimit, decrementRateLimit, resetRateLimit, verifyLoginCredentials, burnLoginScryptWork, needsRehash, hashPassword } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { loginSchema } from "@/lib/validation";
 import { secureCookieFlag } from "@/lib/auth";
@@ -130,18 +130,21 @@ export async function POST(request: NextRequest) {
     // user's later logins must never inherit an attacker's spent bucket).
     // S127/CB12: the account bucket resets too — successes never accumulate
     // (the same progressive model on the harder key).
-    // S136/CK1: the GLOBAL bucket resets too — the containment budget
-    // exists to bound the ANONYMOUS FLOOD shape (a rotated-XFF stream of
-    // non-existent emails, every attempt a FAILURE); an interleaved
-    // legitimate burst (successes) must never inherit the flood's spend.
-    // The attack shape never succeeds, so the containment still trips at
-    // 40 consecutive failures — and a mixed crowd's successful logins keep
-    // the sitewide window open. (The first draft reset neither: the e2e
-    // chunk-5 login census — the budget/429 specs' own failed attempts —
-    // accumulated past 40 mid-chunk and 429'd every subsequent login.)
+    // S136/CK1 + S138/CM3 (audit AI-2): the GLOBAL bucket DECREMENTS — it
+    // is an AGGREGATE budget (every requester's spend in one window), and
+    // one requester's success proves only THAT requester legitimate, not
+    // that the window's other 39 spends were. The reset form was
+    // defeat-able by any credentialed caller under the default in-band
+    // posture (open registration + the OTP in the response → scriptable
+    // credentials): 39 failed logins + 1 scripted success reset the
+    // process-wide CPU containment to zero, forever — the exact
+    // single-worker-starvation shape CK1 was built to bound. The decrement
+    // keeps the model net-of-successes: only FAILED logins accumulate
+    // (consecutive successes oscillate just under the budget and never
+    // trip; a pure flood still trips at 40 net).
     resetRateLimit(`login:${ip}`);
     resetRateLimit(`loginAcct:${user.id}`);
-    resetRateLimit("loginGlobal:");
+    decrementRateLimit("loginGlobal:");
 
     return setSessionCookie(NextResponse.json({ user: publicUser(user) }), user.id, {
       // S120/BU15: the proxy-aware derivation (see verify-email).

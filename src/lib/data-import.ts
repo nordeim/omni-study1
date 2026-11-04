@@ -305,10 +305,12 @@ export function sortFoldersParentsFirst(folders: ImportRow[]): ImportRow[] | str
     const offenders = folders
       .map((row) => String(row.id))
       .filter((id) => !emitted.has(id));
-    // S133/CH6: the offender list is attacker-controlled — a 25 MiB cyclic
-    // folder envelope would otherwise echo every un-emitted id back in the
-    // 400 body (a ~30 MB error string). First 10 + the count; the operator
-    // still finds the cycle in their file.
+    // S133/CH6: the offender list is attacker-controlled — a max-size
+    // cyclic folder envelope (IMPORT_MAX_BYTES — never a bare number
+    // here) would otherwise echo every un-emitted id back in the 400
+    // body (a ~30 MB error string at the old cap, worse at 64 MiB).
+    // First 10 + the count; the operator still finds the cycle in
+    // their file.
     const shown = offenders.slice(0, 10);
     const rest =
       offenders.length > shown.length
@@ -555,7 +557,8 @@ function finish(rawData: Record<string, unknown>): ImportParseResult {
 // renders href={file.url} target=_blank — script execution in the app
 // origin on click), wrong field TYPES surfaced as PrismaClientValidationError
 // → HTTP 500 (violating the 400-bad-input contract), and unbounded strings
-// rode the body cap (10 MiB at the time — 25 MiB since S124/BY3) straight into SQLite. The guard runs BEFORE the
+// rode the body cap (10 MiB at the time — IMPORT_MAX_BYTES since S124/BY3,
+// 64 MiB since S137/CL2) straight into SQLite. The guard runs BEFORE the
 // write loop: every value must be a primitive (the export format's own
 // serialization contract — Date → ISO, JSON columns → strings), strings are
 // capped (generously — the caps stop abuse, never legitimate backups), and

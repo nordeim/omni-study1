@@ -111,11 +111,12 @@ export function parseWith<T>(schema: ZodType<T>, input: unknown): T {
 }
 
 /** The shared JSON body cap (S118/BS2). 10 MiB (the import route alone
- *  carries the higher 25 MiB ceiling — S124/BY3, the export/import
- *  reconciliation; every other JSON route keeps this shared cap; the
- *  import route's own catch answers its route-specific copy). The largest
- *  legitimate JSON body is the math solver's photographed-problem image
- *  (base64, schema-bounded at 7,000,000 chars); everything else is bounded
+ *  carries the higher IMPORT_MAX_BYTES ceiling — 64 MiB since S137/CL2,
+ *  the export/import reconciliation; every other JSON route keeps this
+ *  shared cap; the import route's own catch answers its route-specific
+ *  copy). The largest legitimate JSON body is the math solver's
+ *  photographed-problem image (base64, schema-bounded at 7,000,000 chars);
+ *  everything else is bounded
  *  far below. The cap converts an unbounded request.text() into a bounded
  *  read (memory) with an actionable 413 (S129/CD4 corrected the status: the
  *  same fault answered 400 here but 413 on the import route — 413 is the
@@ -257,19 +258,22 @@ export function toErrorResponse(err: unknown): NextResponse {
     if (err.code === "P2003") {
       return errorResponse(400, "That record references something that does not exist.");
     }
-    // S137/CL10 (audit A-L2): the interactive-transaction timeout — a LEGAL
-    // body (under the byte cap) can carry enough rows that the time budget
-    // binds (the import restore's 60 s window; the many-rows tail). The
-    // rollback HOLDS (Prisma rolls the transaction back on the timeout) —
-    // the honest 413 framing with the actionable remedy, never the opaque
-    // 500 (the app's established too-large status, the BodyTooLargeError
-    // precedent). P2028's only realistic source in this codebase is the
-    // import route's timeout-scoped transaction; the merge-guard txs are
-    // single-row writes.
+    // S137/CL10 (audit A-L2) + S138/CM4 (Mode-C F2 + AI-6): the
+    // interactive-transaction timeout — a LEGAL body (under the byte cap)
+    // can carry enough rows that the time budget binds (the import
+    // restore's 60 s window; the many-rows tail). The rollback HOLDS
+    // (Prisma rolls the transaction back on the timeout) — the honest 413
+    // framing with the actionable remedy, never the opaque 500 (the app's
+    // established too-large status, the BodyTooLargeError precedent).
+    // The copy is SOURCE-NEUTRAL: this mapper is shared by every route,
+    // and P2028's sources include the retention-trim transactions
+    // (ai/chat, math/solve, rum, calculator/history) and the merge guards
+    // beside the import route — the import-specific "split the backup"
+    // remedy lives in the import route's own catch, pinned by census.
     if (err.code === "P2028") {
       return errorResponse(
         413,
-        "That backup was too large or slow to restore in one pass and was fully rolled back. Try again, or split the backup and retry the halves.",
+        "That request was too large or slow to complete in one pass and was fully rolled back. Try again, or split the work into smaller passes.",
       );
     }
   }

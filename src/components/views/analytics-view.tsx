@@ -313,12 +313,13 @@ export function AnalyticsView() {
   const grades = useDataStore((s) => s.grades);
   const focusSessions = useDataStore((s) => s.focusSessions);
   const subjects = useDataStore((s) => s.subjects);
-  // S132/CG6: the CE3 loading gate — the stat row renders fraction values
-  // (0/N — never an EmptyState, the S17 fresh-user contract), so an
-  // in-flight boot rendered FALSE zero-stats. The gate mirrors the tasks-
-  // view idiom: spinner while loading AND every stat source is still
-  // empty (tasks + grades + subjects — the three stat families' sources;
-  // a fresh user's settled state skips the gate, keeping the S17 contract).
+  // S132/CG6 + S137/CL7 + S138/CM5: the CE3 loading gate — the stat row
+  // renders fraction values (0/N — never an EmptyState, the S17
+  // fresh-user contract), so an in-flight boot rendered FALSE zero-stats.
+  // The gate is the OR-form over the SIX stat families' sources (see the
+  // S137/CL7 block at the gate below): any primary source still empty
+  // while loading owns the row; a fresh user's settled state skips the
+  // gate (all sources landed-empty), keeping the S17 contract.
   const loading = useDataStore((s) => s.loading);
 
   const today = startOfDay(new Date());

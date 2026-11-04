@@ -33,6 +33,7 @@ import {
   SCRYPT_R,
   SCRYPT_P,
   checkRateLimit,
+  decrementRateLimit,
   rateLimitBucketCount,
   resetAllRateLimits,
   createSessionToken,
@@ -476,6 +477,110 @@ describe("the global-bucket eviction exemption (S137/CL8)", () => {
       resetAllRateLimits();
       vi.useRealTimers();
     }
+  });
+});
+
+// S138/CM1 (audits AI-1 + Mode-C F1 — the CL8 residual) — the exemption's
+// crafted-key hardening. The S137/CL8 exemption shipped as a SUBSTRING
+// test (`key.includes("Global:")`) over key material whose per-IP half
+// embeds the RAW, forgeable first x-forwarded-for entry under the default
+// (unset TRUSTED_PROXY_HOPS) posture: a forged `X-Forwarded-For:
+// Global:<unique>` mints `verify:Global:<unique>` / `resend:` / `forgot:`
+// / `reset:` buckets on the four unauthenticated per-IP-only routes —
+// every one eviction-exempt. Once the live map is all-exempt the eviction
+// deletes NOTHING and the unconditional insert grows the map past the
+// S121/BV9 hard cap (the documented "bounded at MAX_BUCKETS even under
+// the flood" invariant was FALSE under this shape; the CL8 pin's
+// `cl8-flood-${i}` keys never contained the substring, so the hole was
+// unpinned). The fix: the exemption is an EXACT-KEY whitelist of the two
+// real process-wide budget keys (loginGlobal:, registerGlobal: — the only
+// two Global: mint sites in the tree), so client-derived material can
+// never manufacture an exempt key.
+describe("the exemption exact-key whitelist (S138/CM1)", () => {
+  it("a CRAFTED-key flood ('Global:' inside forged per-IP keys) cannot grow the map past the cap — the crafted keys evict like any other (pre-fix: every one exempt, unbounded)", () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-11-01T10:00:00Z"));
+    resetAllRateLimits();
+    try {
+      // The real containment bucket, spent to its budget of 1.
+      expect(checkRateLimit("loginGlobal:", 1).ok).toBe(true);
+      // The attacker's shape: 2100 distinct keys that each CONTAIN the
+      // exempt substring (the exact forged-XFF form
+      // `verify:Global:<i>`). Pre-fix all 2100 were exemption-matched →
+      // the eviction never found a victim → the map grew past 2048.
+      for (let i = 0; i < 2100; i++) checkRateLimit(`verify:Global:${i}`, 5);
+      // The S121/BV9 bound RESTORED: the crafted keys are not the two
+      // real budget keys, so they evict each other like any flood.
+      expect(rateLimitBucketCount()).toBeLessThanOrEqual(2048);
+      // The exemption's INTENT survives: the real loginGlobal: bucket
+      // kept its spend through the crafted-key pressure.
+      expect(checkRateLimit("loginGlobal:", 1).ok).toBe(false);
+    } finally {
+      resetAllRateLimits();
+      vi.useRealTimers();
+    }
+  });
+});
+
+// S138/CM3 (audit AI-2) — the loginGlobal: success DECREMENT. The login
+// route's success path fully DELETED the aggregate global bucket
+// (resetRateLimit): under the default ADR-013 in-band posture (open
+// registration + the OTP in the response) valid credentials are
+// scriptable, so a credentialed attacker alternating 39 failed logins + 1
+// successful one reset the S136/CK1 process-wide CPU containment to zero
+// forever — the exact single-worker-starvation threat CK1 was built to
+// bound. The fix: an aggregate budget's reset must not be grantable by
+// ONE of its many requesters — a success proves THAT requester is
+// legitimate, not that the window's other 39 spends were. Successes now
+// DECREMENT the global (net-of-successes progressive model: only failed
+// logins accumulate); the per-IP and per-account buckets still fully
+// reset (their key material IS the proven requester).
+describe("decrementRateLimit (S138/CM3 — the aggregate-budget seam)", () => {
+  it("decrements a spent bucket without re-arming its window", () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-11-01T10:00:00Z"));
+    resetAllRateLimits();
+    try {
+      checkRateLimit("loginGlobal:", 40);
+      checkRateLimit("loginGlobal:", 40);
+      checkRateLimit("loginGlobal:", 40);
+      decrementRateLimit("loginGlobal:");
+      // count 3 → 2: the bucket still enforces at its budget, and the
+      // window NEVER re-arms (the reset form would delete the bucket and
+      // re-create it fresh on the next check — the exact defeat shape).
+      expect(checkRateLimit("loginGlobal:", 3).ok).toBe(true);
+      expect(checkRateLimit("loginGlobal:", 3).ok).toBe(false);
+      expect(rateLimitBucketCount()).toBe(1);
+    } finally {
+      resetAllRateLimits();
+      vi.useRealTimers();
+    }
+  });
+
+  it("floors at zero — a success-heavy window never re-arms the budget from below", () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-11-01T10:00:00Z"));
+    resetAllRateLimits();
+    try {
+      checkRateLimit("loginGlobal:", 40);
+      decrementRateLimit("loginGlobal:");
+      decrementRateLimit("loginGlobal:");
+      decrementRateLimit("loginGlobal:");
+      // count floored at 0: the next check re-inserts at count 1, never a
+      // negative count (a negative floor would make the budget DEEPER
+      // than fresh — the inverted containment).
+      expect(checkRateLimit("loginGlobal:", 1).ok).toBe(true);
+      expect(checkRateLimit("loginGlobal:", 1).ok).toBe(false);
+    } finally {
+      resetAllRateLimits();
+      vi.useRealTimers();
+    }
+  });
+
+  it("is a no-op on a missing key (an expired-or-never-minted bucket never throws)", () => {
+    resetAllRateLimits();
+    expect(() => decrementRateLimit("loginGlobal:")).not.toThrow();
+    expect(rateLimitBucketCount()).toBe(0);
   });
 });
 

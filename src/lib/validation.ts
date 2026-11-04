@@ -424,8 +424,9 @@ export const practiceTestSchema = z.object({
     // S121/BV5: the blob bound (the family convention — content 100k, tags
     // 2k, reminders/subtasks/topics 100k). `questions` was the only
     // unbounded JSON-blob field: a ~9.5 MiB valid-questions JSON passed
-    // the schema AND the import read cap (10 MiB at the time — 25 MiB
-    // since S124/BY3) and persisted to SQLite.
+    // the schema AND the import read cap (10 MiB at the time —
+    // IMPORT_MAX_BYTES since S124/BY3, 64 MiB since S137/CL2) and
+    // persisted to SQLite.
     .max(100_000)
     .refine((v) => {
       try {
