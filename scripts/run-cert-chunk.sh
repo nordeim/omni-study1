@@ -4,7 +4,7 @@
 # SIGKILL escalation → rm db/e2e.db → run the chunk), one chunk per
 # invocation so each foreground run fits the tool timeout.
 # Usage: bash /home/z/my-project/omni-study1/scripts/run-cert-chunk.sh <1-5>
-# Expected (S135/CJ re-tag): 150 + 183 + 76 + 94 + 85 = 588 — the same
+# Expected (S136/CK re-tag): 150 + 184 + 79 + 94 + 86 = 593 — the same
 # census as scripts/e2e-chunked-cert.sh (machine-enforced by
 # tests/script-conventions.test.ts, including the identical-CHUNKS pin).
 # (S135/CJ net +4: chunk 2 +2 [CJ1 folders window + CJ3 accent-edge], chunk

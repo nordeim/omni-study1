@@ -254,10 +254,11 @@
 
   /* The sf-primary color utilities defined in @theme (everything else
      reads the runtime vars via rgb(var(--sf-*)) in inline styles or custom
-     classes; S135/CJ3 grew the set from six to eight — the softest/empty
+     classes; S135/CJ3 grew the set from six to NINE — the softest/empty
      tints gained their first UTILITY consumers [the notes selected-row bg
      + the analytics stat-chip bg], and the edge border tint joined for
-     the three migrated violet-200 border sites): */
+     the three migrated violet-200 border sites; the "six to eight"
+     wording in the S135 records was a miscount, corrected S136/CK6): */
   --color-sf-primary: rgb(var(--sf-primary));
   --color-sf-primary-foreground: rgb(var(--sf-primary-foreground));
   --color-sf-primary-soft: rgb(var(--sf-primary-soft));
@@ -384,12 +385,16 @@
     #ffffff,
     rgb(245 243 255 / 0.3)
   );
+  /* S136/CK5: the dark third stop rides the soft-dark token now (the
+     raw-rgb alpha convention — the sf-today-tint precedent; byte-identical
+     at violet [76 29 149 = violet-900], re-themes under the 6 non-violet
+     accents — the CJ3 doctrine extended to CSS literals). */
   .dark & {
     background-image: linear-gradient(
       to right bottom,
       hsl(222 47% 6%),
       hsl(222 47% 4%),
-      rgb(76 29 149 / 0.12)
+      rgb(var(--sf-primary-soft-dark) / 0.12)
     );
   }
 }

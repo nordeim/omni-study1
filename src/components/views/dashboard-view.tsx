@@ -245,13 +245,19 @@ export function DashboardView() {
         <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
           {/* S4-K (measured s68): the hints and the icon-block gradients are
               the reference's measured values (inline sRGB gradients — the v4
-              oklab-interpolation trap); the Focus Time value is month-hours. */}
+              oklab-interpolation trap); the Focus Time value is month-hours.
+              S136/CK5: the FIRST icon block is the ACCENT slot — the
+              reference's measured pair (violet-600 → indigo-600) rides the
+              runtime token pair now (byte-identical at violet, re-themes
+              under the 6 non-violet accents — the CJ3 doctrine extended to
+              inline styles); the blue/orange/pink siblings are the FIXED
+              categorical palette (also measured on the reference). */}
           <StatCard
             icon={Target}
             label="Today's Progress"
             value={`${doneToday}/${todayScope.length}`}
             hint="tasks completed"
-            iconBackground="linear-gradient(to right bottom, rgb(139, 92, 246), rgb(79, 70, 229))"
+            iconBackground="linear-gradient(to right bottom, rgb(var(--sf-primary)), rgb(var(--sf-primary-gradient-to)))"
           />
           <StatCard
             icon={SquareCheckBig}
@@ -289,7 +295,14 @@ export function DashboardView() {
           className="lg:col-span-2"
           action={<SectionLink href="/MyDay" view="myday" label="View All" onNavigate={navigate} />}
         >
-          {todayScope.length === 0 ? (
+          {/* S136/CK4: the CE3 gate — an in-flight tasks load renders the
+              loading branch, never the false "No tasks for today" (the
+              KPI-row idiom extended to the section cards). */}
+          {loading && tasks.length === 0 ? (
+            <div className="flex justify-center py-10 text-sf-primary">
+              <Spinner className="size-6" />
+            </div>
+          ) : todayScope.length === 0 ? (
             <SimpleEmptyState icon={SquareCheckBig} message="No tasks for today. Add some from My Day!" />
           ) : (
             <ul aria-label="Today's tasks">
@@ -343,7 +356,13 @@ export function DashboardView() {
           borderedHeader
           action={<SectionLink href="/Exams" view="exams" label="All" onNavigate={navigate} />}
         >
-          {upcomingExams.length === 0 ? (
+          {/* S136/CK4: the CE3 gate (the e2e pin holds BOTH this card and
+              the assignments card — never the false "No upcoming exams"). */}
+          {loading && exams.length === 0 ? (
+            <div className="flex justify-center py-10 text-sf-primary">
+              <Spinner className="size-6" />
+            </div>
+          ) : upcomingExams.length === 0 ? (
             <SimpleEmptyState icon={GraduationCap} message="No upcoming exams" />
           ) : (
             <ul aria-label="Upcoming exams">
@@ -399,7 +418,13 @@ export function DashboardView() {
         borderedHeader
         action={<SectionLink href="/Assignments" view="assignments" label="View All" onNavigate={navigate} />}
       >
-        {activeAssignments.length === 0 ? (
+        {/* S136/CK4: the CE3 gate — never the false "No upcoming
+            assignments" during an in-flight load. */}
+        {loading && assignments.length === 0 ? (
+          <div className="flex justify-center py-10 text-sf-primary">
+            <Spinner className="size-6" />
+          </div>
+        ) : activeAssignments.length === 0 ? (
           <SimpleEmptyState icon={BookOpen} message="No upcoming assignments" />
         ) : (
           <ul aria-label="Upcoming assignments">

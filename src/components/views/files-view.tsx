@@ -201,15 +201,31 @@ export function FilesView() {
     [],
   );
 
+  // S136/CK2 (audit B-H1): the sequence ticket — the fetchSeq idiom of
+  // S119/BT8, ported to the private loader. refresh() fires after EVERY
+  // mutation (delete/rename/upload), and overlapping refreshes had no
+  // order discipline: an older in-flight GET settling after a newer one
+  // clobbered fresher state (a just-deleted row resurrects; the retry
+  // 404s). Capture ++seq BEFORE the GET pair; apply only when still
+  // latest. A ref (not a module variable) — the ticket is component-
+  // instance-scoped, the React idiom for the store's module-level seq.
+  const fileRowsSeq = React.useRef(0);
+
   const refresh = React.useCallback(async () => {
+    const ticket = ++fileRowsSeq.current;
     try {
       const [folderRows, fileRows] = await loadFileRows();
+      if (fileRowsSeq.current !== ticket) return; // a newer GET superseded this one
       setFolders(folderRows);
       setFiles(fileRows);
     } catch (err: unknown) {
-      toast.error(errorMessage(err, "Could not load your files."));
+      if (fileRowsSeq.current === ticket) {
+        toast.error(errorMessage(err, "Could not load your files."));
+      }
     } finally {
-      setLoading(false);
+      if (fileRowsSeq.current === ticket) {
+        setLoading(false);
+      }
     }
     // S129/CD3: `toast` joins the deps (the useToast object — stable via its
     // useMemo over the store's push, so the identity never churns; naming it
@@ -220,16 +236,24 @@ export function FilesView() {
   // the set-state-in-effect lint contract flags wrapped loaders).
   React.useEffect(() => {
     let cancelled = false;
+    // S136/CK2: the ticket applies here too — a mount GET superseded by a
+    // mutation refresh never lands (`cancelled` covers UNMOUNT; the ticket
+    // covers SUPERSESSION — both settle paths discipline the pair).
+    const ticket = ++fileRowsSeq.current;
     (async () => {
       try {
         const [folderRows, fileRows] = await loadFileRows();
-        if (cancelled) return;
+        if (cancelled || fileRowsSeq.current !== ticket) return;
         setFolders(folderRows);
         setFiles(fileRows);
       } catch (err: unknown) {
-        if (!cancelled) toast.error(errorMessage(err, "Could not load your files."));
+        if (!cancelled && fileRowsSeq.current === ticket) {
+          toast.error(errorMessage(err, "Could not load your files."));
+        }
       } finally {
-        if (!cancelled) setLoading(false);
+        if (!cancelled && fileRowsSeq.current === ticket) {
+          setLoading(false);
+        }
       }
     })();
     return () => {

@@ -189,8 +189,18 @@ export function MyDayView() {
         </Button>
       </form>
 
-      {/* ---- zero-day amber empty (S9-B) — BELOW the chrome, session-65 ---- */}
-      {!loading && tasks.length === 0 ? (
+      {/* ---- zero-day amber empty (S9-B) — BELOW the chrome, session-65.
+          S136/CK4: the loading branch — an in-flight load renders the
+          gate, never the false "0/0 tasks completed today" zero row.
+          The greeting stays H3: MEASURED on the reference this cycle (H1
+          "My Day" followed directly by H3 "Good X!" — the reference itself
+          ships the level-skip; the parity doctrine overrides the generic
+          axe rule, the S9-B/Q parity pin the guard). ---- */}
+      {loading && tasks.length === 0 ? (
+        <div className="flex justify-center py-12 text-sf-primary">
+          <Spinner className="size-6" />
+        </div>
+      ) : !loading && tasks.length === 0 ? (
         // LIVE clock, not the day-anchor `today` (hour 0) — same session-63
         // drift find as the dashboard greeting; Family G pins the bucket.
         <div className="flex flex-col items-center py-12 text-center">

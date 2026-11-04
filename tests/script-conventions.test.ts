@@ -117,7 +117,7 @@ describe("the chunked cert runner's truth contract (S128/CC2)", () => {
 
   it("names the CURRENT per-chunk census in its header (the re-tag tripwire)", () => {
     // The topmost Expected line — re-tagged by every census-changing cycle.
-    expect(certSource).toContain("Expected: 150 + 183 + 76 + 94 + 85 = 588");
+    expect(certSource).toContain("Expected: 150 + 184 + 79 + 94 + 86 = 593");
   });
 
   it("propagates a failing chunk's exit code (never a green cert on a red run)", () => {
@@ -510,6 +510,7 @@ describe("the Batch CG auth-hardening census (S132/CG1+CG3+CG11)", () => {
   const LOGIN = path.resolve(process.cwd(), "src/app/api/auth/login/route.ts");
   const FORGOT = path.resolve(process.cwd(), "src/app/api/auth/forgot-password/route.ts");
   const REGISTER = path.resolve(process.cwd(), "src/app/api/auth/register/route.ts");
+  const VERIFY = path.resolve(process.cwd(), "src/app/api/auth/verify-email/route.ts");
 
   it("login's exhausted loginAcct branch burns scrypt BEFORE the uniform 401 (the timing equalizer on the account bucket)", () => {
     const src = readFileSync(LOGIN, "utf8");
@@ -571,6 +572,39 @@ describe("the Batch CG auth-hardening census (S132/CG1+CG3+CG11)", () => {
       globalAt,
       "the global bucket precedes the per-IP key (a distinct-email flood trips the containment bucket FIRST)",
     ).toBeLessThan(ipKeyAt);
+  });
+
+  it("login carries the loginGlobal containment budget BEFORE the per-IP key (S136/CK1 — the A-H1 fix: every login burns the full synchronous scrypt pair, and a rotated-XFF flood of non-existent emails skipped every budget — the per-IP key is the forgeable first hop, the per-account bucket only fires when the user exists)", () => {
+    const src = readFileSync(LOGIN, "utf8");
+    // Pre-CK1: no loginGlobal key existed — the RED discriminator (the
+    // registerGlobal doctrine of S132/CG11, never applied to login).
+    expect(src).toMatch(/checkRateLimit\("loginGlobal:", 40\)/);
+    const globalAt = src.indexOf("loginGlobal:");
+    const ipKeyAt = src.indexOf("login:${ip}");
+    expect(
+      globalAt,
+      "the global bucket precedes the per-IP key (a rotated-XFF flood trips the containment bucket FIRST — the CPU-DoS shape the register route already bounds)",
+    ).toBeLessThan(ipKeyAt);
+    // The 429 copy stays IDENTICAL to the per-IP limit's — no distinguishable
+    // global-vs-per-IP response shape (no new oracle, the CG11 doctrine).
+    const globalBlock = src.slice(globalAt, src.indexOf("}", src.indexOf("if (!globalLimit.ok)")));
+    expect(globalBlock).toContain("Too many login attempts. Try again shortly.");
+    // The SUCCESS-RESET: the progressive model extended to the global budget
+    // (the mid-run correction — an interleaved legitimate burst never
+    // inherits a flood's spend; the attack shape never succeeds).
+    expect(src).toMatch(/resetRateLimit\("loginGlobal:"\)/);
+  });
+
+  it("verify-email re-checks emailVerified BEFORE consuming the token (S136/CK10 — the A-L5 resend/verify race edge: a resend whose user read raced a concurrent verification can leave one live token on a now-verified account)", () => {
+    const src = readFileSync(VERIFY, "utf8");
+    // Pre-CK10: no emailVerified guard existed — the RED discriminator.
+    const guardAt = src.indexOf("user.emailVerified");
+    expect(guardAt, "the guard exists in the verify route").toBeGreaterThan(-1);
+    const tokenLookupAt = src.indexOf("verificationToken.findFirst");
+    expect(
+      guardAt,
+      "the guard precedes the token lookup (an already-verified account never consumes a stale token — defense-in-depth under the hardened delivery posture)",
+    ).toBeLessThan(tokenLookupAt);
   });
 });
 

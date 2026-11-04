@@ -1024,3 +1024,69 @@ test.describe("S132/CG6 · the Settings loading gates", () => {
     }
   });
 });
+
+// ---------------------------------------------------------------------------
+// S136/CK4 (audits B-M1/M2) — the CE3 residual gates: the dashboard's
+// section cards and the gradetracker's summary grid render FALSE
+// empty-states/zeros during in-flight loads (the S132/CG6 class at the
+// sites the CG6 sweep missed). Same idiom as the CG6 Settings leg: a held
+// never-fulfilling route, the hydrated wait (the held pre-warm collection
+// holds the Splash until the CD2 deadline releases it), then the in-flight
+// window assertions.
+// ---------------------------------------------------------------------------
+test.describe("S136/CK4: the CE3 residual gates (dashboard + gradetracker legs)", () => {
+  test("an in-flight assignments/exams load renders the dashboard section gates, never the false 'No upcoming exams'/'No upcoming assignments' (RED pre-fix)", async ({ page }) => {
+    const HELD_A = "**/api/assignments";
+    const HELD_E = "**/api/exams";
+    await page.route(HELD_A, () => {
+      /* never fulfills — the accepted-TCP stall shape */
+    });
+    await page.route(HELD_E, () => {
+      /* never fulfills */
+    });
+    try {
+      // The dashboard pre-warms tasks+assignments+exams+focusSessions+
+      // subjects — the held pair holds the Splash until the CD2 deadline
+      // (~20 s), then the app commits with both collections still loading.
+      await page.goto("/Dashboard");
+      await page.waitForFunction(
+        () => document.documentElement.dataset.appHydrated === "true",
+        undefined,
+        { timeout: 35_000 },
+      );
+      // The in-flight window: the section-card gates own the cards — the
+      // false empty states render NOWHERE.
+      await expect(page.getByText("No upcoming exams")).toHaveCount(0);
+      await expect(page.getByText("No upcoming assignments")).toHaveCount(0);
+      await expect(page.locator(".animate-spin").first()).toBeVisible();
+    } finally {
+      await page.unroute(HELD_A);
+      await page.unroute(HELD_E);
+    }
+  });
+
+  test("an in-flight grades load renders the gradetracker summary gate, never the false '0%' zero row (RED pre-fix)", async ({ page }) => {
+    const HELD = "**/api/grades";
+    await page.route(HELD, () => {
+      /* never fulfills */
+    });
+    try {
+      // The gradetracker pre-warms grades+subjects — the held grades fetch
+      // holds the Splash until the CD2 deadline, then commits with the
+      // summary grid still loading (the OR-form gate: either primary
+      // source empty during load owns the row).
+      await page.goto("/GradeTracker");
+      await page.waitForFunction(
+        () => document.documentElement.dataset.appHydrated === "true",
+        undefined,
+        { timeout: 35_000 },
+      );
+      // The in-flight window: the summary gate owns the grid — the settled
+      // zero-state copy ("Overall Average") renders NOWHERE while loading.
+      await expect(page.getByText("Overall Average")).toHaveCount(0);
+      await expect(page.locator(".animate-spin").first()).toBeVisible();
+    } finally {
+      await page.unroute(HELD);
+    }
+  });
+});

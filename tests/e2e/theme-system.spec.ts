@@ -450,3 +450,55 @@ test.describe("S129/CD1 · the Radix overlay animation parity (the reference-mea
     expect(overlayAnim.duration).toBe("0.15s");
   });
 });
+
+test.describe("S136/CK5 · the KPI accent-icon gradient tracks the accent (the inline-hex family)", () => {
+  test("the dashboard's first KPI icon gradient follows the accent: the violet pair → the blue pair (RED pre-fix: the hardcoded inline hexes ignore the switch)", async ({ page }) => {
+    // The accent-switch rides the REAL settings API (the S27 doctrine);
+    // the restore rides the explicit finally PATCH. The first KPI block
+    // ("Today's Progress") is the ACCENT slot — the blue/orange/pink
+    // siblings are the fixed categorical palette measured on the reference
+    // (only the first slot re-themes; that is the family's whole point).
+    await page.request.patch(PREFERENCES, { data: { accentColor: "violet" } });
+    await page.goto("/Dashboard");
+    await page.waitForFunction(() => {
+      const root = document.documentElement;
+      return root.style.getPropertyValue("--sf-primary") === "139 92 246";
+    });
+    const firstIcon = page.locator('main [style*="linear-gradient(to right bottom"]').first();
+    await expect(firstIcon).toBeVisible();
+    const violetGradient = await firstIcon.evaluate((el) => getComputedStyle(el).backgroundImage);
+    // The violet baseline: --sf-primary (violet-600) → --sf-primary-gradient-to
+    // (indigo-600) — the reference's own measured value, byte-identical.
+    expect(violetGradient).toContain("rgb(139, 92, 246)");
+    expect(violetGradient).toContain("rgb(79, 70, 229)");
+
+    try {
+      await page.request.patch(PREFERENCES, { data: { accentColor: "blue" } });
+      // The accent reaches the DOM through a fresh load (the AG11a pattern).
+      await page.goto("/Dashboard");
+      await page.waitForFunction(() => {
+        const root = document.documentElement;
+        return root.style.getPropertyValue("--sf-primary") === "59 130 246";
+      });
+      const firstIconBlue = page.locator('main [style*="linear-gradient(to right bottom"]').first();
+      await expect(firstIconBlue).toBeVisible();
+      const blueGradient = await firstIconBlue.evaluate((el) => getComputedStyle(el).backgroundImage);
+      // RED pre-fix: the hardcoded rgb(139, 92, 246), rgb(79, 70, 229) pair
+      // stays violet under the blue accent. GREEN: blue-500 → sky-600.
+      expect(blueGradient).toContain("rgb(59, 130, 246)");
+      expect(blueGradient).toContain("rgb(2, 132, 199)");
+      expect(blueGradient).not.toContain("rgb(139, 92, 246)");
+
+      // The categorical siblings stay FIXED under the blue accent (measured
+      // on the reference — blue/orange/pink are not accent-semantic).
+      const all = page.locator('main [style*="linear-gradient(to right bottom"]');
+      const count = await all.count();
+      expect(count).toBeGreaterThanOrEqual(4);
+      const secondGradient = await all.nth(1).evaluate((el) => getComputedStyle(el).backgroundImage);
+      expect(secondGradient).toContain("rgb(59, 130, 246)"); // the blue KPI stays blue-500→cyan-700
+      expect(secondGradient).toContain("rgb(8, 145, 178)");
+    } finally {
+      await page.request.patch(PREFERENCES, { data: { accentColor: "violet" } });
+    }
+  });
+});

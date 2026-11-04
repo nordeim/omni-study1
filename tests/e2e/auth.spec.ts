@@ -126,3 +126,29 @@ test.describe("login route", () => {
     await expect(page).toHaveURL(/\/login/);
   });
 });
+
+// ---------------------------------------------------------------------------
+// S136/CK3 (audit A-M1) — the session cookie's SET-path attribute family,
+// pinned at the WIRE: no test ever asserted httpOnly/sameSite/path on the
+// cookie a real login sets (a regression dropping httpOnly — the session
+// readable by any future XSS — or flipping sameSite to none shipped with
+// every gate green). Playwright's context.cookies() reads httpOnly cookies
+// (document.cookie cannot — that is the point of the attribute).
+// ---------------------------------------------------------------------------
+test.describe("S136/CK3: the session cookie's SET-path attributes", () => {
+  test("a real UI login sets the session cookie httpOnly + SameSite=Lax + Path=/ (RED pre-fix: nothing pinned the attribute family)", async ({ page }) => {
+    await page.goto("/login");
+    await page.getByLabel("Email", { exact: true }).fill(DEMO_EMAIL);
+    await page.getByLabel("Password", { exact: true }).fill(DEMO_PASSWORD);
+    await page.getByRole("button", { name: "Sign in", exact: true }).click();
+    await expect(page).toHaveURL(/\/Dashboard\/?$/);
+
+    const cookies = await page.context().cookies();
+    const session = cookies.find((c) => c.name === "sf_session");
+    expect(session, "the sf_session cookie exists after login").toBeDefined();
+    expect(session?.httpOnly, "httpOnly — never document.cookie-readable").toBe(true);
+    expect(session?.sameSite, "SameSite=Lax — the CSRF posture").toBe("Lax");
+    expect(session?.path, "Path=/ — scoped to the whole app origin").toBe("/");
+    expect(session?.expires, "a persistent cookie (the 7-day TTL maxAge)").toBeGreaterThan(Date.now() / 1000);
+  });
+});

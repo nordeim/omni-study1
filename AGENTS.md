@@ -9,9 +9,9 @@ High-signal instructions for coding agents working in this repo. Everything here
 | `bun install` | Install deps (Bun ≥ 1.3) |
 | `bun run dev` | Dev server on :3000 (Turbopack), logs tee'd to `dev.log` |
 | `bun run lint` / `bun run typecheck` | ESLint / `tsc --noEmit` — both must be clean |
-| `bun run test` | Vitest unit layer (1332 tests; `*.test.ts` only — never picks up e2e specs) |
+| `bun run test` | Vitest unit layer (1344 tests; `*.test.ts` only — never picks up e2e specs) |
 | `bun run build` | Production build → `.next/standalone` (**required before e2e**) |
-| `bun run test:e2e` | Playwright vs the standalone build on :3100 with `db/e2e.db` (588 tests across the 5-chunk cold map — 150+183+76+94+85, 30 spec files; a single-process full run trips the register rate-limiter budget by design, the chunked map re-boots the server per chunk). NOTE (S45, the day-boundary lesson): the global setup re-seeds every run, but the seed's IDEMPOTENT UPSERTS do NOT refresh day-relative dates on existing rows — a scratch `db/e2e.db` that ages across a UTC midnight keeps its original day-relative dates (today's tasks, the +1-day exam badge, the due-in pills, the import round-trip dates each read one day stale → 4 deterministic failures in parity-session6/parity-session9/s23-import). Delete `db/e2e.db` when a run crosses a day boundary — the global setup re-creates it fresh with current dates. NOTE (S46, TWO more aged-scratch-db classes + a build-input one): (1) ALWAYS run e2e COLD — S131/CF5 chained `scripts/e2e-cold-reset.sh` into `bun run test:e2e` (port-guard + `rm -f db/e2e.db` BEFORE playwright boots anything — global-setup is TOO LATE: Playwright starts the webServer before globalSetup), so the default runner self-colds; any DIRECT `playwright test` invocation still needs the manual `rm -f db/e2e.db` before every full run: the s23-import round-trip posts a FIXED-id envelope, so a second consecutive run against the aged db reads `created: 0, updated: 1` instead of `created: 1, updated: 0` and fails — not just across midnights, across ANY re-run; (2) the s22 negative-spawn spec reads the BUNDLED `.env` — Next's standalone output COPIES the repo-root `.env` into `.next/standalone/.env` at build time, so a REAL AUTH_SECRET in the dev `.env` leaks into the bundle and the guard CORRECTLY boots (the spec times out waiting for the exit) — keep the repo-root `.env`'s AUTH_SECRET EMPTY (the `.env.example` dev posture: `AUTH_SECRET=""` — dev falls back to the local constant with the boot warning) when building for e2e |
+| `bun run test:e2e` | Playwright vs the standalone build on :3100 with `db/e2e.db` (593 tests across the 5-chunk cold map — 150+184+79+94+86, 30 spec files; a single-process full run trips the register rate-limiter budget by design, the chunked map re-boots the server per chunk). NOTE (S45, the day-boundary lesson): the global setup re-seeds every run, but the seed's IDEMPOTENT UPSERTS do NOT refresh day-relative dates on existing rows — a scratch `db/e2e.db` that ages across a UTC midnight keeps its original day-relative dates (today's tasks, the +1-day exam badge, the due-in pills, the import round-trip dates each read one day stale → 4 deterministic failures in parity-session6/parity-session9/s23-import). Delete `db/e2e.db` when a run crosses a day boundary — the global setup re-creates it fresh with current dates. NOTE (S46, TWO more aged-scratch-db classes + a build-input one): (1) ALWAYS run e2e COLD — S131/CF5 chained `scripts/e2e-cold-reset.sh` into `bun run test:e2e` (port-guard + `rm -f db/e2e.db` BEFORE playwright boots anything — global-setup is TOO LATE: Playwright starts the webServer before globalSetup), so the default runner self-colds; any DIRECT `playwright test` invocation still needs the manual `rm -f db/e2e.db` before every full run: the s23-import round-trip posts a FIXED-id envelope, so a second consecutive run against the aged db reads `created: 0, updated: 1` instead of `created: 1, updated: 0` and fails — not just across midnights, across ANY re-run; (2) the s22 negative-spawn spec reads the BUNDLED `.env` — Next's standalone output COPIES the repo-root `.env` into `.next/standalone/.env` at build time, so a REAL AUTH_SECRET in the dev `.env` leaks into the bundle and the guard CORRECTLY boots (the spec times out waiting for the exit) — keep the repo-root `.env`'s AUTH_SECRET EMPTY (the `.env.example` dev posture: `AUTH_SECRET=""` — dev falls back to the local constant with the boot warning) when building for e2e |
 | `node scripts/capture-studyflow.mjs` | Refresh all 31 `docs/screenshots/` captures from the dev server (24 light + 7 dark) |
 | `node scripts/dark-sweep.mjs` | Dark-mode contrast audit over all 20 views (flashbulb/unreadable detector). S27: sets dark mode through the settings API (the real lifecycle) and SELF-VERIFIES the precondition — fails loudly (exit 1, no findings) if the dark class is not applied; the applied mode rides the JSON envelope. Never force the class directly (the session-10 approach silently rotted after S11) |
 | `node scripts/accent-dark-sweep.mjs` | Accent × dark-mode audit (S38-extended): all 7 accents × 20 desktop views × 20 MOBILE views at 390×844 + the drawer per accent (FAIL <2.2, WARN <3.2 for accent text; the mobile records also carry scrollWidth — >390 is a finding). The S38 shape is unit-pinned anti-phantom: every view recorded EXPLICITLY on both surfaces (clean views carry empty detector arrays), the per-accent `applied` self-verified readings + `mode: "dark"` + `mobileViewport` ride the envelope, and the seam's ALL-ACCENTS + ALL-VIEWS + drawer-present guards make every silently-skipped dimension a LOUD shape-error (the pre-S38 mobile pass swept only 6 views — MOBILE_VIEWS — and the omission-means-clean recording could not distinguish "clean because measured" from "clean because never rendered") |
@@ -139,7 +139,7 @@ The **`AUTH_SECRET` boot-guard contract** (session-22, ADR-020): `src/instrument
 - **The SECURITY-HARDENING contract (S14):** the four AI routes (`ai/chat`, `ai/generate-cards`, `ai/generate-questions`, `math/solve`) each enforce `checkRateLimit(`ai:${user.id}`, 20)` after `requireUser`, before validation — 429 + `Retry-After` + "Too many AI requests" (the budget is ~3× the heaviest realistic burst; a full service worker off-session queue does not exist). The limiter generalizes: `checkRateLimit(key, max = 10)` — login/register keep the default. File downloads carry `X-Content-Type-Options: nosniff` + `Cache-Control: private, no-store` next to the S13 disposition. NO upload MIME allowlist BY DECISION — the reference stores arbitrary types (parity over restriction); the residual risk is documented as mitigated by nosniff + no-store + attachment. The settings route rejects whitespace-only display names (mirroring the S13 empty-filename guard) and stores padded names trimmed.
 - **The AI-ACCESSIBILITY contract (S14):** AI output is announced — the assistant transcript pane (`aiassistant-view.tsx`) and the solver's "Math solution" card (`mathsolver-view.tsx`) are `aria-live="polite"` regions with `aria-busy={busy}`: while busy the region suppresses churn (the spinner/Thinking row stays sighted-only), and the completed reply/solution announces when busy flips false. Errors were already covered (the toast stack is aria-live). New AI output surfaces must follow the same pattern — never land async content into a static container.
 - **API pattern:** route files are 3-line shells over `makeCollectionRoutes`/`makeItemRoutes` + an entity delegate in `src/lib/server/entities.ts`. Every query is scoped `where: { userId }` — ownership by construction. Every payload passes its Zod schema in `src/lib/validation.ts` first.
-- **Auth:** scrypt hashes + HMAC-signed stateless cookie sessions (`src/lib/auth.ts`), login rate-limited 10/IP/15 min (in-memory — single instance only). No auth framework.
+- **Auth:** scrypt hashes + HMAC-signed stateless cookie sessions (`src/lib/auth.ts`), login rate-limited 10/IP/15 min + the process-wide `loginGlobal:` containment budget 40/15 min with the success-reset (S136/CK1 — every login burns the full synchronous scrypt pair, so a rotated-XFF flood of non-existent emails that skipped every per-key budget is bounded sitewide; only FAILED logins accumulate — the attack shape never succeeds; the volume-containment 429 copies the per-IP 429 exactly — no new oracle; in-memory — single instance only). No auth framework.
 - **AI:** `z-ai-web-dev-sdk` is imported **only** inside `src/app/api/{ai,math}/route.ts` files (server-side). Never import it from client code. Three AI surface routes: `/api/ai/chat` (assistant), `/api/ai/generate-cards` (deck flashcards — S7-A superset), `/api/ai/generate-questions` (practice-test questions — S7-B superset; the reference's AI generation works but its test creation is broken).
 - **Calculator:** `src/lib/calculator.ts` implements a tokenizer + shunting-yard evaluator (incl. a `u-` unary operator). There is no `eval` anywhere.
 
@@ -1430,3 +1430,72 @@ Hover-parity probing must run in Playwright, not a touch-emulating browser — v
 - Never `bun run build` during a `test:e2e` run — the booting webServer serves deleted inodes; the S9 lesson re-verified.
 - `formatCalcResult` renders 12 significant digits (`3.28083989501` for m→ft) — converter pins may assert the long form.
 - The calculator's `=` REPLACES the expression with the result and the next DIGIT starts fresh (chaining contract pinned by calculator.spec).
+
+## S136 lessons (Batch CK — the audit-driven hardening cycle: the login-containment + files-race + CE3-residual + accent-literal set)
+
+1. **A census that matches CLASS-NAME patterns is blind to INLINE-STYLE
+   literals — and the blind spot is systemic, not incidental.** The CJ3
+   register's negative sweeps matched `border-violet-200` /
+   `dark:*-violet-(800|900)` class shapes and stayed GREEN while the
+   dashboard's first KPI icon hardcoded the entire accent pair
+   (`rgb(139, 92, 246), rgb(79, 70, 229)`) and the `.sf-canvas` dark wash
+   pinned violet-900 — two accent-semantic sites the register could not
+   see. Both audits (independently) called it the census's blind spot.
+   Lesson: when a token family exists, the register's sweep scope must
+   cover every SERIALIZATION the family's consumers can carry — the class
+   form AND the inline-hex form (with the comment-line discriminator per
+   the S92/AS1 quote-adjacency doctrine, or a prose value-note becomes a
+   false offender).
+2. **"Apply the doctrine to the SIBLING endpoint" is an audit axis, not
+   just a file-by-file pass.** registerGlobal: existed since S132/CG11
+   with its own comment naming the rotated-XFF CPU-DoS class — and login,
+   the endpoint where EVERY request burns the same scrypt pair, sat
+   unbounded for four cycles because the doctrine was recorded as
+   register's fix, not as a class rule. Lesson: when a budget/guard
+   doctrine lands on one endpoint, the next audit of that family should
+   enumerate the SIBLINGS sharing the expensive property (same KDF burn,
+   same write shape, same enumeration surface) — the doctrine's
+   applicability set, not its implementation site.
+3. **A global budget needs the SUCCESS-RESET the per-key budgets already
+   carry — and the e2e census proves it before the cert does.** The first
+   loginGlobal draft reset nothing on success: the chunk's own budget/429
+   specs (all-failure attempts, never reset) accumulated past 40 mid-chunk
+   and 429'd eleven subsequent login-flow tests. The progressive model
+   (only FAILED attempts consume budget) is a property of the BUDGET'S
+   DESIGN, not of the per-IP key shape — extend it with the containment,
+   or the containment poisons your own suite (and any interleaved
+   legitimate burst in production).
+4. **A pin that SPENDS an uncleanable budget must sit at its chunk's
+   TERMINAL position — and pre-reset its own slate.** The flood pin's
+   first home (mid-chunk) poisoned every alphabetically-later login in its
+   chunk: the spent global bucket cannot be cleaned from the wire (a
+   post-flood login is itself gated — the lockout-by-design). Two rules
+   fall out: the pin lives as the LAST test of its chunk's
+   alphabetically-LAST file (robust to Playwright's scheduling order), and
+   its FIRST action is one successful login (the clean-slate pre-reset) so
+   its arithmetic is deterministic regardless of chunk history. This is
+   the S135 correction-8 lesson (the registerGlobal cap) generalized to
+   the budget side: size the pin against the chunk's budget census AND its
+   position, before writing it.
+5. **A gate's emptiness condition must match the pin's HELD-ROUTE set.**
+   The gradetracker gate's first draft required grades AND subjects empty;
+   the pin holds only `/api/grades` — subjects landed, the AND never
+   fired, the false "0%" still rendered, the pin correctly stayed RED.
+   Lesson: for a stat row fed by N collections, the in-flight gate is the
+   OR-form (any primary source empty while loading = the row is
+   untrustworthy); the settled-zero contract (renders AT ZERO) is a
+   DIFFERENT branch and stays untouched.
+6. **An a11y finding on a PARITY surface needs the reference measurement
+   BEFORE the fix — the generic rule never overrides the measured
+   contract.** Audit B-M7 flagged the MyDay zero-state greeting as an
+   h3-skips-level axe violation; the h3→h2 "fix" broke the standing
+   S9-B/Q parity pin in the first re-cert — and the live reference
+   measurement (this cycle, on the empty reference account) showed the
+   reference ITSELF renders H3 "Good X!" directly under the MyDay H1. The
+   clone's h3 was exact parity all along; the finding was a false
+   positive of the generic-rule class, and the revert restored the
+   measured contract. Lesson: the SectionLink-nesting precedent is the
+   rule, not the exception — when an audit finding is style-guide-shaped
+   (axe/WCAG) AND the surface is reference-measured parity, the reference
+   wins until the reference itself changes; the parity pin family is the
+   guard that enforces it.

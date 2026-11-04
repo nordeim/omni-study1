@@ -138,7 +138,10 @@ export function AIAssistantView() {
         className="sf-scroll mt-6 flex max-h-full flex-1 flex-col space-y-4 overflow-y-auto pb-4"
       >
         <div className="mx-auto flex w-full max-w-3xl flex-col space-y-4">
-          {emptyTranscript && !busy && (
+          {/* S136/CK4: the CE3 gate — an in-flight load renders the spinner
+              branch below, never the false empty-account copy + quick
+              actions on un-hydrated history. */}
+          {!loading && emptyTranscript && !busy && (
             <>
               <div className="mx-auto flex size-16 items-center justify-center rounded-2xl bg-sf-primary-soft dark:bg-sf-primary-soft-dark/40">
                 <Bot className="size-8 text-sf-primary" strokeWidth={2} aria-hidden />

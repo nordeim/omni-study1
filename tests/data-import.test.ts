@@ -1294,7 +1294,7 @@ describe("S135/CJ2 · IMPORT_ORDER rides the seam and covers the manifest", () =
 // colon is the id.
 // ---------------------------------------------------------------------------
 describe("S135/CJ5 · parseImportRaceMessage (the colon-safe 409 assembly)", () => {
-  it("is exported and splits collection from id at the second colon only", async () => {
+  it("is exported from the seam (S136/CK6 retitle — the split semantics live in the two sibling legs below)", async () => {
     const mod = await import("../src/lib/data-import");
     expect(typeof mod.parseImportRaceMessage).toBe("function");
   });

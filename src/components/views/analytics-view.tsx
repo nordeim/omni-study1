@@ -402,8 +402,17 @@ export function AnalyticsView() {
   return (
     <div className="flex flex-col gap-6">
       <ViewHeader title="Analytics" subtitle="Insights across your study activity" icon={ChartColumn} />
-      {/* ---- stat cards (icon-block, S8-I) — gated on in-flight data (S132/CG6) ---- */}
-      {loading && tasks.length === 0 && grades.length === 0 && subjects.length === 0 ? (
+      {/* ---- stat cards (icon-block, S8-I) — gated on in-flight data (S132/CG6;
+          S136/CK4 widened to the SIX stat families the row actually renders —
+          the old 3-collection gate left assignments/exams/focus in flight
+          rendering their false "0/0" zeroes) ---- */}
+      {loading &&
+      tasks.length === 0 &&
+      grades.length === 0 &&
+      subjects.length === 0 &&
+      assignments.length === 0 &&
+      exams.length === 0 &&
+      focusSessions.length === 0 ? (
         <div className="flex justify-center py-16 text-sf-primary">
           <Spinner className="size-6" />
         </div>

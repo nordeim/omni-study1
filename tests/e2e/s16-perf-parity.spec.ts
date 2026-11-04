@@ -122,3 +122,73 @@ test.describe("S16-A dashboard load stability (CLS guard)", () => {
     expect(cls).toBeLessThanOrEqual(0.02);
   });
 });
+
+// ---------------------------------------------------------------------------
+// S136/CK1 (audit A-H1) — the login global containment budget, pinned at
+// the WIRE with the actual attack shape: a rotated-XFF flood of
+// non-existent-email logins. Under the default TRUSTED_PROXY_HOPS-unset
+// posture each forged x-forwarded-for hop is its own per-IP bucket (10/
+// 15-min each — never tripped by 1 request), and the non-existent emails
+// skip the per-account bucket entirely (it only fires when the user
+// exists) — pre-CK1 NOTHING bounded the flood while every request burned
+// the full synchronous scrypt pair. The process-wide loginGlobal: bucket
+// (40/15-min, the registerGlobal doctrine of S132/CG11) is the bound this
+// pin proves: the first 429 lands at global request 40-or-41, with the
+// honest copy.
+//
+// TERMINAL-POSITION RULE (the mid-run correction): the spent global bucket
+// cannot be cleaned up from the wire (a post-flood login is itself gated —
+// the lockout-by-design; the success-reset only boots under the cap), so
+// this pin MUST be its chunk's TERMINAL test: this file is chunk 3's
+// alphabetically-LAST file, this describe is the file's LAST, and nothing
+// after it in the chunk needs a login. The CLEAN-SLATE PRE-RESET below
+// (one successful demo login) zeroes the bucket first, so first429 is
+// exactly 41 — deterministic regardless of whatever failures preceded it
+// in the chunk. (The first draft lived mid-chunk in resilience.spec.ts:
+// the flood poisoned every subsequent login in its chunk — the S135
+// correction-8 class on the BUDGET side.)
+// ---------------------------------------------------------------------------
+test.describe("S136/CK1: the login global containment budget", () => {
+  test("a rotated-XFF flood of non-existent-email logins trips the process-wide bucket (RED pre-fix: all 41 answer the uniform 401 — no global bound existed)", async ({ request }) => {
+    // CLEAN-SLATE PRE-RESET: one successful demo login zeroes the global
+    // bucket (the route's success-reset — the progressive model extended
+    // to the global budget). Without it the pin's arithmetic would depend
+    // on whatever failures preceded it in the chunk; with it the count
+    // starts at 0 and first429 is exactly 41.
+    const warm = await request.post("/api/auth/login", {
+      data: { email: "demo@studyflow.app", password: "Demo1234!" },
+    });
+    expect(warm.status(), "the clean-slate login succeeds (and resets the global window)").toBe(200);
+
+    const statuses: number[] = [];
+    let first429Body = "";
+    for (let i = 1; i <= 41; i++) {
+      const res = await request.post("/api/auth/login", {
+        data: {
+          email: `ck1-flood-${i}@nonexistent.invalid`,
+          password: "WrongPassword123!",
+        },
+        // The attack shape: a UNIQUE TEST-NET hop per request — each
+        // per-IP bucket sees exactly 1 request (under its 10 cap), so only
+        // the GLOBAL bucket accumulates.
+        headers: { "x-forwarded-for": `192.0.2.${100 + i}` },
+      });
+      statuses.push(res.status());
+      if (res.status() === 429 && !first429Body) {
+        first429Body = String((await res.json() as { error?: string }).error ?? "");
+      }
+    }
+    // The uniform miss: the first POST is the ordinary invalid-credentials
+    // 401 (the no-user branch — no per-account bucket, the burn paid).
+    expect(statuses[0]).toBe(401);
+    // The containment: the first 429 lands at global request 40-or-41.
+    const first429 = statuses.indexOf(429) + 1;
+    expect(first429, `the first 429 index (statuses: ${statuses.slice(35).join(",")})`).toBeGreaterThanOrEqual(40);
+    expect(first429).toBeLessThanOrEqual(41);
+    // Every request from the first 429 onward stays contained (the window
+    // holds — POST 41 is a 429 too).
+    expect(statuses[40]).toBe(429);
+    // The honest copy (identical to the per-IP limit's — no new oracle).
+    expect(first429Body).toContain("Too many login attempts");
+  });
+});

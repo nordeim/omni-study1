@@ -29,6 +29,32 @@ const UNVERIFIED_COPY =
 
 export async function POST(request: NextRequest) {
   try {
+    // S136/CK1 (audit A-H1): the process-wide containment budget, BEFORE
+    // the per-IP key — the registerGlobal: doctrine of S132/CG11 applied to
+    // login, the endpoint where EVERY request burns the full synchronous
+    // scrypt pair (~0.5 s measured). Under the default
+    // TRUSTED_PROXY_HOPS-unset posture the per-IP key below is the FIRST
+    // x-forwarded-for hop — forgeable per request — and a flood of
+    // non-existent emails skips the per-account bucket entirely (it only
+    // fires when the user exists): pre-CK1 nothing bounded a ~2 req/s
+    // rotated-XFF flood from starving the single worker for ALL routes.
+    // 40/15-min process-wide bounds that churn (the register sizing
+    // mirrored: 4x the per-IP budget; the e2e login-heaviest chunk runs
+    // ~21 POSTs and every chunk re-boots the server, so the in-process
+    // bucket never trips in tests outside the dedicated terminal flood
+    // pin). A volume-containment 429 leaks nothing the per-IP 429 doesn't
+    // already — the copy is IDENTICAL. The SUCCESS-RESET below is the
+    // progressive model extended to the global budget: only FAILED logins
+    // accumulate (the attack shape never succeeds); an interleaved
+    // legitimate burst never inherits a flood's spend.
+    const globalLimit = checkRateLimit("loginGlobal:", 40);
+    if (!globalLimit.ok) {
+      return rateLimitedResponse(
+        globalLimit.retryAfterSec,
+        "Too many login attempts. Try again shortly.",
+      );
+    }
+
     // The limiter sits BEFORE validation — invalid payloads consume budget.
     const ip = clientIp(request);
     const limit = checkRateLimit(`login:${ip}`, 10);
@@ -104,8 +130,18 @@ export async function POST(request: NextRequest) {
     // user's later logins must never inherit an attacker's spent bucket).
     // S127/CB12: the account bucket resets too — successes never accumulate
     // (the same progressive model on the harder key).
+    // S136/CK1: the GLOBAL bucket resets too — the containment budget
+    // exists to bound the ANONYMOUS FLOOD shape (a rotated-XFF stream of
+    // non-existent emails, every attempt a FAILURE); an interleaved
+    // legitimate burst (successes) must never inherit the flood's spend.
+    // The attack shape never succeeds, so the containment still trips at
+    // 40 consecutive failures — and a mixed crowd's successful logins keep
+    // the sitewide window open. (The first draft reset neither: the e2e
+    // chunk-5 login census — the budget/429 specs' own failed attempts —
+    // accumulated past 40 mid-chunk and 429'd every subsequent login.)
     resetRateLimit(`login:${ip}`);
     resetRateLimit(`loginAcct:${user.id}`);
+    resetRateLimit("loginGlobal:");
 
     return setSessionCookie(NextResponse.json({ user: publicUser(user) }), user.id, {
       // S120/BU15: the proxy-aware derivation (see verify-email).

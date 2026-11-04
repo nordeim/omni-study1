@@ -88,3 +88,37 @@ describe("SESSION_TTL lockstep (S134/CI6b — the cookie maxAge derives from the
     expect(serverAuth).not.toMatch(/SESSION_TTL_SECONDS\s*=\s*7\s*\*\s*24/);
   });
 });
+
+// ---------------------------------------------------------------------------
+// S136/CK3 (audit A-M1) — the SET-path attribute family, previously
+// unpinned: setSessionCookie correctly ships httpOnly + sameSite=lax +
+// path=/ + the TTL maxAge, but NO test asserted any of them (a regression
+// dropping httpOnly — the session readable by any future XSS — or flipping
+// sameSite to none shipped with every gate green). The behavioral form
+// follows the clear-cookie precedent (NextResponse + the live seam).
+// ---------------------------------------------------------------------------
+import { NextResponse } from "next/server";
+import { setSessionCookie, SESSION_COOKIE_NAME, SESSION_TTL_SECONDS } from "@/lib/server/auth";
+
+describe("setSessionCookie's SET-path attributes (S136/CK3)", () => {
+  it("the session cookie ships httpOnly (never document.cookie-readable)", () => {
+    const res = setSessionCookie(NextResponse.json({ ok: true }), "user-1");
+    expect(res.cookies.get(SESSION_COOKIE_NAME)?.httpOnly).toBe(true);
+  });
+
+  it("the session cookie ships SameSite=Lax (the CSRF posture the JSON Content-Type gate completes)", () => {
+    const res = setSessionCookie(NextResponse.json({ ok: true }), "user-1");
+    expect(res.cookies.get(SESSION_COOKIE_NAME)?.sameSite).toBe("lax");
+  });
+
+  it("the session cookie ships Path=/ (scoped to the whole app origin)", () => {
+    const res = setSessionCookie(NextResponse.json({ ok: true }), "user-1");
+    expect(res.cookies.get(SESSION_COOKIE_NAME)?.path).toBe("/");
+  });
+
+  it("the session cookie's maxAge rides the TTL single-source (the 7-day lockstep, on the SET path)", () => {
+    const res = setSessionCookie(NextResponse.json({ ok: true }), "user-1");
+    expect(res.cookies.get(SESSION_COOKIE_NAME)?.maxAge).toBe(SESSION_TTL_SECONDS);
+    expect(SESSION_TTL_SECONDS).toBe(7 * 24 * 60 * 60);
+  });
+});

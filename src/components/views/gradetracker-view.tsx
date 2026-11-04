@@ -336,7 +336,18 @@ export function GradeTrackerView() {
       {/* ---- stats (zero-data renders AT ZERO — never an EmptyState, S17) ----
           Session-65 re-measure: the reference's row is THREE cards
           (grid md:grid-cols-3 gap-4) — no Highest Grade card and no
-          sub-captions; the white-card icons are emerald-500/blue-500. */}
+          sub-captions; the white-card icons are emerald-500/blue-500.
+          S136/CK4: the CE3 gate — an in-flight load renders the loading
+          branch, never the false "0%/0/0" zero row (the SETTLED zero
+          state still renders AT ZERO — the S17 contract, untouched). The
+          OR-form: EITHER primary source empty while loading means the row
+          is untrustworthy (the pin's held-route set holds only /api/grades
+          — subjects landing must not un-gate the grades row). */}
+      {loading && (grades.length === 0 || subjects.length === 0) ? (
+        <div className="flex justify-center py-16">
+          <Spinner className="size-6 text-sf-primary" />
+        </div>
+      ) : (
       <div role="group" className="grid gap-4 md:grid-cols-3" aria-label="Grade summary">
         <div className="sf-gradient sf-gradient-shadow-lg rounded-2xl p-6 text-white">
           <Award className="mb-3 h-8 w-8 opacity-80" strokeWidth={2} aria-hidden />
@@ -350,6 +361,7 @@ export function GradeTrackerView() {
         <GtSummaryCard icon={Target} iconClass="text-emerald-500" label="Total Grades" value={grades.length} />
         <GtSummaryCard icon={ChartColumn} iconClass="text-blue-500" label="Subjects Tracked" value={subjects.length} />
       </div>
+      )}
 
       {/* ---- per-subject cards (Batch AB, measured on the populated ref:
           bare cards in a 2-col grid — chip + avg, the Progress-to-A row,

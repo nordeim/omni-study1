@@ -10,6 +10,8 @@
 // when still the latest. Pinned here with a controlled apiGet mock whose
 // first (stale) resolution is DELAYED past the second (fresh) one.
 import { describe, expect, it, vi, beforeEach } from "vitest";
+import { readFileSync } from "node:fs";
+import path from "node:path";
 
 const apiGetMock = vi.fn();
 vi.mock("@/lib/api", () => ({
@@ -162,5 +164,47 @@ describe("the collection GET deadline (S129/CD2)", () => {
     for (const call of calls) {
       expect(call[1]).toEqual({ timeoutMs: 20_000 });
     }
+  });
+});
+
+// ---------------------------------------------------------------------------
+// S136/CK2 (audit B-H1) — the files-view private loader carries the SAME
+// sequence discipline. Files is the one view that bypasses the guarded
+// useDataStore seam (a local loadFileRows()/refresh() pair); refresh() —
+// fired after EVERY mutation (delete/rename/upload) — had NO ticket, so an
+// older in-flight GET settling after a newer one clobbered fresher state
+// (a just-deleted row resurrects; the retry 404s) — the exact S119/BT8
+// class the store fixed with fetchSeq, never ported here. The component
+// shape (React.useCallback) keeps this a source census: the ticket idiom
+// must exist with the apply-when-latest guard, in BOTH settle paths.
+// ---------------------------------------------------------------------------
+describe("the files-view loader sequence census (S136/CK2)", () => {
+  const FILES_VIEW = path.resolve(process.cwd(), "src/components/views/files-view.tsx");
+  const src = readFileSync(FILES_VIEW, "utf8");
+
+  it("a component-scoped sequence ticket exists (the fetchSeq idiom ported to the private loader)", () => {
+    // Pre-CK2: no ticket counter existed — the RED discriminator.
+    expect(src).toMatch(/fileRowsSeq|fileLoadSeq/);
+  });
+
+  it("refresh() captures the ticket BEFORE the GET pair and applies only when still latest", () => {
+    // Pre-CK2: refresh() set state unconditionally — the RED discriminator.
+    const refreshAt = src.indexOf("const refresh = React.useCallback");
+    expect(refreshAt).toBeGreaterThan(-1);
+    const refreshBody = src.slice(refreshAt, src.indexOf("}, [loadFileRows, toast]", refreshAt));
+    expect(refreshBody).toMatch(/ticket/);
+    expect(
+      refreshBody.indexOf("ticket"),
+      "the ticket is captured BEFORE the GET pair (loadFileRows awaits after the capture)",
+    ).toBeLessThan(refreshBody.indexOf("await loadFileRows()"));
+    expect(refreshBody).toMatch(/still latest|!== ticket|seq !== ticket/);
+  });
+
+  it("the mount effect respects the SAME ticket (a superseded mount GET never lands)", () => {
+    // Pre-CK2: the effect keyed only on `cancelled` (unmount) — a superseded
+    // response still landed. RED: no ticket mention inside the effect body.
+    const effectAt = src.indexOf("React.useEffect(() => {");
+    const effectBody = src.slice(effectAt, src.indexOf("}, [loadFileRows, toast]", effectAt));
+    expect(effectBody).toMatch(/ticket/);
   });
 });

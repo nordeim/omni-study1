@@ -82,6 +82,18 @@ export async function POST(request: NextRequest) {
       return errorResponse(400, "That code is invalid or has expired.");
     }
 
+    // S136/CK10 (audit A-L5): an already-verified account never consumes a
+    // token. A resend whose user read raced a concurrent verification can
+    // leave one live token on a NOW-verified account (the verify
+    // transaction's deleteMany only clears what existed at commit);
+    // presenting that code would sign in. The guard also skips the token
+    // query on the common path. The uniform 400 shape stays — no new
+    // oracle (the verified-state branch was already reachable via the
+    // consumed-token path).
+    if (user.emailVerified) {
+      return errorResponse(400, "That code is invalid or has expired.");
+    }
+
     // S131/CF7 → S132/CG2: the compare runs on the PEPPERED HMAC DIGESTS —
     // the token stores the digest (the BR6 posture: a DB read never yields
     // a live sign-in credential) and the presented code digests through

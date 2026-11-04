@@ -281,7 +281,7 @@ export const POST = async (request: NextRequest) => {
           ) {
             return errorResponse(
               400,
-              `${collection}: row "${row.id as string}" is missing its required ${field} — a new row must reference a ${refCollection} in this backup.`,
+              `${collection}: row "${row.id as string}" is missing its required ${field} — a new row must reference an existing ${refCollection.replace(/s$/, "")} in this backup.`,
             );
           }
         }

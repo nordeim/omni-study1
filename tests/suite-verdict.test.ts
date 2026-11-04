@@ -28,7 +28,7 @@ const isErr = (v: StageVerdict) => v.green === false && /shape not recognized/i.
 const SECURITY_GREEN = {
   findings: [],
   nonGaps: [
-    { surface: "Session cookie flags (httpOnly + SameSite=Lax + Path=/ + 30d Max-Age; secure is NODE_ENV-gated — dev false, prod true by code)", detail: "{\"httpOnly\":true,\"sameSite\":\"lax\",\"secure\":false}" },
+    { surface: "Session cookie flags (httpOnly + SameSite=Lax + Path=/ + the TTL Max-Age single-sourced since S134/CI6b [the shipped 7-day TTL — the session-65 record's '30d' was the pre-CI6b hand-mirrored literal]; secure is proxy-aware since S120/BU15 [X-Forwarded-Proto wins — the record's 'NODE_ENV-gated' was the pre-BU15 derivation], corrected S136/CK3)", detail: "{\"httpOnly\":true,\"sameSite\":\"lax\",\"secure\":false}" },
     { surface: "AI routes rate-limited (20 then 429)", detail: "20x400 then 2x429; cutoffAt=21" },
   ],
 };

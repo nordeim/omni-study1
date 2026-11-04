@@ -1,7 +1,18 @@
 import { defineConfig } from "vitest/config";
 import path from "node:path";
 
-// Unit-test layer for the pure domain seams — 45 files / 1332 tests
+// Unit-test layer for the pure domain seams — 45 files / 1344 tests
+// (re-anchored S136/CK — the audit-driven hardening cycle: the login-
+// containment + files-race + CE3-residual + accent-literal set: census
+// 1332 → 1344, +12 net [script-conventions +2: the S136/CK1 loginGlobal
+// source census + the S136/CK10 verify-email emailVerified guard census;
+// data-store +3: the S136/CK2 files-view loader sequence censuses (the
+// ticket + the refresh capture-before-GET + the mount-effect supersede);
+// secure-cookie +4: the S136/CK3 SET-path attribute pins (httpOnly +
+// sameSite + path + the TTL maxAge, the behavioral NextResponse form);
+// hue-tokens +3: the S136/CK5 inline-hex register (the zero-literal sweep
+// with the comment-line discriminator + the KPI token-pair consumer + the
+// sf-canvas soft-dark wash)]. The prior S135/CJ re-anchor block follows.)
 // (re-anchored S135/CJ — the audit-driven hardening cycle + the violet
 // accent-edge token family: census 1314 → 1332, +18 net [data-import +9:
 // the S135/CJ2 IMPORT_ORDER seam-move family (the export pin + the

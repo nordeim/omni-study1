@@ -473,7 +473,7 @@ const VIOLET_RESIDUALS: ReadonlyArray<{ file: string; line: number; pattern: Reg
   { file: "src/components/views/tasks-view.tsx", line: 115, pattern: /dark:hover:border-violet-800/, why: "the row-card hover border's DARK half (the light half rides --sf-primary-edge since S135/CJ3; no reference ground truth for dark — the clone's dark mode is the documented superset)" },
   { file: "src/components/views/flashcards-view.tsx", line: 394, pattern: /dark:border-violet-800/, why: "the study-card face border's DARK half (the light half rides --sf-primary-edge since S135/CJ3; the 800-vs-900 divergence from notes is the S92 divergent-variant class)" },
   { file: "src/components/views/notes-view.tsx", line: 686, pattern: /dark:border-violet-900/, why: "the selected-note row border's DARK half (the light border rides --sf-primary-edge and the bg rides --sf-primary-softest since S135/CJ3; softDark's 900 value is byte-equal but the dark-edge family waits for a uniform design pass)" },
-  { file: "src/components/views/analytics-view.tsx", line: 414, pattern: /dark:bg-violet-900\/50/, why: "the Tasks-Completed chip's DARK half (the light bg rides --sf-primary-empty since S135/CJ3; the /50 opacity serializes through the trap-7 family — a dark empty-step token would change the form)" },
+  { file: "src/components/views/analytics-view.tsx", line: 423, pattern: /dark:bg-violet-900\/50/, why: "the Tasks-Completed chip's DARK half (the light bg rides --sf-primary-empty since S135/CJ3; the /50 opacity serializes through the trap-7 family — a dark empty-step token would change the form)" },
 ];
 
 // The S135/CJ3 treated-light-half census: the five migrations, pinned to
@@ -484,7 +484,7 @@ const EDGE_CONSUMERS: ReadonlyArray<{ file: string; line: number; pattern: RegEx
   { file: "src/components/views/flashcards-view.tsx", line: 394, pattern: /border-sf-primary-edge/, why: "the study-card face border" },
   { file: "src/components/views/notes-view.tsx", line: 686, pattern: /border-sf-primary-edge/, why: "the selected-note row border" },
   { file: "src/components/views/notes-view.tsx", line: 686, pattern: /bg-sf-primary-softest/, why: "the selected-note row tint" },
-  { file: "src/components/views/analytics-view.tsx", line: 414, pattern: /bg-sf-primary-empty/, why: "the Tasks-Completed chip" },
+  { file: "src/components/views/analytics-view.tsx", line: 423, pattern: /bg-sf-primary-empty/, why: "the Tasks-Completed chip" },
 ];
 
 describe("the accent-semantic violet register (S134/CI8 → S135/CJ3, the dark half)", () => {
@@ -552,5 +552,78 @@ describe("the accent-semantic violet register (S134/CI8 → S135/CJ3, the dark h
         `${c.file}:${c.line} — the treated site must keep its accent-token class (${c.why})`,
       ).toMatch(c.pattern);
     }
+  });
+});
+
+// ---------------------------------------------------------------------------
+// S136/CK5 (audits B-M4 + B-M5) — the census widening to INLINE-STYLE
+// literals: the CJ3 register's negative sweeps match CLASS-NAME patterns
+// and could not see the dashboard KPI icon gradient (an inline
+// background-image hardcoding the accent pair rgb(139, 92, 246) →
+// rgb(79, 70, 229) — byte-equal to --sf-primary → --sf-primary-gradient-to)
+// nor the .sf-canvas dark wash (rgb(76 29 149 / 0.12) — violet-900 =
+// --sf-primary-soft-dark). Both drift under the 6 non-violet accents with
+// the census green — the class-pattern blind spot, closed here: the
+// inline-hex shapes join the register's sweep scope.
+// ---------------------------------------------------------------------------
+describe("the accent-semantic INLINE-HEX register (S136/CK5 — the class-pattern blind spot)", () => {
+  it("carries ZERO inline accent-pair/violet-900 hex literals in component code (a hardcoded gradient or dark wash fails this leg)", () => {
+    // The measured shapes: the violet-600 accent stop, the indigo-600
+    // gradient-to stop, and the violet-900 soft-dark wash (both serial
+    // forms — the comma-joined and the raw-rgb alpha convention).
+    // The S92/AS1 quote-adjacency doctrine: the VALUE, never a comment —
+    // comment lines (the //, /*, * forms) document values legitimately
+    // (the sf-chip-dark wash note in settings-view is prose, not a site).
+    const literals = [
+      /rgb\(139,\s*92,\s*246\)/,
+      /rgb\(79,\s*70,\s*229\)/,
+      /rgb\(76\s+29\s+149/,
+      /rgb\(76,\s*29,\s*149\)/,
+    ];
+    const isCommentLine = (lineText: string) => {
+      const trimmed = lineText.trim();
+      return trimmed.startsWith("//") || trimmed.startsWith("/*") || trimmed.startsWith("*");
+    };
+    const files = listSrcFiles(path.resolve(process.cwd(), "src/components"));
+    expect(files.length, "the components census ran").toBeGreaterThan(40);
+    const offenders: string[] = [];
+    for (const file of files) {
+      const src = readConsumer(file);
+      const rel = path.relative(process.cwd(), file);
+      src.split("\n").forEach((lineText, i) => {
+        if (isCommentLine(lineText)) return;
+        for (const lit of literals) {
+          if (lit.test(lineText)) offenders.push(`${rel}:${i + 1} (${lit.source})`);
+        }
+      });
+    }
+    expect(
+      offenders,
+      `inline accent hexes in component code (ride the runtime vars — rgb(var(--sf-primary)) etc., the AGENTS no-hardcoded-violet-hexes rule extended to inline styles): ${offenders.join(", ")}`,
+    ).toEqual([]);
+  });
+
+  it("the dashboard KPI accent-icon gradient rides the runtime token pair (the first KPI block is the ACCENT slot; the blue/orange/pink siblings are the fixed categorical palette measured on the reference)", () => {
+    const src = readConsumer(
+      path.resolve(process.cwd(), "src/components/views/dashboard-view.tsx"),
+    );
+    // Pre-CK5: the gradient hardcoded the violet pair — the RED discriminator.
+    expect(src).toMatch(
+      /rgb\(var\(--sf-primary\)\),\s*rgb\(var\(--sf-primary-gradient-to\)\)/,
+    );
+    // The three categorical siblings stay FIXED (measured on the reference:
+    // blue, orange, pink — only the first slot is accent-semantic).
+    expect(src).toMatch(/rgb\(59,\s*130,\s*246\),\s*rgb\(8,\s*145,\s*178\)/);
+    expect(src).toMatch(/rgb\(249,\s*115,\s*22\),\s*rgb\(217,\s*119,\s*6\)/);
+    expect(src).toMatch(/rgb\(236,\s*72,\s*153\),\s*rgb\(225,\s*29,\s*72\)/);
+  });
+
+  it("the sf-canvas dark wash rides the soft-dark token (the raw-rgb alpha convention — the sf-today-tint precedent; byte-identical at violet)", () => {
+    const css = readConsumer(path.resolve(process.cwd(), "src/app/globals.css"));
+    // Pre-CK5: the dark branch pinned rgb(76 29 149 / 0.12) — the RED
+    // discriminator. The light branch's softest stop is the same idiom's
+    // already-treated form (the S135/CJ-era precedent).
+    expect(css).toMatch(/rgb\(var\(--sf-primary-soft-dark\) \/ 0\.12\)/);
+    expect(css).not.toMatch(/rgb\(76\s+29\s+149/);
   });
 });

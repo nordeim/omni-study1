@@ -29,7 +29,23 @@
 # census over the cap and 429'd s26's register — the pins ride the demo
 # session now, account-independent 400s, chunk 3's demo import budget at
 # 4/10]).
-# Expected: 150 + 183 + 76 + 94 + 85 = 588 (each chunk's count includes its
+# (S136/CK re-tag — census 588 → 593, net +5: chunk 2 +1 [the S136/CK5
+# KPI accent-gradient discriminator in theme-system — the inline-hex family:
+# the first KPI icon block's computed gradient follows the accent switch,
+# violet pair → blue pair, the categorical siblings stay fixed]; chunk 3 +3
+# [the S136/CK1 rotated-XFF login flood pin in s16-perf-parity — the
+# loginGlobal: containment budget proven at the wire, the first 429 at
+# global POST 40-or-41; the pin is TERMINAL by design (s16 is the chunk's
+# alphabetically-last file, the describe its last test — the spent global
+# bucket cannot be cleaned from the wire, so nothing after it may need a
+# login; the CLEAN-SLATE pre-reset zeroes the bucket first) +2 the
+# S136/CK4 CE3 residual gate legs in resilience — the held
+# assignments/exams dashboard section-card gate + the held grades
+# gradetracker summary gate, the CG6 idiom at the sites the CG6 sweep
+# missed]; chunk 5 +1 [the S136/CK3 session-cookie SET-path leg in
+# auth.spec — context.cookies asserts httpOnly + SameSite=Lax + Path=/ on
+# a real UI login]. The full CK map: docs/remediation-plan-session136.md.)
+# Expected: 150 + 184 + 79 + 94 + 86 = 593 (each chunk's count includes its
 # auth setup — the current census; the historical re-tag blocks beneath.)
 # (S131/CF re-tag — census 567 → 570, net +3: chunk 1 +1 [the CF9
 # drawer focus-restore leg in mobile-navigation — crossing the lg

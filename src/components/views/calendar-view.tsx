@@ -102,6 +102,44 @@ export function CalendarView() {
     [timetable],
   );
 
+  // S136/CK7 (audit B-M6): the by-day presence map — ONE pass over each
+  // collection bucketing rows by calendar day, replacing the grid's
+  // per-cell × per-collection filter sweeps (~42 cells × 4 filters × full
+  // collection scans on EVERY render at the documented 500-item windows).
+  // The dot presence only needs booleans; the day-detail panel keeps the
+  // single-day callbacks above (5 reads, not the hot path). Behavior-
+  // preserving: the same isSameDay/isoWeekday equivalence, bucketed once.
+  const dayKey = (d: Date) => `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+  const presence = React.useMemo(() => {
+    const map = new Map<
+      string,
+      { tasks: boolean; assignments: boolean; exams: boolean; classes: boolean }
+    >();
+    const ensure = (d: Date) => {
+      const key = dayKey(d);
+      let entry = map.get(key);
+      if (!entry) {
+        entry = { tasks: false, assignments: false, exams: false, classes: false };
+        map.set(key, entry);
+      }
+      return entry;
+    };
+    for (const t of tasks) {
+      if (t.dueDate) ensure(new Date(t.dueDate)).tasks = true;
+    }
+    for (const a of assignments) {
+      if (a.dueDate) ensure(new Date(a.dueDate)).assignments = true;
+    }
+    for (const e of exams) {
+      ensure(new Date(e.date)).exams = true;
+    }
+    // The recurring weekday classes: a per-weekday bucket set, consumed
+    // per cell through the ISO weekday (the same equivalence classesFor
+    // uses — no date bucketing possible for recurrence).
+    const classWeekdays = new Set(timetable.map((c) => c.dayOfWeek));
+    return { map, classWeekdays };
+  }, [tasks, assignments, exams, timetable]);
+
   const shift = (delta: number) => {
     const next = addMonths(new Date(cursor.year, cursor.month, 1), delta);
     setCursor({ year: next.getFullYear(), month: next.getMonth() });
@@ -282,12 +320,14 @@ export function CalendarView() {
           >
             {cells.map((cell) => {
               // S127/CB5: the category-presence computation (events are
-              // dotless by design — the reference measured it).
+              // dotless by design — the reference measured it). S136/CK7:
+              // the by-day map read replaces the 4 per-cell filter sweeps.
+              const entry = presence.map.get(dayKey(cell.date));
               const present: Record<string, boolean> = {
-                tasks: tasksFor(cell.date).length > 0,
-                assignments: assignmentsFor(cell.date).length > 0,
-                exams: examsFor(cell.date).length > 0,
-                classes: classesFor(cell.date).length > 0,
+                tasks: entry?.tasks ?? false,
+                assignments: entry?.assignments ?? false,
+                exams: entry?.exams ?? false,
+                classes: presence.classWeekdays.has(isoWeekday(cell.date)),
               };
               const dotCount = CATEGORY_DOTS.filter((c) => present[c.key]).length;
               const isSelected = isSameDay(cell.date, selected);

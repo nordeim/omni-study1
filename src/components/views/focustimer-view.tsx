@@ -192,12 +192,19 @@ export function FocusTimerView() {
       </header>
 
       <div className="mx-auto flex w-full max-w-md flex-col items-center gap-6">
-        {/* ---- stats ---- */}
+        {/* ---- stats (S136/CK4: the CE3 gate — an in-flight load renders
+            the loading branch, never the false 0/0/0 row) ---- */}
+        {loading && focusSessions.length === 0 ? (
+          <div className="flex w-full justify-center py-10 text-sf-primary">
+            <Spinner className="size-6" />
+          </div>
+        ) : (
         <div className="grid w-full grid-cols-3 gap-3">
           <StatCard icon={Flame} label="Pomodoros" value={focusSessions.filter((s) => s.mode === "focus").length} hint="All-time focus sessions" />
           <StatCard icon={Target} label="Today" value={sessionsToday} hint="Sessions completed today" />
           <StatCard icon={Zap} label="Sessions" value={focusSessions.length} hint="Total sessions logged" />
         </div>
+        )}
         {/* ---- mode tabs ---- */}
         <div className="flex items-center gap-1 rounded-xl bg-slate-100 p-1 dark:bg-slate-800" role="group" aria-label="Timer mode">
           {(Object.keys(MODE_LABELS) as TimerMode[]).map((m) => (
