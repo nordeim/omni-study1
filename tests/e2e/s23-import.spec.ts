@@ -518,3 +518,56 @@ test.describe("S133/CH2+CH7 the import parity + the counts refresh (fresh TEST-N
     await expect(tasksChip).toContainText("1", { timeout: 10_000 });
   });
 });
+
+// S140/CO1 — the note-HTML sanitize leg on the IMPORT door (A-L3 closed).
+// A hostile "backup" note (remote tracking pixel + script + inline handler)
+// imports 200 — the round-trip contract is untouched — but the STORED
+// content comes back sanitized: no remote img src, no script tag, no
+// event handler. This is the import door's half of the A-L3 fix (the API
+// door is covered by the delegate writeTransform + the render gate by the
+// legacy-note leg in parity-session9). Rides the DEMO session (budget #9
+// of 10 — the chunk-5 register census has zero headroom, so no fresh user).
+test.describe("S140/CO1 the note-HTML sanitize on import (A-L3)", () => {
+  test("a hostile note imports clean: the stored content carries no remote img, script, or handler", async ({
+    request,
+  }) => {
+    const hostile = envelope({
+      data: {
+        notes: [
+          {
+            id: "s140-hostile-note",
+            title: "S140 hostile note probe",
+            content:
+              "<p>legit text</p>" +
+              '<img src="https://a-l3-import.example/px.gif" alt="pixel">' +
+              "<script>alert(1)</script>" +
+              '<p onclick="steal()">bait</p>' +
+              '<iframe src="https://a-l3-import.example/frame"></iframe>',
+            tags: "[]",
+            notebookId: null,
+            subjectId: null,
+            createdAt: "2026-09-05T00:00:00.000Z",
+            updatedAt: "2026-09-05T00:00:00.000Z",
+          },
+        ],
+      },
+    });
+    const res = await request.post("/api/import/data", { data: hostile });
+    expect(res.status()).toBe(200);
+    const body = (await res.json()) as { created: number; updated: number };
+    expect(body.created).toBe(1);
+
+    // The STORED row reads back sanitized (the render gate and the CSP are
+    // defense-in-depth; the import write loop itself strips the payload).
+    const notes = await request.get("/api/notes");
+    expect(notes.status()).toBe(200);
+    const list = (await notes.json()) as Array<{ id: string; content: string }>;
+    const note = list.find((n) => n.id === "s140-hostile-note");
+    expect(note).toBeDefined();
+    expect(note!.content).toContain("<p>legit text</p>");
+    expect(note!.content).not.toContain("a-l3-import.example");
+    expect(note!.content.toLowerCase()).not.toContain("<script");
+    expect(note!.content.toLowerCase()).not.toContain("onclick");
+    expect(note!.content.toLowerCase()).not.toContain("<iframe");
+  });
+});

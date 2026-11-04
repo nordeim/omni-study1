@@ -11,7 +11,7 @@
 
 import { NextResponse, type NextRequest } from "next/server";
 
-import { checkRateLimit, verifyPassword } from "@/lib/auth";
+import { checkRateLimit, decrementRateLimit, verifyPassword } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { changeEmailSchema } from "@/lib/validation";
 import { publicUser, requireUser } from "@/lib/server/auth";
@@ -26,6 +26,16 @@ import {
 export async function POST(request: NextRequest) {
   try {
     const user = await requireUser();
+    // S140/CO2 (Audit B M-1): the shared authBurnGlobal: aggregate — this
+    // route burns login's synchronous scrypt pair (the password verify)
+    // under only a per-user budget. See change-password's comment block.
+    const burnLimit = checkRateLimit("authBurnGlobal:", 40);
+    if (!burnLimit.ok) {
+      return rateLimitedResponse(
+        burnLimit.retryAfterSec,
+        "Too many attempts. Try again shortly.",
+      );
+    }
     const limit = checkRateLimit(`changeEmail:${user.id}`, 10);
     if (!limit.ok) {
       return rateLimitedResponse(limit.retryAfterSec, "Too many attempts. Try again shortly.");
@@ -65,6 +75,9 @@ export async function POST(request: NextRequest) {
       where: { id: user.id },
       data: { email: normalized }, // emailVerified intentionally untouched
     });
+
+    // S140/CO2: the CM3 discharge (net-of-successes — see login's route).
+    decrementRateLimit("authBurnGlobal:");
 
     return NextResponse.json({ ok: true, email: normalized, user: publicUser(updated) });
   } catch (err: unknown) {

@@ -123,7 +123,7 @@ describe("the chunked cert runner's truth contract (S128/CC2)", () => {
     // witness, relocated out of chunk 3's BY5-spent export budget) +
     // chunk 3 82 → 87 (the CN2 tolerance pair, the cross-account 409,
     // the CN4 card-delegate 404s, the CN10 owned-FK re-point) — 597 → 603.
-    expect(certSource).toContain("Expected: 150 + 185 + 87 + 95 + 86 = 603");
+    expect(certSource).toContain("Expected: 150 + 186 + 87 + 95 + 87 = 605");
   });
 
   it("propagates a failing chunk's exit code (never a green cert on a red run)", () => {
@@ -1159,5 +1159,79 @@ describe("the S139/CN source censuses", () => {
     // command ignore it — deleted as pure confusion surface.
     expect(existsSync(path.resolve(REPO_ROOT, "package-lock.json"))).toBe(false);
     expect(existsSync(path.resolve(REPO_ROOT, "bun.lock"))).toBe(true);
+  });
+});
+
+// S140/CO2 (Audit B M-1) — the authed-scrypt aggregate containment route
+// census: the four sibling routes (change-password, change-email,
+// delete-account, reset-password) each burn the same synchronous scrypt
+// pair login does, and the CK1 process-wide containment family was never
+// swept across them. The census keeps the family swept: every route file
+// carries the authBurnGlobal: check + the CM3 decrement-on-success.
+describe("the authBurnGlobal route census (S140/CO2)", () => {
+  const AUTHED_ROUTES = [
+    "change-password",
+    "change-email",
+    "delete-account",
+    "reset-password",
+  ].map((r) => path.resolve(process.cwd(), `src/app/api/auth/${r}/route.ts`));
+
+  it("all four authed scrypt-burning routes carry the shared authBurnGlobal: containment check", () => {
+    for (const file of AUTHED_ROUTES) {
+      const src = readFileSync(file, "utf8");
+      expect(src, `${file} must check the authBurnGlobal: aggregate before the scrypt burn`).toContain(
+        "checkRateLimit(\"authBurnGlobal:\", 40)",
+      );
+    }
+  });
+
+  it("all four routes discharge the aggregate with the CM3 decrement on legitimate success (never resetRateLimit)", () => {
+    for (const file of AUTHED_ROUTES) {
+      const src = readFileSync(file, "utf8");
+      expect(src, `${file} must decrement the authBurnGlobal: aggregate on success`).toContain(
+        'decrementRateLimit("authBurnGlobal:")',
+      );
+      // The AI-2 defeat shape: a success must NEVER fully reset the
+      // aggregate (one requester's success discharges only their own
+      // spend — the S138/CM3 doctrine, now pinned per-route).
+      expect(src).not.toContain('resetRateLimit("authBurnGlobal:")');
+    }
+  });
+});
+
+// S140/CO5 (Audit B L-1) — the AGENTS.md auth summary contract line: the
+// top-level line still taught the overturned S136 success-RESET while the
+// route has shipped the CM3 success-DECREMENT for two sessions. A future
+// implementer working from the most-read contract line could reintroduce
+// resetRateLimit("loginGlobal:") — reopening the documented AI-2
+// containment defeat. The CN9 login-route-file pin generalized to the
+// contract line itself.
+describe("the AGENTS.md auth contract line (S140/CO5)", () => {
+  it("the top-level loginGlobal summary documents the success-DECREMENT (the CM3 form), not the overturned reset", () => {
+    const agents = readFileSync(path.resolve(process.cwd(), "AGENTS.md"), "utf8");
+    const summaryLine = agents.split("\n")[141]; // the Auth bullet (line 142, 1-indexed)
+    expect(summaryLine).toContain("loginGlobal:");
+    expect(summaryLine).toContain("success-decrement");
+    expect(summaryLine).not.toContain("success-reset");
+  });
+});
+
+// S140/CO1 (Audit C F1) — the note-HTML sanitize route census: both entry
+// points must apply the server sanitizer — the delegate door via
+// writeTransform (pinned in the entities census below) and the import
+// door in the route's own write loop (the route writes through the RAW
+// Prisma tx client, so the delegate's hook never fires there).
+describe("the note-HTML sanitize census (S140/CO1)", () => {
+  const IMPORT_ROUTE = path.resolve(process.cwd(), "src/app/api/import/data/route.ts");
+  const ENTITIES = path.resolve(process.cwd(), "src/lib/server/entities.ts");
+
+  it("the import route sanitizes notes content in its write loop (the raw-tx door the delegate hook cannot reach)", () => {
+    const src = readFileSync(IMPORT_ROUTE, "utf8");
+    expect(src).toContain("sanitizeNoteHtml");
+  });
+
+  it("the note delegate carries the writeTransform sanitize hook (the API door)", () => {
+    const src = readFileSync(ENTITIES, "utf8");
+    expect(src).toContain("sanitizeNoteContent");
   });
 });

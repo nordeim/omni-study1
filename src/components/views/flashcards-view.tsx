@@ -567,6 +567,12 @@ export function FlashcardsView() {
                       </button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
+                      {/* S140/CO4h: deliberately onClick (NOT the
+                          onSelect the plain items use) — the raw click's
+                          stopPropagation is load-bearing here: these items
+                          live inside the deck ROW (the div role=button),
+                          and only the DOM event's own propagation chain
+                          can be cut before the row's activation handler. */}
                       <DropdownMenuItem
                         onClick={(e) => {
                           e.stopPropagation();
@@ -661,7 +667,7 @@ export function FlashcardsView() {
                     Study
                   </Button>
                 )}
-                <DropdownDeleteDeck name={selectedDeck.name} onDelete={() => removeDeck(selectedDeck)} onEdit={() => openDeckDialog(selectedDeck)} />
+                <DeckDetailActions name={selectedDeck.name} onDelete={() => removeDeck(selectedDeck)} onEdit={() => openDeckDialog(selectedDeck)} />
               </div>
             </div>
 
@@ -865,7 +871,10 @@ export function FlashcardsView() {
   );
 }
 
-function DropdownDeleteDeck({
+// S140/CO4g (Audit A L-5): renamed from the fossil `DropdownDeleteDeck` —
+// the component renders two plain icon buttons (Edit + Delete callbacks)
+// and owns no dropdown and no deletion; the old name actively misled.
+function DeckDetailActions({
   name,
   onEdit,
   onDelete,

@@ -35,6 +35,7 @@ import {
 import { currentGreeting, type ViewId } from "@/lib/router";
 import { Button } from "@/components/ui/button";
 import { useAppStore, useThemeStore } from "@/lib/store";
+import { cn } from "@/lib/utils";
 import {
   SectionCard,
   SimpleEmptyState,
@@ -322,13 +323,19 @@ export function DashboardView() {
                     aria-checked={task.completed}
                     aria-label={`Mark "${task.title}" complete`}
                     onClick={() => dashboardTaskActions.onToggle(task.id)}
-                    className={
-                      "flex size-5 shrink-0 items-center justify-center rounded-full border-2 bg-white dark:bg-slate-900 " +
-                      (PRIORITY_BORDER[task.priority] ?? PRIORITY_BORDER.none) +
-                      (task.completed
-                        ? " border-sf-primary bg-sf-primary text-sf-primary-foreground"
-                        : "")
-                    }
+                    // S140/CO3 (Audit A M-1): the completed-state accent
+                    // classes now route through cn()/twMerge so they WIN
+                    // the same-property conflicts (border-*/bg-*) against
+                    // the priority border — the raw concatenation let the
+                    // stylesheet's emission order pick the winner (the
+                    // Tasks-view PriorityCheckbox resolves this exact
+                    // conflict through cn; this checkbox mirrors it).
+                    className={cn(
+                      "flex size-5 shrink-0 items-center justify-center rounded-full border-2 bg-white dark:bg-slate-900",
+                      PRIORITY_BORDER[task.priority] ?? PRIORITY_BORDER.none,
+                      task.completed &&
+                        "border-sf-primary bg-sf-primary text-sf-primary-foreground",
+                    )}
                   >
                     {task.completed && (
                       <svg viewBox="0 0 12 12" className="size-3" fill="none" aria-hidden>

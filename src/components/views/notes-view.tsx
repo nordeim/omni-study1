@@ -535,11 +535,11 @@ export function NotesView() {
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={openNewNote}>
+              <DropdownMenuItem onSelect={openNewNote}>
                 <FileText className="size-4" strokeWidth={2} />
                 New Note
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={openNewNotebook}>
+              <DropdownMenuItem onSelect={openNewNotebook}>
                 <Notebook className="size-4" strokeWidth={2} />
                 New Notebook
               </DropdownMenuItem>
@@ -796,7 +796,7 @@ export function NotesView() {
                         </Select>
                       </div>
                     )}
-                    <DropdownMenuItem onClick={() => removeNote(selected.id)} className="text-red-600 focus:text-red-600">
+                    <DropdownMenuItem onSelect={() => removeNote(selected.id)} className="text-red-600 focus:text-red-600">
                       <Trash2 className="size-4" strokeWidth={2} />
                       Delete note
                     </DropdownMenuItem>

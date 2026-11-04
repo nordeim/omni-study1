@@ -9,7 +9,7 @@ High-signal instructions for coding agents working in this repo. Everything here
 | `bun install` | Install deps (Bun ≥ 1.3) |
 | `bun run dev` | Dev server on :3000 (Turbopack), logs tee'd to `dev.log` |
 | `bun run lint` / `bun run typecheck` | ESLint / `tsc --noEmit` — both must be clean |
-| `bun run test` | Vitest unit layer (1391 tests; `*.test.ts` only — never picks up e2e specs) |
+| `bun run test` | Vitest unit layer (1409 tests; `*.test.ts` only — never picks up e2e specs) |
 | `bun run build` | Production build → `.next/standalone` (**required before e2e**) |
 | `bun run test:e2e` | Playwright vs the standalone build on :3100 with `db/e2e.db` (603 tests across the 5-chunk cold map — 150+185+87+95+86, 30 spec files; a single-process full run trips the register rate-limiter budget by design, the chunked map re-boots the server per chunk). NOTE (S45, the day-boundary lesson): the global setup re-seeds every run, but the seed's IDEMPOTENT UPSERTS do NOT refresh day-relative dates on existing rows — a scratch `db/e2e.db` that ages across a UTC midnight keeps its original day-relative dates (today's tasks, the +1-day exam badge, the due-in pills, the import round-trip dates each read one day stale → 4 deterministic failures in parity-session6/parity-session9/s23-import). Delete `db/e2e.db` when a run crosses a day boundary — the global setup re-creates it fresh with current dates. NOTE (S46, TWO more aged-scratch-db classes + a build-input one): (1) ALWAYS run e2e COLD — S131/CF5 chained `scripts/e2e-cold-reset.sh` into `bun run test:e2e` (port-guard + `rm -f db/e2e.db` BEFORE playwright boots anything — global-setup is TOO LATE: Playwright starts the webServer before globalSetup), so the default runner self-colds; any DIRECT `playwright test` invocation still needs the manual `rm -f db/e2e.db` before every full run: the s23-import round-trip posts a FIXED-id envelope, so a second consecutive run against the aged db reads `created: 0, updated: 1` instead of `created: 1, updated: 0` and fails — not just across midnights, across ANY re-run; (2) the s22 negative-spawn spec reads the BUNDLED `.env` — Next's standalone output COPIES the repo-root `.env` into `.next/standalone/.env` at build time, so a REAL AUTH_SECRET in the dev `.env` leaks into the bundle and the guard CORRECTLY boots (the spec times out waiting for the exit) — keep the repo-root `.env`'s AUTH_SECRET EMPTY (the `.env.example` dev posture: `AUTH_SECRET=""` — dev falls back to the local constant with the boot warning) when building for e2e |
 | `node scripts/capture-studyflow.mjs` | Refresh all 31 `docs/screenshots/` captures from the dev server (24 light + 7 dark) |
@@ -139,7 +139,7 @@ The **`AUTH_SECRET` boot-guard contract** (session-22, ADR-020): `src/instrument
 - **The SECURITY-HARDENING contract (S14):** the four AI routes (`ai/chat`, `ai/generate-cards`, `ai/generate-questions`, `math/solve`) each enforce `checkRateLimit(`ai:${user.id}`, 20)` after `requireUser`, before validation — 429 + `Retry-After` + "Too many AI requests" (the budget is ~3× the heaviest realistic burst; a full service worker off-session queue does not exist). The limiter generalizes: `checkRateLimit(key, max = 10)` — login/register keep the default. File downloads carry `X-Content-Type-Options: nosniff` + `Cache-Control: private, no-store` next to the S13 disposition. NO upload MIME allowlist BY DECISION — the reference stores arbitrary types (parity over restriction); the residual risk is documented as mitigated by nosniff + no-store + attachment. The settings route rejects whitespace-only display names (mirroring the S13 empty-filename guard) and stores padded names trimmed.
 - **The AI-ACCESSIBILITY contract (S14):** AI output is announced — the assistant transcript pane (`aiassistant-view.tsx`) and the solver's "Math solution" card (`mathsolver-view.tsx`) are `aria-live="polite"` regions with `aria-busy={busy}`: while busy the region suppresses churn (the spinner/Thinking row stays sighted-only), and the completed reply/solution announces when busy flips false. Errors were already covered (the toast stack is aria-live). New AI output surfaces must follow the same pattern — never land async content into a static container.
 - **API pattern:** route files are 3-line shells over `makeCollectionRoutes`/`makeItemRoutes` + an entity delegate in `src/lib/server/entities.ts`. Every query is scoped `where: { userId }` — ownership by construction. Every payload passes its Zod schema in `src/lib/validation.ts` first.
-- **Auth:** scrypt hashes + HMAC-signed stateless cookie sessions (`src/lib/auth.ts`), login rate-limited 10/IP/15 min + the process-wide `loginGlobal:` containment budget 40/15 min with the success-reset (S136/CK1 — every login burns the full synchronous scrypt pair, so a rotated-XFF flood of non-existent emails that skipped every per-key budget is bounded sitewide; only FAILED logins accumulate — the attack shape never succeeds; the volume-containment 429 copies the per-IP 429 exactly — no new oracle; in-memory — single instance only). No auth framework.
+- **Auth:** scrypt hashes + HMAC-signed stateless cookie sessions (`src/lib/auth.ts`), login rate-limited 10/IP/15 min + the process-wide `loginGlobal:` containment budget 40/15 min with the success-decrement (S136/CK1 established the budget; S138/CM3 replaced the reset with the net-of-successes decrement — every login burns the full synchronous scrypt pair, so a rotated-XFF flood of non-existent emails that skipped every per-key budget is bounded sitewide; only FAILED logins accumulate — the attack shape never succeeds; the volume-containment 429 copies the per-IP 429 exactly — no new oracle; in-memory — single instance only). No auth framework.
 - **AI:** `z-ai-web-dev-sdk` is imported **only** inside `src/app/api/{ai,math}/route.ts` files (server-side). Never import it from client code. Three AI surface routes: `/api/ai/chat` (assistant), `/api/ai/generate-cards` (deck flashcards — S7-A superset), `/api/ai/generate-questions` (practice-test questions — S7-B superset; the reference's AI generation works but its test creation is broken).
 - **Calculator:** `src/lib/calculator.ts` implements a tokenizer + shunting-yard evaluator (incl. a `u-` unary operator). There is no `eval` anywhere.
 
@@ -1701,3 +1701,73 @@ Hover-parity probing must run in Playwright, not a touch-emulating browser — v
    BY (or extend the census's exclusion note with the new query's
    cost) in the same commit — the schema-indexes census catches the
    omission only if the new query's model joins the censused set.
+
+
+## S140 lessons (Batch CO — the audit-driven hardening cycle: the note-HTML sanitize + authed-scrypt containment + checkbox-cn + FE-hardening set)
+
+1. **A client-imported seam can't host the server sanitizer — follow the
+   import graph before choosing the hook.** `validation.ts` and
+   `data-import.ts` are both client-imported (views + the export panel),
+   so the sanitize-html dependency had to live in a server-only module
+   (`src/lib/server/note-html.ts`) consumed at the delegate
+   (`writeTransform`) and the route — never in the shared schema. The
+   corollary: the IMPORT route writes through the raw Prisma tx client
+   (`(tx as any)[model]`), not the factory delegates, so the delegate's
+   `writeTransform` hook never fires there — the import door needed its
+   own explicit call site. Lesson: when a fix must cover "every write
+   path," enumerate the write paths by reading the code, not by trusting
+   the factory's hook story.
+2. **An allowlist beats a strip-list, and the authorship fact makes it
+   lossless.** Quill's Delta round-trip drops scripts/handlers but its
+   Image/Video/Link blots keep REMOTE urls alive — so "Quill filters it"
+   was never true for the tracking-pixel class. The fix's allowlist IS
+   Quill's authoring vocabulary, and the BW10 image gate (data:-only
+   inserts) proves no authentic note ever carried a remote img —
+   img-src=data:-only destroys zero user content. Lesson: measure what
+   the editor can actually author before writing the sanitizer policy;
+   the vocabulary is the allowlist.
+3. **A containment family stays open until every scrypt-burning sibling
+   is swept — and the census pin is what keeps it swept.** CK1 added
+   process-wide budgets to login/register; change-password,
+   change-email, delete-account, and reset-password burn the same
+   synchronous scrypt pair and carried only per-user/per-IP keys. The
+   route census leg (all four files must carry the `authBurnGlobal:`
+   marker + the decrement, never the reset) makes the family
+   regression-proof. Lesson: when you build a budget family, ship the
+   census in the same commit — the next audit rotation will otherwise
+   find the unswept siblings two cycles later (this one did).
+4. **The raw-string className concatenation is a class-conflict
+   time bomb.** `border-slate-300` + `border-sf-primary` in one literal
+   leaves the winner to Tailwind's emission order — the author's intent
+   dies at build time. `cn()`/twMerge exists for exactly this; the
+   dashboard checkbox was the ONE site in the codebase that skipped it
+   (the Tasks-view sibling resolves the identical conflict correctly).
+   Lesson: grep for string-concatenated className when a view carries
+   conditional state classes — the bug is invisible until the emission
+   order flips.
+5. **The file:line-anchored residual registers move when you edit above
+   them.** The CO3 `cn()` import shifted the dashboard residual's line
+   by one and tripped BOTH hue-tokens legs (the site escaped the
+   register; the register's own line went stale). Fix the register in
+   the same commit with the "re-anchored" note (the S130/CE4
+   precedent). Lesson: line-anchored pins are canaries for line-shifting
+   edits — expect to re-anchor, and read the failure as the register
+   working.
+6. **The RED probe sometimes hits a guard first — that's the guard
+   working, not a failed probe.** The render-gate RED demonstration
+   (comment out the sanitize call) failed the BUILD on
+   noUnusedLocals — the unused import IS a type gate. The probe moved
+   to the function level (identity return) and produced the designed
+   red (the live remote img rendered). Lesson: when a RED probe trips a
+   guardrail, relocate the probe — never weaken the guardrail to make
+   the probe convenient.
+7. **Live parity comparison beats inherited parity claims.** The
+   reference's mobile drawer and desktop chrome were re-measured fresh
+   this cycle (agent-browser, computed styles on both hosts) — the
+   288px/white/black-20/blur(4px)/20-links contract and the
+   v3-`backdrop-blur-sm` ≡ v4-`backdrop-blur-xs` equivalence verified
+   live, not inherited from the 54 prior green drawer checks (the 55th
+   ran after). Lesson: re-measure the parity surface you're claiming,
+   even when the standing suite says green — the suite guards the
+   clone; only the live comparison guards the REFERENCE's side of the
+   contract.

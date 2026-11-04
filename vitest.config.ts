@@ -1,10 +1,23 @@
 import { defineConfig } from "vitest/config";
 import path from "node:path";
 
-// Unit-test layer for the pure domain seams — 45 files / 1391 tests
+// Unit-test layer for the pure domain seams — 46 files / 1409 tests
+// (re-anchored S140/CO — the audit-driven hardening cycle: the note-HTML
+// sanitize + authed-scrypt containment + checkbox-cn + FE-hardening set:
+// census 1391 → 1409, +18 net [note-html +10: the S140/CO1 server-sanitizer
+// pins — the hostile sextet (script/style blocks, inline handlers,
+// javascript: and data:text/html hrefs, remote img src, iframe/object/
+// embed/form/input/svg, srcset + non-color styles, non-ql- classes) + the
+// Quill-vocabulary quartet + the plain-text/seed round-trip pair; auth +3:
+// the S140/CO2 authBurnGlobal containment + CM3-decrement + the
+// eviction-exemption census re-tag; script-conventions +5: the S140/CO2
+// four-route authBurnGlobal census pair + the S140/CO5 AGENTS.md
+// contract-line pin + the S140/CO1 import-route/delegate sanitize census
+// pair; hue-tokens re-anchored: the dashboard residual's file:line shifted
+// +1 by the CO3 cn() import]. The prior S139/CN re-anchor block follows.)
 // (re-anchored S139/CN — the audit-driven hardening cycle: the parity-
-// integrality + round-trip-witness + covering-index + bounded-walk set:
-// census 1369 → 1391, +22 net [data-import +8: the S139/CN1 parity
+// integrality + round-trip-witness + covering-index + bounded-walk set: census
+// 1369 → 1391, +22 net [data-import +8: the S139/CN1 parity
 // integrality sextet (progress/dayOfWeek integrality + maxScore ≥ 1 +
 // files mime/size + the members item shape) + the S139/CN2 version-floor
 // leg + the CE7 registry census re-anchor (files.mime joined);

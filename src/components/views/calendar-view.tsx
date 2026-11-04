@@ -225,7 +225,12 @@ export function CalendarView() {
           <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100">
             {monthLabel}
           </h2>
-          {loading && events.length === 0 ? (
+          {/* S140/CO4b (Audit A L-2): the timeline renders EVENTS AND TASKS
+              (timelineDays below) — the OR-form gate covers both sources
+              (the S138/CM2 doctrine: any primary source empty while
+              loading owns the row; the events-only gate let a
+              mixed-landing state render a task-less timeline). */}
+          {loading && (events.length === 0 || tasks.length === 0) ? (
             <div className="flex justify-center py-8 text-sf-primary">
               <Spinner className="size-6" />
             </div>
@@ -408,7 +413,15 @@ export function CalendarView() {
             {formatLongDateWithWeekday(selected)}
           </h3>
 
-          {loading && events.length === 0 ? (
+          {/* S140/CO4b (Audit A L-2): the day detail renders FIVE collections
+              (events/tasks/assignments/exams/classes — see dayEmpty) — the
+              OR-form gate covers them all. */}
+          {loading &&
+          (events.length === 0 ||
+            tasks.length === 0 ||
+            assignments.length === 0 ||
+            exams.length === 0 ||
+            timetable.length === 0) ? (
             <div className="flex justify-center py-8 text-sf-primary">
               <Spinner className="size-6" />
             </div>

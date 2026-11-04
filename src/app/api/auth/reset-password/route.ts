@@ -14,7 +14,7 @@
 
 import { NextResponse, type NextRequest } from "next/server";
 
-import { checkRateLimit, hashPassword, hashResetToken } from "@/lib/auth";
+import { checkRateLimit, decrementRateLimit, hashPassword, hashResetToken } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { resetPasswordSchema } from "@/lib/validation";
 import { clientIp } from "@/lib/server/auth";
@@ -28,6 +28,20 @@ import {
 
 export async function POST(request: NextRequest) {
   try {
+    // S140/CO2 (Audit B M-1) — the shared authBurnGlobal: aggregate FIRST
+    // (the login convention: the limiter sits before validation; invalid
+    // payloads consume budget). This route burns the synchronous scrypt
+    // mint (the new-password hash), and the per-IP 10/15-min key is
+    // FORGEABLE per request under the default XFF posture — the in-band
+    // forgot flow (5 one-shot tokens/email/15min) mints burn after burn
+    // from a single mailbox pair. See change-password's comment block.
+    const burnLimit = checkRateLimit("authBurnGlobal:", 40);
+    if (!burnLimit.ok) {
+      return rateLimitedResponse(
+        burnLimit.retryAfterSec,
+        "Too many reset attempts. Try again shortly.",
+      );
+    }
     // S118/BS12 — limiter-before-validation (the login convention).
     const ip = clientIp(request);
     const limit = checkRateLimit(`reset:${ip}`, 10);
@@ -88,6 +102,9 @@ export async function POST(request: NextRequest) {
     if (!consumed) {
       return errorResponse(400, "That reset link is invalid or has expired. Request a new one.");
     }
+
+    // S140/CO2: the CM3 discharge (net-of-successes — see login's route).
+    decrementRateLimit("authBurnGlobal:");
 
     return NextResponse.json({ ok: true });
   } catch (err: unknown) {

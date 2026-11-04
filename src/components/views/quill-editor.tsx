@@ -18,6 +18,9 @@ import type QuillType from "quill";
 import "quill/dist/quill.snow.css";
 
 import { useToastStore } from "@/components/ui/toast";
+// S140/CO1: the legacy-row render gate (same policy module as the server
+// sanitizer — pure data + a DOMParser walk, no node deps).
+import { sanitizeNoteHtmlDom } from "@/lib/note-html";
 
 /** The reference's measured snow toolbar: 3 pickers + 5 format groups = 20 controls. */
 const TOOLBAR: unknown[] = [
@@ -251,10 +254,19 @@ export const QuillEditor = React.forwardRef<QuillEditorHandle, QuillEditorProps>
         // their ql-* classes ("Normal" reads as the value, not a name).
         labelToolbarPickers(containerRef.current.parentElement?.querySelector(".ql-toolbar") ?? null);
 
-        if (/<[a-z][^>]*>/i.test(initialRef.current)) {
-          quill.clipboard.dangerouslyPasteHTML(initialRef.current, Quill.sources.SILENT);
-        } else if (initialRef.current) {
-          quill.setText(initialRef.current, Quill.sources.SILENT);
+        // S140/CO1 (the A-L3 closure) — the legacy-row render gate: every
+        // server write path (the note delegate + the import loop) now
+        // sanitizes note HTML, but rows stored BEFORE that fix ride this
+        // mount path straight into dangerouslyPasteHTML. Quill's Delta
+        // round-trip drops scripts/handlers, but its Image/Video/Link blots
+        // keep REMOTE urls alive (the tracking-pixel class) — the DOM walk
+        // (same policy module, browser-native DOMParser) neutralizes them
+        // BEFORE the paste. Defense-in-depth under the production CSP.
+        const initial = sanitizeNoteHtmlDom(initialRef.current);
+        if (/<[a-z][^>]*>/i.test(initial)) {
+          quill.clipboard.dangerouslyPasteHTML(initial, Quill.sources.SILENT);
+        } else if (initial) {
+          quill.setText(initial, Quill.sources.SILENT);
         }
 
         quill.on("text-change", (_delta, _old, source) => {

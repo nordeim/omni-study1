@@ -368,9 +368,15 @@ export function ExamsView() {
                           Topics to study:
                         </p>
                         <div className="flex flex-wrap gap-1">
-                          {topics.map((topic) => (
+                          {topics.map((topic, i) => (
                             <span
-                              key={topic}
+                              // S140/CO4a (Audit A L-1): the value-index
+                              // composite key — duplicate topics are
+                              // schema-legal (user/import JSON, no dedupe on
+                              // addTopic), and the bare-topic key collides.
+                              // The dialog's own chips (the practicetests
+                              // precedent) already key this way.
+                              key={`${topic}-${i}`}
                               // S83/AJ5: the near-black topic chip carries
                               // near-white text — an essential background
                               // under the S12-C2 convention (it must print).

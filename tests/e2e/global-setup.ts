@@ -52,4 +52,15 @@ export default function globalSetup(): void {
     console.error("[global-setup] bun prisma/seed.ts failed — retrying with npx tsx:", err);
     run("npx tsx prisma/seed.ts");
   }
+
+  // S140/CO1: the hostile LEGACY note fixture — a pre-fix row (written
+  // before the note-HTML sanitize seam) the render-gate e2e leg opens in
+  // the Notes view, asserting zero outbound requests to the attacker
+  // origin. Idempotent; rides the same shell-pinned DATABASE_URL.
+  try {
+    run("bun scripts/e2e-plant-legacy-note.ts");
+  } catch (err) {
+    console.error("[global-setup] bun scripts/e2e-plant-legacy-note.ts failed — retrying with npx tsx:", err);
+    run("npx tsx scripts/e2e-plant-legacy-note.ts");
+  }
 }

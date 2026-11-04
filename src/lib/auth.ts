@@ -369,10 +369,18 @@ function sweepExpiredBuckets(now: number): void {
  * buckets that were ALL eviction-exempt: once the live map was all-exempt
  * the eviction found no victim and the unconditional insert grew the map
  * past this cap without bound (the S121/BV9 invariant itself). The exact
- * set restores the bound mathematically: at most 2 exempt keys can ever
- * be live, so the eviction always finds a non-global victim; an EXPIRED
+ * set restores the bound mathematically: at most 3 exempt keys can ever
+ * be live (the two CK1 aggregates + the S140 authed-scrypt aggregate), so
+ * the eviction always finds a non-global victim; an EXPIRED
  * global is swept by sweepExpiredBuckets before this runs. */
-const PROTECTED_BUCKETS = new Set(["loginGlobal:", "registerGlobal:"]);
+const PROTECTED_BUCKETS = new Set([
+  "loginGlobal:",
+  "registerGlobal:",
+  // S140/CO2: the authed-scrypt aggregate (change-password / change-email /
+  // delete-account / reset-password) joins the exact-key whitelist — the
+  // CK1 containment family fully swept.
+  "authBurnGlobal:",
+]);
 
 function evictOldestBucket(): void {
   let oldestKey: string | null = null;

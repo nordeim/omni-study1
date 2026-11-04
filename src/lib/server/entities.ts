@@ -38,6 +38,11 @@ import {
   timetableClassUpdateSchema,
   hhmmMinutes,
 } from "../validation";
+
+// S140/CO1: the server-only note-HTML sanitizer (the A-L3 closure — never
+// re-exported through this module's client-reachable surface; the seam
+// lives at src/lib/server/note-html.ts).
+import { sanitizeNoteHtml } from "./note-html";
 import {
   NotFoundError,
   parseWith,
@@ -508,7 +513,27 @@ export const noteDelegate = makeOwnedDelegate({
   createSchema: noteSchema,
   updateSchema: noteSchema.partial(),
   ownedFks: OWNED_FKS.note,
+  // S140/CO1 (the A-L3 deferral, closed): the note-HTML sanitize gate on
+  // the API door. Both write paths (create + update) flow through the
+  // factory's toWrite, so ONE writeTransform sanitizes every note body
+  // the direct route accepts — the allowlist seam lives in
+  // src/lib/server/note-html.ts (sanitize-html is server-only:
+  // validation.ts is client-imported, so the schema itself must stay
+  // dependency-free). The IMPORT door writes through the raw Prisma tx
+  // client (the import route bypasses this hook by design) and applies
+  // the same sanitizer in its own loop; the quill-editor mount gate
+  // covers pre-fix legacy rows with the DOM walk from the same policy.
+  writeTransform: sanitizeNoteContent,
 });
+
+/** S140/CO1: strip note HTML to Quill's authoring vocabulary (the
+ *  tracking-pixel / remote-iframe / handler class dies here; plain text
+ *  passes through byte-identically — the demo seed's note bodies). */
+function sanitizeNoteContent(data: Row): Row {
+  const content = data.content;
+  if (typeof content !== "string" || content === "") return data;
+  return { ...data, content: sanitizeNoteHtml(content) };
+}
 
 export const flashcardDeckDelegate = makeOwnedDelegate({
   model: db.flashcardDeck as unknown as OwnedModel,

@@ -359,7 +359,7 @@ export function AssignmentsView() {
                       </button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
-                      <DropdownMenuItem onClick={() => openEdit(a)}>
+                      <DropdownMenuItem onSelect={() => openEdit(a)}>
                         <Pencil className="size-4" strokeWidth={2} />
                         Edit
                       </DropdownMenuItem>

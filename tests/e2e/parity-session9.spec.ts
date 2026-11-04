@@ -724,3 +724,56 @@ test.describe("S127/CB9 · the assignments Type select is the shared 8-value voc
     await expect(dlg).toHaveCount(0);
   });
 });
+
+// S140/CO1 — the legacy-row RENDER gate (A-L3 closed): the global setup
+// plants one PRE-FIX hostile note on the demo user (scripts/e2e-
+// plant-legacy-note.ts — a remote tracking pixel + iframe + handler bait,
+// simulating a row written before the sanitize seam existed). Opening it
+// in the Notes view exercises the quill-editor mount gate
+// (sanitizeNoteHtmlDom — the DOMParser walk over the same policy the
+// server seam enforces): the hostile markup must die BEFORE the Quill
+// paste, so the attacker origin sees ZERO requests and the editor DOM
+// carries no live remote img. The server doors (API + import) are pinned
+// in tests/note-html.test.ts + s23-import.spec.ts.
+test.describe("S140/CO1 · the legacy hostile note render gate", () => {
+  test("opening a pre-fix hostile note fires ZERO requests to the attacker origin and leaves no live remote img", async ({
+    page,
+  }) => {
+    // Belt: abort any attempted request to the fixture's reserved origin
+    // (RFC 2606 .example — never resolves) and COUNT what was attempted.
+    let attempts = 0;
+    await page.route("**/a-l3-legacy.example/**", (route) => {
+      attempts += 1;
+      return route.abort();
+    });
+
+    await page.goto("/Notes");
+    await hydrated(page);
+
+    // Open the planted legacy note (its row button carries the title).
+    const row = page
+      .locator('[aria-label="Notes list pane"]')
+      .getByRole("button", { name: /A-L3 legacy hostile note/ });
+    await expect(row).toBeVisible();
+    await row.click();
+
+    // The editor mounts (the title input carries the note's title) and the
+    // legacy render gate has pasted the SANITIZED form.
+    await expect(page.getByLabel("Note title")).toHaveValue(
+      "A-L3 legacy hostile note (render-gate fixture)",
+    );
+    // The hostile elements never materialize in the live editor DOM: no
+    // remote img, no iframe (Quill's Video blot), no handler attribute.
+    await expect(page.locator(".ql-editor img[src^='http']")).toHaveCount(0);
+    await expect(page.locator(".ql-editor iframe")).toHaveCount(0);
+    // The benign paragraph text survives (the sanitizer is an allowlist,
+    // not a scorched earth).
+    await expect(page.locator(".ql-editor")).toContainText(
+      "Legacy row planted pre-fix",
+    );
+
+    // Zero outbound attempts to the attacker origin — the render gate
+    // killed the pixel before the fetch (the route counter never moved).
+    expect(attempts).toBe(0);
+  });
+});

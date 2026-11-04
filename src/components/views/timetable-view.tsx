@@ -516,7 +516,13 @@ export function TimetableView() {
             <p className="text-sm text-slate-500 dark:text-slate-400">{formatWeekdayMonthDay(today)}</p>
           </div>
           <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {visible.slice(0, 9).map((c) => {
+            {/* S140/CO4c (Audit A L-3): the silent 9-card cap is gone —
+                it hid user data with no affordance and no measured
+                reference basis (the reference renders its empty state
+                here; chrome-level parity is unaffected). The 3-col grid
+                handles the domain scale (a real timetable carries
+                ~10-20 classes). */}
+            {visible.map((c) => {
               const subject = subjectOf(c.subjectId);
               const color = subject?.color ?? "rgb(var(--sf-primary))";
               return (

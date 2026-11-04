@@ -449,7 +449,8 @@ describe("rate-limiter hard cap under an all-live flood (S121/BV9)", () => {
 // restarting its count at 1 — the CK1 CPU-DoS bound quietly re-arms. The
 // fix: evictOldestBucket skips the fixed process-wide budget keys (the
 // `Global:` family — a tiny, always-live, attacker-unreachable set of at
-// most 2 keys; the eviction always finds a non-global oldest). The map's
+// most 2 keys — 3 since S140/CO2 added the authed-scrypt aggregate; the
+// eviction always finds a non-global oldest). The map's
 // bound stays MAX_BUCKETS: the exemption only chooses the eviction
 // VICTIM, it never skips the eviction itself.
 describe("the global-bucket eviction exemption (S137/CL8)", () => {
@@ -775,5 +776,88 @@ describe("the S134/CI1 scrypt KDF migration", () => {
     scryptBurns.length = 0;
     burnLoginScryptWork("probe-password");
     expect(scryptBurns).toEqual([131072, 16384]);
+  });
+});
+
+// S140/CO2 (Audit B M-1 — the CK1 containment family swept to its
+// siblings): change-password, change-email, delete-account, and
+// reset-password each burn the same synchronous scrypt pair as login
+// (~0.5-0.9s blocking the single worker), but carried only per-user or
+// per-IP budgets — NO process-wide aggregate. Under the default in-band
+// posture (ADR-013: registration open, the OTP in the response), a fleet
+// of throwaway accounts yields ~10 burns x 3 authed routes x N accounts
+// per 15-min window = sustained sitewide event-loop starvation, the exact
+// harm class S136/CK1 was built to bound on login/register. The fix: ONE
+// shared `authBurnGlobal:` aggregate (40/15min, the loginGlobal sizing
+// mirrored) checked before the burn on all four routes, discharged by the
+// S138/CM3 decrement-on-success (one requester's success proves only
+// their own legitimacy — an aggregate's reset must not be grantable by
+// ONE of its many requesters), and registered in PROTECTED_BUCKETS so the
+// map-cap eviction can never delete the containment bucket mid-flood
+// (the S138/CM1 exact-key whitelist doctrine).
+describe("the authed-scrypt aggregate containment (S140/CO2)", () => {
+  it("the shared authBurnGlobal: budget bounds the aggregate at 40/15-min (the CK1 family swept to its siblings)", () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-11-04T12:00:00Z"));
+    resetAllRateLimits();
+    try {
+      for (let i = 0; i < 40; i++) {
+        expect(checkRateLimit("authBurnGlobal:", 40).ok).toBe(true);
+      }
+      // The 41st authed burn in the window is contained sitewide.
+      const blocked = checkRateLimit("authBurnGlobal:", 40);
+      expect(blocked.ok).toBe(false);
+      expect(blocked.retryAfterSec).toBeGreaterThan(0);
+      // A DIFFERENT requester (any of the four routes) shares the one
+      // aggregate — the containment is process-wide, not per-key.
+      expect(checkRateLimit("authBurnGlobal:", 40).ok).toBe(false);
+      // The window heals: 15 minutes later the budget reopens.
+      vi.setSystemTime(new Date("2026-11-04T12:16:00Z"));
+      expect(checkRateLimit("authBurnGlobal:", 40).ok).toBe(true);
+    } finally {
+      resetAllRateLimits();
+      vi.useRealTimers();
+    }
+  });
+
+  it("decrementRateLimit discharges the authBurnGlobal: aggregate the CM3 way (net-of-successes — never a full reset)", () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-11-04T12:00:00Z"));
+    resetAllRateLimits();
+    try {
+      for (let i = 0; i < 40; i++) checkRateLimit("authBurnGlobal:", 40);
+      expect(checkRateLimit("authBurnGlobal:", 40).ok).toBe(false);
+      // A legitimate success (password changed) decrements — it must NOT
+      // reset the window's other 39 spends (the AI-2 defeat shape).
+      decrementRateLimit("authBurnGlobal:");
+      expect(checkRateLimit("authBurnGlobal:", 40).ok).toBe(true);
+      // ...but 39 failures re-exhaust it: only successes oscillate under
+      // the bound; a pure flood still trips at 40 net.
+      for (let i = 0; i < 39; i++) checkRateLimit("authBurnGlobal:", 40);
+      expect(checkRateLimit("authBurnGlobal:", 40).ok).toBe(false);
+    } finally {
+      resetAllRateLimits();
+      vi.useRealTimers();
+    }
+  });
+
+  it("the authBurnGlobal: bucket is eviction-EXEMPT like its login/register siblings (the exact-key whitelist census, S138/CM1 extended)", () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-11-04T12:00:00Z"));
+    resetAllRateLimits();
+    try {
+      // The containment bucket, spent to its budget of 1.
+      expect(checkRateLimit("authBurnGlobal:", 1).ok).toBe(true);
+      // A crafted-key flood whose keys merely CONTAIN the exempt
+      // substring (the forged-XFF form) — none are the exact exempt key.
+      for (let i = 0; i < 2100; i++) checkRateLimit(`changePw:authBurnGlobal:${i}`, 5);
+      // The map cap holds (crafted keys evict each other) ...
+      expect(rateLimitBucketCount()).toBeLessThanOrEqual(2048);
+      // ... and the REAL containment bucket survived the pressure.
+      expect(checkRateLimit("authBurnGlobal:", 1).ok).toBe(false);
+    } finally {
+      resetAllRateLimits();
+      vi.useRealTimers();
+    }
   });
 });

@@ -50,6 +50,9 @@ import {
 } from "@/lib/data-import";
 import { db } from "@/lib/db";
 import { requireUser } from "@/lib/server/auth";
+// S140/CO1: the import door's note-HTML sanitizer (the raw-tx write loop
+// bypasses the delegate writeTransform — see the loop's comment).
+import { sanitizeNoteHtml } from "@/lib/server/note-html";
 import {
   checkEventOrderingMerge,
   checkGradeRangeMerge,
@@ -377,6 +380,24 @@ export const POST = async (request: NextRequest) => {
         for (const row of rows) {
           const { id, ...rawFields } = row;
           const fields = stripSecrets(rawFields);
+          // S140/CO1 (the A-L3 deferral, closed) — the import door's note-HTML
+          // sanitize step. This loop writes through the RAW Prisma tx client
+          // ((tx as any)[model]), NOT the factory delegates, so the note
+          // delegate's writeTransform sanitize hook never fires here — the
+          // route applies the SAME sanitizer (src/lib/server/note-html.ts)
+          // directly. The seam's sanitizeImportRow is documented
+          // validate-only BY DESIGN (data-import.ts is client-imported — the
+          // sanitize-html dependency cannot ride it); this is the import
+          // door's one server-side write seam. Plain-text rows round-trip
+          // byte-identically (the demo export/seed); a hostile
+          // "backup" note's remote-img/iframe/handler markup dies here.
+          if (
+            collection === "notes" &&
+            typeof fields.content === "string" &&
+            fields.content !== ""
+          ) {
+            fields.content = sanitizeNoteHtml(fields.content);
+          }
           // cards carry no userId column — ownership rides the deck relation,
           // so EVERY probe (including this write loop's findFirst, the S117
           // fix) scopes through { deck: { userId } }, exactly like the

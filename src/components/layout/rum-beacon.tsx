@@ -2,11 +2,15 @@
 
 // ---------------------------------------------------------------------------
 // The ADR-016 RUM beacon: ZERO DOM (visual parity is byte-preserved — the
-// component renders null always). After mount, only when a session cookie is
-// present, it dynamic-imports web-vitals and POSTs each metric the moment it
-// reports to /api/rum (the server upserts the (sessionId, metric) pair —
-// final value wins). Failures are swallowed SILENTLY: no toast, no console
-// spam — telemetry must never become user-visible noise.
+// component renders null always). The AUTH GATE lives at the MOUNT POINT:
+// the authed shell renders this component only inside its signed-in branch
+// (the httpOnly session cookie was never readable from the client — the
+// old document.cookie gate never opened; S140/CO4e re-aligned this header
+// with the inline mount-point comment). After mount it dynamic-imports
+// web-vitals and POSTs each metric the moment it reports to /api/rum (the
+// server upserts the (sessionId, metric) pair — final value wins).
+// Failures are swallowed SILENTLY: no toast, no console spam — telemetry
+// must never become user-visible noise.
 // ---------------------------------------------------------------------------
 
 import * as React from "react";

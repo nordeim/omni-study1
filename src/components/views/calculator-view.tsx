@@ -601,20 +601,39 @@ const UNIT_CATEGORIES: { value: UnitCategory; label: string; units: string[] }[]
   { value: "data", label: "Data", units: ["B", "KB", "MB", "GB", "TB"] },
 ];
 
+/** S140/CO4d: the ONE unit-converter default rule — Length re-selects the
+ *  reference's measured m → ft pair; every other category takes
+ *  units[0] → units[2] (the long-standing switch behavior — no measured
+ *  basis exists to change it, and none is needed: only Length's default
+ *  was ever measured against the reference). */
+function unitDefaultPair(category: { value: UnitCategory; units: string[] }): {
+  from: string;
+  to: string;
+} {
+  if (category.value === "length") return { from: "m", to: "ft" };
+  return { from: category.units[0], to: category.units[2] ?? category.units[1] };
+}
+
 function UnitPanel() {
   const { toast } = useToast();
   const [categoryValue, setCategoryValue] = React.useState<UnitCategory>("length");
   const category = UNIT_CATEGORIES.find((c) => c.value === categoryValue) ?? UNIT_CATEGORIES[0];
   // The reference's length defaults are m → ft (1 / 0.3048 = 3.2808…).
-  const [from, setFrom] = React.useState(category.value === "length" ? "m" : category.units[0]);
-  const [to, setTo] = React.useState(category.value === "length" ? "ft" : (category.units[2] ?? category.units[1]));
+  // S140/CO4d (Audit A L-6): the dead initializer ternary is gone (the
+  // category is always Length at mount) and the default rule now has ONE
+  // form — `unitDefaultPair` — applied at mount AND on re-select, so
+  // cycling away from Length and back restores the measured m → ft pair
+  // (previously the switch handler fell to units[0]/units[2] = mm → m).
+  const [from, setFrom] = React.useState(() => unitDefaultPair(UNIT_CATEGORIES[0]).from);
+  const [to, setTo] = React.useState(() => unitDefaultPair(UNIT_CATEGORIES[0]).to);
   const [value, setValue] = React.useState("1");
 
   const switchCategory = (next: string) => {
     const nextCategory = UNIT_CATEGORIES.find((c) => c.value === next) ?? UNIT_CATEGORIES[0];
     setCategoryValue(nextCategory.value);
-    setFrom(nextCategory.units[0]);
-    setTo(nextCategory.units[2] ?? nextCategory.units[1]);
+    const pair = unitDefaultPair(nextCategory);
+    setFrom(pair.from);
+    setTo(pair.to);
   };
 
   const parsed = Number(value);

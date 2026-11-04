@@ -3881,3 +3881,105 @@ entry.
 **Next cycle.** The FE/views + auth/crypto/infra axes (the s138 axes, two
 cycles stale by then), or the A-M3 restore-availability performance cycle
 (the batching redesign + the knownIds skip).
+
+---
+
+## Session 151 — Batch CO (Cycle 90): the note-HTML sanitize + authed-scrypt containment + checkbox-cn + FE-hardening set — the note-HTML sanitize + authed-scrypt containment + checkbox-cn + FE-hardening set
+
+**Received state.** `6485364` on `main` (the Batch CN fix `b557019` + the
+operator's two session-log commits) — the 32nd workspace continuation, a
+fresh clone with `node_modules/`, `.env`, `db/`, `.next/` all absent.
+
+**Environment re-provisioned per the recipe.** `bun install` (491 pkgs,
+6.8s), `.env` from the current `.env.example`
+(`DATABASE_URL="file:../db/custom.db"`, `AUTH_SECRET=""` — the e2e-build
+posture), `bun run db:push` + `db:seed` (db/custom.db at the repo root —
+the three-anchor contract holding), `bunx playwright install chromium`
+(chromium-1243 re-provisioned), `bun run build` green (the six documented
+Turbopack warnings).
+
+**Cold baseline BEFORE any work.** lint ✓ · tsc ✓ · unit **1391/1391**
+(45 files — the documented S139 final state exactly) · build ✓ · the
+mobile-navigation spec cold **20/20** · the dev-server preflight GREEN ·
+the drawer check GREEN (**the 55th consecutive no-Tailwind-v4-mobile-nav-
+bug confirmation**).
+
+**Live parity re-verified fresh (agent-browser 0.41.1, BOTH hosts).** The
+reference logged in with the operator account; the mobile drawer's
+computed styles byte-matched (the 288px w-72 white panel, the black/20
+backdrop at blur(4px) — the v3 `backdrop-blur-sm` ≡ v4
+`backdrop-blur-xs` trap-9 equivalence verified live — exactly 20 links, no
+footer); the desktop chrome matched (the 260px sidebar, 20 links in
+order, main at x=260). The reference's `/Timetable` "My Classes" renders
+its EMPTY state on the operator account — no card-cap measurement exists
+(data-shaped probes non-authoritative, the S123 doctrine).
+
+**The audits (Mode-C, read-only subagents, every M/L finding re-verified
+by direct read).** The rotated triple per the s139 closing directive: the
+FE/views axis **0C/0H/1M/6L/9I** (every hard rule mechanically verified
+passing — the axis exceptionally clean), the auth/crypto/infra axis
+**0C/0H/1M/1L/8I** (every documented contract verified upheld), and the
+standing A-L3 note-HTML surface **0C/0H/1M/2L/3I** (the deferral VERIFIED
+end-to-end: both entry points unvalidated, the render sink keeps remote
+urls alive through Quill's blots, production leaning on the CSP alone,
+zero test coverage).
+
+**The plan.** `docs/remediation-plan-session140.md` written BEFORE any
+source change (the standing doctrine): the CO1 sextet (note-HTML), the
+CO2 quartet (authBurnGlobal), the CO3 cn() fix, the CO4 FE-hardening
+octet, the CO5 AGENTS.md contract-line fix, the CO6 doc chain. A-M3
+deferred AGAIN with rationale (its own performance cycle); the authed
+sessionVersion/Cache-Control items deferred with documented rationale.
+
+**Executed TDD-style.** RED: the note-html import-RED (10 legs), the
+authBurnGlobal eviction-exemption RED (the crafted-key flood evicted the
+real bucket — fixed by the PROTECTED_BUCKETS registration), the census
+REDs (5 legs: the four-route authBurnGlobal markers + the AGENTS.md
+success-decrement line + the two sanitize census legs). The e2e
+render-gate leg's RED probe ran at the function level — the first
+call-site attempt hit the noUnusedLocals type gate (the guard itself
+working; the lesson recorded). GREEN: unit **1391 → 1409** (46 files:
+note-html +10, auth +3, script-conventions +5), e2e **603 → 605**
+(150+186+87+95+87 — chunk 2 +1 [the render-gate leg], chunk 5 +1 [the
+import-door sanitize leg at demo import budget 9/10; the chunk-5 register
+census has zero headroom, so no fresh user]).
+
+**Honest mid-run corrections.** (1) The hue-tokens residual register
+re-anchored — the CO3 `cn()` import shifted the dashboard residual's
+line +1 and tripped both register legs (the register working as
+designed). (2) The `<hr>` test expectation re-pinned to the serialized
+`<hr /` form (sanitize-html's void-element serialization — the trap-10
+"pin what reads back" doctrine). (3) The RED-probe relocation (lesson 6).
+(4) The P1008 RumEvent socket-timeout noise class observed through the
+cert WebServer logs — pre-existing (observed at baseline too), all chunks
+first-pass, the documented machine-load class.
+
+**The CN set's sibling — CO1's dependency decision.** sanitize-html
+2.18.1 (+@types) joined as the repo's first new runtime dependency since
+the seed: the vetted allowlist library at a server-only seam
+(`src/lib/server/note-html.ts`), zero client-bundle impact
+(`validation.ts`/`data-import.ts` stay dependency-free — both are
+client-imported). The policy lives once in `src/lib/note-html.ts`
+(client-safe data + the DOMParser render gate); the server sanitizer and
+the browser gate consume the SAME allowlist.
+
+**Re-cert (the FINAL tree).** lint ✓ · tsc ✓ · unit **1409/1409** (46
+files) · build ✓ · the cold 5-chunk e2e **605/605** (150+186+87+95+87,
+every chunk first-pass) · **census 2014 green**. Evidence: four
+`docs/screenshots/140-clone-*.png` frames (desktop, mobile drawer, the
+Notes render-gate surface with the planted legacy hostile note, the
+Timetable My Classes surface — the capture script self-verifying; the
+probe row cleaned from the dev db after the capture).
+
+**Docs.** README badge/census lines + the Session-140 row; AGENTS.md
+census + the S140 lessons block; CLAUDE.md's two-cycles-stale test counts
+corrected (1171→1409, 560→605 — the s140 audit's own doc-drift finding);
+PAD v1.3.48 (the revision block + the §8.1 Total row 77/2010 + the §11
+A-L3 closure row); the SKILL doc census; the vitest header re-anchor; the
+cert-script re-tag; the plan §6 as-executed close; `docs/session_153.md`;
+this entry.
+
+**Next cycle.** The A-M3 restore-availability performance cycle (the
+batching redesign + the knownIds skip — now the only standing M-family
+deferral), or the FE/views + auth/crypto/infra rotation again (one cycle
+fresher now).

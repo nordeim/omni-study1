@@ -39,6 +39,13 @@ import { cn } from "@/lib/utils";
 import { useAppStore } from "@/lib/store";
 import type { ViewId } from "@/lib/router";
 
+// S140/CO4f (Audit A I-2): the id→item lookup as a module-level Map — the
+// per-link NAV_ITEMS.find() ran a 20-item linear scan on EVERY render of
+// every one of the 20 links in BOTH the sidebar and the drawer (~400
+// scans per chrome render, re-running each minute via the clock's useNow
+// tick). One O(1) get() per link now.
+const NAV_ITEM_BY_ID = new Map(NAV_ITEMS.map((n) => [n.id, n]));
+
 export const NAV_ICONS: Record<ViewId, LucideIcon> = {
   dashboard: LayoutDashboard,
   myday: Sun,
@@ -76,7 +83,7 @@ type NavItemLinkProps = {
  * avatarTo, the measured S8-A stops) + strong text + aria-current.
  */
 export function NavItemLink({ view, collapsed = false, onNavigate, className, tone = "default" }: NavItemLinkProps) {
-  const item = NAV_ITEMS.find((n) => n.id === view);
+  const item = NAV_ITEM_BY_ID.get(view);
   const active = useAppStore((s) => s.view) === view;
   const navigate = useAppStore((s) => s.navigate);
   if (!item) return null;

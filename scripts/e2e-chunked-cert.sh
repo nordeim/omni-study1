@@ -1,4 +1,13 @@
 #!/usr/bin/env bash
+# (S140/CO re-tag — census 603 → 605, net +2: chunk 2 +1 [the S140/CO1
+# legacy hostile-note render-gate leg in parity-session9 — the planted
+# pre-fix row opens in the Notes view with route interception on the
+# attacker origin: zero outbound requests, no live remote img/iframe in
+# the editor DOM, the benign text preserved]; chunk 5 +1 [the S140/CO1
+# import-door sanitize leg in s23-import — a hostile note imports 200 and
+# reads back stripped: no remote img src, no script, no handler, the
+# round-trip contract untouched; rides the demo session at import budget
+# 9/10 — the chunk-5 register census has zero headroom, so no fresh user].)
 # (S132/CG re-tag — census 570 → 575, net +5: chunk 1 +2 [the two CG7
 # modified-click legs in navigation — a synthetic ctrl-click on the
 # section-action View All CTA and on the Start My Day hero CTA never fires
@@ -82,7 +91,7 @@
 # 192.0.2.139, 3/10 per-IP, 3/40 registerGlobal), the demo import
 # budget at 8/10; END-of-file, the CK1 flood pin stays TERMINAL in
 # s16]. The full CN map: docs/remediation-plan-session139.md.)
-# Expected: 150 + 185 + 87 + 95 + 86 = 603 (each chunk's count includes its
+# Expected: 150 + 186 + 87 + 95 + 87 = 605 (each chunk's count includes its
 # auth setup — the current census; the historical re-tag blocks beneath.)
 # (S131/CF re-tag — census 567 → 570, net +3: chunk 1 +1 [the CF9
 # drawer focus-restore leg in mobile-navigation — crossing the lg
