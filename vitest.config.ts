@@ -1,7 +1,21 @@
 import { defineConfig } from "vitest/config";
 import path from "node:path";
 
-// Unit-test layer for the pure domain seams — 45 files / 1314 tests
+// Unit-test layer for the pure domain seams — 45 files / 1332 tests
+// (re-anchored S135/CJ — the audit-driven hardening cycle + the violet
+// accent-edge token family: census 1314 → 1332, +18 net [data-import +9:
+// the S135/CJ2 IMPORT_ORDER seam-move family (the export pin + the
+// manifest set-equality + the parents-first shape) + the S135/CJ4
+// required-FK null/non-string trio + the S135/CJ5 parseImportRaceMessage
+// trio; script-conventions +3: the S135/CJ2 route-side collection censuses
+// (the export findMany count + the buildDataExport literal-key census +
+// the import consumption census); theme +2: the S135/CJ3 accent-edge
+// family (the per-accent 200-step emission + the violet byte-identity) +
+// the S3-J pin's 17 → 18 re-anchor riding the existing leg;
+// hue-tokens +2: the treated-light-half consumer census + the re-shaped
+// dark-half register's clean-sweep leg; validation +1: the S135/CJ7
+// preferencesSchema default-free pin; data-export +1: the S135/CJ7
+// user-block Date→ISO pin].)
 // (re-anchored S134/CI — the audit-driven hardening cycle + the KDF
 // migration: census 1291 → 1314, +23 net [auth +14: the S134/CI1 scrypt
 // KDF migration family (the 6-part format round-trip — which is ALSO the

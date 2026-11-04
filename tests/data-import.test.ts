@@ -360,7 +360,7 @@ describe("IMPORT_FK_MAP (the completeness pin — the INITIAL_COLLECTIONS patter
 });
 
 describe("IMPORT_MAX_BYTES (the documented body cap)", () => {
-  it("is 10 MiB — 5x the largest realistic single-user envelope", () => {
+  it("is 25 MiB — the S124/BY3 export/import reconciliation (the export emits base64 file payloads inline)", () => {
     // S124/BY3: 10 → 25 MiB — the export/import reconciliation (the export
     // emits base64 file payloads inline; ~4-5 max-size uploads made the
     // user's own backup unrestorable under the old cap).
@@ -1197,5 +1197,119 @@ describe("S133/CH4 · the envelope validator twin closed (the route consumes the
     expect(res.ok).toBe(false);
     if (res.ok) return;
     expect(res.error).toContain("newer version");
+  });
+});
+
+// ---------------------------------------------------------------------------
+// S135/CJ4 (audit A-L2) — the required-FK null/non-string rejection. The
+// seam's FK loop early-continued on undefined/null BEFORE the spec.required
+// rejection, and the route's twin guard skipped non-strings — a cards row
+// with deckId null (or a number) sailed both layers and died as
+// PrismaClientValidationError → the GENERIC "fields do not match" 400. The
+// ADR-021 actionable-message contract degrades silently for that one
+// hand-crafted shape. The seam now rejects it with the named-field message;
+// undefined (absent) stays seam-legal — the UPDATE branch's untouched case
+// (the route owns the create-branch rejection via its knownIds census).
+// ---------------------------------------------------------------------------
+describe("S135/CJ4 · the required-FK null and non-string rejection", () => {
+  const cardsEnvelope = (deckId: unknown): Record<string, unknown> => ({
+    format: "studyflow-data-export",
+    version: 1,
+    exportedAt: "2026-11-01T00:00:00.000Z",
+    user: { id: "u-cj4", email: "cj4@account.dev", name: "CJ4" },
+    counts: { decks: 1, cards: 1 },
+    data: {
+      decks: [{ id: "d1", name: "Deck", createdAt: "2026-10-01T00:00:00.000Z" }],
+      cards: [
+        {
+          id: "c1",
+          deckId,
+          front: "front",
+          back: "back",
+          createdAt: "2026-10-01T00:00:00.000Z",
+        },
+      ],
+    },
+  });
+
+  it("rejects a cards row with deckId null — the actionable message, not the generic Prisma fallback (RED pre-fix: ok)", async () => {
+    const { validateImportEnvelope } = await import("../src/lib/data-import");
+    const res = validateImportEnvelope(cardsEnvelope(null));
+    expect(res.ok).toBe(false);
+    if (res.ok) return;
+    expect(res.error).toContain("cards");
+    expect(res.error).toContain("deckId");
+    expect(res.error).toContain("c1");
+  });
+
+  it("rejects a cards row with a non-string deckId (a number sails both guards pre-fix)", async () => {
+    const { validateImportEnvelope } = await import("../src/lib/data-import");
+    const res = validateImportEnvelope(cardsEnvelope(42));
+    expect(res.ok).toBe(false);
+    if (res.ok) return;
+    expect(res.error).toContain("deckId");
+  });
+
+  it("still ACCEPTS an absent deckId at the seam — the update branch's untouched case (the route owns create-branch rejection)", async () => {
+    const { validateImportEnvelope } = await import("../src/lib/data-import");
+    const res = validateImportEnvelope(cardsEnvelope(undefined));
+    expect(res.ok).toBe(true);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// S135/CJ2 (audit A-M1) — the import order joins the seam. IMPORT_ORDER was
+// route-local (import/data/route.ts): dropping a collection from it
+// compiled clean and the route silently ignored that family's rows — the
+// exact drift class the manifest byte-pin guards on the seam side but
+// nothing guarded on the route side. The order is seam knowledge (the
+// parents-first topological order); it moves beside IMPORT_FK_MAP and the
+// manifest-consistency census extends to set-equality.
+// ---------------------------------------------------------------------------
+describe("S135/CJ2 · IMPORT_ORDER rides the seam and covers the manifest", () => {
+  it("is exported from src/lib/data-import (RED pre-fix: the route-local const is invisible here)", async () => {
+    const mod = await import("../src/lib/data-import");
+    expect(Array.isArray(mod.IMPORT_ORDER)).toBe(true);
+  });
+
+  it("covers EXACTLY the export manifest — a dropped or added collection fails both directions", async () => {
+    const { IMPORT_ORDER } = await import("../src/lib/data-import");
+    expect([...IMPORT_ORDER].sort()).toEqual([...EXPORT_COLLECTIONS].sort());
+  });
+
+  it("imports folders before files and decks before cards (the parents-first shape survives the move)", async () => {
+    const { IMPORT_ORDER } = await import("../src/lib/data-import");
+    const order = [...IMPORT_ORDER];
+    expect(order.indexOf("folders")).toBeLessThan(order.indexOf("files"));
+    expect(order.indexOf("decks")).toBeLessThan(order.indexOf("cards"));
+    expect(order.indexOf("subjects")).toBeLessThan(order.indexOf("tasks"));
+  });
+});
+
+// ---------------------------------------------------------------------------
+// S135/CJ5 (audit A-L5) — the colon-safe 409 race-message parse. The route's
+// handler destructured `err.message.split(":")` as [, collection, id] — an
+// id containing ":" (legal to 64 arbitrary chars) truncated at the first
+// colon. The parse moves to a pure seam helper: everything after the SECOND
+// colon is the id.
+// ---------------------------------------------------------------------------
+describe("S135/CJ5 · parseImportRaceMessage (the colon-safe 409 assembly)", () => {
+  it("is exported and splits collection from id at the second colon only", async () => {
+    const mod = await import("../src/lib/data-import");
+    expect(typeof mod.parseImportRaceMessage).toBe("function");
+  });
+
+  it("an id containing colons survives the parse intact (RED pre-fix: not a function)", async () => {
+    const { parseImportRaceMessage } = await import("../src/lib/data-import");
+    const parsed = parseImportRaceMessage("import-p2002:cards:weird:id:with:colons");
+    expect(parsed).toEqual({ collection: "cards", id: "weird:id:with:colons" });
+  });
+
+  it("the plain shapes parse as before", async () => {
+    const { parseImportRaceMessage } = await import("../src/lib/data-import");
+    expect(parseImportRaceMessage("import-p2002:tasks:t-123")).toEqual({
+      collection: "tasks",
+      id: "t-123",
+    });
   });
 });

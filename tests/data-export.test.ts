@@ -126,6 +126,16 @@ describe("buildDataExport (the envelope builder)", () => {
     expect(envelope.user.studyGoalHours).toBe(4);
   });
 
+  // S135/CJ7 (audit A-I4) — the user block's Date→ISO conversion was
+  // unpinned (email/studyGoalHours asserted, the Date branch not — the
+  // fixture's createdAt rode the seam unasserted). publicUser
+  // pre-stringifies in production; this leg pins the seam's own Date
+  // branch on the user block so a serializer regression cannot ship green.
+  it("S135/CJ7: the user block's Date fields serialize to ISO strings", () => {
+    const envelope = buildDataExport(user, {}, WHEN);
+    expect(envelope.user.createdAt).toBe("2026-10-09T08:00:00.000Z");
+  });
+
   it("presents EVERY manifest collection key — empty input yields [] + count 0", () => {
     const envelope = buildDataExport(user, {}, WHEN);
     expect(Object.keys(envelope.data)).toEqual(EXPORT_COLLECTIONS);

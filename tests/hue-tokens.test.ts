@@ -446,29 +446,50 @@ describe("the analytics accent tokenization (S130/CE8)", () => {
 });
 
 // ---------------------------------------------------------------------------
-// S134/CI8 (audit B-L2) — the accent-semantic violet register. Four sites
-// hardcode violet on surfaces whose hue SHOULD follow the user's chosen
-// accent (the S121/BV15 family): the tasks row-card hover border
-// (undocumented), the flashcards study-card back border (undocumented), the
-// notes selected-row tint (a documented measured value), and the analytics
-// Tasks-Completed chip (a documented measured value). No byte-identical
-// accent-token equivalent exists for a violet-200 border (--sf-primary-soft
-// is violet-100, not 200) — inventing a token family is a parity-measured
-// change of its own (deferred, plan §4). The register machine-guards the
-// ledger: the negative leg fails when a FIFTH border-violet-200 site
-// appears unregistered; the anchored leg fails when a registered site
-// moves or sheds its class.
+// S134/CI8 → S135/CJ3 — the accent-semantic violet register, RE-SHAPED to
+// its dark half. The CI8 era registered four LIGHT hardcoded-violet sites
+// (three violet-200 borders + one violet-100 chip). S135/CJ3 closed the
+// light half — the parity measurement CI8 lacked is now gathered (the
+// reference is single-accent; all four light values re-verified live, the
+// tasks hover and flashcards face at class/computed level, the analytics
+// chip computed rgb(237, 233, 254)): the 200-level border tint earned
+// its own token at THREE uniform consumers (--sf-primary-edge, the S92
+// second-consumer doctrine), the notes bg rides the EXISTING softest token
+// (violet-50 byte-identical), and the chip bg rides the EXISTING empty
+// token (violet-100 byte-identical). What remains site-local is the DARK
+// half of each site — deliberately (the S92 divergent-variant doctrine):
+// the reference's Dark option is the measured platform no-op, so the dark
+// tints have NO reference ground truth (clone-superset design), and the
+// three dark border values are DIVERGENT (800/800/900) — a dark-edge token
+// family waits for a harmonization pass that changes dark-mode rendering
+// at three sites. The register machine-guards the remainder: the negative
+// leg fails when a FIFTH dark violet site appears unregistered; the
+// anchored leg fails when a registered site moves or sheds its class; the
+// NEW treated-light-half census (the S94/AU2 precedent) pins the five
+// migrated sites to their tokens with the S92 quote-adjacency discriminator
+// (the class string, never a comment mention).
 // ---------------------------------------------------------------------------
 const VIOLET_RESIDUALS: ReadonlyArray<{ file: string; line: number; pattern: RegExp; why: string }> = [
-  { file: "src/components/views/tasks-view.tsx", line: 115, pattern: /hover:border-violet-200/, why: "the row-card hover border (undocumented accent-semantic drift, audit B-L2)" },
-  { file: "src/components/views/flashcards-view.tsx", line: 394, pattern: /border-violet-200/, why: "the study-card back border (undocumented accent-semantic drift, audit B-L2)" },
-  { file: "src/components/views/notes-view.tsx", line: 686, pattern: /border-violet-200/, why: "the selected-note row tint (documented measured parity value, never swept into the accent-token doctrine; line re-anchored S134/CI7b — the patchSelected mirror comments above shifted it)" },
-  { file: "src/components/views/analytics-view.tsx", line: 414, pattern: /bg-violet-100/, why: "the Tasks-Completed stat chip (documented measured parity value — the anchored-only leg; bg-violet-100 is unsweepable, the empty-state/KPI families share it)" },
+  { file: "src/components/views/tasks-view.tsx", line: 115, pattern: /dark:hover:border-violet-800/, why: "the row-card hover border's DARK half (the light half rides --sf-primary-edge since S135/CJ3; no reference ground truth for dark — the clone's dark mode is the documented superset)" },
+  { file: "src/components/views/flashcards-view.tsx", line: 394, pattern: /dark:border-violet-800/, why: "the study-card face border's DARK half (the light half rides --sf-primary-edge since S135/CJ3; the 800-vs-900 divergence from notes is the S92 divergent-variant class)" },
+  { file: "src/components/views/notes-view.tsx", line: 686, pattern: /dark:border-violet-900/, why: "the selected-note row border's DARK half (the light border rides --sf-primary-edge and the bg rides --sf-primary-softest since S135/CJ3; softDark's 900 value is byte-equal but the dark-edge family waits for a uniform design pass)" },
+  { file: "src/components/views/analytics-view.tsx", line: 414, pattern: /dark:bg-violet-900\/50/, why: "the Tasks-Completed chip's DARK half (the light bg rides --sf-primary-empty since S135/CJ3; the /50 opacity serializes through the trap-7 family — a dark empty-step token would change the form)" },
 ];
 
-describe("the accent-semantic violet register (S134/CI8)", () => {
-  it("carries ZERO unregistered border-violet-200 sites in the views (a fifth site fails this leg)", () => {
-    const family = /border-violet-200/;
+// The S135/CJ3 treated-light-half census: the five migrations, pinned to
+// their tokens at file:line anchors (quote-adjacency — the class VALUE, not
+// a prose mention; the S92/AS1 discriminator).
+const EDGE_CONSUMERS: ReadonlyArray<{ file: string; line: number; pattern: RegExp; why: string }> = [
+  { file: "src/components/views/tasks-view.tsx", line: 115, pattern: /hover:border-sf-primary-edge/, why: "the row-card hover border" },
+  { file: "src/components/views/flashcards-view.tsx", line: 394, pattern: /border-sf-primary-edge/, why: "the study-card face border" },
+  { file: "src/components/views/notes-view.tsx", line: 686, pattern: /border-sf-primary-edge/, why: "the selected-note row border" },
+  { file: "src/components/views/notes-view.tsx", line: 686, pattern: /bg-sf-primary-softest/, why: "the selected-note row tint" },
+  { file: "src/components/views/analytics-view.tsx", line: 414, pattern: /bg-sf-primary-empty/, why: "the Tasks-Completed chip" },
+];
+
+describe("the accent-semantic violet register (S134/CI8 → S135/CJ3, the dark half)", () => {
+  it("carries ZERO unregistered dark violet sites in the views (a fifth dark site fails this leg)", () => {
+    const family = /dark:(?:hover:)?(?:border|bg)-violet-(?:800|900)/;
     const viewFiles = listSrcFiles(
       path.resolve(process.cwd(), "src/components/views"),
     );
@@ -487,18 +508,49 @@ describe("the accent-semantic violet register (S134/CI8)", () => {
     }
     expect(
       offenders,
-      `border-violet-200 sites outside the register (accent-semantic surfaces ride the accent tokens or join the register with a why): ${offenders.join(", ")}`,
+      `dark violet sites outside the register (accent-semantic surfaces ride the accent tokens or join the register with a why): ${offenders.join(", ")}`,
     ).toEqual([]);
   });
 
-  it("the register stays anchored (every registered site still carries its violet class at the recorded line)", () => {
+  it("carries ZERO unregistered LIGHT border-violet-200 sites (the CI8 sweep direction, now fully clean)", () => {
+    const family = /border-violet-200/;
+    const viewFiles = listSrcFiles(
+      path.resolve(process.cwd(), "src/components/views"),
+    );
+    const offenders: string[] = [];
+    for (const file of viewFiles) {
+      const src = readConsumer(file);
+      const rel = path.relative(process.cwd(), file);
+      src.split("\n").forEach((lineText, i) => {
+        if (!family.test(lineText)) return;
+        offenders.push(`${rel}:${i + 1}`);
+      });
+    }
+    expect(
+      offenders,
+      `border-violet-200 sites anywhere in the views (the light half rides --sf-primary-edge since S135/CJ3 — a new hardcoded site fails here): ${offenders.join(", ")}`,
+    ).toEqual([]);
+  });
+
+  it("the register stays anchored (every registered site still carries its dark violet class at the recorded line)", () => {
     for (const r of VIOLET_RESIDUALS) {
       const src = readConsumer(path.resolve(process.cwd(), r.file));
       const lineText = src.split("\n")[r.line - 1];
       expect(
         lineText,
-        `${r.file}:${r.line} — the registered site must keep its violet class (${r.why})`,
+        `${r.file}:${r.line} — the registered site must keep its dark violet class (${r.why})`,
       ).toMatch(r.pattern);
+    }
+  });
+
+  it("the S135/CJ3 treated sites carry their accent tokens at the recorded lines (the consumer census — the class VALUE, never a comment)", () => {
+    for (const c of EDGE_CONSUMERS) {
+      const src = readConsumer(path.resolve(process.cwd(), c.file));
+      const lineText = src.split("\n")[c.line - 1];
+      expect(
+        lineText,
+        `${c.file}:${c.line} — the treated site must keep its accent-token class (${c.why})`,
+      ).toMatch(c.pattern);
     }
   });
 });

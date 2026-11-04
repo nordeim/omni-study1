@@ -391,7 +391,7 @@ export function FlashcardsView() {
               </div>
               <div
                 data-flip-back
-                className="absolute inset-0 flex items-center justify-center rounded-2xl border-2 border-violet-200 bg-white p-8 [backface-visibility:hidden] [transform:rotateY(180deg)] dark:border-violet-800 dark:bg-slate-900"
+                className="absolute inset-0 flex items-center justify-center rounded-2xl border-2 border-sf-primary-edge bg-white p-8 [backface-visibility:hidden] [transform:rotateY(180deg)] dark:border-violet-800 dark:bg-slate-900"
               >
                 {/* S77/AD10 (measured): 20px/400 slate-700 back text. */}
                 <p className="text-center text-xl font-normal text-slate-700 dark:text-slate-100">

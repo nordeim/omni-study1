@@ -21,10 +21,28 @@ import { expect, test, type Page } from "@playwright/test";
 // (5) THE PANEL JOURNEY: /export renders the Restore card; a real
 //     setInputFiles import → the result summary renders.
 //
-// Rate-limit budget: this file makes exactly 9 import POSTs against the
-// 10/15-min per-user budget (round-trip 1 + re-import 1 + dangling-FK 1 +
-// the 400 family 4 + the panel journey 1 + the S117 cards round-trip 1)
-// — counted and documented; no other spec file POSTs the route.
+// Rate-limit budget (S135/CJ6 recount): this file makes exactly 8 DEMO-user
+// import POSTs against the 10/15-min per-user budget (round-trip 1 +
+// re-import 1 + the 400 family 4 + the panel journey 1 + the S117 cards
+// round-trip 1 — the dangling-FK probe rides the round-trip envelope, no
+// standalone POST). Other spec files DO POST this route (the S92/A4-era
+// exclusivity claim was false): resilience.spec.ts carries 4 demo-user
+// POSTs (the BW11 over-cap 413 — the limiter fires before the body read,
+// consuming budget; the BY3 acceptance; and the S135/CJ4+CJ5 400-message
+// pins, relocated there after the first draft HERE tripped chunk 5's
+// registerGlobal: 40 cap — two wasted fresh-user registrations [the pins
+// rode this file's demo storageState anyway] pushed the chunk's register
+// census over 40 and the LAST registering test 429'd) and
+// s14-hardening.spec.ts POSTs on fresh users (the CA5/CA2/CJ1 window
+// probes). Safety is the CHUNK MAP, not exclusivity: resilience rides
+// chunk 3 and this file rides chunk 5 — different server boots, and both
+// the import limiter and the registerGlobal cap are per-process in-memory
+// (each chunk re-boots clean). The register census is ALSO chunk-scoped:
+// chunk 5 carries ~40 register POSTs (auth-flows' 13 sites incl. the CI3
+// quartet's 11 + the verify-OTP re-register pairs + greeting-clock/s18/
+// s24/s25/s26's fresh journeys) — at the registerGlobal: 40 cap with zero
+// headroom; any NEW chunk-5 pin that registers a user must reuse the demo
+// session or displace a register elsewhere. Keep them apart.
 // S119/BT1: the perimeter pins below POST on a FRESH TEST-NET-registered
 // user (192.0.2.119) — the demo user's import budget is untouched.
 test.use({ storageState: "tests/e2e/.auth/user.json" });

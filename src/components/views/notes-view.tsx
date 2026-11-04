@@ -683,7 +683,7 @@ export function NotesView() {
                   className={cn(
                     "block w-full rounded-xl border-2 p-3 text-left outline-none transition-colors focus-visible:ring-2 focus-visible:ring-sf-primary/40",
                     effectiveNoteId === note.id
-                      ? "border-violet-200 bg-violet-50 dark:border-violet-900 dark:bg-slate-800"
+                      ? "border-sf-primary-edge bg-sf-primary-softest dark:border-violet-900 dark:bg-slate-800"
                       : "border-transparent bg-slate-50 hover:border-slate-200 dark:bg-slate-800/50 dark:hover:border-slate-700",
                   )}
                 >

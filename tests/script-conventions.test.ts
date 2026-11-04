@@ -117,7 +117,7 @@ describe("the chunked cert runner's truth contract (S128/CC2)", () => {
 
   it("names the CURRENT per-chunk census in its header (the re-tag tripwire)", () => {
     // The topmost Expected line — re-tagged by every census-changing cycle.
-    expect(certSource).toContain("Expected: 150 + 181 + 74 + 94 + 85 = 584");
+    expect(certSource).toContain("Expected: 150 + 183 + 76 + 94 + 85 = 588");
   });
 
   it("propagates a failing chunk's exit code (never a green cert on a red run)", () => {
@@ -256,8 +256,10 @@ describe("the write-route budget census (S130/CE6)", () => {
 // single request would accept (the corrupted row then locks the inversion
 // in). CE5 wraps the guarded delegates' update path in db.$transaction
 // with the re-read inside (the BZ7 folder pattern). The census pins the
-// invariant: the guarded update paths (and the hand-written card
-// delegate's) route through $transaction.
+// invariant: the guarded update paths route through $transaction. (The
+// hand-written card delegate does NOT — by design: it has no cross-field
+// invariant, and a deck-change TOCTOU resolves as P2003 → 400; the
+// S135/CJ6 correction of a claim this census never asserted.)
 describe("the transactional merge-guard census (S130/CE5)", () => {
   const ENTITIES = path.resolve(process.cwd(), "src/lib/server/entities.ts");
 
@@ -704,5 +706,52 @@ describe("the S134/CI1 KDF-migration route censuses", () => {
       /passwordHash:\s*(newPasswordHash|upgradedHash)/,
     );
     expect(txBody, "no KDF burn inside the transaction body").not.toMatch(/hashPassword\(/);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// S135/CJ2 (audit A-M1) — the route-side 20-collection censuses. The seam's
+// manifest is byte-pinned, but the ROUTE wiring was prose-only: the export
+// route builds the literal by hand against the seam's
+// Partial<Record<ExportCollection, ExportRow[]>> (an omitted key compiles
+// clean and silently exports [] + count 0 — every user's backup minus that
+// family, green gates all the way down), and the import route's
+// IMPORT_ORDER was route-local (a dropped collection's rows silently
+// ignored on restore). The exact drift class the repo machine-guards
+// everywhere else (INITIAL_COLLECTIONS, OWNED_FKS, the rate-limit census,
+// the CH1 registry-key census) — now closed on both route sides.
+// ---------------------------------------------------------------------------
+describe("the S135/CJ2 route-side collection censuses", () => {
+  const EXPORT_ROUTE = path.resolve(process.cwd(), "src/app/api/export/data/route.ts");
+  const IMPORT_ROUTE = path.resolve(process.cwd(), "src/app/api/import/data/route.ts");
+
+  it("the export route reads EXACTLY 20 collections (the findMany count — a deleted read fails)", () => {
+    const src = readFileSync(EXPORT_ROUTE, "utf8");
+    const reads = src.match(/\.findMany\(/g) ?? [];
+    expect(reads.length, "the export route must carry exactly 20 findMany reads (the manifest census)").toBe(20);
+  });
+
+  it("the export route hands every manifest collection to buildDataExport (an omitted literal key fails)", async () => {
+    const src = readFileSync(EXPORT_ROUTE, "utf8");
+    const { EXPORT_COLLECTIONS } = await import("../src/lib/data-export");
+    const missing: string[] = [];
+    for (const name of EXPORT_COLLECTIONS) {
+      // The literal's shorthand form: a line that is exactly the key + comma
+      // (the destructure block carries them inline — "name, " — so the
+      // whole-line match discriminates the literal from the destructure).
+      const literalKey = new RegExp(`^\\s*${name},\\s*$`, "m");
+      if (!literalKey.test(src)) missing.push(name);
+    }
+    expect(
+      missing,
+      `manifest collections absent from the export route's buildDataExport literal (a Partial-key omission silently exports an empty family): ${missing.join(", ")}`,
+    ).toEqual([]);
+  });
+
+  it("the import route IMPORT_ORDER rides the seam (no route-local re-declaration — RED pre-fix: the const lives in the route)", () => {
+    const src = readFileSync(IMPORT_ROUTE, "utf8");
+    expect(src).not.toContain("const IMPORT_ORDER");
+    expect(src).toMatch(/IMPORT_ORDER/);
+    expect(src).toMatch(/from\s+"@\/lib\/data-import"/);
   });
 });

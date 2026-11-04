@@ -31,16 +31,23 @@ const folderCreateSchema = z.object({
 });
 
 export const GET = withUser(async (user) => {
-  // S127/CB10: the CA5 bounded window, asc-shaped (the tree's roots-first
-  // order preserved) + the id tiebreak — the import route can mint ~10^5
-  // folder rows in a single envelope, the exact growth vector CA5 bounded
-  // for the 16 factory collections; these two hand-written file-family
-  // GETs were the stragglers.
+  // S127/CB10: the CA5 bounded window + the id tiebreak — the import route
+  // can mint ~10^5 folder rows in a single envelope, the exact growth
+  // vector CA5 bounded for the 16 factory collections; these two
+  // hand-written file-family GETs were the stragglers.
+  // S135/CJ1 (audit B-M1): the window is the NEWEST 500 — the factory's
+  // BZ13 form (desc + take, then reverse to the asc presentation). The
+  // asc-shaped take shipped the OLDEST window: past 500 folders every
+  // NEWER folder vanished from this GET (created once via its POST
+  // response, then invisible on every reload while its files referenced
+  // a folder the client tree did not know). The e2e pin (the CA5 shape,
+  // 505 folders) is the machine guard.
   const folders = await db.fileFolder.findMany({
     where: { userId: user.id },
-    orderBy: [{ createdAt: "asc" }, { id: "asc" }],
+    orderBy: [{ createdAt: "desc" }, { id: "desc" }],
     take: 500,
   });
+  folders.reverse();
   return NextResponse.json(folders);
 });
 

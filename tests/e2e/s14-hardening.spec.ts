@@ -566,6 +566,74 @@ test.describe("S126/CA5 · the factory list window is the newest 500", () => {
 });
 
 // ---------------------------------------------------------------------------
+// S135/CJ1 (audit B-M1) · the FOLDERS list joins the newest-500 family. The
+// hand-written folders GET was the only bounded enumeration in the API tree
+// still ordering asc + taking — the OLDEST-500 window (the BZ13/CA5 shape
+// at the route's own admission: a single import envelope mints 10^5 folder
+// rows). Past 500 folders every NEWER folder vanished from
+// GET /api/files/folders — created once (the POST response) then gone on
+// every reload, its files referencing a folder the client tree does not
+// know. The fix mirrors the factory form: desc + take (the newest 500) +
+// reverse to the asc presentation. Fresh TEST-NET user, 505 folders.
+// ---------------------------------------------------------------------------
+test.describe("S135/CJ1 · the folders list window is the newest 500", () => {
+  test("505 imported folders → GET /api/files/folders answers 500, the NEWEST window (RED pre-fix: the OLDEST 500)", async ({ request }) => {
+    test.setTimeout(120_000);
+    const stamp = Date.now();
+    const email = `s135-cj1-${stamp}@studyflow.app`;
+    const ip = "192.0.2.142";
+
+    const reg = await request.post("/api/auth/register", {
+      headers: { "x-forwarded-for": ip },
+      data: { email, password: "Fresh1234!", name: "S135 CJ1 Probe" },
+    });
+    expect(reg.ok(), `register failed: ${reg.status()}`).toBe(true);
+    const { code } = (await reg.json()) as { code: string };
+    const verify = await request.post("/api/auth/verify-email", {
+      headers: { "x-forwarded-for": ip },
+      data: { email, code },
+    });
+    expect(verify.ok()).toBe(true);
+    const login = await request.post("/api/auth/login", {
+      headers: { "x-forwarded-for": ip },
+      data: { email, password: "Fresh1234!" },
+    });
+    expect(login.ok()).toBe(true);
+
+    const base = Date.now() - 505_000;
+    const folders = Array.from({ length: 505 }, (_, i) => ({
+      id: `s135-cj1-${stamp}-folder-${i}`,
+      name: `CJ1 window probe ${i}`,
+      createdAt: new Date(base + i * 1000).toISOString(),
+      updatedAt: new Date(base + i * 1000).toISOString(),
+    }));
+    const res = await request.post("/api/import/data", {
+      data: {
+        format: "studyflow-data-export",
+        version: 1,
+        exportedAt: "2026-11-02T00:00:00.000Z",
+        user: { id: "u-cj1", email, name: "S135 CJ1 Probe" },
+        counts: {},
+        data: { folders },
+      },
+    });
+    expect(res.ok(), `import failed: ${res.status()}`).toBe(true);
+
+    const list = (await (await request.get("/api/files/folders")).json()) as Array<{
+      id: string;
+      name: string;
+    }>;
+    // RED pre-fix: length 500 but the OLDEST window (row[0] = folder-0).
+    expect(list.length).toBe(500);
+    expect(list[0].id, "the window must start at the newest-500 boundary").toBe(
+      `s135-cj1-${stamp}-folder-5`,
+    );
+    expect(list[499].id).toBe(`s135-cj1-${stamp}-folder-504`);
+    expect(list.some((f) => f.id === `s135-cj1-${stamp}-folder-0`)).toBe(false);
+  });
+});
+
+// ---------------------------------------------------------------------------
 // S126/CA2 · the import route rejects empty ids and null collections (the
 // s126 persistence audit's B-M2): the route's inline validator checked only
 // `typeof id === "string"` — an `id: ""` row imported and minted a row with

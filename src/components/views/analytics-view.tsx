@@ -411,7 +411,7 @@ export function AnalyticsView() {
       <div role="group" className="grid grid-cols-2 gap-4 lg:grid-cols-4" aria-label="Analytics stats">
         <StatBlock
           icon={SquareCheckBig}
-          iconClasses="bg-violet-100 dark:bg-violet-900/50"
+          iconClasses="bg-sf-primary-empty dark:bg-violet-900/50"
           value={`${completedTasks}/${tasks.length}`}
           label="Tasks Completed"
           sub={`${taskRate}% completion rate`}

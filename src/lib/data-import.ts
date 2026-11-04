@@ -16,13 +16,18 @@ import {
 
 // ---------------------------------------------------------------------------
 // The data-import seam (S23/ADR-021). Pure — unit-pinned by
-// tests/data-import.test.ts. parseImportEnvelope turns a downloaded (or
-// hand-crafted) export file into normalized rows ready for the route's
-// upsert-by-id transaction — or an actionable error naming the first
-// offender. Pre-validating here matters because Prisma enforces FKs on
-// SQLite (P2003): a dangling optional FK must be NULLED at the seam (the
-// schema's own SetNull semantics) and a dangling REQUIRED cards.deckId is
-// a corrupt envelope that must never reach the database mid-transaction.
+// tests/data-import.test.ts. validateImportEnvelope is the PRODUCTION-
+// consumed stage (the route's single source — CH4): the envelope identity,
+// the shape rules, and the required-FK null/non-string rejection. The
+// richer parseImportEnvelope wrapper is the unit-pinned REFERENCE parser
+// (envelope-only FK nulling, secret strip, topo sort) — the route consumes
+// the stateless stages + its own account-aware twins instead (a pure seam
+// cannot see the database; S135/CJ8 reworded this header after the audit's
+// I-1 found it overstating the wrapper's role). Pre-validating here matters
+// because Prisma enforces FKs on SQLite (P2003): a dangling optional FK
+// must be NULLED at the seam (the schema's own SetNull semantics) and a
+// dangling REQUIRED cards.deckId is a corrupt envelope that must never
+// reach the database mid-transaction.
 // ---------------------------------------------------------------------------
 
 import {
@@ -58,6 +63,40 @@ export type ImportFkSpec = {
  * userId — it is scoped through its deck); every other FK is nullable
  * (SetNull in the schema, null-at-the-seam on import).
  */
+/**
+ * S135/CJ2 (audit A-M1): the canonical restore order, exported from the seam.
+ * Previously route-local — a collection dropped from the route's copy
+ * compiled clean and its rows were silently ignored on restore (the route's
+ * `parsed` map is only populated inside the `for (const collection of
+ * IMPORT_ORDER)` loop). The order is seam knowledge (referents before
+ * referees — folders before files, decks before cards, subjects before
+ * everything subject-tagged); the manifest-consistency census pins
+ * set-equality against EXPORT_COLLECTIONS so a dropped or added collection
+ * fails BOTH directions.
+ */
+export const IMPORT_ORDER = [
+  "subjects",
+  "taskLists",
+  "folders",
+  "notebooks",
+  "decks",
+  "tasks",
+  "assignments",
+  "exams",
+  "events",
+  "timetableClasses",
+  "notes",
+  "cards",
+  "practiceTests",
+  "studyGroups",
+  "grades",
+  "focusSessions",
+  "files",
+  "chatMessages",
+  "calcHistory",
+  "holidays",
+] as const;
+
 export const IMPORT_FK_MAP: Record<ExportCollection, ImportFkSpec[]> = {
   subjects: [],
   taskLists: [],
@@ -332,6 +371,33 @@ export function validateImportEnvelope(
       };
     }
   }
+  // S135/CJ4 (audit A-L2): a REQUIRED FK can never be null or a non-string
+  // in ANY branch — pre-fix those rows sailed the seam (the FK loop's
+  // undefined/null early-continues + the route's typeof-string guard) and
+  // died at the Prisma write as the GENERIC "fields do not match" 400, the
+  // ADR-021 actionable-message contract silently degraded for one
+  // hand-crafted shape. undefined (absent) stays legal here: the UPDATE
+  // branch's untouched case — the route owns the create-branch rejection
+  // via its knownIds census.
+  for (const collection of EXPORT_COLLECTIONS) {
+    const specs = IMPORT_FK_MAP[collection].filter((s) => s.required);
+    if (specs.length === 0) continue;
+    const rows = input.data[collection];
+    if (!Array.isArray(rows)) continue;
+    for (const row of rows) {
+      if (!isPlainObject(row)) continue;
+      for (const spec of specs) {
+        const value = row[spec.field];
+        if (value === undefined) continue;
+        if (value === null || typeof value !== "string") {
+          return {
+            ok: false,
+            error: `Collection "${collection}" row "${String(row.id)}" carries a ${spec.field} that is not a string id — a required reference can never be null or a non-string value.`,
+          };
+        }
+      }
+    }
+  }
   return { ok: true, data: input.data };
 }
 
@@ -341,6 +407,27 @@ export function validateImportEnvelope(
  * Both callers now share this. */
 export function duplicateIdError(collection: string, id: string): string {
   return `${collection}: duplicate id "${id}" — every row needs a unique id.`;
+}
+
+/**
+ * S135/CJ5 (audit A-L5): the colon-safe parse of the import race message
+ * (`import-p2002:<collection>:<id>`). The route's handler previously
+ * destructured `message.split(":")` as [, collection, id] — an id
+ * containing ":" (legal to 64 arbitrary chars) truncated at the first
+ * colon, cutting off the operator's only pointer to the racing row.
+ * Everything after the SECOND colon is the id.
+ */
+export function parseImportRaceMessage(
+  message: string,
+): { collection: string; id: string } {
+  const prefix = "import-p2002:";
+  const rest = message.startsWith(prefix) ? message.slice(prefix.length) : message;
+  const firstColon = rest.indexOf(":");
+  if (firstColon === -1) return { collection: "", id: rest };
+  return {
+    collection: rest.slice(0, firstColon),
+    id: rest.slice(firstColon + 1),
+  };
 }
 
 /** Parse + normalize an import envelope, or name the first offender.
@@ -360,15 +447,11 @@ export function parseImportEnvelope(
 }
 
 function finish(rawData: Record<string, unknown>): ImportParseResult {
-  // Unknown collections are rejected BY NAME before any row is read.
-  for (const key of Object.keys(rawData)) {
-    if (!KNOWN_COLLECTIONS.has(key)) {
-      return {
-        ok: false,
-        error: `Unknown collection "${key}" in the export file. This app imports exactly: ${EXPORT_COLLECTIONS.join(", ")}.`,
-      };
-    }
-  }
+  // S135/CJ8: the unknown-collection rejection loop that used to open this
+  // function was unreachable dead code — parseImportEnvelope delegates to
+  // validateImportEnvelope FIRST (CH4's single source), which rejects
+  // unknown collections BY NAME with the identical message; finish() only
+  // ever receives an already-validated data block.
 
   const rows = {} as ImportRows;
   let totalRows = 0;

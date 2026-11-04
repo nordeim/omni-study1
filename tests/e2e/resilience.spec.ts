@@ -693,6 +693,78 @@ test.describe("S124/BY3: the between-caps import acceptance", () => {
   });
 });
 
+// ---------------------------------------------------------------------------
+// S135/CJ4+CJ5 (audits A-L2 + A-L5) — the import 400-message contract's
+// two degraded/unpinned paths. CJ4: a NEW-branch cards row with deckId
+// MISSING sailed both FK guards (the seam's undefined early-continue + the
+// route's typeof-string guard) and died as PrismaClientValidationError →
+// the GENERIC "fields do not match" message — the ADR-021 actionable-
+// message contract silently degraded for that one hand-crafted shape; the
+// route now names the field. CJ5: the PrismaClientValidationError → 400
+// mapping itself (the route's last line of defense for "never 500 for bad
+// input") had NO wire-level pin — a wrong-typed KNOWN field (title: 42, a
+// primitive that survives the seam's type guard) exercises exactly that
+// fallback. The pins ride the DEMO session (the BY3 pattern — the 400
+// message shape is account-independent, the guards fire before any
+// user-specific write; the demo import budget carries 4/10 in this chunk,
+// the s23 family's 8 live in chunk 5's separate process). The first draft
+// lived in s23 with fresh TEST-NET registrations — wasted (the file-level
+// storageState put the POSTs on the demo session anyway) and fatal to the
+// chunk-5 registerGlobal: 40 cap; the relocation is the fix.
+// ---------------------------------------------------------------------------
+test.describe("S135/CJ4+CJ5 the import 400-message contract (the demo session, the BY3 pattern)", () => {
+  test("CJ4: a new-branch cards row MISSING deckId → the NAMED 400 (RED pre-fix: the generic fields-do-not-match)", async ({ request }) => {
+    const evil = {
+      format: "studyflow-data-export",
+      version: 1,
+      exportedAt: "2026-11-01T00:00:00.000Z",
+      user: { id: "u-cj4", email: "cj4@probe.dev", name: "CJ4 Probe" },
+      counts: {},
+      data: {
+        decks: [{ id: "cj4-deck", name: "CJ4 Deck", createdAt: "2026-09-01T00:00:00.000Z" }],
+        cards: [
+          {
+            id: "cj4-card",
+            // deckId ABSENT — the create branch cannot satisfy the required FK.
+            front: "front",
+            back: "back",
+            createdAt: "2026-09-01T00:00:00.000Z",
+          },
+        ],
+      },
+    };
+    const res = await request.post("/api/import/data", { data: evil });
+    expect(res.status()).toBe(400);
+    const body = (await res.json()) as { error: string };
+    expect(body.error).toContain("deckId");
+    expect(body.error).toContain("cj4-card");
+  });
+
+  test("CJ5: a wrong-typed KNOWN field (title: 42) → 400 fields-do-not-match — the PrismaClientValidationError mapping's wire pin (coverage: the mapping exists untested)", async ({ request }) => {
+    const evil = {
+      format: "studyflow-data-export",
+      version: 1,
+      exportedAt: "2026-11-01T00:00:00.000Z",
+      user: { id: "u-cj5", email: "cj5@probe.dev", name: "CJ5 Probe" },
+      counts: {},
+      data: {
+        subjects: [],
+        tasks: [
+          {
+            id: "cj5-task",
+            title: 42 as unknown as string, // a primitive — survives the seam's type guard
+            createdAt: "2026-09-01T00:00:00.000Z",
+          },
+        ],
+      },
+    };
+    const res = await request.post("/api/import/data", { data: evil });
+    expect(res.status()).toBe(400);
+    const body = (await res.json()) as { error: string };
+    expect(body.error).toContain("fields do not match");
+  });
+});
+
 // S124/BY5 — the export-family limiter. The two heaviest enumerations
 // (export/data: 20 tables + base64 payloads + the full in-memory
 // JSON.stringify; rum/export: 2000 rows → CSV) answered unlimited GETs

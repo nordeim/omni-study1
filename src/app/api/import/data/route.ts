@@ -35,6 +35,7 @@ import { checkRateLimit } from "@/lib/auth";
 // validateImportEnvelope owns the format/version/collection identity.
 import {
   IMPORT_MAX_BYTES,
+  IMPORT_ORDER,
   IMPORT_OPTIONAL_FKS,
   IMPORT_REQUIRED_FKS,
   ImportRowError,
@@ -42,6 +43,7 @@ import {
   duplicateIdError,
   importProfilePatch,
   importRowIdError,
+  parseImportRaceMessage,
   sanitizeImportRow,
   sortFoldersParentsFirst,
   validateImportEnvelope,
@@ -88,31 +90,10 @@ const IMPORT_MERGE_GUARDS: Record<
   },
 };
 
-/** Restore order: referents before referees (folders before files, decks
- * before cards, subjects before everything subject-tagged). */
-const IMPORT_ORDER = [
-  "subjects",
-  "taskLists",
-  "folders",
-  "notebooks",
-  "decks",
-  "tasks",
-  "assignments",
-  "exams",
-  "events",
-  "timetableClasses",
-  "notes",
-  "cards",
-  "practiceTests",
-  "studyGroups",
-  "grades",
-  "focusSessions",
-  "files",
-  "chatMessages",
-  "calcHistory",
-  "holidays",
-] as const;
-
+// S135/CJ2 (audit A-M1): IMPORT_ORDER rides the seam (exported beside
+// IMPORT_FK_MAP) — the route-local copy could silently drop a collection's
+// rows on restore with a green typecheck. The seam's manifest-consistency
+// census pins set-equality; the script-conventions census pins this import.
 type Collection = (typeof IMPORT_ORDER)[number];
 
 const MODEL: Record<Collection, keyof PrismaClient> = {
@@ -243,6 +224,11 @@ export const POST = async (request: NextRequest) => {
 
     // Known ids per collection = imported ids ∪ the owner's existing rows.
     const knownIds = new Map<Collection, Set<string>>();
+    // S135/CJ4: existingIds keeps the DB-ONLY half of the census — knownIds
+    // unions the envelope's own ids (the FK-resolution contract), which
+    // would make every imported row look "existing" to a create-branch
+    // discriminator.
+    const existingIds = new Map<Collection, Set<string>>();
     for (const collection of IMPORT_ORDER) {
       const ids = new Set<string>((parsed.get(collection) ?? []).map((r) => r.id as string));
       const model = MODEL[collection];
@@ -256,11 +242,23 @@ export const POST = async (request: NextRequest) => {
         where,
         select: { id: true },
       });
-      for (const row of existing) ids.add(row.id);
+      const dbIds = new Set<string>();
+      for (const row of existing) {
+        ids.add(row.id);
+        dbIds.add(row.id);
+      }
       knownIds.set(collection, ids);
+      existingIds.set(collection, dbIds);
     }
 
     // FK integrity: required → 400; optional → nulled.
+    // S135/CJ4 (audit A-L2): the missing-on-CREATE case joins the named-400
+    // family — the seam (validateImportEnvelope) rejects null/non-string
+    // required values, and undefined (absent) is the UPDATE branch's
+    // untouched case; but a NEW row (id not in existingIds — the DB-only
+    // census, NOT knownIds which unions the envelope's own ids) without its
+    // required FK previously sailed to the Prisma write and answered the
+    // GENERIC "fields do not match" 400.
     for (const [collection, fks] of Object.entries(IMPORT_REQUIRED_FKS) as [
       Collection,
       Record<string, Collection>,
@@ -275,6 +273,15 @@ export const POST = async (request: NextRequest) => {
             return errorResponse(
               400,
               `${collection}: row "${row.id as string}" references a missing ${field} "${value}" — restore the ${refCollection} rows first.`,
+            );
+          }
+          if (
+            value === undefined &&
+            !existingIds.get(collection)?.has(row.id as string)
+          ) {
+            return errorResponse(
+              400,
+              `${collection}: row "${row.id as string}" is missing its required ${field} — a new row must reference a ${refCollection} in this backup.`,
             );
           }
         }
@@ -444,7 +451,9 @@ export const POST = async (request: NextRequest) => {
     // S130/CE7: the concurrent-create race surfaced from the transaction —
     // the named 409 with the actionable message (see the write loop).
     if (err instanceof Error && err.name === "ImportConcurrentCreateError") {
-      const [, collection, id] = err.message.split(":");
+      // S135/CJ5: the colon-safe parse — ids legally contain ":" and the
+      // bare split(":") truncated them at the first colon.
+      const { collection, id } = parseImportRaceMessage(err.message);
       return errorResponse(
         409,
         `That ${collection} row (id "${id}") was created elsewhere while the import ran. Re-export a fresh backup and try again.`,

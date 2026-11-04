@@ -20,7 +20,16 @@
 # S134/CI4 MyDay quick-add in-flight-guard pin in tasks.spec], chunk 5 +4
 # [the S134/CI3 per-IP 429 quartet in auth-flows — login/register/forgot/
 # reset, each on its own TEST-NET IP].)
-# Expected: 150 + 181 + 74 + 94 + 85 = 584 (each chunk's count includes its
+# (S135/CJ re-tag — census 584 → 588, net +4: chunk 2 +2 [the S135/CJ1
+# folders newest-500 window pin in s14-hardening + the S135/CJ3 accent-edge
+# discriminator in theme-system], chunk 3 +2 [the S135/CJ4 missing-deckId
+# named-400 + the S135/CJ5 wrong-typed-field 400 pins in resilience — the
+# BY3 demo-session pattern; the first draft lived in s23 (chunk 5) with
+# fresh TEST-NET registrations that pushed chunk 5's registerGlobal: 40
+# census over the cap and 429'd s26's register — the pins ride the demo
+# session now, account-independent 400s, chunk 3's demo import budget at
+# 4/10]).
+# Expected: 150 + 183 + 76 + 94 + 85 = 588 (each chunk's count includes its
 # auth setup — the current census; the historical re-tag blocks beneath.)
 # (S131/CF re-tag — census 567 → 570, net +3: chunk 1 +1 [the CF9
 # drawer focus-restore leg in mobile-navigation — crossing the lg

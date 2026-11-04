@@ -252,14 +252,21 @@
   --color-input: hsl(var(--input));
   --color-ring: hsl(var(--ring));
 
-  /* The sf-primary color utilities defined in @theme (the only ones —
-     everything else reads the runtime vars via rgb(var(--sf-*))): */
+  /* The sf-primary color utilities defined in @theme (everything else
+     reads the runtime vars via rgb(var(--sf-*)) in inline styles or custom
+     classes; S135/CJ3 grew the set from six to eight — the softest/empty
+     tints gained their first UTILITY consumers [the notes selected-row bg
+     + the analytics stat-chip bg], and the edge border tint joined for
+     the three migrated violet-200 border sites): */
   --color-sf-primary: rgb(var(--sf-primary));
   --color-sf-primary-foreground: rgb(var(--sf-primary-foreground));
   --color-sf-primary-soft: rgb(var(--sf-primary-soft));
   --color-sf-primary-soft-dark: rgb(var(--sf-primary-soft-dark));
   --color-sf-primary-strong: rgb(var(--sf-primary-strong));
   --color-sf-primary-strong-dark: rgb(var(--sf-primary-strong-dark));
+  --color-sf-primary-edge: rgb(var(--sf-primary-edge)); /* S135/CJ3 — the 200-level border tint */
+  --color-sf-primary-softest: rgb(var(--sf-primary-softest)); /* S135/CJ3 — the 50-level selected-row tint */
+  --color-sf-primary-empty: rgb(var(--sf-primary-empty)); /* S135/CJ3 — the solid 100-level empty step (the stat-chip bg) */
 }
 
 /* ---------------------------------------------------------------------------
@@ -288,6 +295,7 @@
   --sf-primary-softest: 245 243 255;
   --sf-primary-softest-adjacent: 238 242 255;
   --sf-primary-empty: 237 233 254;
+  --sf-primary-edge: 221 214 254; /* S135/CJ3 — violet-200 #ddd6fe (the pre-hydration fallback; the boot script + accentCssVars own the runtime value) */
   --sf-primary-gradient-to: 79 70 229;
   --sf-primary-gradient-to-strong: 67 56 202;
   --sf-primary-avatar-from: 167 139 250;

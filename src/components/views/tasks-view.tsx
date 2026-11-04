@@ -112,7 +112,7 @@ export function TaskRowCard({
   const due = task.dueDate ? new Date(task.dueDate) : null;
   const overdue = due !== null && daysUntil(due, today) <= 0;
   return (
-    <div className="group rounded-xl border border-slate-200 bg-white shadow-sm transition-all hover:border-violet-200 hover:shadow-md dark:border-slate-700 dark:bg-card dark:hover:border-violet-800">
+    <div className="group rounded-xl border border-slate-200 bg-white shadow-sm transition-all hover:border-sf-primary-edge hover:shadow-md dark:border-slate-700 dark:bg-card dark:hover:border-violet-800">
       <div className="flex items-center gap-3 p-4">
         <PriorityCheckbox
           checked={task.completed}

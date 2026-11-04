@@ -123,13 +123,16 @@ describe("S132/CG9 · THEME_BOOT_SCRIPT token derivation (the positional alignme
     }
   });
 
-  it("the suffix list carries the full 17-token census (the count the sweeps depend on)", () => {
-    expect(BOOT_TOKEN_SUFFIXES.length).toBe(17);
-    // The derived list contains the two historically-late additions the
-    // hand-maintained arrays once missed risk on: clock-date-dark (S88/AO5)
-    // and empty (S121/BV15).
+  it("the suffix list carries the full 18-token census (the count the sweeps depend on)", () => {
+    // S135/CJ3: 17 → 18 (the edge border tint joins the set — the same
+    // lockstep the S3-J pin enforces on accentCssVars).
+    expect(BOOT_TOKEN_SUFFIXES.length).toBe(18);
+    // The derived list contains the three historically-late additions the
+    // hand-maintained arrays once missed risk on: clock-date-dark (S88/AO5),
+    // empty (S121/BV15), and edge (S135/CJ3).
     expect(BOOT_TOKEN_SUFFIXES).toContain("clock-date-dark");
     expect(BOOT_TOKEN_SUFFIXES).toContain("empty");
+    expect(BOOT_TOKEN_SUFFIXES).toContain("edge");
     // kebab-case only (the S8 e2e lesson: camelCase suffixes resolve no var).
     for (const s of BOOT_TOKEN_SUFFIXES) {
       expect(s).toMatch(/^[a-z]+(-[a-z]+)*$/);

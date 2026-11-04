@@ -381,6 +381,45 @@ test.describe("S127/CB15 · a failed theme save reverts the visible selection", 
 // The fix wires the v4 port (@import "tw-animate-css") and restores the
 // overlay fade classes. This pin holds the clone to the reference-measured
 // computed values on BOTH nodes of the Add Task dialog.
+test.describe("S135/CJ3 · the accent-edge token tracks the accent (the violet-200 border family)", () => {
+  test("the notes selected-row border follows the accent: violet-200 → blue-200 (RED pre-fix: hardcoded violet ignores the switch)", async ({ page }) => {
+    // The accent-switch rides the REAL settings API (the S27 doctrine);
+    // the restore rides afterEach + the explicit finally PATCH.
+    await page.request.patch(PREFERENCES, { data: { accentColor: "violet" } });
+    await page.goto("/Notes");
+    await page.waitForFunction(() => {
+      const root = document.documentElement;
+      return root.style.getPropertyValue("--sf-primary") === "139 92 246";
+    });
+    const row = page.getByRole("button", { name: /Dot product intuition/ }).first();
+    await row.click();
+    // transition-colors races the class swap (the AD7 pin's settle note).
+    await page.waitForTimeout(300);
+    const violetBorder = await row.evaluate((el) => getComputedStyle(el).borderTopColor);
+    expect(violetBorder).toContain("rgb(221, 214, 254)"); // violet-200 (the measured parity value)
+
+    try {
+      await page.request.patch(PREFERENCES, { data: { accentColor: "blue" } });
+      // The accent reaches the DOM through a fresh load (the AG11a pattern —
+      // a raw API PATCH does not notify the live store; the boot applies the
+      // stored accent on the next navigation).
+      await page.goto("/Notes");
+      await page.waitForFunction(() => {
+        const root = document.documentElement;
+        return root.style.getPropertyValue("--sf-primary") === "59 130 246";
+      });
+      const rowBlue = page.getByRole("button", { name: /Dot product intuition/ }).first();
+      await rowBlue.click();
+      await page.waitForTimeout(300);
+      const blueBorder = await rowBlue.evaluate((el) => getComputedStyle(el).borderTopColor);
+      // RED pre-fix: the hardcoded border-violet-200 stays rgb(221, 214, 254).
+      expect(blueBorder).toContain("rgb(191, 219, 254)"); // blue-200 (--sf-primary-edge at blue)
+    } finally {
+      await page.request.patch(PREFERENCES, { data: { accentColor: "violet" } });
+    }
+  });
+});
+
 test.describe("S129/CD1 · the Radix overlay animation parity (the reference-measured enter family)", () => {
   test("the Add Task dialog's overlay and content run the enter animation at the reference's 0.15s (pre-fix: none/0s — the family was inert)", async ({ page }) => {
     await page.goto("/Tasks");

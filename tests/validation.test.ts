@@ -389,6 +389,18 @@ describe("preferencesSchema", () => {
     expect(preferencesSchema.safeParse({ avatarEmoji: "🎓".repeat(9) }).success).toBe(false); // 9 code points > 8 (zod v4 counts code points)
   });
 
+  // S135/CJ7 (audit B-I3) — the default-free invariant is LOAD-BEARING: the
+  // settings route patches with the SENT-KEYS intersection (the AH8 guard),
+  // so any .default() added to preferencesSchema would materialize as a
+  // sent key on every partial save and silently reset that column. The
+  // invariant was guarded by the route's AJ4 comment alone — prose. This
+  // leg makes it a machine guard: parse {} and the output must carry NO
+  // keys (the moment a default lands, this fails).
+  it("S135/CJ7: parses {} to a NO-KEY result — the default-free invariant (a .default() would silently reset a column on every partial save)", () => {
+    const parsed = preferencesSchema.parse({});
+    expect(Object.keys(parsed)).toEqual([]);
+  });
+
   // S17-A — the reference's Profile tab persists four study-profile fields
   // on its User entity (captured from the reference's own PUT body):
   // school_name / grade_level / study_goal_hours / notifications_enabled.

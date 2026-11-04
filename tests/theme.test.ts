@@ -176,8 +176,39 @@ describe("accentCssVars", () => {
       // design — the dedicated key, the AO5 precedent).
       expect(vars["--sf-primary-empty"]).toBe(t.empty);
       expect(vars["--sf-primary-empty"]).toBe(t.emptyFrom);
-      expect(Object.keys(vars)).toHaveLength(17);
+      // S135/CJ3: the accent-edge token joins the set (18 vars) — the
+      // 200-level border tint the three migrated violet sites ride.
+      expect(vars["--sf-primary-edge"]).toBe(
+        (ACCENT_TOKENS[accent] as Record<string, string | undefined>).edge,
+      );
+      expect(Object.keys(vars)).toHaveLength(18);
     }
+  });
+});
+
+describe("the S135/CJ3 accent-edge token family", () => {
+  it("emits --sf-primary-edge for every accent at the 200-level step of its own hue family", () => {
+    const EXPECTED: Record<string, string> = {
+      violet: "221 214 254", // violet-200 — the measured border sites (byte-identical parity)
+      blue: "191 219 254", // blue-200
+      green: "167 243 208", // emerald-200
+      orange: "253 230 138", // amber-200
+      pink: "251 207 232", // pink-200
+      red: "254 202 202", // red-200
+      teal: "153 246 228", // teal-200
+    };
+    for (const accent of ACCENTS) {
+      expect(
+        accentCssVars(accent)["--sf-primary-edge"],
+        `the ${accent} edge tint`,
+      ).toBe(EXPECTED[accent]);
+    }
+  });
+
+  it("violet's edge is EXACTLY the measured violet-200 (the three migrated sites stay byte-identical)", () => {
+    expect(
+      (ACCENT_TOKENS.violet as Record<string, string | undefined>).edge,
+    ).toBe("221 214 254");
   });
 });
 

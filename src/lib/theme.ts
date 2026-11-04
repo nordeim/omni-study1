@@ -48,6 +48,10 @@ export type AccentToken = {
   // clockDateDark≡avatarFrom precedent: the shared VALUE is deliberate,
   // the dedicated key lets a future retune diverge without touching the
   // gradient consumers)
+  edge: string; // 200 — the light interactive/selected BORDER tint
+  // (S135/CJ3: the tasks row-card hover border, the flashcards study-card
+  // face border, the notes selected-row border — the measured violet-200
+  // sites, accent-tracked)
 };
 
 export const ACCENT_TOKENS: Record<Accent, AccentToken> = {
@@ -69,6 +73,7 @@ export const ACCENT_TOKENS: Record<Accent, AccentToken> = {
     emptyFrom: "237 233 254", // violet-100
     emptyTo: "224 231 255", // indigo-100
     empty: "237 233 254", // = emptyFrom (violet-100)
+    edge: "221 214 254", // violet-200 #ddd6fe — the measured border sites (S135/CJ3)
   },
   blue: {
     primary: "59 130 246", // #3b82f6
@@ -88,6 +93,7 @@ export const ACCENT_TOKENS: Record<Accent, AccentToken> = {
     emptyFrom: "219 234 254", // blue-100
     emptyTo: "224 242 254", // sky-100
     empty: "219 234 254", // = emptyFrom (blue-100)
+    edge: "191 219 254", // blue-200 #bfdbfe (S135/CJ3)
   },
   green: {
     primary: "16 185 129", // emerald-500 (the reference swatch)
@@ -107,6 +113,7 @@ export const ACCENT_TOKENS: Record<Accent, AccentToken> = {
     emptyFrom: "209 250 229", // emerald-100
     emptyTo: "204 251 241", // teal-100
     empty: "209 250 229", // = emptyFrom (emerald-100)
+    edge: "167 243 208", // emerald-200 #a7f3d0 (S135/CJ3)
   },
   orange: {
     primary: "245 158 11", // amber-500 (the reference swatch)
@@ -126,6 +133,7 @@ export const ACCENT_TOKENS: Record<Accent, AccentToken> = {
     emptyFrom: "254 243 199", // amber-100
     emptyTo: "255 237 213", // orange-100
     empty: "254 243 199", // = emptyFrom (amber-100)
+    edge: "253 230 138", // amber-200 #fde68a (S135/CJ3)
   },
   pink: {
     primary: "236 72 153", // #ec4899
@@ -145,6 +153,7 @@ export const ACCENT_TOKENS: Record<Accent, AccentToken> = {
     emptyFrom: "252 231 243", // pink-100
     emptyTo: "255 228 230", // rose-100
     empty: "252 231 243", // = emptyFrom (pink-100)
+    edge: "251 207 232", // pink-200 #fbcfe8 (S135/CJ3)
   },
   red: {
     primary: "239 68 68", // #ef4444
@@ -164,6 +173,7 @@ export const ACCENT_TOKENS: Record<Accent, AccentToken> = {
     emptyFrom: "254 226 226", // red-100
     emptyTo: "255 237 213", // orange-100
     empty: "254 226 226", // = emptyFrom (red-100)
+    edge: "254 202 202", // red-200 #fecaca (S135/CJ3)
   },
   teal: {
     primary: "20 184 166", // #14b8a6
@@ -183,6 +193,7 @@ export const ACCENT_TOKENS: Record<Accent, AccentToken> = {
     emptyFrom: "204 251 241", // teal-100
     emptyTo: "207 250 254", // cyan-100
     empty: "204 251 241", // = emptyFrom (teal-100)
+    edge: "153 246 228", // teal-200 #99f6e4 (S135/CJ3)
   },
 };
 
@@ -202,9 +213,9 @@ export function resolveMode(mode: ThemeMode, systemPrefersDark: boolean): "light
 
 /**
  * The COMPLETE --sf-* variable set for an accent (S3-J regression pin: exactly
- * 17 entries — S88/AO5 added clock-date-dark; S121/BV15 added the solid
- * empty step; a partial set leaves stale violet tokens on non-violet
- * accents).
+ * 18 entries — S88/AO5 added clock-date-dark; S121/BV15 added the solid
+ * empty step; S135/CJ3 added the edge border tint; a partial set leaves
+ * stale violet tokens on non-violet accents).
  * Keys are kebab-case (the S8 e2e lesson: camelCase suffixes resolve no var).
  */
 export function accentCssVars(accent: Accent): Record<string, string> {
@@ -231,6 +242,10 @@ export function accentCssVars(accent: Accent): Record<string, string> {
     // default on every accent before this entry existed — the exact stale-
     // token class the S3-J pin's comment warns about).
     "--sf-primary-empty": t.empty,
+    // S135/CJ3: the 200-level border tint — the tasks row-card hover border,
+    // the flashcards study-card face border, the notes selected-row border
+    // (the measured violet-200 family, accent-tracked).
+    "--sf-primary-edge": t.edge,
   };
 }
 
@@ -288,6 +303,7 @@ export const BOOT_TOKEN_SUFFIXES: readonly string[] = [
   "empty-from",
   "empty-to",
   "empty", // S121/BV15
+  "edge", // S135/CJ3 — the 200-level border tint
 ];
 
 export function themeCachePayload(mode: ThemeMode, accent: Accent): string {
