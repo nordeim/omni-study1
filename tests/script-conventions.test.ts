@@ -117,7 +117,7 @@ describe("the chunked cert runner's truth contract (S128/CC2)", () => {
 
   it("names the CURRENT per-chunk census in its header (the re-tag tripwire)", () => {
     // The topmost Expected line — re-tagged by every census-changing cycle.
-    expect(certSource).toContain("Expected: 150 + 184 + 79 + 94 + 86 = 593");
+    expect(certSource).toContain("Expected: 150 + 184 + 81 + 95 + 86 = 596");
   });
 
   it("propagates a failing chunk's exit code (never a green cert on a red run)", () => {
@@ -787,5 +787,60 @@ describe("the S135/CJ2 route-side collection censuses", () => {
     expect(src).not.toContain("const IMPORT_ORDER");
     expect(src).toMatch(/IMPORT_ORDER/);
     expect(src).toMatch(/from\s+"@\/lib\/data-import"/);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// S137/CL — the cycle's source censuses (the import-symmetry + cap-sizing +
+// cards-bound + honest-copy set).
+// ---------------------------------------------------------------------------
+describe("the S137/CL source censuses", () => {
+  const ENTITIES = path.resolve(process.cwd(), "src/lib/server/entities.ts");
+  const FILES_VIEW = path.resolve(process.cwd(), "src/components/views/files-view.tsx");
+  const IMPORT_ROUTE = path.resolve(process.cwd(), "src/app/api/import/data/route.ts");
+
+  it("the cards list is BOUNDED — the deck-completeness 5000 window (S137/CL3, the family's only unbounded read)", () => {
+    // S137/CL3 (audit B-M2): every sibling collection GET runs the CA5
+    // newest-500 window, but the card list had NO take ("the take would
+    // hide cards") while the import route can mint ~10^5 cards in one
+    // envelope — after which every boot transferred the entire card
+    // table. The bound: the BZ13 sibling form (desc + take, reversed to
+    // the asc presentation) at 5000 — the deck-completeness contract
+    // (study mode runs a deck's full set; deck counts stay honest) keeps
+    // it 10x the sibling window; past 5000 the newest-window applies
+    // exactly like every sibling collection.
+    const src = readFileSync(ENTITIES, "utf8");
+    const idx = src.indexOf("export const flashcardCardDelegate");
+    expect(idx, "the card delegate exists").toBeGreaterThan(-1);
+    const listBlock = src.slice(idx, src.indexOf("create:", idx));
+    expect(
+      listBlock,
+      "the cards list carries the bounded window (RED pre-fix: the unbounded findMany)",
+    ).toMatch(/take:\s*5000/);
+  });
+
+  it("the folder-delete dialog copy states the SetNull outcome honestly (S137/CL5 — 'All Files', never 'the enclosing folder')", () => {
+    // S137/CL5 (audit A-L1): the schema's onDelete: SetNull moves contained
+    // files AND child subfolders to ROOT (All Files), not to the deleted
+    // folder's parent — the dialog mispredicted a destructive action's
+    // data outcome. The reference measurement (this cycle, live): the
+    // reference has NO confirm dialog at all (immediate delete), so the
+    // clone's dialog is superset territory and its copy is
+    // clone-territory (the honest-copy doctrine, not a parity contract).
+    const src = readFileSync(FILES_VIEW, "utf8");
+    expect(src).toContain("move to All Files");
+    expect(src).not.toContain("move to the enclosing folder");
+  });
+
+  it("the import 409 collision copy names BOTH causes honestly (S137/CL10 — the cross-account case the old 're-export' advice could never help)", () => {
+    // S137/CL10 (audit A-I1): the dominant real trigger of the P2002 409
+    // is a cross-account global-PK collision (the s128 e2e comment
+    // documents exactly this) — for which "Re-export a fresh backup and
+    // try again" was advice that could never help (ids are stable by
+    // design). The copy now names both: the concurrent-create race AND
+    // the already-taken-id case, with the remedy that fits each.
+    const src = readFileSync(IMPORT_ROUTE, "utf8");
+    expect(src).toContain("already belong to another account");
+    expect(src).not.toContain("was created elsewhere while the import ran. Re-export");
   });
 });

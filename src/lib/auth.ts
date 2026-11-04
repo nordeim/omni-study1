@@ -337,11 +337,23 @@ function sweepExpiredBuckets(now: number): void {
 /** S121/BV9: the hard-cap eviction — the oldest live bucket (min
  * windowStart) is removed so a distinct-key flood can never grow the map
  * past the cap. Deterministic: ties break on first-insertion order (the
- * Map iteration order), the same order windowStart monotonicity gives. */
+ * Map iteration order), the same order windowStart monotonicity gives.
+ * S137/CL8 (Mode-C audit F2): the fixed process-wide CONTAINMENT budgets
+ * (the `Global:` keys — loginGlobal:, registerGlobal:) are EXEMPT — the
+ * containment must not be evictable by cross-route distinct-key pressure
+ * (a rotated-XFF flood on the per-IP-only routes — verify/resend/forgot —
+ * fills the map and the eviction would delete a global bucket mid-flood,
+ * restarting its count at 1: the CK1 CPU-DoS bound quietly re-arming).
+ * The exemption is safe because the globals are a FIXED, tiny, always-live
+ * set (at most 2 keys), so the eviction always finds a non-global oldest;
+ * an EXPIRED global is swept by sweepExpiredBuckets before this runs. The
+ * map's bound stays MAX_BUCKETS — the exemption only chooses the eviction
+ * VICTIM, never skips the eviction itself. */
 function evictOldestBucket(): void {
   let oldestKey: string | null = null;
   let oldestStart = Infinity;
   for (const [key, bucket] of buckets) {
+    if (key.includes("Global:")) continue; // the CL8 containment exemption
     if (bucket.windowStart < oldestStart) {
       oldestStart = bucket.windowStart;
       oldestKey = key;

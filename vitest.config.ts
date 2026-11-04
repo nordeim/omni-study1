@@ -1,7 +1,21 @@
 import { defineConfig } from "vitest/config";
 import path from "node:path";
 
-// Unit-test layer for the pure domain seams — 45 files / 1344 tests
+// Unit-test layer for the pure domain seams — 45 files / 1356 tests
+// (re-anchored S137/CL — the audit-driven hardening cycle: the import-
+// symmetry + cap-sizing + cards-bound + honest-copy set: census
+// 1344 → 1356, +12 net [data-import +7: the S137/CL1 equal-times
+// round-trip leg + the S137/CL2 cap-arithmetic pair (the 64 MiB const
+// re-tag + the machine-checked >= 18-files bound) + the S137/CL6 date
+// sanity band quintet (the far-future/pre-2000/far-future-updatedAt
+// rejections + the old-but-legit + user-facing-un-banded acceptances);
+// auth +1: the S137/CL8 global-bucket eviction-exemption leg (the
+// loginGlobal: bucket SURVIVES a distinct-key flood past the cap);
+// http-body +1: the S137/CL10 P2028 → 413 mapping (the real
+// PrismaClientKnownRequestError, the named rollback copy);
+// script-conventions +3: the S137/CL3 cards-take census + the S137/CL5
+// folder-dialog copy census + the S137/CL10 409-copy census]. The prior
+// S136/CK re-anchor block follows.)
 // (re-anchored S136/CK — the audit-driven hardening cycle: the login-
 // containment + files-race + CE3-residual + accent-literal set: census
 // 1332 → 1344, +12 net [script-conventions +2: the S136/CK1 loginGlobal

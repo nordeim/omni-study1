@@ -257,6 +257,21 @@ export function toErrorResponse(err: unknown): NextResponse {
     if (err.code === "P2003") {
       return errorResponse(400, "That record references something that does not exist.");
     }
+    // S137/CL10 (audit A-L2): the interactive-transaction timeout — a LEGAL
+    // body (under the byte cap) can carry enough rows that the time budget
+    // binds (the import restore's 60 s window; the many-rows tail). The
+    // rollback HOLDS (Prisma rolls the transaction back on the timeout) —
+    // the honest 413 framing with the actionable remedy, never the opaque
+    // 500 (the app's established too-large status, the BodyTooLargeError
+    // precedent). P2028's only realistic source in this codebase is the
+    // import route's timeout-scoped transaction; the merge-guard txs are
+    // single-row writes.
+    if (err.code === "P2028") {
+      return errorResponse(
+        413,
+        "That backup was too large or slow to restore in one pass and was fully rolled back. Try again, or split the backup and retry the halves.",
+      );
+    }
   }
   // Unknown → 500; the detail is logged server-side only (never the body).
   console.error("[api] unhandled error:", err);

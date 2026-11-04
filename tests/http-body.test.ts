@@ -144,6 +144,26 @@ describe("the body-cap status (S129/CD4 — BodyTooLargeError → 413)", () => {
     );
     expect(res.status).toBe(400);
   });
+
+  it("toErrorResponse maps P2028 (interactive-transaction timeout) to the named 413 — the import many-rows tail (S137/CL10, pre-fix: the opaque 500)", async () => {
+    // S137/CL10 (audit A-L2): a LEGAL envelope (under the byte cap) can
+    // carry enough rows that the 60 s interactive transaction expires —
+    // Prisma throws P2028, the rollback HOLDS, but the generic 500 branch
+    // answered an opaque copy for a shape with a named, actionable remedy.
+    // The honest 413 framing: the body was under the byte cap; the TIME
+    // budget is the binding constraint; "split the backup" is the remedy.
+    // The real Prisma error class (constructor-verified this cycle), so
+    // the mapping is exercised on the genuine instance shape.
+    const { Prisma } = await import("@prisma/client");
+    const err = new Prisma.PrismaClientKnownRequestError(
+      "Transaction already closed: a timeout occurred",
+      { code: "P2028", clientVersion: "6.19.0" },
+    );
+    const res = toErrorResponse(err);
+    expect(res.status).toBe(413);
+    const body = await res.json();
+    expect(body.error).toContain("fully rolled back");
+  });
 });
 
 describe("assertJsonContentType (S119/BT1a — the BR5 policy as a shared seam)", () => {

@@ -627,21 +627,25 @@ test.describe("S122/BW11: the over-cap 413 contracts", () => {
     });
   });
 
-  test("an import past the 25 MiB cap answers 413 with the MiB copy (the JSON content-type passes the BR5 gate first)", async ({ request }) => {
+  test("an import past the 64 MiB cap answers 413 with the MiB copy (the JSON content-type passes the BR5 gate first)", async ({ request }) => {
     // S124/BY3 re-anchor: the cap moved 10 → 25 MiB (the export/import
     // reconciliation — the export emits base64 file payloads inline, so the
-    // old cap rejected ~4-5 max-size uploads' worth of the user's OWN backup;
-    // 25 MiB covers the realistic round-trip ADR-019 promises). 25 MiB + 1
-    // byte of JSON — the cap fires at the body read, before parsing.
-    // Content-Type must be application/json (the BR5 gate runs before the
-    // cap and would otherwise answer a misleading 400).
+    // old cap rejected ~4-5 max-size uploads' worth of the user's OWN
+    // backup). S137/CL2 re-tag: 25 → 64 MiB — the BY3-era "~18 max-size
+    // files at 25 MiB" arithmetic was ~2x off (a 2 MiB upload inflates to
+    // 2,796,204 base64 chars; 25 MiB covers ~9.4 files), so a user with
+    // 10+ near-cap files downloaded a backup their own in-app restore
+    // then 413'd. 64 MiB covers ~23 — the realistic round-trip with
+    // margin. 64 MiB + 1 byte of JSON — the cap fires at the body read,
+    // before parsing. Content-Type must be application/json (the BR5 gate
+    // runs before the cap and would otherwise answer a misleading 400).
     const res = await request.post("/api/import/data", {
       headers: { "content-type": "application/json" },
-      data: "x".repeat(25 * 1024 * 1024 + 1),
+      data: "x".repeat(64 * 1024 * 1024 + 1),
     });
     expect(res.status()).toBe(413);
     const body = (await res.json()) as { error?: string };
-    expect(body.error).toContain("25 MiB");
+    expect(body.error).toContain("64 MiB");
   });
 });
 
@@ -1084,6 +1088,102 @@ test.describe("S136/CK4: the CE3 residual gates (dashboard + gradetracker legs)"
       // The in-flight window: the summary gate owns the grid — the settled
       // zero-state copy ("Overall Average") renders NOWHERE while loading.
       await expect(page.getByText("Overall Average")).toHaveCount(0);
+      await expect(page.locator(".animate-spin").first()).toBeVisible();
+    } finally {
+      await page.unroute(HELD);
+    }
+  });
+});
+
+// ---------------------------------------------------------------------------
+// S137/CL1 (audit B-M1) — the timetable equal-times import asymmetry. The
+// interactive boundary (hhmmEndBeforeStart) rejects only endMin < startMin:
+// a zero-length 09:00–09:00 class is creatable through the API and
+// persists — but the import seam rejected endTime <= startTime, so ONE such
+// row in an export bricked the ENTIRE all-or-nothing restore with a message
+// blaming a row the app itself minted. The wire pin proves the asymmetry
+// live (the create 200s), then the round-trip on that very row. Rides the
+// DEMO session's request (chunk 3's import budget 4 → 5/10; no fresh
+// registrations — chunk 5's register census stays untouched).
+// ---------------------------------------------------------------------------
+test.describe("S137/CL1: the timetable equal-times import symmetry (the round-trip contract)", () => {
+  test("a zero-length class the API itself admits round-trips through the import (RED pre-fix: the restore 400s on the app's own row)", async ({ request }) => {
+    // 1. The interactive boundary ADMITS the zero-length class — the
+    // asymmetry proven live at the wire (the route's schema rejects only
+    // strict inversion). 201 — the collection-POST convention.
+    const create = await request.post("/api/timetable", {
+      data: { name: "CL1 zero-length probe", dayOfWeek: 1, startTime: "09:00", endTime: "09:00" },
+    });
+    expect(create.status()).toBe(201);
+    const row = (await create.json()) as { id: string; createdAt: string; updatedAt: string };
+
+    // 2. The export→import round-trip on that SAME row: the envelope
+    // carrying it restores clean (pre-fix: 400 'field "endTime" must be
+    // after "startTime"' — the all-or-nothing rollback of the whole
+    // restore for one legally-created row).
+    const envelope = {
+      format: "studyflow-data-export",
+      version: 1,
+      exportedAt: new Date().toISOString(),
+      counts: {},
+      data: {
+        timetableClasses: [
+          {
+            id: row.id,
+            name: "CL1 zero-length probe",
+            dayOfWeek: 1,
+            startTime: "09:00",
+            endTime: "09:00",
+            room: "",
+            weekType: "ALL",
+            subjectId: null,
+            createdAt: row.createdAt,
+            updatedAt: row.updatedAt,
+          },
+        ],
+      },
+    };
+    const res = await request.post("/api/import/data", { data: envelope });
+    expect(res.status()).toBe(200); // RED pre-fix: 400
+    const body = (await res.json()) as { imported: Record<string, { created: number; updated: number }> };
+    expect(body.imported.timetableClasses.updated).toBe(1);
+
+    // 3. Zero residue (the AM1/AN1 finally-cleanup convention).
+    const cleanup = await request.delete(`/api/timetable/${row.id}`);
+    expect([200, 204]).toContain(cleanup.status());
+  });
+});
+
+// ---------------------------------------------------------------------------
+// S137/CL7 (Mode-C audit F4) — the analytics OR-form stat gate. The CK4
+// widening left this one site in the AND-form: with five of the six
+// pre-warmed families landed and assignments in flight, the AND was false
+// and the stat row rendered its false "0" Assignments card — the exact
+// mixed-landing zero the widening claimed to fix. The OR-form (the
+// gradetracker doctrine: any primary source empty while loading owns the
+// row) is the fix. Same held-route idiom as the CK4 legs.
+// ---------------------------------------------------------------------------
+test.describe("S137/CL7: the analytics OR-form stat gate (the mixed-landing false zero)", () => {
+  test("an in-flight assignments load renders the stat gate, never the false '0' Assignments stat (RED pre-fix)", async ({ page }) => {
+    const HELD = "**/api/assignments";
+    await page.route(HELD, () => {
+      /* never fulfills — the accepted-TCP stall shape */
+    });
+    try {
+      // The analytics pre-warms six stat families — the held assignments
+      // fetch holds the Splash until the CD2 deadline, then the app
+      // commits with the OTHER five landed and assignments still loading
+      // (the mixed-landing state where the AND-form rendered the false
+      // "0" Assignments card).
+      await page.goto("/Analytics");
+      await page.waitForFunction(
+        () => document.documentElement.dataset.appHydrated === "true",
+        undefined,
+        { timeout: 35_000 },
+      );
+      // The in-flight window: the OR-form gate owns the stat row — the
+      // group renders NOWHERE (pre-fix: visible with the false zero).
+      await expect(page.locator('[aria-label="Analytics stats"]')).toHaveCount(0);
       await expect(page.locator(".animate-spin").first()).toBeVisible();
     } finally {
       await page.unroute(HELD);

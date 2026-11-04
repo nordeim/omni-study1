@@ -9,9 +9,9 @@ High-signal instructions for coding agents working in this repo. Everything here
 | `bun install` | Install deps (Bun ≥ 1.3) |
 | `bun run dev` | Dev server on :3000 (Turbopack), logs tee'd to `dev.log` |
 | `bun run lint` / `bun run typecheck` | ESLint / `tsc --noEmit` — both must be clean |
-| `bun run test` | Vitest unit layer (1344 tests; `*.test.ts` only — never picks up e2e specs) |
+| `bun run test` | Vitest unit layer (1356 tests; `*.test.ts` only — never picks up e2e specs) |
 | `bun run build` | Production build → `.next/standalone` (**required before e2e**) |
-| `bun run test:e2e` | Playwright vs the standalone build on :3100 with `db/e2e.db` (593 tests across the 5-chunk cold map — 150+184+79+94+86, 30 spec files; a single-process full run trips the register rate-limiter budget by design, the chunked map re-boots the server per chunk). NOTE (S45, the day-boundary lesson): the global setup re-seeds every run, but the seed's IDEMPOTENT UPSERTS do NOT refresh day-relative dates on existing rows — a scratch `db/e2e.db` that ages across a UTC midnight keeps its original day-relative dates (today's tasks, the +1-day exam badge, the due-in pills, the import round-trip dates each read one day stale → 4 deterministic failures in parity-session6/parity-session9/s23-import). Delete `db/e2e.db` when a run crosses a day boundary — the global setup re-creates it fresh with current dates. NOTE (S46, TWO more aged-scratch-db classes + a build-input one): (1) ALWAYS run e2e COLD — S131/CF5 chained `scripts/e2e-cold-reset.sh` into `bun run test:e2e` (port-guard + `rm -f db/e2e.db` BEFORE playwright boots anything — global-setup is TOO LATE: Playwright starts the webServer before globalSetup), so the default runner self-colds; any DIRECT `playwright test` invocation still needs the manual `rm -f db/e2e.db` before every full run: the s23-import round-trip posts a FIXED-id envelope, so a second consecutive run against the aged db reads `created: 0, updated: 1` instead of `created: 1, updated: 0` and fails — not just across midnights, across ANY re-run; (2) the s22 negative-spawn spec reads the BUNDLED `.env` — Next's standalone output COPIES the repo-root `.env` into `.next/standalone/.env` at build time, so a REAL AUTH_SECRET in the dev `.env` leaks into the bundle and the guard CORRECTLY boots (the spec times out waiting for the exit) — keep the repo-root `.env`'s AUTH_SECRET EMPTY (the `.env.example` dev posture: `AUTH_SECRET=""` — dev falls back to the local constant with the boot warning) when building for e2e |
+| `bun run test:e2e` | Playwright vs the standalone build on :3100 with `db/e2e.db` (596 tests across the 5-chunk cold map — 150+184+81+95+86, 30 spec files; a single-process full run trips the register rate-limiter budget by design, the chunked map re-boots the server per chunk). NOTE (S45, the day-boundary lesson): the global setup re-seeds every run, but the seed's IDEMPOTENT UPSERTS do NOT refresh day-relative dates on existing rows — a scratch `db/e2e.db` that ages across a UTC midnight keeps its original day-relative dates (today's tasks, the +1-day exam badge, the due-in pills, the import round-trip dates each read one day stale → 4 deterministic failures in parity-session6/parity-session9/s23-import). Delete `db/e2e.db` when a run crosses a day boundary — the global setup re-creates it fresh with current dates. NOTE (S46, TWO more aged-scratch-db classes + a build-input one): (1) ALWAYS run e2e COLD — S131/CF5 chained `scripts/e2e-cold-reset.sh` into `bun run test:e2e` (port-guard + `rm -f db/e2e.db` BEFORE playwright boots anything — global-setup is TOO LATE: Playwright starts the webServer before globalSetup), so the default runner self-colds; any DIRECT `playwright test` invocation still needs the manual `rm -f db/e2e.db` before every full run: the s23-import round-trip posts a FIXED-id envelope, so a second consecutive run against the aged db reads `created: 0, updated: 1` instead of `created: 1, updated: 0` and fails — not just across midnights, across ANY re-run; (2) the s22 negative-spawn spec reads the BUNDLED `.env` — Next's standalone output COPIES the repo-root `.env` into `.next/standalone/.env` at build time, so a REAL AUTH_SECRET in the dev `.env` leaks into the bundle and the guard CORRECTLY boots (the spec times out waiting for the exit) — keep the repo-root `.env`'s AUTH_SECRET EMPTY (the `.env.example` dev posture: `AUTH_SECRET=""` — dev falls back to the local constant with the boot warning) when building for e2e |
 | `node scripts/capture-studyflow.mjs` | Refresh all 31 `docs/screenshots/` captures from the dev server (24 light + 7 dark) |
 | `node scripts/dark-sweep.mjs` | Dark-mode contrast audit over all 20 views (flashbulb/unreadable detector). S27: sets dark mode through the settings API (the real lifecycle) and SELF-VERIFIES the precondition — fails loudly (exit 1, no findings) if the dark class is not applied; the applied mode rides the JSON envelope. Never force the class directly (the session-10 approach silently rotted after S11) |
 | `node scripts/accent-dark-sweep.mjs` | Accent × dark-mode audit (S38-extended): all 7 accents × 20 desktop views × 20 MOBILE views at 390×844 + the drawer per accent (FAIL <2.2, WARN <3.2 for accent text; the mobile records also carry scrollWidth — >390 is a finding). The S38 shape is unit-pinned anti-phantom: every view recorded EXPLICITLY on both surfaces (clean views carry empty detector arrays), the per-accent `applied` self-verified readings + `mode: "dark"` + `mobileViewport` ride the envelope, and the seam's ALL-ACCENTS + ALL-VIEWS + drawer-present guards make every silently-skipped dimension a LOUD shape-error (the pre-S38 mobile pass swept only 6 views — MOBILE_VIEWS — and the omission-means-clean recording could not distinguish "clean because measured" from "clean because never rendered") |
@@ -1499,3 +1499,70 @@ Hover-parity probing must run in Playwright, not a touch-emulating browser — v
    (axe/WCAG) AND the surface is reference-measured parity, the reference
    wins until the reference itself changes; the parity pin family is the
    guard that enforces it.
+
+## S137 lessons (Batch CL — the audit-driven hardening cycle: the import-symmetry + cap-sizing + cards-bound + honest-copy set)
+
+1. **A round-trip contract means the IMPORT validates what the APP ITSELF
+   CAN MINT — and the asymmetry is invisible until you probe both
+   boundaries with the same row.** The timetable equal-times defect
+   (B-M1): the interactive schema rejected only strict inversion
+   (`endMin < startMin`) while the import seam rejected `<=` — a
+   zero-length class the UI/API happily created bricked the ENTIRE
+   all-or-nothing restore with a message blaming a row the app itself
+   minted. The sibling guards (events, grades) were symmetric; only
+   timetable drifted, and no census compared the two comparison
+   OPERATORS. Lesson: when a family has paired boundaries (interactive
+   schema ↔ import validator), pin the operator itself or probe the
+   round-trip with a boundary value the interactive side admits — the
+   e2e leg that creates the row through the API and restores it through
+   the import is the only test that catches the class (the unit seam
+   test asserted the WRONG operator and passed for years).
+2. **A size cap justified by arithmetic needs the arithmetic
+   MACHINE-CHECKED, or the prose claim rots silently.** The 25 MiB import
+   cap (A-M1) carried a "~18 max-size files" justification that was ~2×
+   off (one 2 MiB upload inflates to 2,796,204 base64 chars; 25 MiB
+   covers ~9.4) — for four sessions, because nothing executed the
+   division. The fix is not just the corrected constant (64 MiB ≈ 23
+   files) but the pinned bound: `floor(cap / inflation) >= 18` now fails
+   the suite if anyone re-sizes the cap without re-reconciling the
+   promise. Lesson: every cap/ratio/threshold justified by a computation
+   gets a one-line unit leg that re-runs the computation — prose
+   justifications are unverified claims wearing documentation's clothes.
+3. **"Unbounded by design" is a load-bearing comment that must name its
+   own mint vector — and the bounded-reads doctrine applies to the
+   DECK-SCOPED sibling too.** The cards list (B-M2) was the family's only
+   unbounded read, defended by "the take would hide cards" while the
+   import route could mint ~10^5 cards in one envelope — the exact
+   growth vector cited when the file-family GETs were bounded two cycles
+   earlier. The resolution was neither the sibling's 500 nor the old
+   unbounded form: a 5000 deck-completeness window (study mode runs a
+   deck's FULL set; the deck counts must stay honest). Lesson: when a
+   collection's display contract genuinely differs from its siblings
+   (completeness vs recency), bound it at ITS OWN contract's scale — and
+   audit the mint vectors (import, AI generation, bulk write) against
+   EVERY list read, not just the ones that share the sibling shape.
+4. **A coverage gap on a security INVARIANT is a finding even when the
+   behavior is correct — the pin is the deliverable.** The cross-user
+   ITEM isolation (CL9/B-I1): every generated PATCH/DELETE scoped
+   `userId` correctly, but NO test asserted a foreign-owned id → 404 — a
+   regression dropping the userId from the delegate's where-clause would
+   have passed the entire suite (list isolation was pinned implicitly,
+   the ITEM paths never). The fix shipped ZERO source changes: one e2e
+   leg with two sessions (a fresh user's row, the demo context's
+   PATCH+DELETE both answering 404). Lesson: audit the TEST matrix
+   against the security invariants, not just the behaviors — the
+   owned-FK doctrine had a census but the item paths had no wire proof,
+   and "correct today" without a pin is "regressible tomorrow."
+5. **A machine-load flake in the cert is diagnosed by its SIGNATURE
+   across the passing chunks, then discriminated by a standalone
+   re-run.** The re-cert's one first-run failure (BU7, chunk 1) landed
+   with the Prisma socket-timeout stderr visible in the logs of chunks
+   that PASSED — the same contention (the dev daemon co-resident with
+   the cert's standalone server) corrupting one timing-sensitive leg.
+   The discriminator: stop the contention source, re-run the chunk cold
+   → 150/150 first-pass. The honest record states both runs, names the
+   signature, and does NOT silently count the flake away (the machine
+   load class is a documented known quantity; a REAL regression
+   reproduces standalone). Lesson: one flake + a passing standalone
+   re-run + the signature visible elsewhere = machine load; anything
+   else gets investigated as a regression, never assumed.

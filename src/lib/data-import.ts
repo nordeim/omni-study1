@@ -41,14 +41,31 @@ import {
  *  file payloads INLINE (a 2 MiB upload inflates ×4/3), so the old cap
  *  rejected the user's OWN backup once ~4-5 max-size files landed (~13 MiB):
  *  the "own your data" round-trip downloaded a file the in-app restore then
- *  413'd. 25 MiB covers the realistic round-trip ADR-019 promises (~18
- *  max-size files' base64 + content). */
-export const IMPORT_MAX_BYTES = 25 * 1024 * 1024;
+ *  413'd. S137/CL2: 25 → 64 MiB — the BY3-era "~18 max-size files at
+ *  25 MiB" arithmetic was ~2× off (one 2 MiB upload inflates to
+ *  ceil(2,097,152/3)×4 = 2,796,204 base64 chars, so 25 MiB covers only
+ *  ~9.4 files — a user with 10+ near-cap files, achievable inside ONE
+ *  15-min upload budget of 20, downloaded a backup their own restore then
+ *  413'd — the exact BY3 class at 2× the documented threshold). 64 MiB
+ *  covers ~23 max-size files — the realistic round-trip promise with
+ *  margin. The arithmetic is machine-pinned in tests/data-import.test.ts
+ *  (the floor(cap / inflation) >= 18 leg) so the next re-size reconciles
+ *  with the REAL bound, not a prose claim. */
+export const IMPORT_MAX_BYTES = 64 * 1024 * 1024;
 
 /** The import-side secret guard — the file never speaks for the account:
  *  passwordHash and userId are stripped from every row (the importer's own
  *  id is re-attached by the route, never by the file). */
 export const NEVER_IMPORT_FIELDS = ["passwordHash", "userId"] as const;
+
+/** S137/CL6 — the system-timestamp sanity band (audit B-L1, the
+ *  window-poison vector): createdAt/updatedAt must parse inside
+ *  [2000-01-01, now + 24h] or the row rejects BEFORE the transaction with
+ *  the named copy. The floor admits every real account (the app's own
+ *  epoch is far later); the 24 h ceiling admits a clock-skewed client;
+ *  the poison vectors (9999 / 1900) reject. */
+const IMPORT_DATE_FLOOR_MS = Date.parse("2000-01-01T00:00:00.000Z");
+const IMPORT_DATE_CEILING_MS = 24 * 60 * 60 * 1000;
 
 export type ImportFkSpec = {
   field: string;
@@ -215,7 +232,11 @@ export function importRowIdError(collection: string, row: unknown): string | nul
   return null;
 }
 
-function stripSecrets(row: ImportRow): ImportRow {
+/** S137/CL11 (audit A-I3): exported — the route's byte-identical private
+ *  twin (stripNeverImportFields) deleted; BOTH sites consume THIS loop
+ *  over NEVER_IMPORT_FIELDS (the BW8 single-source doctrine's last inch —
+ *  a future edit to one copy would have drifted silently). */
+export function stripSecrets(row: ImportRow): ImportRow {
   const out: ImportRow = {};
   for (const [key, value] of Object.entries(row)) {
     if ((NEVER_IMPORT_FIELDS as readonly string[]).includes(key)) continue;
@@ -899,7 +920,7 @@ function checkDomainCaps(collection: string, row: ImportRow, index: number): voi
       typeof endTime === "string" &&
       hhmmMinutes(startTime) !== null &&
       hhmmMinutes(endTime) !== null &&
-      (hhmmMinutes(endTime) as number) <= (hhmmMinutes(startTime) as number)
+      (hhmmMinutes(endTime) as number) < (hhmmMinutes(startTime) as number)
     ) {
       throw new ImportRowError(
         collection,
@@ -1103,6 +1124,33 @@ export function sanitizeImportRow(
           index,
           `field "${field}" must be a non-empty string (whitespace-only is rejected by every route).`,
         );
+      }
+      // S137/CL6 (audit B-L1): the system-timestamp sanity band. The seam
+      // accepted ARBITRARY createdAt/updatedAt strings — a hand-edited
+      // far-future timestamp (9999) rode the row into the DB and
+      // permanently poisoned the newest-500 windows (every collection GET
+      // ranks it above every real row; with >=500 poisoned rows all real
+      // data vanishes from every in-app list). The band covers ONLY the
+      // two system-minted timestamps: [2000-01-01, now + 24h] — an old
+      // account imports clean, a clock-skewed near-future imports clean,
+      // the poison vectors reject with the named copy BEFORE the
+      // transaction. User-facing date fields (dueDate, exam/event dates —
+      // legitimately years out) are deliberately NOT banded; garbage
+      // NON-date strings keep their existing graceful path (the route's
+      // PrismaClientValidationError → the CJ5 400).
+      if (field === "createdAt" || field === "updatedAt") {
+        const ts = Date.parse(value);
+        if (
+          Number.isNaN(ts) ||
+          ts < IMPORT_DATE_FLOOR_MS ||
+          ts > Date.now() + IMPORT_DATE_CEILING_MS
+        ) {
+          throw new ImportRowError(
+            collection,
+            index,
+            `field "${field}" is outside the importable date range — the export format carries real timestamps between 2000 and now + 1 day.`,
+          );
+        }
       }
     }
   }

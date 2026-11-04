@@ -76,21 +76,28 @@ export const POST = async (request: NextRequest) => {
     // (the export window — the GET's take: 500 and the export's take:
     // 2000 both sit inside it), id-tiebroken, the stale-select bounded
     // per write (the BW4 class — take: 1000, converging over writes).
-    const total = await db.rumEvent.count({ where: { userId: user.id } });
-    if (total > RUM_RETENTION_WINDOW) {
-      const stale = await db.rumEvent.findMany({
-        where: { userId: user.id },
-        orderBy: [{ createdAt: "desc" }, { id: "desc" }],
-        skip: RUM_RETENTION_WINDOW,
-        take: 1000,
-        select: { id: true },
-      });
-      if (stale.length > 0) {
-        await db.rumEvent.deleteMany({
-          where: { userId: user.id, id: { in: stale.map((row) => row.id) } },
+    // S137/CL11 (audit B-I3): the trim wrapped in ONE interactive
+    // transaction — the calculator/history and ai/messages twins are
+    // already transactional; three bare awaits could interleave with a
+    // concurrent POST (safe-by-convergence, deletes only by id list —
+    // but the consistency close costs one tx).
+    await db.$transaction(async (tx) => {
+      const total = await tx.rumEvent.count({ where: { userId: user.id } });
+      if (total > RUM_RETENTION_WINDOW) {
+        const stale = await tx.rumEvent.findMany({
+          where: { userId: user.id },
+          orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+          skip: RUM_RETENTION_WINDOW,
+          take: 1000,
+          select: { id: true },
         });
+        if (stale.length > 0) {
+          await tx.rumEvent.deleteMany({
+            where: { userId: user.id, id: { in: stale.map((row) => row.id) } },
+          });
+        }
       }
-    }
+    });
 
     return NextResponse.json({ ok: true, accepted: events.length });
   } catch (err: unknown) {

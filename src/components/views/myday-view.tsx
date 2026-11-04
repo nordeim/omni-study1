@@ -248,11 +248,11 @@ export function MyDayView() {
 
       {/* ---- task rows ---- */}
       <div role="group" className="sf-scroll flex-1 space-y-3 overflow-y-auto pr-1" aria-label="My Day tasks">
-        {loading && tasks.length === 0 ? (
-          <div className="flex justify-center py-16 text-sf-primary">
-            <Spinner className="size-6" />
-          </div>
-        ) : active.length === 0 ? (
+        {/* S137/CL11 (Mode-C audit F7): the inner loading gate dropped — the
+            outer S136/CK4 gate above owns the loading && tasks.length === 0
+            state, so the main branch always has tasks.length > 0 (the inner
+            ternary arm was unreachable dead code). */}
+        {active.length === 0 ? (
           <p className="py-10 text-center text-sm text-slate-500 dark:text-slate-400">
             All done for today — add another task above.
           </p>

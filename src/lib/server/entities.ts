@@ -556,13 +556,25 @@ export const holidayDelegate = makeOwnedDelegate({
  */
 export const flashcardCardDelegate: EntityDelegate = {
   list: (userId) =>
-    db.flashcard.findMany({
-      where: { deck: { userId } },
-      // S126/CA5: the id tiebreak (deck-scoped and unbounded by design —
-      // the take would hide cards; the tiebreak only makes the order
-      // deterministic under same-millisecond ties, the BZ10 class).
-      orderBy: [{ createdAt: "asc" }, { id: "asc" }],
-    }),
+    db.flashcard
+      .findMany({
+        where: { deck: { userId } },
+        // S137/CL3 (audit B-M2): BOUNDED — the deck-completeness window.
+        // Every sibling collection GET runs the CA5 newest-500 window, but
+        // this list had NO take ("the take would hide cards") while the
+        // import route can mint ~10^5 cards in one envelope — the exact
+        // growth vector CA5/CB10 cited when bounding the file-family GETs
+        // — after which every boot transferred the entire card table. The
+        // BZ13 sibling form (desc + take, reversed to the configured asc
+        // presentation) at 5000: the deck-completeness contract (study
+        // mode runs a deck's full card set; the deck counts stay honest)
+        // keeps the bound 10× the sibling window, past which the
+        // newest-5000 window applies exactly like every sibling. The id
+        // tiebreak keeps same-millisecond ties deterministic (BZ10).
+        orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+        take: 5000,
+      })
+      .then((rows) => rows.reverse()),
 
   create: async (userId, input) => {
     const parsed = parseWith(flashcardSchema, input);

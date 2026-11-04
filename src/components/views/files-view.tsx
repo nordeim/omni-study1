@@ -649,8 +649,14 @@ export function FilesView() {
           <AlertDialogHeader>
             <AlertDialogTitle>Delete this folder?</AlertDialogTitle>
             <AlertDialogDescription>
-              {deletingFolder?.name} will be removed. Files inside are kept and move to the enclosing
-              folder. This cannot be undone.
+              {/* S137/CL5 (audit A-L1): the honest SetNull outcome — the schema's
+                  onDelete: SetNull (FileItem.folderId + FileFolder.parentId)
+                  moves contained files AND child subfolders to ROOT (All
+                  Files), not to the deleted folder's parent. (The reference
+                  measurement: it ships no confirm dialog at all — the clone's
+                  dialog is superset, its copy is clone-territory.) */}
+              {deletingFolder?.name} will be removed. Files and subfolders inside are kept and
+              move to All Files. This cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

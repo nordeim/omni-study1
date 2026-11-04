@@ -439,6 +439,46 @@ describe("rate-limiter hard cap under an all-live flood (S121/BV9)", () => {
   });
 });
 
+// S137/CL8 (Mode-C audit F2) — the global-bucket eviction exemption. The
+// containment budgets (`loginGlobal:`, `registerGlobal:`) lived in the
+// shared 2048-cap bucket map with NO key protection: a distinct-key flood
+// on the per-IP-only routes (verify/resend/forgot with rotated XFF —
+// cheap, no scrypt burn, unlimited distinct live keys) fills the map, and
+// the oldest-first eviction can delete a GLOBAL bucket mid-flood,
+// restarting its count at 1 — the CK1 CPU-DoS bound quietly re-arms. The
+// fix: evictOldestBucket skips the fixed process-wide budget keys (the
+// `Global:` family — a tiny, always-live, attacker-unreachable set of at
+// most 2 keys; the eviction always finds a non-global oldest). The map's
+// bound stays MAX_BUCKETS: the exemption only chooses the eviction
+// VICTIM, it never skips the eviction itself.
+describe("the global-bucket eviction exemption (S137/CL8)", () => {
+  it("a loginGlobal: bucket SURVIVES a distinct-key flood past the cap (pre-fix: evicted as the oldest live entry)", () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-11-01T10:00:00Z"));
+    resetAllRateLimits();
+    try {
+      // The containment bucket, spent to its budget of 1 — the oldest
+      // live entry in the map (inserted first under frozen fake time).
+      expect(checkRateLimit("loginGlobal:", 1).ok).toBe(true);
+      // The cross-route pressure shape: 2100 distinct live keys (past
+      // MAX_BUCKETS=2048 — the sweep frees nothing, the eviction path
+      // fires repeatedly). Pre-fix the loginGlobal: bucket (the oldest)
+      // was the FIRST eviction victim.
+      for (let i = 0; i < 2100; i++) checkRateLimit(`cl8-flood-${i}`, 5);
+      // The exemption: the containment bucket survived WITH its spend —
+      // the next check is still blocked. Pre-fix: the bucket was evicted
+      // and this call re-created it fresh → ok: true (the RED state).
+      expect(checkRateLimit("loginGlobal:", 1).ok).toBe(false);
+      // The map's bound held (the eviction still ran — non-global
+      // victims only; the exemption never skips the eviction).
+      expect(rateLimitBucketCount()).toBeLessThanOrEqual(2048);
+    } finally {
+      resetAllRateLimits();
+      vi.useRealTimers();
+    }
+  });
+});
+
 // S131/CF7 — the OTP digest family (docs/remediation-plan-session131.md).
 //
 // The BR6 posture extended to the OTP: a DB read must never yield a live

@@ -45,7 +45,21 @@
 # missed]; chunk 5 +1 [the S136/CK3 session-cookie SET-path leg in
 # auth.spec — context.cookies asserts httpOnly + SameSite=Lax + Path=/ on
 # a real UI login]. The full CK map: docs/remediation-plan-session136.md.)
-# Expected: 150 + 184 + 79 + 94 + 86 = 593 (each chunk's count includes its
+# (S137/CL re-tag — census 593 → 596, net +3: chunk 3 +2 [the S137/CL1
+# timetable equal-times round-trip leg + the S137/CL7 analytics OR-form
+# held-route gate, both in resilience — the CL1 leg rides the demo
+# session's request (chunk 3's demo import budget 4 → 5/10; no fresh
+# registrations, chunk 5's register census untouched; both sit MID-file —
+# resilience is alphabetically before s16-perf-parity, so the S136/CK1
+# flood pin stays TERMINAL); the BW11 import-cap 413 leg re-tagged in
+# place to the 64 MiB boundary]; chunk 4 +1 [the S137/CL9 cross-user
+# ITEM-isolation leg in s17-fresh-user — a fresh user's task PATCHed and
+# DELETEd from the demo context answers 404 both ways, the factory's
+# ownership-in-the-where-clause invariant finally wire-pinned; a coverage
+# pin landing GREEN on the pre-fix tree (the CK3 designed expectation —
+# the finding was the missing pin, not a defect)]. The full CL map:
+# docs/remediation-plan-session137.md.)
+# Expected: 150 + 184 + 81 + 95 + 86 = 596 (each chunk's count includes its
 # auth setup — the current census; the historical re-tag blocks beneath.)
 # (S131/CF re-tag — census 567 → 570, net +3: chunk 1 +1 [the CF9
 # drawer focus-restore leg in mobile-navigation — crossing the lg

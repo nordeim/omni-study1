@@ -403,16 +403,22 @@ export function AnalyticsView() {
     <div className="flex flex-col gap-6">
       <ViewHeader title="Analytics" subtitle="Insights across your study activity" icon={ChartColumn} />
       {/* ---- stat cards (icon-block, S8-I) — gated on in-flight data (S132/CG6;
-          S136/CK4 widened to the SIX stat families the row actually renders —
-          the old 3-collection gate left assignments/exams/focus in flight
-          rendering their false "0/0" zeroes) ---- */}
+          S137/CL7: the OR-form over the six stat families the row renders —
+          the S136/CK4 AND-form could never fix the mixed-landing false
+          zeroes it claimed to: with five families landed and one in
+          flight, the AND was false and the row rendered its false "0"
+          card. The gradetracker doctrine (S136 lesson 5): for a stat row
+          fed by N collections, the in-flight gate is the OR-form — any
+          primary source empty while loading = the row is untrustworthy.
+          The settled-zero contract stays a DIFFERENT branch — a completed
+          load at zero data renders the zero cards, the S17-D pins.) ---- */}
       {loading &&
-      tasks.length === 0 &&
-      grades.length === 0 &&
-      subjects.length === 0 &&
-      assignments.length === 0 &&
-      exams.length === 0 &&
-      focusSessions.length === 0 ? (
+      (tasks.length === 0 ||
+        grades.length === 0 ||
+        subjects.length === 0 ||
+        assignments.length === 0 ||
+        exams.length === 0 ||
+        focusSessions.length === 0) ? (
         <div className="flex justify-center py-16 text-sf-primary">
           <Spinner className="size-6" />
         </div>

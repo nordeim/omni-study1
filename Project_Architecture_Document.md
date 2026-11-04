@@ -1,4 +1,4 @@
-# StudyFlow (Omni-Study) — Master Project Architecture Document (PAD) v1.3.44
+# StudyFlow (Omni-Study) — Master Project Architecture Document (PAD) v1.3.45
 
 **Classification:** Internal Engineering Reference
 **Status:** DEFINITIVE, PRODUCTION-LOCKED BLUEPRINT
@@ -8,6 +8,11 @@
 **Rule:** Every architectural decision in this document traces to a specific rationale. Nothing is here "because it's popular."
 
 ---
+
+#### Revision Block — v1.3.45 (Session-137 / Batch CL, Cycle 87)
+
+- `[SR]` Current test census anchor (the v1.2.0 convention, re-anchored): **1356/1356 Vitest unit** (45 files — the S137 additions: data-import +7 [the CL1 equal-times round-trip leg + the CL2 cap-arithmetic pair (the 64 MiB const re-tag + the machine-checked >= 18-files bound) + the CL6 date sanity band quintet], auth +1 [the CL8 global-bucket eviction-exemption leg], http-body +1 [the CL10 P2028 → 413 mapping on the real PrismaClientKnownRequestError], script-conventions +3 [the CL3 cards-take census + the CL5 folder-dialog copy census + the CL10 409-copy census]) + **596/596 cold-chunk e2e** (591 chromium specs in 30 files + the auth setup re-run per chunk; the 5-chunk map **150+184+81+95+86**, every chunk first-pass on the final tree — chunk 1's one first-run BU7 flake was the machine-load class [the Prisma socket-timeout signature visible in the passing chunks' logs; the dev daemon was the contention source], re-verified 150/150 first-pass standalone with the source removed; the per-file counts in §8.1 are script-derivable). Unit + e2e = **1952 green**.
+- `[SR]` The audit-driven hardening cycle — the import-symmetry + cap-sizing + cards-bound + honest-copy set (`docs/remediation-plan-session137.md`): **CL1 (M)** the timetable equal-times import symmetry (B-M1 — the interactive boundary admits a zero-length 09:00–09:00 class [endMin < startMin rejects only inversion] while the import seam rejected endTime <= startTime, so ONE legally-created row bricked the ENTIRE all-or-nothing restore; the import mirrors the interactive boundary: strict inversion rejects, equal times import clean — the round-trip contract repaired in the only direction that heals existing accounts); **CL2 (M)** the import cap sizing (A-M1 — the BY3-era "~18 max-size files at 25 MiB" arithmetic was ~2× off [one 2 MiB upload inflates to 2,796,204 base64 chars; 25 MiB covers ~9.4], so a 10+-file user's own backup 413'd at restore: 25 → 64 MiB [~23 files] with the arithmetic machine-pinned so the next re-size reconciles with the REAL bound); **CL3 (M)** the cards bounded read (B-M2 — the family's only unbounded list, with the import route as the documented ~10^5-card mint vector, joined the bounded-reads family at the deck-completeness 5000 window [10× the sibling newest-500 — study mode runs a deck's full set, the deck counts stay honest]); **CL4 (L)** the §8.1 FULL regeneration (MC-F1 — the CK9 follow-through: nine stale E2E rows re-counted from `playwright test --list`, the unit rows re-verified, the Total row corrected with the setup double-count defined in a footnote rather than silently absorbed); **CL5 (L)** the folder-delete dialog honest copy (A-L1 — SetNull moves files AND subfolders to root, not "the enclosing folder"; the reference measured live this cycle ships NO confirm dialog at all, so the clone's dialog is superset and its copy clone-territory); **CL6 (L)** the import date sanity band (B-L1 — createdAt/updatedAt must parse inside [2000-01-01, now + 24h] or the row rejects BEFORE the transaction: the far-future/pre-2000 window-poison vectors [9999 timestamps permanently rank above every real row in the newest-500 windows] now reject with the named copy; user-facing date fields deliberately un-banded); **CL7 (L)** the analytics OR-form gate (MC-F4 — the CK4 AND-form could never fix the mixed-landing false zeroes it claimed to; the gradetracker doctrine applied: any primary source empty while loading owns the row); **CL8 (L)** the global-bucket eviction exemption (MC-F2 — the `loginGlobal:`/`registerGlobal:` containment budgets were evictable via cross-route distinct-key pressure on the per-IP-only routes; evictOldestBucket skips the Global: keys — the exemption chooses the eviction VICTIM, never skips the eviction, the map's bound unchanged); **CL9 (L)** the cross-user ITEM isolation pin (B-I1 — PATCH/DELETE a foreign-owned id → 404, finally wire-pinned: a regression dropping userId from the delegate where-clause would have passed every existing test; a coverage pin landing GREEN on the pre-fix tree, the CK3 designed expectation); **CL10 (L)** the import error family (A-L2 + A-I1 — P2028 [the interactive-transaction timeout on a legal many-rows envelope] maps to the named 413 with the actionable rollback copy instead of the opaque 500; the P2002 409 copy names BOTH collision causes [the concurrent-create race AND the dominant cross-account global-PK collision for which "re-export a fresh backup" could never help]); **CL11 (I)** the consistency trio (the myday dead inner gate, the strip-loop twins single-sourced behind the seam's exported stripSecrets, the RUM retention trim wrapped in its $transaction). The rotated dual deep audits — the data/import/export axis (**0C/0H/1M/3L/4I**) + the entities/factory axis (**0C/0H/2M/1L/5I**); every M/L finding re-verified by direct read (the two live-probe findings re-confirmed against the seam source). The docs set: the revision block you are reading + the §8.1 regeneration. Five honest mid-run corrections (the 201-vs-200 collection-POST convention on the CL1/CL9 create legs; the CJ3 register line re-anchor 423 → 429; the CL3 normalize scope error caught by typecheck; the unused NEVER_IMPORT_FIELDS import; the CL8 map-bound assertion honest-formed to <= MAX_BUCKETS).
 
 #### Revision Block — v1.3.44 (Session-136 / Batch CK, Cycle 86)
 
@@ -1126,13 +1131,13 @@ Single-role per-user ownership model; no admin surface. Session: `{ uid, iat, ex
 | Unit — `ai-helpers.test.ts` | 1 | 15 | `tests/ai-helpers.test.ts` |
 | Unit — `api-offline.test.ts` | 1 | 5 | `tests/api-offline.test.ts` |
 | Unit — `api-timeout.test.ts` | 1 | 12 | `tests/api-timeout.test.ts` | (S130/CE1 +2 net: +4 the default-deadline family −2 the tombstoned patient-default legs)
-| Unit — `auth.test.ts` | 1 | 50 | `tests/auth.test.ts` (S131/CF7 +2: the OTP digest family behavior pins) |
+| Unit — `auth.test.ts` | 1 | 51 | `tests/auth.test.ts` (S131/CF7 +2: the OTP digest family behavior pins) |
 | Unit — `calculator.test.ts` | 1 | 26 | `tests/calculator.test.ts` |
 | Unit — `clear-cookie.test.ts` | 1 | 3 | `tests/clear-cookie.test.ts` |
 | Unit — `client-ip.test.ts` | 1 | 14 | `tests/client-ip.test.ts` |
 | Unit — `overlay-animation.test.ts` | 1 | 4 | `tests/overlay-animation.test.ts` (the S129/CD1 45th unit file — the tw-animate-css wiring pin + the overlay-class census + the dead-v3-dep guard; its row was missing since S129 — the L-MC2 staleness) |
 | Unit — `data-export.test.ts` | 1 | 10 | `tests/data-export.test.ts` |
-| Unit — `data-import.test.ts` | 1 | 111 | `tests/data-import.test.ts` | (S130/CE7 +7: the length-cap family)
+| Unit — `data-import.test.ts` | 1 | 118 | `tests/data-import.test.ts` | (S130/CE7 +7: the length-cap family)
 | Unit — `data-store.test.ts` | 1 | 11 | `tests/data-store.test.ts` | (S129/CD2 +2: the collection-GET deadline at the seam boundary)
 | Unit — `date.test.ts` | 1 | 33 | `tests/date.test.ts` |
 | Unit — `db-path.test.ts` | 1 | 18 | `tests/db-path.test.ts` |
@@ -1145,7 +1150,7 @@ Single-role per-user ownership model; no admin surface. Session: `{ uid, iat, ex
 | Unit — `folder-tree.test.ts` | 1 | 16 | `tests/folder-tree.test.ts` |
 | Unit — `grade-merge.test.ts` | 1 | 7 | `tests/grade-merge.test.ts` |
 | Unit — `group-members.test.ts` | 1 | 15 | `tests/group-members.test.ts` |
-| Unit — `http-body.test.ts` | 1 | 12 | `tests/http-body.test.ts` | (S129/CD4 +3: the BodyTooLargeError family + the 413 mapping)
+| Unit — `http-body.test.ts` | 1 | 13 | `tests/http-body.test.ts` | (S129/CD4 +3: the BodyTooLargeError family + the 413 mapping)
 | Unit — `hue-pairs.test.ts` | 1 | 2 | `tests/hue-pairs.test.ts` |
 | Unit — `hue-tokens.test.ts` | 1 | 22 | `tests/hue-tokens.test.ts` | (S130/CE8 +2: the analytics tokenization sweep)
 | Unit — `import-row-guard.test.ts` | 1 | 12 | `tests/import-row-guard.test.ts` |
@@ -1154,7 +1159,7 @@ Single-role per-user ownership model; no admin surface. Session: `{ uid, iat, ex
 | Unit — `router.test.ts` | 1 | 11 | `tests/router.test.ts` |
 | Unit — `rum-diagnostics.test.ts` | 1 | 34 | `tests/rum-diagnostics.test.ts` |
 | Unit — `schema-indexes.test.ts` | 1 | 6 | `tests/schema-indexes.test.ts` | (S128/CC10; S130/CE9 +1: the FileFolder parentId pin)
-| Unit — `script-conventions.test.ts` | 1 | 35 | `tests/script-conventions.test.ts` | (S129/CD8 +2; S130/CE5+CE6 +3: the write-route budget + merge-guard censuses) (S131/CF1/CF6/CF7/CF4+5 +10: the per-email budget census, the OTP digest census, the cert-runner truth pair, the e2e posture + always-cold censuses) |
+| Unit — `script-conventions.test.ts` | 1 | 38 | `tests/script-conventions.test.ts` | (S129/CD8 +2; S130/CE5+CE6 +3: the write-route budget + merge-guard censuses) (S131/CF1/CF6/CF7/CF4+5 +10: the per-email budget census, the OTP digest census, the cert-runner truth pair, the e2e posture + always-cold censuses) |
 | Unit — `secure-cookie.test.ts` | 1 | 15 | `tests/secure-cookie.test.ts` |
 | Unit — `seed-gate.test.ts` | 1 | 5 | `tests/seed-gate.test.ts` |
 | Unit — `sent-keys-patch.test.ts` | 1 | 12 | `tests/sent-keys-patch.test.ts` |
@@ -1170,36 +1175,36 @@ Single-role per-user ownership model; no admin surface. Session: `{ uid, iat, ex
 | Unit — `view-collections.test.ts` | 1 | 7 | `tests/view-collections.test.ts` |
 | E2E — `a11y-sweep.spec.ts` | 1 | 20 | `tests/e2e/a11y-sweep.spec.ts` |
 | E2E — `accessibility.spec.ts` | 1 | 34 | `tests/e2e/accessibility.spec.ts` |
-| E2E — `auth-flows.spec.ts` | 1 | 18 | `tests/e2e/auth-flows.spec.ts` | (S129/CD6a +1: the bare-/reset-password default) (S131/CF8 +1: the resend 429 honesty leg — the per-email budget burn on a unique XFF) |
-| E2E — `auth.spec.ts` | 1 | 6 | `tests/e2e/auth.spec.ts` |
+| E2E — `auth-flows.spec.ts` | 1 | 23 | `tests/e2e/auth-flows.spec.ts` | (S129/CD6a +1: the bare-/reset-password default) (S131/CF8 +1: the resend 429 honesty leg — the per-email budget burn on a unique XFF) |
+| E2E — `auth.spec.ts` | 1 | 7 | `tests/e2e/auth.spec.ts` |
 | E2E — `calculator.spec.ts` | 1 | 13 | `tests/e2e/calculator.spec.ts` |
 | E2E — `dark-mode.spec.ts` | 1 | 28 | `tests/e2e/dark-mode.spec.ts` (S131/CF11 +1: the login-card hairline dark-pair leg) |
 | E2E — `greeting-clock.spec.ts` | 1 | 4 | `tests/e2e/greeting-clock.spec.ts` |
 | E2E — `mobile-navigation.spec.ts` | 1 | 19 | `tests/e2e/mobile-navigation.spec.ts` (S131/CF9 +1: the lg-breakpoint focus-restore leg) |
-| E2E — `navigation.spec.ts` | 1 | 61 | `tests/e2e/navigation.spec.ts` | (S129/CD2 +1; S130/CE3 +1: the view loading-gate leg)
+| E2E — `navigation.spec.ts` | 1 | 64 | `tests/e2e/navigation.spec.ts` | (S129/CD2 +1; S130/CE3 +1: the view loading-gate leg)
 | E2E — `parity-session5.spec.ts` | 1 | 46 | `tests/e2e/parity-session5.spec.ts` |
 | E2E — `parity-session6.spec.ts` | 1 | 21 | `tests/e2e/parity-session6.spec.ts` |
 | E2E — `parity-session7.spec.ts` | 1 | 55 | `tests/e2e/parity-session7.spec.ts` | (S130/CE2 +1: the True/False default leg)
 | E2E — `parity-session8.spec.ts` | 1 | 66 | `tests/e2e/parity-session8.spec.ts` |
 | E2E — `parity-session9.spec.ts` | 1 | 35 | `tests/e2e/parity-session9.spec.ts` |
-| E2E — `resilience.spec.ts` | 1 | 22 | `tests/e2e/resilience.spec.ts` |
-| E2E — `s14-hardening.spec.ts` | 1 | 22 | `tests/e2e/s14-hardening.spec.ts` |
-| E2E — `s16-perf-parity.spec.ts` | 1 | 3 | `tests/e2e/s16-perf-parity.spec.ts` |
-| E2E — `s17-fresh-user.spec.ts` | 1 | 10 | `tests/e2e/s17-fresh-user.spec.ts` |
+| E2E — `resilience.spec.ts` | 1 | 30 | `tests/e2e/resilience.spec.ts` |
+| E2E — `s14-hardening.spec.ts` | 1 | 23 | `tests/e2e/s14-hardening.spec.ts` |
+| E2E — `s16-perf-parity.spec.ts` | 1 | 4 | `tests/e2e/s16-perf-parity.spec.ts` |
+| E2E — `s17-fresh-user.spec.ts` | 1 | 11 | `tests/e2e/s17-fresh-user.spec.ts` |
 | E2E — `s18-rum.spec.ts` | 1 | 6 | `tests/e2e/s18-rum.spec.ts` |
 | E2E — `s19-rum-panel.spec.ts` | 1 | 5 | `tests/e2e/s19-rum-panel.spec.ts` | (S130/CE4 +1: the load-state machine leg)
 | E2E — `s20-rum-export.spec.ts` | 1 | 4 | `tests/e2e/s20-rum-export.spec.ts` |
 | E2E — `s21-data-export.spec.ts` | 1 | 5 | `tests/e2e/s21-data-export.spec.ts` |
 | E2E — `s22-boot-guard.spec.ts` | 1 | 2 | `tests/e2e/s22-boot-guard.spec.ts` |
-| E2E — `s23-import.spec.ts` | 1 | 10 | `tests/e2e/s23-import.spec.ts` | (S130/CE7 +1: the id-length atom leg — fresh TEST-NET user)
+| E2E — `s23-import.spec.ts` | 1 | 12 | `tests/e2e/s23-import.spec.ts` | (S130/CE7 +1: the id-length atom leg — fresh TEST-NET user)
 | E2E — `s24-change-password.spec.ts` | 1 | 5 | `tests/e2e/s24-change-password.spec.ts` |
 | E2E — `s25-delete-account.spec.ts` | 1 | 5 | `tests/e2e/s25-delete-account.spec.ts` |
 | E2E — `s26-change-email.spec.ts` | 1 | 7 | `tests/e2e/s26-change-email.spec.ts` |
 | E2E — `s52-sidebar-collapse.spec.ts` | 1 | 8 | `tests/e2e/s52-sidebar-collapse.spec.ts` |
-| E2E — `tasks.spec.ts` | 1 | 9 | `tests/e2e/tasks.spec.ts` |
-| E2E — `theme-system.spec.ts` | 1 | 16 | `tests/e2e/theme-system.spec.ts` | (S129/CD1 +1: the overlay-animation parity leg)
+| E2E — `tasks.spec.ts` | 1 | 11 | `tests/e2e/tasks.spec.ts` |
+| E2E — `theme-system.spec.ts` | 1 | 18 | `tests/e2e/theme-system.spec.ts` | (S129/CD1 +1: the overlay-animation parity leg)
 | E2E — the shared-sign-in setup project (one login; the storageState the whole suite rides; each cert chunk re-runs it) | 1 | 1 | `tests/e2e/auth.setup.ts` |
-| **Total** | **77** | **1938** | `tests/` — **1344 Vitest unit** (45 files, `vitest run` 1344/1344) + **593 e2e** (588 chromium specs in 30 files per `playwright test --list` + the 1 setup × the 5 cold-cert chunks = the 593-test chunked census [150+184+79+94+86, `db/e2e.db` cold every chunk]); unit + e2e = **1937 green** (the badge sum: 1344 + 593). Re-measured S136/CK9 (L-MC2 closed: every per-file row re-counted from the live tooling this cycle, the missing 45th unit file added — the table stays PER-FILE and script-derivable: `vitest run` per-file counts + `playwright test --list`; the prior Total's 1921-vs-1920 was the legacy setup double-count, now consistent). |
+| **Total** | **76** | **1948** | `tests/` — **1356 Vitest unit** (45 files, `vitest run` 1356/1356) + **591 chromium e2e specs** (30 files per `playwright test --list`) + the 1 shared-sign-in setup = the direct per-file sum **1948**. The chunked-cert BADGE census is **1952 green** (1356 + 596): the setup re-runs once per cold-cert chunk (591 + 5 × 1 = 596; the 5-chunk map **150+184+81+95+86**, `db/e2e.db` cold every chunk) — the setup's 5 runs are a CERT-PROCEDURE artifact counted once in this table's Files column, never a 76th file. Re-measured S137/CL4 (the MC-F1 close, the CK9 follow-through: every E2E row re-counted from `playwright test --list` this cycle — nine rows had drifted stale across S132–S136 [auth-flows 18→23, auth 6→7, navigation 61→64, resilience 22→30, s14-hardening 22→23, s16-perf-parity 3→4, s23-import 10→12, tasks 9→11, theme-system 16→18], four of them files the S136 diff itself touched — and the prior Total's `77/1938` was the SAME legacy setup double-count the S136 regeneration claimed to have closed, now defined in this footnote instead of silently absorbed). |
 
 ### 8.2 Test Patterns
 

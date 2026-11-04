@@ -473,7 +473,7 @@ const VIOLET_RESIDUALS: ReadonlyArray<{ file: string; line: number; pattern: Reg
   { file: "src/components/views/tasks-view.tsx", line: 115, pattern: /dark:hover:border-violet-800/, why: "the row-card hover border's DARK half (the light half rides --sf-primary-edge since S135/CJ3; no reference ground truth for dark — the clone's dark mode is the documented superset)" },
   { file: "src/components/views/flashcards-view.tsx", line: 394, pattern: /dark:border-violet-800/, why: "the study-card face border's DARK half (the light half rides --sf-primary-edge since S135/CJ3; the 800-vs-900 divergence from notes is the S92 divergent-variant class)" },
   { file: "src/components/views/notes-view.tsx", line: 686, pattern: /dark:border-violet-900/, why: "the selected-note row border's DARK half (the light border rides --sf-primary-edge and the bg rides --sf-primary-softest since S135/CJ3; softDark's 900 value is byte-equal but the dark-edge family waits for a uniform design pass)" },
-  { file: "src/components/views/analytics-view.tsx", line: 423, pattern: /dark:bg-violet-900\/50/, why: "the Tasks-Completed chip's DARK half (the light bg rides --sf-primary-empty since S135/CJ3; the /50 opacity serializes through the trap-7 family — a dark empty-step token would change the form)" },
+  { file: "src/components/views/analytics-view.tsx", line: 429, pattern: /dark:bg-violet-900\/50/, why: "the Tasks-Completed chip's DARK half (the light bg rides --sf-primary-empty since S135/CJ3; the /50 opacity serializes through the trap-7 family — a dark empty-step token would change the form)" },
 ];
 
 // The S135/CJ3 treated-light-half census: the five migrations, pinned to
@@ -484,7 +484,7 @@ const EDGE_CONSUMERS: ReadonlyArray<{ file: string; line: number; pattern: RegEx
   { file: "src/components/views/flashcards-view.tsx", line: 394, pattern: /border-sf-primary-edge/, why: "the study-card face border" },
   { file: "src/components/views/notes-view.tsx", line: 686, pattern: /border-sf-primary-edge/, why: "the selected-note row border" },
   { file: "src/components/views/notes-view.tsx", line: 686, pattern: /bg-sf-primary-softest/, why: "the selected-note row tint" },
-  { file: "src/components/views/analytics-view.tsx", line: 423, pattern: /bg-sf-primary-empty/, why: "the Tasks-Completed chip" },
+  { file: "src/components/views/analytics-view.tsx", line: 429, pattern: /bg-sf-primary-empty/, why: "the Tasks-Completed chip" },
 ];
 
 describe("the accent-semantic violet register (S134/CI8 → S135/CJ3, the dark half)", () => {

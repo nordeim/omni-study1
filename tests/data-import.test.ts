@@ -360,11 +360,24 @@ describe("IMPORT_FK_MAP (the completeness pin — the INITIAL_COLLECTIONS patter
 });
 
 describe("IMPORT_MAX_BYTES (the documented body cap)", () => {
-  it("is 25 MiB — the S124/BY3 export/import reconciliation (the export emits base64 file payloads inline)", () => {
-    // S124/BY3: 10 → 25 MiB — the export/import reconciliation (the export
-    // emits base64 file payloads inline; ~4-5 max-size uploads made the
-    // user's own backup unrestorable under the old cap).
-    expect(IMPORT_MAX_BYTES).toBe(25 * 1024 * 1024);
+  it("is 64 MiB — the S137/CL2 arithmetic reconciliation (25 MiB covered only ~9 max-size files, not the documented ~18)", () => {
+    // S124/BY3: 10 → 25 MiB (the export emits base64 file payloads inline,
+    // so ~4-5 max-size uploads made the user's own backup unrestorable
+    // under the old 10 MiB cap). S137/CL2: 25 → 64 MiB — the BY3-era
+    // "~18 max-size files at 25 MiB" claim was ~2× off: a 2 MiB upload
+    // inflates to ceil(2,097,152/3)*4 = 2,796,204 base64 chars, so 25 MiB
+    // covers ~9.4 files. 64 MiB covers ~23 — the realistic round-trip
+    // promise (~18 max-size files' base64 + content) with margin.
+    expect(IMPORT_MAX_BYTES).toBe(64 * 1024 * 1024);
+  });
+
+  it("covers the documented realistic round-trip (~18 max-size files' base64) — the machine-checked arithmetic (S137/CL2)", () => {
+    // The honest bound: floor(cap / one max-size file's base64 inflation).
+    // The next re-size of IMPORT_MAX_BYTES must reconcile with THIS leg,
+    // not with a prose claim — the S137 lesson (the ~18 claim rotted at
+    // 25 MiB for four sessions because nothing machine-checked it).
+    const ONE_MAX_FILE_BASE64 = Math.ceil((2 * 1024 * 1024) / 3) * 4; // 2,796,204
+    expect(Math.floor(IMPORT_MAX_BYTES / ONE_MAX_FILE_BASE64)).toBeGreaterThanOrEqual(18);
   });
 });
 
@@ -623,9 +636,93 @@ describe("S127/CB11 · the completed import domain caps", () => {
     ).toThrow(ImportRowError);
   });
 
+  it("accepts the EQUAL-times span — the app's own creatable shape (S137/CL1, the round-trip contract)", () => {
+    // S137/CL1 (audit B-M1): the interactive boundary (hhmmEndBeforeStart)
+    // rejects only endMin < startMin — a zero-length 09:00–09:00 class is
+    // creatable through the UI/API and persists. The import seam rejected
+    // endTime <= startTime, so ONE such row in an export bricked the
+    // ENTIRE all-or-nothing restore with a message blaming a row the app
+    // itself minted. The import mirrors the interactive boundary: strict
+    // inversion rejects, equal times import clean.
+    expect(() =>
+      sanitizeImportRow("timetableClasses", { id: "c1", startTime: "09:00", endTime: "09:00" }, 0),
+    ).not.toThrow();
+  });
+
   it("accepts the legacy unpadded hour (the atom admits '9:00')", () => {
     expect(() =>
       sanitizeImportRow("timetableClasses", { id: "c1", startTime: "9:00", endTime: "10:30" }, 0),
+    ).not.toThrow();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// S137/CL6 (audit B-L1) · the import date sanity band. The seam accepted
+// ARBITRARY createdAt/updatedAt strings: a hand-edited far-future
+// timestamp (9999) rode the row into the DB and permanently poisoned the
+// newest-500 windows (every collection GET ranks it above every real row;
+// with >=500 poisoned rows all real data vanishes from every in-app
+// list). The band: the two SYSTEM-minted timestamps must parse inside
+// [2000-01-01, now + 24h] — old-but-real accounts import clean, a
+// clock-skewed near-future imports clean, the poison vectors reject
+// BEFORE the transaction with the named copy. User-facing date fields
+// (dueDate, exam dates — legitimately years out) are deliberately NOT
+// banded.
+// ---------------------------------------------------------------------------
+describe("S137/CL6 · the import date sanity band (the window-poison vector)", () => {
+  it("rejects a far-future createdAt (the 9999 poison)", () => {
+    expect(() =>
+      sanitizeImportRow("tasks", {
+        id: "cl6-future",
+        title: "T",
+        createdAt: "9999-12-31T00:00:00.000Z",
+      }, 0),
+    ).toThrow(/date range/);
+  });
+
+  it("rejects a pre-2000 createdAt (the garbage-past poison)", () => {
+    expect(() =>
+      sanitizeImportRow("tasks", {
+        id: "cl6-past",
+        title: "T",
+        createdAt: "1900-01-01T00:00:00.000Z",
+      }, 0),
+    ).toThrow(/date range/);
+  });
+
+  it("rejects a far-future updatedAt too (both system timestamps banded)", () => {
+    expect(() =>
+      sanitizeImportRow("subjects", {
+        id: "cl6-future2",
+        name: "S",
+        color: "#8b5cf6",
+        createdAt: "2026-01-01T00:00:00.000Z",
+        updatedAt: "9999-12-31T00:00:00.000Z",
+      }, 0),
+    ).toThrow(/date range/);
+  });
+
+  it("accepts an old-but-legit timestamp (a 2015 account imports clean)", () => {
+    expect(() =>
+      sanitizeImportRow("tasks", {
+        id: "cl6-old",
+        title: "T",
+        createdAt: "2015-06-15T12:00:00.000Z",
+      }, 0),
+    ).not.toThrow();
+  });
+
+  it("leaves user-facing date fields un-banded (a 2031 event startDate is legal)", () => {
+    // The band covers ONLY createdAt/updatedAt — user-facing dates are
+    // user-intent and legitimately years in the future (the existing
+    // inverted-span legs' own 2031 events prove the shape).
+    expect(() =>
+      sanitizeImportRow("events", {
+        id: "cl6-evt",
+        startDate: "2031-03-15T13:00:00.000Z",
+        endDate: "2031-03-15T14:00:00.000Z",
+        createdAt: "2026-01-01T00:00:00.000Z",
+      }, 0),
     ).not.toThrow();
   });
 });

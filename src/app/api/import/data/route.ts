@@ -39,13 +39,13 @@ import {
   IMPORT_OPTIONAL_FKS,
   IMPORT_REQUIRED_FKS,
   ImportRowError,
-  NEVER_IMPORT_FIELDS,
   duplicateIdError,
   importProfilePatch,
   importRowIdError,
   parseImportRaceMessage,
   sanitizeImportRow,
   sortFoldersParentsFirst,
+  stripSecrets,
   validateImportEnvelope,
 } from "@/lib/data-import";
 import { db } from "@/lib/db";
@@ -126,17 +126,11 @@ const MODEL: Record<Collection, keyof PrismaClient> = {
 
 /** OPTIONAL FKs — a dangling reference imports NULLED (SetNull semantics). */
 
-/** The import-side secret guard (the S23 seam's list): the file never speaks
- * for the account — passwordHash and userId are stripped from every row
- * (the importer's own id is re-attached by the route, never by the file). */
-function stripNeverImportFields(row: Row): Row {
-  const out: Row = {};
-  for (const [key, value] of Object.entries(row)) {
-    if ((NEVER_IMPORT_FIELDS as readonly string[]).includes(key)) continue;
-    out[key] = value;
-  }
-  return out;
-}
+// S137/CL11 (audit A-I3): the route's private stripNeverImportFields twin
+// DELETED — the write loop consumes the seam's exported stripSecrets (the
+// BW8 single-source doctrine: the field LIST was already single-sourced
+// via NEVER_IMPORT_FIELDS, but the LOOP itself was duplicated; a future
+// edit to one copy would have drifted silently).
 
 export const POST = async (request: NextRequest) => {
   try {
@@ -359,7 +353,7 @@ export const POST = async (request: NextRequest) => {
         let u = 0;
         for (const row of rows) {
           const { id, ...rawFields } = row;
-          const fields = stripNeverImportFields(rawFields);
+          const fields = stripSecrets(rawFields);
           // cards carry no userId column — ownership rides the deck relation,
           // so EVERY probe (including this write loop's findFirst, the S117
           // fix) scopes through { deck: { userId } }, exactly like the
@@ -454,9 +448,16 @@ export const POST = async (request: NextRequest) => {
       // S135/CJ5: the colon-safe parse — ids legally contain ":" and the
       // bare split(":") truncated them at the first colon.
       const { collection, id } = parseImportRaceMessage(err.message);
+      // S137/CL10 (audit A-I1): the copy names BOTH collision causes —
+      // the CE7 concurrent-create race AND the dominant real trigger, a
+      // cross-account global-PK collision (ids are GLOBAL primary keys,
+      // so a backup restored into a different account hits P2002 on the
+      // first shared id — the s128 e2e comment documents exactly this).
+      // The old "Re-export a fresh backup" advice could never help THAT
+      // case (ids are stable by design).
       return errorResponse(
         409,
-        `That ${collection} row (id "${id}") was created elsewhere while the import ran. Re-export a fresh backup and try again.`,
+        `That ${collection} row (id "${id}") collides with an existing record — either it was created while this import ran, or this backup's ids already belong to another account. Edit the backup's ids or restore into the original account.`,
       );
     }
     return toErrorResponse(err);

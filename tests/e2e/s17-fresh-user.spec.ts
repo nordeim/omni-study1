@@ -425,3 +425,50 @@ test.describe("S120/BU13 · the timed-test expiry announcement (authed)", () => 
     }
   });
 });
+
+// ---------------------------------------------------------------------------
+// S137/CL9 (audit B-I1) — the factory's cross-user ITEM isolation, wired.
+// The owned-FK doctrine (every generated query scopes where:{userId}) is
+// list-pinned implicitly (a second account sees zero rows) and the
+// foreign-FK 404s are pinned — but NO test ever asserted the ITEM paths:
+// PATCH/DELETE on a foreign-owned id → 404. The only guard is the
+// delegate's findFirst({where:{id, userId}}) — a regression dropping the
+// userId from that where-clause would pass every existing test. This leg
+// registers a fresh user (user2), creates THEIR task, then asks from the
+// DEMO session (the project's own signed-in state) for that row by id.
+// ---------------------------------------------------------------------------
+test.describe("S137/CL9 · the factory's cross-user ITEM isolation (a foreign-owned id → 404)", () => {
+  test.use({ storageState: { cookies: [], origins: [] } });
+
+  test("the demo session's PATCH and DELETE on user2's task id both answer 404 (the ownership lives IN the where-clause)", async ({ page, browser }) => {
+    await registerFreshUser(page, "cl9-iso");
+
+    // user2 (the fresh session) creates their own task through the API
+    // (201 — the collection-POST convention).
+    const create = await page.request.post("/api/tasks", {
+      data: { title: "CL9 isolation probe" },
+    });
+    expect(create.status()).toBe(201);
+    const row = (await create.json()) as { id: string };
+
+    // The demo session (a SECOND signed-in account) asks for user2's row
+    // by id: update and delete both miss the ownership-scoped probe →
+    // 404 (never 403, never 200 — the delegate's where-clause carries
+    // the userId, so a foreign id simply does not exist).
+    const demo = await browser.newContext({ storageState: "tests/e2e/.auth/user.json" });
+    try {
+      const patch = await demo.request.patch(`/api/tasks/${row.id}`, {
+        data: { title: "hijacked" },
+      });
+      expect(patch.status()).toBe(404);
+      const del = await demo.request.delete(`/api/tasks/${row.id}`);
+      expect(del.status()).toBe(404);
+    } finally {
+      await demo.close();
+    }
+
+    // Zero residue (the AM1/AN1 convention — user2 deletes their OWN row).
+    const cleanup = await page.request.delete(`/api/tasks/${row.id}`);
+    expect([200, 204]).toContain(cleanup.status());
+  });
+});
