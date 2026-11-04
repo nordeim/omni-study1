@@ -12,7 +12,7 @@ import * as React from "react";
 
 import { useRouter } from "next/navigation";
 
-import { apiSend } from "@/lib/api";
+import { apiSend, isTimeoutError } from "@/lib/api";
 import { Spinner } from "@/components/views/shared";
 import { IMPORT_MAX_BYTES } from "@/lib/data-import";
 
@@ -28,6 +28,15 @@ function errorMessage(err: unknown, fallback: string): string {
   // copy, keep every other error's own message (the API's actionable 400s).
   if (err instanceof SyntaxError) {
     return "That file is not a valid StudyFlow backup (it is not readable JSON).";
+  }
+  // S139/CN8 (audit A-L4): the import deadline is a 120 s
+  // AbortSignal.timeout — its rejection is a bare DOMException whose
+  // message ("signal timed out") rendered verbatim in the alert, on the
+  // exact large-restore path the deadline exists for. The CE1 doctrine
+  // (the isTimeoutError seam every auth surface already carries) maps it
+  // to honest, actionable copy instead.
+  if (isTimeoutError(err)) {
+    return "The import took too long and was stopped. Try a smaller backup, or split it first.";
   }
   return err instanceof Error && err.message ? err.message : fallback;
 }

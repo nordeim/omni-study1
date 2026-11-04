@@ -68,20 +68,41 @@ const folderDelegate: EntityDelegate = {
         // opened the cycled folder, the Files view's breadcrumb walk wedged
         // the renderer PERMANENTLY (one authenticated API call froze the
         // tab). Reject self-parenting and any re-parent that would close a
-        // cycle — one userId-scoped query, the ancestor chain walked in
-        // memory with a visited set (also terminates on a pre-existing
-        // cycled row set from an imported DB).
+        // cycle — the ancestor chain walked with a visited set (also
+        // terminates on a pre-existing cycled row set from an imported DB).
         // S85/AL3 (the s85 audit's L4): the walk lives in the shared pure
         // seam now (wouldCreateCycle, src/lib/folder-tree.ts — unit-pinned
         // against the pre-existing-cycle shapes; the inline twin's
         // termination property was unpinned and mutation-surviving).
+        // S139/CN5 (audit B-M3): the walk is now BOUNDED — one findFirst
+        // per HOP up the ancestor chain (depth-bounded), not the user's
+        // whole folder table per PATCH. The pre-CN5 form read EVERY folder
+        // the user owned inside this default-5 s transaction (the folders
+        // GET is bounded at 500 precisely because the import route can
+        // mint ~10^5 folders in one envelope — the guard itself was the
+        // family's unbounded read). The collected chain feeds the
+        // UNCHANGED wouldCreateCycle seam (its unit pins stay live), and
+        // the first hop doubles as the parent-existence check: for the
+        // cycle question only the ancestor chain of the candidate parent
+        // matters, so the bounded chain and the full table answer
+        // identically.
         if (writes.parentId === id) {
           throw new ValidationError("A folder cannot be its own parent.");
         }
-        const chain = await tx.fileFolder.findMany({
-          where: { userId },
-          select: { id: true, parentId: true },
-        });
+        const chain: { id: string; parentId: string | null }[] = [];
+        const seen = new Set<string>();
+        let cursor: string | null = writes.parentId;
+        while (cursor !== null && !seen.has(cursor)) {
+          const row: { id: string; parentId: string | null } | null =
+            await tx.fileFolder.findFirst({
+              where: { id: cursor, userId },
+              select: { id: true, parentId: true },
+            });
+          if (!row) break; // a dangling ancestor terminates the walk (the seam's own rule)
+          chain.push(row);
+          seen.add(row.id);
+          cursor = row.parentId;
+        }
         if (!chain.some((row) => row.id === writes.parentId)) {
           throw new NotFoundError("That folder does not exist.");
         }

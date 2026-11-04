@@ -4,9 +4,19 @@
 # SIGKILL escalation → rm db/e2e.db → run the chunk), one chunk per
 # invocation so each foreground run fits the tool timeout.
 # Usage: bash /home/z/my-project/omni-study1/scripts/run-cert-chunk.sh <1-5>
-# Expected (S138/CM re-tag): 150 + 184 + 82 + 95 + 86 = 597 — the same
+# Expected (S139/CN re-tag): 150 + 185 + 87 + 95 + 86 = 603 — the same
 # census as scripts/e2e-chunked-cert.sh (machine-enforced by
 # tests/script-conventions.test.ts, including the identical-CHUNKS pin).
+# (S139/CN net +6: chunk 2 +1 [the S139/CN2 export→import round-trip
+# witness in s14-hardening — the demo's own export POSTed back verbatim,
+# created: 0; relocated out of resilience where BY5's deliberately-spent
+# demo export budget mid-chunk 429'd the leg — the S135/CJ relocation
+# class; chunk 2 runs it at import 6/10, export 1/10]; chunk 3 +5 [the
+# CN2 empty-envelope + folders-true-index tolerance legs + the CN2
+# cross-account 409 + the CN4 card-delegate foreign-id 404s + the CN10
+# owned-FK PATCH re-point 404 — one fresh TEST-NET user2 each (probe IP
+# 192.0.2.139), the demo import budget at 8/10; END-of-file, the CK1
+# flood pin stays TERMINAL in s16].)
 # (S138/CM net +1: chunk 3 +1 [the S138/CM2 dashboard KPI OR-form
 # held-route leg in resilience — holding ONLY /api/focus-sessions while
 # the other four dashboard families resolve: the mixed-landing where the

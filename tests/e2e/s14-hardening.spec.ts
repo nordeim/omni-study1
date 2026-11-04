@@ -912,3 +912,46 @@ test.describe("S127/CB20: both link-file paths store url.length", () => {
     expect(row.size).toBe(url.length);
   });
 });
+
+// ---------------------------------------------------------------------------
+// S139/CN2 · the full export→import round-trip witness (audit A-M2's
+// headline hole: no test anywhere downloaded GET /api/export/data and
+// POSTed it back — the family's "own your data" promise across all 20
+// collections, including the seeded unpadded "9:00" timetable rows, the
+// folders, the chat, the calc history, the holidays, and the CB19
+// preferences block, was never exercised end-to-end; the S117 cards
+// break would have been caught by exactly this pin).
+//
+// Rides the demo session. THE BUDGET RELOCATION (the honest mid-run
+// correction): the first draft lived in chunk 3's resilience.spec.ts,
+// where S124/BY5 (the export-family limiter pin, :780) spends the demo
+// export budget MID-CHUNK (10 GETs + the asserted 11th 429) — the
+// round-trip's export GET answered 429 and the leg failed at its first
+// assertion (exactly the S135/CJ relocation class: a leg that needs a
+// budget another pin in the same chunk deliberately exhausts). Chunk 2
+// spends 5 demo import POSTs (this file) and ZERO export GETs, so here
+// the leg runs at import 6/10 and export 1/10 — both free. The residual
+// placement note: Playwright runs the chunk's files alphabetically, so
+// tasks.spec and theme-system.spec follow this file — the round-trip is
+// IDEMPOTENT by construction (the update branch writes the ENVELOPE'S
+// timestamps verbatim, so every demo row restores its own values; the
+// CB19 preference patch applies the same values), and the two later
+// files assert only on their OWN rows and settings, never demo-row
+// freshness; the next chunk re-boots the server and re-seeds db/e2e.db
+// cold regardless.
+// ---------------------------------------------------------------------------
+test.describe("S139/CN2 · the export→import round-trip witness", () => {
+  test("the demo's own export restores clean (created: 0 — the headline promise, finally witnessed)", async ({ request }) => {
+    const exportRes = await request.get("/api/export/data");
+    expect(exportRes.status()).toBe(200);
+    const envelope = (await exportRes.json()) as Record<string, unknown>;
+    // The envelope round-trips VERBATIM — every collection the export
+    // carries (including the seeded unpadded "9:00" timetable rows, the
+    // folders, the chat, the calc history, the holidays, and the user
+    // preferences block) must be restorable by the app that minted it.
+    const res = await request.post("/api/import/data", { data: envelope });
+    expect(res.status()).toBe(200);
+    const body = (await res.json()) as { created: number };
+    expect(body.created).toBe(0);
+  });
+});

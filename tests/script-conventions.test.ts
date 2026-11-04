@@ -1,5 +1,5 @@
 import { execSync } from "node:child_process";
-import { readdirSync, readFileSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
 
@@ -119,7 +119,11 @@ describe("the chunked cert runner's truth contract (S128/CC2)", () => {
     // The topmost Expected line — re-tagged by every census-changing cycle.
     // S138/CM: chunk 3 81 → 82 (the S138/CM2 dashboard KPI OR-form
     // held-route leg) — 596 → 597.
-    expect(certSource).toContain("Expected: 150 + 184 + 82 + 95 + 86 = 597");
+    // S139/CN: chunk 2 184 → 185 (the S139/CN2 export→import round-trip
+    // witness, relocated out of chunk 3's BY5-spent export budget) +
+    // chunk 3 82 → 87 (the CN2 tolerance pair, the cross-account 409,
+    // the CN4 card-delegate 404s, the CN10 owned-FK re-point) — 597 → 603.
+    expect(certSource).toContain("Expected: 150 + 185 + 87 + 95 + 86 = 603");
   });
 
   it("propagates a failing chunk's exit code (never a green cert on a red run)", () => {
@@ -995,13 +999,15 @@ describe("the S138/CM source censuses", () => {
     expect(pkg).not.toContain("@radix-ui/react-scroll-area");
   });
 
-  it("the Docker runtime stage drops to a non-root user (S138/CM8 — no USER directive shipped root)", () => {
+  it("the Docker runtime stage drops to a non-root user (S138/CM8 — no USER directive shipped root; the census tightened to the bun identity at S139/CN9)", () => {
     // S138/CM8 (audit AI-3): the runtime stage ran as root with write
     // access to /data and the app tree. The bun base image ships a
     // non-root `bun` user; the runtime now chowns /data and drops to it
-    // before the CMD.
+    // before the CMD. S139/CN9 (Mode-C L-2): the first census accepted
+    // ANY `USER` line — a regression to `USER root` kept it green; the
+    // regex now pins the bun identity exactly.
     const src = readFileSync(DOCKERFILE, "utf8");
-    expect(src).toMatch(/^USER /m);
+    expect(src).toMatch(/^USER bun$/m);
     expect(src).toContain("chown");
   });
 
@@ -1017,5 +1023,141 @@ describe("the S138/CM source censuses", () => {
     expect(src).toContain("default-src 'self'");
     expect(src).toContain("object-src 'none'");
     expect(src).toContain("frame-ancestors 'none'");
+  });
+});
+
+describe("the S139/CN source censuses", () => {
+  const LOGIN = path.resolve(process.cwd(), "src/app/api/auth/login/route.ts");
+  const REGISTER = path.resolve(process.cwd(), "src/app/api/auth/register/route.ts");
+  const IMPORT_ROUTE = path.resolve(process.cwd(), "src/app/api/import/data/route.ts");
+  const FOLDERS_ROUTE = path.resolve(process.cwd(), "src/app/api/files/folders/[id]/route.ts");
+  const EXPORT_PANEL = path.resolve(process.cwd(), "src/components/export/export-panel.tsx");
+  const HTTP = path.resolve(process.cwd(), "src/lib/server/http.ts");
+  const ENTITIES = path.resolve(process.cwd(), "src/lib/server/entities.ts");
+  const DOCKERFILE = path.resolve(process.cwd(), "Dockerfile");
+  const REPO_ROOT = process.cwd();
+
+  it("the folder re-parent cycle guard reads the ANCESTOR CHAIN, never the user's whole folder table (S139/CN5 — the guard was the family's own unbounded read)", () => {
+    // S139/CN5 (audit B-M3): the cycle guard ran
+    // tx.fileFolder.findMany({ where: { userId } }) inside the default-5s
+    // transaction on EVERY re-parent — the user's ENTIRE folder table per
+    // PATCH, while the folders GET is bounded at 500 precisely because
+    // the import route can mint ~10^5 folders in one envelope. The
+    // bounded form walks the ancestor chain with one findFirst per hop
+    // (the visited set terminates pre-existing imported cycles) and feeds
+    // the unchanged wouldCreateCycle seam.
+    const src = readFileSync(FOLDERS_ROUTE, "utf8");
+    expect(src).not.toContain("fileFolder.findMany");
+    expect(src).toContain("tx.fileFolder.findFirst");
+    expect(src).toContain("wouldCreateCycle");
+  });
+
+  it("the import body-read catch discriminates the typed over-cap error from transport failures (S139/CN6 — a client abort mid-stream is not 'too large')", () => {
+    // S139/CN6 (audit A-L1): the bare catch answered a confident 413 for
+    // ANY readBodyCapped failure — a transport/stream error mislabeled
+    // with size remediation advice that cannot help. The typed
+    // BodyTooLargeError (S129/CD4) exists and is now used here: only the
+    // genuine over-cap read answers 413; everything else propagates to
+    // the honest 500 handler.
+    const src = readFileSync(IMPORT_ROUTE, "utf8");
+    expect(src).toContain("instanceof BodyTooLargeError");
+  });
+
+  it("the per-row sanitize loop runs BEFORE the folders topo-sort (S139/CN7 — rejection copy names the backup file's true row index)", () => {
+    // S139/CN7 (audit A-L2): folders were topo-sorted BEFORE the sanitize
+    // loop, so 'Invalid folders[3]' named the SORTED position — an
+    // operator editing their backup per the message landed on the wrong
+    // line. sanitizeImportRow is VERIFIED validate-only (no row mutation
+    // anywhere in its body), so the reorder is behavior-neutral for valid
+    // envelopes; only the rejection copy changes.
+    const src = readFileSync(IMPORT_ROUTE, "utf8");
+    const sanitizeAt = src.indexOf("sanitizeImportRow(collection, rows[i], i)");
+    const sortAt = src.indexOf("sortFoldersParentsFirst(");
+    expect(sanitizeAt).toBeGreaterThan(-1);
+    expect(sortAt).toBeGreaterThan(-1);
+    expect(sanitizeAt).toBeLessThan(sortAt);
+  });
+
+  it("the export panel classifies the import timeout with friendly copy (S139/CN8 — the CE1 doctrine every auth surface already carries)", () => {
+    // S139/CN8 (audit A-L4): a 120 s AbortSignal.timeout rejection
+    // (DOMException 'signal timed out') rendered verbatim in the alert —
+    // user-hostile copy on the exact large-restore timeout the deadline
+    // exists for. The isTimeoutError branch (src/lib/api.ts, the CE1
+    // seam) now maps it the way every auth surface already does.
+    const src = readFileSync(EXPORT_PANEL, "utf8");
+    expect(src).toContain("isTimeoutError");
+  });
+
+  it("the login route no longer narrates the overturned SUCCESS-RESET doctrine (S139/CN9 — the stale paragraph 100 lines above the decrement)", () => {
+    // S139/CN9 (Mode-C L-1): the pre-CM3 paragraph still taught "the
+    // SUCCESS-RESET below … only FAILED logins accumulate (the attack
+    // shape never succeeds)" — contradicted by the CM3 decrement wired
+    // 100 lines below it (a success no longer discharges the window's
+    // other 39 spends; the in-band posture makes scripted successes the
+    // attack's own shape). The exact stale-prose class CM5 swept.
+    const src = readFileSync(LOGIN, "utf8");
+    expect(src).not.toContain("SUCCESS-RESET");
+  });
+
+  it("the register route documents the deliberate discharge asymmetry (S139/CN9 — a future symmetry pass must not reopen the AI-2 defeat here)", () => {
+    // S139/CN9 (Mode-C I-2): login decrements loginGlobal: on success;
+    // register never discharges registerGlobal: — CORRECT (a register
+    // "success" is credential-free and scriptable under the in-band
+    // posture), but nothing documented WHY the siblings differ. The
+    // comment now owns the asymmetry deliberately.
+    const src = readFileSync(REGISTER, "utf8");
+    expect(src).toContain("deliberately NEVER discharge");
+  });
+
+  it("the Dockerfile init-profile comment matches the compose reality (S139/CN9 — the init service has no user: override, so it runs as the image user)", () => {
+    // S139/CN9 (Mode-C M-1): the comment claimed the compose init
+    // profile "still runs as root" — but the init service carries no
+    // user: override, so after the image-level USER bun it runs as bun
+    // (the named-volume path still works because the image chowns /data;
+    // a BIND-MOUNTED /data owned by root now fails the SQLite open —
+    // documented in DEPLOYMENT.md §8).
+    const src = readFileSync(DOCKERFILE, "utf8");
+    expect(src).toContain("runs as the image user");
+    expect(src).not.toContain("still runs as root");
+  });
+
+  it("the route-param id honors the 64-char bound the body atoms enforce (S139/CN11 — a 65-char URL id answered the delegate verbatim)", () => {
+    // S139/CN11 (audit B-L1): body ids cap at idField's 64 chars, but
+    // withUserParams passed context.params.id into findFirst verbatim —
+    // an 8 KB path segment reached the query (Prisma parameterizes, so
+    // no injection; purely the inconsistency). The bound now 404s (the
+    // no-oracle posture — a >64-char id cannot exist).
+    const src = readFileSync(HTTP, "utf8");
+    expect(src).toContain("id.length > 64");
+  });
+
+  it("the dead orderBy config branch is gone (S139/CN11 — no delegate ever selected desc; the branch was a reader trap)", () => {
+    // S139/CN11 (audit B-L2): `orderBy?: "asc" | "desc"` config + the
+    // `orderBy === "desc" ? rows : rows.reverse()` branch was dead across
+    // all sixteen delegates — grep-verified no delegate passes orderBy,
+    // and the cards delegate owns its own raw-query ordering. Deleted,
+    // not commented.
+    const src = readFileSync(ENTITIES, "utf8");
+    expect(src).not.toContain('orderBy === "desc"');
+    expect(src).not.toContain('orderBy?: "asc" | "desc"');
+  });
+
+  it("a beforeWrite delegate whose txModelName does not resolve fails AT CONSTRUCTION (S139/CN11 — the loud-at-construction doctrine, completed)", () => {
+    // S139/CN11 (audit B-L3): txModelName presence was checked but not
+    // RESOLUTION — a typo surfaced as a 500 at the first guarded PATCH,
+    // not at startup. The construction check now resolves the name
+    // against the client.
+    const src = readFileSync(ENTITIES, "utf8");
+    expect(src).toContain("does not resolve");
+  });
+
+  it("no stale npm lockfile rides the repo root (S139/CN11 — package-lock.json still pinned five CM7-removed Radix deps)", () => {
+    // S139/CN11 (Mode-C I-3): the npm lock predates the bun toolchain
+    // switch and drifted (it still carried the CM7-deleted Radix deps
+    // and the long-removed tailwindcss-animate). The bun toolchain, the
+    // Dockerfile (package.json + bun.lock only), and every documented
+    // command ignore it — deleted as pure confusion surface.
+    expect(existsSync(path.resolve(REPO_ROOT, "package-lock.json"))).toBe(false);
+    expect(existsSync(path.resolve(REPO_ROOT, "bun.lock"))).toBe(true);
   });
 });

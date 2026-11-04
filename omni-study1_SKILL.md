@@ -25,7 +25,7 @@ tags:
 
 > **What this is:** the single-source-of-truth reference for working in
 > `nordeim/omni-study1`. Every fact below is verified against the codebase
-> (1966 tests green, re-anchored at the S138 update: 1369 Vitest unit [45 files] + 597 Playwright e2e [the 5-chunk census: 592 chromium specs + the per-chunk setup re-runs — 150+184+82+95+86]) — the census re-anchored through
+> (1994 tests green, re-anchored at the S139 update: 1391 Vitest unit [45 files] + 603 Playwright e2e [the 5-chunk census: 598 chromium specs + the per-chunk setup re-runs — 150+185+87+95+86]) — the census re-anchored through
 > the s117–s124 hardening cycles; the 2.0 baseline was 834 + 299 in six
 > chunks after the parity re-application + account-flow completion +
 > regression hardening).
@@ -135,7 +135,7 @@ touch resolution.
   wholesale disables (~25 rules, unchanged since commit `01cb829`) stay the
   deliberate repo posture — the compensating controls are tsc strict
   (`noUnusedLocals`/`noUnusedParameters`, `_`-prefix as deliberate-unused),
-  the ACTIVE `react-hooks/set-state-in-effect` gate, and the 1369+597 test
+  the ACTIVE `react-hooks/set-state-in-effect` gate, and the 1391+603 test
   suites. Do not re-litigate the remaining disables without a violation
   census first (the s129 probe: 55 unused-vars are the `_`-prefix
   convention, 11 prefer-const are scaffold style, 6 exhaustive-deps were
@@ -627,13 +627,13 @@ tail -40 dev.log                            # request traces + prisma queries
 ```bash
 bun run lint && bun run typecheck && bun run test && bun run build && bun run test:e2e
 ```
-Current green state (re-anchored at S138/CM): lint ✓ · tsc ✓ (`noImplicitAny` + `noUnusedLocals`/`noUnusedParameters` — the BV16 machine guard; plus the S129/CD3 re-enabled `react-hooks/exhaustive-deps` as an error) · 1369 unit ✓ · build ✓ (the type gate live — `ignoreBuildErrors` removed) · 597 e2e ✓ (1966 green).
+Current green state (re-anchored at S139/CN): lint ✓ · tsc ✓ (`noImplicitAny` + `noUnusedLocals`/`noUnusedParameters` — the BV16 machine guard; plus the S129/CD3 re-enabled `react-hooks/exhaustive-deps` as an error) · 1391 unit ✓ · build ✓ (the type gate live — `ignoreBuildErrors` removed) · 603 e2e ✓ (1994 green).
 
 **Full-suite chunk map** (one server-boot per chunk; the 10-min tool cap makes
 one-shot full runs unreliable — the 2.0 six-chunk map: chrome+s14 104 ·
 S5+calc+S6 46 · S7+S8+S9 79 · tasks/resilience/s16/s17 20 · auth+s18–s23 35 ·
 s24–s26 18. Re-anchored at 2.2: the FIVE-chunk cold map of
-`scripts/e2e-chunked-cert.sh` — 150+184+82+95+86 = 597 (re-anchored S138/CM; the pre-S138 line said 596 [150+184+81+95+86], the S137-era map, always run COLD
+`scripts/e2e-chunked-cert.sh` — 150+185+87+95+86 = 603 (re-anchored S139/CN; the pre-S139 line said 597 [150+184+82+95+86], the S138-era map, always run COLD
 [`rm -f db/e2e.db`]: the s23 round-trip posts a FIXED-id envelope and the
 seed's idempotent upserts never refresh day-relative dates).
 
@@ -847,7 +847,7 @@ no bottom tab bar, drawer-only mobile nav). Mobile QA viewport: 390×844.
 | Layer | z | Where |
 |---|---|---|
 | Fixed app chrome (mobile header, desktop sidebar, the notes mobile FAB) | `z-30` | `mobile-chrome.tsx:121`, `sidebar.tsx:48`, `notes-view.tsx:877` |
-| The Radix overlay family (dialog/alert-dialog/dropdown/select/popover/tooltip backdrops + content, the mobile drawer) | `z-50` | `ui/dialog.tsx`, `ui/alert-dialog.tsx`, `ui/dropdown-menu.tsx`, `ui/select.tsx`, `ui/popover.tsx`, `ui/tooltip.tsx` |
+| The Radix overlay family (dialog/alert-dialog/dropdown/select/popover backdrops + content, the mobile drawer) | `z-50` | `ui/dialog.tsx`, `ui/alert-dialog.tsx`, `ui/dropdown-menu.tsx`, `ui/select.tsx`, `ui/popover.tsx` |
 | Toast viewport (above open dialogs) | `z-[60]` | `ui/toast.tsx:61` |
 | Connectivity banner (the topmost feedback surface) | `z-[70]` | `connectivity-banner.tsx:48` |
 | Skip link (above everything — the a11y contract) | `z-index: 100` | `globals.css` `sf-skip-link` |

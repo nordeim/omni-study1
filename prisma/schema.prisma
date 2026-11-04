@@ -363,7 +363,14 @@ model Flashcard {
   updatedAt  DateTime      @updatedAt
   deck       FlashcardDeck @relation(fields: [deckId], references: [id], onDelete: Cascade)
 
+  // deckId: the FK lookup + deck-delete cascade scan.
+  // S139/CN3 (audit B-M1): [createdAt, id] covers the CL3 cards-list
+  // ORDER BY (createdAt desc, id desc, take 5000) — without it SQLite
+  // temp-b-tree-sorted every owned card per GET (the CC10-measured
+  // class). SQLite walks this index newest-first and stops at 5000
+  // matching rows; [deckId] stays for the FK/cascade scans.
   @@index([deckId])
+  @@index([createdAt, id])
 }
 
 model PracticeTest {

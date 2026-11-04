@@ -171,6 +171,48 @@ describe("the body-cap status (S129/CD4 — BodyTooLargeError → 413)", () => {
     expect(body.error).toContain("fully rolled back");
     expect(body.error).toContain("split the work into smaller passes");
   });
+
+  // S139/CN10 (audit B-L4) — the P2002/P2025/P2003 legs. The shared
+  // mapper's other three Prisma-code mappings were correct but UNPINNED
+  // at the unit layer (only P2028 was, at CM4): the P2025→404 leg is the
+  // concurrent-delete degradation path of every UNGUARDED update/remove
+  // (the row vanishes between the ownership probe and the write), and
+  // P2003→400 is the FK-race degradation (the FK target vanishes between
+  // the owned-FK probe and the create). A regression in either mapping
+  // would surface as an opaque 500 with no failing test. Real
+  // PrismaClientKnownRequestError instances throughout (the P2028
+  // template's constructor-verified form).
+  it("toErrorResponse maps P2002 (unique-constraint violation) to 409 with the named copy (S139/CN10, pre-fix: unpinned)", async () => {
+    const { Prisma } = await import("@prisma/client");
+    const err = new Prisma.PrismaClientKnownRequestError(
+      "Unique constraint failed on the fields: (`id`)",
+      { code: "P2002", clientVersion: "6.19.0" },
+    );
+    const res = toErrorResponse(err);
+    expect(res.status).toBe(409);
+    const body = await res.json();
+    expect(body.error).toContain("already exists");
+  });
+
+  it("toErrorResponse maps P2025 (record not found) to 404 (the concurrent-delete degradation path, S139/CN10)", async () => {
+    const { Prisma } = await import("@prisma/client");
+    const err = new Prisma.PrismaClientKnownRequestError(
+      "An operation failed because it depends on one or more records that were required but not found.",
+      { code: "P2025", clientVersion: "6.19.0" },
+    );
+    const res = toErrorResponse(err);
+    expect(res.status).toBe(404);
+  });
+
+  it("toErrorResponse maps P2003 (FK violation) to 400 (the FK-race degradation path, S139/CN10)", async () => {
+    const { Prisma } = await import("@prisma/client");
+    const err = new Prisma.PrismaClientKnownRequestError(
+      "Foreign key constraint failed on the field: `subjectId`",
+      { code: "P2003", clientVersion: "6.19.0" },
+    );
+    const res = toErrorResponse(err);
+    expect(res.status).toBe(400);
+  });
 });
 
 describe("assertJsonContentType (S119/BT1a — the BR5 policy as a shared seam)", () => {

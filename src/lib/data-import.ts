@@ -623,10 +623,26 @@ export const IMPORT_FIELD_LENGTHS: Record<string, number> = {
   "calcHistory.expression": 500,
   "calcHistory.result": 500,
   "chatMessages.content": 100_000,
+  // S139/CN1: the files mime cap — the interactive upload stores the
+  // browser's entry.type (realistically < 100 chars), but the import
+  // guard's generic default is 1 M chars, and a poisoned oversized mime
+  // rides FILE_METADATA into EVERY files list GET (the CE7 bloat class:
+  // a 900-K-char field bloats every list read of the family).
+  "files.mime": 100,
 };
 
 const IMPORT_FILE_URL_MAX_CHARS = 2000;
 const IMPORT_FILE_NAME_MAX_CHARS = 200;
+// S139/CN1: the files size ceiling — a seam-local MIRROR of
+// src/lib/server/http.ts's MAX_UPLOAD_BYTES (2 MiB). The mirror (not the
+// import) is the established pattern: this seam must stay client-safe
+// (export-panel.tsx imports IMPORT_MAX_BYTES from it) and the server
+// http module is server-side. The files-view.tsx client twin documents
+// the same mirror convention. A bare number would re-seed the exact
+// stale-cap drift class CL2/CM5 machine-censured — if the upload ceiling
+// moves, THIS constant moves in the same commit (the census pins the
+// relationship by value).
+const IMPORT_FILE_SIZE_MAX_BYTES = 2 * 1024 * 1024;
 
 /** The guard's rejection — names the collection and row index so the
  *  operator can find the offender in their backup file. */
@@ -753,11 +769,14 @@ function checkDomainCaps(collection: string, row: ImportRow, index: number): voi
       );
     }
     if (maxScore !== undefined && maxScore !== null) {
-      if (typeof maxScore !== "number" || maxScore <= 0) {
+      // S139/CN1: the route atom is z.number().min(1) — a Float 0.5 passed
+      // the old `<= 0` leg and PERSISTED (the column has no Prisma
+      // backstop), violating the family's own CB11/CA14 contract.
+      if (typeof maxScore !== "number" || maxScore < 1) {
         throw new ImportRowError(
           collection,
           index,
-          'field "maxScore" must be a number greater than 0 (the Grade Tracker divides by it).',
+          'field "maxScore" must be a number greater than or equal to 1 (the Grade Tracker divides by it).',
         );
       }
       if (maxScore > 1000) {
@@ -786,11 +805,20 @@ function checkDomainCaps(collection: string, row: ImportRow, index: number): voi
   if (collection === "assignments") {
     const progress = row.progress;
     if (progress !== undefined && progress !== null) {
-      if (typeof progress !== "number" || progress < 0 || progress > 100) {
+      // S139/CN1: the route atom is z.number().int().min(0).max(100) — a
+      // non-integer (12.5) passed this guard and died at Prisma as the
+      // GENERIC "fields do not match" 400 (the CJ4 actionable-copy
+      // degradation, the exact class this parity contract exists to close).
+      if (
+        typeof progress !== "number" ||
+        !Number.isInteger(progress) ||
+        progress < 0 ||
+        progress > 100
+      ) {
         throw new ImportRowError(
           collection,
           index,
-          'field "progress" must be a number between 0 and 100.',
+          'field "progress" must be a whole number between 0 and 100.',
         );
       }
     }
@@ -799,11 +827,17 @@ function checkDomainCaps(collection: string, row: ImportRow, index: number): voi
   if (collection === "timetableClasses") {
     const dayOfWeek = row.dayOfWeek;
     if (dayOfWeek !== undefined && dayOfWeek !== null) {
-      if (typeof dayOfWeek !== "number" || dayOfWeek < 0 || dayOfWeek > 6) {
+      // S139/CN1: same — the route atom is z.number().int().min(0).max(6).
+      if (
+        typeof dayOfWeek !== "number" ||
+        !Number.isInteger(dayOfWeek) ||
+        dayOfWeek < 0 ||
+        dayOfWeek > 6
+      ) {
         throw new ImportRowError(
           collection,
           index,
-          'field "dayOfWeek" must be a number between 0 (Monday) and 6 (Sunday).',
+          'field "dayOfWeek" must be a whole number between 0 (Monday) and 6 (Sunday).',
         );
       }
     }
@@ -1009,6 +1043,33 @@ function checkDomainCaps(collection: string, row: ImportRow, index: number): voi
             'field "members" must be a JSON array of at most 50 members.',
           );
         }
+        // S139/CN1: the ITEM shape — the interactive atom is
+        // z.object({ name: trim().min(1).max(100), email: trim().email()
+        // .max(200) }); the import's string bound for the whole column was
+        // the 1 M generic, so garbage items persisted (the read-side
+        // normalizeMembers drops blank names, but the write side owed the
+        // parity contract the shape). NO email-FORMAT check here — a
+        // stricter import regex than the atom risks rejecting legal
+        // exports (the round-trip contract outranks the nicety, and the
+        // read side renders email as text, never a link).
+        for (const item of parsed) {
+          if (
+            typeof item !== "object" ||
+            item === null ||
+            Array.isArray(item) ||
+            typeof (item as Record<string, unknown>).name !== "string" ||
+            ((item as Record<string, unknown>).name as string).trim().length < 1 ||
+            ((item as Record<string, unknown>).name as string).length > 100 ||
+            typeof (item as Record<string, unknown>).email !== "string" ||
+            ((item as Record<string, unknown>).email as string).length > 200
+          ) {
+            throw new ImportRowError(
+              collection,
+              index,
+              'field "members" items must each be an object with a name (1-100 characters) and an email (at most 200 characters).',
+            );
+          }
+        }
       }
     }
   }
@@ -1208,6 +1269,39 @@ export function sanitizeImportRow(
         collection,
         index,
         `field "data" must be base64 text of at most ${IMPORT_FILE_DATA_MAX_CHARS.toLocaleString("en-US")} characters (the 2 MiB upload ceiling).`,
+      );
+    }
+    // S139/CN1: the mime and size legs — the interactive upload stores the
+    // browser's entry.type (mime) and entry.size (a real byte count under
+    // the 2 MiB ceiling); the import guard previously checked NEITHER, so
+    // a poisoned 1 M-char mime rode FILE_METADATA into every files list
+    // GET (the CE7 bloat class) and a negative or fractional size
+    // persisted (the column has no backstop).
+    const mime = row.mime;
+    if (
+      mime !== undefined &&
+      mime !== null &&
+      (typeof mime !== "string" || mime.length > 100)
+    ) {
+      throw new ImportRowError(
+        collection,
+        index,
+        'field "mime" must be a string of at most 100 characters (the browser-provided type the upload stores).',
+      );
+    }
+    const size = row.size;
+    if (
+      size !== undefined &&
+      size !== null &&
+      (typeof size !== "number" ||
+        !Number.isInteger(size) ||
+        size < 0 ||
+        size > IMPORT_FILE_SIZE_MAX_BYTES)
+    ) {
+      throw new ImportRowError(
+        collection,
+        index,
+        `field "size" must be a whole number of bytes between 0 and ${IMPORT_FILE_SIZE_MAX_BYTES.toLocaleString("en-US")} (the 2 MiB upload ceiling).`,
       );
     }
   }

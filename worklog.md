@@ -3777,3 +3777,107 @@ usage-line-free = 239/120 + the two s112 riders**; `.env.example` verified curre
 **Docs set (same commit):** README (the badge 1966 + the census lines + the S138 row), AGENTS.md (the census anchors + the S138 lessons section — five lessons), PAD **v1.3.46** (the revision block + the §8.1 touched-row re-count: auth 51→55, script-conventions 38→47, resilience 30→31, the Total 1948→1962 with the badge 1966), the SKILL doc (the census anchors), the vitest header (45/1369 + the S138/CM re-anchor block), the cert re-tags (the S138/CM block + Expected 597 in both + the script-conventions tripwire re-tag), the plan's §5 (the as-executed record with the full corrections ledger), `docs/session_147.md`, and this entry.
 
 **Deferrals (documented, with rationale):** FE-4 (the analytics Focus Time sub-caption — PARITY-PINNED, the reference's own copy measured live this cycle), FE-5 (the settings remount race — the intentional key-remount pattern), MC-F6 (the 64 MiB memory tail), MC-F7 (the knownIds/export unbounded reads — the A-L3 posture), MC-F8 (the band edges), the two default-5 s transaction sites (their P2028 copy now honest via CM4; explicit timeouts deferred), and the standing s133–s137 deferred set (MC-F3, A-L3, A-I2, A-I4, B-I2, B-I4, B-I5, B-L2). **Next cycle suggestion: the FE/views + auth/crypto/infra axes are now FRESH — rotate onto the data/import/export + entities/factory families (the s137 axes, two cycles stale by then), or take the B-L2 list-memoization family as its own performance cycle.**
+
+## Session 150 — Batch CN (Cycle 89): the parity-integrality + round-trip-witness + covering-index + bounded-walk set
+
+**Context.** The 31st workspace continuation — the sandbox reset; a fresh
+clone at `d7733c2` (the Batch CM state + the operator's two s138 session-log
+commits). The environment re-provisioned: `bun install` foreground, `.env`
+from the current `.env.example` (`DATABASE_URL="file:../db/custom.db"`, `db/`
+at the repo root), `db/` pushed + seeded, chromium-1243 re-provisioned (the
+reset wiped the browser cache — the first chunk-1 cert attempt failed 149×
+on the missing headless-shell executable, re-run first-pass; the browser
+cache is part of the environment, not just `node_modules`).
+
+**The cold baseline (before any work).** lint ✓ · tsc ✓ · unit **1369/1369**
+(45 files — the documented S138 final state exactly) · the canonical build
+green · the cold 5-chunk e2e **597/597** (150+184+82+95+86, every chunk
+first-pass) · the drawer check GREEN (**the 53rd consecutive
+no-Tailwind-v4-mobile-nav-bug confirmation at baseline**).
+
+**The audits (rotated per the s138 closing directive — the data/import/
+export + entities/factory axes; every H/M/L re-verified by direct read).**
+Mode-C on the CM diff: **0C/0H/1M/4L/3I — all nine CM claims TRUE** (the
+findings are residuals OF the fixes: the Docker init-user comment falsified
+by the compose reality + the bind-mount EACCES mode; the login stale
+SUCCESS-RESET paragraph; the `^USER ` census accepting `USER root`; the
+SKILL tooltip row; the un-annotated S136 lesson; the register asymmetry;
+the stale package-lock). Audit A (data/import/export): **0C/0H/3M/4L/5I** —
+the parity sextet, the round-trip pin-net holes (the family's HEADLINE
+promise never exercised end-to-end), the restore-availability half
+(deferred as its own family); the catch-all 413, the folders row-index
+drift, the note-HTML paste, the panel timeout. Audit B (entities/factory):
+**0C/0H/3M/5L/2I** — the cards ORDER BY with no covering index (the CC10
+class re-opened by CL3), the card delegate's unpinned ownership guard (the
+CL9 class), the cycle guard's full-table read; the route-param id bound,
+the dead orderBy branch, the unchecked txModelName, the unpinned mapper
+legs, the CREATE-only owned-FK pin.
+
+**Live parity.** The drawer check GREEN at baseline AND on the remediated
+tree (**the 53rd/54th consecutive** — the dev daemon started and killed
+inside the same command each time, the S138 lesson-5 discipline). The
+reference desktop-chrome battery held (the 258px sidebar column / the
+standing 260px box, exactly 20 nav items, the standing labels). No
+reference-shared surface is touched by the CN set — the batteries are the
+witnesses.
+
+**The CN set (TDD: RED 18 unit + 1 e2e defect pins for the designed
+reasons + 10 coverage pins GREEN-on-arrival → GREEN unit 1369 → 1391, e2e
+597 → 603).** **CN1** the parity-integrality sextet (progress/dayOfWeek
+integrality, maxScore ≥ 1, files mime ≤ 100 + size 0..2 MiB, the members
+item shape; chatMessages.content deliberately kept at the 100 K PERSISTED
+bound — the round-trip contract outranks the interactive bound).
+**CN2** the round-trip witness quartet (the version floor, the empty
+envelope, the cross-account 409, and THE HEADLINE: the demo's own export
+posted back verbatim restores clean, created: 0 — the "own your data"
+promise finally witnessed across all 20 collections; the S117 cards break
+would have been caught by exactly this leg). **CN3** the Flashcard
+`@@index([createdAt, id])` covering index. **CN4** the card-delegate
+ownership wire pins (foreign card/deck 404s). **CN5** the folder
+cycle-guard's bounded ancestor walk (one findFirst per hop feeding the
+unchanged wouldCreateCycle seam; the AK1 family re-proves the guard).
+**CN6** the typed BodyTooLargeError 413 catch. **CN7** the
+sanitize-before-sort reorder (the TRUE row index in the rejection copy).
+**CN8** the panel's isTimeoutError branch. **CN9** the doc-accuracy
+sextet (Dockerfile + DEPLOYMENT.md §8 bind-mount note + login paragraph +
+USER-bun regex + SKILL row + AGENTS annotation + register asymmetry).
+**CN10** the P2002/P2025/P2003 mapper trio + the owned-FK re-point leg.
+**CN11** the route-param 64-char bound + the dead orderBy branch deleted +
+the txModelName resolution check + the stale package-lock.json deleted.
+
+**The honest mid-run corrections (the full ledger in the plan's §6).** The
+round-trip leg's first home (chunk 3's resilience) 429'd behind S124/BY5's
+deliberately-spent demo export budget mid-chunk — relocated to chunk 2's
+s14-hardening where both budgets run free (the S135/CJ class, elevated to
+the S139 lesson 2: inventory what the chunk SPENDS before placing a leg
+that CONSUMES); the CN7 marker re-scoped to the deterministic over-cap
+form (a blank name is not a guaranteed import rejection); the CE7 registry
+census re-tagged for files.mime; two typings caught by typecheck; the
+chunk-3 first re-run's two AK1 500s were the machine-load class
+(standalone-clean, re-run first-pass); the capture script's /export wait
+re-scoped to the panel's own pinned headings.
+
+**The re-cert (the final tree).** lint ✓ · tsc ✓ · unit **1391/1391** (45
+files) · the canonical build green · the cold 5-chunk e2e **603/603 —
+150+185+87+95+86, every chunk first-pass** · the register tripwire rider
+arithmetic exact (importers 256 → 257, Usage-line carriers 137 → 138, stale
+0 — the capture-s139-evidence.mjs rider; the 50th consecutive hold) · the
+drawer check GREEN (**the 54th consecutive**) · three evidence frames
+(`docs/screenshots/139-clone-*.png` — desktop, mobile drawer, the /export
+portability panel). **Census: 1391 unit + 603 e2e = 1994 green.**
+
+**The docs set (same commit).** README (the badge 1994 + the census lines
++ the S139 row), AGENTS.md (the census anchors + the S136 lesson-3
+superseded annotation + the S139 lessons — five lessons), PAD **v1.3.47**
+(the revision block + the §8.1 touched-row re-count: data-import 118→125,
+schema-indexes 6→7, http-body 13→16, script-conventions 47→58, resilience
+31→36, s14-hardening 23→24, the Total 1962→1990 with the badge 1994), the
+SKILL doc (the census anchors + the tooltip row), the vitest header
+(45/1391), the cert re-tags (the S139/CN block + Expected 603 in both
+scripts + the script-conventions tripwire), the plan §6
+(`docs/remediation-plan-session139.md`), `docs/session_150.md`, and this
+entry.
+
+**Next cycle.** The FE/views + auth/crypto/infra axes (the s138 axes, two
+cycles stale by then), or the A-M3 restore-availability performance cycle
+(the batching redesign + the knownIds skip).

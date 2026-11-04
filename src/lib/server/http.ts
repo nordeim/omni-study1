@@ -313,6 +313,15 @@ export function withUserParams(handler: AuthedItemHandler) {
   return async (request: NextRequest, context: ItemRouteContext): Promise<Response> => {
     try {
       const { id } = await context.params;
+      // S139/CN11 (audit B-L1): the route-param id honors the same 64-char
+      // bound the body atoms enforce (validation.ts idField) — an 8 KB
+      // path segment previously reached the delegate's findFirst verbatim
+      // (Prisma parameterizes, so no injection — purely the inconsistency;
+      // a >64-char id cannot exist, so the honest status is the no-oracle
+      // 404, identical to a missing row).
+      if (id.length === 0 || id.length > 64) {
+        throw new NotFoundError();
+      }
       const user = await requireUser();
       return await handler(user, request, id);
     } catch (err: unknown) {

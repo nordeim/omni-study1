@@ -86,9 +86,14 @@ COPY --from=build /app/package.json ./package.json
 # volume still boots (the db lands inside the container's own layer).
 # S138/CM8 (audit AI-3): the runtime drops to the bun base image's
 # non-root `bun` user — the app tree stays root-owned read-only for it,
-# and /data (the only writable the server needs) is chowned. The init
-# profile (db push + seed) still runs as root: creating and seeding the
-# volume before the first server start is exactly its one-shot job.
+# and /data (the only writable the server needs) is chowned. S139/CN9
+# (Mode-C M-1): the compose init profile (db push + seed) carries NO
+# `user:` override, so it runs as the image user (bun) too — the
+# named-volume path works because the image's chown rides into a fresh
+# named volume. A BIND-MOUNTED /data owned by root fails the SQLite open
+# at first boot (see docs/DEPLOYMENT.md §8 — chown it to the container's
+# bun uid, or run the init profile once with --user 0:0 followed by the
+# chown, before starting the runtime).
 RUN mkdir -p /data && chown -R bun:bun /data
 
 USER bun

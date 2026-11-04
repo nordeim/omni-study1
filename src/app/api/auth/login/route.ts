@@ -43,10 +43,12 @@ export async function POST(request: NextRequest) {
     // ~21 POSTs and every chunk re-boots the server, so the in-process
     // bucket never trips in tests outside the dedicated terminal flood
     // pin). A volume-containment 429 leaks nothing the per-IP 429 doesn't
-    // already — the copy is IDENTICAL. The SUCCESS-RESET below is the
-    // progressive model extended to the global budget: only FAILED logins
-    // accumulate (the attack shape never succeeds); an interleaved
-    // legitimate burst never inherits a flood's spend.
+    // already — the copy is IDENTICAL. The aggregate DISCHARGE below is
+    // the S138/CM3 decrement: a success nets −1 on the global (one
+    // requester's success proves only their own legitimacy — an
+    // aggregate's reset must not be grantable by ONE of its many
+    // requesters), so consecutive successes oscillate just under the
+    // bound and never trip, while a pure flood still trips at 40 net.
     const globalLimit = checkRateLimit("loginGlobal:", 40);
     if (!globalLimit.ok) {
       return rateLimitedResponse(

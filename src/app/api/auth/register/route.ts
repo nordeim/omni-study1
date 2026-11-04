@@ -48,6 +48,13 @@ export async function POST(request: NextRequest) {
     // legitimate multi-user deploy fronted by a proxy with
     // TRUSTED_PROXY_HOPS≥1 derives per-IP keys that never sum here). A
     // volume-containment 429 leaks nothing the per-IP 429 doesn't already.
+    // S139/CN9 (Mode-C I-2): this route deliberately NEVER discharge its
+    // globals (no reset, no decrement — login decrements loginGlobal: at
+    // CM3) — a register "success" is credential-free and scriptable under
+    // the default in-band posture (open registration + the OTP in the
+    // response), so ANY success-side discharge here would reopen the
+    // exact AI-2 defeat CM3 closed, on the register side. The asymmetry
+    // is the security property, not an oversight.
     const globalLimit = checkRateLimit("registerGlobal:", 40);
     if (!globalLimit.ok) {
       return rateLimitedResponse(

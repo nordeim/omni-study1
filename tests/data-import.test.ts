@@ -112,6 +112,15 @@ describe("the envelope identity (shared with the export seam)", () => {
     expect(res.error).toContain("newer version");
   });
 
+  it("rejects an OLDER version with the actionable message (S139/CN2 — the floor half of the documented version contract, never pinned)", () => {
+    const env = validEnvelope() as Record<string, unknown>;
+    env.version = 0;
+    const res = parseImportEnvelope(env);
+    expect(res.ok).toBe(false);
+    if (res.ok) return;
+    expect(res.error).toContain("older version");
+  });
+
   it("rejects a non-object envelope", () => {
     const res = parseImportEnvelope("not an envelope");
     expect(res.ok).toBe(false);
@@ -657,6 +666,76 @@ describe("S127/CB11 · the completed import domain caps", () => {
 });
 
 // ---------------------------------------------------------------------------
+// S139/CN1 (audit A-M1) · the import parity integrality sextet. The
+// hand-crafted-envelope parity contract (ADR-021: the import validates
+// what the app itself can mint) still missed six cheap invariants the
+// interactive routes enforce: progress/dayOfWeek admitted non-integers
+// (12.5 passed the guard, died at Prisma as the GENERIC "fields do not
+// match" 400 — the CJ4 actionable-copy degradation); grades.maxScore
+// admitted 0.5 (a Float column — no Prisma backstop — while the route
+// atom is min(1)); files.mime rode the generic 1 M-char default (a
+// poisoned row inflates EVERY files list GET — FILE_METADATA carries
+// mime — the CE7 bloat class); files.size admitted negatives and
+// non-integers; studyGroups.members item shapes were unvalidated (the
+// 1 M generic vs the ~15 K interactive reality).
+// ---------------------------------------------------------------------------
+describe("S139/CN1 · the import parity integrality sextet", () => {
+  it("rejects a non-integer assignment progress (the route atom is int — 12.5 currently dies at Prisma as the generic 400)", () => {
+    expect(() =>
+      sanitizeImportRow("assignments", { id: "a1", progress: 12.5 }, 0),
+    ).toThrow(/whole number/);
+  });
+
+  it("rejects a non-integer timetable dayOfWeek (the route atom is int)", () => {
+    expect(() =>
+      sanitizeImportRow("timetableClasses", { id: "c1", dayOfWeek: 3.5 }, 0),
+    ).toThrow(/whole number/);
+  });
+
+  it("rejects a fractional grades maxScore below 1 (0.5 currently PERSISTS — the Float column has no Prisma backstop)", () => {
+    expect(() =>
+      sanitizeImportRow("grades", { id: "g1", title: "G", score: 0.4, maxScore: 0.5 }, 0),
+    ).toThrow(/greater than or equal to 1/);
+  });
+
+  it("rejects an oversized files mime (a poisoned 1 M-char mime rides FILE_METADATA into every files list GET)", () => {
+    expect(() =>
+      sanitizeImportRow("files", { id: "f1", name: "n", mime: "x".repeat(101) }, 0),
+    ).toThrow(/mime/);
+  });
+
+  it("rejects a negative and a non-integer files size, and an over-cap size (the upload ceiling mirror)", () => {
+    expect(() =>
+      sanitizeImportRow("files", { id: "f1", name: "n", size: -5 }, 0),
+    ).toThrow(/size/);
+    expect(() =>
+      sanitizeImportRow("files", { id: "f1", name: "n", size: 1.5 }, 0),
+    ).toThrow(/size/);
+    expect(() =>
+      sanitizeImportRow("files", { id: "f1", name: "n", size: 2 * 1024 * 1024 + 1 }, 0),
+    ).toThrow(/size/);
+    expect(() =>
+      sanitizeImportRow("files", { id: "f1", name: "n", size: 2 * 1024 * 1024 }, 0),
+    ).not.toThrow();
+  });
+
+  it("rejects a study-group members item with a bad shape (a non-object item; a blank name; an oversized email)", () => {
+    expect(() =>
+      sanitizeImportRow("studyGroups", { id: "g1", members: JSON.stringify(["not-an-object"]) }, 0),
+    ).toThrow(/members/);
+    expect(() =>
+      sanitizeImportRow("studyGroups", { id: "g1", members: JSON.stringify([{ name: " ", email: "m@x.y" }]) }, 0),
+    ).toThrow(/members/);
+    expect(() =>
+      sanitizeImportRow("studyGroups", { id: "g1", members: JSON.stringify([{ name: "M", email: "x".repeat(201) }]) }, 0),
+    ).toThrow(/members/);
+    expect(() =>
+      sanitizeImportRow("studyGroups", { id: "g1", members: JSON.stringify([{ name: "M", email: "m@x.y" }]) }, 0),
+    ).not.toThrow();
+  });
+});
+
+// ---------------------------------------------------------------------------
 // S137/CL6 (audit B-L1) · the import date sanity band. The seam accepted
 // ARBITRARY createdAt/updatedAt strings: a hand-edited far-future
 // timestamp (9999) rode the row into the DB and permanently poisoned the
@@ -909,6 +988,8 @@ describe("S130/CE7 · the import length caps", () => {
     // the manifest name ("decks.*"), and the four parity-contract atoms
     // added (calcHistory.expression/result, holidays.name, folders.name,
     // chatMessages.content).
+    // S139/CN1 re-anchor: files.mime joined (the CE7 bloat class — the
+    // mime rode the 1 M generic default into every files list GET).
     expect(keys).toEqual([
       "assignments.description",
       "assignments.title",
@@ -926,6 +1007,7 @@ describe("S130/CE7 · the import length caps", () => {
       "exams.location",
       "exams.title",
       "exams.topics",
+      "files.mime",
       "folders.name",
       "grades.title",
       "holidays.name",

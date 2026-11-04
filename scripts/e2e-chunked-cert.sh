@@ -68,7 +68,21 @@
 # TERMINAL in s16 (the chunk's alphabetically-last file); rides the demo
 # session, no registrations, no import budget]. The full CM map:
 # docs/remediation-plan-session138.md.)
-# Expected: 150 + 184 + 82 + 95 + 86 = 597 (each chunk's count includes its
+# (S139/CN re-tag — census 597 → 603, net +6: chunk 2 +1 [the S139/CN2
+# export→import round-trip witness in s14-hardening — the demo's own GET
+# /api/export/data POSTed back verbatim, created: 0 — the family's
+# headline promise finally exercised; RELOCATED out of chunk 3's
+# resilience (the first draft's export GET 429'd behind S124/BY5's
+# deliberately-spent demo export budget mid-chunk — the S135/CJ
+# relocation class) to chunk 2 where both budgets run free (import
+# 6/10, export 1/10)]; chunk 3 +5 [the S139/CN2 empty-envelope +
+# folders-true-index tolerance legs + the CN2 cross-account 409 + the
+# CN4 card-delegate foreign-id 404s + the CN10 owned-FK PATCH re-point
+# 404 — the last three on ONE fresh TEST-NET user2 each (probe IP
+# 192.0.2.139, 3/10 per-IP, 3/40 registerGlobal), the demo import
+# budget at 8/10; END-of-file, the CK1 flood pin stays TERMINAL in
+# s16]. The full CN map: docs/remediation-plan-session139.md.)
+# Expected: 150 + 185 + 87 + 95 + 86 = 603 (each chunk's count includes its
 # auth setup — the current census; the historical re-tag blocks beneath.)
 # (S131/CF re-tag — census 567 → 570, net +3: chunk 1 +1 [the CF9
 # drawer focus-restore leg in mobile-navigation — crossing the lg

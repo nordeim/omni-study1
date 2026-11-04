@@ -1,7 +1,23 @@
 import { defineConfig } from "vitest/config";
 import path from "node:path";
 
-// Unit-test layer for the pure domain seams — 45 files / 1369 tests
+// Unit-test layer for the pure domain seams — 45 files / 1391 tests
+// (re-anchored S139/CN — the audit-driven hardening cycle: the parity-
+// integrality + round-trip-witness + covering-index + bounded-walk set:
+// census 1369 → 1391, +22 net [data-import +8: the S139/CN1 parity
+// integrality sextet (progress/dayOfWeek integrality + maxScore ≥ 1 +
+// files mime/size + the members item shape) + the S139/CN2 version-floor
+// leg + the CE7 registry census re-anchor (files.mime joined);
+// schema-indexes +1: the S139/CN3 Flashcard [createdAt, id] covering-
+// index census; http-body +3: the S139/CN10 P2002/P2025/P2003 mapper
+// legs (real PrismaClientKnownRequestErrors, the P2028 template);
+// script-conventions +11: the S139/CN censuses (the bounded ancestor
+// walk + the typed 413 catch + the sanitize-before-sort order + the
+// panel timeout branch + the login SUCCESS-RESET ban + the register
+// asymmetry + the Dockerfile init-user honesty + the USER bun pin + the
+// route-param id bound + the dead orderBy branch + the txModelName
+// resolution + the stale package-lock absence)]. The prior S138/CM
+// re-anchor block follows.)
 // (re-anchored S138/CM — the audit-driven hardening cycle: the exemption-
 // hardening + KPI-gate + containment-decrement + honest-form set: census
 // 1356 → 1369, +13 net [auth +4: the S138/CM1 crafted-key injection leg

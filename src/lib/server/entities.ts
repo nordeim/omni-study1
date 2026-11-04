@@ -90,7 +90,6 @@ type OwnedConfig = {
   fromRow?: (row: unknown) => unknown;
   /** Pre-write normalizer applied after the date conversion. */
   writeTransform?: (data: Row) => Row;
-  orderBy?: "asc" | "desc";
   /** S121/BV1: cross-field guard run on UPDATE with the STORED row + the
    * sent writes (a single-leg PATCH that inverts against the stored row —
    * the events end≥start merge). Throw ValidationError/NotFoundError. */
@@ -262,7 +261,6 @@ export const sentKeysPatch = (
 function makeOwnedDelegate(config: OwnedConfig): EntityDelegate {
   const { model, createSchema, updateSchema, fromRow, writeTransform } = config;
   const dateFields = config.dateFields ?? [];
-  const orderBy = config.orderBy ?? "asc";
   const ownedFks = config.ownedFks;
   const beforeWrite = config.beforeWrite;
   // S130/CE5: the guarded-delegate construction contract (see txModelName).
@@ -270,6 +268,17 @@ function makeOwnedDelegate(config: OwnedConfig): EntityDelegate {
   if (beforeWrite && !txModelName) {
     throw new Error(
       "S130/CE5: every beforeWrite delegate must declare txModelName (the transactional re-read resolves the tx delegate by name).",
+    );
+  }
+  // S139/CN11 (audit B-L3): the name must also RESOLVE on the client at
+  // construction — a typo previously surfaced as a 500 at the FIRST
+  // guarded PATCH instead of failing loudly at startup (the
+  // loud-at-construction doctrine CE5's own comment states, completed).
+  // (The non-null assertion is safe: the CE5 check above already threw
+  // on every beforeWrite delegate without a name.)
+  if (beforeWrite && !(txModelName! in db)) {
+    throw new Error(
+      `S139/CN11: the beforeWrite delegate's txModelName "${String(txModelName)}" does not resolve on the Prisma client — the transactional re-read would throw at the first guarded PATCH.`,
     );
   }
 
@@ -292,10 +301,14 @@ function makeOwnedDelegate(config: OwnedConfig): EntityDelegate {
           // (the newest 500), then reverse to the configured asc
           // presentation. The id tiebreak makes same-millisecond ties
           // deterministic (the BZ10 class).
+          // S139/CN11 (audit B-L2): the dead `orderBy: "desc"` config
+          // branch is deleted — no delegate ever selected desc (grep-
+          // verified; the cards delegate below owns its own raw-query
+          // ordering); every delegate reverses to asc.
           orderBy: [{ createdAt: "desc" }, { id: "desc" }],
           take: 500,
         })
-        .then((rows) => (orderBy === "desc" ? rows : rows.reverse()).map(normalize)),
+        .then((rows) => rows.reverse().map(normalize)),
 
     create: async (userId, input) => {
       const parsed = parseWith(createSchema, input);

@@ -206,6 +206,18 @@ Notes:
   in as it — or, before any real data exists, stop the stack, delete
   the volume (`docker volume rm …db-data`), and re-run the init
   profile with `SEED_DEMO=0`.
+- **The non-root runtime + volume ownership (S138/CM8 + S139/CN9).** The
+  runtime stage drops to the base image's non-root `bun` user and chowns
+  `/data` (the only writable path the server needs). The compose `init`
+  service carries no `user:` override, so it runs as the same image user —
+  the **named-volume** path (`db-data`, the documented default) works
+  because the image's chown rides into a fresh named volume. A
+  **bind-mounted** `/data` (a host directory) does NOT get that chown:
+  a root-owned host dir fails the SQLite open/write at first boot with
+  EACCES as the `bun` user. Chown the host directory to the container's
+  bun uid before first run (on the oven/bun base that is uid 1000), or
+  run the one-shot init once with `--user 0:0` and an explicit
+  `chown -R 1000:1000 /data` step before starting the runtime.
 - **PostgreSQL** (§4 form-3) works in containers too: set the
   `DATABASE_URL` service environment to the postgres URL and leave the
   volume unmounted.

@@ -57,6 +57,7 @@ import {
 } from "@/lib/server/entities";
 import {
   assertJsonContentType,
+  BodyTooLargeError,
   errorResponse,
   rateLimitedResponse,
   readBodyCapped,
@@ -162,11 +163,20 @@ export const POST = async (request: NextRequest) => {
     let text: string;
     try {
       text = await readBodyCapped(request, IMPORT_MAX_BYTES);
-    } catch {
-      return errorResponse(
-        413,
-        `That backup is too large. The import cap is ${IMPORT_MAX_BYTES / (1024 * 1024)} MiB.`,
-      );
+    } catch (err: unknown) {
+      // S139/CN6 (audit A-L1): discriminate the TYPED over-cap error from
+      // transport failures — the bare catch answered a confident 413 for
+      // ANY read failure (a client abort mid-stream or a proxy hiccup is
+      // not "too large", and the size-remediation advice cannot help it).
+      // Only the genuine BodyTooLargeError (S129/CD4's typed seam class)
+      // answers 413; everything else propagates to the honest 500 handler.
+      if (err instanceof BodyTooLargeError) {
+        return errorResponse(
+          413,
+          `That backup is too large. The import cap is ${IMPORT_MAX_BYTES / (1024 * 1024)} MiB.`,
+        );
+      }
+      throw err;
     }
     let raw: unknown;
     try {
@@ -297,24 +307,20 @@ export const POST = async (request: NextRequest) => {
       }
     }
 
-    // Folders import parents-first (S117/BR1 — the seam's topo sort; a
-    // hand-crafted child-first order would die P2003 mid-transaction. A
-    // parentId pointing at an EXISTING owned folder (not in this envelope)
-    // sorts as a root — its FK was already validated above).
-    if (parsed.has("folders")) {
-      const sorted = sortFoldersParentsFirst(parsed.get("folders") as Row[]);
-      if (typeof sorted === "string") {
-        return errorResponse(400, sorted);
-      }
-      parsed.set("folders", sorted);
-    }
-
     // ---- S119/BT1b: the per-row guard, BEFORE any write -----------------
     // Every row must satisfy the export format's primitive-value contract
     // (a wrong type would otherwise surface as PrismaClientValidationError
     // → HTTP 500) and the files rows additionally satisfy the BR4/BS5 link
     // rules (a stored javascript: URL renders as href target=_blank in the
     // Files view — the unguarded third entry point, now guarded).
+    // S139/CN7 (audit A-L2): this loop now runs BEFORE the folders topo
+    // sort below — the rejection copy names the row index, and the sort
+    // reorders rows, so sanitizing post-sort made "Invalid folders[3]"
+    // point at the SORTED position, not the backup file's row (an
+    // operator editing per the message landed on the wrong line).
+    // sanitizeImportRow is VERIFIED validate-only (no row mutation
+    // anywhere in its body), so the reorder is behavior-neutral for valid
+    // envelopes — only the rejection copy's index changes.
     for (const collection of parsed.keys()) {
       const rows = parsed.get(collection) as Row[];
       for (let i = 0; i < rows.length; i += 1) {
@@ -327,6 +333,18 @@ export const POST = async (request: NextRequest) => {
           throw err;
         }
       }
+    }
+
+    // Folders import parents-first (S117/BR1 — the seam's topo sort; a
+    // hand-crafted child-first order would die P2003 mid-transaction. A
+    // parentId pointing at an EXISTING owned folder (not in this envelope)
+    // sorts as a root — its FK was already validated above).
+    if (parsed.has("folders")) {
+      const sorted = sortFoldersParentsFirst(parsed.get("folders") as Row[]);
+      if (typeof sorted === "string") {
+        return errorResponse(400, sorted);
+      }
+      parsed.set("folders", sorted);
     }
 
     // ---- the all-or-nothing write --------------------------------------

@@ -1237,3 +1237,177 @@ test.describe("S138/CM2: the dashboard KPI OR-form gate (the mixed-landing false
     }
   });
 });
+
+// ---------------------------------------------------------------------------
+// S139/CN2 · the import tolerance edges. The import-family pin net
+// (audit A-M2) never exercised: the empty envelope (`data: {}` → 200,
+// zero rows — the tolerance edge) and the folders rejection copy's row
+// index (CN7). Rides the demo session (the project storageState).
+// Budget: +2 demo import POSTs (5/10 → 7/10, the 409 probe below is the
+// 8th); no export GETs (BY5 at :780 spends the demo export budget
+// mid-chunk — the headline round-trip leg relocated to chunk 2's
+// s14-hardening for exactly that reason, the S135/CJ relocation class).
+// ---------------------------------------------------------------------------
+test.describe("S139/CN2 · the import tolerance edges", () => {
+  test("an EMPTY envelope restores 200 with zero rows (the tolerance edge, finally pinned)", async ({ request }) => {
+    const res = await request.post("/api/import/data", {
+      data: { format: "studyflow-data-export", version: 1, data: {} },
+    });
+    expect(res.status()).toBe(200);
+    const body = (await res.json()) as { created: number; updated: number };
+    expect(body.created).toBe(0);
+    expect(body.updated).toBe(0);
+  });
+
+  test("the folders rejection copy names the BACKUP FILE's row index, never the topo-sorted one (S139/CN7)", async ({ request }) => {
+    // folders[0] is the INVALID child (an over-cap name — the deterministic
+    // registry rejection) whose parentId points at its envelope sibling
+    // (folders[1], the valid parent). The topo sort moves the parent
+    // FIRST — so the pre-fix sanitize loop ran on the sorted array and its
+    // message said "folders[1]", sending the operator to the wrong line
+    // of their backup.
+    const res = await request.post("/api/import/data", {
+      data: {
+        format: "studyflow-data-export",
+        version: 1,
+        data: {
+          folders: [
+            { id: "s139-bad-child", name: "x".repeat(201), parentId: "s139-parent" },
+            { id: "s139-parent", name: "S139 parent" },
+          ],
+        },
+      },
+    });
+    expect(res.status()).toBe(400);
+    const body = (await res.json()) as { error: string };
+    expect(body.error).toContain("folders[0]");
+  });
+});
+
+// ---------------------------------------------------------------------------
+// S139/CN2+CN4+CN10 · the cross-user import/factory wire pins. The import
+// route's 409 collision branch (its own comment calls the cross-account
+// global-PK collision "the dominant real trigger") was never pinned at
+// the HTTP level; the hand-written CARD delegate's ownership guard (the
+// one CRUD path that does not share the factory's where-clause) had ZERO
+// behavioral pins (the CL9 class); the owned-FK PATCH re-point leg ("a
+// task at a foreign subject") was pinned at CREATE only. One fresh
+// TEST-NET user per test (the s23 BT1 budget-isolation convention, probe
+// IP 192.0.2.139 — 3/10 per-IP, 3/40 registerGlobal; the demo import
+// budget gains only the 409 probe: 8/10 → stays under the cap).
+// ---------------------------------------------------------------------------
+const CN_PROBE_IP = "192.0.2.139";
+
+async function registerFreshUser(page: import("@playwright/test").Page, salt: string): Promise<void> {
+  const email = `s139-${salt}-${Date.now()}@studyflow.app`;
+  const res = await page.request.post("/api/auth/register", {
+    headers: { "x-forwarded-for": CN_PROBE_IP },
+    data: { email, password: "Fresh1234!", name: "S139 Probe" },
+  });
+  expect(res.ok(), `register failed: ${res.status()}`).toBe(true);
+  const body = (await res.json()) as { code: string };
+  const verify = await page.request.post("/api/auth/verify-email", {
+    headers: { "x-forwarded-for": CN_PROBE_IP },
+    data: { email, code: body.code },
+  });
+  expect(verify.ok(), `verify failed: ${verify.status()}`).toBe(true);
+}
+
+test.describe("S139/CN2+CN4+CN10 · the cross-user import/factory wire pins", () => {
+  test.use({ storageState: { cookies: [], origins: [] } });
+
+  test("the cross-account 409: importing an id another user owns answers the named collision copy (S139/CN2)", async ({ page, browser }) => {
+    await registerFreshUser(page, "cn2-409");
+    const demo = await browser.newContext({ storageState: "tests/e2e/.auth/user.json" });
+    try {
+      const envelope = {
+        format: "studyflow-data-export",
+        version: 1,
+        data: {
+          subjects: [{ id: "s139-409-subject", name: "CN2 collision probe", color: "#8b5cf6" }],
+        },
+      };
+      // user2 mints the fixed-id row (the import is the only id-specifying
+      // entry point — the interactive POSTs mint cuids).
+      const mine = await page.request.post("/api/import/data", { data: envelope });
+      expect(mine.status()).toBe(200);
+      const minted = (await mine.json()) as { created: number };
+      expect(minted.created).toBe(1);
+      // The demo session imports the SAME id: the ownership probe misses
+      // ({id, userId: demo} finds nothing) → the write falls to CREATE →
+      // the global PK collides → P2002 → the route's named 409.
+      const theirs = await demo.request.post("/api/import/data", { data: envelope });
+      expect(theirs.status()).toBe(409);
+      const body = (await theirs.json()) as { error: string };
+      expect(body.error).toContain("collides with an existing record");
+    } finally {
+      // Zero residue (the AM1/AN1 convention — user2 deletes their OWN row).
+      await page.request.delete("/api/subjects/s139-409-subject");
+      await demo.close();
+    }
+  });
+
+  test("the card delegate's ownership guard: foreign card PATCH/DELETE → 404, foreign deckId POST → 404 (S139/CN4)", async ({ page, browser }) => {
+    await registerFreshUser(page, "cn4-iso");
+    const deckRes = await page.request.post("/api/flashcards/decks", {
+      data: { name: "CN4 isolation deck" },
+    });
+    expect(deckRes.status()).toBe(201);
+    const deck = (await deckRes.json()) as { id: string };
+    const cardRes = await page.request.post("/api/flashcards/cards", {
+      data: { deckId: deck.id, front: "CN4 front", back: "CN4 back" },
+    });
+    expect(cardRes.status()).toBe(201);
+    const card = (await cardRes.json()) as { id: string };
+    const demo = await browser.newContext({ storageState: "tests/e2e/.auth/user.json" });
+    try {
+      // The card delegate is the family's ONE hand-written CRUD path — the
+      // only guard is its own `deck: { userId }` where-clauses (update/
+      // remove) and the deck-ownership probe (create). A regression
+      // dropping the userId from any of the three would pass every
+      // existing test (the CL9 rationale, applied to the sibling).
+      const patch = await demo.request.patch(`/api/flashcards/cards/${card.id}`, {
+        data: { front: "hijacked" },
+      });
+      expect(patch.status()).toBe(404);
+      const del = await demo.request.delete(`/api/flashcards/cards/${card.id}`);
+      expect(del.status()).toBe(404);
+      const create = await demo.request.post("/api/flashcards/cards", {
+        data: { deckId: deck.id, front: "Q2", back: "A2" },
+      });
+      expect(create.status()).toBe(404);
+    } finally {
+      await demo.close();
+      // Deleting the deck cascades its cards (onDelete: Cascade).
+      await page.request.delete(`/api/flashcards/decks/${deck.id}`);
+    }
+  });
+
+  test("the owned-FK re-point: PATCHing an OWNED task at a foreign subjectId → 404 (S139/CN10)", async ({ page, browser }) => {
+    await registerFreshUser(page, "cn10-fk");
+    const subjRes = await page.request.post("/api/subjects", {
+      data: { name: "CN10 foreign subject", color: "#8b5cf6" },
+    });
+    expect(subjRes.status()).toBe(201);
+    const subject = (await subjRes.json()) as { id: string };
+    const demo = await browser.newContext({ storageState: "tests/e2e/.auth/user.json" });
+    try {
+      const taskRes = await demo.request.post("/api/tasks", {
+        data: { title: "CN10 re-point probe" },
+      });
+      expect(taskRes.status()).toBe(201);
+      const task = (await taskRes.json()) as { id: string };
+      // assertOwnedFks runs on PATCH too ("re-pointing a task at a foreign
+      // subject is the same hazard") — pinned here at the wire for the
+      // first time (BV7 pinned the CREATE verb only).
+      const patch = await demo.request.patch(`/api/tasks/${task.id}`, {
+        data: { subjectId: subject.id },
+      });
+      expect(patch.status()).toBe(404);
+      await demo.request.delete(`/api/tasks/${task.id}`);
+    } finally {
+      await demo.close();
+      await page.request.delete(`/api/subjects/${subject.id}`);
+    }
+  });
+});

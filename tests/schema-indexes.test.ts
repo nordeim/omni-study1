@@ -136,4 +136,23 @@ describe("the factory-list index census (S128/CC10)", () => {
       `FK columns with no leftmost index coverage (every parent-DELETE SetNull/Cascade scan on these is a full-table scan): ${missing.join(", ")}`,
     ).toEqual([]);
   });
+
+  // S139/CN3 (audit B-M1) — the CL3 cards window's ORDER BY covering
+  // index. The cards list runs `orderBy [{createdAt desc}, {id desc}]
+  // take 5000` through the `deck: { userId }` JOIN; with only the bare
+  // [deckId] index, SQLite temp-b-tree-sorts EVERY owned card on every
+  // cards GET (the class CC10 measured at 34.6 ms/100k and closed with
+  // composites on the 19 factory-listed models — the CL3 window
+  // re-opened it for the family's newest query). The [createdAt, id]
+  // covering index lets SQLite walk newest-first and stop at 5000
+  // MATCHING rows (the common single-user case; the sparse-user
+  // adversarial case is no worse than the sort). [deckId] stays — the
+  // FK/deck-delete-cascade lookup index. The complete fix (denormalized
+  // userId + the family composite) is the documented upgrade path, not
+  // taken this cycle.
+  it("Flashcard carries the [createdAt, id] covering index for the CL3 window's ORDER BY (the CC10 class, re-opened then closed)", () => {
+    const body = modelBody("Flashcard");
+    expect(body).toContain("@@index([createdAt, id])");
+    expect(body).toContain("@@index([deckId])");
+  });
 });
