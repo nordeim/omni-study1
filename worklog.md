@@ -4188,3 +4188,136 @@ data-portability axis is one cycle fresh; the FE/views + auth/crypto
 axis just swept) — or the A-M3 stage-2 (the chunked sub-tx + resume
 token, the one named deferral, needs operator direction on the ADR-021
 contract change).
+
+## Session 154 — Batch CR (Cycle 93): the own-keys + non-text-tag-door + typed-import-delegate + sequence-CAS set
+
+**Received state.** A fresh clone at `d0af6cb` on `main` (the Batch CQ
+fix `4184366` + the operator's session_157 transcript commit) — the
+35th workspace continuation. The environment provisioned from scratch
+per the recipe: `bun install` (510 pkgs), `.env` from `.env.example`
+(`DATABASE_URL="file:../db/custom.db"`), `db:push` + `db:seed` (the
+repo-root `db/custom.db` 389 KiB, demo account), Playwright Chromium
+installed, the dev daemon live on :3000 via the S32 subshell recipe.
+
+**Cold baseline BEFORE any work.** lint ✓ · tsc ✓ · unit **1466/1466**
+(47 files — the documented S142 final state exactly) · the drawer check
+GREEN (**the 58th consecutive no-Tailwind-v4-mobile-nav-bug
+confirmation** — reference backdrop oklab(0 0 0 / 0.2) at blur(4px),
+288px white panels, 20 links, both hosts live) · the desktop chrome
+probe **MATCH** (all five formal checks — `scripts/parity-probe-s142.mjs`
+with REF_PROBE_* exported; sidebar outer 260=260, 20 links in identical
+order, mainX 260=260, mainWidth 1180=1180).
+
+**The audits (Mode-C, read-only subagents, every M/L finding re-verified
+by direct read).** The rotated pair per the s142 closing directive (the
+entities/factory axis, five cycles stale, plus the standing
+recent-changes focus): (1) the Batch CQ recent-changes audit —
+**0C/0H/1M/4L/5I**: all eight CQ claims verified TRUE at the source
+level (the DOM walker's recursive-edge enumeration: every edge bounded;
+no `as any` introduced; the straggler/completeness greps clean) — the
+M: **A-M1** three of the eight fixes (CQ4 the P2025 named-409, CQ7 the
+CAS rollbacks, CQ8 the tx-fresh mint) are pinned ONLY by source-text
+censuses, not behavior (a catch-leg reordering that shadows P2025
+passes green); the Ls: the vitest header's per-file arithmetic slip
+("+7", actual +6), the CQ3 e2e leg's stale comment (describes the
+ArrowUp path the code does not run), the appearance CAS compares VALUES
+not request identity (the same-value ABA the cited fetchSeq idiom does
+not have), the verify-email pre-tx select's dead sessionVersion column
+(dead since CQ8); (2) the entities/factory rotation — **0C/0H/0M/1L/3I**,
+the axis substantially clean (all eight SPECIAL-ATTENTION invariants
+re-verified holding: ownership scoping on every route, the sent-keys
+filter at all 17 write sites, the write-budget census, the guarded
+delegates' transactions, the index census, the FK onDelete parity, no
+raw SQL, the date discipline) — the L: **B-L1** `sentKeysPatch`'s
+membership test `key in parsed` walks the prototype chain: a hostile
+PATCH body carrying `toString`/`constructor`/`valueOf` injects the
+inherited FUNCTIONS into the Prisma write data →
+PrismaClientValidationError → the shared mapper's 500 (the 400-family
+taxonomy's one reachable violation on interactive paths).
+
+**Two pre-plan probes (the doctrine — probe, don't guess).** (1) The
+11-tag two-door corpus: the five NON-TEXT tags (script/style/textarea/
+option/xmp — exactly sanitize-html's default nonTextTags, verified
+against the library source) DIE WHOLE at the server write door but
+their TEXT SURVIVED the DOM render door's unwrap branch (noscript/
+template/title/iframe unwrap to text at BOTH doors; comments/PIs die at
+both) — the CQ5-family residual of "the two doors accept the SAME
+payload set", promoted to CR2. (2) The hostile-body sentKeysPatch
+probe: the write set came back [toString, constructor, valueOf,
+hasOwnProperty, title] with `writes.toString` a FUNCTION — B-L1
+behaviorally demonstrated pre-fix. The interrupted prior run's named
+hypotheses were re-verified independently before inclusion (the mover
+Select's missing accessible name; the import-router's three inline
+any-casts; the non-text asymmetry); the quill-mount last-line-of-defense
+guard was considered and DECLINED with rationale (the plan §5).
+
+**The plan.** `docs/remediation-plan-session143.md` written BEFORE any
+source change and validated against the codebase before execution: CR1
+the own-keys guard + the shared PrismaValidation leg, CR2 the shared
+non-text-tag policy at both doors, CR3 the mover's accessible name, CR4
+the typed import-delegate seam, CR5 the sequence-ticket CAS, CR6 the
+importRestoreError behavioral seam, CR7 the dead-column drop, CR8 the
+comment-accuracy trio, CR9 the doc chain. The A-M3 stage-2 deferred
+AGAIN with rationale (the ADR-021 contract change needs operator
+direction).
+
+**Executed TDD-style.** RED first: the hostile-body leg (pre-proven by
+the §0 probe), the five non-text legs on the DOM door (pre-proven by
+the corpus probe — the server-door twins green-on-arrival, pinned
+against drift), the fetch-seq seam family (module-absent RED), the
+importRestoreError family (seam-absent RED, 6 legs). The honest
+mid-flight corrections: (1) the CR2 depth-cap leg's first RED exposed a
+SECOND leak the plan had not named — the cap branch's own subtreeText
+collector was re-collecting script text from BEYOND the cap (the
+non-text check before the cap stops the walker's resurrection; the
+collector now skips non-text subtrees entirely — the two-door contract
+holds past the cap, not just under it); (2) the CR6 delegation design
+re-shaped mid-flight to the honest NULL-delegation boundary (the seam
+returns null for the shared-mapper families — toErrorResponse stays the
+single source; the seam's tests pin the delegation contract); (3) the
+CR4 comment's first draft quoted the old any-cast shape verbatim —
+which would have false-failed the new no-any-cast census (comments
+mentioning a pattern look like the pattern to a source-text census);
+reworded to describe the shape without the literal; (4) THE TEMPLATE
+RIDER, found LAST by the evidence capture's live machine proof in real
+Chromium — a `<template>`'s children live in its inert `.content`
+fragment (never as direct children), so the unwrap branch moved
+nothing and the container-family text died at the DOM door in real
+browsers while the server door keeps it (happy-dom keeps template
+children direct — the unit corpus's environment boundary, the S142
+≥4k-serializer class's sibling); fixed with the `.content ?? child`
+source and re-verified by the full unit suite, a fresh tsc, a rebuild,
+and the affected e2e families re-run green.
+
+**Re-cert (the FINAL tree).** lint ✓ · tsc ✓ · unit **1490/1490**
+(48 files, +24: sent-keys-patch +1, http-body +1, note-html-dom +4,
+note-html +2, fetch-seq +4 [NEW FILE], data-import +6,
+script-conventions +6) · build ✓ · the cold 5-chunk e2e — the map
+unchanged at 606 (the S143 pins re-anchored existing legs in place: the
+CQ3 mover locator is now the NAMED combobox form, failing if the
+accessible name regresses) · **census 2096 green** (was 2072).
+
+**Evidence.** Four `docs/screenshots/143-clone-*.png` frames (desktop,
+mobile drawer, the notes-actions popover with the mover combobox
+holding focus AND carrying its accessible name — machine-verified in
+the capture — and the planted non-text legacy note rendering with the
+five non-text texts machine-verified ABSENT from the editor while the
+container family's text is present — the frame that FOUND the template
+.content rider (template-kept was absent on the first run; the fixed
+capture is GREEN); the probe row cleaned from the dev db after the
+capture — the demo-surface-restoration convention).
+
+**Docs.** README badge/census + the Session-143 row; AGENTS.md census +
+the S143 lessons block; CLAUDE.md counts; PAD v1.3.51 (the revision
+block + the §11 closure rows); the SKILL census (both sites); the
+vitest header re-anchor; the cert re-tag (606 unchanged, in-place
+re-anchors); the plan §6 as-executed close; `docs/session_159.md`; this
+entry; the `.env.example` contract re-verified complete against every
+env var the code reads.
+
+**Next cycle.** The audit rotation continues (the FE/views +
+auth/crypto/infra axis one cycle fresh; the import/export +
+data-portability axis two cycles stale; the entities/factory axis just
+swept) — or the A-M3 stage-2 (the chunked sub-tx + resume token, the
+one named deferral, needs operator direction on the ADR-021 contract
+change).

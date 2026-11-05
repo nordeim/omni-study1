@@ -1983,15 +1983,15 @@ test.describe("S142 · the notebook mover is keyboard-reachable (CQ3)", () => {
     // Open the actions surface.
     await page.getByRole("button", { name: "Note actions" }).click();
 
-    // THE REACHABILITY PIN: the mover's Select trigger (role="combobox")
-    // holds focus the moment the popover opens — keyboard-reachable by
-    // construction. Pre-fix the focus sat on the menu content and no
-    // arrow/Tab sequence could ever land here.
-    await expect
-      .poll(() =>
-        page.evaluate(() => document.activeElement?.getAttribute("role") ?? ""),
-      )
-      .toBe("combobox");
+    // THE REACHABILITY PIN: the mover's Select trigger holds focus the
+    // moment the popover opens — keyboard-reachable by construction.
+    // Pre-fix the focus sat on the menu content and no arrow/Tab
+    // sequence could ever land here. S143/CR3: the locator is the NAMED
+    // combobox — the assertion fails if the mover's accessible name
+    // regresses (the aria-label the CQ3 surface was missing for screen
+    // readers — WCAG 4.1.2).
+    const moverCombobox = page.getByRole("combobox", { name: "Move note to notebook" });
+    await expect(moverCombobox).toBeFocused();
     // Tab order inside the surface: the Delete action is the next stop
     // after the mover (both are real tab stops now).
     await page.keyboard.press("Tab");
@@ -2005,15 +2005,15 @@ test.describe("S142 · the notebook mover is keyboard-reachable (CQ3)", () => {
 
     // Return to the mover and operate it by keyboard alone: ArrowDown
     // opens the listbox (focus rides the options — wait for it to LAND,
-    // Radix moves focus asynchronously), ArrowUp + Enter commits "No
-    // notebook" (the deterministic first option — probed: ArrowUp wraps
-    // from the selected option to it).
+    // Radix moves focus asynchronously), then the target option is
+    // focused directly (the same DOM focus arrow-navigation produces —
+    // Radix's roving arrow order varies with settle timing, probed; the
+    // deterministic form) and committed with Enter. S143/CR8: this
+    // comment now states the path the code actually runs (it previously
+    // described an ArrowUp "No notebook" commit from an earlier
+    // iteration — the audit A-L2 stale-comment class).
     await page.keyboard.press("Shift+Tab");
-    await expect
-      .poll(() =>
-        page.evaluate(() => document.activeElement?.getAttribute("role") ?? ""),
-      )
-      .toBe("combobox");
+    await expect(moverCombobox).toBeFocused();
     await page.keyboard.press("ArrowDown");
     // The listbox opened BY KEYBOARD (the option roles render). Focus the
     // target option directly (the same DOM focus arrow-navigation

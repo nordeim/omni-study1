@@ -36,6 +36,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
+import { createFetchSeq } from "@/lib/fetch-seq";
 import {
   Dialog,
   DialogContent,
@@ -138,35 +139,45 @@ function AppearanceCard() {
   // PATCH and only toasted on failure, so the pressed selection lied
   // about what would persist until the next /api/auth/me hydration
   // silently reverted it. The local selection now reverts with the toast.
-  // S142/CQ7 (audit B-L1): CAS-guarded rollbacks. The S127/CB15 shape
-  // restored `prev` unconditionally — a late-failing PATCH (settling after
-  // a newer successful pick) clobbered the newer value: local store +
-  // localStorage disagreed with the server until reload. The guard: only
-  // roll back when the store STILL holds the failed `next` (the
-  // fetchSeq idiom's compare-and-swap form, applied to the theme store).
+  // S142/CQ7 (audit B-L1) + S143/CR5 (audit A-L3): sequence-ticket CAS
+  // rollbacks. The S127/CB15 shape restored `prev` unconditionally — a
+  // late-failing PATCH settling after a newer pick clobbered it; the
+  // S142 value-compare guard closed the different-value case but left
+  // the same-value ABA (pick A, pick A again, the FIRST PATCH fails →
+  // store===next → rollback over the second's optimism). The S143 form
+  // is the TRUE fetchSeq idiom the S142 comment cited: per-field
+  // sequence tickets — the catch rolls back only when NO newer pick was
+  // issued (a value never enters the comparison). Pure seam unit-pinned
+  // in tests/fetch-seq.test.ts.
+  const themeSeq = createFetchSeq();
   const pickTheme = (next: ThemeMode) => {
     const prev = mode;
+    const ticket = themeSeq.begin();
     setMode(next);
     patchPreferences({ themeMode: next }).catch((err: unknown) => {
-      if (useThemeStore.getState().mode === next) setMode(prev);
+      if (themeSeq.isCurrent(ticket)) setMode(prev);
       toast.error(errorMessage(err, "Could not save the theme preference."));
     });
   };
 
+  const accentSeq = createFetchSeq();
   const pickAccent = (next: Accent) => {
     const prev = accent;
+    const ticket = accentSeq.begin();
     setAccent(next);
     patchPreferences({ accentColor: next }).catch((err: unknown) => {
-      if (useThemeStore.getState().accent === next) setAccent(prev);
+      if (accentSeq.isCurrent(ticket)) setAccent(prev);
       toast.error(errorMessage(err, "Could not save the accent color."));
     });
   };
 
+  const avatarSeq = createFetchSeq();
   const pickAvatar = (emoji: string) => {
     const prev = avatar;
+    const ticket = avatarSeq.begin();
     setAvatar(emoji);
     patchPreferences({ avatarEmoji: emoji }).catch((err: unknown) => {
-      if (useThemeStore.getState().avatar === emoji) setAvatar(prev);
+      if (avatarSeq.isCurrent(ticket)) setAvatar(prev);
       toast.error(errorMessage(err, "Could not save the avatar."));
     });
   };

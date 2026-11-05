@@ -42,6 +42,7 @@ import {
   NOTE_HTML_CLASS_PATTERN,
   NOTE_HTML_IMAGE_MIME_PATTERN,
   NOTE_HTML_LINK_SCHEMES,
+  NOTE_HTML_NON_TEXT_TAGS,
   NOTE_HTML_STYLE_PROPS,
   NOTE_HTML_STYLE_VALUE_PATTERN,
 } from "../note-html";
@@ -91,6 +92,14 @@ const OPTIONS: sanitizeHtml.IOptions = {
   // text/children — the container-unwrapping form, matching the DOM
   // gate's fragment-unwrapping behavior.)
   disallowedTagsMode: "discard",
+  // S143/CR2: the non-text family dies WHOLE — set EXPLICITLY from the
+  // shared NOTE_HTML_NON_TEXT_TAGS constant (the exact five-tag set the
+  // library default already used — verified against sanitize-html's
+  // source — so this is behavior-identical, drift-immune, and machine-
+  // censused as the shared two-door contract). The DOM render door's
+  // walker now kills the same set whole (it previously unwrapped them
+  // to text — the probed asymmetry).
+  nonTextTags: [...NOTE_HTML_NON_TEXT_TAGS],
   // S141/CP5: the img MIME enforcement + the anchor rel injection ride
   // transformTags (the pre-attribute-filter pass where a payload-level
   // rule can DROP an attribute rather than merely refuse to allow one).

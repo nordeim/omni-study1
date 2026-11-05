@@ -904,14 +904,18 @@ describe("the S138/CM source censuses", () => {
     expect(src).toContain("resetRateLimit(`loginAcct:${user.id}`)");
   });
 
-  it("the import route carries the backup-specific P2028 copy route-locally (S138/CM4 — the shared mapper went source-neutral)", () => {
+  it("the import P2028 backup-specific copy lives with the import seam (S138/CM4 — source-neutral shared mapper; S143/CR6 — the catch's legs moved to importRestoreError)", () => {
     // S138/CM4 (Mode-C F2 + AI-6): the shared toErrorResponse emitted
     // "split the backup and retry the halves" for EVERY P2028 source,
     // including the ai/math/rum/calculator retention-trim transactions.
-    // The route's own catch now owns the backup-specific remedy; the
-    // shared mapper's copy is source-neutral (pinned in http-body).
-    const src = readFileSync(IMPORT_ROUTE, "utf8");
-    expect(src).toContain("split the backup and retry the halves");
+    // The import-specific remedy now lives in the importRestoreError
+    // seam (src/lib/data-import.ts — S143/CR6 extracted the catch's
+    // mapping for BEHAVIORAL pins); the shared mapper's copy is
+    // source-neutral (pinned in http-body).
+    const seam = readFileSync(path.resolve(process.cwd(), "src/lib/data-import.ts"), "utf8");
+    expect(seam).toContain("split the backup and retry the halves");
+    const route = readFileSync(IMPORT_ROUTE, "utf8");
+    expect(route).toContain("importRestoreError");
   });
 
   it("NO stale '25 MiB' prose outside the cap's own doc block (S138/CM5 — the recurring stale-cap class gets its machine check)", () => {
@@ -1336,10 +1340,12 @@ describe("the S142/CQ source censuses", () => {
     expect(page).not.toContain("json.length");
   });
 
-  it("CQ4: the import catch carries the P2025 named-409 leg (the concurrent-delete taxonomy)", () => {
-    const src = readFileSync(IMPORT_ROUTE, "utf8");
-    expect(src).toContain('"P2025"');
-    expect(src).toContain("was deleted while this import ran");
+  it("CQ4: the import catch carries the P2025 named-409 leg (the concurrent-delete taxonomy) — S143/CR6 re-anchor: the leg lives in the importRestoreError seam (behaviorally pinned in data-import.test.ts; this census is the marker backstop)", () => {
+    const seam = readFileSync(path.resolve(process.cwd(), "src/lib/data-import.ts"), "utf8");
+    expect(seam).toContain('"P2025"');
+    expect(seam).toContain("was deleted while this import ran");
+    const route = readFileSync(IMPORT_ROUTE, "utf8");
+    expect(route).toContain("importRestoreError(err)");
   });
 
   it("CQ6: AGENTS.md's e2e census row agrees with the cert script's expected map (the count-claims machine gate)", () => {
@@ -1361,16 +1367,85 @@ describe("the S142/CQ source censuses", () => {
     expect(agentsChunks.reduce((a: number, b: number) => a + b, 0)).toBe(agentsTotal);
   });
 
-  it("CQ7: the three appearance rollbacks are CAS-guarded (no unconditional prev restore)", () => {
+  it("CQ7: the three appearance rollbacks are CAS-guarded — S143/CR5 re-anchor: the sequence-ticket form (the value-compare ABA closed; the pure seam unit-pinned in fetch-seq.test.ts)", () => {
     const src = readFileSync(SETTINGS_VIEW, "utf8");
-    expect(src).toContain("if (useThemeStore.getState().mode === next) setMode(prev);");
-    expect(src).toContain("if (useThemeStore.getState().accent === next) setAccent(prev);");
-    expect(src).toContain("if (useThemeStore.getState().avatar === emoji) setAvatar(prev);");
+    expect(src).toContain("if (themeSeq.isCurrent(ticket)) setMode(prev);");
+    expect(src).toContain("if (accentSeq.isCurrent(ticket)) setAccent(prev);");
+    expect(src).toContain("if (avatarSeq.isCurrent(ticket)) setAvatar(prev);");
+    expect(src).toContain("createFetchSeq()");
+    // The old value-compare shape is gone (the ABA's signature).
+    expect(src).not.toContain("useThemeStore.getState().mode === next");
   });
 
-  it("CQ8: verify-email mints the cookie from the transaction's fresh row (not the pre-tx read)", () => {
+  it("CQ8: verify-email mints the cookie from the transaction's fresh row (not the pre-tx read) + S143/CR7: the pre-tx select no longer fetches the dead sessionVersion column", () => {
     const src = readFileSync(VERIFY_EMAIL, "utf8");
     expect(src).toContain("sessionVersion: verifiedUser.sessionVersion");
     expect(src).not.toContain("sessionVersion: user.sessionVersion");
+    // S143/CR7: the dead column left behind by the CQ8 re-anchor (only
+    // id/emailVerified are read from the pre-tx row) — the select shape
+    // is pinned too, so the dead read cannot come back silently.
+    expect(src).toContain("select: { id: true, emailVerified: true }");
+    expect(src).not.toContain("sessionVersion: true");
+  });
+});
+
+// ---------------------------------------------------------------------------
+// S143/CR — the cycle's source censuses (the own-keys guard + the
+// non-text-tag door policy + the typed import-delegate seam + the
+// sequence-ticket CAS markers).
+// ---------------------------------------------------------------------------
+describe("the S143/CR source censuses", () => {
+  const IMPORT_ROUTE = path.resolve(process.cwd(), "src/app/api/import/data/route.ts");
+  const NOTE_HTML = path.resolve(process.cwd(), "src/lib/note-html.ts");
+  const SERVER_NOTE_HTML = path.resolve(process.cwd(), "src/lib/server/note-html.ts");
+  const SETTINGS_VIEW = path.resolve(process.cwd(), "src/components/views/settings-view.tsx");
+  const NOTES_VIEW = path.resolve(process.cwd(), "src/components/views/notes-view.tsx");
+
+  it("CR1: the sentKeysPatch membership test is own-keys (the prototype-chain walk closed)", () => {
+    const src = readFileSync(
+      path.resolve(process.cwd(), "src/lib/server/entities.ts"),
+      "utf8",
+    );
+    expect(src).toContain("Object.prototype.hasOwnProperty.call(parsed, key)");
+    expect(src).not.toContain("!(key in parsed)");
+  });
+
+  it("CR1: the shared mapper carries the PrismaClientValidationError leg (the import route's local BT1b, now shared)", () => {
+    const src = readFileSync(
+      path.resolve(process.cwd(), "src/lib/server/http.ts"),
+      "utf8",
+    );
+    expect(src).toContain('err.name === "PrismaClientValidationError"');
+    expect(src).toContain("That request contained fields the server could not accept");
+  });
+
+  it("CR2: the shared NOTE_HTML_NON_TEXT_TAGS constant feeds BOTH doors (the five-tag set)", () => {
+    const dom = readFileSync(NOTE_HTML, "utf8");
+    expect(dom).toContain("export const NOTE_HTML_NON_TEXT_TAGS");
+    expect(dom).toContain("NOTE_HTML_NON_TEXT_TAGS.includes(child.tagName.toLowerCase())");
+    expect(dom).toContain("NOTE_HTML_NON_TEXT_TAGS.includes((node as Element).tagName.toLowerCase())");
+    const server = readFileSync(SERVER_NOTE_HTML, "utf8");
+    expect(server).toContain("nonTextTags: [...NOTE_HTML_NON_TEXT_TAGS]");
+  });
+
+  it("CR4: the import route carries NO inline any-casts — the typed importDelegateOps seam owns the one documented index cast", () => {
+    const src = readFileSync(IMPORT_ROUTE, "utf8");
+    expect(src).toContain("function importDelegateOps(");
+    expect(src).toContain("const delegate = importDelegateOps(db, model);");
+    expect(src).toContain("const delegate = importDelegateOps(tx, model);");
+    expect(src).not.toContain("as any");
+  });
+
+  it("CR5: the three pickers ride the sequence-ticket CAS (the createFetchSeq seam)", () => {
+    const src = readFileSync(SETTINGS_VIEW, "utf8");
+    expect(src).toContain('from "@/lib/fetch-seq"');
+    expect(src).toContain("const ticket = themeSeq.begin();");
+    expect(src).toContain("const ticket = accentSeq.begin();");
+    expect(src).toContain("const ticket = avatarSeq.begin();");
+  });
+
+  it("CR3: the notebook mover carries its accessible name (the CQ3 surface's WCAG 4.1.2 name)", () => {
+    const src = readFileSync(NOTES_VIEW, "utf8");
+    expect(src).toContain('aria-label="Move note to notebook"');
   });
 });

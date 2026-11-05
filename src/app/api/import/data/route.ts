@@ -74,7 +74,7 @@ import {
   importProfilePatch,
   importProbeTargets,
   importRowIdError,
-  parseImportRaceMessage,
+  importRestoreError,
   sanitizeImportRow,
   sortFoldersParentsFirst,
   stripSecrets,
@@ -156,6 +156,30 @@ const MODEL: Record<Collection, keyof PrismaClient> = {
   calcHistory: "calculatorHistoryEntry",
   holidays: "holiday",
 };
+
+/** S143/CR4 — the generic-restore delegate lookup, narrowed through ONE
+ * documented cast. The three call sites previously cast the client to
+ * `any` inline before indexing it by the model key: Prisma's per-model
+ * delegates have heterogeneous findMany/update/createMany signatures TS
+ * cannot unify across the `keyof PrismaClient` union, but the generic
+ * restore uses EXACTLY these three ops with Row-shaped args (the
+ * dynamic-envelope design — the route's own doc block above). The
+ * interface narrows the contract; the single index cast is the honest
+ * boundary of the dynamic lookup (tx omits $connect/$disconnect/$on/
+ * $transaction/$extends, so a `keyof PrismaClient` cannot index it
+ * without a cast). The inline any-casts are gone (census-pinned). */
+interface ImportDelegateOps {
+  findMany(args: { where: Record<string, unknown>; select?: Record<string, unknown> }): Promise<Array<Record<string, unknown>>>;
+  update(args: { where: { id: string }; data: Record<string, unknown> }): Promise<Record<string, unknown>>;
+  createMany(args: { data: Array<Record<string, unknown>> }): Promise<{ count: number }>;
+}
+
+function importDelegateOps(
+  client: PrismaClient | Prisma.TransactionClient,
+  model: keyof PrismaClient,
+): ImportDelegateOps {
+  return (client as unknown as Record<string, ImportDelegateOps>)[model as string];
+}
 
 /** The ownership scope for a probe/write on a collection (cards ride the
  * deck relation — the S117 fix's scope, applied at every query site). */
@@ -307,7 +331,7 @@ export const POST = async (request: NextRequest) => {
       const dbIds = new Set<string>();
       const legs = new Map<string, Row>();
       // The deck-scoped cards probe (the S117 scope) applies here too.
-      const delegate = (db as any)[model];
+      const delegate = importDelegateOps(db, model);
       for (const chunk of chunkImportIds([...ids])) {
         const found = await delegate.findMany({
           where: { id: { in: chunk }, ...scope },
@@ -474,7 +498,7 @@ export const POST = async (request: NextRequest) => {
     for (const [collection, plan] of plans) {
       if (plan.creates.length === 0) continue;
       const model = MODEL[collection];
-      const delegate = (db as any)[model];
+      const delegate = importDelegateOps(db, model);
       for (const chunk of chunkImportIds(plan.creates.map((r) => r.id as string))) {
         // Unscoped by ownership — ANY owner of the id blocks the create
         // (the global-PK collision); the S135/CJ5 copy names both causes.
@@ -513,7 +537,7 @@ export const POST = async (request: NextRequest) => {
         // `keyof PrismaClient` cannot index it without a cast (the delegate
         // is used as `any` throughout — the pre-S117 shape, now explicit
         // under noImplicitAny).
-        const delegate = (tx as any)[model];
+        const delegate = importDelegateOps(tx, model);
         let c = 0;
         let u = 0;
 
@@ -581,60 +605,17 @@ export const POST = async (request: NextRequest) => {
       total: created + updated,
     });
   } catch (err: unknown) {
-    // S119/BT1b: a Prisma validation error from the write loop is a
-    // malformed-envelope condition (the guard above catches the known
-    // shapes; anything left is an exotic field-shape mismatch) — the
-    // 400-bad-input contract, never a 500.
-    if (err instanceof Error && err.name === "PrismaClientValidationError") {
-      return errorResponse(
-        400,
-        "That backup contains a row whose fields do not match the app's data model. Re-export a fresh backup and try again.",
-      );
-    }
-    // S130/CE7: the concurrent-create race surfaced from the transaction —
-    // the named 409 with the actionable message (see the write loop).
-    if (err instanceof Error && err.name === "ImportConcurrentCreateError") {
-      // S135/CJ5: the colon-safe parse — ids legally contain ":" and the
-      // bare split(":") truncated them at the first colon. The bulk form
-      // (a createMany P2002 — the specific row is not recoverable from the
-      // bulk statement) parses to the collection-level copy.
-      const { collection, id } = parseImportRaceMessage(err.message);
-      if (id === "bulk") {
-        return errorResponse(
-          409,
-          `That ${collection} collection contains a row that collides with an existing record — either it was created while this import ran, or this backup's ids already belong to another account. Edit the backup's ids or restore into the original account.`,
-        );
-      }
-      // S137/CL10 (audit A-I1): the copy names BOTH collision causes — the
-      // CE7 concurrent-create race AND the dominant real trigger, a
-      // cross-account global-PK collision.
-      return errorResponse(
-        409,
-        `That ${collection} row (id "${id}") collides with an existing record — either it was created while this import ran, or this backup's ids already belong to another account. Edit the backup's ids or restore into the original account.`,
-      );
-    }
-    // S137/CL10 (audit A-L2) + S138/CM4: P2028 — the 60 s window expired
-    // mid-restore (a legal many-rows envelope; the many-rows tail). The
-    // rollback HOLDS. The route-local copy (not the shared mapper's
-    // source-neutral one) because the remedy here is specifically "split
-    // the backup" — pinned by the script-conventions census.
-    if (typeof err === "object" && err !== null && "code" in err && (err as { code?: unknown }).code === "P2028") {
-      return errorResponse(
-        413,
-        "That backup was too large or slow to restore in one pass and was fully rolled back. Try again, or split the backup and retry the halves.",
-      );
-    }
-    // S142/CQ4 (audit A-L1): P2025 — a row the CP3 probe classified as
-    // "existing" was DELETED between the probe and the write (the
-    // read-hoist widened that window; S140's in-tx read would have
-    // re-created it, this shape rolls back). The named-409 family's
-    // concurrent-modification leg — the generic 404 ("That record does
-    // not exist.") answered a taxonomy question with the wrong family.
-    if (typeof err === "object" && err !== null && "code" in err && (err as { code?: unknown }).code === "P2025") {
-      return errorResponse(
-        409,
-        "That backup contains a row that was deleted while this import ran — it was fully rolled back. Retry the import.",
-      );
+    // S143/CR6 (audit A-M1): the catch's four named legs (BT1b
+    // PrismaClientValidationError→400, the CE7/CJ5 concurrent-create
+    // 409 pair, the CL10/CM4 P2028→413, the CQ4 P2025→409) extracted to
+    // the PURE importRestoreError seam in src/lib/data-import.ts —
+    // unit-pinned BEHAVIORALLY now (the source-text censuses were the
+    // only pins pre-CR6; a leg reordering that shadowed P2025 passed
+    // green). The seam returns null for the shared-mapper families —
+    // toErrorResponse stays the single source for those.
+    const named = importRestoreError(err);
+    if (named !== null) {
+      return errorResponse(named.status, named.message);
     }
     return toErrorResponse(err);
   }

@@ -36,6 +36,12 @@ import {
   sortFoldersParentsFirst,
 } from "../src/lib/data-import";
 import { EXPORT_COLLECTIONS } from "../src/lib/data-export";
+import { importRestoreError } from "@/lib/data-import";
+import { ValidationError } from "@/lib/server/http";
+
+function ValidationErrorCtor(): new (msg: string) => Error {
+  return ValidationError as unknown as new (msg: string) => Error;
+}
 
 // A minimal valid envelope helper — every test starts from a shape the
 // export itself could have produced.
@@ -1564,5 +1570,65 @@ describe("S141/CP3 · the probe/write chunk constants + chunkImportIds", () => {
     expect(chunks.flat()).toEqual(ids);
     // The empty case: zero chunks, not one empty chunk.
     expect(chunkImportIds([])).toEqual([]);
+  });
+});
+
+// S143/CR6 (audit A-M1): the import catch's named-409/413 legs (P2025,
+// P2028) and the BT1b PrismaClientValidationError→400 leg were pinned
+// only by source-text censuses — a catch-leg reordering that shadows
+// P2025 (or a copy change) passed green. The mapping extracts to the
+// PURE importRestoreError seam (the route file cannot export shared
+// symbols — Next's route-type validation — so it lives here); these
+// legs pin every branch behaviorally.
+describe("S143/CR6 · importRestoreError (the catch's error→response mapping, behavioral)", () => {
+  const p2028 = Object.assign(new Error("A transaction failed..."), {
+    code: "P2028",
+  });
+  const p2025 = Object.assign(new Error("An operation failed..."), {
+    code: "P2025",
+  });
+  const prismaValidation = Object.assign(
+    new Error("Unknown argument `wibble`"),
+    { name: "PrismaClientValidationError" },
+  );
+
+  it("maps P2025 to the named 409 (the deleted-while-import-ran family — pre-seam: census-only)", () => {
+    const out = importRestoreError(p2025);
+    if (out === null) throw new Error("P2025 must map to the named 409 leg (got the null delegation)");
+    expect(out.status).toBe(409);
+    expect(out.message).toContain("deleted while this import ran");
+    expect(out.message).toContain("fully rolled back");
+  });
+
+  it("maps P2028 to the named 413 (the too-large-or-slow family)", () => {
+    const out = importRestoreError(p2028);
+    if (out === null) throw new Error("P2028 must map to the named 413 leg (got the null delegation)");
+    expect(out.status).toBe(413);
+    expect(out.message).toContain("fully rolled back");
+    expect(out.message).toContain("split the backup");
+  });
+
+  it("maps PrismaClientValidationError to 400 (the BT1b leg, now shared)", () => {
+    const out = importRestoreError(prismaValidation);
+    if (out === null) throw new Error("PrismaClientValidationError must map to the 400 leg (got the null delegation)");
+    expect(out.status).toBe(400);
+  });
+
+  it("delegates the shared-mapper families (ValidationError → null: toErrorResponse owns them, pinned in http-body)", () => {
+    const out = importRestoreError(new (ValidationErrorCtor())("bad body"));
+    expect(out).toBeNull();
+  });
+
+  it("delegates an unknown error (null — the route falls through to toErrorResponse's 500, never a silent family)", () => {
+    expect(importRestoreError(new Error("boom"))).toBeNull();
+  });
+
+  it("a P2025-shaped racing error (ImportConcurrentCreateError name) stays 409-family copy-stable", () => {
+    const race = new Error("import-p2002:cards:bulk");
+    race.name = "ImportConcurrentCreateError";
+    const out = importRestoreError(race);
+    if (out === null) throw new Error("the racing error must map to the 409 leg (got the null delegation)");
+    expect(out.status).toBe(409);
+    expect(out.message).toContain("collides with an existing record");
   });
 });

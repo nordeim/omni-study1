@@ -1,10 +1,10 @@
 import { defineConfig } from "vitest/config";
 import path from "node:path";
 
-// Unit-test layer for the pure domain seams — 47 files / 1466 tests
+// Unit-test layer for the pure domain seams — 48 files / 1490 tests
 // (re-anchored S142/CQ — the unwrap-depth + door-alignment + byte-signal +
 // named-P2025 + count-gate + CAS-rollback set: census 1449 → 1466, +17 net
-// [note-html-dom +7: the CQ1 unwrap-path depth-cap legs (the disallowed
+// [note-html-dom +6: the CQ1 unwrap-path depth-cap legs (the disallowed
 // chain collapses at the cap — markup beyond it dies, text survives; the
 // honest environment-boundary record: happy-dom's own serializer/connected
 // cascades throw at ≥4k nesting, so the ≥4k not.toThrow shape is browser-
@@ -17,7 +17,18 @@ import path from "node:path";
 // Buffer); script-conventions +6: the CQ1/CQ2/CQ4/CQ6/CQ7/CQ8 censuses (the
 // unwrap depth+subtreeText markers, the byte-signal chain seam→route→page,
 // the P2025 named-409 leg, the AGENTS.md↔cert-map count-claims machine
-// gate, the three CAS-rollback markers, the verify-email tx-fresh mint)].
+// gate, the three CAS-rollback markers, the verify-email tx-fresh mint)]. The S143/CR re-anchor: census 1466 → 1490,
+// +24 net [note-html-dom +4: the non-text-tag family dies whole (the
+// five-tag set — script/style/textarea/option/xmp — RED-probed: their
+// text survived the DOM door pre-fix, the CQ5-family residual; the
+// container family unchanged; the depth-cap collector honors the set);
+// note-html +2: the server-door nonTextTags drift pins; sent-keys-patch
+// +1: the hostile-body own-keys leg; http-body +1: the shared
+// PrismaClientValidationError→400 leg; fetch-seq +4: the sequence-ticket
+// CAS seam (the value-compare ABA closed); data-import +6: the
+// importRestoreError behavioral family (P2025/P2028/the BT1b
+// PrismaValidation leg/the delegation contract); script-conventions +6:
+// the CR1/CR2/CR4/CR5/CR3 markers + the CR7/CQ8 select-shape re-anchor].
 // The prior S141/CP re-anchor block follows.)
 // (re-anchored S141/CP — the render-gate snapshot + plain-text gate +
 // restore-availability + size-signal set: census 1409 → 1449, +40 net

@@ -58,9 +58,12 @@ export async function POST(request: NextRequest) {
       return errorResponse(400, "Enter the 6-digit code from your email.");
     }
 
+    // S143/CR7: sessionVersion dropped from the pre-tx select — dead
+    // since CQ8 minted from the tx-returned row (only id/emailVerified
+    // are read here; the census pins BOTH shapes now).
     const user = await db.user.findUnique({
       where: { email: email.toLowerCase() },
-      select: { id: true, emailVerified: true, sessionVersion: true },
+      select: { id: true, emailVerified: true },
     });
     if (!user) {
       // Uniform rejection — no account-state oracle.

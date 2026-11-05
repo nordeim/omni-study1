@@ -797,7 +797,15 @@ export function NotesView() {
                             patchSelected({ notebookId: v === "none" ? "" : v })
                           }
                         >
-                          <SelectTrigger className="h-8 w-44">
+                          {/* S143/CR3: the mover is the one unlabeled combobox
+                              in the tree (the sibling Selects carry aria-labels
+                              or Label htmlFor pairs) — the exact surface CQ3
+                              made keyboard-reachable gets its accessible name
+                              (WCAG 4.1.2); the CQ3 e2e leg pins it by name. */}
+                          <SelectTrigger
+                            className="h-8 w-44"
+                            aria-label="Move note to notebook"
+                          >
                             <SelectValue placeholder="No notebook" />
                           </SelectTrigger>
                           <SelectContent>

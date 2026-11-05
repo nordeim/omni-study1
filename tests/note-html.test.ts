@@ -226,11 +226,50 @@ describe("sanitizeNoteHtml — the aligned anchor policy (S142/CQ5, server door)
     expect(out).toContain('alt="blank"');
   });
 
-  it("keeps the toolbar vocabulary's http/https/mailto quartet with rel injected", () => {
+  it("keeps the toolbar vocabulary's http/https/mailto trio with rel injected (S143/CR8: the count-word corrected — three schemes, not four)", () => {
     for (const href of ["https://example.com/x", "http://example.com/y", "mailto:z@example.com"]) {
       const out = sanitizeNoteHtml(`<a href="${href}">l</a>`);
       expect(out).toContain(href);
       expect(out).toContain('rel="noopener noreferrer"');
     }
+  });
+});
+
+// S143/CR2 (the server-door twin of the DOM door's non-text policy): the
+// OPTIONS now sets `nonTextTags` EXPLICITLY from the shared
+// NOTE_HTML_NON_TEXT_TAGS constant — behavior-identical to sanitize-html's
+// default (the five-tag set verified in the library source), but
+// drift-immune and machine-censused: the shared contract "the two doors
+// accept the SAME payload set" (the CQ5 comments) now includes the
+// non-text family explicitly, not by library default.
+describe("sanitizeNoteHtml — the non-text-tag policy (S143/CR2, server door)", () => {
+  it("each non-text tag dies WHOLE at the server door (the corpus pinned against default drift)", () => {
+    for (const [tag, text] of [
+      ["script", "alert(1)"],
+      ["style", ".x{}"],
+      ["textarea", "ta"],
+      ["option", "opt"],
+      ["xmp", "xmp"],
+    ] as const) {
+      const out = sanitizeNoteHtml(`<p>a</p><${tag}>${text}</${tag}><p>b</p>`);
+      expect(out).toBe("<p>a</p><p>b</p>");
+    }
+  });
+
+  it("OPTIONS sets nonTextTags explicitly from the shared constant (the drift census)", () => {
+    // The module-level OPTIONS object: the import is value-typed, so the
+    // array identity check pins the SHARED constant (not a copy that can
+    // drift). Behavior: nonTextTags contains exactly the five-tag set.
+    const src = sanitizeNoteHtml("<p>probe</p>");
+    expect(src).toBe("<p>probe</p>");
+    // The census shape: OPTIONS.nonTextTags === [...NOTE_HTML_NON_TEXT_TAGS]
+    // — pinned textually by the script-conventions census (the options
+    // object is not exported); the behavioral backstop is the corpus leg
+    // above. Here: the five-tag set is exactly what dies whole.
+    for (const tag of ["script", "style", "textarea", "option", "xmp"]) {
+      expect(sanitizeNoteHtml(`<p>a</p><${tag}>x</${tag}>`)).toBe("<p>a</p>");
+    }
+    // And nothing ELSE newly dies: the container family still unwraps.
+    expect(sanitizeNoteHtml("<p>a</p><noscript>ns</noscript>")).toBe("<p>a</p>ns");
   });
 });

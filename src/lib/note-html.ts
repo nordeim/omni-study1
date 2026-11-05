@@ -67,6 +67,26 @@ export const NOTE_HTML_STYLE_PROPS: readonly string[] = Object.freeze(["color", 
 export const NOTE_HTML_STYLE_VALUE_PATTERN =
   /^(?:#[0-9a-fA-F]{3,8}|rgba?\([^)]*\)|hsla?\([^)]*\)|[a-zA-Z]+)$/;
 
+/** S143/CR2 — the NON-TEXT tag set, shared by BOTH doors. These five
+ * tags (exactly sanitize-html's default nonTextTags — verified against
+ * the library source) die WHOLE: tag + descendants + text, never the
+ * unwrap-to-text the container family gets. Their content is not
+ * editor-authored prose — script/style are code, textarea/option/xmp are
+ * editing-surface artifacts — and the SERVER write door already kills
+ * them whole, so the DOM render door's unwrap branch keeping their text
+ * was the residual asymmetry of the "the two doors accept the SAME
+ * payload set" contract (CQ5's family; probed empirically: all five
+ * tags' text survived the DOM door pre-fix). The server door now sets
+ * nonTextTags explicitly from this constant — behavior-identical to the
+ * library default, drift-immune. */
+export const NOTE_HTML_NON_TEXT_TAGS: readonly string[] = Object.freeze([
+  "script",
+  "style",
+  "textarea",
+  "option",
+  "xmp",
+]);
+
 /** S141/CP6 — the walk depth cap. The 100k-char content cap admits ~25k
  * nesting levels; beyond 500 the subtree collapses to its text (a note
  * that deep is not editor-authored, and the unbounded recursion
@@ -95,6 +115,17 @@ function subtreeText(root: Element): string {
     const node = stack.pop() as Node;
     if (node.nodeType === 3 /* Node.TEXT_NODE */) {
       out += node.nodeValue ?? "";
+      continue;
+    }
+    // S143/CR2: the collector honors the non-text-whole contract too —
+    // a script/style/textarea/option/xmp subtree beyond the depth cap
+    // must not resurrect its text through the collapse (the server door
+    // kills the set whole at ANY depth; the two-door contract holds
+    // past the cap, not just under it).
+    if (
+      node.nodeType === 1 /* Node.ELEMENT_NODE */ &&
+      NOTE_HTML_NON_TEXT_TAGS.includes((node as Element).tagName.toLowerCase())
+    ) {
       continue;
     }
     // Push children in REVERSE so pops yield document order.
@@ -152,6 +183,15 @@ export function sanitizeNoteHtmlDom(html: string): string {
    * moved element's own attributes (a remote img src, a javascript: href)
    * and disallowed moved wrappers escaped untouched. */
   function processElement(child: Element, depth: number): void {
+    // S143/CR2 — the non-text family dies WHOLE, BEFORE the depth-cap
+    // collapse (a script nested 600-deep must not text-collapse back
+    // into the document via subtreeText) and before the unwrap branch
+    // (its children are editing-surface artifacts, not prose — the
+    // server door's contract, now shared).
+    if (NOTE_HTML_NON_TEXT_TAGS.includes(child.tagName.toLowerCase())) {
+      child.remove();
+      return;
+    }
     // S141/CP6 — the hostile-depth posture: a chain this deep is not
     // editor-authored; collapse the subtree to its text content before
     // recursing (the pre-cap walk threw RangeError on ~25k-deep
@@ -174,7 +214,16 @@ export function sanitizeNoteHtmlDom(html: string): string {
       const parent = child.parentElement;
       if (!parent) return;
       const frag = child.ownerDocument.createDocumentFragment();
-      while (child.firstChild) frag.appendChild(child.firstChild);
+      // S143/CR2 rider (found by the evidence capture's live machine
+      // proof in real Chromium): a <template>'s children live in its
+      // INERT .content fragment, never as direct children — the unwrap
+      // branch must move THOSE or the container family's text dies at
+      // the DOM door in real browsers while the server door keeps it
+      // (happy-dom keeps template children direct — the probe corpus's
+      // environment boundary, the S142 ≥4k class's sibling).
+      const source: Node =
+        (child as Element & { content?: DocumentFragment | null }).content ?? child;
+      while (source.firstChild) frag.appendChild(source.firstChild);
       const moved = Array.from(frag.children);
       parent.replaceChild(frag, child);
       // S142/CQ1: the unwrap consumes a depth level too — the S141 shape

@@ -9,7 +9,7 @@ High-signal instructions for coding agents working in this repo. Everything here
 | `bun install` | Install deps (Bun ≥ 1.3) |
 | `bun run dev` | Dev server on :3000 (Turbopack), logs tee'd to `dev.log` |
 | `bun run lint` / `bun run typecheck` | ESLint / `tsc --noEmit` — both must be clean |
-| `bun run test` | Vitest unit layer (1466 tests; `*.test.ts` only — never picks up e2e specs) |
+| `bun run test` | Vitest unit layer (1490 tests; `*.test.ts` only — never picks up e2e specs) |
 | `bun run build` | Production build → `.next/standalone` (**required before e2e**) |
 | `bun run test:e2e` | Playwright vs the standalone build on :3100 with `db/e2e.db` (606 tests across the 5-chunk cold map — 150+187+87+95+87, 30 spec files; a single-process full run trips the register rate-limiter budget by design, the chunked map re-boots the server per chunk). NOTE (S45, the day-boundary lesson): the global setup re-seeds every run, but the seed's IDEMPOTENT UPSERTS do NOT refresh day-relative dates on existing rows — a scratch `db/e2e.db` that ages across a UTC midnight keeps its original day-relative dates (today's tasks, the +1-day exam badge, the due-in pills, the import round-trip dates each read one day stale → 4 deterministic failures in parity-session6/parity-session9/s23-import). Delete `db/e2e.db` when a run crosses a day boundary — the global setup re-creates it fresh with current dates. NOTE (S46, TWO more aged-scratch-db classes + a build-input one): (1) ALWAYS run e2e COLD — S131/CF5 chained `scripts/e2e-cold-reset.sh` into `bun run test:e2e` (port-guard + `rm -f db/e2e.db` BEFORE playwright boots anything — global-setup is TOO LATE: Playwright starts the webServer before globalSetup), so the default runner self-colds; any DIRECT `playwright test` invocation still needs the manual `rm -f db/e2e.db` before every full run: the s23-import round-trip posts a FIXED-id envelope, so a second consecutive run against the aged db reads `created: 0, updated: 1` instead of `created: 1, updated: 0` and fails — not just across midnights, across ANY re-run; (2) the s22 negative-spawn spec reads the BUNDLED `.env` — Next's standalone output COPIES the repo-root `.env` into `.next/standalone/.env` at build time, so a REAL AUTH_SECRET in the dev `.env` leaks into the bundle and the guard CORRECTLY boots (the spec times out waiting for the exit) — keep the repo-root `.env`'s AUTH_SECRET EMPTY (the `.env.example` dev posture: `AUTH_SECRET=""` — dev falls back to the local constant with the boot warning) when building for e2e |
 | `node scripts/capture-studyflow.mjs` | Refresh all 31 `docs/screenshots/` captures from the dev server (24 light + 7 dark) |
@@ -1888,3 +1888,60 @@ Hover-parity probing must run in Playwright, not a touch-emulating browser — v
    asserts they AGREE (with the chunk-sum arithmetic) — the drift class
    is now structurally loud. Lesson: counts claimed in N documents need
    a test that reads all N and compares, or one of them will rot.
+
+## S143 lessons (Batch CR — the own-keys + non-text-tag-door + typed-import-delegate + sequence-CAS set)
+
+1. **A membership test over user-controlled keys must be OWN-keys.** `key
+   in parsed` walks the prototype chain: a PATCH body carrying
+   `toString`/`constructor`/`valueOf` passed the sent-keys gate and
+   injected the inherited FUNCTIONS into the Prisma write data —
+   PrismaClientValidationError → the shared mapper's 500 (the 400-family
+   taxonomy's one reachable violation). Zod strip-mode never emits
+   inherited keys as own keys, so `hasOwnProperty.call` is
+   lossless. Lesson: when a guard tests "is this key allowed", test the
+   own-property set — `in` is a prototype-chain query, not a
+   has-a-key query.
+2. **The two-door contract has a NON-TEXT dimension, and the sweep that
+   closed the anchor/img family missed it.** sanitize-html's
+   `nonTextTags` (script/style/textarea/option/xmp — its default) kill
+   those tags' TEXT at the write door, but the DOM render door's
+   unwrap branch kept every disallowed element's children — five tags'
+   text survived one door and died at the other (an 11-tag corpus probe
+   found the exact set). And the depth-cap collector had the same leak:
+   subtreeText resurrected script text from BEYOND the cap. Lesson:
+   "the same payload set" contracts need an enumerated-difference probe
+   across the doors (both directions), and every rescue/collapse path
+   re-derives the policy — the collector honored the cap but not the
+   tag set.
+3. **A CAS that compares VALUES is not the fetchSeq idiom it cites.**
+   The S142 rollback guard ("store still equals the failed next") left
+   the same-value ABA open: pick(A), pick(A) again, the first PATCH
+   fails → the rollback clobbers the second pick's optimism. The real
+   idiom compares REQUEST SEQUENCE: per-field tickets, `isCurrent` in
+   the catch, a value never entering the comparison. Lesson: name the
+   identity you compare — a value-derived identity is forgeable by
+   repetition; a request counter is not.
+4. **Source-text censuses are marker backstops, not pins.** Three of the
+   S142 fixes' "pins" were `expect(src).toContain(...)` — a catch-leg
+   reordering that shadows P2025 passes green. The honest upgrade:
+   extract the mapping to a pure seam (importRestoreError) and pin
+   EVERY branch behaviorally against synthetic errors. Lesson: when a
+   fix is a mapping/selection over inputs, the pin must feed inputs —
+   census markers only prove the file still mentions the words.
+5. **One documented cast beats N scattered any-casts — and
+   `keyof PrismaClient` includes symbols.** The import route's three
+   inline `(db|tx as any)[model]` casts collapsed into one typed
+   ImportDelegateOps lookup whose single index cast is the honest
+   boundary of the dynamic-envelope design (Prisma's per-model
+   delegates have heterogeneous signatures TS cannot unify). The
+   `as string` on the index key is load-bearing: `keyof PrismaClient`
+   is string|symbol and Record<string, T> rejects symbol indexing.
+   Lesson: narrow the three ops you actually use into an interface,
+   then cast ONCE, at the boundary, with the reason written beside it.
+6. **The aria-label sweep missed the site the WCAG fix just
+   created.** The mover Select — the surface CQ3 converted for keyboard
+   reachability — shipped without an accessible name while every
+   sibling Select carried one (aria-label or Label htmlFor). Lesson:
+   when a fix converts a control's container/role, check the control's
+   NAME in the same diff — reachability and namability are separate
+   requirements (WCAG 2.1.1 vs 4.1.2).

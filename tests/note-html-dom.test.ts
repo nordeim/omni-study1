@@ -250,3 +250,54 @@ describe("sanitizeNoteHtmlDom — the aligned anchor policy (S142/CQ5, DOM door)
     expect(out).toContain('alt="blank"');
   });
 });
+
+// S143/CR2 (audit A-I1 promoted; probed): the five NON-TEXT tags —
+// sanitize-html's default nonTextTags set (script/style/textarea/option/
+// xmp, verified against node_modules/sanitize-html/index.js:208) — die
+// WHOLE at the server write door, but their TEXT survived the DOM render
+// door (the unwrap branch keeps every disallowed element's children).
+// The shared NOTE_HTML_NON_TEXT_TAGS constant aligns the doors on the
+// write door's contract: these tags' content is never editor-authored
+// prose (the CO1 doctrine — legacy rows render as if freshly written).
+describe("sanitizeNoteHtmlDom — the non-text-tag policy (S143/CR2, DOM door)", () => {
+  it("each non-text tag dies WHOLE — its text never survives (RED pre-fix: the probed text survival)", () => {
+    for (const [tag, text] of [
+      ["script", "alert(1)"],
+      ["style", ".x{}"],
+      ["textarea", "ta"],
+      ["option", "opt"],
+      ["xmp", "xmp"],
+    ] as const) {
+      const out = sanitizeNoteHtmlDom(`<p>a</p><${tag}>${text}</${tag}><p>b</p>`);
+      expect(out).toBe("<p>a</p><p>b</p>");
+    }
+  });
+
+  it("nested allowed content inside a non-text tag dies whole too (no partial rescue)", () => {
+    const out = sanitizeNoteHtmlDom("<p>a</p><script><b>bold</b>tail</script><p>b</p>");
+    expect(out).toBe("<p>a</p><p>b</p>");
+  });
+
+  it("the container family still unwraps to text at the DOM door (the unchanged semantics)", () => {
+    // noscript/template/title/iframe were never in the non-text set —
+    // their text is plain unwrapped content at BOTH doors (probed SAME).
+    for (const [tag, text] of [
+      ["noscript", "ns"],
+      ["template", "t"],
+      ["title", "ti"],
+      ["iframe", "ifr"],
+    ] as const) {
+      const out = sanitizeNoteHtmlDom(`<p>a</p><${tag}>${text}</${tag}><p>b</p>`);
+      expect(out).toBe(`<p>a</p>${text}<p>b</p>`);
+    }
+  });
+
+  it("a non-text tag at depth ≥ the cap dies whole too (the check runs before the collapse)", () => {
+    // A script nested 600-deep inside disallowed containers: the
+    // non-text check fires FIRST (before the depth-cap text collapse),
+    // so the script's text never re-enters the document via subtreeText.
+    const chain = "<div>".repeat(600);
+    const out = sanitizeNoteHtmlDom(`${chain}<script>dead</script>`);
+    expect(out).not.toContain("dead");
+  });
+});

@@ -258,3 +258,19 @@ describe("assertJsonContentType (S119/BT1a — the BR5 policy as a shared seam)"
     expect(() => assertJsonContentType(request)).toThrow(ValidationError);
   });
 });
+
+// S143/CR1 (audit B-L1, the compounding leg): the shared mapper had NO
+// branch for PrismaClientValidationError — the import route carries the
+// local BT1b leg, but every OTHER route's latent Zod↔Prisma shape drift
+// answered the opaque 500 (with unhandled-error log noise). The shared
+// leg mirrors BT1b: the malformed-request family (400), never 500.
+it("S143/CR1: toErrorResponse maps PrismaClientValidationError to 400 (the shared BT1b leg — pre-fix: the opaque 500)", async () => {
+  const err = new Error("Invalid `prisma.task.update()` invocation");
+  err.name = "PrismaClientValidationError";
+  const res = toErrorResponse(err);
+  expect(res.status).toBe(400);
+  const body = res as unknown as { json: () => Promise<{ error: string }> };
+  await expect(body.json()).resolves.toMatchObject({
+    error: expect.stringContaining("could not accept"),
+  });
+});

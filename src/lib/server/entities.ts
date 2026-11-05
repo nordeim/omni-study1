@@ -257,7 +257,15 @@ export const sentKeysPatch = (
   const writes: Row = {};
   for (const key of Object.keys(source)) {
     if (source[key] === undefined) continue;
-    if (!(key in parsed)) continue; // S82/AI5: schema-validated keys only
+    // S82/AI5: schema-validated keys only — and S143/CR1: the membership
+    // test must be OWN-keys. `key in parsed` walks the prototype chain,
+    // so a hostile PATCH body carrying `toString`/`constructor`/`valueOf`/
+    // `hasOwnProperty` (inherited Object.prototype members Zod strip-mode
+    // never emits as own keys) passed the gate and injected the inherited
+    // FUNCTIONS into the write data — PrismaClientValidationError → the
+    // shared mapper's 500 on a reachable interactive path (the 400-family
+    // taxonomy's one reachable violation, probed empirically pre-fix).
+    if (!Object.prototype.hasOwnProperty.call(parsed, key)) continue;
     writes[key] = parsed[key];
   }
   return writes;

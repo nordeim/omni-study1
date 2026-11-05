@@ -248,6 +248,19 @@ export function toErrorResponse(err: unknown): NextResponse {
   if (err instanceof NotFoundError) {
     return errorResponse(404, err.message);
   }
+  // S143/CR1 (audit B-L1, the shared BT1b leg): the import route has
+  // carried this leg locally since S119/BT1b, but every OTHER route's
+  // latent Zod↔Prisma shape drift answered the opaque 500 (with
+  // unhandled-error log noise) — the malformed-request family is the
+  // honest 400, never 500. The own-keys guard in sentKeysPatch closes
+  // the reachable vector; this leg closes the latent drift class for
+  // every route in one place.
+  if (err instanceof Error && err.name === "PrismaClientValidationError") {
+    return errorResponse(
+      400,
+      "That request contained fields the server could not accept. Try refreshing and re-submitting.",
+    );
+  }
   if (err instanceof Prisma.PrismaClientKnownRequestError) {
     if (err.code === "P2002") {
       return errorResponse(409, "That record already exists.");

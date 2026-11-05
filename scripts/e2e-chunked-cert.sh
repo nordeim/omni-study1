@@ -1,4 +1,14 @@
 #!/usr/bin/env bash
+# (S143/CR re-tag — census 606 → 606, net +0: no new e2e tests this cycle;
+# the S143 pins re-anchored EXISTING legs in place — the CQ3 mover locator
+# in parity-session7 is now the NAMED combobox form (getByRole("combobox",
+# { name: "Move note to notebook" }) — the assertion fails if the mover's
+# accessible name regresses, pinning the CR3 aria-label behaviorally). The
+# chunk-3 cert run observed the DOCUMENTED BU1/P1008 environmental flake
+# class (the files-view Rename-prefill leg — the same leg the S142 cycle
+# recorded; no parallel suites ran this time, the pure machine-load class,
+# co-occurring with SQLite socket timeouts in the WebServer log) — the
+# contention-free cold re-run was 87/87 first-pass.)
 # (S142/CQ re-tag — census 605 → 606, net +1: chunk 2 +1 [the CQ3
 # notebook-mover keyboard-reachability leg in parity-session7 — the
 # note-actions surface is a Popover now (the BZ3-pattern conversion), and

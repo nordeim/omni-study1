@@ -93,3 +93,21 @@ describe("sentKeysPatch", () => {
     });
   });
 });
+
+// S143/CR1 (audit B-L1, probed): the membership test `key in parsed` walks
+// the prototype chain — a hostile PATCH body carrying `toString`/
+// `constructor`/`valueOf`/`hasOwnProperty` (inherited Object.prototype
+// members Zod strip-mode never emits as OWN keys) passed the gate and
+// injected the inherited FUNCTIONS into the Prisma write data →
+// PrismaClientValidationError → the shared mapper's 500 (the 400-family
+// taxonomy's one reachable violation). The own-keys guard is the fix;
+// this leg pins the hostile body behaviorally (RED against the pre-fix
+// shape — the §0 probe showed the five-key write set).
+it("S143/CR1: inherited prototype keys never reach the write set (the hostile-body leg)", () => {
+  const hostile = JSON.parse(
+    '{"toString":"x","constructor":"y","valueOf":"z","hasOwnProperty":"w","title":"t"}',
+  );
+  const writes = sentKeysPatch(hostile, { title: "t", content: "c" }) as Record<string, unknown>;
+  expect(Object.keys(writes)).toEqual(["title"]);
+  expect(writes.title).toBe("t");
+});

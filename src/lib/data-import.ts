@@ -1380,3 +1380,76 @@ export function sanitizeImportRow(
 
   return row;
 }
+
+/**
+ * S143/CR6 (audit A-M1) — the import catch's error→response mapping,
+ * extracted as a PURE seam (route files cannot export shared symbols —
+ * Next's route-type validation — so the mapping lives here, unit-pinned
+ * behaviorally in tests/data-import.test.ts; the source-text censuses
+ * stay as the marker backstop).
+ *
+ * Returns the import-specific {status, message} for the four named legs,
+ * or null when the error belongs to the shared mapper (toErrorResponse —
+ * the route falls through to it, so the ValidationError/NotFound/known-
+ * request-error families keep their single source).
+ */
+export function importRestoreError(err: unknown): { status: number; message: string } | null {
+  // S119/BT1b: a Prisma validation error from the write loop is a
+  // malformed-envelope condition (the guard above catches the known
+  // shapes; anything left is an exotic field-shape mismatch) — the
+  // 400-bad-input contract, never a 500.
+  if (err instanceof Error && err.name === "PrismaClientValidationError") {
+    return {
+      status: 400,
+      message:
+        "That backup contains a row whose fields do not match the app's data model. Re-export a fresh backup and try again.",
+    };
+  }
+  // S130/CE7: the concurrent-create race surfaced from the transaction —
+  // the named 409 with the actionable message (see the write loop).
+  if (err instanceof Error && err.name === "ImportConcurrentCreateError") {
+    // S135/CJ5: the colon-safe parse — ids legally contain ":" and the
+    // bare split(":") truncated them at the first colon. The bulk form
+    // (a createMany P2002 — the specific row is not recoverable from the
+    // bulk statement) parses to the collection-level copy.
+    const { collection, id } = parseImportRaceMessage(err.message);
+    if (id === "bulk") {
+      return {
+        status: 409,
+        message: `That ${collection} collection contains a row that collides with an existing record — either it was created while this import ran, or this backup's ids already belong to another account. Edit the backup's ids or restore into the original account.`,
+      };
+    }
+    // S137/CL10 (audit A-I1): the copy names BOTH collision causes — the
+    // CE7 concurrent-create race AND the dominant real trigger, a
+    // cross-account global-PK collision.
+    return {
+      status: 409,
+      message: `That ${collection} row (id "${id}") collides with an existing record — either it was created while this import ran, or this backup's ids already belong to another account. Edit the backup's ids or restore into the original account.`,
+    };
+  }
+  // S137/CL10 (audit A-L2) + S138/CM4: P2028 — the 60 s window expired
+  // mid-restore (a legal many-rows envelope; the many-rows tail). The
+  // rollback HOLDS. The route-local copy (not the shared mapper's
+  // source-neutral one) because the remedy here is specifically "split
+  // the backup".
+  if (typeof err === "object" && err !== null && "code" in err && (err as { code?: unknown }).code === "P2028") {
+    return {
+      status: 413,
+      message:
+        "That backup was too large or slow to restore in one pass and was fully rolled back. Try again, or split the backup and retry the halves.",
+    };
+  }
+  // S142/CQ4 (audit A-L1): P2025 — a row the CP3 probe classified as
+  // "existing" was DELETED between the probe and the write (the
+  // read-hoist widened that window; S140's in-tx read would have
+  // re-created it, this shape rolls back). The named-409 family's
+  // concurrent-modification leg — the generic 404 ("That record does
+  // not exist.") answered a taxonomy question with the wrong family.
+  if (typeof err === "object" && err !== null && "code" in err && (err as { code?: unknown }).code === "P2025") {
+    return {
+      status: 409,
+      message: "That backup contains a row that was deleted while this import ran — it was fully rolled back. Retry the import.",
+    };
+  }
+  return null;
+}
