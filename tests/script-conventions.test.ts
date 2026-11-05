@@ -129,7 +129,9 @@ describe("the chunked cert runner's truth contract (S128/CC2)", () => {
     // S145/CT: chunk 3 89 → 91 (the CT1 focus-timer completion-window
     // pair — the phantom/double-log leg + the settle-CAS leg) + chunk 5
     // 88 → 89 (the CT3 gradient-CTA leg) — 609 → 612.
-    expect(certSource).toContain("Expected: 150 + 187 + 91 + 95 + 89 = 612");
+    // S146/CU: chunk 2 187 → 189 (the CU1 multipart-mime pair — the
+    // derivation tripwire + the clean .pdf round-trip) — 612 → 614.
+    expect(certSource).toContain("Expected: 150 + 189 + 91 + 95 + 89 = 614");
   });
 
   it("propagates a failing chunk's exit code (never a green cert on a red run)", () => {
@@ -1586,5 +1588,84 @@ describe("the S145/CT source censuses", () => {
     expect(s23).toContain("exactly 10 DEMO-user");
     expect(s23).toContain("zero headroom");
     expect(s23).toContain("resilience.spec.ts carries 9 demo-user");
+  });
+});
+// S146/CU1 + CU2 + CU3 (the s146 audits' M/L set): the multipart mime
+// guard wiring at the files POST door, the OTP re-issue transactional set
+// at the register/re-send auth family (the S142-carried standing
+// deferral landing — the CT2 batch-tx pattern extended to its siblings),
+// and the body-read catch discrimination at the files door (the CN6
+// shape the import route adopted at S139). The census pins the wiring;
+// the behavioral legs ride the unit predicate (CU1) and the auth-flows
+// register/resend journeys (CU2 — the interleave is not externally
+// drivable, the CT2 doctrine); CU3's mid-stream abort is likewise not
+// drivable from the Playwright API (the CN6 precedent was census-pinned
+// for the same reason).
+describe("S146/CU1-CU3: the upload mime guard + the OTP re-issue transactions + the files 413 discrimination", () => {
+  const FILES_ROUTE = path.resolve(process.cwd(), "src/app/api/files/route.ts");
+  const REGISTER = path.resolve(process.cwd(), "src/app/api/auth/register/route.ts");
+  const RESEND = path.resolve(
+    process.cwd(),
+    "src/app/api/auth/resend-verification/route.ts",
+  );
+
+  it("S146/CU1: the files POST multipart door guards the mime before write (the import door's admitted set at the interactive door)", () => {
+    // S146/CU1 (audit B-M1): `mime: entry.type` verbatim stored a
+    // client-controlled part Content-Type with no length/charset bound —
+    // the import door caps the identical column ("files.mime": 100 +
+    // printable-ASCII, the CE7 bloat class riding every list GET). The
+    // route now rejects a non-empty over-long or non-printable mime with
+    // 400 before the write; the unknown-type "" shape keeps the
+    // octet-stream fallback.
+    const src = readFileSync(FILES_ROUTE, "utf8");
+    expect(src).toContain("isPrintableAsciiMime");
+    expect(src).toContain("UPLOAD_MIME_MAX_CHARS");
+  });
+
+  it("S146/CU2a: the register re-issue triple runs in ONE transaction (the existing-unverified branch)", () => {
+    // S146/CU2 (audits A-L1 + B-L1): the deleteMany → user.update →
+    // token.create triple ran as three sequential awaits — a concurrent
+    // same-account re-register interleaves delete/delete/update/update/
+    // create/create and leaves TWO live 15-min OTP codes (the older
+    // inert by the findFirst-desc verify path, but the same BZ7/CE5
+    // interleave family CT2 closed at the forgot-password sibling).
+    const src = readFileSync(REGISTER, "utf8");
+    expect(src).toContain("db.$transaction([");
+    expect(src).toContain("verificationToken.deleteMany");
+    expect(src).toContain("user.update");
+    expect(src).toContain("verificationToken.create");
+  });
+
+  it("S146/CU2b: the register fresh-account pair runs in ONE interactive transaction (the P2002 loser stores nothing)", () => {
+    // The fresh branch's user.create → token.create pair: the token data
+    // depends on the created row's id, so the batch form cannot express
+    // it — the interactive $transaction (the folders/[id] precedent).
+    // The S125/BZ9 P2002 catch moves around the WHOLE tx: the unique
+    // violation rolls the pair back identically (the loser's token was
+    // never stored — the uniform {ok:true} shape unchanged).
+    const src = readFileSync(REGISTER, "utf8");
+    expect(src).toContain("db.$transaction(async (tx)");
+    expect(src).toContain("tx.user.create");
+    expect(src).toContain("tx.verificationToken.create");
+  });
+
+  it("S146/CU2c: the resend supersede pair runs in ONE transaction (the CT2 mirror)", () => {
+    // The resend-verification sibling — the deleteMany + create pair,
+    // the exact shape the forgot-password route closed at S145/CT2.
+    const src = readFileSync(RESEND, "utf8");
+    expect(src).toContain("db.$transaction([");
+    expect(src).toContain("verificationToken.deleteMany");
+    expect(src).toContain("verificationToken.create");
+  });
+
+  it("S146/CU3: the files body-read catch discriminates the typed over-cap error from transport failures (the CN6 shape)", () => {
+    // S146/CU3 (audit B-L2): the files multipart branch answered a
+    // confident 413 for ANY readBytesCapped failure — a mid-stream client
+    // abort or proxy hiccup is not "too large" (the S139/CN6 lesson the
+    // import route adopted; the files POST never did). Only the genuine
+    // BodyTooLargeError answers 413; everything else propagates to the
+    // honest 500 handler.
+    const src = readFileSync(FILES_ROUTE, "utf8");
+    expect(src).toContain("instanceof BodyTooLargeError");
   });
 });

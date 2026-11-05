@@ -101,6 +101,27 @@ export const FILE_METADATA = {
  * twin in files-view.tsx carries a documented mirror). */
 export const MAX_UPLOAD_BYTES = 2 * 1024 * 1024; // 2 MiB
 
+/** S146/CU1 (audit B-M1): the multipart upload door's mime cap — the
+ * import door's mirror (data-import.ts caps the identical column at
+ * "files.mime": 100 with the printable-ASCII charset guard, the CE7
+ * bloat class: a poisoned oversized mime rides FILE_METADATA into EVERY
+ * files list GET). The interactive door stored `entry.type` verbatim, so
+ * a hand-crafted multipart body could write an unbounded mime per row.
+ * The admitted set mirrors the import door exactly: printable ASCII
+ * (0x20–0x7E); EMPTY still passes (the unknown-type "" shape keeps the
+ * route's octet-stream fallback — a legit mime is never non-ASCII per
+ * the type/subtype grammar). The charset half is belt-and-suspenders
+ * against parser/runtime divergence: undici's formData parser sanitizes
+ * the charset family before the route sees it (the drive probes), the
+ * same posture as downloadHeaders' clamp standing behind the import
+ * guard. */
+export const UPLOAD_MIME_MAX_CHARS = 100;
+
+/** See UPLOAD_MIME_MAX_CHARS — the admission predicate (length + charset). */
+export function isPrintableAsciiMime(type: string): boolean {
+  return type.length <= UPLOAD_MIME_MAX_CHARS && /^[\x20-\x7E]*$/.test(type);
+}
+
 /** Parse a request body through its Zod schema; failure → ValidationError. */
 export function parseWith<T>(schema: ZodType<T>, input: unknown): T {
   const result = schema.safeParse(input);

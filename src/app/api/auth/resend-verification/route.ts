@@ -76,16 +76,23 @@ export async function POST(request: NextRequest) {
       // account's EXPIRED tokens never outlive a resend either (bounded
       // auth tables; the shipped branch only ever created, so abandoned
       // unverified accounts accumulated expired rows).
-      await db.verificationToken.deleteMany({
-        where: { userId: user.id, expiresAt: { lt: new Date() } },
-      });
-      await db.verificationToken.create({
-        data: {
-          userId: user.id,
-          code: hashOtpCode(code),
-          expiresAt: new Date(Date.now() + CODE_TTL_MS),
-        },
-      });
+      // S146/CU2 (audits A-L1 + B-L1): the pair rides ONE transaction —
+      // two un-transacted awaits interleave under concurrent same-account
+      // resends as delete/delete/create/create, leaving TWO live OTP codes
+      // (the BZ7/CE5 interleave family; the exact shape S145/CT2 closed
+      // at the forgot-password sibling — the batch $transaction mirror).
+      await db.$transaction([
+        db.verificationToken.deleteMany({
+          where: { userId: user.id, expiresAt: { lt: new Date() } },
+        }),
+        db.verificationToken.create({
+          data: {
+            userId: user.id,
+            code: hashOtpCode(code),
+            expiresAt: new Date(Date.now() + CODE_TTL_MS),
+          },
+        }),
+      ]);
       // S120/BU2: hardened deployments omit the code (the off-switch).
       if (inAppDeliveryGates(process.env).otp) {
         return NextResponse.json({ ok: true });

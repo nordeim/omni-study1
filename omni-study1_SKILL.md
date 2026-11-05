@@ -25,7 +25,7 @@ tags:
 
 > **What this is:** the single-source-of-truth reference for working in
 > `nordeim/omni-study1`. Every fact below is verified against the codebase
-> (2115 tests green, re-anchored at the S145 update: 1503 Vitest unit [48 files] + 612 Playwright e2e [the 5-chunk census: 607 chromium specs + the per-chunk setup re-runs — 150+187+91+95+89]) — the census re-anchored through
+> (2127 tests green, re-anchored at the S146 update: 1513 Vitest unit [48 files] + 614 Playwright e2e [the 5-chunk census: 609 chromium specs + the per-chunk setup re-runs — 150+189+91+95+89]) — the census re-anchored through
 > the s117–s124 hardening cycles; the 2.0 baseline was 834 + 299 in six
 > chunks after the parity re-application + account-flow completion +
 > regression hardening).
@@ -627,13 +627,13 @@ tail -40 dev.log                            # request traces + prisma queries
 ```bash
 bun run lint && bun run typecheck && bun run test && bun run build && bun run test:e2e
 ```
-Current green state (re-anchored at S145/CT): lint ✓ · tsc ✓ (`noImplicitAny` + `noUnusedLocals`/`noUnusedParameters` — the BV16 machine guard; plus the S129/CD3 re-enabled `react-hooks/exhaustive-deps` as an error) · 1503 unit ✓ · build ✓ (the type gate live — `ignoreBuildErrors` removed) · 609 e2e ✓ (2109 green).
+Current green state (re-anchored at S146/CU): lint ✓ · tsc ✓ (`noImplicitAny` + `noUnusedLocals`/`noUnusedParameters` — the BV16 machine guard; plus the S129/CD3 re-enabled `react-hooks/exhaustive-deps` as an error) · 1513 unit ✓ · build ✓ (the type gate live — `ignoreBuildErrors` removed) · 614 e2e ✓ (2127 green).
 
 **Full-suite chunk map** (one server-boot per chunk; the 10-min tool cap makes
 one-shot full runs unreliable — the 2.0 six-chunk map: chrome+s14 104 ·
 S5+calc+S6 46 · S7+S8+S9 79 · tasks/resilience/s16/s17 20 · auth+s18–s23 35 ·
 s24–s26 18. Re-anchored at 2.2: the FIVE-chunk cold map of
-`scripts/e2e-chunked-cert.sh` — 150+187+91+95+89 = 612 (re-anchored S145/CT — the S144-era updates re-anchored the head + the green-state line but missed THIS site, which still carried the S139-era 603 [150+185+87+95+86], the s140 doc-drift class reborn; the pre-S139 line said 597 [150+184+82+95+86], the S138-era map, always run COLD
+`scripts/e2e-chunked-cert.sh` — 150+189+91+95+89 = 614 (re-anchored S146/CU — the S144-era updates re-anchored the head + the green-state line but missed THIS site, which still carried the S139-era 603 [150+185+87+95+86], the s140 doc-drift class reborn; the pre-S139 line said 597 [150+184+82+95+86], the S138-era map, always run COLD
 [`rm -f db/e2e.db`]: the s23 round-trip posts a FIXED-id envelope and the
 seed's idempotent upserts never refresh day-relative dates).
 

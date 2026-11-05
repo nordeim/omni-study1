@@ -21,7 +21,10 @@ import { linkFileSchema } from "@/lib/validation";
 import {
   FILE_METADATA,
   MAX_UPLOAD_BYTES,
+  UPLOAD_MIME_MAX_CHARS,
+  BodyTooLargeError,
   errorResponse,
+  isPrintableAsciiMime,
   parseWith,
   rateLimitedResponse,
   readBytesCapped,
@@ -119,8 +122,18 @@ export const POST = withUser(async (user, request: NextRequest) => {
   let rawBytes: Uint8Array;
   try {
     rawBytes = await readBytesCapped(request, UPLOAD_BODY_MAX_BYTES);
-  } catch {
-    return errorResponse(413, "Files are limited to 2 MiB.");
+  } catch (err: unknown) {
+    // S146/CU3 (audit B-L2): discriminate the TYPED over-cap error from
+    // transport failures — the bare catch answered a confident 413 for
+    // ANY read failure (the S139/CN6 lesson the import route adopted;
+    // a mid-stream client abort or a proxy hiccup is not "too large",
+    // and the size-remediation copy cannot help it). Only the genuine
+    // BodyTooLargeError answers 413; everything else propagates to the
+    // honest 500 handler.
+    if (err instanceof BodyTooLargeError) {
+      return errorResponse(413, "Files are limited to 2 MiB.");
+    }
+    throw err;
   }
   const form = await new Request(request.url, {
     method: "POST",
@@ -149,6 +162,26 @@ export const POST = withUser(async (user, request: NextRequest) => {
   // length unbounded (row bloat; serve-time was already safe).
   if (name.length > 200) {
     return errorResponse(400, "File names are limited to 200 characters.");
+  }
+  // S146/CU1 (audit B-M1): the multipart mime guard — the import door
+  // caps the identical column at 100 printable-ASCII chars (the CE7
+  // bloat class: a poisoned oversized mime rides FILE_METADATA into
+  // EVERY files list GET), but this door stored `entry.type` verbatim;
+  // a hand-crafted multipart body writes the part Content-Type into the
+  // row (the drive probe: a 150-char printable mime stored verbatim;
+  // the parser sanitizes the charset family itself, the
+  // belt-and-suspenders posture). The unknown-type "" shape keeps the
+  // octet-stream fallback below.
+  if (typeof entry.type === "string" && entry.type.length > 0) {
+    if (entry.type.length > UPLOAD_MIME_MAX_CHARS) {
+      return errorResponse(400, "File types are limited to 100 characters.");
+    }
+    if (!isPrintableAsciiMime(entry.type)) {
+      return errorResponse(
+        400,
+        "File types must be printable ASCII — control characters and non-ASCII text cannot be stored as a file type.",
+      );
+    }
   }
   if (entry.size > MAX_UPLOAD_BYTES) {
     return errorResponse(413, "Files are limited to 2 MiB.");

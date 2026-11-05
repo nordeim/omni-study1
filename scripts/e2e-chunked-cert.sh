@@ -1,4 +1,17 @@
 #!/usr/bin/env bash
+# (S146/CU re-tag — census 612 → 614, net +2: chunk 2 +2 [the S146/CU1
+# multipart-mime pair in s14-hardening — the derivation tripwire (a
+# hostile 150-char DECLARED part Content-Type on a .txt upload stores the
+# EXTENSION-derived "text/plain;charset=utf-8" under the e2e runtime's
+# Bun parse — pinning the runtime split: the declared part type only
+# reaches the write on the Node-parse path, where the new route guard
+# 400s it with the length copy; the guard's behavioral RED→GREEN evidence
+# rode the dev-daemon probe — the shipped Bun postures derive the mime
+# from the filename extension and are structurally bounded) + the clean
+# .pdf round-trip (the registry mime echo + the list rendering; the guard
+# never over-fires)]. The unit census 1503 → 1513 (+10: the CU1
+# admission-set quintet in files.test + the CU1/CU2/CU3 census quintet
+# in script-conventions) rides the vitest header re-anchor.)
 # (S145/CT re-tag — census 609 → 612, net +3: chunk 3 +2 [the S145/CT1
 # focus-timer completion-window pair in resilience — the fake-clock-driven
 # phantom/double-log leg (a Play press through the in-flight save + the
@@ -160,7 +173,7 @@
 # 192.0.2.139, 3/10 per-IP, 3/40 registerGlobal), the demo import
 # budget at 8/10; END-of-file, the CK1 flood pin stays TERMINAL in
 # s16]. The full CN map: docs/remediation-plan-session139.md.)
-# Expected: 150 + 187 + 91 + 95 + 89 = 612 (each chunk's count includes its
+# Expected: 150 + 189 + 91 + 95 + 89 = 614 (each chunk's count includes its
 # auth setup — the current census; the historical re-tag blocks beneath.)
 # (S131/CF re-tag — census 567 → 570, net +3: chunk 1 +1 [the CF9
 # drawer focus-restore leg in mobile-navigation — crossing the lg

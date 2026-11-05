@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest";
 
-import { buildContentDisposition, downloadHeaders } from "@/lib/server/http";
+import {
+  buildContentDisposition,
+  downloadHeaders,
+  isPrintableAsciiMime,
+} from "@/lib/server/http";
 
 // S13-C3: the file-download Content-Disposition must speak BOTH filename
 // dialects — an ASCII-safe quoted fallback (RFC 2183) AND the RFC 5987
@@ -75,5 +79,47 @@ describe("downloadHeaders clamps the Content-Type value (S144/CS4)", () => {
     // The browser-real shape rides through byte-identical.
     const clean = downloadHeaders("a.txt", "text/html; charset=utf-8") as Record<string, string>;
     expect(clean["Content-Type"]).toBe("text/html; charset=utf-8");
+  });
+});
+
+// S146/CU1 (audit B-M1): the multipart upload door's mime guard — the
+// import door caps the identical column at 100 printable-ASCII chars
+// ("files.mime": 100 + the charset guard in data-import.ts, the CE7
+// bloat class: a poisoned oversized mime rides FILE_METADATA into EVERY
+// files list GET); the interactive door stored `entry.type` verbatim —
+// a hand-crafted multipart body writes a ~2 MiB mime per row. The seam
+// mirrors the import door's admitted set exactly: printable ASCII
+// (0x20–0x7E), empty still admitted (the unknown-type "" shape keeps
+// falling back to the octet-stream default at the route).
+describe("isPrintableAsciiMime — the multipart mime admission set (S146/CU1)", () => {
+  it("admits the browser-real shapes: parameters, long vendor types, and the empty unknown-type shape", () => {
+    expect(isPrintableAsciiMime("text/html; charset=utf-8")).toBe(true);
+    expect(isPrintableAsciiMime("application/vnd.openxmlformats-officedocument.wordprocessingml.document")).toBe(true);
+    expect(isPrintableAsciiMime("")).toBe(true);
+  });
+
+  it("rejects the over-length mime (the import door's 100-char cap mirrored at the interactive door)", () => {
+    expect(isPrintableAsciiMime("a".repeat(100))).toBe(true);
+    expect(isPrintableAsciiMime("a".repeat(101))).toBe(false);
+    expect(isPrintableAsciiMime("a".repeat(150))).toBe(false);
+  });
+
+  it("rejects CRLF in the part Content-Type (the header-injection probe)", () => {
+    expect(isPrintableAsciiMime("text/html\r\nSet-Cookie: pwn=1")).toBe(false);
+    expect(isPrintableAsciiMime("text/plain\r")).toBe(false);
+    expect(isPrintableAsciiMime("text/plain\n")).toBe(false);
+  });
+
+  it("rejects non-ASCII text (a legit mime is never non-ASCII per the type/subtype grammar)", () => {
+    expect(isPrintableAsciiMime("текст/plain")).toBe(false);
+    expect(isPrintableAsciiMime("text/plaiñ")).toBe(false);
+    expect(isPrintableAsciiMime("application/pdf🙂")).toBe(false);
+  });
+
+  it("rejects the other control family — TAB, ESC, DEL, NUL (the s144 mime-probe set)", () => {
+    expect(isPrintableAsciiMime("text/plain\t")).toBe(false);
+    expect(isPrintableAsciiMime("text/plain\x1b")).toBe(false);
+    expect(isPrintableAsciiMime("text/plain\x7f")).toBe(false);
+    expect(isPrintableAsciiMime("text/\x00plain")).toBe(false);
   });
 });

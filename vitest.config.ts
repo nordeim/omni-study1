@@ -1,7 +1,18 @@
 import { defineConfig } from "vitest/config";
 import path from "node:path";
 
-// Unit-test layer for the pure domain seams — 48 files / 1503 tests
+// Unit-test layer for the pure domain seams — 48 files / 1513 tests
+// (re-anchored S146/CU — the multipart-mime + OTP-tx + 413-discrimination
+// + breadcrumb-recount set: census 1503 → 1513, +10 net
+// [files +5: the S146/CU1 multipart mime admission-set quintet (the
+// import door's mirrored cap — printable-ASCII ≤ 100, empty admitted;
+// the length + CRLF + non-ASCII + control-family rejections); 
+// script-conventions +5: the S146/CU1 files-route mime-guard wiring
+// census, the S146/CU2a register re-issue-triple transaction census,
+// the S146/CU2b register fresh-pair interactive-transaction census, the
+// S146/CU2c resend supersede-pair transaction census (the CT2 mirror),
+// the S146/CU3 files body-read BodyTooLargeError discrimination census
+// (the CN6 shape)]. The S145/CT re-anchor blocks follow.)
 // (re-anchored S145/CT — the completion-window + supersede-tx +
 // gradient-CTA + budget-recount set: census 1500 → 1503, +3 net
 // [script-conventions +3: the S145/CT1 focus-timer completion-window
@@ -11,8 +22,7 @@ import path from "node:path";
 // $transaction wiring), the S145/CT4 demo-import-budget census (the
 // census-visible POST call-site counts machine-pinned to the recounted
 // headers — s23 9 fixture + the census-invisible in-app panel POST =
-// 10/10 zero headroom; resilience 8 fixture + 1 demo.request = 9/10)].
-// The S144/CS re-anchor blocks follow.)
+// 10/10 zero headroom; resilience 8 fixture + 1 demo.request = 9/10)].)
 // (re-anchored S144/CS — the cursor-dequeue + row-ceiling + mime-charset +
 // template-collector + drift-log + instance-scoped-CAS set: census
 // 1490 → 1500, +10 net [data-import +4: the S144/CS2 250k-star topo-sort

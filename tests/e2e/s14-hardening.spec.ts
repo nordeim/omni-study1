@@ -955,3 +955,80 @@ test.describe("S139/CN2 · the export→import round-trip witness", () => {
     expect(body.created).toBe(0);
   });
 });
+
+// ---------------------------------------------------------------------------
+// S146/CU1 · the multipart mime guard (the s146 audit B's M1): the import
+// door caps the files.mime column at 100 printable-ASCII chars (the CE7
+// bloat class — a poisoned oversized mime rides FILE_METADATA into EVERY
+// files list GET); the interactive door stored the part's declared
+// Content-Type verbatim on the Node-parse path.
+//
+// THE RUNTIME SPLIT (the drive-probe findings, the S145 prove-the-drive
+// doctrine): the declared part Content-Type only reaches the write on the
+// NODE-parse path — the dev daemon stored a 150-char declared type
+// VERBATIM pre-guard (the probe), and answers 400 post-guard. The
+// BUN-parse path (this suite's standalone — and every shipped production
+// posture: `bun run start` + the oven/bun Docker image) DERIVES the mime
+// from the FILENAME EXTENSION through Bun's registry and never delivers
+// the declared type to the route (an unknown extension yields "" → the
+// octet-stream fallback) — the write is structurally bounded there. The
+// guard is the runtime-divergence belt-and-suspenders (the documented
+// Bun-vs-Node name behavior is the precedent), and its behavioral RED→
+// GREEN evidence rides the dev-daemon probe; the unit legs pin the
+// admission set, the census pins the wiring.
+//
+// Budget: 2 demo-user upload POSTs (this file rode 2 — the C3 probe +
+// the link POST) → 4/20 after this pair. The clean leg deletes its row
+// in the finally (the C3-leg pattern).
+// ---------------------------------------------------------------------------
+test.describe("S146/CU1: the multipart upload guards the mime before write", () => {
+  test("CU1a: a hostile declared part Content-Type stores the EXTENSION-derived mime under the e2e runtime (the derivation tripwire)", async ({ request }) => {
+    // The declared 150-char type never reaches the write on the Bun parse
+    // path — the stored mime is the .txt registry value. The leg pins the
+    // derivation so a runtime switch (a Node-hosted standalone, where the
+    // declared type rides verbatim and the guard 400s it) fails HERE and
+    // forces the re-anchor, instead of surfacing as mystery behavior.
+    const res = await request.post("/api/files", {
+      multipart: {
+        file: {
+          name: "s146-cu1-length-probe.txt",
+          mimeType: "a".repeat(150),
+          buffer: Buffer.from("s146 cu1 length probe"),
+        },
+      },
+    });
+    expect(res.status()).toBe(201);
+    const row = (await res.json()) as { id: string; mime: string };
+    expect(row.mime).toBe("text/plain;charset=utf-8");
+    await request.delete(`/api/files/${row.id}`);
+  });
+
+  test("CU1b: a browser-real mime round-trips through the guard (the clean shape, byte-identical)", async ({ request }) => {
+    // NOTE (the drive normalization, found at the RED run): under the Bun
+    // parse path the stored mime is the FILENAME-EXTENSION registry value
+    // (a .pdf name → "application/pdf"); the declared-type semantics ride
+    // the unit predicate legs (tests/files.test.ts).
+    const up = await request.post("/api/files", {
+      multipart: {
+        file: {
+          name: "s146-cu1-clean-probe.pdf",
+          mimeType: "application/pdf",
+          buffer: Buffer.from("s146 cu1 clean probe"),
+        },
+      },
+    });
+    expect(up.status()).toBe(201);
+    const row = (await up.json()) as { id: string; mime: string };
+    expect(row.mime).toBe("application/pdf");
+    try {
+      // the list GET answers the guarded metadata shape
+      const list = await request.get("/api/files");
+      expect(list.status()).toBe(200);
+      const files = (await list.json()) as Array<{ id: string; mime: string }>;
+      const seen = files.find((f) => f.id === row.id);
+      expect(seen?.mime).toBe("application/pdf");
+    } finally {
+      await request.delete(`/api/files/${row.id}`);
+    }
+  });
+});

@@ -654,7 +654,10 @@ test.describe("S122/BW11: the over-cap 413 contracts", () => {
   // deadline). The row-count ceiling (100,000 — pinned in
   // tests/data-import.test.ts, census-pinned in script-conventions)
   // bounds the amplification at the cheapest post-parse point. Rides
-  // the demo session (resilience's demo import POSTs 4 → 5/10).
+  // the demo session (the file's demo import POSTs now total 9/10 —
+  // the S146/CU4 recount: this leg was tallied "4 → 5/10" at landing
+  // but the CS5 POST was the 9th demo POST, not the 5th; the header
+  // arithmetic is census-pinned in script-conventions).
   test("an import past the row cap answers 413 with the rows copy (the parse-memory amplification bound)", async ({ request }) => {
     const folders = Array.from({ length: 100_001 }, (_, i) => ({
       id: `s144-rowcap-${i}`,
@@ -935,8 +938,9 @@ test.describe("S124/BY3: the between-caps import acceptance", () => {
 // primitive that survives the seam's type guard) exercises exactly that
 // fallback. The pins ride the DEMO session (the BY3 pattern — the 400
 // message shape is account-independent, the guards fire before any
-// user-specific write; the demo import budget carries 4/10 in this chunk,
-// the s23 family's 8 live in chunk 5's separate process). The first draft
+// user-specific write; the demo import budget carries 9/10 in this chunk
+// — the S146/CU4 recount; one slot free, and the s23 family's 10 live in
+// chunk 5's separate process). The first draft
 // lived in s23 with fresh TEST-NET registrations — wasted (the file-level
 // storageState put the POSTs on the demo session anyway) and fatal to the
 // chunk-5 registerGlobal: 40 cap; the relocation is the fix.
@@ -1328,8 +1332,9 @@ test.describe("S136/CK4: the CE3 residual gates (dashboard + gradetracker legs)"
 // row in an export bricked the ENTIRE all-or-nothing restore with a message
 // blaming a row the app itself minted. The wire pin proves the asymmetry
 // live (the create 200s), then the round-trip on that very row. Rides the
-// DEMO session's request (chunk 3's import budget 4 → 5/10; no fresh
-// registrations — chunk 5's register census stays untouched).
+// DEMO session's request (chunk 3's import budget now totals 9/10 — the
+// S146/CU4 recount; no fresh registrations — chunk 5's register census
+// stays untouched).
 // ---------------------------------------------------------------------------
 test.describe("S137/CL1: the timetable equal-times import symmetry (the round-trip contract)", () => {
   test("a zero-length class the API itself admits round-trips through the import (RED pre-fix: the restore 400s on the app's own row)", async ({ request }) => {
@@ -1468,8 +1473,10 @@ test.describe("S138/CM2: the dashboard KPI OR-form gate (the mixed-landing false
 // (audit A-M2) never exercised: the empty envelope (`data: {}` → 200,
 // zero rows — the tolerance edge) and the folders rejection copy's row
 // index (CN7). Rides the demo session (the project storageState).
-// Budget: +2 demo import POSTs (5/10 → 7/10, the 409 probe below is the
-// 8th); no export GETs (BY5 at :780 spends the demo export budget
+// Budget: the CN2 pair's two demo import POSTs (the file's total now
+// 9/10 after the S146/CU4 recount — the historical "5/10 → 7/10" tally
+// undercounted; the 409 probe below is one of the 9); no export GETs
+// (BY5 at :780 spends the demo export budget
 // mid-chunk — the headline round-trip leg relocated to chunk 2's
 // s14-hardening for exactly that reason, the S135/CJ relocation class).
 // ---------------------------------------------------------------------------
@@ -1519,7 +1526,8 @@ test.describe("S139/CN2 · the import tolerance edges", () => {
 // task at a foreign subject") was pinned at CREATE only. One fresh
 // TEST-NET user per test (the s23 BT1 budget-isolation convention, probe
 // IP 192.0.2.139 — 3/10 per-IP, 3/40 registerGlobal; the demo import
-// budget gains only the 409 probe: 8/10 → stays under the cap).
+// budget gains only the 409 probe — the file's demo POST total is 9/10
+// after the S146/CU4 recount, one slot free).
 // ---------------------------------------------------------------------------
 const CN_PROBE_IP = "192.0.2.139";
 

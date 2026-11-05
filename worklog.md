@@ -4593,3 +4593,128 @@ fresh) — or the A-M3 stage-2 (the chunked sub-tx + resume token, the one
 named deferral — its ADR-021 contract change deserves its own cycle with
 its own ADR; the NODE_ENV casing warning is a cheap rider for the next
 auth-family cycle).
+
+## Session 157 — Batch CU (Cycle 96): the multipart-mime + OTP-tx + 413-discrimination + breadcrumb-recount set
+
+**Workspace (the 38th continuation).** Fresh clone at `dd656e0` on `main`
+(the Batch CT fix `a680eb8` + the operator's session_163/164 transcript
+commit). Environment provisioned per the recipe: `bun install` (510 pkgs),
+`.env` from `.env.example` (`DATABASE_URL="file:../db/custom.db"`),
+`db:push` + `db:seed` (`db/custom.db` 389 KiB), Playwright Chromium
+(headless-shell 1243), the dev daemon live on :3000.
+
+**Cold baseline (before any work):** lint ✓ · tsc ✓ · unit **1503/1503**
+(48 files — the documented S145 final state exactly) · the drawer check
+GREEN (**the 61st consecutive no-Tailwind-v4-mobile-nav-bug
+confirmation**) · the desktop chrome probe **MATCH** (all five formal
+checks). Baseline noise: none.
+
+**The audits (two read-only Mode-C subagents, every M/L finding
+re-verified by direct read):**
+
+- **Audit A — the Batch CT recent-changes axis** (the `a680eb8` diff):
+  **0C/0H/0M/2L/2I** — all thirteen CT claims verified DELIVERED, every
+  delivered test leg discriminating honestly, the census arithmetic
+  machine-verified. The Ls: A-L1 the verification-token supersede
+  siblings remain un-transacted (resend's pair, register's re-issue
+  triple + the fresh-account pair — the CT2 family residual); A-L2 five
+  stale in-file resilience budget breadcrumbs understated the recounted
+  9/10 demo import POSTs (one miscounted at write time).
+
+- **Audit B — the entities/factory + data-layer axis** (two cycles
+  stale): **0C/0H/1M/2L/4I** — all eight historically-real families
+  re-verified CLOSED (the ownership scoping, the route authz across 59
+  shells, the error taxonomy, the CR7 delegates, the sequence-CAS
+  family, the rate-limit keying, the cascade integrity, the validation
+  completeness). The M: **B-M1** the multipart upload stored the
+  client-controlled part Content-Type (`mime`) with no length/charset
+  bound while the import door caps the identical column (the CE7 bloat
+  class). The Ls: B-L1 (= A-L1); B-L2 the files multipart branch
+  answered 413 for ANY body-read failure (the CN6 discrimination never
+  adopted at the second door).
+
+**The plan** (`docs/remediation-plan-session146.md`) written BEFORE any
+source change and validated against the codebase, then executed
+TDD-first.
+
+**The RED inventory:** the unit REDs 10/10 as designed (the five CU1
+admission-set predicate legs — the seam absent, the import failure IS
+the red; the five census legs — the route markers absent). The
+dev-daemon probes carried CU1's behavioral RED→GREEN: pre-guard the
+150-char declared type stored VERBATIM (201, len 150); post-guard 400
+with the guard's copy.
+
+**THE RUNTIME SPLIT (the cycle's hard-won finding).** The e2e RED
+refused to flip post-fix; the honest diagnosis ladder (a `| head`
+SIGPIPE-killed build serving a stale standalone — builds captured to
+file from then on; a minimal repro under node AND bun; the
+Playwright-serializer dump; the extension-matrix probe; the live
+process dump) isolated the truth: the declared part Content-Type
+reaches the write only on the NODE-parse path (the dev daemon — where
+the probe proved the defect and the fix); the BUN-parse path (the e2e
+standalone, `bun run start`, the oven/bun Docker image) DERIVES the
+stored mime from the FILENAME EXTENSION through Bun's registry (.txt →
+"text/plain;charset=utf-8", .pdf → "application/pdf", unknown → "" →
+the octet-stream fallback) and never delivers the declared type — the
+write is structurally bounded on every shipped Bun posture. The CU1 fix
+is the runtime-divergence belt-and-suspenders; its e2e leg became the
+DERIVATION TRIPWIRE (a .txt upload with a hostile declared type → 201 +
+the registry mime — fails loudly if a future runtime switch changes
+the semantics).
+
+**The fixes (all RED-proven at their reachable layers):** CU1 the
+multipart mime guard — the `UPLOAD_MIME_MAX_CHARS` +
+`isPrintableAsciiMime` seam in `http.ts` (the import door's admitted
+set exactly; empty admitted) + the route guard (the BW13 name-cap copy
+pattern; the unknown-type "" shape keeps the octet-stream fallback).
+CU2 the OTP re-issue transactional set (the S142-carried standing
+deferral landing): the register re-issue triple in ONE batch
+`$transaction`; the fresh-account pair in the interactive
+`$transaction(async (tx) => …)` (the folders/[id] precedent; the P2002
+catch moves around the whole tx — the loser's rollback shape
+externally identical); the resend pair in the batch form (the CT2
+mirror). CU3 the files body-read catch discriminating
+`BodyTooLargeError` from transport failures (only the genuine
+over-cap answers 413). CU4 the five resilience breadcrumbs re-anchored
+to the present-tense 9/10 arithmetic. The rider: the CT3 e2e leg's
+shadow half (both /export CTAs compute a non-"none" box-shadow).
+
+**Re-cert (the FINAL tree).** lint ✓ · tsc ✓ · unit **1513/1513** (48
+files, +10) · build ✓ · the cold 5-chunk e2e re-tagged **612 → 614**
+(chunk 2 +2 [the CU1 derivation tripwire + the clean round-trip pair] —
+the map 150+189+91+95+89) · **census 2127 green** (was 2115). Chunk 1
+**150 first-pass** (3.0 m) · chunk 2 **189 first-pass** (4.3 m — the
+CU1 pair's chunk, exactly the re-tag) · chunk 4 **95 first-pass**
+(3.2 m) · chunk 5 **89 first-pass** (1.4 m) · chunk 3 hit the documented
+BU1/P1008 environmental flake class (3 failures co-occurring with the
+WebServer socket-timeout noise — the files-view family, the class
+S142/S143/S145 recorded) — the contention-free cold re-run of chunk 3
+was **91/91 first-pass** (4.0 m).
+
+**Evidence.** Three `docs/screenshots/146-clone-*.png` frames (desktop
+235 KiB, mobile drawer 64 KiB, the Files view with the clean upload row
+209 KiB), self-verifying (exists, >10 KiB, byte-diverse, md5-distinct)
++ the machine proofs on the frame: the hostile declared type → 400
+with the guard's copy (the dev daemon — the Node-parse path), the clean
+.pdf upload → 201 + the registry mime echo rendering in the view, the
+probe rows cleaned up after capture.
+
+**Docs.** README badge/census (2115 → 2127) + the Session-146 row;
+AGENTS census + the S146 lessons block (four lessons: the
+runtime-split reachability doctrine — probe the layer where the defect
+lives and tripwire the split; the transaction family extends sideways —
+grep the siblings after closing a pair; the `| head` SIGPIPE build
+killer — never pipe-truncate a build's output; the breadcrumb-is-part-
+of-the-budget); CLAUDE counts; PAD v1.3.54 (the revision block + the
+§11 closure row); the SKILL census (all three sites); the vitest header
+re-anchor; the cert re-tag + the runner's three-cycles-stale Expected
+line; the plan §6 as-executed close; `docs/session_165.md`; this entry;
+the `.env.example` contract re-verified complete against every env var
+the code reads (no env-var reads changed this cycle).
+
+**Next cycle.** The rotation continues (the entities/factory axis just
+swept; the FE/views + auth/crypto axis two cycles stale again) — or the
+A-M3 stage-2 chunked sub-tx + resume token (the one named standing
+deferral — its ADR-021 contract change deserves its own cycle with its
+own ADR). The NODE_ENV casing warning stays the cheap rider for the
+next auth-family cycle.

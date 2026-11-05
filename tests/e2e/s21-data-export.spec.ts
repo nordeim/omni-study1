@@ -151,5 +151,13 @@ test.describe("S21 the full-data export", () => {
     expect(ctaBg).toContain("linear-gradient");
     const importBg = await importCta.evaluate((el) => getComputedStyle(el).backgroundImage);
     expect(importBg).toContain("linear-gradient");
+    // S146 (audit A-F4, the rider): the shadow half of the CT3 convention —
+    // the sf-gradient-shadow utility was unpinned (dropping the class would
+    // have passed green; the gradient assertion alone pins only the
+    // background-image). A set shadow computes a non-"none" value.
+    const ctaShadow = await downloadCta.evaluate((el) => getComputedStyle(el).boxShadow);
+    expect(ctaShadow).not.toBe("none");
+    const importShadow = await importCta.evaluate((el) => getComputedStyle(el).boxShadow);
+    expect(importShadow).not.toBe("none");
   });
 });

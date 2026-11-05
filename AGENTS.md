@@ -9,9 +9,9 @@ High-signal instructions for coding agents working in this repo. Everything here
 | `bun install` | Install deps (Bun ≥ 1.3) |
 | `bun run dev` | Dev server on :3000 (Turbopack), logs tee'd to `dev.log` |
 | `bun run lint` / `bun run typecheck` | ESLint / `tsc --noEmit` — both must be clean |
-| `bun run test` | Vitest unit layer (1503 tests; `*.test.ts` only — never picks up e2e specs) |
+| `bun run test` | Vitest unit layer (1513 tests; `*.test.ts` only — never picks up e2e specs) |
 | `bun run build` | Production build → `.next/standalone` (**required before e2e**) |
-| `bun run test:e2e` | Playwright vs the standalone build on :3100 with `db/e2e.db` (612 tests across the 5-chunk cold map — 150+187+91+95+89, 30 spec files; a single-process full run trips the register rate-limiter budget by design, the chunked map re-boots the server per chunk). NOTE (S45, the day-boundary lesson): the global setup re-seeds every run, but the seed's IDEMPOTENT UPSERTS do NOT refresh day-relative dates on existing rows — a scratch `db/e2e.db` that ages across a UTC midnight keeps its original day-relative dates (today's tasks, the +1-day exam badge, the due-in pills, the import round-trip dates each read one day stale → 4 deterministic failures in parity-session6/parity-session9/s23-import). Delete `db/e2e.db` when a run crosses a day boundary — the global setup re-creates it fresh with current dates. NOTE (S46, TWO more aged-scratch-db classes + a build-input one): (1) ALWAYS run e2e COLD — S131/CF5 chained `scripts/e2e-cold-reset.sh` into `bun run test:e2e` (port-guard + `rm -f db/e2e.db` BEFORE playwright boots anything — global-setup is TOO LATE: Playwright starts the webServer before globalSetup), so the default runner self-colds; any DIRECT `playwright test` invocation still needs the manual `rm -f db/e2e.db` before every full run: the s23-import round-trip posts a FIXED-id envelope, so a second consecutive run against the aged db reads `created: 0, updated: 1` instead of `created: 1, updated: 0` and fails — not just across midnights, across ANY re-run; (2) the s22 negative-spawn spec reads the BUNDLED `.env` — Next's standalone output COPIES the repo-root `.env` into `.next/standalone/.env` at build time, so a REAL AUTH_SECRET in the dev `.env` leaks into the bundle and the guard CORRECTLY boots (the spec times out waiting for the exit) — keep the repo-root `.env`'s AUTH_SECRET EMPTY (the `.env.example` dev posture: `AUTH_SECRET=""` — dev falls back to the local constant with the boot warning) when building for e2e |
+| `bun run test:e2e` | Playwright vs the standalone build on :3100 with `db/e2e.db` (614 tests across the 5-chunk cold map — 150+189+91+95+89, 30 spec files; a single-process full run trips the register rate-limiter budget by design, the chunked map re-boots the server per chunk). NOTE (S45, the day-boundary lesson): the global setup re-seeds every run, but the seed's IDEMPOTENT UPSERTS do NOT refresh day-relative dates on existing rows — a scratch `db/e2e.db` that ages across a UTC midnight keeps its original day-relative dates (today's tasks, the +1-day exam badge, the due-in pills, the import round-trip dates each read one day stale → 4 deterministic failures in parity-session6/parity-session9/s23-import). Delete `db/e2e.db` when a run crosses a day boundary — the global setup re-creates it fresh with current dates. NOTE (S46, TWO more aged-scratch-db classes + a build-input one): (1) ALWAYS run e2e COLD — S131/CF5 chained `scripts/e2e-cold-reset.sh` into `bun run test:e2e` (port-guard + `rm -f db/e2e.db` BEFORE playwright boots anything — global-setup is TOO LATE: Playwright starts the webServer before globalSetup), so the default runner self-colds; any DIRECT `playwright test` invocation still needs the manual `rm -f db/e2e.db` before every full run: the s23-import round-trip posts a FIXED-id envelope, so a second consecutive run against the aged db reads `created: 0, updated: 1` instead of `created: 1, updated: 0` and fails — not just across midnights, across ANY re-run; (2) the s22 negative-spawn spec reads the BUNDLED `.env` — Next's standalone output COPIES the repo-root `.env` into `.next/standalone/.env` at build time, so a REAL AUTH_SECRET in the dev `.env` leaks into the bundle and the guard CORRECTLY boots (the spec times out waiting for the exit) — keep the repo-root `.env`'s AUTH_SECRET EMPTY (the `.env.example` dev posture: `AUTH_SECRET=""` — dev falls back to the local constant with the boot warning) when building for e2e |
 | `node scripts/capture-studyflow.mjs` | Refresh all 31 `docs/screenshots/` captures from the dev server (24 light + 7 dark) |
 | `node scripts/dark-sweep.mjs` | Dark-mode contrast audit over all 20 views (flashbulb/unreadable detector). S27: sets dark mode through the settings API (the real lifecycle) and SELF-VERIFIES the precondition — fails loudly (exit 1, no findings) if the dark class is not applied; the applied mode rides the JSON envelope. Never force the class directly (the session-10 approach silently rotted after S11) |
 | `node scripts/accent-dark-sweep.mjs` | Accent × dark-mode audit (S38-extended): all 7 accents × 20 desktop views × 20 MOBILE views at 390×844 + the drawer per accent (FAIL <2.2, WARN <3.2 for accent text; the mobile records also carry scrollWidth — >390 is a finding). The S38 shape is unit-pinned anti-phantom: every view recorded EXPLICITLY on both surfaces (clean views carry empty detector arrays), the per-accent `applied` self-verified readings + `mode: "dark"` + `mobileViewport` ride the envelope, and the seam's ALL-ACCENTS + ALL-VIEWS + drawer-present guards make every silently-skipped dimension a LOUD shape-error (the pre-S38 mobile pass swept only 6 views — MOBILE_VIEWS — and the omission-means-clean recording could not distinguish "clean because measured" from "clean because never rendered") |
@@ -2112,3 +2112,67 @@ Hover-parity probing must run in Playwright, not a touch-emulating browser — v
    literal (the fix re-worded the comment). Lesson: when a census
    counts a literal occurrence, grep the comment blocks too — the
    explanation is the first place the literal leaks in.
+
+## S146 lessons (Batch CU — the multipart-mime + OTP-tx + 413-discrimination + breadcrumb-recount set)
+
+1. **A runtime split can hide a fix's reachability — probe the layer
+   where the defect lives, and pin the split you find.** The multipart
+   mime guard's e2e leg could never fire: the shipped Bun postures
+   (local `bun run start` + the oven/bun Docker image) DERIVE the
+   stored mime from the FILENAME EXTENSION through Bun's registry
+   (.txt → "text/plain;charset=utf-8", .pdf → "application/pdf", an
+   unknown extension → "" → the octet-stream fallback) and never
+   deliver the declared part Content-Type to the route — while the
+   Node-parse path (the dev daemon; any Node-hosted standalone) stores
+   the declared type VERBATIM (the probe: a 150-char type stored
+   verbatim, 201 pre-guard → 400 with the guard's copy post-guard).
+   Two misreads cost the diagnosis before the minimal repro + the
+   extension-matrix probes isolated the derivation ("undici sanitizes
+   the charset family"; "Bun replaces part types" — both were the
+   extension derivation wearing different masks). The honest shape:
+   the guard rides the defect's reachable layer (the dev-daemon
+   probe = the RED→GREEN evidence), the unit legs pin the admission
+   set, the census pins the wiring, and a DERIVATION TRIPWIRE e2e leg
+   pins the runtime's actual semantics (a .txt upload with a hostile
+   declared type → 201 + the registry mime) so a future runtime switch
+   fails loudly and forces the re-anchor. Lesson: when a guard cannot
+   fire through the test runtime, do not force the leg — name the
+   split, prove the fix at the layer where the defect is reachable,
+   and tripwire the split itself.
+2. **The un-transacted multi-write family extends sideways, not just
+   forward.** CT2 closed the forgot-password pair; the s146 audit
+   found the SAME interleave shape on its siblings (the register
+   re-issue triple, the register fresh pair, the resend pair) — routes
+   whose comments claim bounded-table invariants ("the account's
+   expired tokens never outlive a re-register") while the awaits run
+   un-transacted. The data-dependent pair (the fresh branch's token
+   needs the created row's id) takes the INTERACTIVE
+   `$transaction(async (tx) => …)` form (the folders/[id] precedent)
+   with the P2002 catch moved around the WHOLE tx — the loser's
+   rollback shape is externally identical. Lesson: after closing a
+   transaction-window finding, grep the SIBLING routes for the same
+   await sequence — invariants live in families, and the fix pattern
+   (batch form for known inputs, interactive form for data-dependent
+   chains) is already in the codebase.
+3. **A pipe can kill a build silently — never `| head` a build
+   command's output.** `bun run build 2>&1 | grep … | head -4` closed
+   the pipe after four lines; the build died mid-write (SIGPIPE) and
+   the stale standalone kept serving PRE-FIX code while every gate
+   looked plausible — the e2e RED "passed" against a tree that no
+   longer existed. The diagnosis burned an hour of runtime-divergence
+   theorizing before the process-level truth surfaced. Lesson: capture
+   build output to a FILE and read the tail (`bun run build >
+   /tmp/build.log 2>&1; echo exit=$?`), and when an e2e result
+   contradicts a verified source change, suspect the SERVED BUILD
+   before the code.
+4. **The breadcrumb is part of the budget.** The CT4 recount fixed
+   s23's header and resilience's cross-reference but left five IN-FILE
+   breadcrumbs saying 4/10, 5/10, 7/10, 8/10 — tallied per-cycle at
+   landing ("X → Y/10") and never re-anchored when later cycles spent
+   the budget; one ("4 → 5/10") was miscounted at write time (the CS5
+   POST was the 9th, not the 5th). A future author trusting "5/10"
+   could add four demo import POSTs and 429 chunk 3. Lesson: when a
+   rate-limit budget rides a file, EVERY prose mention of the count is
+   a contract — re-anchor the whole set in the same edit, or collapse
+   the per-cycle history into one present-tense line the census can
+   pin.

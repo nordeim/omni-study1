@@ -141,24 +141,35 @@ export async function POST(request: NextRequest) {
     if (existing) {
       // Existing UNVERIFIED account: re-issue a fresh code (the S25/S26
       // flow re-registers and reads the new code from the response).
-      // S120/BU22: opportunistic pruning — the account's expired tokens
-      // never outlive a re-register (bounded auth tables).
-      await db.verificationToken.deleteMany({
-        where: { userId: existing.id, expiresAt: { lt: new Date() } },
-      });
-      // S121/BV6: the re-typed password + name WIN — the shipped branch
-      // kept the FIRST registration's hash, so a user who re-registered
-      // with a different password and verified could not sign in with the
-      // password they last typed (a 401 + a forced forgot-password dance).
-      // The account is unverified: there is no verified identity to
-      // protect, and any abuse self-heals on the next re-register.
-      await db.user.update({
-        where: { id: existing.id },
-        data: { passwordHash: hashPassword(password), fullName },
-      });
-      await db.verificationToken.create({
-        data: { ...tokenData, userId: existing.id },
-      });
+      // S146/CU2 (audits A-L1 + B-L1): the re-issue triple rides ONE
+      // transaction — three un-transacted awaits interleave under
+      // concurrent same-account re-registers as delete/delete/update/
+      // update/create/create, leaving TWO live 15-min OTP codes (the
+      // older inert by the findFirst-desc verify path, but the same
+      // BZ7/CE5 interleave family S145/CT2 closed at the forgot-password
+      // sibling; the S142-carried "register re-issue transactional
+      // triple" deferral landing). The batch form (the CT2 mirror):
+      // all three inputs are known up-front. The opportunistic
+      // expired-token prune (S120/BU22) and the BV6 re-typed-password
+      // win ride inside the same atomic unit.
+      await db.$transaction([
+        db.verificationToken.deleteMany({
+          where: { userId: existing.id, expiresAt: { lt: new Date() } },
+        }),
+        // S121/BV6: the re-typed password + name WIN — the shipped branch
+        // kept the FIRST registration's hash, so a user who re-registered
+        // with a different password and verified could not sign in with the
+        // password they last typed (a 401 + a forced forgot-password dance).
+        // The account is unverified: there is no verified identity to
+        // protect, and any abuse self-heals on the next re-register.
+        db.user.update({
+          where: { id: existing.id },
+          data: { passwordHash: hashPassword(password), fullName },
+        }),
+        db.verificationToken.create({
+          data: { ...tokenData, userId: existing.id },
+        }),
+      ]);
       // S120/BU14: 200 (was 200 — unchanged) + the S120/BU2 gate: hardened
       // deployments omit the code (the off-switch contract).
       if (inAppDeliveryGates(process.env).otp) {
@@ -175,20 +186,31 @@ export async function POST(request: NextRequest) {
     // verified-exists branch's shape. NO code leg: the loser's own token
     // was never stored (echoing its code would send the user down a dead
     // verification path); the winner's client carries the working one.
-    let userId: string;
+    // S146/CU2 (audit B-L1): the fresh-account pair rides ONE interactive
+    // transaction (the folders/[id] precedent — the token data depends on
+    // the created row's id, so the batch array form cannot express it):
+    // a crash between the two writes can no longer orphan a user row
+    // with zero tokens. The P2002 catch moves around the WHOLE tx — the
+    // unique-constraint rejection rolls the pair back identically (the
+    // loser's token was never stored; the uniform {ok:true} shape
+    // unchanged).
     try {
-      const user = await db.user.create({
-        data: {
-          email: normalizedEmail,
-          passwordHash: hashPassword(password),
-          fullName,
-          // emailVerified stays false — the schema default. No session
-          // cookie: the register→verify journey completes only after the
-          // code matches.
-        },
-        select: { id: true },
+      await db.$transaction(async (tx) => {
+        const user = await tx.user.create({
+          data: {
+            email: normalizedEmail,
+            passwordHash: hashPassword(password),
+            fullName,
+            // emailVerified stays false — the schema default. No session
+            // cookie: the register→verify journey completes only after the
+            // code matches.
+          },
+          select: { id: true },
+        });
+        await tx.verificationToken.create({
+          data: { ...tokenData, userId: user.id },
+        });
       });
-      userId = user.id;
     } catch (err: unknown) {
       if (
         typeof err === "object" &&
@@ -200,9 +222,6 @@ export async function POST(request: NextRequest) {
       }
       throw err;
     }
-    await db.verificationToken.create({
-      data: { ...tokenData, userId },
-    });
 
     // S120/BU14: the SAME 200 as every other branch (was 201 — the status
     // split was an enumeration oracle); the S120/BU2 delivery gate rides.
