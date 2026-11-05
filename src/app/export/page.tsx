@@ -4,7 +4,8 @@ import { redirect } from "next/navigation";
 
 import { ExportPanel } from "@/components/export/export-panel";
 import { db } from "@/lib/db";
-import { getCurrentUser } from "@/lib/server/auth";
+import { getCurrentUser, publicUser } from "@/lib/server/auth";
+import { renderExportEnvelope } from "@/lib/server/export-build";
 
 export const metadata: Metadata = { title: "Export Your Data" };
 
@@ -83,11 +84,23 @@ export default async function ExportPage() {
     holidays,
   };
 
+  // S141/CP4: the size signal — the page renders the SAME envelope the
+  // download answers (the shared export-build seam), so the panel's warning
+  // can never drift from what the route actually serves. Cost honesty: this
+  // doubles the page's per-view work (the counts above + the full envelope
+  // assembly) on the linked-from-nowhere owner surface; accepted (the
+  // asymmetry's detection half — an export past the restore cap must be
+  // knowable BEFORE the user collects a 413 on restore, and each blind
+  // retry burns import budget).
+  const { json } = await renderExportEnvelope(publicUser(user));
+  const exportBytes = json.length;
+
   return (
     <main className="mx-auto w-full max-w-3xl p-6 pt-10">
       <ExportPanel
         counts={Object.entries(counts).map(([name, count]) => ({ name, count }))}
         email={user.email}
+        exportBytes={exportBytes}
       />
     </main>
   );

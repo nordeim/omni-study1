@@ -1,7 +1,25 @@
 import { defineConfig } from "vitest/config";
 import path from "node:path";
 
-// Unit-test layer for the pure domain seams — 46 files / 1409 tests
+// Unit-test layer for the pure domain seams — 47 files / 1449 tests
+// (re-anchored S141/CP — the render-gate snapshot + plain-text gate +
+// restore-availability + size-signal set: census 1409 → 1449, +40 net
+// [note-html-dom +17: the NEW happy-dom environment project — the first
+// DOM-environment unit file (the S140 DOM render gate shipped with zero
+// unit coverage; its moved-children walk was provably dead code — a
+// DocumentFragment is EMPTIED by replaceChild — and every hostile
+// element one nesting level deep escaped; the nested corpus + the depth
+// cap + the tightened MIME/style rules on the DOM door); note-html +6:
+// the CP2 entity-bearing passthrough pair + the CP5 svg/data-text-html
+// img legs + the url()/expression() style legs + the rel injection;
+// data-import +8: the CP3 probe-set derivation (cards→decks, folders
+// self-FK, IMPORT_ORDER ordering) + the chunk constants + chunkImportIds;
+// data-export +3: the CP4 formatExportBytes size-signal family;
+// script-conventions +5+1: the CP3 route censuses (the timeout/maxWait
+// pair, the probe-set markers, createMany, the hoisted-sanitize +
+// collision-pre-flight markers) + the CP4 both-consumers-ride-the-seam
+// leg + the CJ2 export-route census re-anchor onto the export-build
+// seam]. The prior S140/CO re-anchor block follows.)
 // (re-anchored S140/CO — the audit-driven hardening cycle: the note-HTML
 // sanitize + authed-scrypt containment + checkbox-cn + FE-hardening set:
 // census 1391 → 1409, +18 net [note-html +10: the S140/CO1 server-sanitizer

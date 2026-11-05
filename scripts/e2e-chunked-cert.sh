@@ -1,4 +1,15 @@
 #!/usr/bin/env bash
+# (S141/CP re-tag — census 605 → 605, net +0: no new e2e tests this cycle;
+# the S141 pins EXTENDED existing legs in place — the parity-session9
+# render-gate leg now intercepts a SECOND attacker origin (the planted
+# corpus grew div/section-WRAPPED payloads — the S140 fixture carried only
+# top-level hostile elements, exactly the shape the gate already handled)
+# and asserts the wrapped img dies by name; the s21-data-export legs assert
+# the X-Export-Bytes header against the actual body size and the /export
+# panel's size line + absent over-cap warning. The chunk-2 cert run
+# observed the P1008 sandbox I/O-stall flake class (one test, different on
+# each run, co-occurring with SQLite socket timeouts) — re-run clean
+# 186/186; the documented machine-load class.)
 # (S140/CO re-tag — census 603 → 605, net +2: chunk 2 +1 [the S140/CO1
 # legacy hostile-note render-gate leg in parity-session9 — the planted
 # pre-fix row opens in the Notes view with route interception on the

@@ -47,12 +47,31 @@ export const NOTE_HTML_LINK_SCHEMES: readonly string[] = Object.freeze(["http", 
  * construction: the tracking-pixel class dies here. */
 export const NOTE_HTML_IMAGE_SCHEME = "data";
 
+/** S141/CP5 — the raster-only data: image pattern (svg+xml excluded —
+ * script-capable; text/html is not an image at all): shared by the DOM
+ * gate's src rule and the server door's transformTags filter so the two
+ * doors accept the SAME payload set. */
+export const NOTE_HTML_IMAGE_MIME_PATTERN = /^data:image\/(?:png|gif|jpeg|webp)[;,]/i;
+
 /** Quill's own class namespace — the only classes a span/code may carry. */
 export const NOTE_HTML_CLASS_PATTERN = /^ql-[a-z0-9-]+$/;
 
 /** Inline style properties the editor emits (its color/background pickers);
  * every other property (position, url(), …) is an injection surface. */
 export const NOTE_HTML_STYLE_PROPS: readonly string[] = Object.freeze(["color", "background-color"]);
+
+/** S141/CP5 — the color VALUE grammar shared by both doors: hex,
+ * rgb()/rgba(), hsl()/hsla(), or a named color. url()/expression()/
+ * gradient() and every other function-token dies at the VALUE level, not
+ * just the property level. */
+export const NOTE_HTML_STYLE_VALUE_PATTERN =
+  /^(?:#[0-9a-fA-F]{3,8}|rgba?\([^)]*\)|hsla?\([^)]*\)|[a-zA-Z]+)$/;
+
+/** S141/CP6 — the walk depth cap. The 100k-char content cap admits ~25k
+ * nesting levels; beyond 500 the subtree collapses to its text (a note
+ * that deep is not editor-authored, and the unbounded recursion
+ * previously threw RangeError inside the editor mount IIFE). */
+export const NOTE_HTML_MAX_WALK_DEPTH = 500;
 
 /** Quick shape probe the editor mount uses: does this string carry markup? */
 export function looksLikeHtml(html: string): boolean {
@@ -71,7 +90,7 @@ export function looksLikeHtml(html: string): boolean {
 export function sanitizeNoteHtmlDom(html: string): string {
   if (!looksLikeHtml(html)) return html;
   const doc = new DOMParser().parseFromString(html, "text/html");
-  walk(doc.body);
+  walk(doc.body, 0);
   return doc.body.innerHTML;
 
   function allowedAttrFor(tag: string, attr: string): boolean {
@@ -81,72 +100,106 @@ export function sanitizeNoteHtmlDom(html: string): string {
 
   function cleanUrl(href: string): string | null {
     const trimmed = href.trim().toLowerCase();
-    if (trimmed.startsWith("data:")) return NOTE_HTML_IMAGE_SCHEME === "data" && /^data:image\//i.test(href.trim()) ? href : null;
+    // S141/CP5: the raster-only data: MIME set governs the anchor data:
+    // case too (aligned with the img rule — the two doors accept the same
+    // payload set; svg/data:text/html hrefs die).
+    if (trimmed.startsWith("data:"))
+      return NOTE_HTML_IMAGE_MIME_PATTERN.test(href.trim()) ? href : null;
     const scheme = trimmed.split(":")[0];
     if (scheme === "http" || scheme === "https" || scheme === "mailto") return href;
     return null; // javascript:, vbscript:, unknown — gone.
   }
 
-  function walk(node: Element): void {
+  function walk(node: Element, depth: number): void {
     for (const child of Array.from(node.children)) {
-      const tag = child.tagName.toLowerCase();
-      if (!NOTE_HTML_ALLOWED_TAGS.includes(tag)) {
-        // Disallowed node: keep its TEXT (containers) but drop the element
-        // itself — the document replaces it with its children/text.
-        const parent = child.parentElement;
-        if (!parent) continue;
-        const frag = node.ownerDocument.createDocumentFragment();
-        while (child.firstChild) frag.appendChild(child.firstChild);
-        parent.replaceChild(frag, child);
-        // The moved children still need the walk — re-run on the fragment
-        // contents by walking the parent once more is unsafe (skip; the
-        // remaining children below cover siblings, and the moved nodes
-        // were already inside a disallowed element: their attrs were
-        // never editor-authored. Strip their element forms conservatively
-        // by walking them directly).
-        for (const moved of Array.from(frag.children)) walk(moved);
+      processElement(child, depth);
+    }
+  }
+
+  /** The per-element gate: unwrap disallowed tags (processing their moved
+   * children as ELEMENTS — attribute gate and all), or run the attribute
+   * gate and recurse. S141/CP1: the S140 shape called walk() on the moved
+   * children, which processes each moved element's CHILDREN only — the
+   * moved element's own attributes (a remote img src, a javascript: href)
+   * and disallowed moved wrappers escaped untouched. */
+  function processElement(child: Element, depth: number): void {
+    // S141/CP6 — the hostile-depth posture: a chain this deep is not
+    // editor-authored; collapse the subtree to its text content before
+    // recursing (the pre-cap walk threw RangeError on ~25k-deep
+    // nesting, killing the editor mount with an unhandled rejection).
+    if (depth >= NOTE_HTML_MAX_WALK_DEPTH) {
+      child.replaceWith(child.textContent ?? "");
+      return;
+    }
+    const tag = child.tagName.toLowerCase();
+    if (!NOTE_HTML_ALLOWED_TAGS.includes(tag)) {
+      // Disallowed node: keep its TEXT (containers) but drop the element
+      // itself — the document replaces it with its children/text.
+      // S141/CP1: snapshot the moved children BEFORE the insertion — a
+      // DocumentFragment is EMPTIED by replaceChild (the DOM spec MOVES
+      // its children into the insertion parent), so the S140 code's
+      // post-insertion Array.from(frag.children) iterated zero elements
+      // and every hostile element one nesting level deep escaped the
+      // gate entirely (the dead-walk bug, verified empirically in
+      // headless Chromium by the s141 audit).
+      const parent = child.parentElement;
+      if (!parent) return;
+      const frag = child.ownerDocument.createDocumentFragment();
+      while (child.firstChild) frag.appendChild(child.firstChild);
+      const moved = Array.from(frag.children);
+      parent.replaceChild(frag, child);
+      for (const m of moved) processElement(m, depth);
+      return;
+    }
+    // Attribute gate.
+    for (const attr of Array.from(child.attributes)) {
+      const name = attr.name.toLowerCase();
+      if (!allowedAttrFor(tag, name)) {
+        child.removeAttribute(attr.name);
         continue;
       }
-      // Attribute gate.
-      for (const attr of Array.from(child.attributes)) {
-        const name = attr.name.toLowerCase();
-        if (!allowedAttrFor(tag, name)) {
-          child.removeAttribute(attr.name);
-          continue;
-        }
-        if (tag === "a" && name === "href") {
-          const kept = cleanUrl(attr.value);
-          if (kept === null) child.removeAttribute(attr.name);
-          else if (kept !== attr.value) child.setAttribute("href", kept);
-        }
-        if (tag === "img" && name === "src") {
-          if (!/^data:image\//i.test(attr.value.trim())) {
-            // Remote (or non-image data:) src — the tracking-pixel class.
-            // Neutralize the load by REMOVING the src: the element stays
-            // (alt text remains readable) but fetches nothing.
-            child.removeAttribute("src");
-          }
-        }
-        if ((tag === "span" || tag === "code") && name === "class") {
-          const kept = attr.value
-            .split(/\s+/)
-            .filter((cls) => NOTE_HTML_CLASS_PATTERN.test(cls));
-          if (kept.length === 0) child.removeAttribute("class");
-          else if (kept.join(" ") !== attr.value) child.setAttribute("class", kept.join(" "));
-        }
-        if (tag === "span" && name === "style") {
-          const kept = attr.value
-            .split(";")
-            .map((decl) => decl.trim())
-            .filter((decl) => {
-              const prop = decl.split(":")[0]?.trim().toLowerCase() ?? "";
-              return NOTE_HTML_STYLE_PROPS.includes(prop);
-            })
-            .join("; ");
-          if (kept !== attr.value) child.setAttribute("style", kept);
+      if (tag === "a" && name === "href") {
+        const kept = cleanUrl(attr.value);
+        if (kept === null) child.removeAttribute(attr.name);
+        else if (kept !== attr.value) child.setAttribute("href", kept);
+      }
+      if (tag === "img" && name === "src") {
+        // S141/CP5: the raster-only data: MIME set (svg excluded — the
+        // script-capable MIME must die at BOTH doors, not just the
+        // remote-URL class).
+        if (!NOTE_HTML_IMAGE_MIME_PATTERN.test(attr.value.trim())) {
+          // Remote (or non-raster data:) src — the tracking-pixel class.
+          // Neutralize the load by REMOVING the src: the element stays
+          // (alt text remains readable) but fetches nothing.
+          child.removeAttribute("src");
         }
       }
-      walk(child);
+      if ((tag === "span" || tag === "code") && name === "class") {
+        const kept = attr.value
+          .split(/\s+/)
+          .filter((cls) => NOTE_HTML_CLASS_PATTERN.test(cls));
+        if (kept.length === 0) child.removeAttribute("class");
+        else if (kept.join(" ") !== attr.value) child.setAttribute("class", kept.join(" "));
+      }
+      if (tag === "span" && name === "style") {
+        // S141/CP5: the VALUE grammar joins the property filter — a
+        // url()/expression() value riding an allowed property name is
+        // an exfiltration vector the property-only filter kept.
+        const kept = attr.value
+          .split(";")
+          .map((decl) => decl.trim())
+          .filter((decl) => {
+            const colon = decl.indexOf(":");
+            if (colon === -1) return false;
+            const prop = decl.slice(0, colon).trim().toLowerCase();
+            if (!NOTE_HTML_STYLE_PROPS.includes(prop)) return false;
+            const value = decl.slice(colon + 1).trim();
+            return NOTE_HTML_STYLE_VALUE_PATTERN.test(value);
+          })
+          .join("; ");
+        if (kept !== attr.value) child.setAttribute("style", kept);
+      }
     }
+    walk(child, depth + 1);
   }
 }

@@ -3983,3 +3983,103 @@ this entry.
 batching redesign + the knownIds skip — now the only standing M-family
 deferral), or the FE/views + auth/crypto/infra rotation again (one cycle
 fresher now).
+
+## Session 152 — Batch CP (Cycle 91): the render-gate snapshot + plain-text gate + restore-availability + size-signal set
+
+**Received state.** `c654ed0` on `main` (the Batch CO fix `9cb5a10` +
+the operator's session_154 transcript commit) — the 33rd workspace
+continuation, the environment re-verified from the prior session's
+provisioned state (`.env` with `DATABASE_URL="file:../db/custom.db"`,
+the repo-root `db/custom.db` + scratch `db/e2e.db`, the dev daemon
+live, dependencies current incl. sanitize-html 2.18.1 + Prisma 6.19.3).
+
+**Cold baseline BEFORE any work.** lint ✓ · tsc ✓ · unit **1409/1409**
+(46 files — the documented S140 final state exactly) · the dev-server
+preflight GREEN · the drawer check GREEN (**the 56th consecutive
+no-Tailwind-v4-mobile-nav-bug confirmation** — the reference backdrop
+black/20 at blur(4px) ≡ the clone `backdrop-blur-xs`, 288px white
+panels, 20 links, both hosts live) · mobile-navigation cold **20/20**.
+Desktop chrome re-verified fresh (20 links in identical order, main at
+x=260 w=1180 both hosts).
+
+**The audits (Mode-C, read-only subagents, every H/M/L finding
+re-verified by direct read).** The rotated pair per the s140 closing
+directive: (1) the Batch CO recent-changes audit — **0C/1H/1M/5L/4I**:
+the S140 DOM render gate's moved-children walk was PROVABLY dead code
+(a DocumentFragment is EMPTIED by replaceChild; the post-insertion
+`Array.from(frag.children)` iterated zero elements — a div-wrapped
+remote img, a javascript: link, a handler, and a hostile inline style
+all escaped, verified empirically in headless Chromium), and the
+server sanitizer's unconditional entity encoding mangled plain text
+("AT&T" → "AT&amp;T" rendered visibly through quill.setText — both
+byte-identity pins were entity-free and gave false assurance); (2) the
+data-portability surface (the A-M3 axis) — **0C/0H/2M/3L/3I**: A-M3 +
+A-I1 still present exactly as recorded (2N+1 queries inside one 60 s
+interactive tx; 20 unconditional full-table pre-scans;
+journal_mode=delete + busy_timeout 5000 probed live), A-L1/L2/L4
+verified FIXED with pins, plus the new facts: the notes sanitize runs
+INSIDE the lock window, `maxWait` unset + the 60 s timeout pinned by
+nothing, and the export/import size asymmetry has no detection point
+(an export past the cap surfaces only as a 413, each retry burning
+import budget).
+
+**The plan.** `docs/remediation-plan-session141.md` written BEFORE any
+source change and validated against the codebase before execution: CP1
+the snapshot fix + the happy-dom unit project (the repo's first
+DOM-environment test file — happy-dom 21.0.4 as a devDependency), CP2
+the plain-text gate, CP3 the A-M3 restructure (contract-preserving),
+CP4 the export size signal (the shared renderExportEnvelope seam), CP5
+the policy-tightening pair, CP6 the depth cap, CP7 the DRY sweep, CP8
+the doc chain. The A-M3 stage-2 (chunked sub-transactions + a resume
+token) deferred AGAIN with rationale — it breaks the all-or-nothing
+ADR-021 contract without operator direction (the s140 sessionVersion
+precedent); stage-1 collapses the lock window without it.
+
+**Executed TDD-style.** RED first: the nested-hostile corpus (the
+17-leg happy-dom file — 9 legs RED on first run, reproducing the
+Chromium finding exactly), the entity passthrough pair, the probe-set
+derivation octet, the size-formatting trio, the route censuses. GREEN:
+**1409 → 1449 unit (46 → 47 files)**, e2e **605 → 605** (the S141 pins
+extended existing legs in place — the render-gate leg's wrapped-payload
+interception + the s21 header/size-line assertions). The engine facts
+probed empirically before chunking: SQLite 3.46, IN verified at 20 000
+ids, createMany binding verified at 5 000 params. The behavioral probe
+against the dev server: import #1 created 4 / import #2 idempotent
+updated 4 / the stored hostile note read back stripped (probe rows
+cleaned after, the demo-surface convention).
+
+**Honest mid-run corrections.** (1) The first CP1 fix attempt walked
+the moved children as containers (their own attribute gate never
+fired — the per-element processElement extraction is the real fix; the
+two-level probe leg passed the first attempt only because its
+assertions were URL-indirect, now pinned by name). (2) The main
+session's shell gateway died mid-cycle (the persistent Bash session
+lost after a heavy foreground chunk run); the remaining work — the
+full cert, the evidence captures, the doc chain — completed through
+delegated subagents with identical results. (3) The chunk-2 cert run
+observed the P1008 sandbox I/O-stall flake class (one test, a
+DIFFERENT one on each independent run, co-occurring with SQLite socket
+timeouts in the webServer log) — the re-run was 186/186 first-pass;
+the documented machine-load class, recorded honestly.
+
+**Re-cert (the FINAL tree).** lint ✓ · tsc ✓ · unit **1449/1449**
+(47 files) · build ✓ · the cold 5-chunk e2e **605/605** (150+186+87+
+95+87; chunk 2 re-run clean after the P1008 flake) · **census 2054
+green**. Evidence: four `docs/screenshots/141-clone-*.png` frames
+(desktop, mobile drawer, the Notes render-gate surface with the
+planted WRAPPED hostile note — 0 outbound attempts + 0 remote imgs
+machine-verified in the capture — and the /export panel with the size
+signal; the capture script self-verifying; the probe row cleaned from
+the dev db after the capture).
+
+**Docs.** README badge/census lines + the Session-141 row; AGENTS.md
+census + the S141 lessons block; CLAUDE.md count; PAD v1.3.49 (the
+revision block + the §11 A-M3/A-I1/asymmetry closure rows + the §8.1
+Total re-anchor); the SKILL census; the vitest header re-anchor; the
+cert re-tag; the plan §6 as-executed close; `docs/session_155.md`;
+this entry.
+
+**Next cycle.** The audit rotation continues (FE/views +
+auth/crypto/infra are two cycles stale again) or the A-M3 stage-2 (the
+chunked sub-transactions + resume token — the one named deferral, and
+it needs operator direction on the ADR-021 contract change).

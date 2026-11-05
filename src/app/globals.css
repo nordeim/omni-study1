@@ -721,6 +721,20 @@
   }
 }
 
+@utility sf-alert-amber {
+  /* S141/CP4: the bordered amber WARNING box (the red/emerald alert family's
+     caution middle) — the export panel's over-cap backup-size warning (an
+     export past the restore cap must be knowable BEFORE the 413). */
+  border: 1px solid var(--color-amber-200);
+  background-color: var(--color-amber-50);
+  color: var(--color-amber-700);
+  .dark & {
+    border-color: var(--color-amber-900);
+    background-color: var(--color-amber-950);
+    color: var(--color-amber-200);
+  }
+}
+
 @utility sf-connectivity-pill {
   /* S94/AU1: the S14 offline banner's amber pill — the residual register's
      first TREATED entry (the s93 register's own note: "update the register

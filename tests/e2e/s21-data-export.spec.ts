@@ -63,6 +63,15 @@ test.describe("S21 the full-data export", () => {
     expect(body.data).not.toHaveProperty("rumEvents");
     expect(body.data).not.toHaveProperty("verificationTokens");
     expect(body.data).not.toHaveProperty("passwordResetTokens");
+
+    // S141/CP4: the size signal rides the response — the X-Export-Bytes
+    // header carries the EXACT serialized body size (the same number the
+    // /export page renders for the panel's over-cap warning; pinned here
+    // against the actual body so a stale header fails loudly).
+    const sizeHeader = res.headers()["x-export-bytes"];
+    expect(sizeHeader).toBeDefined();
+    expect(Number(sizeHeader)).toBeGreaterThan(0);
+    expect(Number(sizeHeader)).toBe(JSON.stringify(body).length);
   });
 
   test("GET /api/export/data rejects anonymous callers (401)", async ({ browser }) => {
@@ -74,7 +83,7 @@ test.describe("S21 the full-data export", () => {
     await ctx.close();
   });
 
-  test("the /export page renders the count grid + the Download JSON action", async ({ page }) => {
+  test("the /export page renders the count grid + the Download JSON action + the size signal", async ({ page }) => {
     await page.goto("/export");
     await expect(page.getByRole("heading", { name: "Export Your Data" })).toBeVisible();
 
@@ -85,6 +94,16 @@ test.describe("S21 the full-data export", () => {
 
     // The download action: a real navigation link to the authed endpoint.
     await expect(page.locator('a[href="/api/export/data"]')).toBeVisible();
+
+    // S141/CP4: the size signal — the Download card renders the exact
+    // envelope size (the shared seam's own render) with the restore cap
+    // named beside it; the seeded demo account sits far under the cap, so
+    // the amber warning stays ABSENT (its presence would mean the
+    // comparison drifted).
+    const download = page.getByRole("region", { name: "Download" });
+    await expect(download).toContainText("Current backup size:");
+    await expect(download).toContainText("restore cap 64 MB");
+    await expect(download.getByRole("status")).toHaveCount(0);
 
     // The metadata title rides the layout's template.
     await expect(page).toHaveTitle(/Export Your Data/);

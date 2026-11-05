@@ -1,13 +1,18 @@
-# StudyFlow (Omni-Study) — Master Project Architecture Document (PAD) v1.3.48
+# StudyFlow (Omni-Study) — Master Project Architecture Document (PAD) v1.3.49
 
 **Classification:** Internal Engineering Reference
 **Status:** DEFINITIVE, PRODUCTION-LOCKED BLUEPRINT
 **Companion Documents:** `README.md` (user-facing), `AGENTS.md` (agent quick-reference), `CLAUDE.md` (agent operating conventions), `docs/Tailwind-V4-Validation-Report.md` (parity trap log)
-**Last Updated:** 2026-11-04
+**Last Updated:** 2026-11-05
 **Audience:** Senior Engineers, Tech Leads, DevOps, Onboarding Engineers, and AI Coding Agents
 **Rule:** Every architectural decision in this document traces to a specific rationale. Nothing is here "because it's popular."
 
 ---
+
+#### Revision Block — v1.3.49 (Session-141 / Batch CP, Cycle 91)
+
+- `[SR]` Current test census anchor (the v1.2.0 convention, re-anchored): **1449/1449 Vitest unit** (47 files — the S141 additions: note-html-dom +17 [the repo's first happy-dom DOM-environment unit project: the nested-hostile corpus + the depth cap + the tightened MIME/style DOM-door rules], note-html +6 [the CP2 entity passthrough pair + the CP5 policy legs], data-import +8 [the CP3 probe-set derivation + the chunk constants], data-export +3 [the CP4 size formatting], script-conventions +6 [the CP3 route censuses + the CP4 seam census + the CJ2 re-anchor]) + **605/605 Playwright e2e** (unchanged — the S141 pins extended existing legs in place) = **census 2054 green**.
+- `[SR]` The render-gate snapshot + plain-text gate + restore-availability + size-signal set (`docs/remediation-plan-session141.md`): **CP1 (H — the s141 Batch-CO audit's F1)** the S140 DOM render gate's moved-children walk was PROVABLY dead code — a DocumentFragment is EMPTIED by replaceChild, so the post-insertion `Array.from(frag.children)` iterated zero elements and every hostile element one nesting level deep escaped the gate (verified empirically in headless Chromium; the e2e plant fixture carried only top-level hostile elements, structurally unable to catch it) — the fix is the snapshot-before-insertion + a per-element processElement, pinned under happy-dom 21.0.4 (the repo's first DOM-environment devDependency); **CP2 (M)** the server sanitizer's unconditional entity encoding mangled plain text ("AT&T" → "AT&amp;T" rendering visibly through quill.setText) — the looksLikeHtml first line makes both doors byte-identical for plain text; **CP3 (M — A-M3 + A-I1 closed, the standing M-family deferral)** the restore-availability restructure, contract-preserving: the FK-aware IN-probe pre-flight at O(envelope) (importProbeTargets + chunkImportIds from the seam — a cards-only envelope still probes decks), every read + the notes sanitize CPU hoisted OUT of the transaction, per-row updates + chunked createMany (500 rows/call; SQLite 3.46's parameter ceiling probed empirically) in a WRITE-ONLY tx, a cross-account collision pre-flight answering the named 409 PRE-write, explicit `{ timeout: 60_000, maxWait: 5_000 }` — the all-or-nothing ADR-021 contract preserved, every e2e wire pin untouched; **CP4 (M)** the export size signal (the export/import asymmetry's detection half): the shared `renderExportEnvelope` server seam (route + /export page single-source), the panel's exact size line + the `sf-alert-amber` over-cap warning, the `X-Export-Bytes` response header; **CP5/CP6/CP7 (L/I)** the raster-only data: img MIME set (svg+xml excluded) + the color-grammar style VALUES + rel=noopener injection at BOTH doors, the 500-deep walk cap (the ~25k-deep RangeError class), the shared-constants DRY sweep.
 
 #### Revision Block — v1.3.48 (Session-140 / Batch CO, Cycle 90)
 
@@ -1219,7 +1224,7 @@ Single-role per-user ownership model; no admin surface. Session: `{ uid, iat, ex
 | E2E — `tasks.spec.ts` | 1 | 11 | `tests/e2e/tasks.spec.ts` |
 | E2E — `theme-system.spec.ts` | 1 | 18 | `tests/e2e/theme-system.spec.ts` | (S129/CD1 +1: the overlay-animation parity leg)
 | E2E — the shared-sign-in setup project (one login; the storageState the whole suite rides; each cert chunk re-runs it) | 1 | 1 | `tests/e2e/auth.setup.ts` |
-| **Total** | **77** | **2010** | `tests/` — **1409 Vitest unit** (46 files, `vitest run` 1409/1409) + **600 chromium e2e specs** (30 files per `playwright test --list`) + the 1 shared-sign-in setup = the direct per-file sum **2010**. The chunked-cert BADGE census is **1994 green** (1391 + 603): the setup re-runs once per cold-cert chunk (598 + 5 × 1 = 603; the 5-chunk map **150+185+87+95+86**, `db/e2e.db` cold every chunk) — the setup's 5 runs are a CERT-PROCEDURE artifact counted once in this table's Files column, never a 76th file. Re-measured S139/CN (the touched rows re-counted from the machine this cycle: data-import 118→125, schema-indexes 6→7, http-body 13→16, script-conventions 47→58, resilience 31→36, s14-hardening 23→24 — the CL4 footnote convention holds). |
+| **Total** | **78** | **2050** | `tests/` — **1449 Vitest unit** (47 files, `vitest run` 1449/1449) + **600 chromium e2e specs** (30 files per `playwright test --list`) + the 1 shared-sign-in setup = the direct per-file sum **2050**. The chunked-cert BADGE census is **2054 green** (1449 + 605): the setup re-runs once per cold-cert chunk (600 + 5 × 1 = 605; the 5-chunk map **150+186+87+95+87**, `db/e2e.db` cold every chunk) — the setup's 5 runs are a CERT-PROCEDURE artifact counted once in this table's Files column, never a 78th file. Re-measured S139/CN (the touched rows re-counted from the machine this cycle: data-import 118→125, schema-indexes 6→7, http-body 13→16, script-conventions 47→58, resilience 31→36, s14-hardening 23→24 — the CL4 footnote convention holds). |
 
 ### 8.2 Test Patterns
 
@@ -1299,6 +1304,8 @@ Enforced: ESLint flat config + `tsc --noEmit` (both gate). Convention (review-en
 
 | Priority | Issue | Impact | Status |
 |----------|-------|--------|--------|
+| RESOLVED | The restore-availability family (A-M3 + A-I1, the standing M deferral): the import's single interactive transaction interleaved per-row findFirst reads + the notes sanitize CPU inside the SQLite RESERVED-lock window (up to 60 s sitewide write blocking), and the knownIds pre-scan ran 20 unconditional full-table scans (O(account) per import) | Every restore queued every other write in the app for the whole loop; large accounts paid O(account) probe cost regardless of backup size | **Fixed** — the S141/CP3 restructure: FK-aware IN-probe pre-flight (O(envelope)), write-only transaction (per-row updates + chunked createMany), hoisted sanitize + merge-guard reads, cross-account collision pre-flight, explicit timeout+maxWait; the all-or-nothing contract preserved (see `docs/remediation-plan-session141.md`) |
+| RESOLVED | The export/import size asymmetry had no detection point: an unbounded export past the 64 MiB restore cap surfaced only as a 413 at restore time, each blind retry burning import budget | Silent "own your data" round-trip break at scale | **Fixed** — the S141/CP4 size signal: the shared renderExportEnvelope seam, the /export panel's exact size line + over-cap amber warning, the X-Export-Bytes header |
 | MEDIUM | In-memory rate limiters (login + AI budgets) are per-process | A multi-instance deploy would multiply the attempt budgets | Open (single-instance by design; document before scaling) |
 | MEDIUM | `next dev` OOM-killed in ~4 GB containers under parallel load (observed: 1.6 GB RSS + headless browsers) | Dev server dies silently mid-session | Mitigated (close extra browsers; restart) — no memory cap configured |
 | LOW | "Continue with Google" renders but is not wired to OAuth | Visual parity only; email/password is the real flow | Open (honest toast; future integration point) |

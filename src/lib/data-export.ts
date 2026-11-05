@@ -100,3 +100,20 @@ export function buildDataExport(
     data,
   };
 }
+
+/**
+ * S141/CP4 — the human size line for the /export panel's Download card
+ * (the export/import asymmetry's detection half: the unbounded export can
+ * exceed the 64 MiB restore cap, and the panel warns when it does). The
+ * WARNING threshold itself is the raw byte comparison against
+ * IMPORT_MAX_BYTES (data-import.ts) — this helper is display-only, so a
+ * rounding edge at the cap boundary never gates the warning.
+ */
+export function formatExportBytes(bytes: number): string {
+  const KIB = 1024;
+  const MIB = 1024 * 1024;
+  if (bytes < MIB) {
+    return `${Math.round(bytes / KIB)} KB`;
+  }
+  return `${Math.round((bytes / MIB) * 10) / 10} MB`;
+}

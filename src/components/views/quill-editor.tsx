@@ -20,7 +20,7 @@ import "quill/dist/quill.snow.css";
 import { useToastStore } from "@/components/ui/toast";
 // S140/CO1: the legacy-row render gate (same policy module as the server
 // sanitizer — pure data + a DOMParser walk, no node deps).
-import { sanitizeNoteHtmlDom } from "@/lib/note-html";
+import { sanitizeNoteHtmlDom, looksLikeHtml } from "@/lib/note-html";
 
 /** The reference's measured snow toolbar: 3 pickers + 5 format groups = 20 controls. */
 const TOOLBAR: unknown[] = [
@@ -263,7 +263,9 @@ export const QuillEditor = React.forwardRef<QuillEditorHandle, QuillEditorProps>
         // (same policy module, browser-native DOMParser) neutralizes them
         // BEFORE the paste. Defense-in-depth under the production CSP.
         const initial = sanitizeNoteHtmlDom(initialRef.current);
-        if (/<[a-z][^>]*>/i.test(initial)) {
+        // S141/CP7: the shared shape probe (the S140 code re-inlined the
+        // regex — a drift hazard against the policy module's own gate).
+        if (looksLikeHtml(initial)) {
           quill.clipboard.dangerouslyPasteHTML(initial, Quill.sources.SILENT);
         } else if (initial) {
           quill.setText(initial, Quill.sources.SILENT);

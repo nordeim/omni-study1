@@ -765,17 +765,21 @@ describe("the S134/CI1 KDF-migration route censuses", () => {
 // the CH1 registry-key census) — now closed on both route sides.
 // ---------------------------------------------------------------------------
 describe("the S135/CJ2 route-side collection censuses", () => {
-  const EXPORT_ROUTE = path.resolve(process.cwd(), "src/app/api/export/data/route.ts");
+  // S141/CP4 re-anchor: the 20-read assembly moved to the shared server seam
+  // (src/lib/server/export-build.ts) — the route and the /export page both
+  // consume it (the BW8 single-source doctrine; the size-signal fix). The
+  // findMany census and the buildDataExport literal census follow the seam.
+  const EXPORT_BUILD = path.resolve(process.cwd(), "src/lib/server/export-build.ts");
   const IMPORT_ROUTE = path.resolve(process.cwd(), "src/app/api/import/data/route.ts");
 
-  it("the export route reads EXACTLY 20 collections (the findMany count — a deleted read fails)", () => {
-    const src = readFileSync(EXPORT_ROUTE, "utf8");
+  it("the export assembly reads EXACTLY 20 collections (the findMany count — a deleted read fails)", () => {
+    const src = readFileSync(EXPORT_BUILD, "utf8");
     const reads = src.match(/\.findMany\(/g) ?? [];
-    expect(reads.length, "the export route must carry exactly 20 findMany reads (the manifest census)").toBe(20);
+    expect(reads.length, "the export seam must carry exactly 20 findMany reads (the manifest census)").toBe(20);
   });
 
-  it("the export route hands every manifest collection to buildDataExport (an omitted literal key fails)", async () => {
-    const src = readFileSync(EXPORT_ROUTE, "utf8");
+  it("the export assembly hands every manifest collection to buildDataExport (an omitted literal key fails)", async () => {
+    const src = readFileSync(EXPORT_BUILD, "utf8");
     const { EXPORT_COLLECTIONS } = await import("../src/lib/data-export");
     const missing: string[] = [];
     for (const name of EXPORT_COLLECTIONS) {
@@ -787,8 +791,20 @@ describe("the S135/CJ2 route-side collection censuses", () => {
     }
     expect(
       missing,
-      `manifest collections absent from the export route's buildDataExport literal (a Partial-key omission silently exports an empty family): ${missing.join(", ")}`,
+      `manifest collections absent from the export seam's buildDataExport literal (a Partial-key omission silently exports an empty family): ${missing.join(", ")}`,
     ).toEqual([]);
+  });
+
+  it("S141/CP4: BOTH export consumers ride the shared seam (the route downloads it; the page sizes from it — no inline twin)", () => {
+    const route = readFileSync(
+      path.resolve(process.cwd(), "src/app/api/export/data/route.ts"),
+      "utf8",
+    );
+    const page = readFileSync(path.resolve(process.cwd(), "src/app/export/page.tsx"), "utf8");
+    expect(route).toContain("renderExportEnvelope");
+    expect(page).toContain("renderExportEnvelope");
+    // The route's own body never re-declares the reads (the twin-drift guard).
+    expect((route.match(/\.findMany\(/g) ?? []).length).toBe(0);
   });
 
   it("the import route IMPORT_ORDER rides the seam (no route-local re-declaration — RED pre-fix: the const lives in the route)", () => {
@@ -1233,5 +1249,45 @@ describe("the note-HTML sanitize census (S140/CO1)", () => {
   it("the note delegate carries the writeTransform sanitize hook (the API door)", () => {
     const src = readFileSync(ENTITIES, "utf8");
     expect(src).toContain("sanitizeNoteContent");
+  });
+});
+
+// S141/CP3 (the A-M3 + A-I1 family) — the restore-availability route
+// census: the restructured import route must keep the transaction
+// WRITE-ONLY. The S140 shape interleaved findFirst reads and the notes
+// sanitize CPU inside one 60 s interactive transaction (the SQLite
+// RESERVED lock held sitewide) and paid 20 unconditional full-table
+// scans before it; the S141 shape hoists every read + all CPU out
+// (IN-probe pre-flight at O(envelope)) and writes via per-row updates +
+// chunked createMany. These substring censuses pin the shape markers so
+// a regression to the lock-holding N+1 loop fails a test.
+describe("the restore-availability census (S141/CP3)", () => {
+  const IMPORT_ROUTE = path.resolve(process.cwd(), "src/app/api/import/data/route.ts");
+
+  it("the transaction options are EXPLICIT and complete (timeout AND maxWait — the 5 s default maxWait P2028s unrelated writes under load)", () => {
+    const src = readFileSync(IMPORT_ROUTE, "utf8");
+    expect(src).toContain("maxWait: 5_000");
+    expect(src).toContain("timeout: 60_000");
+  });
+
+  it("the knownIds pre-flight rides the FK-aware probe-set derivation (no unconditional 20-collection scans)", () => {
+    const src = readFileSync(IMPORT_ROUTE, "utf8");
+    expect(src).toContain("importProbeTargets");
+    expect(src).toContain("chunkImportIds");
+  });
+
+  it("the create set writes through chunked createMany (the bulk path — 2 queries/row → writes only)", () => {
+    const src = readFileSync(IMPORT_ROUTE, "utf8");
+    expect(src).toContain("createMany");
+  });
+
+  it("the notes sanitize pass runs BEFORE the transaction (the CPU out of the lock window)", () => {
+    const src = readFileSync(IMPORT_ROUTE, "utf8");
+    expect(src).toContain("S141/CP3: the pre-tx notes sanitize pass");
+  });
+
+  it("the cross-account collision pre-flight answers the named 409 pre-write (the dominant P2002 trigger, caught with zero writes)", () => {
+    const src = readFileSync(IMPORT_ROUTE, "utf8");
+    expect(src).toContain("S141/CP3: the cross-account collision pre-flight");
   });
 });

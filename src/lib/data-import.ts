@@ -194,6 +194,78 @@ function deriveOptionalFks() {
   return out;
 }
 
+// ---------------------------------------------------------------------------
+// S141/CP3 — the restore-availability pre-flight helpers (the A-M3 +
+// A-I1 family). The S140 route scanned ALL 20 collections with
+// unconditional full-table findMany calls (O(account) per import — pure
+// waste for absent collections, and the heaviest table per import was
+// the CARDS deck-join) and then ran findFirst → update|create (2
+// queries/row) INSIDE one 60 s interactive transaction, holding the
+// single-node SQLite RESERVED lock while interleaving reads and the
+// notes sanitize CPU. The S141 restructure probes ONLY what the
+// envelope touches with IN-lists at O(envelope) cost and hoists every
+// read + all CPU out of the transaction (the all-or-nothing contract
+// itself is PRESERVED — see the route's restructured write loop).
+// ---------------------------------------------------------------------------
+
+/**
+ * S141/CP3 — the id-chunk size for the IN-probes. SQLite 3.46 (the
+ * repo's engine, probed) carries the 32 766-variable class; the IN-list
+ * was verified working at 20 000 ids — 5 000 leaves 6× headroom while
+ * keeping probe counts low.
+ */
+export const IMPORT_PROBE_CHUNK = 5_000;
+
+/**
+ * S141/CP3 — the row-chunk size for createMany writes. The widest import
+ * row carries ~20 fields → 10 000 bound parameters per 500-row call,
+ * 3× under the ceiling (createMany binding verified at 1 000 rows × 5
+ * fields empirically).
+ */
+export const IMPORT_CREATE_CHUNK = 500;
+
+/**
+ * S141/CP3 (A-I1 closed) — the DB-probe target set: every collection
+ * that carries envelope rows, PLUS every FK target of a collection that
+ * does (a cards-only envelope still needs decks knownIds for the
+ * required-FK resolution contract — the pinned s23 case; folders
+ * self-parenting rides the same derivation). Derived from
+ * IMPORT_FK_MAP (the single source — a new FK-bearing collection extends
+ * the probe set mechanically). Collections OUTSIDE the set are never
+ * queried: the pre-S141 route's 20 unconditional full-table scans cost
+ * O(account) per import regardless of backup size.
+ */
+export function importProbeTargets(collectionsWithRows: readonly string[]): ExportCollection[] {
+  const withRows = new Set(collectionsWithRows);
+  const targets = new Set<ExportCollection>();
+  for (const collection of withRows) {
+    targets.add(collection as ExportCollection);
+  }
+  for (const [source, specs] of Object.entries(IMPORT_FK_MAP) as [
+    ExportCollection,
+    ImportFkSpec[],
+  ][]) {
+    if (!withRows.has(source)) continue;
+    for (const spec of specs) targets.add(spec.target);
+  }
+  // IMPORT_ORDER filters AND orders (referents before referees — the
+  // same topo order the write loop honors).
+  return IMPORT_ORDER.filter((collection) => targets.has(collection));
+}
+
+/**
+ * S141/CP3 — chunk an id list at the probe size (the IN-probe's
+ * parameter-bounded shape). Order-preserving; the empty list yields
+ * zero chunks (an absent collection is never queried at all).
+ */
+export function chunkImportIds<T>(ids: readonly T[]): T[][] {
+  const chunks: T[][] = [];
+  for (let i = 0; i < ids.length; i += IMPORT_PROBE_CHUNK) {
+    chunks.push(ids.slice(i, i + IMPORT_PROBE_CHUNK) as T[]);
+  }
+  return chunks;
+}
+
 export type ImportRow = Record<string, unknown>;
 export type ImportRows = Record<ExportCollection, ImportRow[]>;
 

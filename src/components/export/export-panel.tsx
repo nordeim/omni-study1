@@ -15,6 +15,7 @@ import { useRouter } from "next/navigation";
 import { apiSend, isTimeoutError } from "@/lib/api";
 import { Spinner } from "@/components/views/shared";
 import { IMPORT_MAX_BYTES } from "@/lib/data-import";
+import { formatExportBytes } from "@/lib/data-export";
 
 type ImportSummary = {
   created: number;
@@ -68,9 +69,14 @@ const COLLECTION_LABELS: Record<string, string> = {
 export function ExportPanel({
   counts,
   email,
+  exportBytes,
 }: {
   counts: Array<{ name: string; count: number }>;
   email: string;
+  /** S141/CP4: the exact serialized envelope size (the shared seam renders
+   * it server-side alongside the counts) — the export/import asymmetry's
+   * detection half. */
+  exportBytes: number;
 }) {
   const [file, setFile] = React.useState<File | null>(null);
   const [busy, setBusy] = React.useState(false);
@@ -146,6 +152,23 @@ export function ExportPanel({
         <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
           A single JSON envelope — every collection, versioned and id-stable.
         </p>
+        {/* S141/CP4: the size signal — the exact rendered size of the file
+            the anchor serves (the page computes it through the same seam the
+            route downloads from; the raw byte comparison gates the warning,
+            the formatted line is display-only). */}
+        <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
+          Current backup size: <span className="font-medium">{formatExportBytes(exportBytes)}</span>
+          <span className="text-slate-400 dark:text-slate-500">
+            {" "}(restore cap {formatExportBytes(IMPORT_MAX_BYTES)})
+          </span>
+        </p>
+        {exportBytes > IMPORT_MAX_BYTES && (
+          <p role="status" className="sf-alert-amber mt-3 rounded-lg px-3 py-2 text-sm">
+            This backup is larger than the in-app restore cap — a restore from
+            this file will be rejected. Keep it as an archive, or remove large
+            files before exporting again.
+          </p>
+        )}
         <a
           href="/api/export/data"
           download

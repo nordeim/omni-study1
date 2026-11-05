@@ -190,3 +190,34 @@ describe("buildDataExport (the envelope builder)", () => {
     expect(json).not.toContain("cafebabe");
   });
 });
+
+// ---------------------------------------------------------------------------
+// S141/CP4 — the export size signal (Audit B F2, the export/import
+// asymmetry's detection half). The unbounded export could silently exceed
+// the 64 MiB restore cap: an account past ~23 max-size files downloads a
+// backup the in-app restore will ALWAYS 413 at the body read, with no
+// in-app signal and each blind retry burning import budget. The fix: the
+// /export page renders the exact envelope size (the shared server seam)
+// and the panel warns when it exceeds IMPORT_MAX_BYTES. These pins own
+// the pure formatting helper the panel consumes.
+// ---------------------------------------------------------------------------
+describe("S141/CP4 · formatExportBytes (the size-signal formatting)", () => {
+  it("is exported from the export seam", async () => {
+    const mod = await import("../src/lib/data-export");
+    expect(typeof mod.formatExportBytes).toBe("function");
+  });
+
+  it("formats the MB band with one decimal", async () => {
+    const { formatExportBytes } = await import("../src/lib/data-export");
+    expect(formatExportBytes(0)).toBe("0 KB");
+    expect(formatExportBytes(13 * 1024 * 1024)).toBe("13 MB");
+    expect(formatExportBytes(12.4 * 1024 * 1024)).toBe("12.4 MB");
+    expect(formatExportBytes(64 * 1024 * 1024 + 1)).toBe("64 MB");
+  });
+
+  it("formats the sub-MB band in KB (the small-backup case reads honestly)", async () => {
+    const { formatExportBytes } = await import("../src/lib/data-export");
+    expect(formatExportBytes(980 * 1024)).toBe("980 KB");
+    expect(formatExportBytes(1023 * 1024)).toBe("1023 KB");
+  });
+});

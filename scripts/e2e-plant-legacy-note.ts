@@ -31,7 +31,14 @@ async function main(): Promise<void> {
     '<img src="https://a-l3-legacy.example/px.gif" alt="pixel">' +
     '<iframe src="https://a-l3-legacy.example/frame"></iframe>' +
     '<script>alert("never")</script>' +
-    '<p onclick="steal()">handler bait</p>';
+    '<p onclick="steal()">handler bait</p>' +
+    // S141/CP1: the corpus grew WRAPPED payloads — the S140 fixture carried
+    // only TOP-LEVEL hostile elements (exactly the shape the gate already
+    // handled), while the dead-walk bug let anything one nesting level deep
+    // escape. The realistic pre-CO1 legacy shape is pasted newsletter
+    // content: hostile markup inside <div>/<section> scaffolding.
+    '<div><img src="https://a-l3-wrapped.example/px.gif" alt="wrapped pixel"></div>' +
+    '<section><article><img src="https://a-l3-wrapped.example/deep.gif"></article></section>';
 
   const demo = await db.user.findUnique({ where: { email: "demo@studyflow.app" } });
   if (!demo) {

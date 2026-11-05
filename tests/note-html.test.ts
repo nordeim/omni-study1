@@ -142,3 +142,68 @@ describe("sanitizeNoteHtml — Quill's authoring vocabulary preserved (S140/CO1)
     expect(sanitizeNoteHtml(seedLike)).toBe(seedLike);
   });
 });
+
+// S141/CP2 — the plain-text passthrough gate. The S140 server door ran
+// sanitize-html UNCONDITIONALLY: its parser re-serializes text nodes with
+// entity encoding, so a plain-text row containing & or < was silently
+// rewritten ("AT&T" → "AT&amp;T", "5 < 6" → "5 &lt; 6") — the documented
+// "plain-text rows round-trip byte-identically" contract was FALSE, and
+// the entities rendered as visible text through quill.setText (the
+// s141 audit's empirical probe). The S140 pins never caught it: both
+// byte-identity samples were entity-free. The fix: the server door adopts
+// the DOM gate's own first line (looksLikeHtml) — plain text passes
+// through untouched at BOTH doors.
+describe("sanitizeNoteHtml — the plain-text passthrough gate (S141/CP2)", () => {
+  it("round-trips entity-bearing plain text byte-identically (the mangled-ampersand class)", () => {
+    const plain = "AT&T rules — Q&A, R&D; 5 < 6 and 7 > 3";
+    expect(sanitizeNoteHtml(plain)).toBe(plain);
+  });
+
+  it("round-trips the entity-bearing entity-free boundary: markup detection is the gate, not entity escaping", () => {
+    // "5 < 6" alone is NOT markup (no <[a-z]…> shape) — it passes through;
+    // a row that IS markup re-serializes canonically (text-node entity
+    // escaping inside markup is HTML-correct and renders identically).
+    expect(sanitizeNoteHtml("5 < 6")).toBe("5 < 6");
+    const markup = "<p>AT&T rules</p>";
+    expect(sanitizeNoteHtml(markup)).toBe("<p>AT&amp;T rules</p>");
+  });
+});
+
+// S141/CP5 — the server-door policy tightening: the raster-only data:
+// image MIME set (svg+xml excluded — script-capable; data:text/html is
+// not an image), the color VALUE grammar on styles (url()/expression()
+// die at the value level), and the rel injection on surviving anchors.
+describe("sanitizeNoteHtml — the tightened policy pair (S141/CP5, server door)", () => {
+  it("drops data:image/svg+xml and data:text/html img srcs (raster-only payload set)", () => {
+    const out = sanitizeNoteHtml(
+      '<img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjwvc3ZnPg==">' +
+        '<img src="data:text/html;base64,PHNjcmlwdD5hbGVydCgxKTwvc2NyaXB0Pg==">' +
+        '<img src="data:image/png;base64,iVBORw0KGgo=">',
+    );
+    expect(out).not.toContain("image/svg+xml");
+    expect(out).not.toContain("data:text/html");
+    expect(out).toContain("data:image/png;base64,iVBORw0KGgo=");
+  });
+
+  it("drops style values outside the color grammar (the url()/expression() vectors)", () => {
+    const out = sanitizeNoteHtml(
+      '<span style="color: url(https://evil.example/x); background-color: expression(alert(1))">v</span>',
+    );
+    expect(out).not.toContain("url(");
+    expect(out).not.toContain("expression");
+    expect(out).not.toContain("evil.example");
+  });
+
+  it("keeps grammar-valid color values on spans", () => {
+    const out = sanitizeNoteHtml(
+      '<span style="color: #ff0000; background-color: rgba(255, 0, 0, 0.5)">v</span>',
+    );
+    expect(out).toContain("#ff0000");
+    expect(out).toContain("rgba(255, 0, 0, 0.5)");
+  });
+
+  it("injects rel=noopener noreferrer on surviving target=_blank anchors", () => {
+    const out = sanitizeNoteHtml('<p><a href="https://docs.example/g" target="_blank">g</a></p>');
+    expect(out).toContain('rel="noopener noreferrer"');
+  });
+});

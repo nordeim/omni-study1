@@ -9,7 +9,7 @@ High-signal instructions for coding agents working in this repo. Everything here
 | `bun install` | Install deps (Bun ≥ 1.3) |
 | `bun run dev` | Dev server on :3000 (Turbopack), logs tee'd to `dev.log` |
 | `bun run lint` / `bun run typecheck` | ESLint / `tsc --noEmit` — both must be clean |
-| `bun run test` | Vitest unit layer (1409 tests; `*.test.ts` only — never picks up e2e specs) |
+| `bun run test` | Vitest unit layer (1449 tests; `*.test.ts` only — never picks up e2e specs) |
 | `bun run build` | Production build → `.next/standalone` (**required before e2e**) |
 | `bun run test:e2e` | Playwright vs the standalone build on :3100 with `db/e2e.db` (603 tests across the 5-chunk cold map — 150+185+87+95+86, 30 spec files; a single-process full run trips the register rate-limiter budget by design, the chunked map re-boots the server per chunk). NOTE (S45, the day-boundary lesson): the global setup re-seeds every run, but the seed's IDEMPOTENT UPSERTS do NOT refresh day-relative dates on existing rows — a scratch `db/e2e.db` that ages across a UTC midnight keeps its original day-relative dates (today's tasks, the +1-day exam badge, the due-in pills, the import round-trip dates each read one day stale → 4 deterministic failures in parity-session6/parity-session9/s23-import). Delete `db/e2e.db` when a run crosses a day boundary — the global setup re-creates it fresh with current dates. NOTE (S46, TWO more aged-scratch-db classes + a build-input one): (1) ALWAYS run e2e COLD — S131/CF5 chained `scripts/e2e-cold-reset.sh` into `bun run test:e2e` (port-guard + `rm -f db/e2e.db` BEFORE playwright boots anything — global-setup is TOO LATE: Playwright starts the webServer before globalSetup), so the default runner self-colds; any DIRECT `playwright test` invocation still needs the manual `rm -f db/e2e.db` before every full run: the s23-import round-trip posts a FIXED-id envelope, so a second consecutive run against the aged db reads `created: 0, updated: 1` instead of `created: 1, updated: 0` and fails — not just across midnights, across ANY re-run; (2) the s22 negative-spawn spec reads the BUNDLED `.env` — Next's standalone output COPIES the repo-root `.env` into `.next/standalone/.env` at build time, so a REAL AUTH_SECRET in the dev `.env` leaks into the bundle and the guard CORRECTLY boots (the spec times out waiting for the exit) — keep the repo-root `.env`'s AUTH_SECRET EMPTY (the `.env.example` dev posture: `AUTH_SECRET=""` — dev falls back to the local constant with the boot warning) when building for e2e |
 | `node scripts/capture-studyflow.mjs` | Refresh all 31 `docs/screenshots/` captures from the dev server (24 light + 7 dark) |
@@ -1771,3 +1771,62 @@ Hover-parity probing must run in Playwright, not a touch-emulating browser — v
    even when the standing suite says green — the suite guards the
    clone; only the live comparison guards the REFERENCE's side of the
    contract.
+
+
+## S141 lessons (Batch CP — the render-gate snapshot + plain-text gate + restore-availability + size-signal set)
+
+1. **A DOM "walk" that processes only a node's children never gates the
+   moved element itself.** The S140 render gate called walk() on the
+   unwrapped children — which visits each moved element's CHILDREN, not
+   the element: its own src/href/style survived untouched, and
+   disallowed moved wrappers stayed in the DOM (the two-level probe
+   passed only because its URL assertions were indirect). The fix
+   extracts a per-element processElement() and calls IT on every moved
+   child. Lesson: when a tree-walk unwraps nodes, process the moved
+   node ITSELF, not just its subtree.
+2. **A DocumentFragment is EMPTIED by insertion — snapshot BEFORE
+   replaceChild.** The S140 code took Array.from(frag.children) AFTER
+   parent.replaceChild(frag, child) and iterated zero elements (the DOM
+   spec MOVES fragment children into the insertion parent). The s141
+   audit proved it empirically in headless Chromium; the happy-dom unit
+   project reproduces the spec behavior exactly. Lesson: DOM
+   order-of-operations facts need empirical probes, not intuition — and
+   the unit pin should land with the fix (the DOM gate shipped with
+   zero unit coverage because vitest ran node-only; happy-dom is one
+   devDependency away).
+3. **Gate the sanitizer on shape, never trust it as a passthrough.**
+   sanitize-html re-serializes text nodes with entity encoding ("AT&T"
+   → "AT&amp;T") — unconditional sanitization mangled plain-text rows and
+   the entities rendered as visible text through quill.setText. The
+   looksLikeHtml first line (the DOM gate's own contract) makes both
+   doors byte-identical for plain text. Lesson: pin the passthrough
+   contract with entity-bearing samples — the S140 pins were
+   entity-free and gave false assurance.
+4. **Hoist reads and CPU out of the transaction; keep the wire contract.**
+   The A-M3 restructure collapsed the restore's lock window (per-row
+   findFirst + the notes sanitize CPU inside the tx → IN-probe pre-flight + write-only tx + chunked createMany + a cross-account
+   collision pre-flight) WITHOUT touching the all-or-nothing ADR-021
+   shape — every e2e wire pin rode untouched. Lesson: performance
+   remediation that preserves the observable contract needs zero test
+   changes — that is the design signal you are on the right side of
+   the ADR.
+5. **Probe the engine before choosing chunk constants.** The probe/write
+   chunk sizes (5 000 ids per IN-probe, 500 rows per createMany) came
+   from empirical probes against SQLite 3.46 (IN verified at 20 000
+   ids; createMany binding verified at 5 000 params) — not from
+   folklore about 999 limits. Lesson: parameter ceilings are
+   engine+version facts; probe them, then pin the constants in the
+   seam with unit legs.
+6. **Two surfaces that must agree on a derived value share the
+   producer.** The /export page now renders the same envelope the
+   download route serves (renderExportEnvelope — one server seam), so
+   the size signal can never drift from the served bytes, and the
+   amber over-cap warning fires before the user collects a 413.
+   Lesson: extract the shared producer; never compute the same derived
+   value twice.
+7. **The P1008 sandbox I/O-stall class flakes heavy chunks.** The first
+   chunk-2 cert run failed exactly one test (a DIFFERENT one on each
+   independent run) co-occurring with SQLite socket timeouts in the
+   webServer log; the re-run was 186/186 first-pass. Lesson: single-test
+   failures that MOVE between identical runs + P1008 noise =
+   environmental; re-run the chunk and record the class honestly.

@@ -334,7 +334,7 @@ describe("the informational fields (tolerated, never trusted)", () => {
     expect(res.rows.tasks[0]).toHaveProperty("dueDate", "2026-11-01T12:00:00.000Z");
   });
 
-  it("keeps unknown content fields untouched (forward-compat: the DB validates content)", () => {
+  it("keeps unknown content fields untouched at the SEAM level (parse-only — the route's Prisma write still rejects a genuinely unknown column with the fields-do-not-match 400; a future version's new fields import only after a schema upgrade)", () => {
     const env = validEnvelope() as { data: Record<string, Array<Record<string, unknown>>> };
     env.data.tasks[0].someFutureField = "v2 adds fields — v1 imports keep them";
     const res = parseImportEnvelope(env);
@@ -1490,5 +1490,79 @@ describe("S135/CJ5 · parseImportRaceMessage (the colon-safe 409 assembly)", () 
       collection: "tasks",
       id: "t-123",
     });
+  });
+});
+
+// ---------------------------------------------------------------------------
+// S141/CP3 — the restore-availability pre-flight helpers (the A-M3 +
+// A-I1 family). The S140 route scanned ALL 20 collections with full-table
+// findMany calls (O(account) per import — pure waste for absent
+// collections) and then ran 2 queries/row INSIDE one 60 s interactive
+// transaction (the SQLite RESERVED lock held sitewide). The S141
+// restructure probes ONLY the collections the envelope touches (plus
+// their FK targets — a cards-only envelope still needs decks knownIds)
+// with IN-lists at O(envelope) cost, and hoists every read + all CPU out
+// of the transaction. These pins own the pure derivation + chunk math.
+// ---------------------------------------------------------------------------
+describe("S141/CP3 · importProbeTargets (the FK-aware probe-set derivation)", () => {
+  it("is exported from the seam", async () => {
+    const mod = await import("../src/lib/data-import");
+    expect(typeof mod.importProbeTargets).toBe("function");
+  });
+
+  it("a cards-only envelope probes cards AND decks (the required-FK target — nothing else)", async () => {
+    const { importProbeTargets } = await import("../src/lib/data-import");
+    expect(importProbeTargets(["cards"])).toEqual(["decks", "cards"]);
+  });
+
+  it("a tasks-only envelope probes tasks + its FK targets (taskLists, subjects) — nothing else", async () => {
+    const { importProbeTargets } = await import("../src/lib/data-import");
+    expect(importProbeTargets(["tasks"])).toEqual(["subjects", "taskLists", "tasks"]);
+  });
+
+  it("a folders-only envelope probes folders (the self-FK rides the derivation)", async () => {
+    const { importProbeTargets } = await import("../src/lib/data-import");
+    expect(importProbeTargets(["folders"])).toEqual(["folders"]);
+  });
+
+  it("a subjects+files envelope probes subjects, files, AND folders (files' FK target)", async () => {
+    const { importProbeTargets } = await import("../src/lib/data-import");
+    expect(importProbeTargets(["subjects", "files"])).toEqual([
+      "subjects",
+      "folders",
+      "files",
+    ]);
+  });
+
+  it("the probe set stays in IMPORT_ORDER (referents before referees)", async () => {
+    const { importProbeTargets, IMPORT_ORDER } = await import("../src/lib/data-import");
+    const probed = importProbeTargets(["files", "cards", "tasks"]);
+    const order = [...IMPORT_ORDER];
+    let last = -1;
+    for (const c of probed) {
+      const idx = order.indexOf(c);
+      expect(idx).toBeGreaterThan(last);
+      last = idx;
+    }
+  });
+});
+
+describe("S141/CP3 · the probe/write chunk constants + chunkImportIds", () => {
+  it("the constants hold the verified values (SQLite 3.46: IN verified at 20 000; createMany verified at 1 000 rows)", async () => {
+    const mod = await import("../src/lib/data-import");
+    expect(mod.IMPORT_PROBE_CHUNK).toBe(5_000);
+    expect(mod.IMPORT_CREATE_CHUNK).toBe(500);
+  });
+
+  it("chunkImportIds splits at the probe size and preserves order", async () => {
+    const { chunkImportIds, IMPORT_PROBE_CHUNK } = await import("../src/lib/data-import");
+    const ids = Array.from({ length: IMPORT_PROBE_CHUNK * 2 + 7 }, (_, i) => `id-${i}`);
+    const chunks = chunkImportIds(ids);
+    expect(chunks.length).toBe(3);
+    expect(chunks[0].length).toBe(IMPORT_PROBE_CHUNK);
+    expect(chunks[2].length).toBe(7);
+    expect(chunks.flat()).toEqual(ids);
+    // The empty case: zero chunks, not one empty chunk.
+    expect(chunkImportIds([])).toEqual([]);
   });
 });

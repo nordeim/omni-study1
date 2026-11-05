@@ -14,7 +14,7 @@
 //
 // S117/BR1 (the cards fix + the documented-contract restoration): cards
 // (Flashcard — no userId column) scope EVERY ownership probe through the
-// deck relation, including the write loop's findFirst (the pre-S117 loop
+// deck relation, including the write loop's probes (the pre-S117 loop
 // probed `{ id, userId }` on the flashcard delegate → PrismaClientValidationError
 // → the whole transaction rolled back → HTTP 500 on ANY envelope containing
 // cards — the export→import round-trip was broken for every account with
@@ -23,6 +23,33 @@
 // rejected BY NAME, and folders import parents-first (the seam's topo sort —
 // a child-first hand-crafted order would die P2003 mid-transaction).
 // The 10/15min per-user budget matches the spec's documented envelope.
+//
+// S141/CP3 (A-M3 + A-I1 — the restore-availability restructure,
+// contract-preserving): the S140 shape interleaved findFirst reads and the
+// notes sanitize CPU INSIDE one 60 s interactive transaction — the
+// single-node SQLite RESERVED lock (journal_mode=delete, busy_timeout
+// 5 000, probed) was held sitewide for the whole 2N+1-query loop, and the
+// pre-flight scanned ALL 20 collections unconditionally (O(account) per
+// import regardless of backup size). The S141 shape:
+//   1. the IN-probe pre-flight (importProbeTargets + chunkImportIds from
+//      the seam) — O(envelope) reads that yield the create/update
+//      discriminator, the FK-resolution knownIds, AND the merge-guard
+//      partner legs in one pass;
+//   2. EVERY read + all CPU (the notes sanitize) hoisted OUT of the
+//      transaction — the tx is WRITE-ONLY: per-row updates + chunked
+//      createMany + the profile patch;
+//   3. a cross-account collision pre-flight answers the dominant-409
+//      (a global PK owned by another account) PRE-WRITE, with the named
+//      copy and zero writes;
+//   4. the transaction options are explicit (timeout AND maxWait — the
+//      5 s default maxWait P2028s an unrelated user write at slot
+//      acquisition under a concurrent restore).
+// The ALL-OR-NOTHING contract is preserved (one transaction, upsert-by-id,
+// never-deletes, full rollback on any throw — the e2e rollback and
+// idempotence pins ride untouched). The read-hoist TOCTOU is the accepted
+// equivalence class: the S140 in-tx findFirst+update pair carried the same
+// concurrent-PATCH/concurrent-delete race between its own two queries
+// (reads do not hold the RESERVED lock until the first write).
 // ---------------------------------------------------------------------------
 
 import { NextResponse } from "next/server";
@@ -33,14 +60,19 @@ import { Prisma } from "@prisma/client";
 import { checkRateLimit } from "@/lib/auth";
 // S133/CH4: the envelope constants moved behind the seam —
 // validateImportEnvelope owns the format/version/collection identity.
+// S141/CP3: the probe-set derivation + the id-chunker ride the same seam.
 import {
+  IMPORT_CREATE_CHUNK,
+  IMPORT_FK_MAP,
   IMPORT_MAX_BYTES,
   IMPORT_ORDER,
   IMPORT_OPTIONAL_FKS,
   IMPORT_REQUIRED_FKS,
   ImportRowError,
+  chunkImportIds,
   duplicateIdError,
   importProfilePatch,
+  importProbeTargets,
   importRowIdError,
   parseImportRaceMessage,
   sanitizeImportRow,
@@ -51,7 +83,9 @@ import {
 import { db } from "@/lib/db";
 import { requireUser } from "@/lib/server/auth";
 // S140/CO1: the import door's note-HTML sanitizer (the raw-tx write loop
-// bypasses the delegate writeTransform — see the loop's comment).
+// bypasses the delegate writeTransform — see the pre-tx sanitize pass).
+// S141/CP3: the pass now runs BEFORE the transaction (the CPU out of the
+// lock window) on the same per-row shape.
 import { sanitizeNoteHtml } from "@/lib/server/note-html";
 import {
   checkEventOrderingMerge,
@@ -123,18 +157,11 @@ const MODEL: Record<Collection, keyof PrismaClient> = {
   holidays: "holiday",
 };
 
-/** REQUIRED FKs — a dangling reference is a 400 (the row cannot exist).
- * S122/BW8: DERIVED from the seam's IMPORT_FK_MAP (the single source —
- * the hand-maintained twin maps drifted hazard for 100+ sessions; the
- * unit pins in tests/data-import.test.ts hold the derivation). */
-
-/** OPTIONAL FKs — a dangling reference imports NULLED (SetNull semantics). */
-
-// S137/CL11 (audit A-I3): the route's private stripNeverImportFields twin
-// DELETED — the write loop consumes the seam's exported stripSecrets (the
-// BW8 single-source doctrine: the field LIST was already single-sourced
-// via NEVER_IMPORT_FIELDS, but the LOOP itself was duplicated; a future
-// edit to one copy would have drifted silently).
+/** The ownership scope for a probe/write on a collection (cards ride the
+ * deck relation — the S117 fix's scope, applied at every query site). */
+function ownershipScope(collection: Collection, userId: string): Row {
+  return collection === "cards" ? { deck: { userId } } : { userId };
+}
 
 export const POST = async (request: NextRequest) => {
   try {
@@ -189,12 +216,6 @@ export const POST = async (request: NextRequest) => {
     }
 
     // ---- S133/CH4: the stateless envelope stages ride the SEAM -------------
-    // (the S126 lesson-2 hazard closed: this inline twin had drifted from
-    // the unit-pinned parseImportEnvelope — the seam tolerated a missing
-    // data block, split the version 400s, and carried a second copy of
-    // every message. validateImportEnvelope is now the single source; the
-    // messages below are byte-identical to the pre-CH4 shipped contract,
-    // so the s23 e2e legs stay green untouched.)
     const envelopeCheck = validateImportEnvelope(raw);
     if (!envelopeCheck.ok) {
       return errorResponse(400, envelopeCheck.error);
@@ -202,9 +223,7 @@ export const POST = async (request: NextRequest) => {
     const data = envelopeCheck.data;
 
     // ---- per-collection validation -------------------------------------
-    // S126/CA2: the row-id rule rides the SEAM's shared validator (the
-    // BW8 single-source doctrine — the route's inline twin had dropped the
-    // empty-id guard and minted rows no detail route could address), and a
+    // S126/CA2: the row-id rule rides the SEAM's shared validator, and a
     // `null` collection is rejected like the seam's contract (the
     // array-ness itself is already guaranteed by validateImportEnvelope
     // above — this loop keeps the per-row id + duplicate rules).
@@ -231,41 +250,88 @@ export const POST = async (request: NextRequest) => {
       parsed.set(collection, rows as Row[]);
     }
 
-    // Known ids per collection = imported ids ∪ the owner's existing rows.
+    // ---- S141/CP3: the IN-probe pre-flight (A-I1 closed) ------------------
+    // Replaces the S140 20-unconditional-full-table-scan loop. The probe set
+    // is FK-AWARE (importProbeTargets from the seam — a cards-only envelope
+    // still probes decks for the required-FK resolution; folders
+    // self-parenting rides the same derivation). Per target collection the
+    // probe ids are: the envelope's own rows' ids (the create/update
+    // discriminator + the merge-guard partner legs) ∪ the FK values other
+    // collections reference (the FK-resolution census) — every consumer of
+    // the old full-table knownIds reads only FK-field values from envelope
+    // rows, so the IN-probe on exactly those values is equivalent.
     const knownIds = new Map<Collection, Set<string>>();
     // S135/CJ4: existingIds keeps the DB-ONLY half of the census — knownIds
     // unions the envelope's own ids (the FK-resolution contract), which
     // would make every imported row look "existing" to a create-branch
     // discriminator.
     const existingIds = new Map<Collection, Set<string>>();
-    for (const collection of IMPORT_ORDER) {
-      const ids = new Set<string>((parsed.get(collection) ?? []).map((r) => r.id as string));
-      const model = MODEL[collection];
-      // cards are deck-scoped (no userId column) — ownership rides the deck.
-      const where =
-        collection === "cards"
-          ? { deck: { userId: user.id } }
-          : { userId: user.id };
+    // The merge-guard partner legs for the UPDATE set (the S130/CE7 seam
+    // guards — hoisted out of the transaction with every other read).
+    const guardLegs = new Map<Collection, Map<string, Row>>();
 
-      const existing = await (db[model] as any).findMany({
-        where,
-        select: { id: true },
-      });
-      const dbIds = new Set<string>();
-      for (const row of existing) {
-        ids.add(row.id);
-        dbIds.add(row.id);
+    // The referenced FK values per target (collected BEFORE resolution —
+    // the resolution consumes the probe results). The "self" target form
+    // (folders.parentId → folders) mirrors the resolution loop's shape.
+    const referencedIds = new Map<Collection, Set<string>>();
+    for (const [source, specs] of Object.entries(IMPORT_FK_MAP) as [
+      Collection,
+      Array<{ field: string; target: Collection }>,
+    ][]) {
+      for (const row of parsed.get(source) ?? []) {
+        for (const { field, target } of specs) {
+          const value = row[field];
+          if (typeof value !== "string") continue;
+          const targetCollection = target === source ? source : target;
+          let bucket = referencedIds.get(targetCollection);
+          if (!bucket) {
+            bucket = new Set<string>();
+            referencedIds.set(targetCollection, bucket);
+          }
+          bucket.add(value);
+        }
       }
-      knownIds.set(collection, ids);
+    }
+
+    for (const collection of importProbeTargets([...parsed.keys()])) {
+      const model = MODEL[collection];
+      const scope = ownershipScope(collection, user.id);
+      const mergeGuard = IMPORT_MERGE_GUARDS[collection];
+      const select: Row = mergeGuard ? { id: true, ...mergeGuard.select } : { id: true };
+
+      const ids = new Set<string>(referencedIds.get(collection) ?? []);
+      if (parsed.has(collection)) {
+        for (const row of parsed.get(collection) as Row[]) ids.add(row.id as string);
+      }
+
+      const dbIds = new Set<string>();
+      const legs = new Map<string, Row>();
+      // The deck-scoped cards probe (the S117 scope) applies here too.
+      const delegate = (db as any)[model];
+      for (const chunk of chunkImportIds([...ids])) {
+        const found = await delegate.findMany({
+          where: { id: { in: chunk }, ...scope },
+          select,
+        });
+        for (const row of found as Row[]) {
+          dbIds.add(row.id as string);
+          legs.set(row.id as string, row);
+        }
+      }
+      // knownIds = the envelope's own ids ∪ the probed referenced-existing
+      // rows (the account-aware resolution contract, at O(envelope) cost).
+      const union = new Set<string>(dbIds);
+      for (const row of parsed.get(collection) ?? []) union.add(row.id as string);
+      knownIds.set(collection, union);
       existingIds.set(collection, dbIds);
+      if (mergeGuard) guardLegs.set(collection, legs);
     }
 
     // FK integrity: required → 400; optional → nulled.
     // S135/CJ4 (audit A-L2): the missing-on-CREATE case joins the named-400
-    // family — the seam (validateImportEnvelope) rejects null/non-string
-    // required values, and undefined (absent) is the UPDATE branch's
-    // untouched case; but a NEW row (id not in existingIds — the DB-only
-    // census, NOT knownIds which unions the envelope's own ids) without its
+    // family — the seam rejects null/non-string required values, and
+    // undefined (absent) is the UPDATE branch's untouched case; but a NEW
+    // row (id not in existingIds — the DB-only census) without its
     // required FK previously sailed to the Prisma write and answered the
     // GENERIC "fields do not match" 400.
     for (const [collection, fks] of Object.entries(IMPORT_REQUIRED_FKS) as [
@@ -311,19 +377,10 @@ export const POST = async (request: NextRequest) => {
     }
 
     // ---- S119/BT1b: the per-row guard, BEFORE any write -----------------
-    // Every row must satisfy the export format's primitive-value contract
-    // (a wrong type would otherwise surface as PrismaClientValidationError
-    // → HTTP 500) and the files rows additionally satisfy the BR4/BS5 link
-    // rules (a stored javascript: URL renders as href target=_blank in the
-    // Files view — the unguarded third entry point, now guarded).
-    // S139/CN7 (audit A-L2): this loop now runs BEFORE the folders topo
-    // sort below — the rejection copy names the row index, and the sort
-    // reorders rows, so sanitizing post-sort made "Invalid folders[3]"
-    // point at the SORTED position, not the backup file's row (an
-    // operator editing per the message landed on the wrong line).
-    // sanitizeImportRow is VERIFIED validate-only (no row mutation
-    // anywhere in its body), so the reorder is behavior-neutral for valid
-    // envelopes — only the rejection copy's index changes.
+    // S139/CN7 (audit A-L2): this loop runs BEFORE the folders topo sort
+    // below — the rejection copy names the row index, and the sort reorders
+    // rows (an operator editing per the message landed on the wrong line).
+    // sanitizeImportRow is VERIFIED validate-only (no row mutation).
     for (const collection of parsed.keys()) {
       const rows = parsed.get(collection) as Row[];
       for (let i = 0; i < rows.length; i += 1) {
@@ -350,24 +407,106 @@ export const POST = async (request: NextRequest) => {
       parsed.set("folders", sorted);
     }
 
-    // ---- the all-or-nothing write --------------------------------------
+    // ---- S141/CP3: the pre-tx payload preparation -------------------------
+    // Every read and every CPU-bound pass now happens BEFORE the transaction
+    // (the lock window holds writes only). This stage derives, per
+    // collection: the update set (id ∈ existingIds — the probe's DB-only
+    // census) and the create set (id ∉ existingIds), with the exact write
+    // payloads (stripSecrets + the userId re-attach + the S140/CO1 notes
+    // sanitize — the raw-tx write loop bypasses the delegate writeTransform,
+    // so this is the import door's one server-side write seam) and the
+    // S130/CE7 merge guards against the probe's stored partner legs (the
+    // factory's beforeWrite parity — TOCTOU-equivalent to the S140 in-tx
+    // read: reads never held the RESERVED lock before the first write
+    // either).
+    type WritePlan = { updates: Array<{ id: string; data: Row }>; creates: Row[] };
+    const plans = new Map<Collection, WritePlan>();
+    for (const collection of IMPORT_ORDER) {
+      const rows = parsed.get(collection);
+      if (!rows || rows.length === 0) continue;
+      const mergeGuard = IMPORT_MERGE_GUARDS[collection];
+      const legs = guardLegs.get(collection);
+      const plan: WritePlan = { updates: [], creates: [] };
+      for (const row of rows) {
+        const { id, ...rawFields } = row;
+        const fields = stripSecrets(rawFields);
+        // S141/CP3: the pre-tx notes sanitize pass (the S140/CO1 door —
+        // moved OUT of the transaction: sanitize-html's parse+serialize on
+        // up-to-1 M-char bodies is pure CPU that previously lengthened the
+        // SQLite RESERVED-lock window without issuing a single query).
+        if (
+          collection === "notes" &&
+          typeof fields.content === "string" &&
+          fields.content !== ""
+        ) {
+          fields.content = sanitizeNoteHtml(fields.content);
+        }
+        // cards carry no userId column — ownership rides the deck relation;
+        // envelope userId never reaches Prisma: it is stripped
+        // (NEVER_IMPORT_FIELDS) and re-attached from the session.
+        const data =
+          collection === "cards" ? fields : { ...fields, userId: user.id };
+        const existing = existingIds.get(collection)?.has(id as string);
+        if (existing) {
+          // S130/CE7: the update branch runs the merge guard against the
+          // STORED partner leg (the probe's select — the hoisted read).
+          if (mergeGuard) {
+            const leg = legs?.get(id as string);
+            if (leg) mergeGuard.guard(leg, data);
+          }
+          plan.updates.push({ id: id as string, data });
+        } else {
+          plan.creates.push({ ...data, id } as Row);
+        }
+      }
+      plans.set(collection, plan);
+    }
+
+    // ---- S141/CP3: the cross-account collision pre-flight -----------------
+    // ids are GLOBAL primary keys: the DOMINANT 409 trigger is a backup
+    // restored into a different account colliding on the first shared id
+    // (the s128 e2e comment documents exactly this). The S140 shape burned
+    // the whole transaction to the P2002 and answered post-rollback; the
+    // pre-flight answers the SAME named copy PRE-WRITE (zero writes, no
+    // 60 s budget burned). The residual CE7 concurrent-create race (a write
+    // landing between the probe and the transaction) still rides the P2002
+    // catch below — the all-or-nothing rollback holds either way.
+    for (const [collection, plan] of plans) {
+      if (plan.creates.length === 0) continue;
+      const model = MODEL[collection];
+      const delegate = (db as any)[model];
+      for (const chunk of chunkImportIds(plan.creates.map((r) => r.id as string))) {
+        // Unscoped by ownership — ANY owner of the id blocks the create
+        // (the global-PK collision); the S135/CJ5 copy names both causes.
+        const collisions = await delegate.findMany({
+          where: { id: { in: chunk } },
+          select: { id: true },
+        });
+        for (const hit of collisions as Row[]) {
+          return errorResponse(
+            409,
+            `That ${collection} row (id "${hit.id as string}") collides with an existing record — either it was created while this import ran, or this backup's ids already belong to another account. Edit the backup's ids or restore into the original account.`,
+          );
+        }
+      }
+    }
+
+    // ---- the all-or-nothing write (WRITE-ONLY since S141/CP3) ------------
     const imported: Record<string, { created: number; updated: number }> = {};
     let created = 0;
     let updated = 0;
 
-    // S122/BW4: the documented 60 s timeout, EXPLICIT. Prisma's interactive
-    // default is 5 s — a legitimate large envelope (the seam allows ~1 M-char
-    // fields; many small rows) could exceed it → P2028 → the shared mapper's
-    // 500, violating this route's own 400-contract for bad input (the
-    // rollback itself was always correct — only the timeout was missing).
-    // S138/CM4: the shared mapper's P2028 copy went SOURCE-NEUTRAL (it is
-    // shared by the retention-trim transactions too) — THIS route's catch
-    // owns the backup-specific remedy below.
+    // S122/BW4: the documented 60 s timeout, EXPLICIT (Prisma's interactive
+    // default is 5 s). S141/CP3: maxWait is now EXPLICIT too — the 2 s
+    // default P2028s an unrelated user write at transaction-slot
+    // acquisition under a concurrent restore (census-pinned as a pair).
+    // S138/CM4: the shared mapper's P2028 copy went SOURCE-NEUTRAL — THIS
+    // route's catch owns the backup-specific remedy below.
     await db.$transaction(
       async (tx) => {
       for (const collection of IMPORT_ORDER) {
-        const rows = parsed.get(collection);
-        if (!rows || rows.length === 0) continue;
+        const plan = plans.get(collection);
+        if (!plan) continue;
         const model = MODEL[collection] as keyof PrismaClient;
 
         // tx omits $connect/$disconnect/$on/$transaction/$extends, so a
@@ -377,77 +516,45 @@ export const POST = async (request: NextRequest) => {
         const delegate = (tx as any)[model];
         let c = 0;
         let u = 0;
-        for (const row of rows) {
-          const { id, ...rawFields } = row;
-          const fields = stripSecrets(rawFields);
-          // S140/CO1 (the A-L3 deferral, closed) — the import door's note-HTML
-          // sanitize step. This loop writes through the RAW Prisma tx client
-          // ((tx as any)[model]), NOT the factory delegates, so the note
-          // delegate's writeTransform sanitize hook never fires here — the
-          // route applies the SAME sanitizer (src/lib/server/note-html.ts)
-          // directly. The seam's sanitizeImportRow is documented
-          // validate-only BY DESIGN (data-import.ts is client-imported — the
-          // sanitize-html dependency cannot ride it); this is the import
-          // door's one server-side write seam. Plain-text rows round-trip
-          // byte-identically (the demo export/seed); a hostile
-          // "backup" note's remote-img/iframe/handler markup dies here.
-          if (
-            collection === "notes" &&
-            typeof fields.content === "string" &&
-            fields.content !== ""
-          ) {
-            fields.content = sanitizeNoteHtml(fields.content);
-          }
-          // cards carry no userId column — ownership rides the deck relation,
-          // so EVERY probe (including this write loop's findFirst, the S117
-          // fix) scopes through { deck: { userId } }, exactly like the
-          // knownIds loop above. Envelope userId never reaches Prisma: it is
-          // stripped (NEVER_IMPORT_FIELDS) and re-attached from the session.
-          const data =
-            collection === "cards" ? fields : { ...fields, userId: user.id };
-          const probe =
-            collection === "cards"
-              ? { id: id as string, deck: { userId: user.id } }
-              : { id: id as string, userId: user.id };
-          const mergeGuard = IMPORT_MERGE_GUARDS[collection];
-          const existing = await delegate.findFirst({
-            where: probe,
-            select: mergeGuard ? { id: true, ...mergeGuard.select } : { id: true },
-          });
-          if (existing) {
-            // S130/CE7: the update branch runs the merge guard against the
-            // STORED partner leg (the factory's beforeWrite parity — see
-            // IMPORT_MERGE_GUARDS above).
-            if (mergeGuard) {
-              mergeGuard.guard(existing as Row, fields as Row);
-            }
-            await delegate.update({ where: { id: id as string }, data });
-            u += 1;
-          } else {
-            try {
-              await delegate.create({ data: { ...data, id } as Row });
-            } catch (err: unknown) {
-              // S130/CE7: the concurrent-create race — the probe found no
-              // row but a concurrent write minted the id between the probe
-              // and the create. The throw propagates OUT of the transaction
-              // (the all-or-nothing rollback holds); the route's outer
-              // catch maps it to the named 409 — never the generic 500
-              // (the route's 400-class contract for bad input).
-              if (
-                err instanceof Prisma.PrismaClientKnownRequestError &&
-                err.code === "P2002"
-              ) {
-                const race = new Error(
-                  `import-p2002:${collection}:${id}`,
-                );
-                race.name = "ImportConcurrentCreateError";
-                throw race;
-              }
-              throw err;
-            }
-            c += 1;
-          }
+
+        // The UPDATE set: per-row writes (Prisma has no bulk
+        // distinct-payload update; the probe-hoist already removed the
+        // per-row findFirst read — these are fast indexed-PK writes with
+        // zero read-awaits inside the lock window).
+        for (const { id, data } of plan.updates) {
+          await delegate.update({ where: { id }, data });
+          u += 1;
         }
+
+        // The CREATE set: chunked createMany (IMPORT_CREATE_CHUNK rows per
+        // call — the 32 766-parameter ceiling verified empirically at 5 000+
+        // params; folders' parents-first order is preserved within the
+        // chunk array — SQLite checks FKs per statement row).
+        for (let i = 0; i < plan.creates.length; i += IMPORT_CREATE_CHUNK) {
+          const chunkRows = plan.creates.slice(i, i + IMPORT_CREATE_CHUNK);
+          try {
+            await delegate.createMany({ data: chunkRows });
+          } catch (err: unknown) {
+            // S130/CE7 residual + the pre-flight's after-guard race: a
+            // concurrent write minted an id between the probe and this
+            // create. The throw propagates OUT of the transaction (the
+            // all-or-nothing rollback holds); the route's outer catch maps
+            // it to the named 409 family — never the generic 500.
+            if (
+              err instanceof Prisma.PrismaClientKnownRequestError &&
+              err.code === "P2002"
+            ) {
+              const race = new Error(
+                `import-p2002:${collection}:bulk`,
+              );
+              race.name = "ImportConcurrentCreateError";
+              throw race;
+            }
+            throw err;
+          }
+          c += chunkRows.length;
+        }
+
         imported[collection] = { created: c, updated: u };
         created += c;
         updated += u;
@@ -459,14 +566,12 @@ export const POST = async (request: NextRequest) => {
       // restored content but lost the profile). The patch rides the SAME
       // all-or-nothing transaction; identity (email, name, id) never
       // rides; a garbage or absent block stays ignored.
-      // S133/CH4: validateImportEnvelope proved raw is a plain object —
-      // the user block reads off it directly.
       const profilePatch = importProfilePatch((raw as { user?: unknown }).user);
       if (profilePatch) {
         await tx.user.update({ where: { id: user.id }, data: profilePatch });
       }
       },
-      { timeout: 60_000 },
+      { timeout: 60_000, maxWait: 5_000 },
     );
 
     return NextResponse.json({
@@ -490,15 +595,19 @@ export const POST = async (request: NextRequest) => {
     // the named 409 with the actionable message (see the write loop).
     if (err instanceof Error && err.name === "ImportConcurrentCreateError") {
       // S135/CJ5: the colon-safe parse — ids legally contain ":" and the
-      // bare split(":") truncated them at the first colon.
+      // bare split(":") truncated them at the first colon. The bulk form
+      // (a createMany P2002 — the specific row is not recoverable from the
+      // bulk statement) parses to the collection-level copy.
       const { collection, id } = parseImportRaceMessage(err.message);
-      // S137/CL10 (audit A-I1): the copy names BOTH collision causes —
-      // the CE7 concurrent-create race AND the dominant real trigger, a
-      // cross-account global-PK collision (ids are GLOBAL primary keys,
-      // so a backup restored into a different account hits P2002 on the
-      // first shared id — the s128 e2e comment documents exactly this).
-      // The old "Re-export a fresh backup" advice could never help THAT
-      // case (ids are stable by design).
+      if (id === "bulk") {
+        return errorResponse(
+          409,
+          `That ${collection} collection contains a row that collides with an existing record — either it was created while this import ran, or this backup's ids already belong to another account. Edit the backup's ids or restore into the original account.`,
+        );
+      }
+      // S137/CL10 (audit A-I1): the copy names BOTH collision causes — the
+      // CE7 concurrent-create race AND the dominant real trigger, a
+      // cross-account global-PK collision.
       return errorResponse(
         409,
         `That ${collection} row (id "${id}") collides with an existing record — either it was created while this import ran, or this backup's ids already belong to another account. Edit the backup's ids or restore into the original account.`,

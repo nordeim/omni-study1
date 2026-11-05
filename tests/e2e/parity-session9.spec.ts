@@ -741,8 +741,17 @@ test.describe("S140/CO1 · the legacy hostile note render gate", () => {
   }) => {
     // Belt: abort any attempted request to the fixture's reserved origin
     // (RFC 2606 .example — never resolves) and COUNT what was attempted.
+    // S141/CP1: the interception now covers BOTH fixture origins — the
+    // planted corpus grew WRAPPED payloads (the <div>/<section> scaffolding
+    // the S140 fixture never carried: top-level elements were exactly the
+    // shape the gate already handled, and the dead-walk bug let anything
+    // one nesting level deep escape untouched).
     let attempts = 0;
     await page.route("**/a-l3-legacy.example/**", (route) => {
+      attempts += 1;
+      return route.abort();
+    });
+    await page.route("**/a-l3-wrapped.example/**", (route) => {
       attempts += 1;
       return route.abort();
     });
@@ -764,8 +773,12 @@ test.describe("S140/CO1 · the legacy hostile note render gate", () => {
     );
     // The hostile elements never materialize in the live editor DOM: no
     // remote img, no iframe (Quill's Video blot), no handler attribute.
+    // S141/CP1: the WRAPPED payloads (div/section scaffolding around
+    // remote imgs) are pinned by name — the src-form assertion catches
+    // them, and the explicit origin check documents the corpus.
     await expect(page.locator(".ql-editor img[src^='http']")).toHaveCount(0);
     await expect(page.locator(".ql-editor iframe")).toHaveCount(0);
+    await expect(page.locator(".ql-editor img[src*='a-l3-wrapped.example']")).toHaveCount(0);
     // The benign paragraph text survives (the sanitizer is an allowlist,
     // not a scorched earth).
     await expect(page.locator(".ql-editor")).toContainText(
