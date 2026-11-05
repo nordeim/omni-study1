@@ -173,3 +173,80 @@ describe("sanitizeNoteHtmlDom — the tightened policy rules (S141/CP5, DOM door
     }
   });
 });
+
+describe("sanitizeNoteHtmlDom — the unwrap-path depth cap (S142/CQ1)", () => {
+  // The A-M1 defect: the CP6 cap only counted the ALLOWED-tag path — the
+  // unwrap branch recursed at the SAME depth, so a purely disallowed
+  // chain (<div>×N) ran unbounded and the max-expressible chain (≈9090
+  // <div> levels within the 100k content cap) threw RangeError inside
+  // the editor mount IIFE (JS walk recursion — the S140-recorded class,
+  // reachable pre-fix in the real browser where the engine's parser and
+  // mutation cascades are iterative).
+  //
+  // Environment boundary, probed and recorded honestly: happy-dom's own
+  // library JS recurses on deep-tree mutations and serialization
+  // ([connectedToNode] / innerHTML — RangeError at ≥4 000 nesting), so
+  // the ≥4k-deep not.toThrow shape is NOT demonstrable under happy-dom
+  // regardless of the walk's bound (the browser-level guarantee rides
+  // the capped-walk code shape + the render-gate e2e leg). The unit pin
+  // below pins the cap SEMANTICS at a happy-dom-safe depth — exactly the
+  // existing CP6 allowed-chain leg's pattern, applied to the unwrap path.
+  it("collapses a pathological DISALLOWED-element chain at the cap (markup beyond the cap dies, its text survives)", () => {
+    const depth = 550;
+    const chain = "<div>".repeat(depth) + "<strong>bold</strong>" + "</div>".repeat(depth);
+    const run = (): string => sanitizeNoteHtmlDom(chain);
+    expect(run).not.toThrow();
+    const out = run();
+    // Pre-fix (RED): all 550 levels unwrap and <strong> SURVIVES as
+    // markup — the cap never fired on the unwrap path. Post-fix: the
+    // collapse at depth 500 takes the whole remaining subtree to its
+    // text ("bold"), the same posture as the allowed-chain leg below.
+    expect(out).toContain("bold");
+    expect(out).not.toContain("<strong>");
+    expect((out.match(/<div>/g) ?? []).length).toBe(0);
+  });
+
+  it("collapses a mixed allowed/disallowed chain at the cap (no throw, text survives)", () => {
+    const depth = 600;
+    const chain =
+      "<span>".repeat(10) + "<div>".repeat(depth) + "core" + "</div>".repeat(depth) + "</span>".repeat(10);
+    const run = (): string => sanitizeNoteHtmlDom(chain);
+    expect(run).not.toThrow();
+    expect(run()).toContain("core");
+  });
+});
+
+describe("sanitizeNoteHtmlDom — the aligned anchor policy (S142/CQ5, DOM door)", () => {
+  // The A-L2 alignment: the two doors accept the SAME anchor payload set
+  // — http/https/mailto survive; data: and relative hrefs die at BOTH
+  // doors; rel rides every survivor.
+  it("drops an anchor data: href (raster or not — anchors are not images)", () => {
+    const out = sanitizeNoteHtmlDom(
+      '<a href="data:image/png;base64,iVBORw0KGgo=">exfil</a>',
+    );
+    expect(out).not.toContain("data:");
+    expect(out).toContain("exfil");
+  });
+
+  it("drops relative and fragment-only anchor hrefs (never toolbar-authored)", () => {
+    for (const href of ["/admin", "#anchor", "relative-page", "  "]) {
+      const out = sanitizeNoteHtmlDom(`<a href="${href}">r</a>`);
+      expect(out).not.toMatch(/href="[^"]*"/);
+      expect(out).toContain("r");
+    }
+  });
+
+  it("injects rel=noopener noreferrer on every surviving anchor (the server door's twin)", () => {
+    for (const href of ["https://example.com/x", "http://example.com/y", "mailto:z@example.com"]) {
+      const out = sanitizeNoteHtmlDom(`<a href="${href}">l</a>`);
+      expect(out).toContain('rel="noopener noreferrer"');
+      expect(out).toContain(href);
+    }
+  });
+
+  it("drops a whitespace-only img src (the server door's aligned form)", () => {
+    const out = sanitizeNoteHtmlDom('<img src="   " alt="blank">');
+    expect(out).not.toMatch(/src="[^"]*"/);
+    expect(out).toContain('alt="blank"');
+  });
+});

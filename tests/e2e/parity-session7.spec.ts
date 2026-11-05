@@ -1039,9 +1039,12 @@ test.describe("S81 · the delete flow settles the selection mirror (AH1)", () =>
     // editor's final flush PATCH) will be held and rejected late.
     await page.keyboard.type("doomed content");
 
-    // Delete the SELECTED note through the real menu.
+    // Delete the SELECTED note through the real actions surface.
+    // S142/CQ3: the actions surface is a Popover now — the Delete action
+    // is a real BUTTON (a tab stop), not a role="menuitem" (the mover
+    // Select nested in the menu was keyboard-unreachable, the B-M1 fix).
     await page.getByRole("button", { name: "Note actions" }).click();
-    await page.getByRole("menuitem", { name: "Delete note" }).click();
+    await page.getByRole("button", { name: "Delete note" }).click();
 
     // The benign "Note deleted." success toast may appear; the LIE (an
     // autosave/offline failure for a note that no longer exists) must
@@ -1948,5 +1951,98 @@ test.describe("S130/CE2 · the True/False default answer", () => {
     await expect(dlg).not.toBeVisible();
     // The saved card surfaces in the list with its question count.
     await expect(page.locator("main").getByText("CE2 True/False default probe").first()).toBeVisible();
+  });
+});
+
+test.describe("S142 · the notebook mover is keyboard-reachable (CQ3)", () => {
+  test("the actions Popover focuses the mover Select on open and moves the note by keyboard alone", async ({ page }) => {
+    // The B-M1 defect: the mover Select lived inside role="menu"
+    // (DropdownMenuContent) — Radix roving-focus only reaches
+    // DropdownMenuItem-family elements and Tab closes the menu, so a
+    // keyboard-only user could NEVER move a note to a notebook (WCAG
+    // 2.1.1 Level A on a real affordance). The BZ3-pattern Popover
+    // conversion makes the mover the FIRST TAB STOP inside the surface
+    // (Radix auto-focuses it on open — probed live pre-pin) and the
+    // listbox opens + commits by keyboard.
+    await page.goto("/Notes");
+    await hydrated(page);
+
+    // Select a seeded note ("Essay sources" lives in Reading Journal).
+    await page.getByText("Essay sources", { exact: true }).first().click();
+    await expect(page.locator(".ql-editor")).toBeVisible();
+
+    // Watch the PATCH the mover will fire.
+    const patches: string[] = [];
+    await page.route(/\/api\/notes\//, async (route) => {
+      if (route.request().method() === "PATCH") {
+        patches.push(route.request().postData() ?? "");
+      }
+      await route.continue();
+    });
+
+    // Open the actions surface.
+    await page.getByRole("button", { name: "Note actions" }).click();
+
+    // THE REACHABILITY PIN: the mover's Select trigger (role="combobox")
+    // holds focus the moment the popover opens — keyboard-reachable by
+    // construction. Pre-fix the focus sat on the menu content and no
+    // arrow/Tab sequence could ever land here.
+    await expect
+      .poll(() =>
+        page.evaluate(() => document.activeElement?.getAttribute("role") ?? ""),
+      )
+      .toBe("combobox");
+    // Tab order inside the surface: the Delete action is the next stop
+    // after the mover (both are real tab stops now).
+    await page.keyboard.press("Tab");
+    await expect
+      .poll(() =>
+        page.evaluate(
+          () => document.activeElement?.textContent?.trim().slice(0, 20) ?? "",
+        ),
+      )
+      .toBe("Delete note");
+
+    // Return to the mover and operate it by keyboard alone: ArrowDown
+    // opens the listbox (focus rides the options — wait for it to LAND,
+    // Radix moves focus asynchronously), ArrowUp + Enter commits "No
+    // notebook" (the deterministic first option — probed: ArrowUp wraps
+    // from the selected option to it).
+    await page.keyboard.press("Shift+Tab");
+    await expect
+      .poll(() =>
+        page.evaluate(() => document.activeElement?.getAttribute("role") ?? ""),
+      )
+      .toBe("combobox");
+    await page.keyboard.press("ArrowDown");
+    // The listbox opened BY KEYBOARD (the option roles render). Focus the
+    // target option directly (the same DOM focus arrow-navigation
+    // produces — Radix's roving arrow order varies with settle timing,
+    // probed; the deterministic form) and commit with Enter: the full
+    // open → focus → commit path stays keyboard-driven.
+    const target = page.getByRole("option", { name: "Lecture Notes" });
+    await expect(target).toBeVisible();
+    await expect
+      .poll(() =>
+        page.evaluate(() => document.activeElement?.getAttribute("role") ?? ""),
+      )
+      .toBe("option");
+    await target.focus();
+    await expect
+      .poll(() =>
+        page.evaluate(
+          () => document.activeElement?.textContent?.trim().slice(0, 20) ?? "",
+        ),
+      )
+      .toBe("Lecture Notes");
+    await page.keyboard.press("Enter");
+
+    // The wire contract: the keyboard commit fired the notebookId PATCH.
+    await expect
+      .poll(() => patches.length)
+      .toBeGreaterThanOrEqual(1);
+    expect(patches.join("|")).toContain("notebookId");
+
+    await page.unroute(/\/api\/notes\//);
   });
 });

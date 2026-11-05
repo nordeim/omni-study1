@@ -64,14 +64,16 @@ test.describe("S21 the full-data export", () => {
     expect(body.data).not.toHaveProperty("verificationTokens");
     expect(body.data).not.toHaveProperty("passwordResetTokens");
 
-    // S141/CP4: the size signal rides the response — the X-Export-Bytes
-    // header carries the EXACT serialized body size (the same number the
-    // /export page renders for the panel's over-cap warning; pinned here
-    // against the actual body so a stale header fails loudly).
+    // S141/CP4 + S142/CQ2: the size signal rides the response — the
+    // X-Export-Bytes header carries the exact UTF-8 BYTE size of the body
+    // (the same number the /export page renders for the panel's over-cap
+    // warning; pinned here against the actual body so a stale header fails
+    // loudly). BYTES, not code units: json.length under-reports non-ASCII
+    // bodies up to 3x (the A-M2 defect — this seed itself carries — / ·).
     const sizeHeader = res.headers()["x-export-bytes"];
     expect(sizeHeader).toBeDefined();
     expect(Number(sizeHeader)).toBeGreaterThan(0);
-    expect(Number(sizeHeader)).toBe(JSON.stringify(body).length);
+    expect(Number(sizeHeader)).toBe(Buffer.byteLength(JSON.stringify(body)));
   });
 
   test("GET /api/export/data rejects anonymous callers (401)", async ({ browser }) => {

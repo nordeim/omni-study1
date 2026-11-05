@@ -221,3 +221,34 @@ describe("S141/CP4 · formatExportBytes (the size-signal formatting)", () => {
     expect(formatExportBytes(1023 * 1024)).toBe("1023 KB");
   });
 });
+
+describe("S142/CQ2 · exportByteSize (the byte-based size signal)", () => {
+  // The A-M2 defect: the S141 size signal consumed json.length — UTF-16
+  // CODE UNITS — while the import cap (http.ts's byte counter) and the
+  // panel's file-picker (picked.size) count real UTF-8 bytes. A non-ASCII
+  // account straddling the 64 MiB cap got NO warning (the code-unit count
+  // under-reports by up to 3x). The signal must be byte-based end-to-end.
+  it("computes the UTF-8 byte size, not the UTF-16 code-unit count", async () => {
+    const { exportByteSize } = await import("../src/lib/data-export");
+    // ASCII: bytes === code units.
+    expect(exportByteSize("")).toBe(0);
+    expect(exportByteSize("abc")).toBe(3);
+    // Multi-byte divergence — the seed's own em-dash/middot class.
+    expect(exportByteSize("—")).toBe(3);
+    expect(exportByteSize("·")).toBe(2);
+    expect(exportByteSize("—")).not.toBe("—".length);
+    const body = "Read chapter 4 — vectors";
+    expect(exportByteSize(body)).toBe(Buffer.byteLength(body));
+    expect(exportByteSize(body)).toBeGreaterThan(body.length);
+  });
+
+  it("matches Buffer.byteLength on a representative envelope fragment", async () => {
+    const { exportByteSize } = await import("../src/lib/data-export");
+    const fragment = JSON.stringify({
+      title: "Read chapter 4 — vectors",
+      note: "Q&A — R&D · 5 < 6",
+      emoji: "👋",
+    });
+    expect(exportByteSize(fragment)).toBe(Buffer.byteLength(fragment));
+  });
+});

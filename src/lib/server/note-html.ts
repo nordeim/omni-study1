@@ -97,18 +97,30 @@ const OPTIONS: sanitizeHtml.IOptions = {
   transformTags: {
     img: (tagName, attribs) => {
       const src = attribs.src ?? "";
-      // Raster-only data: payload set (svg excluded). A src outside the
-      // set is REMOVED (the element stays, alt text readable — the same
+      // Raster-only data: payload set (svg excluded), and — S142/CQ5 —
+      // whitespace-only src dies too (the DOM door's MIME gate rejects
+      // it; the S141 `src.trim() &&` guard kept it here: the last door
+      // asymmetry in the img family). A src outside the set is REMOVED
+      // (the element stays, alt text readable — the same
       // load-neutralization form the DOM gate uses).
-      if (src.trim() && !NOTE_HTML_IMAGE_MIME_PATTERN.test(src.trim())) {
+      if (!NOTE_HTML_IMAGE_MIME_PATTERN.test(src.trim())) {
         delete attribs.src;
       }
       return { tagName, attribs };
     },
-    a: (tagName, attribs) => ({
-      tagName,
-      attribs: { ...attribs, rel: "noopener noreferrer" },
-    }),
+    a: (tagName, attribs) => {
+      // S142/CQ5: scheme-less/relative/fragment/whitespace-only hrefs
+      // die here — the DOM door's cleanUrl drops them (never
+      // toolbar-authored; the vocabulary is http/https/mailto), and the
+      // S141 shape kept them at this door: the A-L2 asymmetry. The
+      // scheme'd offenders (javascript:, data:*) already die in
+      // allowedSchemes; this filter closes the scheme-less remainder.
+      const href = attribs.href;
+      if (href !== undefined && !/^(?:https?|mailto):/i.test(href.trim())) {
+        delete attribs.href;
+      }
+      return { tagName, attribs: { ...attribs, rel: "noopener noreferrer" } };
+    },
   },
 };
 

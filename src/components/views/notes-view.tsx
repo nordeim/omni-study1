@@ -762,8 +762,20 @@ export function NotesView() {
                 onPatch={patchTitle}
               />
               <div className="flex shrink-0 items-center gap-2">
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
+                {/* S142/CQ3 (audit B-M1): the actions surface is a Popover,
+                    not a DropdownMenu. The S140-era menu nested the
+                    notebook-mover Select inside role="menu" — Radix
+                    roving-focus only reaches DropdownMenuItem-family
+                    elements and Tab closes the menu, so the mover was
+                    keyboard-unreachable (a WCAG 2.1.1 Level A failure on a
+                    real affordance) — the exact S125/BZ3 nested-interactive
+                    class the notebooks-manage sweep caught, missed here.
+                    The Popover keeps the menu's geometry (content classes
+                    mirror DropdownMenuContent's) while the mover and the
+                    Delete action become real tab stops; Escape closes and
+                    restores focus to the trigger. */}
+                <Popover>
+                  <PopoverTrigger asChild>
                     <button
                       type="button"
                       aria-label="Note actions"
@@ -771,8 +783,11 @@ export function NotesView() {
                     >
                       <MoreVertical className="size-4" strokeWidth={2} />
                     </button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
+                  </PopoverTrigger>
+                  <PopoverContent
+                    align="end"
+                    className="flex w-auto min-w-[10rem] flex-col gap-1 overflow-hidden rounded-md border-border p-1 shadow-md data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-in-95"
+                  >
                     {notebooks.length > 0 && (
                       <div className="px-2 py-1.5">
                         <p className="mb-1 text-xs font-medium text-slate-500 dark:text-slate-400">Move to notebook</p>
@@ -796,12 +811,16 @@ export function NotesView() {
                         </Select>
                       </div>
                     )}
-                    <DropdownMenuItem onSelect={() => removeNote(selected.id)} className="text-red-600 focus:text-red-600">
-                      <Trash2 className="size-4" strokeWidth={2} />
+                    <button
+                      type="button"
+                      onClick={() => removeNote(selected.id)}
+                      className="relative flex cursor-default select-none items-center gap-2 rounded-sm px-2 py-1.5 text-sm text-red-600 outline-none transition-colors hover:bg-accent focus-visible:ring-2 focus-visible:ring-sf-primary/40 focus-visible:outline-none dark:text-red-400"
+                    >
+                      <Trash2 className="size-4 shrink-0" strokeWidth={2} />
                       Delete note
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                    </button>
+                  </PopoverContent>
+                </Popover>
                 {/* S77/AD4 (measured): the ref's explicit Save — gradient +
                     floppy icon. Text stays WHITE (the ref's yellow-on-
                     gradient is its platform quirk); autosave keeps running

@@ -117,3 +117,22 @@ export function formatExportBytes(bytes: number): string {
   }
   return `${Math.round((bytes / MIB) * 10) / 10} MB`;
 }
+
+/**
+ * S142/CQ2 — the envelope's UTF-8 BYTE size. The S141 signal consumed
+ * `json.length` (UTF-16 code units) while every cap in the family counts
+ * real bytes: the import route's body reader (http.ts, `byteLength`),
+ * the panel's file-picker pre-check (`picked.size`), IMPORT_MAX_BYTES
+ * itself. A non-ASCII account (the seed's own — / · / 👋) under-reports
+ * by up to 3x under code units — an export straddling the 64 MiB cap
+ * showed NO warning. One derivation, consumed by the seam → the route
+ * header, the /export page prop, and the panel threshold alike.
+ *
+ * TextEncoder (NOT Buffer): this seam is client-imported by the export
+ * panel — Buffer is a node global the browser bundle must never depend
+ * on. TextEncoder.encode().length is the same UTF-8 byte count, a web
+ * standard available in every runtime the seam loads in.
+ */
+export function exportByteSize(json: string): number {
+  return new TextEncoder().encode(json).length;
+}

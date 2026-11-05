@@ -624,6 +624,18 @@ export const POST = async (request: NextRequest) => {
         "That backup was too large or slow to restore in one pass and was fully rolled back. Try again, or split the backup and retry the halves.",
       );
     }
+    // S142/CQ4 (audit A-L1): P2025 — a row the CP3 probe classified as
+    // "existing" was DELETED between the probe and the write (the
+    // read-hoist widened that window; S140's in-tx read would have
+    // re-created it, this shape rolls back). The named-409 family's
+    // concurrent-modification leg — the generic 404 ("That record does
+    // not exist.") answered a taxonomy question with the wrong family.
+    if (typeof err === "object" && err !== null && "code" in err && (err as { code?: unknown }).code === "P2025") {
+      return errorResponse(
+        409,
+        "That backup contains a row that was deleted while this import ran — it was fully rolled back. Retry the import.",
+      );
+    }
     return toErrorResponse(err);
   }
 };

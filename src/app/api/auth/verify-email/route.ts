@@ -150,7 +150,12 @@ export async function POST(request: NextRequest) {
         // upstream); otherwise the request protocol.
         secure: secureCookieFlag(request.headers.get("x-forwarded-proto"), request.nextUrl.protocol),
         // S118/BS1: embed the current session version in the fresh token.
-        sessionVersion: user.sessionVersion,
+        // S142/CQ8 (audit B-I2): mint from the TRANSACTION's returned row —
+        // the pre-tx `user.sessionVersion` read could race a concurrent
+        // reset-password bump in the window (the fresh token born-invalid;
+        // one extra login, fails closed). The tx row is fresh by
+        // construction.
+        sessionVersion: verifiedUser.sessionVersion,
       },
     );
   } catch (err: unknown) {

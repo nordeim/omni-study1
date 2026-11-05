@@ -36,17 +36,18 @@ export const GET = async () => {
       return rateLimitedResponse(limit.retryAfterSec, "Too many export requests");
     }
 
-    const { json } = await renderExportEnvelope(publicUser(user));
+    const { json, bytes } = await renderExportEnvelope(publicUser(user));
 
     const stamp = new Date().toISOString().slice(0, 10);
     return new NextResponse(json, {
       status: 200,
       headers: {
         ...downloadHeaders(`studyflow-data-${stamp}.json`, "application/json"),
-        // S141/CP4: the exact byte size of the body below (the size-signal
-        // observable; the /export page renders the same number for the
-        // panel's warning).
-        "X-Export-Bytes": String(json.length),
+        // S141/CP4 + S142/CQ2: the exact UTF-8 BYTE size of the body below
+        // (the size-signal observable; the /export page renders the same
+        // number for the panel's warning — bytes, not json.length: code
+        // units under-report non-ASCII bodies up to 3x).
+        "X-Export-Bytes": String(bytes),
       },
     });
   } catch (err: unknown) {

@@ -79,6 +79,32 @@ export function looksLikeHtml(html: string): boolean {
 }
 
 /**
+ * S142/CQ1 — the depth-cap collapse's text collector. An EXPLICIT work
+ * stack, never native recursion: `element.textContent` and the
+ * `innerHTML` serializer walk the subtree recursively in DOM
+ * implementations (happy-dom's serializer empirically throws RangeError
+ * at ≥4 000 nesting; browser engines sit higher but are not unbounded),
+ * and the collapse exists precisely for the pathological-depth case —
+ * the mechanism that saves the editor must not itself be the thrower.
+ * Document-order output; comments/PIs contribute nothing.
+ */
+function subtreeText(root: Element): string {
+  let out = "";
+  const stack: Node[] = [root];
+  while (stack.length > 0) {
+    const node = stack.pop() as Node;
+    if (node.nodeType === 3 /* Node.TEXT_NODE */) {
+      out += node.nodeValue ?? "";
+      continue;
+    }
+    // Push children in REVERSE so pops yield document order.
+    const kids = node.childNodes;
+    for (let i = kids.length - 1; i >= 0; i -= 1) stack.push(kids[i] as Node);
+  }
+  return out;
+}
+
+/**
  * The browser-side render gate for LEGACY rows (pre-CO1 writes the server
  * seam never saw). Walks the string through DOMParser with the policy
  * above: drops disallowed tags (keeping their text where the tag is a
@@ -100,14 +126,17 @@ export function sanitizeNoteHtmlDom(html: string): string {
 
   function cleanUrl(href: string): string | null {
     const trimmed = href.trim().toLowerCase();
-    // S141/CP5: the raster-only data: MIME set governs the anchor data:
-    // case too (aligned with the img rule — the two doors accept the same
-    // payload set; svg/data:text/html hrefs die).
-    if (trimmed.startsWith("data:"))
-      return NOTE_HTML_IMAGE_MIME_PATTERN.test(href.trim()) ? href : null;
+    // S142/CQ5: anchors carry http/https/mailto ONLY — the toolbar's own
+    // vocabulary. data: hrefs die here too (the raster carve-out was the
+    // A-L2 asymmetry: the server door's allowedSchemes already killed
+    // them; anchors are not images), and scheme-less relative/fragment
+    // hrefs die (never toolbar-authored; the server door aligns the same
+    // way in its transformTags filter). The two doors accept the SAME
+    // anchor payload set.
+    if (trimmed.startsWith("data:")) return null;
     const scheme = trimmed.split(":")[0];
     if (scheme === "http" || scheme === "https" || scheme === "mailto") return href;
-    return null; // javascript:, vbscript:, unknown — gone.
+    return null; // javascript:, vbscript:, relative, fragment, whitespace-only, unknown — gone.
   }
 
   function walk(node: Element, depth: number): void {
@@ -128,7 +157,7 @@ export function sanitizeNoteHtmlDom(html: string): string {
     // recursing (the pre-cap walk threw RangeError on ~25k-deep
     // nesting, killing the editor mount with an unhandled rejection).
     if (depth >= NOTE_HTML_MAX_WALK_DEPTH) {
-      child.replaceWith(child.textContent ?? "");
+      child.replaceWith(subtreeText(child));
       return;
     }
     const tag = child.tagName.toLowerCase();
@@ -148,7 +177,14 @@ export function sanitizeNoteHtmlDom(html: string): string {
       while (child.firstChild) frag.appendChild(child.firstChild);
       const moved = Array.from(frag.children);
       parent.replaceChild(frag, child);
-      for (const m of moved) processElement(m, depth);
+      // S142/CQ1: the unwrap consumes a depth level too — the S141 shape
+      // passed `depth` unchanged, so a purely disallowed chain (<div>×N)
+      // recursed unbounded (the cap never fired; the max-expressible
+      // ~9090-level chain within the 100k content cap threw RangeError
+      // inside the editor mount — empirically probed: 6000 survives,
+      // 8000 throws). Every hop through markup costs one level, allowed
+      // or not.
+      for (const m of moved) processElement(m, depth + 1);
       return;
     }
     // Attribute gate.
@@ -200,6 +236,11 @@ export function sanitizeNoteHtmlDom(html: string): string {
         if (kept !== attr.value) child.setAttribute("style", kept);
       }
     }
+    // S142/CQ5: the rel injection — the server door's transformTags twin.
+    // Every SURVIVING anchor rides noopener+noreferrer at both doors
+    // (href-bearing or not — the server injects on every <a>; a
+    // target=_blank survivor without rel was the A-L2 asymmetry).
+    if (tag === "a") child.setAttribute("rel", "noopener noreferrer");
     walk(child, depth + 1);
   }
 }

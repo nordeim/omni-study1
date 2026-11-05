@@ -207,3 +207,30 @@ describe("sanitizeNoteHtml — the tightened policy pair (S141/CP5, server door)
     expect(out).toContain('rel="noopener noreferrer"');
   });
 });
+
+describe("sanitizeNoteHtml — the aligned anchor policy (S142/CQ5, server door)", () => {
+  // The A-L2 alignment: the two doors accept the SAME anchor payload set —
+  // http/https/mailto survive; data: and relative hrefs die at BOTH doors;
+  // rel rides every survivor; whitespace-only img src dies at both.
+  it("drops relative and fragment-only anchor hrefs (the DOM door's aligned form)", () => {
+    for (const href of ["/admin", "#anchor", "relative-page", "  "]) {
+      const out = sanitizeNoteHtml(`<p><a href="${href}">r</a></p>`);
+      expect(out).not.toMatch(/href="[^"]*"/);
+      expect(out).toContain("r");
+    }
+  });
+
+  it("drops a whitespace-only img src (aligned with the DOM door's MIME gate)", () => {
+    const out = sanitizeNoteHtml('<img src="   " alt="blank">');
+    expect(out).not.toMatch(/src="[^"]*"/);
+    expect(out).toContain('alt="blank"');
+  });
+
+  it("keeps the toolbar vocabulary's http/https/mailto quartet with rel injected", () => {
+    for (const href of ["https://example.com/x", "http://example.com/y", "mailto:z@example.com"]) {
+      const out = sanitizeNoteHtml(`<a href="${href}">l</a>`);
+      expect(out).toContain(href);
+      expect(out).toContain('rel="noopener noreferrer"');
+    }
+  });
+});

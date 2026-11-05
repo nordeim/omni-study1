@@ -21,13 +21,18 @@
 
 import { db } from "@/lib/db";
 import { publicUser } from "@/lib/server/auth";
-import { buildDataExport } from "@/lib/data-export";
+import { buildDataExport, exportByteSize } from "@/lib/data-export";
 
 export type ExportUser = Awaited<ReturnType<typeof publicUser>>;
 
 export type RenderedExport = {
   /** The serialized envelope — byte-identical to the route's response body. */
   json: string;
+  /** S142/CQ2 — the envelope's UTF-8 BYTE size (NOT json.length: code
+   * units under-report non-ASCII bodies up to 3x — the A-M2 defect; every
+   * cap in the family counts bytes). One derivation for the route header,
+   * the /export page prop, and the panel's over-cap threshold alike. */
+  bytes: number;
 };
 
 /** Read all 20 collections (userId-scoped, chronological; cards scoped
@@ -36,7 +41,7 @@ export type RenderedExport = {
  * the page's getCurrentUser + redirect gate) — the seam never
  * re-authenticates, so the S140 route's requireUser → limiter ordering is
  * preserved byte-for-byte. The route answers `json` as the download; the
- * /export page reads `json.length` for the size signal. */
+ * /export page reads `bytes` for the size signal. */
 export async function renderExportEnvelope(user: ExportUser): Promise<RenderedExport> {
 
   const [
@@ -114,5 +119,9 @@ export async function renderExportEnvelope(user: ExportUser): Promise<RenderedEx
     new Date(),
   );
 
-  return { json: JSON.stringify(envelope) };
+  const json = JSON.stringify(envelope);
+  // S142/CQ2: the byte size rides the seam — the same number the route's
+  // X-Export-Bytes header, the page's exportBytes prop, and the panel's
+  // over-cap comparison consume (the single-source doctrine).
+  return { json, bytes: exportByteSize(json) };
 }

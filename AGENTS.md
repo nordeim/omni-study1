@@ -9,9 +9,9 @@ High-signal instructions for coding agents working in this repo. Everything here
 | `bun install` | Install deps (Bun ≥ 1.3) |
 | `bun run dev` | Dev server on :3000 (Turbopack), logs tee'd to `dev.log` |
 | `bun run lint` / `bun run typecheck` | ESLint / `tsc --noEmit` — both must be clean |
-| `bun run test` | Vitest unit layer (1449 tests; `*.test.ts` only — never picks up e2e specs) |
+| `bun run test` | Vitest unit layer (1466 tests; `*.test.ts` only — never picks up e2e specs) |
 | `bun run build` | Production build → `.next/standalone` (**required before e2e**) |
-| `bun run test:e2e` | Playwright vs the standalone build on :3100 with `db/e2e.db` (603 tests across the 5-chunk cold map — 150+185+87+95+86, 30 spec files; a single-process full run trips the register rate-limiter budget by design, the chunked map re-boots the server per chunk). NOTE (S45, the day-boundary lesson): the global setup re-seeds every run, but the seed's IDEMPOTENT UPSERTS do NOT refresh day-relative dates on existing rows — a scratch `db/e2e.db` that ages across a UTC midnight keeps its original day-relative dates (today's tasks, the +1-day exam badge, the due-in pills, the import round-trip dates each read one day stale → 4 deterministic failures in parity-session6/parity-session9/s23-import). Delete `db/e2e.db` when a run crosses a day boundary — the global setup re-creates it fresh with current dates. NOTE (S46, TWO more aged-scratch-db classes + a build-input one): (1) ALWAYS run e2e COLD — S131/CF5 chained `scripts/e2e-cold-reset.sh` into `bun run test:e2e` (port-guard + `rm -f db/e2e.db` BEFORE playwright boots anything — global-setup is TOO LATE: Playwright starts the webServer before globalSetup), so the default runner self-colds; any DIRECT `playwright test` invocation still needs the manual `rm -f db/e2e.db` before every full run: the s23-import round-trip posts a FIXED-id envelope, so a second consecutive run against the aged db reads `created: 0, updated: 1` instead of `created: 1, updated: 0` and fails — not just across midnights, across ANY re-run; (2) the s22 negative-spawn spec reads the BUNDLED `.env` — Next's standalone output COPIES the repo-root `.env` into `.next/standalone/.env` at build time, so a REAL AUTH_SECRET in the dev `.env` leaks into the bundle and the guard CORRECTLY boots (the spec times out waiting for the exit) — keep the repo-root `.env`'s AUTH_SECRET EMPTY (the `.env.example` dev posture: `AUTH_SECRET=""` — dev falls back to the local constant with the boot warning) when building for e2e |
+| `bun run test:e2e` | Playwright vs the standalone build on :3100 with `db/e2e.db` (606 tests across the 5-chunk cold map — 150+187+87+95+87, 30 spec files; a single-process full run trips the register rate-limiter budget by design, the chunked map re-boots the server per chunk). NOTE (S45, the day-boundary lesson): the global setup re-seeds every run, but the seed's IDEMPOTENT UPSERTS do NOT refresh day-relative dates on existing rows — a scratch `db/e2e.db` that ages across a UTC midnight keeps its original day-relative dates (today's tasks, the +1-day exam badge, the due-in pills, the import round-trip dates each read one day stale → 4 deterministic failures in parity-session6/parity-session9/s23-import). Delete `db/e2e.db` when a run crosses a day boundary — the global setup re-creates it fresh with current dates. NOTE (S46, TWO more aged-scratch-db classes + a build-input one): (1) ALWAYS run e2e COLD — S131/CF5 chained `scripts/e2e-cold-reset.sh` into `bun run test:e2e` (port-guard + `rm -f db/e2e.db` BEFORE playwright boots anything — global-setup is TOO LATE: Playwright starts the webServer before globalSetup), so the default runner self-colds; any DIRECT `playwright test` invocation still needs the manual `rm -f db/e2e.db` before every full run: the s23-import round-trip posts a FIXED-id envelope, so a second consecutive run against the aged db reads `created: 0, updated: 1` instead of `created: 1, updated: 0` and fails — not just across midnights, across ANY re-run; (2) the s22 negative-spawn spec reads the BUNDLED `.env` — Next's standalone output COPIES the repo-root `.env` into `.next/standalone/.env` at build time, so a REAL AUTH_SECRET in the dev `.env` leaks into the bundle and the guard CORRECTLY boots (the spec times out waiting for the exit) — keep the repo-root `.env`'s AUTH_SECRET EMPTY (the `.env.example` dev posture: `AUTH_SECRET=""` — dev falls back to the local constant with the boot warning) when building for e2e |
 | `node scripts/capture-studyflow.mjs` | Refresh all 31 `docs/screenshots/` captures from the dev server (24 light + 7 dark) |
 | `node scripts/dark-sweep.mjs` | Dark-mode contrast audit over all 20 views (flashbulb/unreadable detector). S27: sets dark mode through the settings API (the real lifecycle) and SELF-VERIFIES the precondition — fails loudly (exit 1, no findings) if the dark class is not applied; the applied mode rides the JSON envelope. Never force the class directly (the session-10 approach silently rotted after S11) |
 | `node scripts/accent-dark-sweep.mjs` | Accent × dark-mode audit (S38-extended): all 7 accents × 20 desktop views × 20 MOBILE views at 390×844 + the drawer per accent (FAIL <2.2, WARN <3.2 for accent text; the mobile records also carry scrollWidth — >390 is a finding). The S38 shape is unit-pinned anti-phantom: every view recorded EXPLICITLY on both surfaces (clean views carry empty detector arrays), the per-accent `applied` self-verified readings + `mode: "dark"` + `mobileViewport` ride the envelope, and the seam's ALL-ACCENTS + ALL-VIEWS + drawer-present guards make every silently-skipped dimension a LOUD shape-error (the pre-S38 mobile pass swept only 6 views — MOBILE_VIEWS — and the omission-means-clean recording could not distinguish "clean because measured" from "clean because never rendered") |
@@ -1830,3 +1830,61 @@ Hover-parity probing must run in Playwright, not a touch-emulating browser — v
    webServer log; the re-run was 186/186 first-pass. Lesson: single-test
    failures that MOVE between identical runs + P1008 noise =
    environmental; re-run the chunk and record the class honestly.
+
+## S142 lessons (Batch CQ — the unwrap-depth + door-alignment + byte-signal + keyboard-reachability set)
+
+1. **A depth cap must count EVERY recursion path, not just the one you
+   fixed last time.** The CP6 cap incremented depth only on the
+   allowed-tag path; the unwrap branch passed `depth` unchanged — a
+   purely disallowed chain (`<div>`×9 000 within the 100k cap) recursed
+   unbounded while the counter read zero. Lesson: when a guard is added
+   to a recursive walker, enumerate every recursive edge (there were
+   two) and pin each — the S141 pin only exercised the allowed-tag edge.
+2. **The rescue mechanism must not itself be the thrower — and the unit
+   environment has its OWN throwers.** `child.textContent` and the
+   innerHTML serializer walk subtrees recursively in DOM implementations
+   (happy-dom's own [connectedToNode]/serializer JS throws RangeError
+   at ≥4 000 nesting — probed: parse survives, serialize throws), so the
+   depth-cap collapse switched to an EXPLICIT-stack text collector, and
+   the ≥4k not.toThrow shape is honestly recorded as browser-only (the
+   unit pin covers the cap SEMANTICS: markup beyond the cap dies, its
+   text survives). Lesson: probe where the environment throws before
+   writing the pin — an unpinnable assertion pinned anyway is a
+   permanent red.
+3. **A size signal over a serialized body counts BYTES, not code
+   units.** `json.length` under-reports non-ASCII up to 3x (the demo
+   seed's own — / · / 👋), while every cap in the family (the import
+   body reader, the panel's file-picker, IMPORT_MAX_BYTES) counts real
+   bytes — an export straddling the 64 MiB cap showed NO warning. The
+   derivation must also live in a client-safe seam: TextEncoder, never
+   Buffer (the export panel imports the seam browser-side). Lesson:
+   match the unit of the cap you warn about, and check the import graph
+   before reaching for node globals.
+4. **A nested interactive inside role="menu" is unreachable by
+   keyboard — and the sweep that fixed the class can miss an instance.**
+   The S125/BZ3 conversion fixed the notebooks-manage menu but the
+   note-actions menu kept a Select inside DropdownMenuContent for 17
+   more sessions (Radix roving-focus only reaches item-family elements;
+   Tab closes the menu). The BZ3-pattern Popover conversion makes the
+   mover the first tab stop. Lesson: when a WCAG fix lands for one
+   instance, grep for the pattern class (nested Select/Popover inside
+   menu content), not just the audited site.
+5. **Radix roving focus moves ASYNCHRONOUSLY — an e2e Enter fired
+   immediately after an Arrow key commits the still-focused CURRENT
+   option (same value → no commit, no PATCH).** The deterministic form:
+   poll for the landed focus (role, then text) before the commit key.
+   Lesson: keyboard-driven e2e needs focus-landing assertions between
+   navigation and activation keystrokes.
+6. **Run the cert ALONE.** The chunk-3 failures (2, then 1 — the BU1
+   leg both times, 2.5s green in isolation) co-occurred with the unit
+   suite running in a parallel tool call — memory/IO contention is the
+   P1008 socket-timeout class's amplifier; the contention-free re-run
+   was 87/87 first-pass. Lesson: the cert is the one gate that must
+   never share the machine; sequence it after every other check.
+7. **Machine-gate the count claims ACROSS documents.** AGENTS.md's e2e
+   row said 603 for two cycles while README/CLAUDE/PAD said 605 — both
+   S140 and S141 updated the unit row and missed the e2e row. The CQ6
+   census leg reads AGENTS.md and the cert script's expected map and
+   asserts they AGREE (with the chunk-sum arithmetic) — the drift class
+   is now structurally loud. Lesson: counts claimed in N documents need
+   a test that reads all N and compares, or one of them will rot.

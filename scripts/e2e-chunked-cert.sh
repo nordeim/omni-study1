@@ -1,4 +1,15 @@
 #!/usr/bin/env bash
+# (S142/CQ re-tag — census 605 → 606, net +1: chunk 2 +1 [the CQ3
+# notebook-mover keyboard-reachability leg in parity-session7 — the
+# note-actions surface is a Popover now (the BZ3-pattern conversion), and
+# the leg pins the mover Select as the FIRST TAB STOP + the keyboard-only
+# open→focus→commit→PATCH path; the AH1 delete leg re-anchored to the new
+# button role in the same file]. The chunk-3 cert runs observed the P1008
+# socket-timeout flake class UNDER SELF-INFLICTED CONTENTION (the unit
+# suite ran in a parallel tool call during the cert — 2 failed, then 1
+# failed on the re-run, the BU1 files-view leg both times, passing 2.5s in
+# isolation); the contention-free re-run was 87/87 first-pass — run the
+# cert ALONE, the documented machine-load class.)
 # (S141/CP re-tag — census 605 → 605, net +0: no new e2e tests this cycle;
 # the S141 pins EXTENDED existing legs in place — the parity-session9
 # render-gate leg now intercepts a SECOND attacker origin (the planted
@@ -102,7 +113,7 @@
 # 192.0.2.139, 3/10 per-IP, 3/40 registerGlobal), the demo import
 # budget at 8/10; END-of-file, the CK1 flood pin stays TERMINAL in
 # s16]. The full CN map: docs/remediation-plan-session139.md.)
-# Expected: 150 + 186 + 87 + 95 + 87 = 605 (each chunk's count includes its
+# Expected: 150 + 187 + 87 + 95 + 87 = 606 (each chunk's count includes its
 # auth setup — the current census; the historical re-tag blocks beneath.)
 # (S131/CF re-tag — census 567 → 570, net +3: chunk 1 +1 [the CF9
 # drawer focus-restore leg in mobile-navigation — crossing the lg

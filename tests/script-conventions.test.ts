@@ -123,7 +123,7 @@ describe("the chunked cert runner's truth contract (S128/CC2)", () => {
     // witness, relocated out of chunk 3's BY5-spent export budget) +
     // chunk 3 82 → 87 (the CN2 tolerance pair, the cross-account 409,
     // the CN4 card-delegate 404s, the CN10 owned-FK re-point) — 597 → 603.
-    expect(certSource).toContain("Expected: 150 + 186 + 87 + 95 + 87 = 605");
+    expect(certSource).toContain("Expected: 150 + 187 + 87 + 95 + 87 = 606");
   });
 
   it("propagates a failing chunk's exit code (never a green cert on a red run)", () => {
@@ -1289,5 +1289,88 @@ describe("the restore-availability census (S141/CP3)", () => {
   it("the cross-account collision pre-flight answers the named 409 pre-write (the dominant P2002 trigger, caught with zero writes)", () => {
     const src = readFileSync(IMPORT_ROUTE, "utf8");
     expect(src).toContain("S141/CP3: the cross-account collision pre-flight");
+  });
+});
+
+// ---------------------------------------------------------------------------
+// S142/CQ — the cycle's source censuses (the unwrap-depth + byte-signal +
+// named-P2025 + count-gate + CAS-rollback + mint-freshness set).
+// ---------------------------------------------------------------------------
+describe("the S142/CQ source censuses", () => {
+  const IMPORT_ROUTE = path.resolve(process.cwd(), "src/app/api/import/data/route.ts");
+  const EXPORT_SEAM = path.resolve(process.cwd(), "src/lib/server/export-build.ts");
+  const EXPORT_ROUTE = path.resolve(process.cwd(), "src/app/api/export/data/route.ts");
+  const EXPORT_PAGE = path.resolve(process.cwd(), "src/app/export/page.tsx");
+  const DATA_EXPORT = path.resolve(process.cwd(), "src/lib/data-export.ts");
+  const AGENTS = path.resolve(process.cwd(), "AGENTS.md");
+  const CERT_SCRIPT = path.resolve(process.cwd(), "scripts/e2e-chunked-cert.sh");
+  const SETTINGS_VIEW = path.resolve(process.cwd(), "src/components/views/settings-view.tsx");
+  const VERIFY_EMAIL = path.resolve(process.cwd(), "src/app/api/auth/verify-email/route.ts");
+  const NOTE_HTML = path.resolve(process.cwd(), "src/lib/note-html.ts");
+
+  it("CQ1: the unwrap path increments depth (the disallowed-chain cap is live)", () => {
+    const src = readFileSync(NOTE_HTML, "utf8");
+    expect(src).toContain("for (const m of moved) processElement(m, depth + 1);");
+    // The collapse is recursion-free (the explicit-stack collector) — the
+    // mechanism that saves the editor must not itself be the thrower.
+    expect(src).toContain("function subtreeText(");
+    expect(src).not.toContain("child.replaceWith(child.textContent");
+  });
+
+  it("CQ2: the export size signal is byte-based end-to-end (the seam derives it once)", () => {
+    const seam = readFileSync(EXPORT_SEAM, "utf8");
+    const route = readFileSync(EXPORT_ROUTE, "utf8");
+    const page = readFileSync(EXPORT_PAGE, "utf8");
+    const pure = readFileSync(DATA_EXPORT, "utf8");
+    // The pure derivation exists and is TextEncoder-based (client-imported
+    // seam — Buffer is a node global the browser bundle must never need).
+    expect(pure).toContain("export function exportByteSize(");
+    expect(pure).toContain("new TextEncoder().encode(json).length");
+    expect(pure).not.toContain("Buffer.byteLength");
+    // The seam returns bytes; both consumers read `.bytes` — never
+    // `json.length` (the A-M2 code-unit under-report).
+    expect(seam).toContain("bytes: exportByteSize(json)");
+    expect(route).toContain("String(bytes)");
+    expect(page).toContain("const { bytes } = await renderExportEnvelope");
+    expect(route).not.toContain("String(json.length)");
+    expect(page).not.toContain("json.length");
+  });
+
+  it("CQ4: the import catch carries the P2025 named-409 leg (the concurrent-delete taxonomy)", () => {
+    const src = readFileSync(IMPORT_ROUTE, "utf8");
+    expect(src).toContain('"P2025"');
+    expect(src).toContain("was deleted while this import ran");
+  });
+
+  it("CQ6: AGENTS.md's e2e census row agrees with the cert script's expected map (the count-claims machine gate)", () => {
+    // The S140/S141 cycles both missed the e2e row while updating the unit
+    // row (603 vs the actual 605 for two cycles) — this leg makes the
+    // drift fail loudly instead of rotting silently.
+    const agents = readFileSync(AGENTS, "utf8");
+    const cert = readFileSync(CERT_SCRIPT, "utf8");
+    const agentsMatch = agents.match(/(\d+) tests across the 5-chunk cold map — (\d+)\+(\d+)\+(\d+)\+(\d+)\+(\d+)/);
+    const certMatch = cert.match(/Expected: (\d+) \+ (\d+) \+ (\d+) \+ (\d+) \+ (\d+) = (\d+)/);
+    expect(agentsMatch).not.toBeNull();
+    expect(certMatch).not.toBeNull();
+    const agentsChunks = (agentsMatch as RegExpMatchArray).slice(2, 7).map(Number);
+    const agentsTotal = Number((agentsMatch as RegExpMatchArray)[1]);
+    const certChunks = (certMatch as RegExpMatchArray).slice(1, 6).map(Number);
+    const certTotal = Number((certMatch as RegExpMatchArray)[6]);
+    expect(agentsChunks).toEqual(certChunks);
+    expect(agentsTotal).toBe(certTotal);
+    expect(agentsChunks.reduce((a: number, b: number) => a + b, 0)).toBe(agentsTotal);
+  });
+
+  it("CQ7: the three appearance rollbacks are CAS-guarded (no unconditional prev restore)", () => {
+    const src = readFileSync(SETTINGS_VIEW, "utf8");
+    expect(src).toContain("if (useThemeStore.getState().mode === next) setMode(prev);");
+    expect(src).toContain("if (useThemeStore.getState().accent === next) setAccent(prev);");
+    expect(src).toContain("if (useThemeStore.getState().avatar === emoji) setAvatar(prev);");
+  });
+
+  it("CQ8: verify-email mints the cookie from the transaction's fresh row (not the pre-tx read)", () => {
+    const src = readFileSync(VERIFY_EMAIL, "utf8");
+    expect(src).toContain("sessionVersion: verifiedUser.sessionVersion");
+    expect(src).not.toContain("sessionVersion: user.sessionVersion");
   });
 });

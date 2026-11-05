@@ -138,11 +138,17 @@ function AppearanceCard() {
   // PATCH and only toasted on failure, so the pressed selection lied
   // about what would persist until the next /api/auth/me hydration
   // silently reverted it. The local selection now reverts with the toast.
+  // S142/CQ7 (audit B-L1): CAS-guarded rollbacks. The S127/CB15 shape
+  // restored `prev` unconditionally — a late-failing PATCH (settling after
+  // a newer successful pick) clobbered the newer value: local store +
+  // localStorage disagreed with the server until reload. The guard: only
+  // roll back when the store STILL holds the failed `next` (the
+  // fetchSeq idiom's compare-and-swap form, applied to the theme store).
   const pickTheme = (next: ThemeMode) => {
     const prev = mode;
     setMode(next);
     patchPreferences({ themeMode: next }).catch((err: unknown) => {
-      setMode(prev);
+      if (useThemeStore.getState().mode === next) setMode(prev);
       toast.error(errorMessage(err, "Could not save the theme preference."));
     });
   };
@@ -151,7 +157,7 @@ function AppearanceCard() {
     const prev = accent;
     setAccent(next);
     patchPreferences({ accentColor: next }).catch((err: unknown) => {
-      setAccent(prev);
+      if (useThemeStore.getState().accent === next) setAccent(prev);
       toast.error(errorMessage(err, "Could not save the accent color."));
     });
   };
@@ -160,7 +166,7 @@ function AppearanceCard() {
     const prev = avatar;
     setAvatar(emoji);
     patchPreferences({ avatarEmoji: emoji }).catch((err: unknown) => {
-      setAvatar(prev);
+      if (useThemeStore.getState().avatar === emoji) setAvatar(prev);
       toast.error(errorMessage(err, "Could not save the avatar."));
     });
   };

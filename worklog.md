@@ -4083,3 +4083,108 @@ this entry.
 auth/crypto/infra are two cycles stale again) or the A-M3 stage-2 (the
 chunked sub-transactions + resume token — the one named deferral, and
 it needs operator direction on the ADR-021 contract change).
+
+## Session 153 — Batch CQ (Cycle 92): the unwrap-depth + door-alignment + byte-signal + keyboard-reachability set
+
+**Received state.** A fresh clone at `10d5a33` on `main` (the Batch CP fix
+`459e7da` + the operator's session_156 transcript commit) — the 34th
+workspace continuation. The environment provisioned from scratch per the
+recipe: `bun install` (510 pkgs), `.env` from `.env.example`
+(`DATABASE_URL="file:../db/custom.db"`), `db:push` + `db:seed` (the
+repo-root `db/custom.db` 389 KiB, demo account), Playwright Chromium
+installed, the dev daemon live on :3000 via the S32 subshell recipe.
+
+**Cold baseline BEFORE any work.** lint ✓ · tsc ✓ · unit **1449/1449**
+(47 files — the documented S141 final state exactly) · the dev-server
+preflight GREEN · the drawer check GREEN (**the 57th consecutive
+no-Tailwind-v4-mobile-nav-bug confirmation** — reference backdrop
+oklab(0 0 0 / 0.2) at blur(4px) ≡ the clone `backdrop-blur-xs`, 288px
+white panels, 20 links, both hosts live) · mobile-navigation cold **20/20**
+· the desktop chrome probe **MATCH** (all five formal checks — after the
+s142 probe rework: the reference's login click renders a splash
+containing `<main>` while still on `/login` (the s141 main-wait
+resolved on the splash and evaluated in the re-render window — the
+all-nulls artifact); the reference redirects its SPA shell to
+`/Dashboard` (the clone serves `/` — both are the settled dashboard);
+the reference's first `<nav>` is an inner 258px div inside the 260px
+shell (the s156-documented probe artifact — the OUTER footprint is the
+shared measurement). `scripts/parity-probe-s142.mjs` settles on
+nav-links + heading (pathname-agnostic), waits for the enabled submit
+button before clicking, and checks the outer sidebar: 260=260, 20 links
+in identical order, mainX 260=260, mainWidth 1180=1180).
+
+**The audits (Mode-C, read-only subagents, every M/L finding re-verified
+by direct read).** The rotated pair per the s141 closing directive (the
+FE/views + auth/crypto/infra axis, two cycles stale): (1) the Batch CP
+recent-changes audit — **0C/0H/2M/3L/3I**: the CP6 depth cap never
+counted the UNWRAP path (`processElement(m, depth)` — a purely
+disallowed `<div>` chain recursed unbounded; the max-expressible
+~9 090-level chain within the 100k content cap threw RangeError inside
+the editor mount, the S140-recorded class still open), and the export
+size signal counted UTF-16 code units (`json.length`) while every cap
+in the family counts real bytes (a non-ASCII account straddling the
+64 MiB restore cap got NO warning; the demo seed's own — / · already
+under-reported); (2) the FE/views + auth/crypto rotation — **0C/0H/1M/
+1L/2I**, the surface substantially clean (all SPECIAL-ATTENTION
+invariants re-verified holding: ownership scoping on every route, the
+scrypt KDF contract, the timing equalizer's uniformity, no innerHTML
+outside the pinned gates, the fail-closed XFF parse): the note-actions
+menu nested the notebook-mover Select inside `role="menu"` —
+keyboard-unreachable (WCAG 2.1.1 Level A on a real affordance), the
+exact S125/BZ3 nested-interactive class missed at this site for 17
+sessions; the appearance pickers' failed-save rollback was not
+compare-and-swap.
+
+**The plan.** `docs/remediation-plan-session142.md` written BEFORE any
+source change and validated against the codebase before execution: CQ1
+the unwrap-depth increment, CQ2 the byte-based size signal, CQ3 the
+BZ3-pattern Popover conversion, CQ4 the P2025 named-409 leg, CQ5 the
+two-door anchor alignment, CQ6 the AGENTS.md census machine gate, CQ7
+the CAS-guarded rollbacks, CQ8 the verify-email tx-fresh mint, CQ9 the
+doc chain. The A-M3 stage-2 deferred AGAIN with rationale (the ADR-021
+contract change needs operator direction).
+
+**Executed TDD-style.** RED first: the disallowed-chain cap legs (the
+happy-dom probes found the environment's own throwers — happy-dom's
+serializer and [connectedToNode] cascade throw at ≥4 000 nesting natively,
+so the ≥4k not.toThrow shape is browser-only; the shipped pin covers the
+cap SEMANTICS: markup beyond the cap dies, its text survives), the
+aligned-anchor legs at both doors (RED 6/37 → GREEN 42/42 in the
+note-html family), the exportByteSize byte-vs-code-unit family, the six
+census legs. The mid-flight corrections, recorded honestly: the CQ2
+first draft used Buffer (the client-imported seam — caught by the
+import-graph check, shipped as TextEncoder); the CQ3 e2e leg raced
+Radix's asynchronous roving focus (an Enter after an Arrow committed the
+still-focused CURRENT option — the deterministic shape polls for the
+landed focus before the commit key); the depth-cap collapse's own
+`child.textContent` was a native recursion that would throw the same way
+(the shipped subtreeText collects text via an explicit stack — the
+rescue mechanism must not itself be the thrower).
+
+**Re-cert (the FINAL tree).** lint ✓ · tsc ✓ · unit **1466/1466**
+(47 files) · build ✓ · the cold 5-chunk e2e **606/606** (150+187+87+95+
+87) — the chunk-3 cert runs observed SELF-INFLICTED CONTENTION (the
+unit suite ran in a parallel tool call during the cert; 2 failed then 1
+— the same BU1 files-view leg, green in 2.5s isolation, co-occurring
+with the P1008 socket-timeout class) — the contention-free re-run
+**87/87 first-pass**. Lesson recorded in AGENTS: run the cert ALONE.
+**Census 2072 green** (was 2054).
+
+**Evidence.** Four `docs/screenshots/142-clone-*.png` frames (desktop,
+mobile drawer, the Notes actions popover with the mover combobox holding
+focus — the CQ3 proof riding the frame, machine-verified — and the
+/export panel with the byte-based size signal; the capture script
+self-verifying).
+
+**Docs.** README badge/census lines + the Session-142 row; AGENTS.md
+census (both rows, the 603-vs-605 drift closed) + the S142 lessons
+block; CLAUDE.md counts; PAD v1.3.50 (the revision block + the §11
+closure rows); the SKILL census; the vitest header re-anchor; the cert
+re-tag (605 → 606); the plan §6 as-executed close; `docs/session_157.md`;
+this entry.
+
+**Next cycle.** The audit rotation continues (the import/export +
+data-portability axis is one cycle fresh; the FE/views + auth/crypto
+axis just swept) — or the A-M3 stage-2 (the chunked sub-tx + resume
+token, the one named deferral, needs operator direction on the ADR-021
+contract change).

@@ -1,7 +1,24 @@
 import { defineConfig } from "vitest/config";
 import path from "node:path";
 
-// Unit-test layer for the pure domain seams — 47 files / 1449 tests
+// Unit-test layer for the pure domain seams — 47 files / 1466 tests
+// (re-anchored S142/CQ — the unwrap-depth + door-alignment + byte-signal +
+// named-P2025 + count-gate + CAS-rollback set: census 1449 → 1466, +17 net
+// [note-html-dom +7: the CQ1 unwrap-path depth-cap legs (the disallowed
+// chain collapses at the cap — markup beyond it dies, text survives; the
+// honest environment-boundary record: happy-dom's own serializer/connected
+// cascades throw at ≥4k nesting, so the ≥4k not.toThrow shape is browser-
+// only — the cap-semantics pin is the unit-observable) + the CQ5 aligned
+// anchor legs (data: hrefs die, relative/fragment hrefs die, rel injected,
+// whitespace-only src dies); note-html +3: the server-door CQ5 twins (the
+// relative/fragment href drop, the whitespace-src drop, the vocabulary
+// quartet with rel); data-export +2: the CQ2 exportByteSize byte-vs-code-
+// unit family (TextEncoder — the client-imported seam must never reach for
+// Buffer); script-conventions +6: the CQ1/CQ2/CQ4/CQ6/CQ7/CQ8 censuses (the
+// unwrap depth+subtreeText markers, the byte-signal chain seam→route→page,
+// the P2025 named-409 leg, the AGENTS.md↔cert-map count-claims machine
+// gate, the three CAS-rollback markers, the verify-email tx-fresh mint)].
+// The prior S141/CP re-anchor block follows.)
 // (re-anchored S141/CP — the render-gate snapshot + plain-text gate +
 // restore-availability + size-signal set: census 1409 → 1449, +40 net
 // [note-html-dom +17: the NEW happy-dom environment project — the first

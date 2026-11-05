@@ -92,8 +92,8 @@ export default async function ExportPage() {
   // asymmetry's detection half — an export past the restore cap must be
   // knowable BEFORE the user collects a 413 on restore, and each blind
   // retry burns import budget).
-  const { json } = await renderExportEnvelope(publicUser(user));
-  const exportBytes = json.length;
+  const { bytes } = await renderExportEnvelope(publicUser(user));
+  const exportBytes = bytes;
 
   return (
     <main className="mx-auto w-full max-w-3xl p-6 pt-10">
