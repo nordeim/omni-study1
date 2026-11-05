@@ -123,7 +123,10 @@ describe("the chunked cert runner's truth contract (S128/CC2)", () => {
     // witness, relocated out of chunk 3's BY5-spent export budget) +
     // chunk 3 82 → 87 (the CN2 tolerance pair, the cross-account 409,
     // the CN4 card-delegate 404s, the CN10 owned-FK re-point) — 597 → 603.
-    expect(certSource).toContain("Expected: 150 + 187 + 87 + 95 + 87 = 606");
+    // S144/CS: chunk 3 87 → 89 (the CS1 appearance-picker sequence-CAS
+    // leg + the CS5 row-cap 413 leg) + chunk 5 87 → 88 (the CS3
+    // merge-guard wiring leg) — 606 → 609.
+    expect(certSource).toContain("Expected: 150 + 187 + 89 + 95 + 88 = 609");
   });
 
   it("propagates a failing chunk's exit code (never a green cert on a red run)", () => {
@@ -1436,12 +1439,57 @@ describe("the S143/CR source censuses", () => {
     expect(src).not.toContain("as any");
   });
 
-  it("CR5: the three pickers ride the sequence-ticket CAS (the createFetchSeq seam)", () => {
+  it("CR5: the three pickers ride the sequence-ticket CAS (the createFetchSeq seam) — S144/CS1 re-anchor: the INSTANCE-SCOPED form", () => {
     const src = readFileSync(SETTINGS_VIEW, "utf8");
     expect(src).toContain('from "@/lib/fetch-seq"');
     expect(src).toContain("const ticket = themeSeq.begin();");
     expect(src).toContain("const ticket = accentSeq.begin();");
     expect(src).toContain("const ticket = avatarSeq.begin();");
+    // S144/CS1 (audit A-M1): the function-body instantiation minted a
+    // FRESH seq per render — every pick's ticket was 1 on its own
+    // instance, isCurrent degraded to always-true, and the guard was the
+    // unconditional rollback again (the ABA open, the S142 different-
+    // value protection regressed). The useRef form holds the guard for
+    // the component's lifetime (the files-view idiom). A census cannot
+    // see instantiation SCOPE — that is exactly how A-M1 shipped — but
+    // it holds the shape against drift; the behavioral e2e leg in
+    // resilience.spec.ts pins the semantics.
+    expect(src).toContain("const themeSeq = React.useRef(createFetchSeq()).current;");
+    expect(src).toContain("const accentSeq = React.useRef(createFetchSeq()).current;");
+    expect(src).toContain("const avatarSeq = React.useRef(createFetchSeq()).current;");
+    // The per-render instantiation shape is gone (the A-M1 signature).
+    expect(src).not.toContain("const themeSeq = createFetchSeq();");
+    expect(src).not.toContain("const accentSeq = createFetchSeq();");
+    expect(src).not.toContain("const avatarSeq = createFetchSeq();");
+  });
+
+  // S144/CS3 (audit B-M2): the import route's IMPORT_MERGE_GUARDS wiring
+  // — the UPDATE-branch merge guards (the B-I1 mitigation) — was pinned
+  // by NOTHING (zero test references; deleting the guard call or
+  // dropping a collection shipped green through the whole suite). The
+  // seam functions are unit-pinned and the interactive delegates are
+  // census-pinned; this closes the unpinned third site. The wiring is
+  // correct today (verified by direct read) — this is the missing-pin
+  // class, green-on-arrival (the S137/CL9 precedent), pinned against
+  // drift; the behavioral e2e leg in s23-import.spec.ts carries the
+  // semantics.
+  it("S144/CS3: the import route runs the merge guards on the UPDATE branch (the IMPORT_MERGE_GUARDS wiring — the unpinned third site)", () => {
+    const src = readFileSync(IMPORT_ROUTE, "utf8");
+    expect(src).toContain("IMPORT_MERGE_GUARDS");
+    expect(src).toContain("mergeGuard.guard(leg, data);");
+    expect(src).toContain("checkGradeRangeMerge");
+    expect(src).toContain("checkEventOrderingMerge");
+    expect(src).toContain("checkTimetableOrderingMerge");
+  });
+
+  // S144/CS5 (audit B-L2): the row-count ceiling's route-side wiring —
+  // the cap constant lives in the seam (pinned in data-import.test.ts),
+  // the CHECK lives in the route (the byte-cap precedent), and this
+  // census holds the wiring against drift.
+  it("S144/CS5: the import route enforces the row-count ceiling (the parse-memory amplification bound)", () => {
+    const src = readFileSync(IMPORT_ROUTE, "utf8");
+    expect(src).toContain("IMPORT_MAX_ROWS");
+    expect(src).toContain("too many rows");
   });
 
   it("CR3: the notebook mover carries its accessible name (the CQ3 surface's WCAG 4.1.2 name)", () => {

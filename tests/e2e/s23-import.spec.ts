@@ -21,18 +21,21 @@ import { expect, test, type Page } from "@playwright/test";
 // (5) THE PANEL JOURNEY: /export renders the Restore card; a real
 //     setInputFiles import → the result summary renders.
 //
-// Rate-limit budget (S135/CJ6 recount): this file makes exactly 8 DEMO-user
+// Rate-limit budget (S135/CJ6 recount): this file makes exactly 9 DEMO-user
 // import POSTs against the 10/15-min per-user budget (round-trip 1 +
 // re-import 1 + the 400 family 4 + the panel journey 1 + the S117 cards
-// round-trip 1 — the dangling-FK probe rides the round-trip envelope, no
+// round-trip 1 + the S144/CS3 merge-guard leg 1 — the dangling-FK probe
+// rides the round-trip envelope, no
 // standalone POST). Other spec files DO POST this route (the S92/A4-era
-// exclusivity claim was false): resilience.spec.ts carries 4 demo-user
+// exclusivity claim was false): resilience.spec.ts carries 5 demo-user
 // POSTs (the BW11 over-cap 413 — the limiter fires before the body read,
 // consuming budget; the BY3 acceptance; and the S135/CJ4+CJ5 400-message
 // pins, relocated there after the first draft HERE tripped chunk 5's
 // registerGlobal: 40 cap — two wasted fresh-user registrations [the pins
 // rode this file's demo storageState anyway] pushed the chunk's register
-// census over 40 and the LAST registering test 429'd) and
+// census over 40 and the LAST registering test 429'd; and the S144/CS5
+// row-cap 413 — the same budget shape as the BW11 leg, the limiter fires
+// before the row-count check) and
 // s14-hardening.spec.ts POSTs on fresh users (the CA5/CA2/CJ1 window
 // probes). Safety is the CHUNK MAP, not exclusivity: resilience rides
 // chunk 3 and this file rides chunk 5 — different server boots, and both
@@ -273,6 +276,44 @@ test.describe("S23 the data import (restore)", () => {
     await expect(result).toBeVisible();
     await expect(result).toContainText("3");
     await expect(result).toContainText("updated");
+  });
+
+  // S144/CS3 (audit B-M2): the import route's IMPORT_MERGE_GUARDS wiring —
+  // the UPDATE-branch merge guards against single-leg inverted rows (the
+  // B-I1 mitigation) — was pinned by NOTHING (zero test references; the
+  // seam functions are unit-pinned, the interactive delegates are
+  // census-pinned, the import route was the unpinned third site). The
+  // behavioral pin: a stored grade leg created through the INTERACTIVE
+  // door (score 40, maxScore 50), then a hand-crafted partial envelope
+  // carrying ONLY {id, score: 90} — the exact hand-crafted shape every
+  // interactive route rejects — must answer the named 400 and leave the
+  // stored row unchanged (the all-or-nothing posture). Rides the demo
+  // session's import budget 8 → 9/10 (the header recount above).
+  test("S144/CS3: the UPDATE branch runs the merge guard (a single-leg inverted grade row answers the named 400; the stored row is unchanged)", async ({
+    request,
+  }) => {
+    // The stored partner leg, through the interactive door.
+    const create = await request.post("/api/grades", {
+      data: { title: "S144 merge probe", score: 40, maxScore: 50 },
+    });
+    expect(create.status()).toBe(201);
+    const created = (await create.json()) as { id: string; score: number };
+    expect(created.score).toBe(40);
+
+    // The hand-crafted partial envelope: score 90 against the stored 50.
+    const res = await request.post("/api/import/data", {
+      headers: { "content-type": "application/json" },
+      data: envelope({ data: { grades: [{ id: created.id, score: 90 }] } }),
+    });
+    expect(res.status()).toBe(400);
+    const body = (await res.json()) as { error?: string };
+    expect(body.error).toContain("Score cannot be higher than the maximum score.");
+
+    // All-or-nothing: the stored row is unchanged (no partial write).
+    const rows = await request.get("/api/grades");
+    const list = (await rows.json()) as Array<{ id: string; score: number }>;
+    const row = list.find((g) => g.id === created.id);
+    expect(row?.score).toBe(40);
   });
 });
 

@@ -11,7 +11,7 @@
 // with synthetic streaming bodies — including the PULL-COUNT proof that
 // the reader stops at the cap, and the multi-byte split-codepoint decode
 // that a naive per-chunk TextDecoder would mojibake.
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import {
   assertJsonContentType,
@@ -273,4 +273,30 @@ it("S143/CR1: toErrorResponse maps PrismaClientValidationError to 400 (the share
   await expect(body.json()).resolves.toMatchObject({
     error: expect.stringContaining("could not accept"),
   });
+});
+
+// S144/CS7 (audit A-L2): the shared leg's own comment names its target as
+// "latent Zod↔Prisma shape drift" — a SERVER-side bug — but the leg
+// returned the 400 SILENTLY (the unknown-error branch it pre-empts logs;
+// this branch didn't), so the operator lost the only production signal
+// that a route was mis-shaping writes, while the user was told to
+// "refresh and re-submit" an error that recurs deterministically. The
+// log is part of the contract now — the drift family stays diagnosable
+// while the client still gets the honest 400.
+it("S144/CS7: the PrismaClientValidationError leg LOGS the drift signal (the silent-server-bug class stays observable)", async () => {
+  const spy = vi.spyOn(console, "error").mockImplementation(() => {});
+  try {
+    const err = new Error("Invalid `prisma.task.update()` invocation");
+    err.name = "PrismaClientValidationError";
+    const res = toErrorResponse(err);
+    // The 400 still answers (the taxonomy leg is unchanged)…
+    expect(res.status).toBe(400);
+    // …and the drift signal fired (the unknown branch's log channel).
+    expect(spy).toHaveBeenCalled();
+    const [tag, logged] = spy.mock.calls[0] ?? [];
+    expect(String(tag)).toContain("prisma validation error");
+    expect(String(logged)).toContain("Invalid `prisma.task.update()`");
+  } finally {
+    spy.mockRestore();
+  }
 });

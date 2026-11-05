@@ -53,6 +53,21 @@ import {
  *  with the REAL bound, not a prose claim. */
 export const IMPORT_MAX_BYTES = 64 * 1024 * 1024;
 
+/** S144/CS5 (audit B-L2) — the documented ROW ceiling. The byte cap bounds
+ *  the BODY, not the parsed object tree: a 64 MiB envelope of minimal rows
+ *  parses into ~10⁶ row objects — several hundred MB of resident memory
+ *  per hostile request with no deadline (the parse-memory amplification;
+ *  auth-gated and rate-limited, but one request inside the budget
+ *  suffices). 100,000 rows is comfortably above any real account (the
+ *  volume-stress profile tops out in the hundreds) and far below the ~10⁶
+ *  the byte cap admits — the amplification bound without touching the
+ *  all-or-nothing ADR-021 shape. The CHECK lives in the route (the
+ *  byte-cap precedent: cap constants in the seam, checks at the door);
+ *  the value and its reconciliation with IMPORT_MAX_BYTES are
+ *  machine-pinned in tests/data-import.test.ts, the route wiring
+ *  census-pinned in tests/script-conventions.test.ts. */
+export const IMPORT_MAX_ROWS = 100_000;
+
 /** The import-side secret guard — the file never speaks for the account:
  *  passwordHash and userId are stripped from every row (the importer's own
  *  id is re-attached by the route, never by the file). */
@@ -360,8 +375,21 @@ export function sortFoldersParentsFirst(folders: ImportRow[]): ImportRow[] | str
   }
 
   const ordered: ImportRow[] = [];
-  while (queue.length > 0) {
-    const id = queue.shift() as string;
+  // S144/CS2 (audit B-M1): the CURSOR dequeue — the previous
+  // `queue.shift()` was O(n) per call, O(n²) over the loop (measured on
+  // this Node: 27 ms at 2×10⁴ rows → 2,842 ms at 2×10⁵ — 25x rows,
+  // 104x time; ~12 minutes projected at the byte cap's ~10⁶ minimal-row
+  // ceiling), and the topo sort is the only superlinear PRE-TX stage on
+  // an otherwise-linear path, so a single hostile envelope pinned the
+  // single-threaded event loop sitewide. The queue only ever GROWS
+  // during iteration (children are pushed on the in-degree
+  // decrement-to-zero, never removed; an id is pushed exactly once —
+  // the init push happens only for unresolvable parents, whose
+  // in-degree stays 0 so the decrement path cannot re-push them), so a
+  // cursor preserves the FIFO/BFS emission order and the
+  // emitted-set/cycle-rejection semantics exactly — at O(n).
+  for (let qi = 0; qi < queue.length; qi += 1) {
+    const id = queue[qi] as string;
     if (emitted.has(id)) continue;
     emitted.add(id);
     const row = byId.get(id);
@@ -1359,6 +1387,30 @@ export function sanitizeImportRow(
         collection,
         index,
         'field "mime" must be a string of at most 100 characters (the browser-provided type the upload stores).',
+      );
+    }
+    // S144/CS4 (audit B-L1, probed): the CHARSET leg — the guard was
+    // length-only, so a hand-crafted "text/html\r\nSet-Cookie: pwn=1"
+    // (≤100 chars) imported clean, persisted, then threw TypeError at
+    // the download door's `new NextResponse(headers)` on EVERY GET of
+    // that row (Node/undici rejects CR/LF header VALUES — the 500-on-
+    // read taxonomy break; the throw fails closed so no header
+    // injection — hostile-self-import only, the row stays deletable).
+    // The admitted set is exactly what browsers emit for entry.type:
+    // printable ASCII — empty still passes (the unknown-type "" shape
+    // must keep importing; a legit mime is never non-ASCII per the
+    // type/subtype grammar). The downloadHeaders clamp is the
+    // belt-and-suspenders for pre-fix stored rows.
+    if (
+      mime !== undefined &&
+      mime !== null &&
+      typeof mime === "string" &&
+      !/^[\x20-\x7E]*$/.test(mime)
+    ) {
+      throw new ImportRowError(
+        collection,
+        index,
+        'field "mime" must be printable ASCII (a browser-provided type like "text/plain") — control characters and non-ASCII text cannot be stored as a file type.',
       );
     }
     const size = row.size;

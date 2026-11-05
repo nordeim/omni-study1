@@ -647,6 +647,96 @@ test.describe("S122/BW11: the over-cap 413 contracts", () => {
     const body = (await res.json()) as { error?: string };
     expect(body.error).toContain("64 MiB");
   });
+
+  // S144/CS5 (audit B-L2): the byte cap bounds the BODY, not the parsed
+  // object tree — a 64 MiB envelope of minimal rows parses into ~10⁶ row
+  // objects (several hundred MB resident per hostile request, no
+  // deadline). The row-count ceiling (100,000 — pinned in
+  // tests/data-import.test.ts, census-pinned in script-conventions)
+  // bounds the amplification at the cheapest post-parse point. Rides
+  // the demo session (resilience's demo import POSTs 4 → 5/10).
+  test("an import past the row cap answers 413 with the rows copy (the parse-memory amplification bound)", async ({ request }) => {
+    const folders = Array.from({ length: 100_001 }, (_, i) => ({
+      id: `s144-rowcap-${i}`,
+      name: "F",
+    }));
+    const res = await request.post("/api/import/data", {
+      headers: { "content-type": "application/json" },
+      data: {
+        format: "studyflow-data-export",
+        version: 1,
+        exportedAt: "2026-11-05T00:00:00.000Z",
+        counts: {},
+        data: { folders },
+      },
+    });
+    expect(res.status()).toBe(413);
+    const body = (await res.json()) as { error?: string };
+    expect(body.error).toContain("100,000");
+    expect(body.error).toContain("rows");
+  });
+});
+
+// S144/CS1 (audit A-M1) — the appearance pickers' sequence-CAS was
+// structurally defeated at the call sites: createFetchSeq() ran in the
+// AppearanceCard FUNCTION BODY, so every render minted fresh seq
+// instances — each pick's ticket was 1 on its OWN instance, isCurrent
+// degraded to always-true, and the guard was the unconditional S127/
+// CB15 rollback again (the ABA CR5 claimed to close; the S142
+// different-value protection regressed with it). The behavioral pin —
+// the route-interception idiom this file already carries: the FIRST
+// preference PATCH settles LAST and fails; a NEWER pick made in between
+// must survive the stale failure. The interception isolates the DB (the
+// PATCHes never reach the server — no cleanup, no write budget).
+test.describe("S144/CS1: the appearance-picker sequence CAS (the instance-scoped form)", () => {
+  test("a late-failing preference PATCH must not roll back a newer accent pick (the ABA)", async ({ page }) => {
+    await page.goto("/Settings");
+    const blue = page.getByRole("button", { name: "Blue accent" });
+    await expect(blue).toBeVisible();
+
+    let calls = 0;
+    await page.route("**/api/settings/preferences", async (route) => {
+      calls += 1;
+      if (calls === 1) {
+        // The FIRST pick's PATCH settles LAST and fails — the stale
+        // failure window (a ~700 ms in-flight lag is the realistic
+        // shape; the pre-fix catch sees isCurrent(1) === true on its
+        // own fresh-instance seq and rolls the store back to the
+        // PRE-pick value, clobbering the newer pick).
+        await page.waitForTimeout(700);
+        await route.fulfill({
+          status: 500,
+          contentType: "application/json",
+          body: JSON.stringify({ error: "late failure (S144/CS1 probe)" }),
+        });
+      } else {
+        await route.fulfill({ status: 200, contentType: "application/json", body: "{}" });
+      }
+    });
+    try {
+      await blue.click(); // pick 1 — Blue (PATCH1 in flight, will fail late)
+      await page.getByRole("button", { name: "Green accent" }).click(); // pick 2 — Green (PATCH2 → 200)
+      // Wait PAST the first PATCH's late failure settling.
+      await page.waitForTimeout(1600);
+      // The newer pick's optimism survives the stale failure — RED
+      // pre-fix: the stale catch rolled the store back to VIOLET (the
+      // pre-pick value), un-pressing Green.
+      await expect(page.getByRole("button", { name: "Green accent" })).toHaveAttribute(
+        "aria-pressed",
+        "true",
+      );
+      await expect(page.getByRole("button", { name: "Violet accent" })).toHaveAttribute(
+        "aria-pressed",
+        "false",
+      );
+      await expect(page.getByRole("button", { name: "Blue accent" })).toHaveAttribute(
+        "aria-pressed",
+        "false",
+      );
+    } finally {
+      await page.unroute("**/api/settings/preferences");
+    }
+  });
 });
 
 // S124/BY3 — the export/import size reconciliation's ACCEPTANCE leg. The

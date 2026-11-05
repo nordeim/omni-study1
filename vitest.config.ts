@@ -1,7 +1,24 @@
 import { defineConfig } from "vitest/config";
 import path from "node:path";
 
-// Unit-test layer for the pure domain seams — 48 files / 1490 tests
+// Unit-test layer for the pure domain seams — 48 files / 1500 tests
+// (re-anchored S144/CS — the cursor-dequeue + row-ceiling + mime-charset +
+// template-collector + drift-log + instance-scoped-CAS set: census
+// 1490 → 1500, +10 net [data-import +4: the S144/CS2 250k-star topo-sort
+// linearity leg (the O(n²) shift dequeue re-measured on this Node — 27 ms
+// at 2×10⁴ → 2,842 ms at 2×10⁵, 25x rows 104x time; the cursor form runs
+// 317 ms at the 250k probe, 30x) + the S144/CS4 mime-charset quadruple
+// (the stored-CRLF 500-on-read class) + the S144/CS5 IMPORT_MAX_ROWS
+// constant pair (the value + the byte-cap reconciliation); files +2: the
+// downloadHeaders Content-Type clamp pair (the header-safe construction
+// for pre-fix stored rows); http-body +1: the PrismaValidation drift-log
+// spy (the silent-server-bug class stays observable); note-html-dom +1:
+// the template-beyond-cap collector leg (the .content source — probed in
+// BOTH happy-dom 21.0.4 and Chromium); script-conventions +2: the CS3
+// merge-guard wiring census (the unpinned third site, green-on-arrival)
+// + the CS5 route-wiring census]. The S144/CS1 CR5 census re-anchor (the
+// React.useRef instance-scoped markers) rides in place.
+// The prior re-anchor blocks follow.)
 // (re-anchored S142/CQ — the unwrap-depth + door-alignment + byte-signal +
 // named-P2025 + count-gate + CAS-rollback set: census 1449 → 1466, +17 net
 // [note-html-dom +6: the CQ1 unwrap-path depth-cap legs (the disallowed

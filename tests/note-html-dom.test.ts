@@ -214,6 +214,29 @@ describe("sanitizeNoteHtmlDom — the unwrap-path depth cap (S142/CQ1)", () => {
     expect(run).not.toThrow();
     expect(run()).toContain("core");
   });
+
+  // S144/CS6 (audit A-L1, probed in BOTH happy-dom 21.0.4 and Chromium):
+  // the CR2 rider taught the UNWRAP branch to move <template> children
+  // from their inert .content fragment, but the depth-cap collector
+  // (subtreeText) still walked node.childNodes — which is EMPTY for a
+  // template — so a template nested ≥500 deep inside disallowed
+  // containers lost its text at the DOM door's collapse while the
+  // server door keeps it (the two-door contract's residual in the exact
+  // CR2 family). The collector now resolves the same .content source.
+  it("S144/CS6: a <template> nested beyond the depth cap keeps its text through the collapse (the collector's .content source)", () => {
+    const depth = 550;
+    const chain =
+      "<div>".repeat(depth) + "<template>tpl-core</template>" + "</div>".repeat(depth);
+    const run = (): string => sanitizeNoteHtmlDom(chain);
+    expect(run).not.toThrow();
+    const out = run();
+    // The whole chain collapses to text; the template's text must ride
+    // with it (RED pre-fix: the collector read the template's EMPTY
+    // direct childNodes and emitted nothing).
+    expect(out).toContain("tpl-core");
+    expect((out.match(/<div>/g) ?? []).length).toBe(0);
+    expect(out).not.toContain("<template>");
+  });
 });
 
 describe("sanitizeNoteHtmlDom — the aligned anchor policy (S142/CQ5, DOM door)", () => {

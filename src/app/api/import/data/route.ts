@@ -65,6 +65,7 @@ import {
   IMPORT_CREATE_CHUNK,
   IMPORT_FK_MAP,
   IMPORT_MAX_BYTES,
+  IMPORT_MAX_ROWS,
   IMPORT_ORDER,
   IMPORT_OPTIONAL_FKS,
   IMPORT_REQUIRED_FKS,
@@ -245,6 +246,32 @@ export const POST = async (request: NextRequest) => {
       return errorResponse(400, envelopeCheck.error);
     }
     const data = envelopeCheck.data;
+
+    // ---- S144/CS5: the row-count ceiling (audit B-L2) ---------------------
+    // The byte cap bounds the BODY, not the parsed object tree — a 64 MiB
+    // envelope of minimal rows parses into ~10⁶ row objects (several
+    // hundred MB resident per hostile request, no deadline; the
+    // recorded A-M3 deferral covers chunked sub-tx TIME, not parse
+    // MEMORY). The check sits at the CHEAPEST post-parse point — before
+    // the per-row id loops, the IN-probes, and the topo sort — so the
+    // over-cap envelope never reaches the expensive stages. The constant
+    // is the seam's (IMPORT_MAX_ROWS, beside IMPORT_MAX_BYTES — the
+    // cap-constants-in-the-seam precedent); the value + its
+    // reconciliation with the byte cap are machine-pinned in
+    // tests/data-import.test.ts, this wiring census-pinned in
+    // tests/script-conventions.test.ts, and the 413 contract e2e-pinned
+    // in tests/e2e/resilience.spec.ts.
+    let totalRows = 0;
+    for (const collection of IMPORT_ORDER) {
+      const rows = data[collection];
+      if (Array.isArray(rows)) totalRows += rows.length;
+    }
+    if (totalRows > IMPORT_MAX_ROWS) {
+      return errorResponse(
+        413,
+        `That backup has too many rows. The import cap is ${IMPORT_MAX_ROWS.toLocaleString("en-US")} rows.`,
+      );
+    }
 
     // ---- per-collection validation -------------------------------------
     // S126/CA2: the row-id rule rides the SEAM's shared validator, and a

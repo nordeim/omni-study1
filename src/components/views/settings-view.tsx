@@ -149,7 +149,17 @@ function AppearanceCard() {
   // sequence tickets — the catch rolls back only when NO newer pick was
   // issued (a value never enters the comparison). Pure seam unit-pinned
   // in tests/fetch-seq.test.ts.
-  const themeSeq = createFetchSeq();
+  // S144/CS1 (audit A-M1): the INSTANCE must live for the component's
+  // LIFETIME — the first draft instantiated createFetchSeq() in the
+  // function body, so every render minted a FRESH seq and each pick's
+  // ticket was 1 on its own instance (isCurrent degraded to
+  // always-true — the unconditional rollback again, the ABA open, the
+  // S142 different-value protection regressed). The React.useRef form
+  // is the files-view idiom ("the ticket is component-instance-scoped,
+  // the React idiom for the store's module-level seq"); the behavioral
+  // e2e leg (resilience.spec.ts: a late-failing PATCH + a newer pick)
+  // pins the semantics.
+  const themeSeq = React.useRef(createFetchSeq()).current;
   const pickTheme = (next: ThemeMode) => {
     const prev = mode;
     const ticket = themeSeq.begin();
@@ -160,7 +170,7 @@ function AppearanceCard() {
     });
   };
 
-  const accentSeq = createFetchSeq();
+  const accentSeq = React.useRef(createFetchSeq()).current;
   const pickAccent = (next: Accent) => {
     const prev = accent;
     const ticket = accentSeq.begin();
@@ -171,7 +181,7 @@ function AppearanceCard() {
     });
   };
 
-  const avatarSeq = createFetchSeq();
+  const avatarSeq = React.useRef(createFetchSeq()).current;
   const pickAvatar = (emoji: string) => {
     const prev = avatar;
     const ticket = avatarSeq.begin();

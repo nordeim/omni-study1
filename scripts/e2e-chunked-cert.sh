@@ -1,4 +1,21 @@
 #!/usr/bin/env bash
+# (S144/CS re-tag — census 606 → 609, net +3: chunk 3 +2 [the S144/CS1
+# appearance-picker sequence-CAS leg — a route-intercepted late-failing
+# preference PATCH must not roll back a NEWER accent pick, the ABA the
+# per-render instantiation defect shipped (the fix is the React.useRef
+# instance-scoped form; the interception isolates the DB — the PATCHes
+# never reach the server, no cleanup, no write budget) + the S144/CS5
+# row-cap 413 leg — 100,001 minimal folder rows answers the named 413
+# (the parse-memory amplification bound; rides the demo session's import
+# budget 4 → 5/10, the same budget shape as the BW11 byte-cap leg it
+# mirrors)]; chunk 5 +1 [the S144/CS3 merge-guard wiring leg in
+# s23-import — a single-leg inverted grade row against a stored partner
+# answers the named 400 with the row unchanged; green-on-arrival by
+# design (the missing-pin class, the S137/CL9 precedent — the wiring was
+# verified correct by direct read; the finding was the ABSENCE of
+# pins); rides the demo import budget 8 → 9/10, the header recount
+# re-anchored]. The unit census 1490 → 1500 (+10) rides the vitest
+# header re-anchor.)
 # (S143/CR re-tag — census 606 → 606, net +0: no new e2e tests this cycle;
 # the S143 pins re-anchored EXISTING legs in place — the CQ3 mover locator
 # in parity-session7 is now the NAMED combobox form (getByRole("combobox",
@@ -123,7 +140,7 @@
 # 192.0.2.139, 3/10 per-IP, 3/40 registerGlobal), the demo import
 # budget at 8/10; END-of-file, the CK1 flood pin stays TERMINAL in
 # s16]. The full CN map: docs/remediation-plan-session139.md.)
-# Expected: 150 + 187 + 87 + 95 + 87 = 606 (each chunk's count includes its
+# Expected: 150 + 187 + 89 + 95 + 88 = 609 (each chunk's count includes its
 # auth setup — the current census; the historical re-tag blocks beneath.)
 # (S131/CF re-tag — census 567 → 570, net +3: chunk 1 +1 [the CF9
 # drawer focus-restore leg in mobile-navigation — crossing the lg

@@ -255,7 +255,14 @@ export function toErrorResponse(err: unknown): NextResponse {
   // honest 400, never 500. The own-keys guard in sentKeysPatch closes
   // the reachable vector; this leg closes the latent drift class for
   // every route in one place.
+  // S144/CS7 (audit A-L2): the leg LOGS before answering — the drift
+  // family is a SERVER-side bug (the comment's own target), and the
+  // silent 400 cost the operator the only production signal that a
+  // route was mis-shaping writes (the unknown-error branch this
+  // pre-empts logs; the client still gets the honest 400 — the log is
+  // for the operator, never the response).
   if (err instanceof Error && err.name === "PrismaClientValidationError") {
+    console.error("[api] prisma validation error:", err);
     return errorResponse(
       400,
       "That request contained fields the server could not accept. Try refreshing and re-submitting.",
@@ -442,8 +449,21 @@ export function buildContentDisposition(filename: string): string {
 
 /** The S13/S14 download contract: attachment + nosniff + private no-store. */
 export function downloadHeaders(filename: string, contentType: string): HeadersInit {
+  // S144/CS4 (audit B-L1, probed): the Content-Type value can carry
+  // STORED data (the files/[id] download passes files.mime — a column
+  // the import door once admitted with control characters). Node/undici
+  // THROWS on CR/LF in header VALUES at Response construction (the
+  // 500-on-read taxonomy break), so the builder clamps the value to
+  // printable ASCII — belt-and-suspenders for any pre-fix stored row
+  // (the import door now rejects the charset at the boundary); the
+  // throw always failed closed, so this was never a header-injection
+  // vector, only a 500-on-read one. The all-control shape falls back to
+  // the generic binary type (an empty Content-Type is not constructable
+  // advice either). The export/rum callers pass literals — unaffected.
+  const safeContentType =
+    contentType.replace(/[^\x20-\x7E]/g, "") || "application/octet-stream";
   return {
-    "Content-Type": contentType,
+    "Content-Type": safeContentType,
     "Content-Disposition": buildContentDisposition(filename),
     "X-Content-Type-Options": "nosniff",
     "Cache-Control": "private, no-store",

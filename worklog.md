@@ -4321,3 +4321,160 @@ data-portability axis two cycles stale; the entities/factory axis just
 swept) — or the A-M3 stage-2 (the chunked sub-tx + resume token, the
 one named deferral, needs operator direction on the ADR-021 contract
 change).
+
+---
+
+## Session 155 — Batch CS (Cycle 94): the cursor-dequeue + row-ceiling + mime-charset + instance-scoped-CAS set
+
+**Workspace (the 36th continuation).** Fresh clone at `88739ca` on `main`
+(the Batch CR fix `7ada703` + the operator's session_160 transcript
+commit). Environment provisioned per the recipe: `bun install` (510
+pkgs), `.env` from `.env.example` (`DATABASE_URL="file:../db/custom.db"`),
+`db:push` + `db:seed` (`db/custom.db` 389 KiB), Playwright Chromium,
+the dev daemon live on :3000.
+
+**Cold baseline (before any work):** lint ✓ · tsc ✓ · unit **1490/1490**
+(48 files — the documented S143 final state exactly) · the drawer check
+GREEN (**the 59th consecutive no-Tailwind-v4-mobile-nav-bug
+confirmation**) · the desktop chrome probe **MATCH** (all five formal
+checks). Baseline noise: none.
+
+**The audits (two read-only Mode-C subagents, every M/L finding
+re-verified by direct read):**
+
+- **Audit A — the Batch CR recent-changes axis** (the `7ada703` diff):
+  **0C / 0H / 1M / 2L / 3I**. All nine CR claims verified TRUE at the
+  source level — with one structural exception: **A-M1** — CR5's
+  sequence-CAS was DEFEATED at the call sites by per-render
+  instantiation (`createFetchSeq()` in the AppearanceCard function body
+  → every render mints a fresh seq → every pick's ticket is 1 on its
+  own instance → `isCurrent` always true → the guard degenerated back
+  to the unconditional S127/CB15 rollback: the ABA re-opened AND the
+  S142 value-compare's different-value protection regressed — only
+  census pins covered the call sites, and a census cannot see
+  instantiation SCOPE). The L: **A-L1** the CR2 template rider taught
+  the unwrap branch but not the depth-cap collector (a `<template>`'s
+  children live in its inert `.content` fragment — probed in BOTH
+  happy-dom 21.0.4 and Chromium — so template text ≥500 deep died at
+  the DOM door's collapse while the server door kept it); **A-L2** the
+  shared PrismaClientValidationError→400 leg logged nothing (its own
+  comment names its target as latent Zod↔Prisma drift — a SERVER-side
+  bug — now silent in production logs). Is: the stale happy-dom
+  environment comment (folded into CS6), the census-only call-site pins
+  (folded into CS1), test-hygiene nits (carried §5).
+- **Audit B — the import/export + data-portability axis** (two cycles
+  stale): **0C / 0H / 2M / 2L / 4I**. The axis verified in strong shape:
+  the all-or-nothing ADR-021 transaction contract genuinely DELIVERED
+  (every write inside the one 60s tx — file blobs ride the `files.data`
+  column inside it; all PKs are client-supplied cuids so no sequence
+  bumps), auth/authz airtight on both doors, the hostile-key write-set
+  pollution-free (empirically probed: object-valued `__proto__`
+  rejected by the row guard's primitive check before the copy;
+  primitive `__proto__` a setter no-op; `constructor`/`toString` own
+  keys reach Prisma as unknown fields → the named 400), and the prior
+  findings (B-I1 grades maxScore, the byte-signal chain, the P2025 leg)
+  all still closed. The M: **B-M1** the folders topo sort's
+  `queue.shift()` dequeue is O(n²) — the only superlinear pre-tx stage,
+  so one authenticated hostile import pins the event loop sitewide
+  (re-measured on this Node: 27 ms at 2×10⁴ → 2,842 ms at 2×10⁵ — 25x
+  rows, 104x time, ~12 minutes projected at the byte cap's ~10⁶-row
+  ceiling; the audit's ~13 s at 10⁵ constant did NOT reproduce — the
+  reproduce-before-trusting doctrine cuts both ways); **B-M2** the
+  import route's `IMPORT_MERGE_GUARDS` wiring (the B-I1 mitigation)
+  pinned by NOTHING (zero test references — deleting the guard call
+  ships green). The L: **B-L1** a hand-crafted `files.mime` with CR/LF
+  passed the length-only guard, persisted, then threw TypeError at
+  every download (`new NextResponse(headers)` — Node/undici rejects
+  control characters in header VALUES; probed: the 500-on-read taxonomy
+  break; fails closed — no header injection; hostile-self-import only);
+  **B-L2** no max-ROWS cap anywhere (the 64 MiB byte cap bounds the
+  BODY, not the ~10⁶-row parsed tree — several hundred MB resident per
+  hostile request, no deadline).
+
+**Executed TDD-style.** RED first — the honest inventory: the CS2 250k
+STAR topo-sort leg at **9.7 s** elapsed vs the 2 s bound (the first
+draft accidentally picked a CHAIN — the degenerate easy case that
+keeps the live queue at ≤2 elements and passed GREEN at 856 ms; the
+star is the honest worst case: the queue fills at the root's pop and
+every shift moves the whole tail); the CS4 mime-charset quadruple + the
+downloadHeaders clamp pair; the CS5 IMPORT_MAX_ROWS constant pair +
+the route census; the CS6 template-beyond-cap collector leg; the CS7
+drift-log spy; the CS3 merge-guard pins (GREEN-on-arrival by design —
+the missing-pin class, the S137/CL9 precedent); and the two e2e RED
+legs against a PRE-FIX build — **CS1** (the route-intercepted
+late-failing PATCH rolled the accent store back over a newer pick —
+Green stayed `aria-pressed="false"`, the exact designed failure) and
+**CS5** (the 100,001-row envelope imported 200 — the amplification
+sails through pre-fix). The honest mid-flight corrections: (1) the CS2
+leg's chain→star re-shape after the accidental-green (the measurement
+that forced it recorded in the test's comment); (2) the CS5 constant
+landed BEFORE the pre-fix e2e build (the build type-checks the tests —
+the module-absent RED had already proven itself at the unit layer, so
+the one-line export was the minimal unblock, the route-side legs still
+RED); (3) the capture script's first draft used a locator method that
+does not exist on this Playwright (`isAttached` → `count() > 0`).
+
+**The CS set.** CS1 the `React.useRef(createFetchSeq()).current`
+instance-scoped CAS (the files-view idiom — the ticket lives for the
+component's lifetime) + the behavioral e2e leg + the census re-anchor
+(the per-render shape now banned). CS2 the cursor dequeue (the queue
+only ever grows during iteration — the BFS order, emitted set, and
+cycle-rejection preserved exactly at O(n); 317 ms at the 250k star, 30x
+under the shift form's 9.7 s). CS3 the merge-guard wiring pins (census
++ the inverted-grade-row e2e leg — a stored `{score: 40, maxScore: 50}`
+leg against a `{id, score: 90}` envelope answers the named 400 with
+the row unchanged). CS4 the mime charset guard at the import door
+(printable ASCII — exactly the browser's `entry.type` emission grammar,
+empty still passes) + the `downloadHeaders` Content-Type clamp
+(belt-and-suspenders for pre-fix rows; the export/rum callers pass
+literals — unaffected). CS5 `IMPORT_MAX_ROWS = 100_000` (the seam
+constant, the byte-cap precedent) checked at the cheapest post-parse
+point in the route — before the per-row loops, the IN-probes, and the
+topo sort — answering the named 413. CS6 the collector's `.content`
+template source (the unwrap rider's twin) + the stale happy-dom
+comment re-worded (the environment narrative was wrong; the code was
+robust either way). CS7 the PrismaValidation drift log (the
+`[api] prisma validation error:` channel — the client keeps the honest
+400, the operator keeps the diagnosis; the spy pins it). CS8 the doc
+chain.
+
+**Re-cert (the FINAL tree).** lint ✓ · tsc ✓ · unit **1500/1500**
+(48 files, +10) · build ✓ (7.6 s compile) · the cold 5-chunk e2e
+re-tagged **606 → 609** (chunk 3 +2 [the CS1 ABA leg + the CS5 row-cap
+413 leg], chunk 5 +1 [the CS3 merge-guard leg] — the map
+150+187+89+95+88) · **census 2109 green** (was 2096). The budget
+recounts re-anchored in both spec headers (s23's demo import POSTs 8 →
+9/10; resilience's 4 → 5/10).
+
+**Evidence.** Four `docs/screenshots/144-clone-*.png` frames
+(desktop, mobile drawer, the Settings appearance card THROUGH the ABA
+scenario — the machine proof riding the frame: the GREEN swatch holds
+`aria-pressed="true"` past the late-failing PATCH, violet/blue false —
+and the /export Restore card with its size signal + the cold-disabled
+Import posture). The capture is SELF-VERIFYING (exists, >10 KiB,
+byte-diverse, md5-distinct, both machine proofs asserted; the
+interception isolates the DB — no PATCH reaches the server, no probe
+cleanup needed).
+
+**Docs.** README badge/census + the Session-144 row; AGENTS.md census
++ the S144 lessons block (six lessons: closure-scoped guards are
+per-render guards; the shift-dequeue quadratic class and the
+chain-vs-star pin shape; the byte cap does not bound the parsed tree;
+stored columns flowing into header values need charset bounds at both
+ends; bug-fix families have twins; a named 400 that hides a server
+bug is worse than the 500 it replaced); CLAUDE.md counts (correcting
+its own two-cycles-stale 605 — the s140 doc-drift class reborn); PAD
+v1.3.52 (the revision block + the §11 closure row); the SKILL census
+(both sites); the vitest header re-anchor; the cert re-tag; the plan
+§6 as-executed close; `docs/session_161.md`; this entry; the
+`.env.example` contract re-verified complete against every env var the
+code reads (unchanged — the S143 verification held).
+
+**Next cycle.** The audit rotation continues (the FE/views +
+auth/crypto/infra axis two cycles stale after S142's sweep — the next
+rotation candidate; the import/export + data-portability axis just
+swept; the entities/factory axis one cycle fresh) — or the A-M3
+stage-2 (the chunked sub-tx + resume token, the one named deferral —
+the operator's standing "best judgement" instruction grants the
+authority, but the ADR-021 contract change deserves its own cycle with
+its own ADR; the CS5 row ceiling closed the adjacent memory hazard).

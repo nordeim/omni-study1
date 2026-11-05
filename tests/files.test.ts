@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { buildContentDisposition } from "@/lib/server/http";
+import { buildContentDisposition, downloadHeaders } from "@/lib/server/http";
 
 // S13-C3: the file-download Content-Disposition must speak BOTH filename
 // dialects — an ASCII-safe quoted fallback (RFC 2183) AND the RFC 5987
@@ -46,5 +46,34 @@ describe("buildContentDisposition", () => {
     const header = buildContentDisposition("my notes v2.txt");
     expect(header).toContain("filename*=UTF-8''my%20notes%20v2.txt");
     expect(header).toContain('filename="my notes v2.txt"');
+  });
+});
+
+// S144/CS4 (audit B-L1, probed): the download door's Content-Type header
+// value comes from the STORED files.mime — a pre-fix row imported through
+// the length-only mime guard could carry CR/LF, and Node/undici's
+// Headers.append THROWS on control characters in header VALUES
+// (empirically verified: `Headers.append: "…" is an invalid header
+// value`), turning that file's every download into the generic 500 (the
+// taxonomy break — the import door now rejects the charset going
+// forward; this clamp keeps the CONSTRUCTION header-safe even for
+// pre-fix stored rows — the throw fails closed, so this was never a
+// header-injection vector, only a 500-on-read one).
+describe("downloadHeaders clamps the Content-Type value (S144/CS4)", () => {
+  it("strips control characters from a stored CRLF mime (the header value stays constructable)", () => {
+    const headers = downloadHeaders("a.txt", "text/html\r\nSet-Cookie: pwn=1") as Record<string, string>;
+    expect(headers["Content-Type"]).not.toMatch(/[\r\n\x00-\x1f]/);
+    expect(headers["Content-Type"]).toBe("text/htmlSet-Cookie: pwn=1");
+    // The RFC 5987 disposition family is untouched by the clamp.
+    expect(headers["Content-Disposition"]).toContain('filename="a.txt"');
+    expect(headers["X-Content-Type-Options"]).toBe("nosniff");
+  });
+
+  it("falls back to application/octet-stream when the clamp empties the value (and passes clean values through)", () => {
+    const blank = downloadHeaders("a.txt", "\r\n\r\n") as Record<string, string>;
+    expect(blank["Content-Type"]).toBe("application/octet-stream");
+    // The browser-real shape rides through byte-identical.
+    const clean = downloadHeaders("a.txt", "text/html; charset=utf-8") as Record<string, string>;
+    expect(clean["Content-Type"]).toBe("text/html; charset=utf-8");
   });
 });

@@ -26,6 +26,7 @@ import { describe, expect, it } from "vitest";
 import {
   IMPORT_FK_MAP,
   IMPORT_MAX_BYTES,
+  IMPORT_MAX_ROWS,
   IMPORT_OPTIONAL_FKS,
   IMPORT_REQUIRED_FKS,
   ImportRowError,
@@ -307,6 +308,51 @@ describe("the folders topological sort (self-referential FK)", () => {
     if (res.ok) return;
     expect(res.error).toContain("cycle");
   });
+
+  // S144/CS2 (audit B-M1, the class RE-MEASURED on this Node — the
+  // reproduce-before-trusting doctrine): the dequeue was Array.shift()
+  // — O(n) per call, O(n²) over the loop. This Node's measured curve:
+  // 27 ms at 2×10⁴ → 449 ms at 8×10⁴ → 2,842 ms at 2×10⁵ (25x rows →
+  // 104x time — the quadratic confirmed; the audit's ~13 s at 10⁵
+  // constant did NOT reproduce here, ~10x smaller on this build), which
+  // projects ~12 MINUTES of event-loop pinning at the 64 MiB byte cap's
+  // ~10⁶ minimal-row ceiling — the sitewide freeze class holds at the
+  // cap tier even though the 10⁵-tier constant is sub-second. The topo
+  // sort is the ONLY superlinear pre-tx stage on an otherwise-linear
+  // path (sanitize + IN-probes are linear). The cursor form (the queue
+  // only ever GROWS during iteration — children are pushed, never
+  // removed) runs ~125 ms at the 250k probe size: 16x margin on the
+  // bound below; the shift form measures ~4.4 s there — 2.2x OVER the
+  // bound, the designed RED. The 60 s test timeout lets the pre-fix RED
+  // fail the ASSERTION (the elapsed bound), never a runner timeout.
+  it("S144/CS2: sorts a 250k-folder star inside the linear budget (the O(n²) shift dequeue was the hostile-envelope event-loop freeze class)", () => {
+    // The STAR, not the chain: a linear chain keeps the live queue at
+    // ≤2 elements (every shift is trivially cheap — the degenerate easy
+    // case this leg's first draft accidentally picked); the star — one
+    // root, 249,999 children — pushes the whole sibling set onto the
+    // queue at the root's pop, so EVERY subsequent shift() moves the
+    // ~2.5×10⁵-element tail (the honest worst case for an O(n)-per-
+    // shift dequeue: ~3×10¹⁰ element moves). 250k rows is ROUTE-
+    // REACHABLE pre-fix (~9 MB of minimal rows, well under the 64 MiB
+    // byte cap) and stays a legitimate seam input post-cap (the CS5
+    // ceiling bounds the ROUTE, not this exported pure function — the
+    // linearity contract is the pin, at any size).
+    const folders = Array.from({ length: 250_000 }, (_, i) => ({
+      id: `f${i}`,
+      name: "F",
+      parentId: i === 0 ? null : "f0",
+    }));
+    const t0 = performance.now();
+    const result = sortFoldersParentsFirst(folders);
+    const elapsed = performance.now() - t0;
+    expect(typeof result).not.toBe("string"); // no cycle in a star
+    if (typeof result === "string") return;
+    const ordered = result;
+    expect(ordered).toHaveLength(250_000);
+    // parents-first holds at scale: the star's root emits FIRST.
+    expect(ordered[0]?.id).toBe("f0");
+    expect(elapsed).toBeLessThan(2_000);
+  }, 60_000);
 });
 
 describe("the informational fields (tolerated, never trusted)", () => {
@@ -393,6 +439,36 @@ describe("IMPORT_MAX_BYTES (the documented body cap)", () => {
     // 25 MiB for four sessions because nothing machine-checked it).
     const ONE_MAX_FILE_BASE64 = Math.ceil((2 * 1024 * 1024) / 3) * 4; // 2,796,204
     expect(Math.floor(IMPORT_MAX_BYTES / ONE_MAX_FILE_BASE64)).toBeGreaterThanOrEqual(18);
+  });
+});
+
+describe("IMPORT_MAX_ROWS (the S144/CS5 parse-memory amplification bound)", () => {
+  // The byte cap bounds the BODY, not the parsed object tree: a 64 MiB
+  // envelope of minimal rows parses into ~10⁶ row objects (several
+  // hundred MB resident per hostile request, no deadline). The row
+  // ceiling bounds the amplification — comfortably above any real
+  // account (the volume-stress profile tops out in the hundreds), far
+  // below the ~10⁶ the byte cap admits. The cap constant lives in the
+  // seam (beside IMPORT_MAX_BYTES); the CHECK lives in the route (the
+  // byte-cap precedent) — the route-side wiring is census-pinned in
+  // tests/script-conventions.test.ts.
+  it("is 100,000 — the S144/CS5 ceiling (the machine-checked value, not a prose claim)", () => {
+    expect(IMPORT_MAX_ROWS).toBe(100_000);
+  });
+
+  it("stays ≤ the byte cap's minimal-row ceiling (the two caps reconcile — the IMPORT_MAX_BYTES re-size family)", () => {
+    // The minimal serialized folder row (~30-42 bytes) puts ~10⁶ rows
+    // inside the 64 MiB byte cap; the row cap must stay the binding
+    // constraint for the amplification class it exists to close. The
+    // next re-size of EITHER cap must reconcile with THIS leg.
+    const MINIMAL_ROW_BYTES = 30;
+    expect(IMPORT_MAX_ROWS).toBeLessThanOrEqual(
+      Math.floor(IMPORT_MAX_BYTES / MINIMAL_ROW_BYTES),
+    );
+    // And comfortably above the documented realistic profile (the
+    // S42/S43 volume stress runs 300/200/250 — every collection far
+    // below the ceiling).
+    expect(IMPORT_MAX_ROWS).toBeGreaterThan(1_000);
   });
 });
 
@@ -708,6 +784,34 @@ describe("S139/CN1 · the import parity integrality sextet", () => {
     expect(() =>
       sanitizeImportRow("files", { id: "f1", name: "n", mime: "x".repeat(101) }, 0),
     ).toThrow(/mime/);
+  });
+
+  // S144/CS4 (audit B-L1, probed): the guard was LENGTH-only — a
+  // hand-crafted "text/html\r\nSet-Cookie: pwn=1" (≤100 chars)
+  // imported clean, persisted, then threw TypeError at the download
+  // door's `new NextResponse(headers)` on EVERY GET of that row
+  // (Node/undici rejects CR/LF header VALUES — the 500-on-read taxonomy
+  // break; the throw fails closed, so no header injection — hostile-
+  // self-import only, the row stays deletable). The charset leg admits
+  // exactly what browsers emit for entry.type (printable ASCII; empty
+  // still passes — the unknown-type "" shape must keep importing).
+  it("S144/CS4: rejects a files mime containing control characters or non-ASCII (a stored CRLF mime 500s that file's download forever)", () => {
+    expect(() =>
+      sanitizeImportRow("files", { id: "f1", name: "n", mime: "text/html\r\nSet-Cookie: pwn=1" }, 0),
+    ).toThrow(/mime/);
+    expect(() =>
+      sanitizeImportRow("files", { id: "f2", name: "n", mime: "text/plain\u001b[31m" }, 0),
+    ).toThrow(/mime/);
+    expect(() =>
+      sanitizeImportRow("files", { id: "f3", name: "n", mime: "text/pla\u00efn" }, 0),
+    ).toThrow(/mime/);
+    // The browser-real shapes still import (the boundary-exact set).
+    expect(() =>
+      sanitizeImportRow("files", { id: "f4", name: "n", mime: "" }, 0),
+    ).not.toThrow();
+    expect(() =>
+      sanitizeImportRow("files", { id: "f5", name: "n", mime: "text/html; charset=utf-8" }, 0),
+    ).not.toThrow();
   });
 
   it("rejects a negative and a non-integer files size, and an over-cap size (the upload ceiling mirror)", () => {

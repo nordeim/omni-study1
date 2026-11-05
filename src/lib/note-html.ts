@@ -128,8 +128,19 @@ function subtreeText(root: Element): string {
     ) {
       continue;
     }
-    // Push children in REVERSE so pops yield document order.
-    const kids = node.childNodes;
+    // Push children in REVERSE so pops yield document order. S144/CS6
+    // (audit A-L1, probed in BOTH happy-dom 21.0.4 and Chromium): a
+    // <template>'s children live in its INERT .content fragment — never
+    // as direct childNodes — so the plain child walk emitted nothing for
+    // a template and its text died at the DOM door's depth-cap collapse
+    // while the server door kept it (the two-door contract's residual
+    // in the exact CR2 family; the S143 rider fixed the unwrap branch —
+    // this is the collector's twin). The source resolves the fragment
+    // for templates and childNodes for every other element (a string
+    // `.content` — meta's — yields no childNodes either, so the ?? keeps
+    // the regular walk for all of them).
+    const source = (node as Element & { content?: DocumentFragment | null }).content;
+    const kids = source?.childNodes ?? node.childNodes;
     for (let i = kids.length - 1; i >= 0; i -= 1) stack.push(kids[i] as Node);
   }
   return out;
@@ -218,9 +229,14 @@ export function sanitizeNoteHtmlDom(html: string): string {
       // proof in real Chromium): a <template>'s children live in its
       // INERT .content fragment, never as direct children — the unwrap
       // branch must move THOSE or the container family's text dies at
-      // the DOM door in real browsers while the server door keeps it
-      // (happy-dom keeps template children direct — the probe corpus's
-      // environment boundary, the S142 ≥4k class's sibling).
+      // the DOM door in real browsers while the server door keeps it.
+      // (S144/CS6 comment accuracy, the s144 audit's I-1: the original
+      // note claimed happy-dom keeps template children DIRECT — the
+      // installed happy-dom 21.0.4 does NOT (probed: childNodes.length
+      // 0, content.childNodes.length 1 — same as Chromium); the `.content
+      // ?? child` form reads BOTH shapes correctly, which is exactly why
+      // it works in either environment — the S142 ≥4k class's sibling
+      // lesson stands, only the environment narrative was wrong.)
       const source: Node =
         (child as Element & { content?: DocumentFragment | null }).content ?? child;
       while (source.firstChild) frag.appendChild(source.firstChild);

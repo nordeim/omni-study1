@@ -9,9 +9,9 @@ High-signal instructions for coding agents working in this repo. Everything here
 | `bun install` | Install deps (Bun ≥ 1.3) |
 | `bun run dev` | Dev server on :3000 (Turbopack), logs tee'd to `dev.log` |
 | `bun run lint` / `bun run typecheck` | ESLint / `tsc --noEmit` — both must be clean |
-| `bun run test` | Vitest unit layer (1490 tests; `*.test.ts` only — never picks up e2e specs) |
+| `bun run test` | Vitest unit layer (1500 tests; `*.test.ts` only — never picks up e2e specs) |
 | `bun run build` | Production build → `.next/standalone` (**required before e2e**) |
-| `bun run test:e2e` | Playwright vs the standalone build on :3100 with `db/e2e.db` (606 tests across the 5-chunk cold map — 150+187+87+95+87, 30 spec files; a single-process full run trips the register rate-limiter budget by design, the chunked map re-boots the server per chunk). NOTE (S45, the day-boundary lesson): the global setup re-seeds every run, but the seed's IDEMPOTENT UPSERTS do NOT refresh day-relative dates on existing rows — a scratch `db/e2e.db` that ages across a UTC midnight keeps its original day-relative dates (today's tasks, the +1-day exam badge, the due-in pills, the import round-trip dates each read one day stale → 4 deterministic failures in parity-session6/parity-session9/s23-import). Delete `db/e2e.db` when a run crosses a day boundary — the global setup re-creates it fresh with current dates. NOTE (S46, TWO more aged-scratch-db classes + a build-input one): (1) ALWAYS run e2e COLD — S131/CF5 chained `scripts/e2e-cold-reset.sh` into `bun run test:e2e` (port-guard + `rm -f db/e2e.db` BEFORE playwright boots anything — global-setup is TOO LATE: Playwright starts the webServer before globalSetup), so the default runner self-colds; any DIRECT `playwright test` invocation still needs the manual `rm -f db/e2e.db` before every full run: the s23-import round-trip posts a FIXED-id envelope, so a second consecutive run against the aged db reads `created: 0, updated: 1` instead of `created: 1, updated: 0` and fails — not just across midnights, across ANY re-run; (2) the s22 negative-spawn spec reads the BUNDLED `.env` — Next's standalone output COPIES the repo-root `.env` into `.next/standalone/.env` at build time, so a REAL AUTH_SECRET in the dev `.env` leaks into the bundle and the guard CORRECTLY boots (the spec times out waiting for the exit) — keep the repo-root `.env`'s AUTH_SECRET EMPTY (the `.env.example` dev posture: `AUTH_SECRET=""` — dev falls back to the local constant with the boot warning) when building for e2e |
+| `bun run test:e2e` | Playwright vs the standalone build on :3100 with `db/e2e.db` (609 tests across the 5-chunk cold map — 150+187+89+95+88, 30 spec files; a single-process full run trips the register rate-limiter budget by design, the chunked map re-boots the server per chunk). NOTE (S45, the day-boundary lesson): the global setup re-seeds every run, but the seed's IDEMPOTENT UPSERTS do NOT refresh day-relative dates on existing rows — a scratch `db/e2e.db` that ages across a UTC midnight keeps its original day-relative dates (today's tasks, the +1-day exam badge, the due-in pills, the import round-trip dates each read one day stale → 4 deterministic failures in parity-session6/parity-session9/s23-import). Delete `db/e2e.db` when a run crosses a day boundary — the global setup re-creates it fresh with current dates. NOTE (S46, TWO more aged-scratch-db classes + a build-input one): (1) ALWAYS run e2e COLD — S131/CF5 chained `scripts/e2e-cold-reset.sh` into `bun run test:e2e` (port-guard + `rm -f db/e2e.db` BEFORE playwright boots anything — global-setup is TOO LATE: Playwright starts the webServer before globalSetup), so the default runner self-colds; any DIRECT `playwright test` invocation still needs the manual `rm -f db/e2e.db` before every full run: the s23-import round-trip posts a FIXED-id envelope, so a second consecutive run against the aged db reads `created: 0, updated: 1` instead of `created: 1, updated: 0` and fails — not just across midnights, across ANY re-run; (2) the s22 negative-spawn spec reads the BUNDLED `.env` — Next's standalone output COPIES the repo-root `.env` into `.next/standalone/.env` at build time, so a REAL AUTH_SECRET in the dev `.env` leaks into the bundle and the guard CORRECTLY boots (the spec times out waiting for the exit) — keep the repo-root `.env`'s AUTH_SECRET EMPTY (the `.env.example` dev posture: `AUTH_SECRET=""` — dev falls back to the local constant with the boot warning) when building for e2e |
 | `node scripts/capture-studyflow.mjs` | Refresh all 31 `docs/screenshots/` captures from the dev server (24 light + 7 dark) |
 | `node scripts/dark-sweep.mjs` | Dark-mode contrast audit over all 20 views (flashbulb/unreadable detector). S27: sets dark mode through the settings API (the real lifecycle) and SELF-VERIFIES the precondition — fails loudly (exit 1, no findings) if the dark class is not applied; the applied mode rides the JSON envelope. Never force the class directly (the session-10 approach silently rotted after S11) |
 | `node scripts/accent-dark-sweep.mjs` | Accent × dark-mode audit (S38-extended): all 7 accents × 20 desktop views × 20 MOBILE views at 390×844 + the drawer per accent (FAIL <2.2, WARN <3.2 for accent text; the mobile records also carry scrollWidth — >390 is a finding). The S38 shape is unit-pinned anti-phantom: every view recorded EXPLICITLY on both surfaces (clean views carry empty detector arrays), the per-accent `applied` self-verified readings + `mode: "dark"` + `mobileViewport` ride the envelope, and the seam's ALL-ACCENTS + ALL-VIEWS + drawer-present guards make every silently-skipped dimension a LOUD shape-error (the pre-S38 mobile pass swept only 6 views — MOBILE_VIEWS — and the omission-means-clean recording could not distinguish "clean because measured" from "clean because never rendered") |
@@ -1945,3 +1945,84 @@ Hover-parity probing must run in Playwright, not a touch-emulating browser — v
    when a fix converts a control's container/role, check the control's
    NAME in the same diff — reachability and namability are separate
    requirements (WCAG 2.1.1 vs 4.1.2).
+
+## S144 lessons (Batch CS — the cursor-dequeue + row-ceiling + mime-charset + instance-scoped-CAS set)
+
+1. **A closure-scoped guard is a per-render guard — hooks state must be
+   INSTANCE-scoped.** The S143/CR5 sequence-CAS was correct as a pure
+   seam (unit-pinned 4 ways) and defeated at the call sites:
+   `createFetchSeq()` in the component BODY minted a fresh instance per
+   render, so every pick's ticket was 1 on its own instance and
+   `isCurrent` was always true — the guard silently degenerated back to
+   the exact unconditional rollback it replaced (the ABA re-opened, the
+   S142 value-compare's different-value protection regressed). The
+   census pins couldn't see it (source text matches either scope) — only
+   a BEHAVIORAL e2e leg (route-intercepted late-failing PATCH + a newer
+   pick) catches the class. Lesson: when a guard's correctness depends
+   on WHERE its state lives, the pin must exercise the wiring (browser
+   or integration), never the seam alone — and reach for the house
+   `React.useRef` idiom (the files-view precedent) before minting
+   module or function-body state.
+2. **`Array.shift()` as a work-queue dequeue is a quadratic DoS vector —
+   and the audit's own constant didn't reproduce.** The folders topo
+   sort's `shift()` loop measured 27 ms at 2×10⁴ rows → 2,842 ms at
+   2×10⁵ (25x rows, 104x time) on this Node: the class is real (the
+   ~12-minute projection at the byte cap's ~10⁶-row ceiling holds), but
+   the audit's ~13 s at 10⁵ was ~10x off this build's constant. The
+   first RED leg (a linear CHAIN) passed green by accident — a chain
+   keeps the live queue at ≤2 elements, the degenerate easy case; the
+   discriminating shape is the STAR (one root, N children — the queue
+   fills at the root's pop and every shift moves the whole tail).
+   Lesson: re-measure claimed perf numbers before sizing the pin (the
+   reproduce-before-trusting doctrine cuts BOTH ways), and when you pin
+   a superlinear algorithm, pick the adversarial SHAPE, not the friendly
+   one.
+3. **A byte cap does not bound the PARSED tree — bound the rows too.**
+   `IMPORT_MAX_BYTES` (64 MiB) bounded the body while a minimal-row
+   envelope parsed into ~10⁶ objects of resident memory with no
+   deadline (the amplification is per-REQUEST: the tx eventually
+   P2028's, but the parse's several-hundred-MB spike happens first and
+   concurrently). The fix is a row-count ceiling at the cheapest
+   post-parse point (100,000 — far above any real account, far below
+   the byte cap's ~10⁶ admission), the constant in the seam + the
+   check in the route (the byte-cap precedent). Lesson: when a cap
+   bounds a SERIALIZED size, ask what the DESERIALIZED size can be —
+   and bound the amplification ratio at the boundary that first sees
+   the parsed shape.
+4. **Stored columns that flow into header VALUES need charset bounds at
+   BOTH ends.** A `files.mime` with CR/LF passed the length-only import
+   guard, persisted clean, and threw TypeError at every download
+   (`new NextResponse(headers)` — Node/undici rejects control
+   characters in header values): bad input accepted with 200, then a
+   500-on-read forever — the taxonomy break in its purest shape. The
+   throw fails closed (no header injection — the row stays deletable),
+   so this was an availability bug, not a security one. The fix bounds
+   the charset at the import door (printable ASCII — exactly what
+   browsers emit for `entry.type`, empty still passes) AND clamps in
+   the header builder (belt-and-suspenders for pre-fix rows). Lesson:
+   trace every stored value to its escape points (header construction
+   is an escape point), and when the browser is the only legitimate
+   writer of a field, the import door's guard should admit exactly the
+   browser's emission grammar.
+5. **A bug-fix family has TWINS — sweep for the sibling before declaring
+   the family closed.** The S143 template rider taught the UNWRAP
+   branch to read `.content`; the depth-cap COLLECTOR walked plain
+   `childNodes` and lost template text at the cap (the same two-door
+   asymmetry one branch over) — and the fix's own comment carried a
+   false environment narrative (happy-dom 21.0.4 keeps template children
+   in `.content`, same as Chromium — probed). Lesson: when a fix lands
+   on one branch of a shared idiom, enumerate every other consumer of
+   that idiom in the same file (unwrap branch / collector / server
+   door), and probe the environment claim a comment makes before it
+   teaches the next agent wrong.
+6. **The 400-family taxonomy's log contract: a named 400 that HIDES a
+   server bug is worse than the 500 it replaced.** The shared
+   PrismaClientValidationError leg correctly stopped the 500s, but the
+   leg's own comment names its target as "latent Zod↔Prisma drift" — a
+   server-side bug — and the silent 400 cost the operator the only
+   production signal (the unknown-error branch it pre-empts LOGS). The
+   fix logs before answering (the client keeps the honest 400; the
+   operator keeps the diagnosis). Lesson: when a mapper converts an
+   error class from 500 to 4xx, decide explicitly whether the class is
+   client-input (stay silent) or server-drift (log it) — and pin the
+   decision.
