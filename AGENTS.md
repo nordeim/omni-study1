@@ -9,7 +9,7 @@ High-signal instructions for coding agents working in this repo. Everything here
 | `bun install` | Install deps (Bun ≥ 1.3) |
 | `bun run dev` | Dev server on :3000 (Turbopack), logs tee'd to `dev.log` |
 | `bun run lint` / `bun run typecheck` | ESLint / `tsc --noEmit` — both must be clean |
-| `bun run test` | Vitest unit layer (1513 tests; `*.test.ts` only — never picks up e2e specs) |
+| `bun run test` | Vitest unit layer (1519 tests; `*.test.ts` only — never picks up e2e specs) |
 | `bun run build` | Production build → `.next/standalone` (**required before e2e**) |
 | `bun run test:e2e` | Playwright vs the standalone build on :3100 with `db/e2e.db` (614 tests across the 5-chunk cold map — 150+189+91+95+89, 30 spec files; a single-process full run trips the register rate-limiter budget by design, the chunked map re-boots the server per chunk). NOTE (S45, the day-boundary lesson): the global setup re-seeds every run, but the seed's IDEMPOTENT UPSERTS do NOT refresh day-relative dates on existing rows — a scratch `db/e2e.db` that ages across a UTC midnight keeps its original day-relative dates (today's tasks, the +1-day exam badge, the due-in pills, the import round-trip dates each read one day stale → 4 deterministic failures in parity-session6/parity-session9/s23-import). Delete `db/e2e.db` when a run crosses a day boundary — the global setup re-creates it fresh with current dates. NOTE (S46, TWO more aged-scratch-db classes + a build-input one): (1) ALWAYS run e2e COLD — S131/CF5 chained `scripts/e2e-cold-reset.sh` into `bun run test:e2e` (port-guard + `rm -f db/e2e.db` BEFORE playwright boots anything — global-setup is TOO LATE: Playwright starts the webServer before globalSetup), so the default runner self-colds; any DIRECT `playwright test` invocation still needs the manual `rm -f db/e2e.db` before every full run: the s23-import round-trip posts a FIXED-id envelope, so a second consecutive run against the aged db reads `created: 0, updated: 1` instead of `created: 1, updated: 0` and fails — not just across midnights, across ANY re-run; (2) the s22 negative-spawn spec reads the BUNDLED `.env` — Next's standalone output COPIES the repo-root `.env` into `.next/standalone/.env` at build time, so a REAL AUTH_SECRET in the dev `.env` leaks into the bundle and the guard CORRECTLY boots (the spec times out waiting for the exit) — keep the repo-root `.env`'s AUTH_SECRET EMPTY (the `.env.example` dev posture: `AUTH_SECRET=""` — dev falls back to the local constant with the boot warning) when building for e2e |
 | `node scripts/capture-studyflow.mjs` | Refresh all 31 `docs/screenshots/` captures from the dev server (24 light + 7 dark) |
@@ -2176,3 +2176,36 @@ Hover-parity probing must run in Playwright, not a touch-emulating browser — v
    a contract — re-anchor the whole set in the same edit, or collapse
    the per-cycle history into one present-tense line the census can
    pin.
+
+## S147 lessons (Batch CV — the node-env-casing-boot-warning + tripwire-cleanup set)
+
+1. **Before warning about an env value, PROBE which runtimes can even
+   deliver it.** The NODE_ENV casing rider looked like a plain missing
+   guard — until the reachability matrix (the S146 runtime-split doctrine
+   applied to an env knob) showed every DOCUMENTED posture normalizes the
+   value before the app reads it: the standalone server.js FORCES
+   `process.env.NODE_ENV = 'production'` at its line 5 BEFORE requiring
+   next; `next dev`/`next start` force their own values; the Dockerfile
+   sets the canonical literal. The miscased value reaches the guards only
+   through a hand-rolled custom server — which reframed the fix from "a
+   missing guard" to "the overdeclaredProxyHopsWarning class of
+   misconfigured-host defense-in-depth," and the honest test shape with
+   it: the unit seam legs drive the pure predicate (the layer where the
+   value is reachable), the census leg pins the wiring, and there is NO
+   e2e leg BY DESIGN — a spawn-based leg would drive the FORCED value,
+   not the miscased one, proving nothing. Lesson: for env-driven guards,
+   read the runtime's own normalization (the standalone's server.js, the
+   framework's CLI) BEFORE designing the leg; "not drivable through this
+   runtime" is a design fact to name, not a gap to force.
+2. **A tripwire leg's CLEANUP is part of its contract.** The CU1a
+   derivation-tripwire was designed to fail loudly on a runtime switch —
+   but its row-cleanup `delete` sat AFTER the assertion, so the leg's
+   own designed failure mode would ALSO leak the probe row into the
+   chunk's files surface (riding FILE_METADATA into every files list
+   GET until the per-chunk DB reset) — while its sibling CU1b carried
+   the try/finally. The failure path of a leg that exists to fail is
+   the MOST likely path to run someday; its cleanup must survive it.
+   Lesson: when a leg's purpose is to catch a future regression, audit
+   what its OWN failure leaves behind — the finally belongs around the
+   assertions, with the row id captured before the first expect that
+   can throw.

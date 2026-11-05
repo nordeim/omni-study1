@@ -7,6 +7,7 @@ import {
   DEV_FALLBACK_SECRET,
   directExposureProdWarning,
   inBandDeliveryProdWarning,
+  nodeEnvCasingWarning,
   overdeclaredProxyHopsWarning,
   parseTrustedProxyHops,
 } from "@/lib/env-check";
@@ -352,5 +353,75 @@ describe("S134/CI6c · overdeclaredProxyHopsWarning (the silent shared-bucket co
       "utf8",
     );
     expect(src).toMatch(/overdeclaredProxyHopsWarning\(process\.env\)/);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// S147/CV1 · nodeEnvCasingWarning (the miscased NODE_ENV made loud — the
+// named auth-family rider landing, the CI6c precedent).
+//
+// THE FINDING (audit B-R1, verified by direct read): every production-keyed
+// guard in this app reads the value EXACTLY — env-check.ts's isProduction
+// core (the AUTH_SECRET fatal gate) + the three prod-gated warnings
+// (CB14/CF2/CI6c), server/auth.ts's Secure-cookie fallbacks, db.ts's Prisma
+// log config, db-path, instrumentation. A host exporting NODE_ENV=Production
+// (or PRODUCTION, " production", staging, "") degrades SILENTLY to the dev
+// posture: the AUTH_SECRET fatal gate never fires (a missing secret boots
+// on the public dev fallback), every production warning stays silent, the
+// cookie fallback is non-Secure.
+//
+// REACHABILITY (the S146 runtime-split doctrine — probe which runtime can
+// even deliver the miscased value): the standalone server.js FORCES
+// process.env.NODE_ENV = 'production' at its line 5 BEFORE requiring next
+// (verified by direct read of .next/standalone/server.js); next dev/start
+// force their own canonical values; the Dockerfile sets ENV
+// NODE_ENV=production (canonical); compose/.env.example never set it — so
+// the miscased value reaches the guards ONLY through a hand-rolled custom
+// server. The warning is exactly the overdeclaredProxyHopsWarning class of
+// misconfigured-host defense-in-depth: structurally silent on every
+// documented posture (all three canonical values + unset never warn).
+//
+// WHY NO E2E LEG (the S146 lesson applied): the warning CANNOT fire through
+// any e2e-observable posture — the standalone webServer forces production at
+// server.js:5 before next boots, so a spawn-based leg would drive the
+// FORCED value, not the miscased one. The defect's reachable layer is the
+// pure seam (every guard reads the raw value); these legs drive exactly
+// that; the wiring is census-pinned below.
+// ---------------------------------------------------------------------------
+describe("S147/CV1 · nodeEnvCasingWarning (the miscased NODE_ENV made loud)", () => {
+  it("is silent on the three canonical values — every documented posture", () => {
+    expect(nodeEnvCasingWarning({ NODE_ENV: "production" })).toBe(false);
+    expect(nodeEnvCasingWarning({ NODE_ENV: "development" })).toBe(false);
+    expect(nodeEnvCasingWarning({ NODE_ENV: "test" })).toBe(false);
+  });
+
+  it("is silent when NODE_ENV is unset — nothing to miscase", () => {
+    expect(nodeEnvCasingWarning({})).toBe(false);
+    expect(nodeEnvCasingWarning({ NODE_ENV: undefined })).toBe(false);
+  });
+
+  it("warns on the capital-P host (NODE_ENV=Production — the exact-value guards read it as dev)", () => {
+    expect(nodeEnvCasingWarning({ NODE_ENV: "Production" })).toBe(true);
+    expect(nodeEnvCasingWarning({ NODE_ENV: "PRODUCTION" })).toBe(true);
+  });
+
+  it("warns on the padded spellings (the CG4 \" 0\" lesson — whitespace is a miscased value)", () => {
+    expect(nodeEnvCasingWarning({ NODE_ENV: " production" })).toBe(true);
+    expect(nodeEnvCasingWarning({ NODE_ENV: "production " })).toBe(true);
+    expect(nodeEnvCasingWarning({ NODE_ENV: " production " })).toBe(true);
+  });
+
+  it("warns on the arbitrary non-canonical values (casing+membership, never a posture guess)", () => {
+    expect(nodeEnvCasingWarning({ NODE_ENV: "staging" })).toBe(true);
+    expect(nodeEnvCasingWarning({ NODE_ENV: "prod" })).toBe(true);
+    expect(nodeEnvCasingWarning({ NODE_ENV: "" })).toBe(true);
+  });
+
+  it("the boot wiring carries the warning after the hop-depth warning (the instrumentation call site)", () => {
+    const src = readFileSync(
+      path.resolve(process.cwd(), "src/instrumentation.ts"),
+      "utf8",
+    );
+    expect(src).toMatch(/nodeEnvCasingWarning\(process\.env\)/);
   });
 });

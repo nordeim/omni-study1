@@ -14,6 +14,7 @@ import {
   authSecretBootStatus,
   directExposureProdWarning,
   inBandDeliveryProdWarning,
+  nodeEnvCasingWarning,
   overdeclaredProxyHopsWarning,
 } from "./lib/env-check";
 import { resolveProcessDatabaseUrl } from "./lib/db-path";
@@ -100,6 +101,27 @@ export async function register(): Promise<void> {
         "TRUSTED_PROXY_HOPS=0, but silent). Declare the chain's TRUE depth " +
         "(TRUSTED_PROXY_HOPS=N, the count of proxies that append entries) — " +
         "see DEPLOYMENT.md §3.",
+    );
+  }
+
+  // S147/CV1 (the named s145/s146-carried rider): the NODE_ENV casing warning —
+  // every production-keyed guard above (the AUTH_SECRET fatal gate, the
+  // CB14/CF2/CI6c warnings) and below the app (the Secure-cookie fallbacks,
+  // the Prisma log config) compares the value EXACTLY; a host exporting
+  // NODE_ENV=Production degrades silently to the dev posture (a missing
+  // AUTH_SECRET boots on the public dev fallback; every production warning
+  // stays silent). The documented postures all normalize the value — the
+  // standalone forces 'production' at server.js:5, next dev/start force
+  // their own, the Dockerfile sets the canonical literal — so this line is
+  // for exactly the hand-rolled custom-server host.
+  if (nodeEnvCasingWarning(process.env)) {
+    console.warn(
+      "[boot] WARNING: NODE_ENV=\"" + process.env.NODE_ENV + "\" is not one of " +
+        "production | development | test — every production-keyed guard in this " +
+        "app (the AUTH_SECRET boot gate, the in-band delivery and proxy-posture " +
+        "warnings, the Secure cookie default) compares the value EXACTLY and is " +
+        "currently reading it as the DEV posture. Set NODE_ENV=production " +
+        "(lowercase) on production hosts.",
     );
   }
 }

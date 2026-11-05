@@ -201,6 +201,39 @@ export function parseTrustedProxyHops(raw: string | undefined): number | undefin
   return n;
 }
 
+// ---- S147/CV1: the NODE_ENV casing boot warning ---------------------------------
+//
+// The s147 FE/auth-rotation audit's named rider (carried from the s145/s146
+// deferrals): every production-keyed guard in this app reads the value
+// EXACTLY — the isProduction core above (the AUTH_SECRET fatal gate), the
+// three prod-gated warnings (CB14 in-band delivery, CF2 direct exposure,
+// CI6c over-declared hops), server/auth.ts's Secure-cookie fallbacks, db.ts's
+// Prisma log config, db-path, instrumentation. A host exporting
+// NODE_ENV=Production (or PRODUCTION, " production", staging, "") degrades
+// SILENTLY to the dev posture: the AUTH_SECRET fatal gate never fires (a
+// missing secret boots on the public dev fallback), every production warning
+// stays silent, the cookie fallback is non-Secure, Prisma logs queries.
+//
+// REACHABILITY (the S146 runtime-split doctrine — probe which runtime can
+// even deliver the miscased value): the standalone server.js FORCES
+// process.env.NODE_ENV = 'production' at its line 5 BEFORE requiring next;
+// next dev/start force their own canonical values; the Dockerfile sets ENV
+// NODE_ENV=production (canonical); compose/.env.example never set it — so
+// the miscased value reaches the guards ONLY through a hand-rolled custom
+// server (an operator importing next programmatically with a host-exported
+// NODE_ENV). This warning is exactly the overdeclaredProxyHopsWarning class
+// of misconfigured-host defense-in-depth, and it is structurally silent on
+// every documented posture (all three canonical values + unset never warn —
+// zero false positives, probed at plan time).
+
+export function nodeEnvCasingWarning(
+  env: { NODE_ENV?: string; [key: string]: string | undefined },
+): boolean {
+  const v = env.NODE_ENV;
+  if (v === undefined) return false;
+  return v !== "production" && v !== "development" && v !== "test";
+}
+
 // ---- S120/BU21: the demo-seed gate ------------------------------------------
 //
 // The documented Docker first-run (`init` profile) seeds the

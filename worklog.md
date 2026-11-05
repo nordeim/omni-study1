@@ -4718,3 +4718,95 @@ A-M3 stage-2 chunked sub-tx + resume token (the one named standing
 deferral — its ADR-021 contract change deserves its own cycle with its
 own ADR). The NODE_ENV casing warning stays the cheap rider for the
 next auth-family cycle.
+
+## Session 158 — Batch CV (Cycle 97): the node-env-casing-boot-warning + tripwire-cleanup set
+
+**Cycle 97 · Session 147 · the FE/views + auth/crypto rotation (two
+cycles stale) + the Batch CU recent-changes axis.** Pull-refreshed to
+`443d508` (the fast-forward added only the operator's session_166
+transcript); the environment verified standing (daemon, `.env`
+`DATABASE_URL="file:../db/custom.db"`, the db, Chromium 1243).
+
+**Cold baseline matched the documented S145-final state exactly**: lint
+✓ · tsc ✓ · unit 1513/1513 (48 files) · the drawer check GREEN (the
+**62nd** consecutive no-Tailwind-v4-mobile-nav-bug confirmation) · the
+desktop parity probe MATCH (all five formal checks). Noise: none.
+
+**The audits** (two Mode-C passes — the subagent dispatch returned
+garbled transcripts, so the orchestrator executed both directly, every
+M/L finding re-verified by direct read): **A** — the Batch CU
+recent-changes axis (`61bc42f`): **0C/0H/0M/1L/2I**, all thirteen CU
+claims confirmed delivered (the seam, the three tx sites, the 413
+discrimination, the breadcrumb arithmetic, the tripwire pair, the
+doc-chain census machine-verified); the one L — the CU1a tripwire leg's
+cleanup outside any finally. **B** — the FE/views + auth/crypto
+rotation: **0C/0H/0M/0L/2I + the named rider adjudicated REAL** — every
+historically-real family re-verified closed (the ABA tickets, the
+scrypt/HMAC core route-by-route, the boot guards, the route authz, the
+error taxonomy, the ownership scoping, the FE structural gates, the CT1
+completion-window set intact).
+
+**The cycle's load-bearing finding — the reachability probe.** The
+NODE_ENV casing rider (carried from s145/s146: "the cheap rider for the
+next auth-family cycle") looked like a plain missing guard — every
+production-keyed guard reads `=== "production"` exactly, and a
+`NODE_ENV=Production` host degrades silently to the dev posture — until
+the S146 runtime-split doctrine was applied to the env knob: the
+standalone server.js FORCES `NODE_ENV='production'` at its line 5 before
+requiring next; next dev/start force their own values; the Dockerfile
+sets the canonical literal; compose/.env.example never set it. The
+miscased value reaches the guards ONLY through a hand-rolled custom
+server — the overdeclaredProxyHopsWarning misconfigured-host class,
+structurally silent on every documented posture (zero false positives,
+probed). The test shape settled with it: the unit seam legs drive the
+pure predicate, the census leg pins the wiring, NO e2e leg by design
+(a spawn would drive the FORCED value, proving nothing).
+
+**The fixes (all RED-proven).** CV1 the NODE_ENV casing boot warning —
+the pure `nodeEnvCasingWarning` predicate in `env-check.ts` (silent on
+the three canonical values + unset; warns on Production/PRODUCTION/
+padded/staging/empty — the honest casing+membership shape) + the
+instrumentation `console.warn` wiring (the CI6c precedent copy: "Set
+NODE_ENV=production (lowercase) on production hosts"); the unit REDs
+6/6 (the import failure IS the red — `6 failed | 33 passed` →
+`39 passed`). CV2 the CU1a tripwire-cleanup finally (audit A-L1: the
+leg's own designed failure must not also leak its probe row into the
+chunk's files surface — the row id captured before the first throwing
+expect; the failed-POST branch creates no row). CV3 the doc chain.
+
+**Re-cert (the FINAL tree).** lint ✓ · tsc ✓ · unit **1519/1519** (48
+files, +6 — env-check's six legs) · build ✓ (the wiring verified
+shipped in the standalone instrumentation chunk — direct read) · the
+targeted s14+s22 run **29/29** (the CU1 pair with the hardened cleanup
++ both s22 boot-guard legs: the new warning is structurally silent on
+the exact "production" the spawn sets) · the cold 5-chunk e2e cert
+**614/614 — 150 + 189 + 91 + 95 + 89, every chunk first-pass this run,
+no flake re-run needed** (unchanged count — no e2e-count change this
+cycle) · **census 2133 green** (was 2127).
+
+**Evidence.** Three `docs/screenshots/147-clone-*.png` frames (desktop
+235 KiB, mobile drawer 64 KiB, the login surface 236 KiB — the cycle's
+axis surface: the unauthenticated auth door), self-verifying (exists,
+>10 KiB, byte-diverse, md5-distinct — the capture script's JSON verdict
+ok:true) + the CV1 machine proof on the unit layer (the six env-check
+legs — the reachable layer for the miscased value).
+
+**Docs.** README badge/census (2127 → 2133) + the Session-147 row;
+AGENTS census (1513 → 1519) + the S147 lessons block (two lessons: the
+probe-which-runtime-can-deliver-an-env-value doctrine — read the
+runtime's own normalization BEFORE designing the leg; the
+tripwire-leg's-cleanup-is-part-of-its-contract — a leg that exists to
+fail has its failure path as its MOST likely path, and its cleanup must
+survive it); CLAUDE counts + the env-check seam fragment; PAD v1.3.55
+(the revision block + the §11 closure row); the SKILL census (both
+sites); the vitest header re-anchor (env-check +6); the cert runner
+unchanged; the plan §6 as-executed close; `docs/session_167.md`; this
+entry; the `.env.example` contract re-verified (no env-var reads changed
+this cycle — the warning reads a value the code already read at eleven
+sites).
+
+**Next cycle.** The rotation continues — the entities/factory +
+data-layer axis is two cycles stale again (swept at S146), or the A-M3
+stage-2 chunked sub-tx + resume token (its own ADR-021 cycle); the
+B-I3 trim rider stays logged for a validation-family cycle; the
+FE/views + auth/crypto axis is one cycle fresh.

@@ -1,7 +1,14 @@
 import { defineConfig } from "vitest/config";
 import path from "node:path";
 
-// Unit-test layer for the pure domain seams — 48 files / 1513 tests
+// Unit-test layer for the pure domain seams — 48 files / 1519 tests
+// (re-anchored S147/CV — the node-env-casing-boot-warning +
+// tripwire-cleanup set: census 1513 → 1519, +6 net
+// [env-check +6: the S147/CV1 nodeEnvCasingWarning quintet (the
+// canonical-silence + unset-silence + the capital-P host + the padded
+// spellings + the arbitrary non-canonical values — the miscased NODE_ENV
+// made loud, silent on every documented posture) + the S147/CV1
+// instrumentation-wiring census leg (the CI6c 4th-leg precedent)].)
 // (re-anchored S146/CU — the multipart-mime + OTP-tx + 413-discrimination
 // + breadcrumb-recount set: census 1503 → 1513, +10 net
 // [files +5: the S146/CU1 multipart mime admission-set quintet (the

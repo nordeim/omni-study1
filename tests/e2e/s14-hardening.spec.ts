@@ -997,10 +997,23 @@ test.describe("S146/CU1: the multipart upload guards the mime before write", () 
         },
       },
     });
-    expect(res.status()).toBe(201);
-    const row = (await res.json()) as { id: string; mime: string };
-    expect(row.mime).toBe("text/plain;charset=utf-8");
-    await request.delete(`/api/files/${row.id}`);
+    // S147/CV2 (audit A-L1): the cleanup rides a finally — the leg's own
+    // designed failure mode (the tripwire firing on a runtime switch: the
+    // Node-parse path answering the guard's 400) must not ALSO leak the
+    // probe row into the chunk's files surface (the CU1b pattern; the
+    // failed-POST branch creates no row — the guard's 400 writes nothing,
+    // so rowId stays undefined and the delete is skipped).
+    let rowId: string | undefined;
+    try {
+      expect(res.status()).toBe(201);
+      const row = (await res.json()) as { id: string; mime: string };
+      rowId = row.id;
+      expect(row.mime).toBe("text/plain;charset=utf-8");
+    } finally {
+      if (rowId !== undefined) {
+        await request.delete(`/api/files/${rowId}`);
+      }
+    }
   });
 
   test("CU1b: a browser-real mime round-trips through the guard (the clean shape, byte-identical)", async ({ request }) => {
