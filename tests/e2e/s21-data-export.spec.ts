@@ -129,4 +129,27 @@ test.describe("S21 the full-data export", () => {
     const nav = page.getByRole("navigation", { name: "Primary" });
     await expect(nav.getByRole("link")).toHaveCount(20);
   });
+
+  // S145/CT3 (audit B-L2): the export panel's two primary CTAs (the
+  // Download JSON anchor + the Import button) were the codebase's only
+  // hand-rolled SOLID bg-sf-primary CTAs — the sole violations of the
+  // house convention (AGENTS.md: "every primary action uses the Button
+  // `gradient` variant … Never render a solid bg-sf-primary CTA"; the
+  // other bg-sf-primary sites are checkbox fills and chat bubbles, not
+  // CTAs). Both now ride the .sf-gradient + .sf-gradient-shadow surface;
+  // the computed-style pin answers the serialization the engine emits
+  // (a solid CTA computes background-image: "none" — RED pre-fix).
+  test("S145/CT3: the export panel's primary CTAs ride the gradient surface (no solid accent CTA)", async ({ page }) => {
+    await page.goto("/export");
+    const downloadCta = page.getByRole("link", { name: "Download JSON" });
+    await expect(downloadCta).toBeVisible();
+    const importCta = page.getByRole("button", { name: "Import" });
+    await expect(importCta).toBeVisible();
+    await expect(importCta).toBeDisabled();
+
+    const ctaBg = await downloadCta.evaluate((el) => getComputedStyle(el).backgroundImage);
+    expect(ctaBg).toContain("linear-gradient");
+    const importBg = await importCta.evaluate((el) => getComputedStyle(el).backgroundImage);
+    expect(importBg).toContain("linear-gradient");
+  });
 });

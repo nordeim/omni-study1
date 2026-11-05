@@ -1,4 +1,24 @@
 #!/usr/bin/env bash
+# (S145/CT re-tag — census 609 → 612, net +3: chunk 3 +2 [the S145/CT1
+# focus-timer completion-window pair in resilience — the fake-clock-driven
+# phantom/double-log leg (a Play press through the in-flight save + the
+# failed save: exactly ONE POST, the Start button disabled through the
+# window, the failure re-latches the clock to a fresh 25:00, the retry
+# runs a real session with no new POST) + the settle-CAS leg (a
+# late-settling save must not clobber a newer Long-Break pick; both ride
+# the route-intercepted /api/focus-sessions — no server writes, no
+# cleanup, no budget)]; chunk 5 +1 [the S145/CT3 gradient-CTA leg in
+# s21-data-export — the Download JSON anchor + the Import button compute
+# linear-gradient backgrounds (the house primary-CTA convention; the
+# codebase's only two solid-accent CTAs, on the /export owner surface,
+# now ride .sf-gradient + .sf-gradient-shadow)]. The S145/CT4 recount
+# rides the same edit: s23's demo import budget is 10/10 ZERO HEADROOM
+# (9 fixture POSTs + the census-invisible in-app panel-journey POST —
+# the S144 header undercounted it as 9), resilience carries 9/10 (8
+# fixture + 1 demo.request — the S144 cross-reference said 5); the
+# script-conventions CT4 census leg machine-pins both counts. The unit
+# census 1500 → 1503 (+3: the CT1/CT2/CT4 source-census legs) rides the
+# vitest header re-anchor.)
 # (S144/CS re-tag — census 606 → 609, net +3: chunk 3 +2 [the S144/CS1
 # appearance-picker sequence-CAS leg — a route-intercepted late-failing
 # preference PATCH must not roll back a NEWER accent pick, the ABA the
@@ -140,7 +160,7 @@
 # 192.0.2.139, 3/10 per-IP, 3/40 registerGlobal), the demo import
 # budget at 8/10; END-of-file, the CK1 flood pin stays TERMINAL in
 # s16]. The full CN map: docs/remediation-plan-session139.md.)
-# Expected: 150 + 187 + 89 + 95 + 88 = 609 (each chunk's count includes its
+# Expected: 150 + 187 + 91 + 95 + 89 = 612 (each chunk's count includes its
 # auth setup — the current census; the historical re-tag blocks beneath.)
 # (S131/CF re-tag — census 567 → 570, net +3: chunk 1 +1 [the CF9
 # drawer focus-restore leg in mobile-navigation — crossing the lg

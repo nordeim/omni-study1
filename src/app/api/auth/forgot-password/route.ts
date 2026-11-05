@@ -75,19 +75,26 @@ export async function POST(request: NextRequest) {
       // one-shot takeover links per account after N requests inside 30 min;
       // exactly one live link per account is the bounded, least-surprise
       // posture — the newest email is the one the user will click).
-      await db.passwordResetToken.deleteMany({
-        where: { userId: user.id },
-      });
-      await db.passwordResetToken.create({
-        data: {
-          userId: user.id,
-          // S117/BR6 — hashed at rest: the row stores the SHA-256 digest; the
-          // raw token rides the URL only. A DB read must never yield a live
-          // account-takeover link.
-          token: hashResetToken(token),
-          expiresAt: new Date(Date.now() + TOKEN_TTL_MS),
-        },
-      });
+      // S145/CT2 (audit B-L1): the pair rides ONE transaction — two
+      // un-transacted awaits interleave under concurrent same-account
+      // requests as delete/delete/create/create, leaving TWO live one-shot
+      // tokens (the route's own one-live-link invariant broken); the batch
+      // form closes the window (the BZ7/CE5 family).
+      await db.$transaction([
+        db.passwordResetToken.deleteMany({
+          where: { userId: user.id },
+        }),
+        db.passwordResetToken.create({
+          data: {
+            userId: user.id,
+            // S117/BR6 — hashed at rest: the row stores the SHA-256 digest; the
+            // raw token rides the URL only. A DB read must never yield a live
+            // account-takeover link.
+            token: hashResetToken(token),
+            expiresAt: new Date(Date.now() + TOKEN_TTL_MS),
+          },
+        }),
+      ]);
       // The absolute URL derives from the REQUEST origin (the e2e suite
       // serves the app on a non-default port; siteUrl() is the metadata
       // origin, not the serving origin).

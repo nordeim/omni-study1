@@ -21,21 +21,28 @@ import { expect, test, type Page } from "@playwright/test";
 // (5) THE PANEL JOURNEY: /export renders the Restore card; a real
 //     setInputFiles import → the result summary renders.
 //
-// Rate-limit budget (S135/CJ6 recount): this file makes exactly 9 DEMO-user
-// import POSTs against the 10/15-min per-user budget (round-trip 1 +
-// re-import 1 + the 400 family 4 + the panel journey 1 + the S117 cards
-// round-trip 1 + the S144/CS3 merge-guard leg 1 — the dangling-FK probe
-// rides the round-trip envelope, no
-// standalone POST). Other spec files DO POST this route (the S92/A4-era
-// exclusivity claim was false): resilience.spec.ts carries 5 demo-user
-// POSTs (the BW11 over-cap 413 — the limiter fires before the body read,
-// consuming budget; the BY3 acceptance; and the S135/CJ4+CJ5 400-message
-// pins, relocated there after the first draft HERE tripped chunk 5's
-// registerGlobal: 40 cap — two wasted fresh-user registrations [the pins
-// rode this file's demo storageState anyway] pushed the chunk's register
-// census over 40 and the LAST registering test 429'd; and the S144/CS5
-// row-cap 413 — the same budget shape as the BW11 leg, the limiter fires
-// before the row-count check) and
+// Rate-limit budget (S135/CJ6 recount → S145/CT4 recount, audit A-L1): this
+// file makes exactly 10 DEMO-user import POSTs against the 10/15-min
+// per-user budget — ZERO HEADROOM: any NEW demo-session import POST added
+// here 429s at the limiter (a future leg must ride a fresh TEST-NET user,
+// a different chunk, or displace one of these). The enumeration: round-trip
+// 1 + re-import 1 + the 400 family 4 + the panel journey 1 (the in-app
+// POST — the app's own fetch through the demo page, invisible to the
+// script-conventions census, which pins the 9 fixture sites) + the S117
+// cards round-trip 1 + the S144/CS3 merge-guard leg 1 + the S140/CO1
+// hostile-note leg 1 — the dangling-FK probe rides the round-trip
+// envelope, no standalone POST). Other spec files DO POST this route (the
+// S92/A4-era exclusivity claim was false): resilience.spec.ts carries 9 demo-user
+// POSTs (8 fixture + 1 demo.request — the BW11 over-cap 413:
+// the limiter fires before the body read, consuming budget; the BY3
+// acceptance; the S135/CJ4+CJ5 400-message pins, relocated there after
+// the first draft HERE tripped chunk 5's registerGlobal: 40 cap — two
+// wasted fresh-user registrations [the pins rode this file's demo
+// storageState anyway] pushed the chunk's register census over 40 and the
+// LAST registering test 429'd; the S137/CL1 equal-times leg; the S139
+// CN2-empty + CN7 pins; the S144/CS5 row-cap 413 — the same budget shape
+// as the BW11 leg, the limiter fires before the row-count check; and the
+// S139 cross-account 409 probe's demo-context POST — one slot free) and
 // s14-hardening.spec.ts POSTs on fresh users (the CA5/CA2/CJ1 window
 // probes). Safety is the CHUNK MAP, not exclusivity: resilience rides
 // chunk 3 and this file rides chunk 5 — different server boots, and both
@@ -260,7 +267,9 @@ test.describe("S23 the data import (restore)", () => {
     await expect(fileInput).toBeAttached();
     await expect(page.getByRole("button", { name: "Import" })).toBeDisabled();
 
-    // A real file through the panel (the last import POST — budget #8).
+    // A real file through the panel (the import POST #9 of 10 — the
+    // S145/CT4 recount: the panel journey's in-app POST is one of this
+    // file's TEN demo-session POSTs, the census-invisible one).
     await fileInput.setInputFiles({
       name: "studyflow-data-2026-10-01.json",
       mimeType: "application/json",
@@ -566,8 +575,9 @@ test.describe("S133/CH2+CH7 the import parity + the counts refresh (fresh TEST-N
 // content comes back sanitized: no remote img src, no script tag, no
 // event handler. This is the import door's half of the A-L3 fix (the API
 // door is covered by the delegate writeTransform + the render gate by the
-// legacy-note leg in parity-session9). Rides the DEMO session (budget #9
-// of 10 — the chunk-5 register census has zero headroom, so no fresh user).
+// legacy-note leg in parity-session9). Rides the DEMO session (budget #10
+// of 10 — the LAST of this file's zero-headroom TEN, the S145/CT4 recount;
+// the chunk-5 register census has zero headroom, so no fresh user).
 test.describe("S140/CO1 the note-HTML sanitize on import (A-L3)", () => {
   test("a hostile note imports clean: the stored content carries no remote img, script, or handler", async ({
     request,

@@ -126,7 +126,10 @@ describe("the chunked cert runner's truth contract (S128/CC2)", () => {
     // S144/CS: chunk 3 87 → 89 (the CS1 appearance-picker sequence-CAS
     // leg + the CS5 row-cap 413 leg) + chunk 5 87 → 88 (the CS3
     // merge-guard wiring leg) — 606 → 609.
-    expect(certSource).toContain("Expected: 150 + 187 + 89 + 95 + 88 = 609");
+    // S145/CT: chunk 3 89 → 91 (the CT1 focus-timer completion-window
+    // pair — the phantom/double-log leg + the settle-CAS leg) + chunk 5
+    // 88 → 89 (the CT3 gradient-CTA leg) — 609 → 612.
+    expect(certSource).toContain("Expected: 150 + 187 + 91 + 95 + 89 = 612");
   });
 
   it("propagates a failing chunk's exit code (never a green cert on a red run)", () => {
@@ -1495,5 +1498,93 @@ describe("the S143/CR source censuses", () => {
   it("CR3: the notebook mover carries its accessible name (the CQ3 surface's WCAG 4.1.2 name)", () => {
     const src = readFileSync(NOTES_VIEW, "utf8");
     expect(src).toContain('aria-label="Move note to notebook"');
+  });
+});
+
+// S145/CT source censuses — the s145 audit's M/L set. The census legs hold
+// the SHAPE against drift; the behavioral semantics ride the e2e legs in
+// resilience.spec.ts (CT1) and s21-data-export.spec.ts (CT3).
+describe("the S145/CT source censuses", () => {
+  // S145/CT1 (audit B-M1): the focus timer's completion window re-armed
+  // from its own terminal state — remaining===0 && mode==="focus"
+  // persisted through the in-flight save (and forever after a failed
+  // save), the Start button stayed enabled, and complete() had no saving
+  // guard, so a Play press at 00:00 POSTed a phantom full-duration
+  // session (a double-log inside the window); the late .then/.catch
+  // state writes clobbered newer mode picks (the S142-S144 ABA family,
+  // this file's own settle path). The fix set: the saving latch + the
+  // disabled affordance + the failure re-latch + the settle-CAS (the
+  // CS1 instance-scoped idiom). A census cannot see wiring SCOPE (the
+  // A-M1 lesson) — the two behavioral e2e legs carry the semantics —
+  // but it holds the markers against drift.
+  it("S145/CT1: the focus timer's completion window is guarded (the saving latch + the settle-CAS)", () => {
+    const src = readFileSync(
+      path.resolve(process.cwd(), "src/components/views/focustimer-view.tsx"),
+      "utf8",
+    );
+    expect(src).toContain('from "@/lib/fetch-seq"');
+    // The instance-scoped settle seq (the CS1 idiom — never per-render).
+    expect(src).toContain("const settleSeq = React.useRef(createFetchSeq()).current;");
+    // The ticket pair: minted at POST time, checked by the settle branches.
+    expect(src).toContain("const settle = settleSeq.begin();");
+    expect(src).toContain("settleSeq.isCurrent(settle)");
+    // The saving latch: a second fire while a save is in flight is a no-op.
+    expect(src).toContain("if (saving) {");
+    // The affordance: BOTH control buttons disable during the save (the
+    // Start button gained it — RED marker: exactly two occurrences).
+    expect((src.match(/disabled=\{saving\}/g) ?? []).length).toBe(2);
+    // The newer-interaction invalidators (every timer state owner mints).
+    expect(src).toContain("settleSeq.begin(); // a newer timer interaction");
+  });
+
+  // S145/CT2 (audit B-L1): the forgot-password supersede pair ran as two
+  // un-transacted awaits — a concurrent same-account race interleaves
+  // delete/delete/create/create and leaves TWO live one-shot tokens,
+  // breaking the route's own documented invariant ("exactly one live
+  // link per account", the S121/BV11b comment). The batch $transaction
+  // form closes the window (the BZ7/CE5 family). The census pins the
+  // wiring; a behavioral concurrency pin is not externally drivable —
+  // the forgot-flow e2e legs re-prove the flow itself.
+  it("S145/CT2: the forgot-password supersede pair runs in ONE transaction (the one-live-link invariant)", () => {
+    const src = readFileSync(
+      path.resolve(process.cwd(), "src/app/api/auth/forgot-password/route.ts"),
+      "utf8",
+    );
+    expect(src).toContain("db.$transaction([");
+    expect(src).toContain("passwordResetToken.deleteMany");
+    expect(src).toContain("passwordResetToken.create");
+  });
+
+  // S145/CT4 (audit A-L1): the demo-import-budget census the s144 commit
+  // re-anchored was MIS-COUNTED — the s23 header claimed "exactly 9"
+  // while the file makes 10 demo-session POSTs (9 fixture + 1 in-app
+  // panel journey), i.e. 10/10 ZERO HEADROOM at the import limiter's
+  // 10/15-min cap; the resilience cross-reference claimed 5 while the
+  // file carries 9 (8 fixture + 1 demo.request). This census counts the
+  // census-visible POST call sites per file and pins the header text
+  // claims alongside them (the count-the-things doctrine; the next
+  // budget-consuming commit re-anchors docs + census together).
+  it("S145/CT4: the demo-session import POST counts match the documented budgets (the A-L1 recount)", () => {
+    const s23 = readFileSync(path.resolve(process.cwd(), "tests/e2e/s23-import.spec.ts"), "utf8");
+    const resilience = readFileSync(
+      path.resolve(process.cwd(), "tests/e2e/resilience.spec.ts"),
+      "utf8",
+    );
+    // The fixture form only — `request.post(` NOT preceded by a member
+    // dot (page.request/demo.request ride other contexts by design).
+    const fixture = (src: string) =>
+      (src.match(/(?<![.\w])request\.post\("\/api\/import\/data"/g) ?? []).length;
+    const demoCtx = (src: string) =>
+      (src.match(/demo\.request\.post\("\/api\/import\/data"/g) ?? []).length;
+    // s23: 9 fixture POSTs + the in-app panel-journey POST = 10/10.
+    expect(fixture(s23)).toBe(9);
+    expect(demoCtx(s23)).toBe(0);
+    // resilience: 8 fixture + 1 demo.request = 9/10 (one slot free).
+    expect(fixture(resilience)).toBe(8);
+    expect(demoCtx(resilience)).toBe(1);
+    // The header's present-tense claims are re-anchored to the recount.
+    expect(s23).toContain("exactly 10 DEMO-user");
+    expect(s23).toContain("zero headroom");
+    expect(s23).toContain("resilience.spec.ts carries 9 demo-user");
   });
 });

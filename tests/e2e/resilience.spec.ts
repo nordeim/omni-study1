@@ -739,6 +739,141 @@ test.describe("S144/CS1: the appearance-picker sequence CAS (the instance-scoped
   });
 });
 
+// S145/CT1 (audit B-M1) — the focus timer's completion window re-armed
+// from its own terminal state: after the auto-completion fired,
+// mode stayed "focus" and remaining stayed 0 until the save POST's
+// .then landed; in that window — and indefinitely after a FAILED save
+// (the catch only toasts) — the Start button was enabled (no disabled
+// prop; only Complete carried it) and complete() had no saving guard,
+// so a Play press at 00:00 re-fired the completion effect and POSTed
+// another createFocusSession with durationSeconds = durations.focus
+// (the FULL nominal duration from zero elapsed time — the phantom
+// session; a double-log inside the in-flight window). The secondary
+// face is the ABA class itself: the save's late .then (setMode/
+// setRemaining) clobbered any newer mode pick made during the window.
+// Both legs ride the route-interception idiom — the POSTs never reach
+// the server (no rows, no cleanup, no write budget); the follow-up
+// collection GETs pass through (reads only).
+test.describe("S145/CT1: the focus-timer completion window (the terminal state must not re-arm)", () => {
+  test("a Play press through the in-flight save + a failed save never double-logs; the failure re-latches for a fresh session", async ({ page }) => {
+    // The fake clock drives the countdown to 00:00 (the only honest way
+    // to reach the completion window — the pomodoro is 25 real minutes).
+    await page.clock.install({ time: new Date("2026-11-05T10:00:00Z") });
+    await page.goto("/FocusTimer");
+    await expect(page.getByRole("heading", { name: "Focus Timer" })).toBeVisible();
+
+    let posts = 0;
+    await page.route("**/api/focus-sessions", async (route) => {
+      if (route.request().method() !== "POST") {
+        // The follow-up collection GET (fetchAndSet) passes through.
+        await route.continue();
+        return;
+      }
+      posts += 1;
+      if (posts === 1) {
+        // The FIRST (real, elapsed-full-duration) POST settles LAST and
+        // fails — the completion window opens at dispatch and stays open
+        // past the failure until the re-latch.
+        await page.waitForTimeout(700);
+        await route.fulfill({
+          status: 500,
+          contentType: "application/json",
+          body: JSON.stringify({ error: "late failure (S145/CT1 probe)" }),
+        });
+      } else {
+        await route.fulfill({
+          status: 201,
+          contentType: "application/json",
+          body: JSON.stringify({ ok: true }),
+        });
+      }
+    });
+    try {
+      const start = page.getByRole("button", { name: "Start timer" });
+      const clock = page.getByRole("timer");
+      await start.click();
+      // Drive the full pomodoro countdown to 00:00 — the completion
+      // effect fires, POST#1 goes in flight (delayed failure).
+      await page.clock.runFor(25 * 60 * 1000);
+      // Real-time slack for the React flush + the 0ms settle timer.
+      await page.waitForTimeout(500);
+      // THE COMPLETION WINDOW: the Start button is disabled (the CT1b
+      // affordance — RED pre-fix: enabled, the phantom's primary entry).
+      await expect(start).toBeDisabled();
+      // ...and past the late failure's settle:
+      await page.waitForTimeout(1200);
+      // Exactly ONE POST through the whole window (RED pre-fix: a Play
+      // press at 00:00 re-fires complete() — the phantom double-log).
+      expect(posts).toBe(1);
+      // The failure toast + THE RE-LATCH: the clock reads 25:00 again —
+      // a fresh session, never the phantom entry at 00:00 (RED pre-fix:
+      // the catch only toasted; remaining stayed 0 forever). The toast
+      // surfaces the server's error-body message (the apiSend extraction
+      // — the probe's marker text, not the generic fallback).
+      await expect(page.getByText("late failure (S145/CT1 probe)")).toBeVisible();
+      await expect(clock).toHaveText("25:00");
+      // The retry press starts a REAL session — running, no new POST
+      // (RED pre-fix: running=true at remaining===0 re-fires the
+      // completion effect → POST#2 with durationSeconds: 1500).
+      await start.click();
+      await expect(page.getByRole("button", { name: "Pause timer" })).toBeVisible();
+      await page.waitForTimeout(400);
+      expect(posts).toBe(1);
+    } finally {
+      await page.unroute("**/api/focus-sessions");
+    }
+  });
+
+  test("a late-settling save must not clobber a newer mode pick (the settle-CAS)", async ({ page }) => {
+    await page.goto("/FocusTimer");
+    await expect(page.getByRole("heading", { name: "Focus Timer" })).toBeVisible();
+
+    let posts = 0;
+    await page.route("**/api/focus-sessions", async (route) => {
+      if (route.request().method() !== "POST") {
+        await route.continue();
+        return;
+      }
+      posts += 1;
+      // Every POST settles late AND SUCCEEDS — the ABA shape: the late
+      // .then's mode switch must respect a newer pick made in between.
+      await page.waitForTimeout(700);
+      await route.fulfill({
+        status: 201,
+        contentType: "application/json",
+        body: JSON.stringify({ ok: true }),
+      });
+    });
+    try {
+      const start = page.getByRole("button", { name: "Start timer" });
+      await start.click();
+      // ~1s of real elapsed time so the early-complete is a real session.
+      await page.waitForTimeout(1100);
+      // The manual early-complete (elapsed-duration POST#1, in flight).
+      await page.getByRole("button", { name: "Complete session" }).click();
+      // DURING the in-flight save: a NEWER mode pick — Long Break.
+      await page.getByRole("button", { name: "Long Break" }).click();
+      // Wait PAST the late settle.
+      await page.waitForTimeout(1600);
+      // The newer pick survives the late success — RED pre-fix: the
+      // stale .then clobbered mode to short-break (Long Break
+      // un-pressed, Short Break pressed, the clock reset to 05:00).
+      await expect(page.getByRole("button", { name: "Long Break" })).toHaveAttribute(
+        "aria-pressed",
+        "true",
+      );
+      await expect(page.getByRole("button", { name: "Short Break" })).toHaveAttribute(
+        "aria-pressed",
+        "false",
+      );
+      await expect(page.getByRole("timer")).toHaveText("15:00");
+      expect(posts).toBe(1);
+    } finally {
+      await page.unroute("**/api/focus-sessions");
+    }
+  });
+});
+
 // S124/BY3 — the export/import size reconciliation's ACCEPTANCE leg. The
 // between-caps envelope: a small valid task + padding in an UNKNOWN field —
 // Zod strip mode drops the key at parse (verified: zero .strict() in the

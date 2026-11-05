@@ -1,7 +1,18 @@
 import { defineConfig } from "vitest/config";
 import path from "node:path";
 
-// Unit-test layer for the pure domain seams — 48 files / 1500 tests
+// Unit-test layer for the pure domain seams — 48 files / 1503 tests
+// (re-anchored S145/CT — the completion-window + supersede-tx +
+// gradient-CTA + budget-recount set: census 1500 → 1503, +3 net
+// [script-conventions +3: the S145/CT1 focus-timer completion-window
+// census (the saving-latch + settle-CAS markers — the behavioral legs
+// ride the resilience e2e pair), the S145/CT2 forgot-password
+// supersede-transaction census (the one-live-link invariant's batch
+// $transaction wiring), the S145/CT4 demo-import-budget census (the
+// census-visible POST call-site counts machine-pinned to the recounted
+// headers — s23 9 fixture + the census-invisible in-app panel POST =
+// 10/10 zero headroom; resilience 8 fixture + 1 demo.request = 9/10)].
+// The S144/CS re-anchor blocks follow.)
 // (re-anchored S144/CS — the cursor-dequeue + row-ceiling + mime-charset +
 // template-collector + drift-log + instance-scoped-CAS set: census
 // 1490 → 1500, +10 net [data-import +4: the S144/CS2 250k-star topo-sort

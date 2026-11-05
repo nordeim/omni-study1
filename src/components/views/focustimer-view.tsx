@@ -9,6 +9,7 @@
 // ---------------------------------------------------------------------------
 
 import * as React from "react";
+import { createFetchSeq } from "@/lib/fetch-seq";
 import {
   Clock,
   Coffee,
@@ -109,13 +110,32 @@ export function FocusTimerView() {
   // Completion side effects run as a reaction to remaining === 0 — deferred
   // to a macrotask so the effect body itself never sets state synchronously
   // (the set-state-in-effect lint contract).
+  //
+  // S145/CT1 (audit B-M1): the settle-CAS — the save's late .then/.catch
+  // state writes must respect currency. The ticket is INSTANCE-scoped
+  // (the React.useRef idiom — the S144/CS1 lesson: a function-body
+  // instantiation mints a fresh seq per render and the guard silently
+  // degenerates); every newer timer interaction (switchMode/applyPreset/
+  // reset) mints, so a stale settle can never clobber a newer pick.
+  const settleSeq = React.useRef(createFetchSeq()).current;
   const complete = React.useCallback(() => {
+    // S145/CT1 (audit B-M1): the completion window guard — the effect
+    // re-arms whenever `running` flips true at remaining === 0, and a
+    // second fire while a save is in flight would double-log the session
+    // (and, after a failed save, POST the FULL nominal duration from zero
+    // elapsed time — the phantom). Unlatch running so the interval never
+    // spins at 00:00; the in-flight save owns the rest.
+    if (saving) {
+      setRunning(false);
+      return;
+    }
     setRunning(false);
     if (mode !== "focus") {
       toast.info("Break's over — ready for another round?");
       return;
     }
     setSaving(true);
+    const settle = settleSeq.begin();
     // S123/BX6: the ELAPSED duration, not the nominal preset — a manual
     // early complete previously logged the full 25:00 (every focus stat
     // silently inflated). The auto path arrives at remaining === 0 and
@@ -131,10 +151,25 @@ export function FocusTimerView() {
       })
       .then(() => {
         toast.success("Focus session saved — take a break!");
+        // S145/CT1: the settle's state writes are currency-gated — a newer
+        // mode/preset pick made during the in-flight save owns the timer;
+        // the late success must not clobber it (the toast still informs).
+        if (!settleSeq.isCurrent(settle)) return;
         setMode("short-break");
         setRemaining(durations["short-break"]);
       })
-      .catch((err: unknown) => toast.error(errorMessage(err, "Could not save the focus session.")))
+      .catch((err: unknown) => {
+        toast.error(errorMessage(err, "Could not save the focus session."));
+        // S145/CT1 (audit B-M1): the failure re-latch — without it the
+        // window stays open forever (mode="focus", remaining=0): a retry
+        // press re-fires the completion effect and logs the phantom
+        // full-duration session. The re-latch restores a FRESH full
+        // duration, so the retry starts a real session; a newer pick made
+        // during the window is never overwritten (currency-gated).
+        if (settleSeq.isCurrent(settle)) {
+          setRemaining(durations[mode]);
+        }
+      })
       .finally(() => setSaving(false));
     // S127/CB1: `remaining` joins the deps — the pre-CB1 array omitted it,
     // so the memoized callback closed over the MOUNT-time value and
@@ -145,7 +180,12 @@ export function FocusTimerView() {
     // (an outer-scope value, not a reactive dependency; the exhaustive-deps
     // unnecessary-dependency class). No behavior change: its identity never
     // changes, so the callback identity is unaffected.
-  }, [mode, durations, remaining, subjectId, toast]);
+    // S145/CT1: `saving` JOINS the array — the completion-window guard
+    // reads it (the CD3-era omission was load-bearing only because the
+    // guard did not exist yet). `settleSeq` joins too — a stable
+    // useRef-derived instance (identity never changes; the exhaustive-deps
+    // rule owns the entry, the cost is nil).
+  }, [saving, mode, durations, remaining, subjectId, settleSeq, toast]);
 
   React.useEffect(() => {
     if (!running || remaining > 0) return;
@@ -154,12 +194,14 @@ export function FocusTimerView() {
   }, [running, remaining, complete]);
 
   const switchMode = (next: TimerMode) => {
+    settleSeq.begin(); // a newer timer interaction — any in-flight settle stops owning the state
     setMode(next);
     setRemaining(durations[next]);
     setRunning(false);
   };
 
   const applyPreset = (id: (typeof PRESETS)[number]["id"]) => {
+    settleSeq.begin(); // a newer timer interaction — any in-flight settle stops owning the state
     const preset = PRESETS.find((p) => p.id === id);
     if (!preset) return;
     setPresetId(id);
@@ -174,6 +216,7 @@ export function FocusTimerView() {
   };
 
   const reset = () => {
+    settleSeq.begin(); // a newer timer interaction — any in-flight settle stops owning the state
     setRemaining(durations[mode]);
     setRunning(false);
   };
@@ -307,7 +350,12 @@ export function FocusTimerView() {
             type="button"
             aria-label={running ? "Pause timer" : "Start timer"}
             onClick={() => setRunning((r) => !r)}
-            className="sf-gradient sf-gradient-shadow-lg flex size-16 items-center justify-center rounded-full text-white transition-transform hover:scale-105"
+            // S145/CT1 (audit B-M1): disabled during the in-flight save —
+            // the completion window's primary entry (a Play press at
+            // 00:00 re-armed the completion effect); parity with the
+            // Complete button's own saving disable.
+            disabled={saving}
+            className="sf-gradient sf-gradient-shadow-lg flex size-16 items-center justify-center rounded-full text-white transition-transform hover:scale-105 disabled:pointer-events-none disabled:opacity-50"
           >
             {running ? (
               <Pause className="size-8" strokeWidth={2} aria-hidden />

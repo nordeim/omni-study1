@@ -9,9 +9,9 @@ High-signal instructions for coding agents working in this repo. Everything here
 | `bun install` | Install deps (Bun ≥ 1.3) |
 | `bun run dev` | Dev server on :3000 (Turbopack), logs tee'd to `dev.log` |
 | `bun run lint` / `bun run typecheck` | ESLint / `tsc --noEmit` — both must be clean |
-| `bun run test` | Vitest unit layer (1500 tests; `*.test.ts` only — never picks up e2e specs) |
+| `bun run test` | Vitest unit layer (1503 tests; `*.test.ts` only — never picks up e2e specs) |
 | `bun run build` | Production build → `.next/standalone` (**required before e2e**) |
-| `bun run test:e2e` | Playwright vs the standalone build on :3100 with `db/e2e.db` (609 tests across the 5-chunk cold map — 150+187+89+95+88, 30 spec files; a single-process full run trips the register rate-limiter budget by design, the chunked map re-boots the server per chunk). NOTE (S45, the day-boundary lesson): the global setup re-seeds every run, but the seed's IDEMPOTENT UPSERTS do NOT refresh day-relative dates on existing rows — a scratch `db/e2e.db` that ages across a UTC midnight keeps its original day-relative dates (today's tasks, the +1-day exam badge, the due-in pills, the import round-trip dates each read one day stale → 4 deterministic failures in parity-session6/parity-session9/s23-import). Delete `db/e2e.db` when a run crosses a day boundary — the global setup re-creates it fresh with current dates. NOTE (S46, TWO more aged-scratch-db classes + a build-input one): (1) ALWAYS run e2e COLD — S131/CF5 chained `scripts/e2e-cold-reset.sh` into `bun run test:e2e` (port-guard + `rm -f db/e2e.db` BEFORE playwright boots anything — global-setup is TOO LATE: Playwright starts the webServer before globalSetup), so the default runner self-colds; any DIRECT `playwright test` invocation still needs the manual `rm -f db/e2e.db` before every full run: the s23-import round-trip posts a FIXED-id envelope, so a second consecutive run against the aged db reads `created: 0, updated: 1` instead of `created: 1, updated: 0` and fails — not just across midnights, across ANY re-run; (2) the s22 negative-spawn spec reads the BUNDLED `.env` — Next's standalone output COPIES the repo-root `.env` into `.next/standalone/.env` at build time, so a REAL AUTH_SECRET in the dev `.env` leaks into the bundle and the guard CORRECTLY boots (the spec times out waiting for the exit) — keep the repo-root `.env`'s AUTH_SECRET EMPTY (the `.env.example` dev posture: `AUTH_SECRET=""` — dev falls back to the local constant with the boot warning) when building for e2e |
+| `bun run test:e2e` | Playwright vs the standalone build on :3100 with `db/e2e.db` (612 tests across the 5-chunk cold map — 150+187+91+95+89, 30 spec files; a single-process full run trips the register rate-limiter budget by design, the chunked map re-boots the server per chunk). NOTE (S45, the day-boundary lesson): the global setup re-seeds every run, but the seed's IDEMPOTENT UPSERTS do NOT refresh day-relative dates on existing rows — a scratch `db/e2e.db` that ages across a UTC midnight keeps its original day-relative dates (today's tasks, the +1-day exam badge, the due-in pills, the import round-trip dates each read one day stale → 4 deterministic failures in parity-session6/parity-session9/s23-import). Delete `db/e2e.db` when a run crosses a day boundary — the global setup re-creates it fresh with current dates. NOTE (S46, TWO more aged-scratch-db classes + a build-input one): (1) ALWAYS run e2e COLD — S131/CF5 chained `scripts/e2e-cold-reset.sh` into `bun run test:e2e` (port-guard + `rm -f db/e2e.db` BEFORE playwright boots anything — global-setup is TOO LATE: Playwright starts the webServer before globalSetup), so the default runner self-colds; any DIRECT `playwright test` invocation still needs the manual `rm -f db/e2e.db` before every full run: the s23-import round-trip posts a FIXED-id envelope, so a second consecutive run against the aged db reads `created: 0, updated: 1` instead of `created: 1, updated: 0` and fails — not just across midnights, across ANY re-run; (2) the s22 negative-spawn spec reads the BUNDLED `.env` — Next's standalone output COPIES the repo-root `.env` into `.next/standalone/.env` at build time, so a REAL AUTH_SECRET in the dev `.env` leaks into the bundle and the guard CORRECTLY boots (the spec times out waiting for the exit) — keep the repo-root `.env`'s AUTH_SECRET EMPTY (the `.env.example` dev posture: `AUTH_SECRET=""` — dev falls back to the local constant with the boot warning) when building for e2e |
 | `node scripts/capture-studyflow.mjs` | Refresh all 31 `docs/screenshots/` captures from the dev server (24 light + 7 dark) |
 | `node scripts/dark-sweep.mjs` | Dark-mode contrast audit over all 20 views (flashbulb/unreadable detector). S27: sets dark mode through the settings API (the real lifecycle) and SELF-VERIFIES the precondition — fails loudly (exit 1, no findings) if the dark class is not applied; the applied mode rides the JSON envelope. Never force the class directly (the session-10 approach silently rotted after S11) |
 | `node scripts/accent-dark-sweep.mjs` | Accent × dark-mode audit (S38-extended): all 7 accents × 20 desktop views × 20 MOBILE views at 390×844 + the drawer per accent (FAIL <2.2, WARN <3.2 for accent text; the mobile records also carry scrollWidth — >390 is a finding). The S38 shape is unit-pinned anti-phantom: every view recorded EXPLICITLY on both surfaces (clean views carry empty detector arrays), the per-accent `applied` self-verified readings + `mode: "dark"` + `mobileViewport` ride the envelope, and the seam's ALL-ACCENTS + ALL-VIEWS + drawer-present guards make every silently-skipped dimension a LOUD shape-error (the pre-S38 mobile pass swept only 6 views — MOBILE_VIEWS — and the omission-means-clean recording could not distinguish "clean because measured" from "clean because never rendered") |
@@ -2026,3 +2026,89 @@ Hover-parity probing must run in Playwright, not a touch-emulating browser — v
    error class from 500 to 4xx, decide explicitly whether the class is
    client-input (stay silent) or server-drift (log it) — and pin the
    decision.
+
+## S145 lessons (Batch CT — the completion-window + supersede-tx + gradient-CTA + budget-recount set)
+
+1. **A terminal state that waits for an async settle RE-ARMS its own
+   trigger — guard the window, not just the happy path.** The focus
+   timer's auto-completion left `mode="focus"` and `remaining=0` in
+   place until the save POST's `.then` landed (and forever after a
+   FAILED save — the catch only toasted). The completion effect
+   (`if (!running || remaining > 0) return;`) re-fires whenever
+   `running` flips true at 0, so a natural "start the next round"
+   press POSTed `durations.focus - 0` — a phantom full-duration session
+   from zero elapsed time (a double-log when pressed inside the
+   in-flight window). The fix family: (a) re-latch the terminal state on
+   the failure path (a fresh full duration — the retry starts a real
+   session), (b) disable the re-entry affordance through the window
+   (the Start button's `disabled={saving}` — parity with the manual
+   Complete button that already carried it), (c) guard the handler
+   against re-entry (`if (saving) return` + unlatch), (d) currency-gate
+   the settle's state writes (the house fetch-seq ticket, minted by
+   POST time and invalidated by every newer timer interaction — the
+   late `.then` must not clobber a newer mode pick). Lesson: enumerate
+   every path that can re-enter the trigger condition while the async
+   settle is outstanding — a completion that leaves its terminal state
+   in place is a re-arm waiting for the next natural press.
+2. **A leg that depends on a novel drive mechanism must prove the DRIVE
+   before its RED is trusted.** The only honest way to reach the
+   00:00 completion window in e2e is `page.clock.install()` +
+   `runFor(25 * 60 * 1000)` — a RED at an early assertion can be an
+   infrastructure failure (the drive never reached the window) rather
+   than the designed defect. A throwaway probe (the dev daemon, the
+   intercepted POST) verified `clockText === "00:00"` AND
+   `posts === 1` BEFORE the designed assertion failures were trusted;
+   the toast-text correction that followed (the intercepted 500's
+   error-body message wins over the generic fallback — the apiSend
+   extraction) is exactly the class a probe catches cheaply. Lesson:
+   when a leg's RED could be explained by a failed drive, probe the
+   drive's intermediate state first — never trust a RED you cannot
+   distinguish from broken infrastructure.
+3. **A budget census must count the INVISIBLE call too.** The s23
+   header claimed "exactly 9 demo import POSTs" while the file makes
+   10: the panel-journey leg's POST rides the APP'S OWN fetch (the
+   Restore card's onImport → the in-app transport), invisible to any
+   source census — and the S140/CO1 leg's POST was omitted from the
+   enumeration. The file sat at 10/10 ZERO headroom at the import
+   limiter's cap while its header documented "1 slot free" — a future
+   leg added "within the documented budget" would 429 non-obviously.
+   The recount documents the invisible POST in prose AND machine-pins
+   the census-visible 9 fixture sites (the S84/AK3 header-correction
+   class: the census stays re-derivable). Lesson: when a header
+   claims a rate-limit budget, enumerate every call site INCLUDING the
+   app's own in-app fetches — a source census cannot see them, so the
+   prose must carry them and the machine pins what it can see.
+4. **Convention residuals concentrate on the surfaces OUTSIDE the
+   parity net.** The export panel's two hand-rolled solid
+   `bg-sf-primary` CTAs survived ~95 cycles of audits and visual
+   regression: `/export` is linked from NOWHERE (the owner-only
+   surface, the S21 design), its e2e pins were presence-only, and no
+   parity sweep ever rendered it against the reference. The fix rides
+   the house gradient surface + a computed-style leg (background-image
+   contains linear-gradient — a solid CTA computes "none"). Lesson:
+   owner-only / link-from-nowhere surfaces escape every visual net by
+   construction — convention censuses (not visual regressions) are the
+   instrument that reaches them.
+5. **A prose invariant without a transaction is a race.** The
+   forgot-password route's own comment stated the invariant ("exactly
+   one live link per account is the bounded, least-surprise posture")
+   while the supersede pair ran as two un-transacted awaits — a
+   concurrent same-account race interleaves delete/delete/create/create
+   and leaves two live one-shot tokens. The fix is the batch
+   `$transaction([deleteMany, create])` (the BZ7/CE5 family) + a census
+   pin; a behavioral concurrency pin is not externally drivable (the
+   interleave cannot be forced from an e2e client), so the census holds
+   the wiring. Lesson: grep for the code that delivers every invariant
+   a comment claims — the comment is the spec, the awaits are the
+   implementation, and the gap between them is exactly where the race
+   lives.
+6. **A census that counts a literal also counts the COMMENT that
+   explains it.** The CT1 census leg counted
+   `src.match(/disabled=\{saving\}/g).length === 2` and failed at 3 —
+   the JSX comment above the new prop contained the counted literal
+   itself. The AY3 comment-immunity precedent (strip comments before
+   counting tokens) applies forward: either strip comments in the
+   census or keep the explanatory prose from containing the counted
+   literal (the fix re-worded the comment). Lesson: when a census
+   counts a literal occurrence, grep the comment blocks too — the
+   explanation is the first place the literal leaks in.

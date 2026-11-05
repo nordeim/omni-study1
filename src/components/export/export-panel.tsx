@@ -172,7 +172,12 @@ export function ExportPanel({
         <a
           href="/api/export/data"
           download
-          className="mt-4 inline-flex h-9 items-center justify-center rounded-md bg-sf-primary px-4 text-sm font-medium text-sf-primary-foreground transition-colors hover:bg-sf-primary-strong"
+          // S145/CT3 (audit B-L2): the house primary-CTA surface — the
+          // gradient variant + the v3 shadow (AGENTS.md: "every primary
+          // action uses the Button `gradient` variant … Never render a
+          // solid bg-sf-primary CTA"; these two were the codebase's only
+          // hand-rolled solid CTA violations).
+          className="sf-gradient sf-gradient-shadow mt-4 inline-flex h-9 items-center justify-center rounded-md px-4 text-sm font-medium text-sf-primary-foreground transition-colors"
         >
           Download JSON
         </a>
@@ -215,7 +220,9 @@ export function ExportPanel({
             type="button"
             onClick={() => void onImport()}
             disabled={!file || busy}
-            className="inline-flex h-9 items-center justify-center rounded-md bg-sf-primary px-4 text-sm font-medium text-sf-primary-foreground transition-colors hover:bg-sf-primary-strong disabled:pointer-events-none disabled:opacity-50"
+            // S145/CT3 (audit B-L2): the gradient CTA surface — see the
+            // Download JSON anchor above (the house primary-CTA convention).
+            className="sf-gradient sf-gradient-shadow inline-flex h-9 items-center justify-center rounded-md px-4 text-sm font-medium text-sf-primary-foreground transition-colors disabled:pointer-events-none disabled:opacity-50"
           >
             {busy ? <Spinner className="size-4" /> : null}
             Import

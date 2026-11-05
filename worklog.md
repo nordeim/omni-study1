@@ -4478,3 +4478,118 @@ stage-2 (the chunked sub-tx + resume token, the one named deferral —
 the operator's standing "best judgement" instruction grants the
 authority, but the ADR-021 contract change deserves its own cycle with
 its own ADR; the CS5 row ceiling closed the adjacent memory hazard).
+
+## Session 156 — Batch CT (Cycle 95): the completion-window + supersede-tx + gradient-CTA + budget-recount set
+
+**Workspace (the 37th continuation).** Fresh clone at `d962537` on `main`
+(the Batch CS fix `b4a76a5` + the operator's session_161/162 transcript
+commit). Environment provisioned per the recipe: `bun install` (510 pkgs),
+`.env` from `.env.example` (`DATABASE_URL="file:../db/custom.db"`),
+`db:push` + `db:seed` (`db/custom.db` 389 KiB), Playwright Chromium
+(headless-shell 1243), the dev daemon live on :3000.
+
+**Cold baseline (before any work):** lint ✓ · tsc ✓ · unit **1500/1500**
+(48 files — the documented S144 final state exactly) · the drawer check
+GREEN (**the 60th consecutive no-Tailwind-v4-mobile-nav-bug
+confirmation**) · the desktop chrome probe **MATCH** (all five formal
+checks). Baseline noise: none.
+
+**The audits (two read-only Mode-C subagents, every M/L finding
+re-verified by direct read):**
+
+- **Audit A — the Batch CS recent-changes axis** (the `b4a76a5` diff):
+  **0C / 0H / 0M / 1L / 2I**. All seven CS claims verified DELIVERED at the
+  source level — the claims table CONFIRMED on every row (the cursor
+  probe: 0 mismatches over 300 random forests; the mime-charset probe; the
+  census arithmetic machine-verified). The L: **A-L1** — the
+  demo-import-budget census the s144 commit re-anchored was MIS-COUNTED:
+  s23's header said "exactly 9" while the file makes 10 demo-session
+  POSTs (omitting the S140/CO1 leg and mislabeling the panel-journey
+  in-app POST) — 10/10 ZERO HEADROOM at the import limiter's 10/15-min
+  cap; the resilience cross-reference said "5" while the file carries 9
+  (8 fixture + 1 demo.request). The Is: the CS5 row cap is post-parse by
+  design; the CR5/CAS double-failure edge (pre-existing S143 semantics).
+
+- **Audit B — the FE/views + auth/crypto/infra axis** (two cycles stale):
+  **0C / 0H / 1M / 2L / 6I** — the axis substantially clean: the
+  historically-real families re-verified CLOSED (the ABA/late-response
+  class with its tickets; the auth core — scrypt/HMAC/boot guards; the
+  route authz; the error taxonomy; the ownership scoping; the FE
+  structural gates). The M1 — **B-M1** — the focus timer's completion
+  window re-armed from its own terminal state: after the auto-completion,
+  mode stayed "focus" and remaining stayed 0 through the in-flight save
+  (and forever after a failed save — the catch only a toast), the Start
+  button stayed enabled, and complete() had no saving guard, so a Play
+  press at 00:00 POSTed a phantom full-duration session from zero elapsed
+  time (a double-log inside the window; the late .then/.catch state
+  writes also clobbered newer mode picks — the S142-S144 ABA family). The
+  L: **B-L1** the forgot-password supersede pair ran as two un-transacted
+  awaits (breaking the route's own one-live-link invariant under a
+  concurrent same-account race); **B-L2** the export panel's two primary
+  CTAs were the codebase's only solid bg-sf-primary CTA violations of
+  the house gradient convention.
+
+**Executed TDD-style.** RED first — the honest inventory: the three unit
+census legs (CT1 markers, CT2 $transaction, CT4 header text) RED 3/3; the
+e2e REDs against the PRE-FIX build — CT1a at `toBeDisabled` (the Start
+button stayed enabled through the in-flight window), CT1b at the Long
+Break `aria-pressed` (the late .then clobbered the newer pick), CT3 at
+`background-image "none"` (the solid CTAs). The fake-clock drive itself
+was validated FIRST by a throwaway probe against the dev daemon (clockText
+"00:00" + POST #1 observed before the designed assertion failures were
+trusted — the new S145 "prove the drive" doctrine).
+
+**The fixes:** CT1 the completion-window set in
+`src/components/views/focustimer-view.tsx` — the saving latch (`if
+(saving)` guard + unlatch), `disabled={saving}` on the Start button,
+the failure re-latch to a fresh full duration, and the settle-CAS (the
+house `React.useRef(createFetchSeq()).current` ticket minted at POST
+time and invalidated by switchMode/applyPreset/reset — the .then/.catch
+state writes currency-gated, the toasts unconditional). CT2 the
+forgot-password supersede pair in ONE batch `$transaction` (the
+one-live-link invariant). CT3 the export-panel CTAs riding `.sf-gradient`
++ `.sf-gradient-shadow` (the house primary-CTA surface). CT4 the budget
+recount (s23 header 10/10 zero-headroom warning, both inline budget
+comments, the resilience cross-reference 9/10, the cert-script re-tag
+note, + the census leg machine-pinning the census-visible POST counts
+per file.
+
+**Re-cert (the FINAL tree).** lint ✓ · tsc ✓ · unit **1503/1503** (48
+files, +3) · build ✓ · the cold 5-chunk e2e re-tagged **609 → 612** (chunk
+3 +2 [the CT1 phantom/double-log leg + the settle-CAS leg], chunk 5 +1
+[the CT3 gradient-CTA leg] — the map 150+187+91+95+89) · **census 2115
+green** (was 2109). Chunk 1 150 first-pass · chunk 2 187 first-pass ·
+chunk 4 95 first-pass · chunk 5 89 first-pass · chunk 3 hit the documented
+BU1/P1008 environmental flake class (the files-view empty-PATCH leg at
+:277 — the same family the S142/S143 cycles recorded, co-occurring with
+the WebServer socket-timeout noise in chunks 1/4) — the contention-free
+cold re-run of chunk 3 was **91/91 first-pass** (4.1 m).
+
+**Evidence.** Four `docs/screenshots/145-clone-*.png` frames (desktop,
+mobile drawer, the focus-timer completion-window proof — the Start button
+disabled through the in-flight window, exactly ONE POST, the failure
+toast, the 25:00 re-latch, the fresh-retry press running a real session —
+and the /export gradient CTAs — both computing
+`linear-gradient(to right, rgb(139, 92, 246), rgb(79, 70, 229))`). The
+capture is SELF-VERIFYING (exists, >10 KiB, byte-diverse, md5-distinct,
+both machine proofs asserted; the interception isolates the DB — no POST
+reaches the server, no probe cleanup needed).
+
+**Docs.** README badge/census + the Session-145 row; AGENTS.md census +
+the S145 lessons block (six lessons: the terminal-state re-arm; the
+novel-drive-probe doctrine; the invisible-POST budget recount; the
+convention residual on owner-only surfaces; the prose-invariant-without-
+a-transaction race; the census-counts-the-comment hazard); CLAUDE.md
+counts; PAD v1.3.53 (the revision block + the §11 closure row); the SKILL
+census (the head + the green-state line + the chunk-map line — itself
+found two-cycles stale at 603, the s140 doc-drift class reborn); the
+vitest header re-anchor; the cert re-tag; the plan §6 as-executed close;
+`docs/session_163.md`; this entry; the `.env.example` contract
+re-verified complete against every env var the env var the code reads (unchanged — the S143/S144 verifications held).
+
+**Next cycle.** The audit rotation continues (the FE/views +
+auth/crypto/infra axis just swept; the entities/factory axis one cycle
+fresh) — or the A-M3 stage-2 (the chunked sub-tx + resume token, the one
+named deferral — its ADR-021 contract change deserves its own cycle with
+its own ADR; the NODE_ENV casing warning is a cheap rider for the next
+auth-family cycle).
