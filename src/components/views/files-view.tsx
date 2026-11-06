@@ -173,6 +173,17 @@ export function FilesView() {
   const [files, setFiles] = React.useState<FileItemRow[]>([]);
   const [currentFolderId, setCurrentFolderId] = React.useState<string | null>(null);
   const [loading, setLoading] = React.useState(true);
+  // S151/CZ2 (audit B-L1): the failed-initial-load surface — the CX5
+  // settings pattern. Files is the one view with a private loader (not
+  // store-backed, so the shell's BootDataFailureBar doesn't cover it): a
+  // failed initial GET used to fire only the TRANSIENT toast, then the
+  // finally flipped loading false and the render settled into the
+  // permanent "No files yet" EmptyState — a false claim of an empty
+  // account, no retry (the CG5/CX5 class, one view over). loadFailed is
+  // first-class state now: the alert + Retry render INSTEAD of the false
+  // empty branch, and a successful retry clears it.
+  const [loadFailed, setLoadFailed] = React.useState(false);
+  const [retryCount, setRetryCount] = React.useState(0);
   const [uploading, setUploading] = React.useState(false);
   const [folderDialogOpen, setFolderDialogOpen] = React.useState(false);
   const [viewMode, setViewMode] = React.useState<"grid" | "list">("grid");
@@ -234,6 +245,9 @@ export function FilesView() {
 
   // Initial fetch is INLINED in the effect (setStates run after the await —
   // the set-state-in-effect lint contract flags wrapped loaders).
+  // S151/CZ2: retryCount joins the deps — the Retry button re-runs this
+  // effect (the CX5 shape); the ticket + cancelled discipline below already
+  // covers supersession (a superseded retry never lands).
   React.useEffect(() => {
     let cancelled = false;
     // S136/CK2: the ticket applies here too — a mount GET superseded by a
@@ -246,9 +260,16 @@ export function FilesView() {
         if (cancelled || fileRowsSeq.current !== ticket) return;
         setFolders(folderRows);
         setFiles(fileRows);
+        // S151/CZ2: a successful load clears the failure state (the retry
+        // lands — the alert goes with it).
+        setLoadFailed(false);
       } catch (err: unknown) {
         if (!cancelled && fileRowsSeq.current === ticket) {
           toast.error(errorMessage(err, "Could not load your files."));
+          // S151/CZ2: the persistent surface — the toast announces (the
+          // aria-live stack), the alert + Retry STAY until a successful
+          // reload (never a false "No files yet" on a failed load).
+          setLoadFailed(true);
         }
       } finally {
         if (!cancelled && fileRowsSeq.current === ticket) {
@@ -260,8 +281,9 @@ export function FilesView() {
       cancelled = true;
     };
     // S129/CD3: `toast` joins the deps (the stable useToast memo — the
-    // exhaustive-deps truth; no re-run churn).
-  }, [loadFileRows, toast]);
+    // exhaustive-deps truth; no re-run churn). S151/CZ2: `retryCount` joins
+    // (the Retry re-run trigger).
+  }, [loadFileRows, toast, retryCount]);
 
   // Breadcrumb: walk parents from the current folder to the root (the
   // pure seam — S84/AK1: the visited-set guard bounds the walk over ANY
@@ -478,6 +500,27 @@ export function FilesView() {
       {loading ? (
         <div className="flex justify-center py-16">
           <Spinner className="size-6 text-sf-primary" />
+        </div>
+      ) : loadFailed ? (
+        // S151/CZ2 (audit B-L1): the failed-load leg — BEFORE the empty
+        // branch (ordered): a failed GET never renders the false "No files
+        // yet" claim. The CX5 idiom: the red role="alert" card + a real
+        // Retry that re-runs the initial-load effect.
+        <div className="sf-card">
+          <div
+            role="alert"
+            className="sf-alert-red flex flex-wrap items-center gap-3 rounded-lg px-3 py-2 text-sm"
+          >
+            <span>Couldn&apos;t load your files.</span>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => setRetryCount((count) => count + 1)}
+            >
+              Retry
+            </Button>
+          </div>
         </div>
       ) : visibleFolders.length === 0 && visibleFiles.length === 0 ? (
         <div className="sf-card">

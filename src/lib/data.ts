@@ -473,6 +473,24 @@ const taskToggleChains = new Map<string, Promise<void>>();
 // taskToggleChains idiom on the members field — see setStudyGroupMembers).
 const groupMemberChains = new Map<string, Promise<void>>();
 
+// S151/CZ1 (audit B-M1): the per-note in-flight tags chains (the same
+// idiom on the notes tags field — see setNoteTags).
+const noteTagsChains = new Map<string, Promise<void>>();
+
+/** The NoteRow.tags JSON contract → a string list (safe parse) — the
+ *  single source for the view rows AND the tags chain (moved from
+ *  notes-view.tsx at S151/CZ1 so the chain's updater receives the same
+ *  parsed base the view renders). */
+export function parseNoteTags(raw: string): string[] {
+  try {
+    const parsed: unknown = JSON.parse(raw || "[]");
+    if (!Array.isArray(parsed)) return [];
+    return parsed.filter((t): t is string => typeof t === "string" && t.length > 0);
+  } catch {
+    return [];
+  }
+}
+
 export const mutations = {
   // ---- tasks (the S6 reference flows) --------------------------------------
   createTask: async (input: TaskInput): Promise<void> => {
@@ -659,6 +677,37 @@ export const mutations = {
   updateNote: async (id: string, patch: Partial<NoteInput>): Promise<void> => {
     await apiSend("PATCH", `${PATHS.notes}/${id}`, patch);
     await fetchAndSet("notes");
+  },
+  // S151/CZ1 (audit B-M1): the per-note tags chain — the CX2 updater form
+  // on the notes tags field (the members fix, one field over: the view's
+  // addTag/removeTag PATCHed ABSOLUTE JSON arrays computed from the
+  // RENDER-SNAPSHOT selected note, so a tag add followed by a tag remove
+  // inside one PATCH+refetch window computed the remove from the PRE-ADD
+  // base and silently dropped the add while both PATCHes succeeded — tag
+  // adds carry no success toast, so the loss was fully silent). The
+  // UPDATER form is the load-bearing choice (the CX2 doctrine): the caller
+  // declares the effect (add/remove), the chain supplies the fresh
+  // POST-SETTLE base. The chain entry never rejects (a failed PATCH must
+  // not poison the chain); the CALLER still gets the real rejection.
+  // Field-scoped like its siblings: the autosave title/content PATCHes are
+  // different fields and need no serialization (the CX1 cross-field note).
+  setNoteTags: async (
+    noteId: string,
+    update: (tags: string[]) => string[],
+  ): Promise<void> => {
+    const chained = (noteTagsChains.get(noteId) ?? Promise.resolve()).then(async () => {
+      const note = useDataStore.getState().notes.find((n) => n.id === noteId);
+      if (!note) return;
+      const tags = update(parseNoteTags(note.tags));
+      await apiSend("PATCH", `${PATHS.notes}/${noteId}`, { tags: JSON.stringify(tags) });
+      await fetchAndSet("notes");
+    });
+    const stored = chained.catch(() => undefined);
+    noteTagsChains.set(noteId, stored);
+    stored.finally(() => {
+      if (noteTagsChains.get(noteId) === stored) noteTagsChains.delete(noteId);
+    });
+    await chained;
   },
   deleteNote: async (id: string): Promise<void> => {
     await apiSend("DELETE", `${PATHS.notes}/${id}`);

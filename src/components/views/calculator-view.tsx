@@ -677,6 +677,11 @@ function UnitPanel() {
         result: converted ?? "",
         mode: "unit",
       });
+      // S151/CZ4 (audit B-L4): the success branch speaks — the GPA twin's
+      // mirror ("GPA saved to history"): a silent success left the user
+      // unable to tell whether the conversion was recorded (especially
+      // with the history panel closed).
+      toast.success("Conversion saved to history");
     } catch (err: unknown) {
       toast.error(errorMessage(err, "Could not save the conversion."));
     } finally {

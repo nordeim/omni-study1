@@ -69,6 +69,7 @@ import {
 } from "@/components/views/quill-editor";
 import {
   mutations,
+  parseNoteTags,
   useDataStore,
   type NoteInput,
   type NotebookRow,
@@ -88,16 +89,8 @@ type DialogState =
   | { open: true; kind: "note" }
   | { open: true; kind: "notebook"; editing: NotebookRow | null };
 
-/** The NoteRow.tags JSON contract → a sorted unique list (safe parse). */
-function parseNoteTags(raw: string): string[] {
-  try {
-    const parsed: unknown = JSON.parse(raw || "[]");
-    if (!Array.isArray(parsed)) return [];
-    return parsed.filter((t): t is string => typeof t === "string" && t.length > 0);
-  } catch {
-    return [];
-  }
-}
+// (parseNoteTags moved to src/lib/data.ts at S151/CZ1 — the single source
+// the view rows AND the tags chain share; imported above.)
 
 // S122/BW3 — the debounced note-title input. Owned as a KEY-REMOUNTED child
 // (by note id, the BU1 pattern) so the draft resets naturally on note
@@ -422,11 +415,11 @@ export function NotesView() {
   // rejects the optional-chained dependency, and the cost is nil).
   const selectedTags = selected ? parseNoteTags(selected.tags) : [];
 
-  const saveTags = (next: string[]) => {
-    void patchSelected({ tags: JSON.stringify(next) });
-  };
-
   const addTag = () => {
+    // The pane renders only with a selection; the guard satisfies the
+    // type (the patchSelected idiom) and keeps the handler a no-op on a
+    // departed note (nothing was lost).
+    if (!selected) return;
     const tag = tagDraft.trim().replace(/^#/, "");
     setTagDraft("");
     if (!tag) return;
@@ -444,11 +437,23 @@ export function NotesView() {
       toast.error("That tag is already on this note.");
       return;
     }
-    saveTags([...selectedTags, tag]);
+    // S151/CZ1 (audit B-M1): the tags ride the per-note chain — the
+    // updater form (the CX2 doctrine): this handler declares the effect
+    // (add), the chain supplies the fresh POST-SETTLE base (the
+    // render-snapshot absolute-array PATCH this replaces lost a rapid
+    // second op — the remove computed from the pre-add base). The updater
+    // is idempotent (the belt-and-braces dedupe): a double-Enter on the
+    // same tag inside the window appends nothing when the fresh base
+    // already carries it.
+    void mutations.setNoteTags(selected.id, (tags) =>
+      tags.includes(tag) ? tags : [...tags, tag]);
   };
 
   const removeTag = (tag: string) => {
-    saveTags(selectedTags.filter((t) => t !== tag));
+    if (!selected) return; // the addTag guard's twin
+    // S151/CZ1: the remove twin — the effect declaration, the chain's
+    // fresh base (see addTag).
+    void mutations.setNoteTags(selected.id, (tags) => tags.filter((t) => t !== tag));
   };
 
   // The Quill wrapper debounces its own change events (autosave superset);

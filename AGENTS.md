@@ -9,7 +9,7 @@ High-signal instructions for coding agents working in this repo. Everything here
 | `bun install` | Install deps (Bun ≥ 1.3) |
 | `bun run dev` | Dev server on :3000 (Turbopack), logs tee'd to `dev.log` |
 | `bun run lint` / `bun run typecheck` | ESLint / `tsc --noEmit` — both must be clean |
-| `bun run test` | Vitest unit layer (1547 tests; `*.test.ts` only — never picks up e2e specs) |
+| `bun run test` | Vitest unit layer (1555 tests; `*.test.ts` only — never picks up e2e specs) |
 | `bun run build` | Production build → `.next/standalone` (**required before e2e**) |
 | `bun run test:e2e` | Playwright vs the standalone build on :3100 with `db/e2e.db` (614 tests across the 5-chunk cold map — 150+189+91+95+89, 30 spec files; a single-process full run trips the register rate-limiter budget by design, the chunked map re-boots the server per chunk). NOTE (S45, the day-boundary lesson): the global setup re-seeds every run, but the seed's IDEMPOTENT UPSERTS do NOT refresh day-relative dates on existing rows — a scratch `db/e2e.db` that ages across a UTC midnight keeps its original day-relative dates (today's tasks, the +1-day exam badge, the due-in pills, the import round-trip dates each read one day stale → 4 deterministic failures in parity-session6/parity-session9/s23-import). Delete `db/e2e.db` when a run crosses a day boundary — the global setup re-creates it fresh with current dates. NOTE (S46, TWO more aged-scratch-db classes + a build-input one): (1) ALWAYS run e2e COLD — S131/CF5 chained `scripts/e2e-cold-reset.sh` into `bun run test:e2e` (port-guard + `rm -f db/e2e.db` BEFORE playwright boots anything — global-setup is TOO LATE: Playwright starts the webServer before globalSetup), so the default runner self-colds; any DIRECT `playwright test` invocation still needs the manual `rm -f db/e2e.db` before every full run: the s23-import round-trip posts a FIXED-id envelope, so a second consecutive run against the aged db reads `created: 0, updated: 1` instead of `created: 1, updated: 0` and fails — not just across midnights, across ANY re-run; (2) the s22 negative-spawn spec reads the BUNDLED `.env` — Next's standalone output COPIES the repo-root `.env` into `.next/standalone/.env` at build time, so a REAL AUTH_SECRET in the dev `.env` leaks into the bundle and the guard CORRECTLY boots (the spec times out waiting for the exit) — keep the repo-root `.env`'s AUTH_SECRET EMPTY (the `.env.example` dev posture: `AUTH_SECRET=""` — dev falls back to the local constant with the boot warning) when building for e2e |
 | `node scripts/capture-studyflow.mjs` | Refresh all 31 `docs/screenshots/` captures from the dev server (24 light + 7 dark) |
@@ -2320,3 +2320,34 @@ Hover-parity probing must run in Playwright, not a touch-emulating browser — v
    guard itself — `setTagDraft("")` before the checks turned a
    rejection into a deletion; when a handler destroys user input,
    either keep the input on rejection or say why it went away.
+
+## S151 lessons (Batch CZ — the tags-chain + load-honesty + phantom-row + save-feedback set)
+
+1. **A chain family is closed when the last FIELD joins it, not the last
+   fix.** The S149/CX2 members chain closed the study-group members
+   field; the notes tags field carried the same absolute-array
+   render-snapshot PATCHes one cycle longer — same family, same idiom,
+   one field over. Lesson: when a race family is fixed with the
+   updater-form chain, grep for every field whose mutations compute
+   ABSOLUTE arrays from render state (`saveTags([...selectedTags, ...])`
+   is the grep shape) — the chain's cost is already paid; the sibling
+   field's rewire is a one-block diff that inherits it. And the parse
+   the chain needs belongs at the single source (parseNoteTags moved to
+   data.ts) so the view rows and the chain updater share one base.
+2. **A false empty state is a claim about the SERVER, so its failure
+   branch is not cosmetic.** "No files yet" asserts the account IS
+   empty; a failed GET must never be able to prove it (the CG5/CX5
+   family, one view over — the one view with a PRIVATE loader the
+   shell's BootDataFailureBar cannot cover). Lesson: enumerate the
+   loaders, not just the store slices — every private loader needs the
+   loadFailed + Retry shape, ordered BEFORE the empty branch so the
+   false claim is structurally unreachable.
+3. **A state-derived action needs a state-derived gate.** The timer's
+   Complete computed its duration from `remaining` but gated only on
+   `saving` — so a never-started timer's zero elapsed floored to a
+   phantom 1-second session. The honest gate reads the SAME state the
+   computation reads: a real interval exists iff the timer ran or time
+   came off the preset. Lesson: when a handler derives a value from
+   state, check what the DERIVED value means when that state is at its
+   initial value — and gate on the initial state itself (the gate
+   before the POST, with its reason named — never a floored phantom).

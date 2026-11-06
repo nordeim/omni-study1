@@ -1,7 +1,21 @@
 import { defineConfig } from "vitest/config";
 import path from "node:path";
 
-// Unit-test layer for the pure domain seams — 48 files / 1547 tests
+// Unit-test layer for the pure domain seams — 48 files / 1555 tests
+// (re-anchored S151/CZ — the tags-chain + load-honesty + phantom-row +
+// save-feedback set: census 1547 → 1555, +8 net [data-store +3: the
+// S151/CZ1 notes-tags chain triple (the add-then-remove post-settle-base
+// leg + the failed-first-op chain-hygiene leg + the missing-note no-op
+// leg); script-conventions +5: the S151/CZ1 wiring census pair (the
+// updater-form wiring + the saveTags-helper retirement) + the S151/CZ2
+// files failed-load surface census (the loadFailed state + the alert +
+// Retry leg ordered BEFORE the false-empty branch) + the S151/CZ3
+// phantom-session gate census (the never-started gate BEFORE the session
+// POST + `running` joining the deps) + the S151/CZ4 unit-save success
+// toast census. The hue-tokens notes-view register re-anchored 700 → 705
+// in the same cycle — the anchored leg tripped as designed when the CZ1
+// rewire added lines above the site; the census maintenance, not a count
+// change.])
 // (re-anchored S150/CY — the folderId-bound + schoolName-trim +
 // tag-honesty set: census 1543 → 1547, +4 net [validation +2: the
 // S150/CY2 schoolName-trim pair (the padded-value-trims leg + the

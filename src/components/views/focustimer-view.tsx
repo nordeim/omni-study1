@@ -129,6 +129,21 @@ export function FocusTimerView() {
       setRunning(false);
       return;
     }
+    // S151/CZ3 (audit B-L3): the phantom-session gate — a Complete on a
+    // NEVER-STARTED timer (running never flipped, remaining at the full
+    // preset — exactly the state after every mount/switchMode/applyPreset/
+    // reset) has NO elapsed interval; the old path floored the zero
+    // elapsed to 1 s (Math.max(1, …)) and minted a phantom completed
+    // session (stats +1, a spurious saved row, an auto-switch to Short
+    // Break) from one stray click. A real interval exists iff the timer
+    // ran (running) or any time came off the preset (remaining < the
+    // preset) — and the gate speaks (the S14 contract: a rejected action
+    // names its reason; the break-mode branch below rides the same gate —
+    // nothing ran, so nothing is "over").
+    if (!running && remaining >= durations[mode]) {
+      toast.info("Start the timer first — there's no session to save yet.");
+      return;
+    }
     setRunning(false);
     if (mode !== "focus") {
       toast.info("Break's over — ready for another round?");
@@ -184,8 +199,10 @@ export function FocusTimerView() {
     // reads it (the CD3-era omission was load-bearing only because the
     // guard did not exist yet). `settleSeq` joins too — a stable
     // useRef-derived instance (identity never changes; the exhaustive-deps
-    // rule owns the entry, the cost is nil).
-  }, [saving, mode, durations, remaining, subjectId, settleSeq, toast]);
+    // rule owns the entry, the cost is nil). S151/CZ3: `running` joins —
+    // the phantom-session gate reads it (the same CD3 discipline: the
+    // omission was load-bearing only while the gate did not exist).
+  }, [saving, running, mode, durations, remaining, subjectId, settleSeq, toast]);
 
   React.useEffect(() => {
     if (!running || remaining > 0) return;

@@ -1869,3 +1869,161 @@ describe("S150/CY3: the note-tag honest feedback (S149/B-I4)", () => {
     expect(block).toMatch(/toast\.error\(/);
   });
 });
+
+// ---------------------------------------------------------------------------
+// S151/CZ1 (audit B-M1): the notes tags wiring census — the CX2 updater-form
+// chain on the tags field. The view's addTag/removeTag PATCHed ABSOLUTE
+// arrays computed from the render-snapshot selectedTags (saveTags([...
+// selectedTags, tag]) / saveTags(selectedTags.filter(...))), so two tag ops
+// inside one PATCH+refetch window computed from the same stale base and
+// silently dropped the first (the exact BX10/CX2 class, one field over).
+// The handlers must now declare effects through the chained
+// mutations.setNoteTags(selected.id, updater) — the chain supplies the
+// post-settle base; the view-level guards (the 24-char cap + the duplicate
+// toast) stay the caller's job, and the add updater stays idempotent (the
+// belt-and-braces dedupe — a double-Enter inside the window must not
+// append a duplicate when the fresh base already carries the tag).
+// ---------------------------------------------------------------------------
+describe("S151/CZ1: the notes tags wiring census (B-M1 — the updater-form chain)", () => {
+  const NOTES_VIEW = path.resolve(process.cwd(), "src/components/views/notes-view.tsx");
+
+  it("addTag/removeTag ride mutations.setNoteTags (the absolute-array snapshot PATCHes are gone)", () => {
+    const src = readFileSync(NOTES_VIEW, "utf8");
+    // Slice the tag handlers: addTag through removeTag's close (the next
+    // `return (` after removeTag ends the handler pair).
+    const addAt = src.indexOf("const addTag = () => {");
+    expect(addAt, "the addTag handler exists").toBeGreaterThan(-1);
+    const removeAt = src.indexOf("const removeTag = (tag: string) => {", addAt);
+    expect(removeAt, "the removeTag handler exists").toBeGreaterThan(-1);
+    const handlersEnd = src.indexOf("\n  return (", removeAt);
+    const handlers = src.slice(addAt, handlersEnd === -1 ? undefined : handlersEnd);
+    // The chained, updater-form calls (the caller declares the effect).
+    expect(handlers).toContain("mutations.setNoteTags(selected.id, (tags) =>");
+    // The absolute-array shapes are GONE (the render-snapshot PATCHes).
+    expect(handlers).not.toContain("saveTags(");
+    // The idempotent add updater: the fresh-base dedupe (a double-Enter on
+    // the same tag inside the window appends nothing when the base already
+    // carries it).
+    expect(handlers).toMatch(/tags\.includes\(tag\) \? tags : \[\.\.\.tags, tag\]/);
+    // The view-level guards stay (the CY3 honest toasts ride the caller).
+    expect(handlers).toContain("Tags are limited to 24 characters.");
+    expect(handlers).toContain("That tag is already on this note.");
+  });
+
+  it("the saveTags absolute-array helper is retired (no consumer remains)", () => {
+    const src = readFileSync(NOTES_VIEW, "utf8");
+    expect(src).not.toContain("const saveTags = ");
+  });
+});
+
+// ---------------------------------------------------------------------------
+// S151/CZ2 (audit B-L1): the files failed-initial-load surface — the one
+// view with a private loader (the shell's BootDataFailureBar cannot cover
+// it). A failed initial GET fired only the TRANSIENT toast, then the
+// finally flipped loading false and the render settled into the permanent
+// "No files yet" EmptyState — a false claim of an empty account with no
+// retry (the CG5/CX5 class, one view over). The CX5 pattern: loadFailed +
+// retryCount state, the alert + Retry render leg BEFORE the false-empty
+// branch, the success retry clearing the alert.
+// ---------------------------------------------------------------------------
+describe("S151/CZ2: the files failed-load surface (B-L1 — the false-empty branch)", () => {
+  const FILES_VIEW = path.resolve(process.cwd(), "src/components/views/files-view.tsx");
+
+  it("a failed initial load surfaces the alert + Retry (never a false 'No files yet')", () => {
+    const src = readFileSync(FILES_VIEW, "utf8");
+    // The failure state + the retry re-run + the success clear (the CX5
+    // shape).
+    expect(src).toContain("loadFailed");
+    expect(src).toMatch(/setLoadFailed\(true\)/);
+    expect(src).toMatch(/setLoadFailed\(false\)/);
+    expect(src).toMatch(/setRetryCount/);
+    // The initial-load effect's catch carries the failure state write
+    // (beside the transient toast — the immediate announcement). Anchor
+    // INSIDE the initial-load effect: the `refresh` callback above carries
+    // its own toast with the same copy (the list-refresh path — transient
+    // only, by design), so the toast copy alone is ambiguous.
+    const effectAt = src.indexOf("// Initial fetch is INLINED in the effect");
+    expect(effectAt, "the initial-load effect exists").toBeGreaterThan(-1);
+    const catchAt = src.indexOf("Could not load your files.", effectAt);
+    expect(catchAt, "the initial-load toast copy exists").toBeGreaterThan(effectAt);
+    const finallyAt = src.indexOf("} finally {", catchAt);
+    expect(finallyAt, "the initial-load finally exists").toBeGreaterThan(catchAt);
+    const catchBlock = src.slice(catchAt, finallyAt);
+    expect(catchBlock).toMatch(/setLoadFailed\(true\)/);
+    // The render: the error leg precedes the false-empty branch (ordered —
+    // the EmptyState can no longer render on a failed load).
+    const errorAt = src.indexOf("Couldn&apos;t load your files.");
+    expect(errorAt, "the files alert copy exists").toBeGreaterThan(-1);
+    const emptyAt = src.indexOf('title="No files yet"');
+    expect(emptyAt, "the empty-state title exists").toBeGreaterThan(-1);
+    expect(errorAt).toBeLessThan(emptyAt);
+    // The alert is the red role="alert" family + a real Retry (the CX5
+    // idiom).
+    const alertBlock = src.slice(Math.max(0, errorAt - 500), errorAt);
+    expect(alertBlock).toContain('role="alert"');
+    expect(alertBlock).toMatch(/sf-alert-red/);
+    const retryBlock = src.slice(errorAt, errorAt + 400);
+    expect(retryBlock).toMatch(/setRetryCount\(\(count\) => count \+ 1\)/);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// S151/CZ3 (audit B-L3): the phantom-session gate. The Complete button
+// gated only on `saving`, so a stray click on a NEVER-STARTED timer
+// computed Math.max(1, durations.focus - remaining) = max(1, 0) = 1 and
+// minted a phantom 1-second completed session (stats +1, a spurious saved
+// row, an auto-switch to Short Break). The gate: a real interval exists
+// iff the timer ran (running) or any time came off the preset (remaining
+// < durations[mode]) — the state after every mount/switchMode/applyPreset/
+// reset is exactly the gated one.
+// ---------------------------------------------------------------------------
+describe("S151/CZ3: the phantom-session gate (B-L3 — the never-started Complete)", () => {
+  const TIMER_VIEW = path.resolve(process.cwd(), "src/components/views/focustimer-view.tsx");
+
+  it("the complete handler gates the never-started timer BEFORE the session POST", () => {
+    const src = readFileSync(TIMER_VIEW, "utf8");
+    const completeAt = src.indexOf("const complete = React.useCallback(() => {");
+    expect(completeAt, "the complete handler exists").toBeGreaterThan(-1);
+    const handler = src.slice(completeAt, src.indexOf("  }, [", completeAt));
+    const gateAt = handler.indexOf("!running && remaining >= durations[mode]");
+    expect(gateAt, "the never-started gate exists in the handler").toBeGreaterThan(-1);
+    const postAt = handler.indexOf("createFocusSession");
+    expect(postAt, "the session POST exists in the handler").toBeGreaterThan(-1);
+    // Ordered: the gate fires BEFORE the POST — a never-started complete
+    // never mints a session row.
+    expect(gateAt).toBeLessThan(postAt);
+    // The gate speaks (a stray click gets its reason — the S14 contract).
+    expect(handler).toMatch(/toast\.info\(/);
+    // `running` joins the useCallback deps (the CD3 discipline — the gate
+    // reads it).
+    const depsAt = src.indexOf("  }, [", completeAt);
+    const deps = src.slice(depsAt, src.indexOf("]);", depsAt));
+    expect(deps).toContain("running");
+    expect(deps).toContain("saving");
+  });
+});
+
+// ---------------------------------------------------------------------------
+// S151/CZ4 (audit B-L4): the unit-save success feedback. saveUnitToHistory
+// toasted only on error while its GPA twin toasts "GPA saved to history" —
+// the user could not tell whether a conversion was recorded (especially
+// with the history panel closed). The one-line mirror: the success toast
+// after the createCalculatorEntry await.
+// ---------------------------------------------------------------------------
+describe("S151/CZ4: the unit-save success feedback (B-L4 — the GPA twin's mirror)", () => {
+  const CALC_VIEW = path.resolve(process.cwd(), "src/components/views/calculator-view.tsx");
+
+  it("saveUnitToHistory announces the saved row (the success branch speaks)", () => {
+    const src = readFileSync(CALC_VIEW, "utf8");
+    const saveAt = src.indexOf("const saveUnitToHistory = async () => {");
+    expect(saveAt, "the unit save handler exists").toBeGreaterThan(-1);
+    const handler = src.slice(saveAt, src.indexOf("  };", saveAt));
+    const entryAt = handler.indexOf("createCalculatorEntry");
+    expect(entryAt, "the history POST exists in the handler").toBeGreaterThan(-1);
+    const toastAt = handler.indexOf("Conversion saved to history");
+    expect(toastAt, "the success toast exists in the handler").toBeGreaterThan(-1);
+    // Ordered: the toast fires for the SAVED row (after the POST).
+    expect(toastAt).toBeGreaterThan(entryAt);
+    expect(handler).toMatch(/toast\.success\(/);
+  });
+});

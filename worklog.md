@@ -5100,3 +5100,128 @@ resume token stays its own ADR-021 cycle (carrying the B-L2 import
 lock-hold finding); the db-path percent-decode (this audit's B-I3)
 is recorded for a db-path-family cycle; the B-I census-granularity
 design change stays the named deferral.
+
+## Session 162 — Batch CZ (Cycle 101): the tags-chain + load-honesty + phantom-row + save-feedback set
+
+**Context.** The workspace was a FRESH CLONE at `b90c2f2` on `main`
+(the Batch CY fix `1d4c293` + the operator's session_174 transcript
+commit; the sandbox had reset). Environment re-provisioned through the
+documented fresh-clone path: install 510 pkgs · `.env` from the
+current `.env.example` (`DATABASE_URL="file:../db/custom.db"` — the
+repo-root `db/` contract) · `db:push` + `db:seed` (the 389 KiB seeded
+demo account) · chromium-1243 · the dev daemon on :3000 (preflight
+GREEN).
+
+**Cold baseline (before any work).** lint ✓ · tsc ✓ · unit
+**1547/1547** (48 files — the documented S150 final state exactly) ·
+the drawer check GREEN (**the 66th consecutive no-Tailwind-v4-
+mobile-nav-bug confirmation**) · the desktop parity probe **MATCH**
+(all five formal checks, live reference login). Baseline noise: none.
+
+**The audits (Mode-C; every M/L finding re-verified by direct read).**
+Audit A — the Batch CY recent-changes axis (`1d4c293`):
+**0C/0H/0M/0L/0I — clean**; all three CY claims verified at the source
+level (the CY1 multipart folderId guard + the CY2 schoolName trim at
+the validation atom + the CY3 addTag drop-reason toasts; the doc
+census machine-verified: README 2161, AGENTS 1547/614, CLAUDE 1547,
+PAD v1.3.58, SKILL both sites, the vitest header). Audit B — the
+FE/views + auth/crypto rotation (two cycles stale — the S149/CX-swept
+axis, the named next axis; the FE/views breadth scan dispatched to a
+read-only subagent per the S148/S149 precedent, the auth/crypto core
+audited by the orchestrator by direct read): the auth/crypto half
+**clean** — every historically-real family re-verified CLOSED at its
+anchors (the scrypt parameter migration + rehash drain, the uniform
+login timing pair, sessionVersion revocation, the rate-limit family
+incl. the exact-key protected buckets + the net-of-successes
+decrement, the peppered-OTP digests + conditional single-use
+consumption, hashed reset tokens + the reset sessionVersion bump, the
+authBurnGlobal containment, proxy-aware Secure cookies, hashless
+selects); the FE/views half **0C/0H/1M/6L/4I** (the CX1/CX2 chain
+families re-verified FULLY LANDED at every consumer site; the XSS
+posture clean; a11y thorough). The finding: **B-M1** the notes tags
+PATCHed absolute arrays off the render snapshot (the CX2 members-fix
+family, one field over — two tag ops in one PATCH+refetch window
+silently lost one, and tag adds carry no success toast). The Ls:
+**B-L1** the files false "No files yet" on a failed initial GET (the
+one view with a private loader); **B-L3** the phantom 1-second session
+from a never-started Complete; **B-L4** the silent unit-save success
+(the GPA twin speaks); **B-L2** the AI-generate silent replace
+(deferred — a product decision); **B-L5** the seven-site delete
+double-fire latch (deferred — a delete-family cycle); **B-L6** the
+six-dialog noValidate hand-guards (deferred — a copy-family cycle);
+the Is recorded (the Grid-Builder parity adjudication, the solver
+subtitle nit, the Due-Soon measured-hint parity, the anchor>button
+documented parity).
+
+The plan (`docs/remediation-plan-session151.md`) written BEFORE any
+source change, validated against the codebase (every anchor re-read;
+the e2e-interplay probe of every spec touching the cycle's four
+surfaces), executed TDD-first. The plan's arithmetic amended twice
+before execution (the S150 precedent): the CX2-shaped missing-note
+no-op leg joined the functional triple and the CZ1 wiring census
+carried two legs, so the RED inventory grew 6 → 7 → **8** (3
+functional + 5 census) and the unit count 1553 → 1554 → **1555**.
+
+**The fixes (the unit REDs 8/8 — the CZ1 functional triple + the
+CZ1/CZ2/CZ3/CZ4 censuses).** CZ1 the note-tags updater chain —
+`setNoteTags(noteId, update)` on a per-note chain map in data.ts (the
+CX2 updater form: the caller declares the effect, the chain supplies
+the post-settle base; field-scoped so the autosave title/content
+PATCHes need no serialization); `parseNoteTags` moved to data.ts as
+the single source; addTag/removeTag declare effects with the
+idempotent add updater (the belt-and-braces dedupe), the view-level
+guards stay (the CY3 toasts), the `saveTags` helper retired. CZ2 the
+files failed-load surface (the CX5 loadFailed + retryCount pattern —
+the alert + Retry leg ordered BEFORE the false-empty branch; a
+successful retry clears it). CZ3 the phantom-session gate (the gate
+`!running && remaining >= durations[mode]` before the POST with its
+reason toast; `running` joins the useCallback deps — the CD3
+discipline). CZ4 the unit-save success toast (the GPA twin's mirror).
+One census tripwire tripped and closed as designed: the hue-tokens
+notes-view register re-anchored 700 → 705 (the CZ1 rewire's +5 lines;
+the anchored leg is the designed move-detector; the site itself
+byte-unchanged).
+
+**Re-cert (the FINAL tree).** lint ✓ · tsc ✓ (after the `selected`
+null guards joined the two handlers) · unit **1555/1555** (48 files,
++8: data-store +3, script-conventions +5) · build ✓ (exit 0; the four
+fix wirings verified shipped in the standalone chunks; the 6 warnings
+the documented baseline) · the targeted e2e — four cold-booted
+per-chunk groups (resilience + parity-session5 87 · calculator +
+s17-fresh-user 25 · parity-session7 57 · parity-session8 +
+mobile-navigation 86): 255 legs, zero failures, zero chunk mixes · the
+cold 5-chunk e2e cert **150 + 189 + 91 + 95 + 89 — every chunk
+first-pass, zero code flakes** (chunk 1's single first-attempt
+failure was the P1008 SQLite socket-timeout machine-load class on the
+BU7 probe's own `prisma.exam.create()` — root-caused by the exact
+Prisma error line + the same-shape sibling passing in the same run +
+the clean 2/2 cold re-run of the single leg, with 13 P1008 noise
+lines clustering in the same run) = the e2e census 614/614 unchanged
+· **census 2169 green** (was 2161).
+
+**Evidence.** Five `docs/screenshots/151-clone-*.png` frames (the
+standing desktop + mobile drawer + the Notes tag row [CZ1] + the
+Files view [CZ2] + the Focus timer [CZ3]), self-verifying (the
+capture script's JSON verdict ok:true; dimensions machine-checked
+1440x900 / 390x844). The CZ4 transient-toast proof rides the census
+layer (the CW2 runtime-split precedent).
+
+**Docs.** README badge/census (2161 → 2169) + the Session-151 row;
+AGENTS census (1547 → 1555) + the S151 lessons block (three lessons:
+a chain family is closed when the last FIELD joins it; a false empty
+state is a claim about the SERVER — enumerate the loaders; a
+state-derived action needs a state-derived gate); CLAUDE counts; PAD
+v1.3.59 (the revision block + the four §11 closure rows); the SKILL
+census (both sites); the vitest header re-anchor (+8 with the
+hue-tokens re-anchor note); the cert runner unchanged;
+`docs/session_175.md`; this entry; the plan §6 as-executed close;
+the `.env.example` contract re-verified (no env-var reads changed
+this cycle).
+
+**Next cycle.** The rotation continues — the AI-generate replace
+guard (the B-L2 rider, a product decision) is the named candidate;
+the delete double-fire latch family (B-L5) pairs with the noValidate
+hand-guard sweep (B-L6) as a dialog/deck-honesty cycle; the A-M3
+stage-2 chunked sub-tx + resume token stays its own ADR-021 cycle
+(carrying the S150/B-L2 import lock-hold finding); the db-path
+percent-decode stays recorded for a db-path-family cycle.

@@ -424,3 +424,87 @@ describe("S149/CX2: the study-group members view wiring census", () => {
     expect(handlers).not.toContain("mutations.updateStudyGroup(");
   });
 });
+
+// S151/CZ1 (audit B-M1): the notes tags chain — the CX2 updater-form
+// treatment on the tags field (the members fix, one field over). The view's
+// addTag/removeTag PATCHed ABSOLUTE JSON arrays computed from the
+// RENDER-SNAPSHOT selected note (notes-view.tsx:423-452), so a tag add
+// followed by a tag remove inside one PATCH+refetch window computed the
+// remove from the PRE-ADD base and silently dropped the add while both
+// PATCHes succeeded (tag adds carry no success toast — a fully silent
+// loss). These legs pin the chained store contract directly: the second op
+// must compute from the POST-SETTLE base. Pre-fix RED:
+// `mutations.setNoteTags` does not exist (the TypeError is the red — the
+// CX1 precedent).
+describe("S151/CZ1: the notes tags chain (B-M1 — add/remove interleave)", () => {
+  const noteRow = {
+    id: "n1",
+    userId: "u1",
+    title: "Chain pin",
+    content: "<p>probe</p>",
+    tags: JSON.stringify(["zulu"]),
+    notebookId: null,
+    subjectId: null,
+    createdAt: "2026-01-01T00:00:00.000Z",
+    updatedAt: "2026-01-01T00:00:00.000Z",
+  };
+
+  beforeEach(() => {
+    apiGetMock.mockReset();
+    apiSendMock.mockReset();
+    apiGetMock.mockResolvedValue([]);
+    apiSendMock.mockResolvedValue(undefined);
+    useDataStore.setState({ notes: [noteRow] });
+  });
+
+  it("an add then a remove inside one window BOTH survive (the remove reads the post-settle base)", async () => {
+    // Hold the FIRST PATCH (the add) so the remove enters while the add has
+    // not settled — the exact two-action window the audit found.
+    let releaseAdd: (() => void) | undefined;
+    const held = new Promise<void>((resolve) => {
+      releaseAdd = resolve;
+    });
+    apiSendMock.mockReturnValueOnce(held).mockReturnValueOnce(Promise.resolve());
+    // The post-settle refetch lands the note WITH the added tag — the
+    // remove link must read THIS base, not the render-time snapshot.
+    apiGetMock.mockResolvedValue([{ ...noteRow, tags: JSON.stringify(["zulu", "alpha"]) }]);
+
+    const add = mutations.setNoteTags("n1", (tags) => [...tags, "alpha"]);
+    const remove = mutations.setNoteTags("n1", (tags) => tags.filter((t) => t !== "zulu"));
+    releaseAdd?.();
+    await Promise.all([add, remove]);
+
+    expect(apiSendMock).toHaveBeenCalledTimes(2);
+    const addPatch = apiSendMock.mock.calls[0]?.[2] as { tags: string };
+    const removePatch = apiSendMock.mock.calls[1]?.[2] as { tags: string };
+    // The add computed from the seeded base (["zulu"]).
+    expect(JSON.parse(addPatch.tags)).toEqual(["zulu", "alpha"]);
+    // The remove computed from the POST-ADD-SETTLE base (["zulu","alpha"]) —
+    // the pre-fix snapshot PATCH would have carried ["alpha"] without zulu
+    // ever being removed… or dropped "alpha" entirely from the stale base.
+    expect(JSON.parse(removePatch.tags)).toEqual(["alpha"]);
+  });
+
+  it("a FAILED first tag PATCH does not poison the chain (the caller still gets the rejection)", async () => {
+    apiSendMock.mockRejectedValueOnce(new Error("offline"));
+    apiSendMock.mockResolvedValueOnce(undefined);
+    // The failed PATCH never landed — the refetch returns the unchanged row.
+    apiGetMock.mockResolvedValue([noteRow]);
+
+    // The first op rejects (the caller sees it)…
+    await expect(
+      mutations.setNoteTags("n1", (tags) => [...tags, "alpha"]),
+    ).rejects.toThrow("offline");
+    // …and the second still runs against the post-settle base (the seeded
+    // tags — the failed PATCH never landed).
+    await mutations.setNoteTags("n1", (tags) => [...tags, "bravo"]);
+    const secondPatch = apiSendMock.mock.calls[1]?.[2] as { tags: string };
+    expect(JSON.parse(secondPatch.tags)).toEqual(["zulu", "bravo"]);
+  });
+
+  it("a missing note is a no-op (a deleted note's chain link never PATCHes)", async () => {
+    useDataStore.setState({ notes: [] });
+    await mutations.setNoteTags("n1", (tags) => [...tags, "alpha"]);
+    expect(apiSendMock).not.toHaveBeenCalled();
+  });
+});
