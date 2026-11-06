@@ -25,7 +25,7 @@ tags:
 
 > **What this is:** the single-source-of-truth reference for working in
 > `nordeim/omni-study1`. Every fact below is verified against the codebase
-> (2133 tests green, re-anchored at the S147 update: 1519 Vitest unit [48 files] + 614 Playwright e2e [the 5-chunk census: 609 chromium specs + the per-chunk setup re-runs — 150+189+91+95+89]) — the census re-anchored through
+> (2144 tests green, re-anchored at the S148 update: 1530 Vitest unit [48 files] + 614 Playwright e2e [the 5-chunk census: 609 chromium specs + the per-chunk setup re-runs — 150+189+91+95+89]) — the census re-anchored through
 > the s117–s124 hardening cycles; the 2.0 baseline was 834 + 299 in six
 > chunks after the parity re-application + account-flow completion +
 > regression hardening).
@@ -627,7 +627,7 @@ tail -40 dev.log                            # request traces + prisma queries
 ```bash
 bun run lint && bun run typecheck && bun run test && bun run build && bun run test:e2e
 ```
-Current green state (re-anchored at S147/CV): lint ✓ · tsc ✓ (`noImplicitAny` + `noUnusedLocals`/`noUnusedParameters` — the BV16 machine guard; plus the S129/CD3 re-enabled `react-hooks/exhaustive-deps` as an error) · 1519 unit ✓ · build ✓ (the type gate live — `ignoreBuildErrors` removed) · 614 e2e ✓ (2133 green).
+Current green state (re-anchored at S148/CW): lint ✓ · tsc ✓ (`noImplicitAny` + `noUnusedLocals`/`noUnusedParameters` — the BV16 machine guard; plus the S129/CD3 re-enabled `react-hooks/exhaustive-deps` as an error) · 1530 unit ✓ · build ✓ (the type gate live — `ignoreBuildErrors` removed) · 614 e2e ✓ (2144 green).
 
 **Full-suite chunk map** (one server-boot per chunk; the 10-min tool cap makes
 one-shot full runs unreliable — the 2.0 six-chunk map: chrome+s14 104 ·

@@ -7,8 +7,21 @@
 // precedent). GET answers the newest HISTORY_WINDOW rows in the UI's
 // oldest-first order (take desc, reversed); POST trims the table beyond
 // the newest HISTORY_WINDOW per user — the table is bounded WITHOUT a
-// user-visible failure mode (a rate limit would silently drop history for
-// a legitimately fast calculator; the trim never rejects a write).
+// user-visible failure mode for the legitimate calculator (the trim
+// never rejects a write).
+//
+// S148/CW1 (audit B-L1): the POST now also rides the shared
+// `write:${user.id}` 600/15-min budget (the CE6 pattern — after auth,
+// BEFORE readJson, the C1 convention). The S122/BW5 exemption had
+// conflated storage-boundedness (the 500-row trim) with
+// rate-boundedness: each POST performs an INSERT + a retention-trim
+// interactive transaction, and a scripted authenticated flood churned
+// the single-node SQLite writer at line rate through the one write
+// verb the BZ5/CB7 posture missed (the per-file CE6 census was
+// satisfied by the DELETE twin's budget). The FE is unaffected: the
+// calculator POSTs one entry per explicit "=" press (far under
+// 40 writes/min), and its catch already degrades honestly (the BT12
+// split — "The result is shown, but history could not record it.").
 // ---------------------------------------------------------------------------
 
 import { NextResponse } from "next/server";
@@ -33,6 +46,14 @@ export const GET = withUser(async (user) => {
 });
 
 export const POST = withUser(async (user, request) => {
+  // S148/CW1 (audit B-L1): the shared write budget — the DELETE twin's
+  // own CE6 pattern, now on the POST too (see the header comment). The
+  // budget check rides after auth (anon stays 401) and BEFORE readJson
+  // (the C1 convention).
+  const limit = checkRateLimit(`write:${user.id}`, 600);
+  if (!limit.ok) {
+    return rateLimitedResponse(limit.retryAfterSec, "Too many requests. Please slow down.");
+  }
   try {
     const { expression, result, mode } = parseWith(
       calculatorHistorySchema,
@@ -76,7 +97,7 @@ export const POST = withUser(async (user, request) => {
 
 export const DELETE = withUser(async (user) => {
   // S130/CE6: the history-clear budget (the write bucket — the ai/messages
-  // twin; the POST stays the documented trimmed-table exception below).
+  // twin; the POST rides the same shared bucket since S148/CW1 above).
   const limit = checkRateLimit(`write:${user.id}`, 600);
   if (!limit.ok) {
     return rateLimitedResponse(limit.retryAfterSec, "Too many requests. Please slow down.");

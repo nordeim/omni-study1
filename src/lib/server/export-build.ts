@@ -21,7 +21,8 @@
 
 import { db } from "@/lib/db";
 import { publicUser } from "@/lib/server/auth";
-import { buildDataExport, exportByteSize } from "@/lib/data-export";
+import { ExportTooLargeError } from "@/lib/server/http";
+import { buildDataExport, exportByteSize, exportOverCeiling } from "@/lib/data-export";
 
 export type ExportUser = Awaited<ReturnType<typeof publicUser>>;
 
@@ -123,5 +124,18 @@ export async function renderExportEnvelope(user: ExportUser): Promise<RenderedEx
   // S142/CQ2: the byte size rides the seam — the same number the route's
   // X-Export-Bytes header, the page's exportBytes prop, and the panel's
   // over-cap comparison consume (the single-source doctrine).
-  return { json, bytes: exportByteSize(json) };
+  const bytes = exportByteSize(json);
+  // S148/CW2 (audit B-L3): the export byte ceiling — the one unbounded
+  // read family gets a served-body bound. The gate lives HERE (the
+  // shared seam both consumers ride — the BW8 single-source doctrine):
+  // the route's catch maps the typed error to the honest 413 with the
+  // database-file remedy (toErrorResponse), and the /export page's
+  // narrow catch renders the over-ceiling panel state from err.bytes.
+  // Under the ceiling both consumers are byte-identical to the
+  // pre-ceiling shape. At-cap is the last ALLOWED count (the CL2
+  // boundary doctrine).
+  if (exportOverCeiling(bytes)) {
+    throw new ExportTooLargeError(bytes);
+  }
+  return { json, bytes };
 }

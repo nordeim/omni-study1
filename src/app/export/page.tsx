@@ -6,6 +6,7 @@ import { ExportPanel } from "@/components/export/export-panel";
 import { db } from "@/lib/db";
 import { getCurrentUser, publicUser } from "@/lib/server/auth";
 import { renderExportEnvelope } from "@/lib/server/export-build";
+import { ExportTooLargeError } from "@/lib/server/http";
 
 export const metadata: Metadata = { title: "Export Your Data" };
 
@@ -92,8 +93,24 @@ export default async function ExportPage() {
   // asymmetry's detection half — an export past the restore cap must be
   // knowable BEFORE the user collects a 413 on restore, and each blind
   // retry burns import budget).
-  const { bytes } = await renderExportEnvelope(publicUser(user));
-  const exportBytes = bytes;
+  //
+  // S148/CW2 (audit B-L3): the seam now THROWS ExportTooLargeError past
+  // the 256 MiB ceiling (the served-body bound). The narrow catch renders
+  // the SAME panel with the error's computed bytes — the panel derives the
+  // over-ceiling state itself from the predicate (exportOverCeiling), so
+  // the over-ceiling render and the route's 413 can never drift (one
+  // source: the seam's gate). Everything else re-throws — the honest 500
+  // path is unchanged.
+  let exportBytes: number;
+  try {
+    exportBytes = (await renderExportEnvelope(publicUser(user))).bytes;
+  } catch (err: unknown) {
+    if (err instanceof ExportTooLargeError) {
+      exportBytes = err.bytes;
+    } else {
+      throw err;
+    }
+  }
 
   return (
     <main className="mx-auto w-full max-w-3xl p-6 pt-10">

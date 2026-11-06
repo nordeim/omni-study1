@@ -7,11 +7,15 @@
 // normalizer (userId dropped, Date → ISO, ids/FKs passed through), and
 // the SECRET GUARD (passwordHash can never ride the export).
 import { describe, expect, it } from "vitest";
+import { readFileSync } from "node:fs";
+import path from "node:path";
 import {
   DATA_EXPORT_FORMAT,
   DATA_EXPORT_VERSION,
   EXPORT_COLLECTIONS,
+  EXPORT_MAX_BYTES,
   buildDataExport,
+  exportOverCeiling,
   serializeExportRow,
 } from "../src/lib/data-export";
 
@@ -250,5 +254,104 @@ describe("S142/CQ2 · exportByteSize (the byte-based size signal)", () => {
       emoji: "👋",
     });
     expect(exportByteSize(fragment)).toBe(Buffer.byteLength(fragment));
+  });
+});
+
+// S148/CW2 — the export byte ceiling (audit B-L3, the s148 data-layer
+// rotation; docs/remediation-plan-session148.md).
+//
+// The export was the one UNBOUNDED read family in the API surface: 20
+// findMany calls with no take, assembled + JSON.stringify'd
+// unconditionally for both consumers (the download route + the /export
+// page's size signal), while the import door legally admits 64 MiB
+// envelopes REPEATEDLY — a legit account can grow to multi-GB and every
+// export GET then materializes the full read set + the string on the
+// single worker. The over-cap WARNING existed only client-side (the
+// panel's amber alert at >IMPORT_MAX_BYTES — the RESTORE cap, a
+// different concern). The ceiling bounds the served body honestly:
+// EXPORT_MAX_BYTES (4x the restore cap) + the exportOverCeiling
+// predicate (the nodeEnvCasingWarning pattern — the gate is named
+// logic, the display helpers stay display-only) + the typed
+// ExportTooLargeError thrown by the shared renderExportEnvelope seam
+// (the BW8 single-source doctrine: neither consumer owns the ceiling),
+// mapped by toErrorResponse to the 413 family (the CU3 discrimination
+// precedent). No e2e leg BY DESIGN (the CV1 runtime-split precedent):
+// driving the ceiling honestly means an account holding >256 MiB of
+// rows — seeding that per-run is prohibitive, and an
+// env-configurable test ceiling is an unrequested knob. The predicate
+// legs drive the pure seam; the census legs pin the four wirings; the
+// s21 export legs re-certify the under-ceiling surface.
+describe("S148/CW2: the export byte ceiling (EXPORT_MAX_BYTES + exportOverCeiling)", () => {
+  it("EXPORT_MAX_BYTES pins the 256 MiB ceiling (the value the panel copy + the route remedy both name)", () => {
+    // 4x the 64 MiB IMPORT_MAX_BYTES restore cap: a legit account can
+    // outgrow the restore cap through repeated imports (the caps are
+    // per-request, not per-account), so the ceiling sits above it to
+    // keep ADR-019 honest for the merely-large — while still bounding
+    // the multi-GB tail the audit measured.
+    expect(EXPORT_MAX_BYTES).toBe(256 * 1024 * 1024);
+  });
+
+  it("an empty account sits far under the ceiling (zero bytes never trips)", () => {
+    expect(exportOverCeiling(0)).toBe(false);
+  });
+
+  it("at-cap is the last ALLOWED byte count (the boundary every byte cap in the family carries)", () => {
+    // The S137/CL2 IMPORT_MAX_BYTES boundary doctrine: the cap value
+    // itself is allowed (a body of exactly cap bytes is served); the
+    // first rejected count is cap + 1.
+    expect(exportOverCeiling(EXPORT_MAX_BYTES)).toBe(false);
+  });
+
+  it("one-past-cap trips (the first rejected count)", () => {
+    expect(exportOverCeiling(EXPORT_MAX_BYTES + 1)).toBe(true);
+  });
+
+  it("the multi-GB tail trips (the audit's amplification account)", () => {
+    // A repeated-import account (10x the ceiling) is refused — the
+    // honest 413 with the database-file remedy, never a multi-GB
+    // body materialized per request.
+    expect(exportOverCeiling(EXPORT_MAX_BYTES * 10)).toBe(true);
+  });
+
+  // ---- the wiring census (the CV1 precedent: four files, four pins) ----
+
+  it("the census: the shared seam throws the typed error at the ceiling (export-build.ts)", () => {
+    const src = readFileSync(
+      path.resolve(process.cwd(), "src/lib/server/export-build.ts"),
+      "utf8",
+    );
+    expect(src).toContain("exportOverCeiling");
+    expect(src).toContain("ExportTooLargeError");
+  });
+
+  it("the census: toErrorResponse maps ExportTooLargeError to the 413 family (http.ts, the CU3 precedent)", () => {
+    const src = readFileSync(
+      path.resolve(process.cwd(), "src/lib/server/http.ts"),
+      "utf8",
+    );
+    expect(src).toContain("instanceof ExportTooLargeError");
+    // The remedy copy names the ceiling + the database-file path (the
+    // honest actionable remedy, never the opaque 500).
+    const branch = src.slice(
+      src.indexOf("instanceof ExportTooLargeError"),
+      src.indexOf("instanceof ExportTooLargeError") + 700,
+    );
+    expect(branch).toContain("413");
+  });
+
+  it("the census: the /export page catches the typed error (the over-ceiling render flows through the same panel prop)", () => {
+    const src = readFileSync(
+      path.resolve(process.cwd(), "src/app/export/page.tsx"),
+      "utf8",
+    );
+    expect(src).toContain("ExportTooLargeError");
+  });
+
+  it("the census: the panel derives the over-ceiling state from the predicate (export-panel.tsx)", () => {
+    const src = readFileSync(
+      path.resolve(process.cwd(), "src/components/export/export-panel.tsx"),
+      "utf8",
+    );
+    expect(src).toContain("exportOverCeiling");
   });
 });

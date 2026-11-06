@@ -9,7 +9,7 @@ High-signal instructions for coding agents working in this repo. Everything here
 | `bun install` | Install deps (Bun ≥ 1.3) |
 | `bun run dev` | Dev server on :3000 (Turbopack), logs tee'd to `dev.log` |
 | `bun run lint` / `bun run typecheck` | ESLint / `tsc --noEmit` — both must be clean |
-| `bun run test` | Vitest unit layer (1519 tests; `*.test.ts` only — never picks up e2e specs) |
+| `bun run test` | Vitest unit layer (1530 tests; `*.test.ts` only — never picks up e2e specs) |
 | `bun run build` | Production build → `.next/standalone` (**required before e2e**) |
 | `bun run test:e2e` | Playwright vs the standalone build on :3100 with `db/e2e.db` (614 tests across the 5-chunk cold map — 150+189+91+95+89, 30 spec files; a single-process full run trips the register rate-limiter budget by design, the chunked map re-boots the server per chunk). NOTE (S45, the day-boundary lesson): the global setup re-seeds every run, but the seed's IDEMPOTENT UPSERTS do NOT refresh day-relative dates on existing rows — a scratch `db/e2e.db` that ages across a UTC midnight keeps its original day-relative dates (today's tasks, the +1-day exam badge, the due-in pills, the import round-trip dates each read one day stale → 4 deterministic failures in parity-session6/parity-session9/s23-import). Delete `db/e2e.db` when a run crosses a day boundary — the global setup re-creates it fresh with current dates. NOTE (S46, TWO more aged-scratch-db classes + a build-input one): (1) ALWAYS run e2e COLD — S131/CF5 chained `scripts/e2e-cold-reset.sh` into `bun run test:e2e` (port-guard + `rm -f db/e2e.db` BEFORE playwright boots anything — global-setup is TOO LATE: Playwright starts the webServer before globalSetup), so the default runner self-colds; any DIRECT `playwright test` invocation still needs the manual `rm -f db/e2e.db` before every full run: the s23-import round-trip posts a FIXED-id envelope, so a second consecutive run against the aged db reads `created: 0, updated: 1` instead of `created: 1, updated: 0` and fails — not just across midnights, across ANY re-run; (2) the s22 negative-spawn spec reads the BUNDLED `.env` — Next's standalone output COPIES the repo-root `.env` into `.next/standalone/.env` at build time, so a REAL AUTH_SECRET in the dev `.env` leaks into the bundle and the guard CORRECTLY boots (the spec times out waiting for the exit) — keep the repo-root `.env`'s AUTH_SECRET EMPTY (the `.env.example` dev posture: `AUTH_SECRET=""` — dev falls back to the local constant with the boot warning) when building for e2e |
 | `node scripts/capture-studyflow.mjs` | Refresh all 31 `docs/screenshots/` captures from the dev server (24 light + 7 dark) |
@@ -2209,3 +2209,36 @@ Hover-parity probing must run in Playwright, not a touch-emulating browser — v
    what its OWN failure leaves behind — the finally belongs around the
    assertions, with the row id captured before the first expect that
    can throw.
+
+## S148 lessons (Batch CW — the write-budget-completion + export-byte-ceiling + parse-status set)
+
+1. **A per-FILE census cannot see per-METHOD gaps.** The S130/CE6
+   write-budget census walked route FILES: a file passed when ANY method
+   in it rode checkRateLimit — which is exactly how the
+   calculator-history POST escaped for seventeen cycles. Its DELETE
+   twin gained the shared `write:` budget at CE6, and the file has
+   satisfied the census ever since while the POST (an INSERT + a
+   retention-trim interactive transaction per call) rode NO budget,
+   because the S122/BW5 comment had conflated storage-boundedness (the
+   500-row trim) with rate-boundedness — two different axes that both
+   sound like "bounded" in a comment. Lesson: when a guard is censused
+   per-file but enforced per-method, a mixed-exemption file is a
+   structural blind spot; the focused per-method pin (slice the block,
+   assert its own guard) closes the found gap without redesigning the
+   census — and the honest boundary between the two is worth naming in
+   the test itself (the B-I census-granularity design change keeps its
+   named deferral).
+2. **Bound the SERVED BODY where you cannot bound the READ SET.** The
+   export's reads are unbounded BY CONTRACT (ADR-019: "own your data"
+   means every row), so the amplification cannot be fixed with a
+   `take:` without breaking the feature's promise. The honest bound is
+   downstream of assembly: the serialized byte size IS knowable
+   (exportByteSize already computed it for the size signal), the
+   ceiling gates on it, and the refusal is typed + actionable (the 413
+   with the database-file remedy — the data still leaves the machine,
+   through the documented backup path instead of the HTTP body).
+   Lesson: when a read cannot be bounded, look for the FIRST
+   already-computed quantity downstream that can be — and make the
+   gate ride the SHARED seam so every consumer (the route's 413, the
+   page's disabled download) derives from one predicate and can never
+   drift (the BW8 doctrine).

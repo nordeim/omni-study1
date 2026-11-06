@@ -86,4 +86,32 @@ describe("api transport-failure mapping (offline)", () => {
       vi.unstubAllGlobals();
     }
   });
+
+  // S148/CW3 (audit B-I2, the s148 data-layer rotation;
+  // docs/remediation-plan-session148.md): a 2xx body that fails res.json()
+  // threw ApiError carrying the SUCCESS status — cosmetic today (no caller
+  // branches on a 2xx error), dishonest to any future status-branching
+  // consumer. The malformed-success family now surfaces 502: the status
+  // finally says what happened (the server answered garbage), never a
+  // pretend-200.
+  it("a malformed 2xx body surfaces ApiError 502, never the pretend-success status (S148/CW3)", async () => {
+    const garbageFetch = vi.fn(() =>
+      Promise.resolve(new Response("not json at all", { status: 200 })),
+    );
+    vi.stubGlobal("fetch", garbageFetch);
+    try {
+      let caught: unknown = null;
+      await apiGet("/api/tasks").catch((err: unknown) => {
+        caught = err;
+      });
+      expect(caught).toBeInstanceOf(ApiError);
+      const apiErr = caught as ApiError;
+      expect(apiErr.status).toBe(502);
+      expect(apiErr.status).not.toBe(200);
+      // The human message is unchanged (the malformed-response copy).
+      expect(apiErr.message).toContain("malformed");
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
 });

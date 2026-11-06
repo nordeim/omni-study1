@@ -155,6 +155,26 @@ export class BodyTooLargeError extends ValidationError {
   }
 }
 
+/** S148/CW2 (audit B-L3) — the over-ceiling EXPORT error. Thrown by the
+ *  shared renderExportEnvelope seam (server/export-build.ts) when the
+ *  serialized envelope exceeds EXPORT_MAX_BYTES (data-export.ts — 256 MiB,
+ *  4x the import restore cap): the one unbounded read family in the API
+ *  surface gets a served-body bound. NOT a ValidationError subclass (the
+ *  body was never read from the client — this is a response-size refusal,
+ *  the request itself was fine), so it maps straight to the 413 family
+ *  with the database-file remedy. Carries `bytes` so the consumers (the
+ *  /export page's over-ceiling panel render) can show the computed size
+ *  without re-serializing. */
+export class ExportTooLargeError extends Error {
+  constructor(
+    public readonly bytes: number,
+    message = "That export is too large to build in one pass (over 256 MB).",
+  ) {
+    super(message);
+    this.name = "ExportTooLargeError";
+  }
+}
+
 /** The BR5 Content-Type policy as a shared seam (S119/BT1a): a non-JSON
  * Content-Type is unparseable-by-policy — a form POST with `text/plain`
  * (which bypasses the CORS/preflight reasoning behind the sameSite=lax
@@ -262,6 +282,20 @@ export function toErrorResponse(err: unknown): NextResponse {
   // ValidationError — the generic 400 branch must not shadow the 413).
   if (err instanceof BodyTooLargeError) {
     return errorResponse(413, err.message);
+  }
+  // S148/CW2 (audit B-L3): the export ceiling — the shared
+  // renderExportEnvelope seam throws this when the serialized envelope
+  // exceeds EXPORT_MAX_BYTES (256 MiB, 4x the import restore cap). The
+  // CU3 discrimination shape: the typed over-cap error answers the
+  // honest 413 with the actionable remedy (the database file itself is
+  // the full-fidelity backup path past the ceiling — DEPLOYMENT.md §4),
+  // never the opaque 500 a raw throw would surface through the
+  // unknown-error branch below.
+  if (err instanceof ExportTooLargeError) {
+    return errorResponse(
+      413,
+      "That export is too large to build in one pass (over 256 MB). Delete unused files — the heaviest collection — and retry, or copy the database file directly (see docs/DEPLOYMENT.md §4).",
+    );
   }
   if (err instanceof ValidationError) {
     return errorResponse(400, err.message);

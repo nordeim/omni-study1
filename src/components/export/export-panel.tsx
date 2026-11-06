@@ -15,7 +15,7 @@ import { useRouter } from "next/navigation";
 import { apiSend, isTimeoutError } from "@/lib/api";
 import { Spinner } from "@/components/views/shared";
 import { IMPORT_MAX_BYTES } from "@/lib/data-import";
-import { formatExportBytes } from "@/lib/data-export";
+import { exportOverCeiling, formatExportBytes, EXPORT_MAX_BYTES } from "@/lib/data-export";
 
 type ImportSummary = {
   created: number;
@@ -82,6 +82,14 @@ export function ExportPanel({
   const [busy, setBusy] = React.useState(false);
   const [result, setResult] = React.useState<ImportSummary | null>(null);
   const [error, setError] = React.useState("");
+  // S148/CW2 (audit B-L3): the over-ceiling state, DERIVED from the same
+  // predicate the shared seam gates on (exportOverCeiling — the BW8
+  // single-source doctrine: the panel's disabled download and the route's
+  // 413 can never drift; the page flows the seam's computed bytes through
+  // the same exportBytes prop). Under the ceiling (every e2e-scale
+  // account) this is false and the panel renders byte-identically to the
+  // pre-ceiling shape.
+  const overCeiling = exportOverCeiling(exportBytes);
   // S133/CH7: the App Router refresh seam — after a successful import the
   // server-rendered "What's included" count grid re-runs its 20 db counts
   // (pre-CH7 the grid showed stale pre-import numbers while the panel said
@@ -162,25 +170,49 @@ export function ExportPanel({
             {" "}(restore cap {formatExportBytes(IMPORT_MAX_BYTES)})
           </span>
         </p>
-        {exportBytes > IMPORT_MAX_BYTES && (
+        {exportBytes > IMPORT_MAX_BYTES && !overCeiling && (
           <p role="status" className="sf-alert-amber mt-3 rounded-lg px-3 py-2 text-sm">
             This backup is larger than the in-app restore cap — a restore from
             this file will be rejected. Keep it as an archive, or remove large
             files before exporting again.
           </p>
         )}
-        <a
-          href="/api/export/data"
-          download
-          // S145/CT3 (audit B-L2): the house primary-CTA surface — the
-          // gradient variant + the v3 shadow (AGENTS.md: "every primary
-          // action uses the Button `gradient` variant … Never render a
-          // solid bg-sf-primary CTA"; these two were the codebase's only
-          // hand-rolled solid CTA violations).
-          className="sf-gradient sf-gradient-shadow mt-4 inline-flex h-9 items-center justify-center rounded-md px-4 text-sm font-medium text-sf-primary-foreground transition-colors"
-        >
-          Download JSON
-        </a>
+        {/* S148/CW2 (audit B-L3): the over-ceiling state — the seam refused
+            the build (the download route answers the honest 413), so the
+            panel says it BEFORE the click: the red alert carries the same
+            remedy copy as the route, and the anchor is replaced by a
+            non-interactive disabled span. The amber restore-cap warning
+            above is a DIFFERENT cap (64 MiB restore vs the 256 MiB export
+            ceiling) and stays suppressed here — the red one subsumes it. */}
+        {overCeiling && (
+          <p role="alert" className="sf-alert-red mt-3 rounded-lg px-3 py-2 text-sm">
+            This backup exceeds the app&apos;s {formatExportBytes(EXPORT_MAX_BYTES)} export
+            ceiling — the download is disabled. Delete unused files (the heaviest
+            collection) and retry, or copy the database file directly (see
+            docs/DEPLOYMENT.md §4).
+          </p>
+        )}
+        {overCeiling ? (
+          <span
+            aria-disabled="true"
+            className="mt-4 inline-flex h-9 cursor-not-allowed items-center justify-center rounded-md bg-slate-100 px-4 text-sm font-medium text-slate-400 opacity-60 dark:bg-slate-800 dark:text-slate-500"
+          >
+            Download unavailable
+          </span>
+        ) : (
+          <a
+            href="/api/export/data"
+            download
+            // S145/CT3 (audit B-L2): the house primary-CTA surface — the
+            // gradient variant + the v3 shadow (AGENTS.md: "every primary
+            // action uses the Button `gradient` variant … Never render a
+            // solid bg-sf-primary CTA"; these two were the codebase's only
+            // hand-rolled solid CTA violations).
+            className="sf-gradient sf-gradient-shadow mt-4 inline-flex h-9 items-center justify-center rounded-md px-4 text-sm font-medium text-sf-primary-foreground transition-colors"
+          >
+            Download JSON
+          </a>
+        )}
       </section>
 
       <section aria-label="Restore" className="sf-card p-6">

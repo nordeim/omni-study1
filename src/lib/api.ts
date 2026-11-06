@@ -63,7 +63,12 @@ async function parse<T>(res: Response): Promise<T> {
   try {
     return (await res.json()) as T;
   } catch {
-    throw new ApiError(res.status, "The server returned a malformed response.");
+    // S148/CW3 (audit B-I2): a 2xx body that fails res.json() is a
+    // server-side fault (garbage answered where JSON was promised) — the
+    // thrown ApiError carried the SUCCESS status verbatim, honest to no
+    // consumer that ever branches on err.status. 502 says what happened;
+    // the human message is unchanged.
+    throw new ApiError(502, "The server returned a malformed response.");
   }
 }
 

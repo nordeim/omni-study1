@@ -1341,9 +1341,13 @@ describe("the S142/CQ source censuses", () => {
     expect(pure).not.toContain("Buffer.byteLength");
     // The seam returns bytes; both consumers read `.bytes` — never
     // `json.length` (the A-M2 code-unit under-report).
-    expect(seam).toContain("bytes: exportByteSize(json)");
+    // S148/CW2 re-anchor: the derivation moved from the return literal to
+    // a named const (the export byte ceiling gate reads it before the
+    // return — the ceiling is census-pinned in data-export.test.ts).
+    expect(seam).toContain("const bytes = exportByteSize(json)");
+    expect(seam).toContain("return { json, bytes }");
     expect(route).toContain("String(bytes)");
-    expect(page).toContain("const { bytes } = await renderExportEnvelope");
+    expect(page).toContain(".bytes");
     expect(route).not.toContain("String(json.length)");
     expect(page).not.toContain("json.length");
   });
@@ -1667,5 +1671,43 @@ describe("S146/CU1-CU3: the upload mime guard + the OTP re-issue transactions + 
     // honest 500 handler.
     const src = readFileSync(FILES_ROUTE, "utf8");
     expect(src).toContain("instanceof BodyTooLargeError");
+  });
+});
+
+// S148/CW1 — the calculator-history POST budget census (audit B-L1, the
+// s148 data-layer rotation; docs/remediation-plan-session148.md).
+//
+// The S130/CE6 census guards at FILE granularity: a route file passes the
+// walk when ANY method in it rides checkRateLimit — which is exactly how
+// the calculator-history POST escaped. Its DELETE twin gained the shared
+// `write:${user.id}` 600/15-min budget at CE6, and the file has satisfied
+// the census ever since while the POST (1 INSERT + the retention-trim
+// interactive transaction per call) rode NO budget — the S122/BW5 comment
+// had conflated storage-boundedness (the 500-row trim) with
+// rate-boundedness. A scripted authenticated flood churned the
+// single-node SQLite writer at line rate through the one write verb the
+// BZ5/CB7 posture missed. The per-method census redesign stays the named
+// B-I deferral; THIS leg is the focused per-method pin for the gap the
+// audit actually found (the CV1 wiring-census precedent: slice the POST
+// block, assert its own budget).
+describe("S148/CW1: the calculator-history POST rides the shared write budget", () => {
+  const CALC_ROUTE = path.resolve(
+    process.cwd(),
+    "src/app/api/calculator/history/route.ts",
+  );
+
+  it("the POST block itself carries checkRateLimit (the per-file census cannot see method gaps)", () => {
+    const src = readFileSync(CALC_ROUTE, "utf8");
+    // Slice the POST handler block: from its export line to the next
+    // export (the DELETE twin) or EOF — the budget must live INSIDE the
+    // POST block, not just somewhere in the file.
+    const start = src.indexOf("export const POST");
+    expect(start, "the POST export exists").toBeGreaterThan(-1);
+    const nextExport = src.indexOf("export const", start + 1);
+    const postBlock = src.slice(start, nextExport === -1 ? undefined : nextExport);
+    expect(
+      postBlock,
+      "the calculator-history POST must call checkRateLimit (audit B-L1: the one authenticated write verb outside the shared BZ5/CB7 write budget)",
+    ).toContain("checkRateLimit(");
   });
 });

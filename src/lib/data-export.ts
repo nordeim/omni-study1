@@ -136,3 +136,42 @@ export function formatExportBytes(bytes: number): string {
 export function exportByteSize(json: string): number {
   return new TextEncoder().encode(json).length;
 }
+
+// ---- S148/CW2: the export byte ceiling (audit B-L3) ---------------------------
+//
+// The export was the one UNBOUNDED read family in the API surface (20
+// findMany calls with no take, assembled + serialized unconditionally
+// for both consumers — the download route and the /export page's size
+// signal), while the import door legally admits 64 MiB envelopes
+// REPEATEDLY (the caps are per-request, not per-account): a legit
+// account can grow to multi-GB and every export GET then materializes
+// the full read set + the JSON string on the single worker. The
+// over-cap WARNING existed only client-side (the panel's amber alert —
+// about the RESTORE cap, a different concern). The ceiling bounds the
+// SERVED BODY honestly:
+//
+// - 256 MiB = 4x the IMPORT_MAX_BYTES restore cap — high enough to
+//   keep ADR-019 ("own your data") honest for the merely-large account
+//   that outgrew the restore cap through repeated imports, low enough
+//   to bound the multi-GB tail. The database file itself remains the
+//   full-fidelity backup path past the ceiling (DEPLOYMENT.md §4).
+// - The predicate (not a raw comparison at the consumers) is the
+//   nodeEnvCasingWarning pattern: the gate is named, unit-pinnable
+//   logic; the display helpers stay display-only.
+// - The gate lives in the shared renderExportEnvelope seam
+//   (server/export-build.ts) — the BW8 single-source doctrine: the
+//   route's 413 and the page's over-ceiling panel can never drift.
+//
+// At-cap is the last ALLOWED byte count (the S137/CL2 boundary
+// doctrine every byte cap in the family carries): the first rejected
+// count is EXPORT_MAX_BYTES + 1.
+
+export const EXPORT_MAX_BYTES = 256 * 1024 * 1024;
+
+/** S148/CW2: the export ceiling gate — true when the serialized
+ * envelope exceeds EXPORT_MAX_BYTES bytes (the honest refusal band;
+ * under it the export serves byte-identically to the pre-ceiling
+ * shape). */
+export function exportOverCeiling(bytes: number): boolean {
+  return bytes > EXPORT_MAX_BYTES;
+}

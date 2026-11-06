@@ -4810,3 +4810,95 @@ data-layer axis is two cycles stale again (swept at S146), or the A-M3
 stage-2 chunked sub-tx + resume token (its own ADR-021 cycle); the
 B-I3 trim rider stays logged for a validation-family cycle; the
 FE/views + auth/crypto axis is one cycle fresh.
+
+## Session 159 — Batch CW (Cycle 98): the write-budget-completion + export-byte-ceiling + parse-status set
+
+**Cycle 98 · Session 148 · the entities/factory + data-layer rotation
+(two cycles stale) + the Batch CV recent-changes axis.** A FRESH CLONE
+at `a051d6e` (the fast-forward from 5acadb9 added only the operator's
+session_168 transcript); the environment provisioned through the
+documented fresh-clone path (install → `db/` at the repo root → `.env`
+`DATABASE_URL="file:../db/custom.db"` → db:generate → db:push →
+db:seed → Chromium 1243 → the daemon on :3000).
+
+**Cold baseline matched the documented S147-final state exactly**: lint
+✓ · tsc ✓ · unit 1519/1519 (48 files) · the drawer check GREEN (the
+**63rd** consecutive no-Tailwind-v4-mobile-nav-bug confirmation) · the
+desktop parity probe MATCH (all five formal checks). Noise: none.
+
+**The audits** (two Mode-C passes — the data-layer breadth scan run as
+a read-only subagent, every M/L finding re-verified by direct read):
+**A** — the Batch CV recent-changes axis (`5acadb9`): **0C/0H/0M/0L/
+0I — clean**, all three CV claims confirmed (the predicate + wiring at
+their anchors, the finally-cleanup, the census machine-verified).
+**B** — the entities/factory + data-layer rotation: **0C/0H/0M/3L/2I**
+— the 60/60 route-authz census, the store/import/export/taxonomy
+families re-verified closed, the bounded-read census exhaustive with
+ONE design-documented exception. The Ls: **B-L1** the
+calculator-history POST (the one authenticated write verb outside the
+shared BZ5/CB7 write budget — the S122/BW5 comment conflated the
+500-row storage trim with rate-boundedness, and the per-file CE6
+census was satisfied by the DELETE twin's budget); **B-L3** the export
+(the one unbounded read family — assembled + serialized
+unconditionally, the over-cap warning client-side only, while the
+import door legally admits 64 MiB envelopes repeatedly); **B-L2** the
+import restore's sequential per-row updates (deferred to the A-M3
+ADR-021 cycle); **B-I2** the parse() 2xx-status cosmetic (the rider).
+
+**The fixes (all RED-proven — the unit REDs 11/11 as designed).** CW1
+the POST joins the shared `write:${user.id}` 600/15-min budget (the
+CE6 pattern; the per-method census leg closes the per-file census's
+structural blind spot without the named B-I redesign). CW2 the export
+byte ceiling — the cycle's load-bearing fix: EXPORT_MAX_BYTES 256 MiB
+(4× the restore cap — ADR-019-honest for the merely-large) + the
+exportOverCeiling pure predicate + the typed ExportTooLargeError
+thrown by the SHARED renderExportEnvelope seam (BW8: the route's 413
+and the page's over-ceiling panel derive from one gate) + the
+toErrorResponse 413 branch with the database-file remedy (CU3) + the
+page's narrow catch + the panel's derived state (the red alert + the
+disabled Download span; under the ceiling every e2e-scale account
+renders byte-identically). No e2e leg BY DESIGN (the CV1 runtime-split
+precedent — driving the ceiling needs a >256 MiB account; the
+predicate legs + the four censuses + the s21 re-cert own the proof).
+CW3 the malformed-2xx parse surfaces ApiError 502, never the
+pretend-200.
+
+**Re-cert (the FINAL tree).** lint ✓ · tsc ✓ · unit **1530/1530**
+(48 files, +11: data-export +9, script-conventions +1, api-offline +1
+— with the CQ2 census leg re-anchored to the new seam shape in the
+same change) · build ✓ (the ceiling wiring verified shipped in the
+standalone chunks; the 6 warnings the documented baseline) · the
+targeted s21 + calculator run **20/20** · the cold 5-chunk e2e cert
+**150 + 188 + 90 + 95 + 89 first-pass with the two documented-class
+flakes** (the AH2a departed-Save timing leg; the AJ1 folder-POST P1008
+socket-timeout 500 — both co-occurring with the WebServer SQLite
+socket-timeout noise, the S142/S143 machine-load class) **re-verified
+GREEN in the contention-free cold re-run of both full spec files
+(97/97 first-pass)** = the e2e census 614/614 unchanged · **census
+2144 green** (was 2133).
+
+**Evidence.** Three `docs/screenshots/148-clone-*.png` frames (desktop
+237 KiB, the mobile drawer 64 KiB, the /export panel 221 KiB — the
+cycle's axis surface), self-verifying (exists, >10 KiB, byte-diverse,
+md5-distinct — the capture script's JSON verdict ok:true) + the CW2
+machine proof on the unit layer.
+
+**Docs.** README badge/census (2133 → 2144) + the Session-148 row;
+AGENTS census (1519 → 1530) + the S148 lessons block (two lessons: the
+per-FILE census cannot see per-METHOD gaps — a mixed-exemption file is
+a structural blind spot, and the focused per-method pin closes the
+found gap; bound the SERVED BODY where the read set is unbounded by
+contract — gate on the first already-computed downstream quantity, at
+the shared seam so no consumer can drift); CLAUDE counts; PAD v1.3.56
+(the revision block + the two §11 closure rows); the SKILL census
+(both sites); the vitest header re-anchor; the cert runner unchanged;
+the plan §6 as-executed close; `docs/session_169.md`; this entry; the
+`.env.example` contract re-verified (no diff — no env-var reads
+changed this cycle).
+
+**Next cycle.** The rotation continues — the FE/views + auth/crypto
+axis is now two cycles stale (swept at S147), or the A-M3 stage-2
+chunked sub-tx + resume token (its own ADR-021 cycle, now carrying the
+B-L2 import lock-hold finding); the B-I3 trim rider stays logged for a
+validation-family cycle; the B-I census-granularity design change stays
+the named deferral.

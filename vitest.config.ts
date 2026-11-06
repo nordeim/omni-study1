@@ -1,7 +1,19 @@
 import { defineConfig } from "vitest/config";
 import path from "node:path";
 
-// Unit-test layer for the pure domain seams — 48 files / 1519 tests
+// Unit-test layer for the pure domain seams — 48 files / 1530 tests
+// (re-anchored S148/CW — the write-budget-completion +
+// export-byte-ceiling + parse-status set: census 1519 → 1530, +11 net
+// [data-export +9: the S148/CW2 export-byte-ceiling quintet (the
+// EXPORT_MAX_BYTES 256-MiB value pin + the exportOverCeiling boundary
+// legs — zero far-under / at-cap-last-allowed / one-past / the
+// multi-GB tail) + the four CW2 wiring censuses (the seam throw, the
+// toErrorResponse 413 branch, the page catch, the panel's derived
+// state); script-conventions +1: the S148/CW1 per-method budget census
+// (the calculator-history POST block sliced + asserted for its own
+// checkRateLimit — the per-file CE6 census's structural blind spot);
+// api-offline +1: the S148/CW3 malformed-2xx parse leg (ApiError 502,
+// never the pretend-200)].)
 // (re-anchored S147/CV — the node-env-casing-boot-warning +
 // tripwire-cleanup set: census 1513 → 1519, +6 net
 // [env-check +6: the S147/CV1 nodeEnvCasingWarning quintet (the
