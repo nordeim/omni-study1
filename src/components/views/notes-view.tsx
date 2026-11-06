@@ -429,7 +429,21 @@ export function NotesView() {
   const addTag = () => {
     const tag = tagDraft.trim().replace(/^#/, "");
     setTagDraft("");
-    if (!tag || tag.length > 24 || selectedTags.includes(tag)) return;
+    if (!tag) return;
+    // S150/CY3 (the S149/B-I4 honesty rider): the two real drops speak —
+    // the draft was cleared BEFORE these guards, so a >24-char or
+    // duplicate tag used to vanish with zero feedback (the "input
+    // cleared, nothing happened, no reason" class). The empty case stays
+    // a no-op (nothing was lost). Both toasts announce through the
+    // aria-live stack (the S14 contract).
+    if (tag.length > 24) {
+      toast.error("Tags are limited to 24 characters.");
+      return;
+    }
+    if (selectedTags.includes(tag)) {
+      toast.error("That tag is already on this note.");
+      return;
+    }
     saveTags([...selectedTags, tag]);
   };
 

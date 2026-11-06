@@ -4992,3 +4992,111 @@ data-layer axis, or the A-M3 stage-2 chunked sub-tx + resume token
 (its own ADR-021 cycle, carrying the B-L2 import lock-hold finding);
 the B-I3 trim rider stays logged for a validation-family cycle; the
 B-I census-granularity design change stays the named deferral.
+
+## Session 161 — Batch CY (Cycle 100): the folderId-bound + schoolName-trim + tag-honesty set
+
+**Context.** The workspace was a FRESH CLONE at `669c83e` on `main`
+(the Batch CX fix `3410ff1` + the operator's session_172 transcript
+commit; the sandbox had reset). Environment re-provisioned through
+the documented fresh-clone path: install 510 pkgs · `.env` from the
+current `.env.example` (`DATABASE_URL="file:../db/custom.db"` — the
+repo-root `db/` contract) · `db:push` + `db:seed` (the 389 KiB seeded
+demo account) · chromium-1243 · the dev daemon on :3000 (preflight
+GREEN).
+
+**Cold baseline (before any work).** lint ✓ · tsc ✓ · unit
+**1543/1543** (48 files — the documented S149 final state exactly) ·
+the drawer check GREEN (**the 65th consecutive no-Tailwind-v4-
+mobile-nav-bug confirmation**) · the desktop parity probe **MATCH**
+(all five formal checks, live reference login). Baseline noise: none.
+
+**The audits (Mode-C; every M/L finding re-verified by direct read).**
+Audit A — the Batch CX recent-changes axis (`3410ff1`):
+**0C/0H/0M/0L/0I — clean**; all five CX claims verified at the source
+level (the CX1/CX2 chains + rewires, the CX3 transport partition, the
+CX4 calculator guards, the CX5 settings failure surface; the doc
+census machine-verified: README 2157, AGENTS 1543/614, PAD v1.3.57,
+SKILL both sites, the vitest header). Audit B — the entities/factory
++ data-layer rotation (three cycles stale — the S146/CU-swept axis,
+the named next axis): the full read of entities/http/auth-server/
+validation/db-path/group-members + the 616-line schema + all 39
+in-scope route files: **0C/0H/0M/1L/5I** — all eight historically-real
+families re-verified CLOSED at their anchors (ownership scoping +
+P2025→404, route authz, the error taxonomy, the CR7 delegate pattern,
+bounded readers, the CR3 own-keys patch discipline, rate-limit keying,
+the Zod boundary). The finding: **B-L1** the multipart `folderId` was
+the one remaining unbounded id atom (the raw form value reached
+`findFirst` verbatim while every other id rides the 64-char bound —
+the hand-validated multipart branch cannot Zod-parse binary, so it
+silently escaped both schema-family fixes). The settings-route
+schoolName untrimmed (this audit's B-I5) was PROMOTED into the fix set
+as the S146/B-I3 trim rider's named validation-family cycle, together
+with the S149/B-I4 note-tag silent-drop rider.
+
+The plan (`docs/remediation-plan-session150.md`) written BEFORE any
+source change, validated against the codebase (every anchor re-read;
+the Zod-4 trim-ordering semantics probed empirically before the
+design was frozen), executed TDD-first.
+
+**The fixes (the unit REDs 4/4 — the CY2 functional pair + the CY1/CY3
+wiring-census legs).** CY1 the multipart folderId 64-char guard (the
+S139/CN11 route-param convention verbatim — a >64-char id cannot
+exist, so the honest status is the no-oracle 404, byte-identical to
+the missing-row branch it precedes). CY2 the schoolName trim at the
+validation ATOM (`z.string().trim().max(120).optional()`; Zod 4
+orders .trim() BEFORE .max() — probed — and the transformed key
+SURVIVES the parsed object, so the sent-keys filters at the settings
+route and the import seam's PROFILE_PATCH_KEYS whitelist keep working
+verbatim; one canonical source now serves the route, the client card,
+AND the import profile patch). CY3 the note-tag honest feedback (the
+empty draft stays a no-op; the >24-char and duplicate drops now name
+their reason through the aria-live toast stack). One census tripwire
+tripped and closed as designed: the hue-tokens notes-view register
+re-anchored 686 → 700 (the CY3 block added lines above the site; the
+anchored leg is the designed move-detector; the site itself
+byte-unchanged).
+
+**Re-cert (the FINAL tree).** lint ✓ · tsc ✓ · unit **1547/1547**
+(48 files, +4: validation +2, script-conventions +2) · build ✓ (exit
+0; the three fix wirings verified shipped in the standalone chunks;
+the 6 warnings the documented baseline) · the targeted e2e on the
+cycle's six surfaces (parity-5/7/8 + s17-fresh-user + tasks +
+s14-hardening + mobile-navigation): 236 legs — 235 green + the s14-C1
+budget interplay, the ad-hoc run having combined chunk 3's
+parity-session5 (the math/solve `ai:` budget consumer, 1-2 real
+requests by design) with chunk 2's C1 exhaustion pin in ONE boot —
+an artificial mix the 5-chunk map's per-chunk re-boot exists to
+prevent; C1 re-verified **27/27 on its own cold boot** · the cold
+5-chunk e2e cert **150 + 189 + 91 + 95 + 89 — every chunk first-pass,
+zero code flakes** (chunk 3's single first-attempt failure was the
+P1008 SQLite socket-timeout machine-load class — root-caused by the
+exact Prisma error line naming `prisma.fileFolder.create()` + the
+same-shape folder tests passing immediately after + the clean 91/91
+cold re-run) = the e2e census 614/614 unchanged · **census 2161
+green** (was 2157).
+
+**Evidence.** Four `docs/screenshots/150-clone-*.png` frames (the
+standing desktop + mobile drawer + the Files view [CY1] + the Notes
+editor tag row [CY3]), self-verifying (the capture script's JSON
+verdict ok:true; dimensions machine-checked 1440x900 / 390x844). The
+CY2 boundary atom's proof rides the unit layer (the trim pair — a
+schema transform is not screenshot-provable, the CW2 runtime-split
+precedent).
+
+**Docs.** README badge/census (2157 → 2161) + the Session-150 row;
+AGENTS census (1543 → 1547) + the S150 lessons block (three lessons:
+a boundary convention is only closed when the LAST channel joins it —
+enumerate body/route-param/query/AND multipart; a trim belongs at the
+ATOM, not at each consumer; a destroyed input demands its reason);
+CLAUDE counts; PAD v1.3.58 (the revision block + the three §11
+closure rows); the SKILL census (both sites); the vitest header
+re-anchor (+4 with the hue-tokens re-anchor note); the cert runner
+unchanged; `docs/session_173.md`; this entry; the `.env.example`
+contract re-verified (no env-var reads changed this cycle).
+
+**Next cycle.** The rotation continues — the FE/views + auth/crypto
+axis (swept at S149) ages first; the A-M3 stage-2 chunked sub-tx +
+resume token stays its own ADR-021 cycle (carrying the B-L2 import
+lock-hold finding); the db-path percent-decode (this audit's B-I3)
+is recorded for a db-path-family cycle; the B-I census-granularity
+design change stays the named deferral.

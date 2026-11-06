@@ -215,7 +215,15 @@ export const preferencesSchema = z.object({
     )
     .optional(),
   displayName: z.string().max(100).optional(),
-  schoolName: z.string().max(120).optional(),
+  // S150/CY2 (the S146/B-I3 trim rider): the trim-before-store doctrine at
+  // the atom — boundedTitle/emailField carry it; schoolName was the one
+  // untrimmed text field, so a whitespace-only value persisted verbatim
+  // while the DB's natural cleared state is "" (the BY1 gradeLevel
+  // convention in the same card). Zod 4 orders .trim() BEFORE .max(), so
+  // the 120-char bound applies to the STORED value. One canonical atom:
+  // both the settings route and the import profile patch
+  // (importProfilePatch) parse through this schema.
+  schoolName: z.string().trim().max(120).optional(),
   // S124/BY1: the clearable form — the Study Profile card ships a "Not set"
   // option, but the bare enum had no clearable leg: the UI mapped "none" →
   // undefined (JSON.stringify drops the key, the route's sent-keys filter

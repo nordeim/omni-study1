@@ -1811,3 +1811,61 @@ describe("S149/CX5: the Settings me-fetch failure surface (B-L3)", () => {
     expect(alertBlock).toMatch(/sf-alert-red/);
   });
 });
+
+// ---------------------------------------------------------------------------
+// S150/CY1 (audit B-L1): the multipart folderId joins the 64-char id bound
+// — the S118/BS2 idField + S139/CN11 route-param convention. The raw form
+// value reached db.fileFolder.findFirst VERBATIM: the one id atom the
+// schemas never owned (Prisma parameterizes, so no injection — purely the
+// boundary inconsistency; a ~2.1 MB parameter could reach SQLite per
+// upload request inside the 2 MiB+64 KiB multipart envelope). A >64-char
+// id cannot exist, so the honest status is the no-oracle 404, byte-
+// identical to the missing-row branch it precedes.
+// ---------------------------------------------------------------------------
+describe("S150/CY1: the multipart folderId 64-char bound (B-L1)", () => {
+  const FILES_ROUTE = path.resolve(process.cwd(), "src/app/api/files/route.ts");
+
+  it("guards the folderId length BEFORE the ownership query (the CN11 route-param convention)", () => {
+    const src = readFileSync(FILES_ROUTE, "utf8");
+    // The multipart branch: the raw form read.
+    const rawAt = src.indexOf('const rawFolder = form.get("folderId")');
+    expect(rawAt, "the multipart folderId read exists").toBeGreaterThan(-1);
+    const branch = src.slice(rawAt, rawAt + 900);
+    const guardAt = branch.indexOf("rawFolder.length > 64");
+    expect(guardAt, "the 64-char guard exists in the multipart branch").toBeGreaterThan(-1);
+    const queryAt = branch.indexOf("fileFolder.findFirst");
+    expect(queryAt, "the ownership query exists in the multipart branch").toBeGreaterThan(-1);
+    // Ordered: the guard fires BEFORE the query — an impossible id never
+    // reaches Prisma.
+    expect(guardAt).toBeLessThan(queryAt);
+    // The no-oracle copy: the impossible id answers exactly like the
+    // missing row (never a new status class).
+    expect(branch).toContain("That folder does not exist.");
+  });
+});
+
+// ---------------------------------------------------------------------------
+// S150/CY3 (the S149/B-I4 honesty rider): the note-tag silent drop. addTag
+// cleared the draft BEFORE the guards, then silently returned on the
+// >24-char and duplicate cases — the user's text was destroyed with zero
+// feedback (the "input cleared, nothing happened, no reason" class). The
+// empty case stays a no-op (nothing was lost); the two real drops now
+// speak through the aria-live toast stack (the S14 announcement contract).
+// ---------------------------------------------------------------------------
+describe("S150/CY3: the note-tag honest feedback (S149/B-I4)", () => {
+  const NOTES_VIEW = path.resolve(process.cwd(), "src/components/views/notes-view.tsx");
+
+  it("addTag names the two real drop reasons (the length cap + the duplicate)", () => {
+    const src = readFileSync(NOTES_VIEW, "utf8");
+    const addAt = src.indexOf("const addTag = () => {");
+    expect(addAt, "the addTag handler exists").toBeGreaterThan(-1);
+    const block = src.slice(addAt, src.indexOf("};", addAt));
+    // The honest markers, in the toast copy family ("Files are limited to
+    // 2 MiB.").
+    expect(block).toContain("Tags are limited to 24 characters.");
+    expect(block).toContain("That tag is already on this note.");
+    // Both drops announce through the toast seam (the aria-live stack) —
+    // not a silent return.
+    expect(block).toMatch(/toast\.error\(/);
+  });
+});

@@ -1243,3 +1243,35 @@ describe("the exported vocabulary atoms (S133/CH2 single-source)", () => {
     expect([...CALCULATOR_MODES]).toEqual(["basic", "scientific", "gpa", "unit"]);
   });
 });
+
+// ---------------------------------------------------------------------------
+// S150/CY2 (the S146/B-I3 trim rider, landed at its named validation-family
+// cycle): the schoolName trim at the validation ATOM. Every sibling text
+// field carries the trim-before-store doctrine (boundedTitle, emailField,
+// the route-side displayName.trim()); schoolName was the one untrimmed text
+// atom — a whitespace-only value persisted verbatim while the DB's natural
+// cleared state is "" (the BY1 gradeLevel convention in the same card). One
+// canonical atom: the settings route stores prefs.schoolName, the import
+// profile patch parses through the same schema — both paths land the trim.
+// Pre-fix RED: the schema returned the padded value verbatim.
+// ---------------------------------------------------------------------------
+describe("S150/CY2: the schoolName trim at the validation atom", () => {
+  it("trims a padded school name before the store (the boundedTitle convention)", () => {
+    const out = preferencesSchema.safeParse({ schoolName: "  Lincoln High  " });
+    expect(out.success).toBe(true);
+    if (out.success) expect(out.data.schoolName).toBe("Lincoln High");
+  });
+
+  it("normalizes a whitespace-only school name to the cleared state (not verbatim whitespace), with the bound still post-trim", () => {
+    const out = preferencesSchema.safeParse({ schoolName: "   " });
+    expect(out.success).toBe(true);
+    if (out.success) expect(out.data.schoolName).toBe("");
+    // The trim orders BEFORE .max(): a padded raw value that trims within
+    // 120 passes (pre-trim the raw length would have failed) — the
+    // ordering witness.
+    const padded = preferencesSchema.safeParse({
+      schoolName: ` ${"x".repeat(120)} `,
+    });
+    expect(padded.success).toBe(true);
+  });
+});

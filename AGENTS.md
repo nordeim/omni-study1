@@ -9,7 +9,7 @@ High-signal instructions for coding agents working in this repo. Everything here
 | `bun install` | Install deps (Bun ≥ 1.3) |
 | `bun run dev` | Dev server on :3000 (Turbopack), logs tee'd to `dev.log` |
 | `bun run lint` / `bun run typecheck` | ESLint / `tsc --noEmit` — both must be clean |
-| `bun run test` | Vitest unit layer (1543 tests; `*.test.ts` only — never picks up e2e specs) |
+| `bun run test` | Vitest unit layer (1547 tests; `*.test.ts` only — never picks up e2e specs) |
 | `bun run build` | Production build → `.next/standalone` (**required before e2e**) |
 | `bun run test:e2e` | Playwright vs the standalone build on :3100 with `db/e2e.db` (614 tests across the 5-chunk cold map — 150+189+91+95+89, 30 spec files; a single-process full run trips the register rate-limiter budget by design, the chunked map re-boots the server per chunk). NOTE (S45, the day-boundary lesson): the global setup re-seeds every run, but the seed's IDEMPOTENT UPSERTS do NOT refresh day-relative dates on existing rows — a scratch `db/e2e.db` that ages across a UTC midnight keeps its original day-relative dates (today's tasks, the +1-day exam badge, the due-in pills, the import round-trip dates each read one day stale → 4 deterministic failures in parity-session6/parity-session9/s23-import). Delete `db/e2e.db` when a run crosses a day boundary — the global setup re-creates it fresh with current dates. NOTE (S46, TWO more aged-scratch-db classes + a build-input one): (1) ALWAYS run e2e COLD — S131/CF5 chained `scripts/e2e-cold-reset.sh` into `bun run test:e2e` (port-guard + `rm -f db/e2e.db` BEFORE playwright boots anything — global-setup is TOO LATE: Playwright starts the webServer before globalSetup), so the default runner self-colds; any DIRECT `playwright test` invocation still needs the manual `rm -f db/e2e.db` before every full run: the s23-import round-trip posts a FIXED-id envelope, so a second consecutive run against the aged db reads `created: 0, updated: 1` instead of `created: 1, updated: 0` and fails — not just across midnights, across ANY re-run; (2) the s22 negative-spawn spec reads the BUNDLED `.env` — Next's standalone output COPIES the repo-root `.env` into `.next/standalone/.env` at build time, so a REAL AUTH_SECRET in the dev `.env` leaks into the bundle and the guard CORRECTLY boots (the spec times out waiting for the exit) — keep the repo-root `.env`'s AUTH_SECRET EMPTY (the `.env.example` dev posture: `AUTH_SECRET=""` — dev falls back to the local constant with the boot warning) when building for e2e |
 | `node scripts/capture-studyflow.mjs` | Refresh all 31 `docs/screenshots/` captures from the dev server (24 light + 7 dark) |
@@ -2278,3 +2278,45 @@ Hover-parity probing must run in Playwright, not a touch-emulating browser — v
    (B-L3's stuck "Loading your account…" is the same lesson on the
    success-side surface — failure states are first-class, and a
    no-retry dead end is an honesty bug, not just a UX nit).
+
+## S150 lessons (Batch CY — the folderId-bound + schoolName-trim + tag-honesty set)
+
+1. **A boundary convention is only closed when the LAST atom joins it.**
+   The 64-char id bound had landed twice — S118/BS2 at the body-atom
+   source (`idField`), S139/CN11 at the route-param source
+   (`withUserParams`) — yet the multipart `folderId` still reached
+   Prisma verbatim: a THIRD input channel (the raw form value) that
+   neither schema nor route-param gate ever owned. Prisma
+   parameterizes, so it was never an injection — it was the
+   inconsistency itself (the one id atom outside the convention, with
+   a ~2.1 MB reachable parameter inside the multipart envelope's
+   overhead room). Lesson: when a bound lands on an atom, enumerate
+   EVERY channel that atom arrives through — body JSON, route params,
+   query strings, AND multipart form fields; the multipart branch is
+   hand-validated (it cannot Zod-parse binary), so it silently
+   escapes the schema-family fixes. The grep is
+   `form.get(...)`/`formData()` — not just `readJson` call sites.
+2. **A trim belongs at the ATOM, not at each consumer.** The
+   displayName trim lived in the route; the Study Profile card
+   trimmed client-side; the import patch parsed through the schema —
+   so `schoolName` survived untrimmed on the ONE path whose consumer
+   never trimmed (a direct API PATCH). Zod 4 orders `.trim()` BEFORE
+   `.max()` (probed empirically: a padded 125-char raw value that
+   trims within 120 passes), and the transformed key SURVIVES in the
+   parsed object — so the sent-keys filters (`!== undefined` at the
+   settings route, `PROFILE_PATCH_KEYS` at the import seam) keep
+   working verbatim. Lesson: normalization invariants go at the
+   single-source atom (the validation schema) where every consumer —
+   route, client, import seam — inherits them for free; the
+   S146 plan's "watch the sent-keys/sentinel interplay" warning
+   resolved to a non-issue BECAUSE the trim preserves key presence.
+3. **A destroyed input demands its reason.** The note-tag add cleared
+   the draft BEFORE the drop guards, so a >24-char or duplicate tag
+   vanished with zero feedback — the user's keystrokes were gone and
+   no explanation existed (the CX3/S149 twin: transport failures
+   reported as delivery). The empty case stays a no-op (nothing was
+   lost); the two REAL drops now name their reason through the
+   aria-live toast stack. Lesson: guard order matters as much as the
+   guard itself — `setTagDraft("")` before the checks turned a
+   rejection into a deletion; when a handler destroys user input,
+   either keep the input on rejection or say why it went away.

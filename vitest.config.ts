@@ -1,7 +1,19 @@
 import { defineConfig } from "vitest/config";
 import path from "node:path";
 
-// Unit-test layer for the pure domain seams — 48 files / 1543 tests
+// Unit-test layer for the pure domain seams — 48 files / 1547 tests
+// (re-anchored S150/CY — the folderId-bound + schoolName-trim +
+// tag-honesty set: census 1543 → 1547, +4 net [validation +2: the
+// S150/CY2 schoolName-trim pair (the padded-value-trims leg + the
+// whitespace-only→cleared-state leg with the post-trim bound witness —
+// the trim rides the validation ATOM, one source for the settings
+// route AND the import profile patch); script-conventions +2: the
+// S150/CY1 multipart folderId 64-char-bound census (the guard BEFORE
+// the ownership query, the no-oracle 404 copy) + the S150/CY3 note-tag
+// honest-feedback census (the two drop-reason toasts). The hue-tokens
+// notes-view register re-anchored 686 → 700 in the same cycle — the
+// anchored leg tripped as designed when the CY3 block added lines
+// above the site; the census maintenance, not a count change.])
 // (re-anchored S149/CX — the sibling-toggle-chain + members-chain +
 // resend-transport + calc-save-latch + settings-me-failure set:
 // census 1530 → 1543, +13 net [data-store +8: the S149/CX1

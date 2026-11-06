@@ -191,6 +191,17 @@ export const POST = withUser(async (user, request: NextRequest) => {
   const rawFolder = form.get("folderId");
   let folderId: string | null = null;
   if (typeof rawFolder === "string" && rawFolder.length > 0) {
+    // S150/CY1 (audit B-L1): the multipart folderId joins the 64-char id
+    // bound (the S118/BS2 idField + S139/CN11 route-param convention) —
+    // the raw form value reached findFirst verbatim, the one id atom the
+    // schemas never owned (Prisma parameterizes, so no injection; purely
+    // the boundary inconsistency — the multipart envelope's 64 KiB
+    // overhead room made a ~2.1 MB parameter reachable per upload). A
+    // >64-char id cannot exist, so the honest status is the no-oracle
+    // 404, byte-identical to the missing-row branch below.
+    if (rawFolder.length > 64) {
+      return errorResponse(404, "That folder does not exist.");
+    }
     const folder = await db.fileFolder.findFirst({
       where: { id: rawFolder, userId: user.id },
       select: { id: true },
