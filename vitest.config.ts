@@ -1,7 +1,22 @@
 import { defineConfig } from "vitest/config";
 import path from "node:path";
 
-// Unit-test layer for the pure domain seams — 48 files / 1530 tests
+// Unit-test layer for the pure domain seams — 48 files / 1543 tests
+// (re-anchored S149/CX — the sibling-toggle-chain + members-chain +
+// resend-transport + calc-save-latch + settings-me-failure set:
+// census 1530 → 1543, +13 net [data-store +8: the S149/CX1
+// sibling-chain trio (the myDay double-toggle opposite-value leg +
+// the important twin + the failed-toggle-no-poison leg) + the two
+// CX1 wiring censuses (tasks-view + myday-view ride the chained
+// mutations, the render-snapshot PATCH shapes gone) + the S149/CX2
+// members-chain pair (the add/remove interleave landing BOTH effects
+// from the post-settle base + the missing-group no-op) + the CX2
+// wiring census (the members panel handlers off the call-time store
+// reads); script-conventions +5: the CX3 resend transport-branch
+// census (timeout + offline distinguished from account state) + the
+// CX4 calculator trio (the '=' re-press no-op guard + the GPA
+// disable + the unit disable) + the CX5 settings me-fetch failure
+// census (the loadFailed state + the alert + the Retry)].)
 // (re-anchored S148/CW — the write-budget-completion +
 // export-byte-ceiling + parse-status set: census 1519 → 1530, +11 net
 // [data-export +9: the S148/CW2 export-byte-ceiling quintet (the

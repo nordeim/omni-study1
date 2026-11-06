@@ -15,7 +15,7 @@ import { create } from "zustand";
 import type { z } from "zod";
 
 import { apiGet, apiSend, DEFAULT_GET_TIMEOUT_MS } from "./api";
-import type { GroupMember } from "./group-members";
+import { normalizeMembers, type GroupMember } from "./group-members";
 import {
   assignmentSchema,
   calculatorHistorySchema,
@@ -469,6 +469,10 @@ const SUBJECT_TOUCHED: CollectionKey[] = [
 // S127/CB16: the per-task in-flight toggle chains (see toggleTask).
 const taskToggleChains = new Map<string, Promise<void>>();
 
+// S149/CX2 (audit B-M2): the per-group in-flight members chains (the
+// taskToggleChains idiom on the members field — see setStudyGroupMembers).
+const groupMemberChains = new Map<string, Promise<void>>();
+
 export const mutations = {
   // ---- tasks (the S6 reference flows) --------------------------------------
   createTask: async (input: TaskInput): Promise<void> => {
@@ -496,6 +500,44 @@ export const mutations = {
     // S128/CC5: evict on settle when still latest — a deleted task's settled
     // chain otherwise lives in the module map for the whole page session
     // (hygiene; the settled-promise entry is tiny but never reclaimed).
+    const stored = chained.catch(() => undefined);
+    taskToggleChains.set(id, stored);
+    stored.finally(() => {
+      if (taskToggleChains.get(id) === stored) taskToggleChains.delete(id);
+    });
+    await chained;
+  },
+  // S149/CX1 (audit B-M1): the sibling toggles join the same chain — the
+  // S127/CB16 fix chained ONE toggle (`completed`); the myDay/important row
+  // toggles PATCHed from the RENDER-SNAPSHOT task (the views passed
+  // `{ myDay: !task.myDay }` off the row prop), so two rapid clicks inside
+  // the PATCH+refetch window both read the same stale base and sent the
+  // SAME value — the second toggle silently lost (the exact BX10 class one
+  // generation behind). Same map, same shape: cross-field PATCHes are
+  // field-scoped so cross-field serialization is unnecessary but harmless,
+  // and ONE shared map keeps the CC5 eviction single.
+  toggleTaskMyDay: async (id: string): Promise<void> => {
+    const chained = (taskToggleChains.get(id) ?? Promise.resolve()).then(async () => {
+      const task = useDataStore.getState().tasks.find((t) => t.id === id);
+      if (!task) return;
+      await apiSend("PATCH", `${PATHS.tasks}/${id}`, { myDay: !task.myDay });
+      await fetchAndSet("tasks");
+    });
+    const stored = chained.catch(() => undefined);
+    taskToggleChains.set(id, stored);
+    stored.finally(() => {
+      if (taskToggleChains.get(id) === stored) taskToggleChains.delete(id);
+    });
+    await chained;
+  },
+  // S149/CX1: the important twin (see toggleTaskMyDay).
+  toggleTaskImportant: async (id: string): Promise<void> => {
+    const chained = (taskToggleChains.get(id) ?? Promise.resolve()).then(async () => {
+      const task = useDataStore.getState().tasks.find((t) => t.id === id);
+      if (!task) return;
+      await apiSend("PATCH", `${PATHS.tasks}/${id}`, { important: !task.important });
+      await fetchAndSet("tasks");
+    });
     const stored = chained.catch(() => undefined);
     taskToggleChains.set(id, stored);
     stored.finally(() => {
@@ -672,6 +714,38 @@ export const mutations = {
   updateStudyGroup: async (id: string, patch: Partial<StudyGroupInput>): Promise<void> => {
     await apiSend("PATCH", `${PATHS.studyGroups}/${id}`, patch);
     await fetchAndSet("studyGroups");
+  },
+  // S149/CX2 (audit B-M2): the per-group members chain — the S123/BX10 fix
+  // moved the members base from the render snapshot to a CALL-TIME store
+  // read, but a call-time read still loses ops to in-flight interleaving:
+  // a remove during an add's PATCH+refetch window (or two rapid removes)
+  // computed its absolute members array from the not-yet-refreshed store
+  // and silently dropped the first op while both fired success toasts. The
+  // chain (the toggleTask precedent) is what makes it correct: each link
+  // computes from the POST-SETTLE base. The UPDATER form (not a value) is
+  // the load-bearing choice — the caller declares the effect, the chain
+  // supplies the fresh base. The chain entry never rejects (a failed PATCH
+  // must not poison the chain); the CALLER still gets the real rejection.
+  setStudyGroupMembers: async (
+    groupId: string,
+    update: (members: GroupMember[]) => GroupMember[],
+  ): Promise<void> => {
+    const chained = (groupMemberChains.get(groupId) ?? Promise.resolve()).then(async () => {
+      const group = useDataStore.getState().studyGroups.find((g) => g.id === groupId);
+      if (!group) return;
+      // The S85/AL1 members seam: either boundary shape normalizes to the
+      // array the PATCH must carry (membersFromRow already normalized the
+      // API boundary; this tolerates any legacy/row shape).
+      const members = update(normalizeMembers(group.members));
+      await apiSend("PATCH", `${PATHS.studyGroups}/${groupId}`, { members });
+      await fetchAndSet("studyGroups");
+    });
+    const stored = chained.catch(() => undefined);
+    groupMemberChains.set(groupId, stored);
+    stored.finally(() => {
+      if (groupMemberChains.get(groupId) === stored) groupMemberChains.delete(groupId);
+    });
+    await chained;
   },
   deleteStudyGroup: async (id: string): Promise<void> => {
     await apiSend("DELETE", `${PATHS.studyGroups}/${id}`);

@@ -219,12 +219,18 @@ export function StudyGroupsView() {
     if (!name || !email || savingMember) return;
     setSavingMember(true);
     try {
-      // S123/BX10: the members base is read from the STORE at mutation
-      // time, never the render-scope snapshot — add/remove interleaving
-      // computed from the same stale base and silently lost one op.
-      const fresh = useDataStore.getState().studyGroups.find((g) => g.id === selected.id);
-      const members = [...parseMembers(fresh?.members ?? selected.members), { name, email }];
-      await mutations.updateStudyGroup(selected.id, { members });
+      // S149/CX2 (audit B-M2): the add rides the per-group members chain —
+      // the S123/BX10 call-time store read still lost ops to in-flight
+      // interleaving (a remove during this PATCH+refetch window computed
+      // from the pre-add base and silently dropped the add). The chain
+      // re-reads the base AFTER the previous op for the SAME group settles;
+      // the updater declares the effect, the chain supplies the fresh base.
+      // (The `savingMember` latch stays: it guards this form's own duplicate
+      // submits and owns the input clearing.)
+      await mutations.setStudyGroupMembers(selected.id, (members) => [
+        ...members,
+        { name, email },
+      ]);
       setMemberName("");
       setMemberEmail("");
       toast.success(`${name} added to ${selected.name}`);
@@ -237,17 +243,15 @@ export function StudyGroupsView() {
 
   const removeMember = (member: Member) => {
     if (!selected) return;
-    // S123/BX10: the fresh-state read (the addMember twin).
-    const fresh = useDataStore.getState().studyGroups.find((g) => g.id === selected.id);
-    // S125/BZ4: remove ONE occurrence — the email-only filter deleted
-    // every duplicate sharing the address (the removeOneMember seam).
-    const members = removeOneMember(
-      parseMembers(fresh?.members ?? selected.members),
-      member.email,
-      member.name,
-    );
+    // S149/CX2 (audit B-M2): the remove rides the same per-group chain (the
+    // addMember twin) — computed from the post-settle base, never the
+    // call-time store snapshot. S125/BZ4: remove ONE occurrence — the
+    // email-only filter deleted every duplicate sharing the address (the
+    // removeOneMember seam).
     mutations
-      .updateStudyGroup(selected.id, { members })
+      .setStudyGroupMembers(selected.id, (members) =>
+        removeOneMember(members, member.email, member.name),
+      )
       .then(() => toast.success(`${member.name} removed`))
       .catch((err: unknown) => toast.error(errorMessage(err, "Could not remove the member.")));
   };

@@ -9,7 +9,7 @@ High-signal instructions for coding agents working in this repo. Everything here
 | `bun install` | Install deps (Bun ≥ 1.3) |
 | `bun run dev` | Dev server on :3000 (Turbopack), logs tee'd to `dev.log` |
 | `bun run lint` / `bun run typecheck` | ESLint / `tsc --noEmit` — both must be clean |
-| `bun run test` | Vitest unit layer (1530 tests; `*.test.ts` only — never picks up e2e specs) |
+| `bun run test` | Vitest unit layer (1543 tests; `*.test.ts` only — never picks up e2e specs) |
 | `bun run build` | Production build → `.next/standalone` (**required before e2e**) |
 | `bun run test:e2e` | Playwright vs the standalone build on :3100 with `db/e2e.db` (614 tests across the 5-chunk cold map — 150+189+91+95+89, 30 spec files; a single-process full run trips the register rate-limiter budget by design, the chunked map re-boots the server per chunk). NOTE (S45, the day-boundary lesson): the global setup re-seeds every run, but the seed's IDEMPOTENT UPSERTS do NOT refresh day-relative dates on existing rows — a scratch `db/e2e.db` that ages across a UTC midnight keeps its original day-relative dates (today's tasks, the +1-day exam badge, the due-in pills, the import round-trip dates each read one day stale → 4 deterministic failures in parity-session6/parity-session9/s23-import). Delete `db/e2e.db` when a run crosses a day boundary — the global setup re-creates it fresh with current dates. NOTE (S46, TWO more aged-scratch-db classes + a build-input one): (1) ALWAYS run e2e COLD — S131/CF5 chained `scripts/e2e-cold-reset.sh` into `bun run test:e2e` (port-guard + `rm -f db/e2e.db` BEFORE playwright boots anything — global-setup is TOO LATE: Playwright starts the webServer before globalSetup), so the default runner self-colds; any DIRECT `playwright test` invocation still needs the manual `rm -f db/e2e.db` before every full run: the s23-import round-trip posts a FIXED-id envelope, so a second consecutive run against the aged db reads `created: 0, updated: 1` instead of `created: 1, updated: 0` and fails — not just across midnights, across ANY re-run; (2) the s22 negative-spawn spec reads the BUNDLED `.env` — Next's standalone output COPIES the repo-root `.env` into `.next/standalone/.env` at build time, so a REAL AUTH_SECRET in the dev `.env` leaks into the bundle and the guard CORRECTLY boots (the spec times out waiting for the exit) — keep the repo-root `.env`'s AUTH_SECRET EMPTY (the `.env.example` dev posture: `AUTH_SECRET=""` — dev falls back to the local constant with the boot warning) when building for e2e |
 | `node scripts/capture-studyflow.mjs` | Refresh all 31 `docs/screenshots/` captures from the dev server (24 light + 7 dark) |
@@ -2242,3 +2242,39 @@ Hover-parity probing must run in Playwright, not a touch-emulating browser — v
    gate ride the SHARED seam so every consumer (the route's 413, the
    page's disabled download) derives from one predicate and can never
    drift (the BW8 doctrine).
+
+## S149 lessons (Batch CX — the sibling-toggle-chain + members-chain + resend-transport + calc-save-latch + settings-me-failure set)
+
+1. **A chain fixed at ONE call site leaves its siblings a generation
+   behind.** The S127/CB16 per-id chain closed the `completed`
+   double-toggle race at exactly one store mutation — while its two
+   sibling toggles (`myDay`/`important`) and the study-group members
+   ops kept racing on progressively "fresher" bases (render snapshot →
+   call-time store read), each fix narrowing the window without closing
+   the class. A call-time read is NOT a chain: two ops in one
+   PATCH+refetch window still compute from the same stale base, and the
+   loser is silently dropped behind a success toast. Lesson: when a
+   race class is fixed with a serialization idiom, grep for EVERY
+   consumer of the same field family in the same change — the idiom's
+   cost is already paid; the sibling rewires are one-line diffs that
+   inherit it (and the UPDATER form — the caller declares the effect,
+   the chain supplies the post-settle base — is what generalizes the
+   idiom from toggles to arbitrary members math).
+2. **An anti-enumeration catch must not swallow TRANSPORT failures.**
+   The S131/CF8 resend design mapped every non-429 failure to the
+   uniform "a new code is on its way" line — honest against every
+   ACCOUNT-state response (the endpoint is uniform-200 by design) but a
+   lie for the two failures that never reached an account decision at
+   all: the 20 s deadline firing and the offline `ApiError(0)`. A
+   request that never left the browser has zero enumeration surface —
+   distinguishing it leaks nothing an attacker can use, while NOT
+   distinguishing it tells the user to wait for a code that was never
+   sent (the exact symptom class CF8 was built to prevent, reopened on
+   the transport side). Lesson: when mapping failures to uniform copy,
+   partition by "did the server make a decision about the account?" —
+   account-state answers stay uniform; transport failures get their
+   honest copy. The same discipline applies to loading surfaces: a
+   fetch that failed must never keep rendering its loading claim
+   (B-L3's stuck "Loading your account…" is the same lesson on the
+   success-side surface — failure states are first-class, and a
+   no-retry dead end is an honesty bug, not just a UX nit).

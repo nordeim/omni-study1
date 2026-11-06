@@ -1081,20 +1081,35 @@ function NotificationsTab({ user, onRefreshed }: { user: AppUser | null; onRefre
 
 export function SettingsView() {
   const [user, setUser] = React.useState<AppUser | null>(null);
+  // S149/CX5 (audit B-L3): a non-401 me-fetch failure (500/timeout — bounded
+  // at 20 s by the seam) used to leave `user === null` forever with the
+  // Account card stuck on "Loading your account…" and no error and no retry.
+  // The failure is now first-class state with an inline alert + Retry (the
+  // BootDataFailureBar idiom scoped to the card); the effect re-runs on each
+  // retry. The 401 path stays silent — the shell's auth gate owns
+  // redirecting anonymous visitors.
+  const [loadFailed, setLoadFailed] = React.useState(false);
+  const [retryCount, setRetryCount] = React.useState(0);
 
   React.useEffect(() => {
     let cancelled = false;
-    apiGet<{ user: AppUser }>("/api/auth/me")
-      .then((response) => {
-        if (!cancelled) setUser(response.user);
-      })
-      .catch(() => {
-        // the shell's auth gate owns redirecting anonymous visitors
-      });
+    // The page.tsx boot() shape: the state writes ride the inner async fn
+    // (the react-hooks/set-state-in-effect contract — no synchronous
+    // setState directly in the effect body).
+    const loadAccount = async (): Promise<void> => {
+      setLoadFailed(false);
+      const response = await apiGet<{ user: AppUser }>("/api/auth/me");
+      if (!cancelled) setUser(response.user);
+    };
+    loadAccount().catch(() => {
+      // the shell's auth gate owns redirecting anonymous visitors (401);
+      // every OTHER failure surfaces the alert + Retry below
+      if (!cancelled) setLoadFailed(true);
+    });
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [retryCount]);
 
   return (
     <div className="flex flex-col gap-6">
@@ -1144,6 +1159,8 @@ export function SettingsView() {
                       {user.emailVerified ? "Email verified" : "Email not verified"}
                     </span>
                   </>
+                ) : loadFailed ? (
+                  "Couldn't load your account."
                 ) : (
                   "Loading your account…"
                 )}
@@ -1158,6 +1175,28 @@ export function SettingsView() {
               <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
                 {user ? `Account created: ${formatLongDate(new Date(user.createdAt))}` : "Account created: —"}
               </p>
+              {/* S149/CX5 (audit B-L3): the failed me-fetch surfaces the red
+                  alert + a real Retry (the BootDataFailureBar idiom, the S15
+                  role="alert" convention) — never a stuck loading claim. The
+                  child cards below keep their theme-store fallbacks either
+                  way; the s17 pins ride the success path (this block is
+                  purely additive below the pinned lines). */}
+              {loadFailed && (
+                <div
+                  role="alert"
+                  className="sf-alert-red mt-3 flex flex-wrap items-center gap-3 rounded-lg px-3 py-2 text-sm"
+                >
+                  <span>Couldn&apos;t load your account information.</span>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setRetryCount((count) => count + 1)}
+                  >
+                    Retry
+                  </Button>
+                </div>
+              )}
             </section>
             <DisplayNameCard key={user ? `dn-${user.id}` : "dn-loading"} user={user} />
             <StudyProfileCard key={user ? `sp-${user.id}` : "sp-loading"} user={user} onRefreshed={setUser} />

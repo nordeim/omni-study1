@@ -14,16 +14,21 @@ import { readFileSync } from "node:fs";
 import path from "node:path";
 
 const apiGetMock = vi.fn();
+// S149/CX1+CX2: apiSend routed through a CAPTURED mock so the chain legs can
+// hold the first PATCH resolution (the apiGetMock pattern — a bare vi.fn()
+// cannot be controlled per-call; no existing leg exercises apiSend, so the
+// mock shape change is behavior-neutral for the S119/S128 pins).
+const apiSendMock = vi.fn();
 vi.mock("@/lib/api", () => ({
   apiGet: (...args: unknown[]) => apiGetMock(...(args as [])),
-  apiSend: vi.fn(),
+  apiSend: (...args: unknown[]) => apiSendMock(...(args as [])),
   // S133/CH10: data.ts now derives COLLECTION_GET_TIMEOUT_MS from this
   // export (the single source) — the mock carries the real value so the
   // CD2 deadline pin keeps asserting timeoutMs: 20_000.
   DEFAULT_GET_TIMEOUT_MS: 20_000,
 }));
 
-import { useDataStore } from "@/lib/data";
+import { mutations, useDataStore } from "@/lib/data";
 
 describe("fetchAndSet sequence guard (S119/BT8 — out-of-order GETs)", () => {
   beforeEach(() => {
@@ -206,5 +211,216 @@ describe("the files-view loader sequence census (S136/CK2)", () => {
     const effectAt = src.indexOf("React.useEffect(() => {");
     const effectBody = src.slice(effectAt, src.indexOf("}, [loadFileRows, toast]", effectAt));
     expect(effectBody).toMatch(/ticket/);
+  });
+});
+
+// S149/CX1 (audit B-M1): the sibling toggle chains — the S127/CB16 per-id
+// chain fixed ONE toggle (`completed`); the myDay/important row toggles
+// PATCHed from the RENDER-SNAPSHOT task, so two rapid clicks inside the
+// PATCH+refetch window both read the same stale base and sent the SAME
+// value (the second toggle silently lost — the exact BX10 class, one
+// generation behind). These legs pin the chained store contract directly:
+// the second toggle must re-read the POST-SETTLE base and send the
+// OPPOSITE value. Pre-fix RED: `mutations.toggleTaskMyDay` does not exist
+// (the TypeError is the red — the CW2 import-failure precedent).
+describe("S149/CX1: the sibling toggle chains (B-M1 — myDay/important double-toggle)", () => {
+  const taskRow = {
+    id: "t1",
+    userId: "u1",
+    title: "Chain pin",
+    notes: "",
+    listId: null,
+    subjectId: null,
+    completed: false,
+    important: false,
+    dueDate: null,
+    priority: "medium" as const,
+    repeat: "none" as const,
+    myDay: false,
+    subtasks: "[]",
+    createdAt: "2026-01-01T00:00:00.000Z",
+    updatedAt: "2026-01-01T00:00:00.000Z",
+  };
+
+  beforeEach(() => {
+    apiGetMock.mockReset();
+    apiSendMock.mockReset();
+    apiGetMock.mockResolvedValue([]);
+    apiSendMock.mockResolvedValue(undefined);
+    useDataStore.setState({ tasks: [taskRow] });
+  });
+
+  it("two rapid myDay toggles send OPPOSITE values (the second re-reads the post-settle base)", async () => {
+    // Hold the FIRST PATCH so the second toggle enters while the first has
+    // not settled — the exact double-click window the audit found.
+    let releaseFirst: (() => void) | undefined;
+    const held = new Promise<void>((resolve) => {
+      releaseFirst = resolve;
+    });
+    apiSendMock.mockReturnValueOnce(held).mockReturnValueOnce(Promise.resolve());
+    // The post-settle refetch lands the UPDATED row (myDay: true) — the
+    // second chain link must read THIS base, not the render-time snapshot.
+    apiGetMock.mockResolvedValue([{ ...taskRow, myDay: true }]);
+
+    const first = mutations.toggleTaskMyDay("t1");
+    const second = mutations.toggleTaskMyDay("t1");
+    releaseFirst?.();
+    await Promise.all([first, second]);
+
+    expect(apiSendMock).toHaveBeenCalledTimes(2);
+    const firstPatch = apiSendMock.mock.calls[0]?.[2] as Record<string, unknown>;
+    const secondPatch = apiSendMock.mock.calls[1]?.[2] as Record<string, unknown>;
+    expect(firstPatch.myDay).toBe(true); // the pre-toggle base was false
+    expect(secondPatch.myDay).toBe(false); // the post-settle base was true
+  });
+
+  it("the important twin chains the same way", async () => {
+    let releaseFirst: (() => void) | undefined;
+    const held = new Promise<void>((resolve) => {
+      releaseFirst = resolve;
+    });
+    apiSendMock.mockReturnValueOnce(held).mockReturnValueOnce(Promise.resolve());
+    apiGetMock.mockResolvedValue([{ ...taskRow, important: true }]);
+
+    const first = mutations.toggleTaskImportant("t1");
+    const second = mutations.toggleTaskImportant("t1");
+    releaseFirst?.();
+    await Promise.all([first, second]);
+
+    expect(apiSendMock).toHaveBeenCalledTimes(2);
+    const firstPatch = apiSendMock.mock.calls[0]?.[2] as Record<string, unknown>;
+    const secondPatch = apiSendMock.mock.calls[1]?.[2] as Record<string, unknown>;
+    expect(firstPatch.important).toBe(true);
+    expect(secondPatch.important).toBe(false);
+  });
+
+  it("a FAILED first toggle does not poison the chain (the caller still gets the rejection)", async () => {
+    apiSendMock.mockRejectedValueOnce(new Error("offline"));
+    apiSendMock.mockResolvedValueOnce(undefined);
+    apiGetMock.mockResolvedValue([taskRow]);
+
+    // The first toggle rejects (the caller sees it)…
+    await expect(mutations.toggleTaskMyDay("t1")).rejects.toThrow("offline");
+    // …and the second still runs against the post-settle base (myDay: false
+    // — the failed PATCH never landed, so the base is unchanged).
+    await mutations.toggleTaskMyDay("t1");
+    const secondPatch = apiSendMock.mock.calls[1]?.[2] as Record<string, unknown>;
+    expect(secondPatch.myDay).toBe(true);
+  });
+});
+
+// The CX1 wiring censuses (the CV1 precedent): the four view call sites
+// must ride the CHAINED mutations, never the render-snapshot updateTask.
+describe("S149/CX1: the sibling-toggle view wiring census", () => {
+  const TASKS_VIEW = path.resolve(process.cwd(), "src/components/views/tasks-view.tsx");
+  const MYDAY_VIEW = path.resolve(process.cwd(), "src/components/views/myday-view.tsx");
+
+  for (const [label, file] of [
+    ["tasks-view", TASKS_VIEW],
+    ["myday-view", MYDAY_VIEW],
+  ] as const) {
+    it(`${label}: the row toggles ride the chained mutations (never the snapshot updateTask)`, () => {
+      const src = readFileSync(file, "utf8");
+      expect(src).toContain("mutations.toggleTaskMyDay(");
+      expect(src).toContain("mutations.toggleTaskImportant(");
+      // The stale-base call shapes are GONE (the BX10 snapshot PATCHes).
+      expect(src).not.toContain("{ myDay: !task.myDay }");
+      expect(src).not.toContain("{ important: !task.important }");
+    });
+  }
+});
+
+// S149/CX2 (audit B-M2): the study-group members chain — the S123/BX10
+// fix moved the members base from the render snapshot to a call-time
+// store read, but a call-time read still loses ops to in-flight
+// interleaving (a remove during an add's PATCH+refetch window computed
+// from the pre-add base and silently dropped the add). The chain idiom
+// (the toggleTask precedent) is what makes it correct: each link computes
+// from the POST-SETTLE base. Pre-fix RED: `mutations.setStudyGroupMembers`
+// does not exist (the TypeError is the red).
+describe("S149/CX2: the study-group members chain (B-M2 — add/remove interleave)", () => {
+  const groupRow = {
+    id: "g1",
+    userId: "u1",
+    name: "Chain pin",
+    color: "#7c3aed",
+    subjectId: null,
+    members: [{ name: "Ari", email: "ari@example.com" }],
+    createdAt: "2026-01-01T00:00:00.000Z",
+    updatedAt: "2026-01-01T00:00:00.000Z",
+  };
+
+  beforeEach(() => {
+    apiGetMock.mockReset();
+    apiSendMock.mockReset();
+    apiGetMock.mockResolvedValue([]);
+    apiSendMock.mockResolvedValue(undefined);
+    useDataStore.setState({ studyGroups: [groupRow] });
+  });
+
+  it("a remove during an add's in-flight window lands BOTH effects (never the remove-alone array)", async () => {
+    // Hold the add's PATCH so the remove enters while the add has not
+    // settled — the exact interleave the audit found.
+    let releaseAdd: (() => void) | undefined;
+    const held = new Promise<void>((resolve) => {
+      releaseAdd = resolve;
+    });
+    apiSendMock.mockReturnValueOnce(held).mockReturnValueOnce(Promise.resolve());
+    // The post-settle refetch lands the group WITH the added member — the
+    // remove link must read THIS base (the server's truth), not the
+    // pre-add store snapshot.
+    apiGetMock.mockResolvedValue([
+      { ...groupRow, members: [{ name: "Ari", email: "ari@example.com" }, { name: "Sam", email: "sam@example.com" }] },
+    ]);
+
+    const add = mutations.setStudyGroupMembers("g1", (members) => [
+      ...members,
+      { name: "Sam", email: "sam@example.com" },
+    ]);
+    const remove = mutations.setStudyGroupMembers("g1", (members) =>
+      members.filter((m) => m.email !== "ari@example.com"),
+    );
+    releaseAdd?.();
+    await Promise.all([add, remove]);
+
+    expect(apiSendMock).toHaveBeenCalledTimes(2);
+    const addPatch = apiSendMock.mock.calls[0]?.[2] as { members: { email: string }[] };
+    const removePatch = apiSendMock.mock.calls[1]?.[2] as { members: { email: string }[] };
+    // The add computed from the seeded base (Ari).
+    expect(addPatch.members.map((m) => m.email)).toEqual(["ari@example.com", "sam@example.com"]);
+    // The remove computed from the POST-ADD-SETTLE base (Ari + Sam) — the
+    // pre-fix call-time read would have dropped Sam from the array.
+    expect(removePatch.members.map((m) => m.email)).toEqual(["sam@example.com"]);
+  });
+
+  it("a missing group is a no-op (a deleted group's chain link never PATCHes)", async () => {
+    useDataStore.setState({ studyGroups: [] });
+    await mutations.setStudyGroupMembers("g1", (members) => members);
+    expect(apiSendMock).not.toHaveBeenCalled();
+  });
+});
+
+// The CX2 wiring census: the members PANEL's add/remove handlers must ride
+// the chain — the call-time `useDataStore.getState().studyGroups.find` reads
+// leave the handlers with the stale-base math. (The GroupDialog's own
+// submit-time read is the edit-form full-payload pattern — designed
+// last-writer-wins, out of this census's scope by the plan's §5.)
+describe("S149/CX2: the study-group members view wiring census", () => {
+  it("addMember/removeMember ride mutations.setStudyGroupMembers (the stale-base reads are gone)", () => {
+    const src = readFileSync(
+      path.resolve(process.cwd(), "src/components/views/studygroups-view.tsx"),
+      "utf8",
+    );
+    // Slice the members-panel handlers: addMember through removeMember's
+    // close (the next `return (` after removeMember ends the handler pair).
+    const addAt = src.indexOf("const addMember = async (event: React.FormEvent) => {");
+    expect(addAt, "the addMember handler exists").toBeGreaterThan(-1);
+    const removeAt = src.indexOf("const removeMember = (member: Member) => {", addAt);
+    expect(removeAt, "the removeMember handler exists").toBeGreaterThan(-1);
+    const handlersEnd = src.indexOf("\n  return (", removeAt);
+    const handlers = src.slice(addAt, handlersEnd === -1 ? undefined : handlersEnd);
+    expect(handlers).toContain("mutations.setStudyGroupMembers(");
+    expect(handlers).not.toContain("useDataStore.getState().studyGroups.find");
+    expect(handlers).not.toContain("mutations.updateStudyGroup(");
   });
 });

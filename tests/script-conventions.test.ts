@@ -1711,3 +1711,103 @@ describe("S148/CW1: the calculator-history POST rides the shared write budget", 
     ).toContain("checkRateLimit(");
   });
 });
+
+// ---------------------------------------------------------------------------
+// S149/Batch CX — the FE/views-axis wiring censuses (the s149 audits' L-tier
+// riders: the resend transport branch, the calculator save guards, the
+// settings me-fetch failure surface). The CV1 wiring-census precedent: the
+// behavioral seams live in components (no component-test infra), so the
+// census pins the branch markers the fixes land.
+// ---------------------------------------------------------------------------
+
+describe("S149/CX3: the resend transport-failure branch (B-L1 — the auth surface)", () => {
+  const LOGIN_SURFACE = path.resolve(
+    process.cwd(),
+    "src/components/auth/login-surface.tsx",
+  );
+
+  it("the resend catch distinguishes TRANSPORT failures (timeout + offline) from account state", () => {
+    const src = readFileSync(LOGIN_SURFACE, "utf8");
+    // Slice the resend handler: from its const declaration to the finally.
+    const resendAt = src.indexOf("const resend = async () => {");
+    expect(resendAt, "the resend handler exists").toBeGreaterThan(-1);
+    const resendBody = src.slice(resendAt, src.indexOf("  };", resendAt));
+    // The transport branch: the deadline classifier AND the offline status
+    // both render their honest copy — never the uniform "a new code is on
+    // its way" line for a request that never left the browser.
+    expect(resendBody).toMatch(/isTimeoutError\(err\)/);
+    expect(resendBody).toMatch(/status === 0/);
+    // The CF8 no-enumeration line stays for every ACCOUNT-state failure.
+    expect(resendBody).toContain("If that account needs verification, a new code is on its way.");
+  });
+});
+
+describe("S149/CX4: the calculator history-save guards (B-L2)", () => {
+  const CALC_VIEW = path.resolve(
+    process.cwd(),
+    "src/components/views/calculator-view.tsx",
+  );
+
+  it("the '=' branch no-ops a re-press right after an evaluation (no derived noise row)", () => {
+    const src = readFileSync(CALC_VIEW, "utf8");
+    // Slice the '=' branch: from its if to the justEvaluated digit branch.
+    const eqAt = src.indexOf('if (token === "=") {');
+    expect(eqAt, "the '=' branch exists").toBeGreaterThan(-1);
+    const eqBody = src.slice(eqAt, src.indexOf("justEvaluated.current && /[0-9.]/", eqAt));
+    // The re-press guard: a second '=' immediately after an evaluation is a
+    // no-op (the display already holds the result; the derived "5 = 5" row
+    // was pure noise). RED pre-fix: no justEvaluated guard inside the branch.
+    expect(eqBody).toMatch(/justEvaluated\.current\) return;/);
+  });
+
+  it("the GPA Save button carries an in-flight disable (the CI4 pattern)", () => {
+    const src = readFileSync(CALC_VIEW, "utf8");
+    expect(src).toContain("savingGpa");
+    // The Save button itself must be disabled while the POST is in flight
+    // (the disable rides the same Button element as the onClick — window
+    // spans both sides of the handler reference).
+    const gpaSaveAt = src.indexOf("void saveGpaToHistory()");
+    expect(gpaSaveAt, "the GPA Save onClick exists").toBeGreaterThan(-1);
+    const gpaButton = src.slice(Math.max(0, gpaSaveAt - 220), gpaSaveAt + 120);
+    expect(gpaButton).toMatch(/disabled=\{savingGpa\}/);
+  });
+
+  it("the unit Save-to-history button carries an in-flight disable (the CI4 pattern)", () => {
+    const src = readFileSync(CALC_VIEW, "utf8");
+    expect(src).toContain("savingUnit");
+    const unitSaveAt = src.indexOf("void saveUnitToHistory()");
+    expect(unitSaveAt, "the unit Save onClick exists").toBeGreaterThan(-1);
+    const unitButton = src.slice(Math.max(0, unitSaveAt - 260), unitSaveAt + 120);
+    expect(unitButton).toMatch(/disabled=\{savingUnit\}/);
+  });
+});
+
+describe("S149/CX5: the Settings me-fetch failure surface (B-L3)", () => {
+  const SETTINGS_VIEW = path.resolve(
+    process.cwd(),
+    "src/components/views/settings-view.tsx",
+  );
+
+  it("a non-401 me-fetch failure surfaces an alert + Retry (never a stuck loading line)", () => {
+    const src = readFileSync(SETTINGS_VIEW, "utf8");
+    // Slice the SettingsView body: from its export to the Tabs render.
+    const viewAt = src.indexOf("export function SettingsView()");
+    expect(viewAt, "the SettingsView export exists").toBeGreaterThan(-1);
+    const viewBody = src.slice(viewAt, src.indexOf("return (", viewAt));
+    // The failure state + the retry re-run (the BootDataFailureBar idiom).
+    expect(viewBody).toContain("loadFailed");
+    expect(viewBody).toMatch(/setLoadFailed\(true\)/);
+    expect(viewBody).toMatch(/setRetryCount/);
+    // The render: the failed card never claims "Loading your account…" —
+    // the honest failure copy + the alert + the Retry affordance. (The
+    // email-line ternary carries the short copy; the ALERT carries the
+    // "...information." long copy — anchor on it, in the JSX entity form
+    // the source spells it.)
+    expect(src).toContain("Couldn't load your account.");
+    expect(src).toContain('role="alert"');
+    const alertAt = src.indexOf("Couldn&apos;t load your account information.");
+    expect(alertAt, "the alert copy exists").toBeGreaterThan(-1);
+    const alertBlock = src.slice(Math.max(0, alertAt - 500), alertAt);
+    expect(alertBlock).toMatch(/sf-alert-red/);
+  });
+});

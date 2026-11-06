@@ -526,16 +526,13 @@ export function TasksView() {
   const actions: TaskRowActions = React.useMemo(
     () => ({
       onToggle: (id) => void run(mutations.toggleTask(id), "Could not update the task."),
+      // S149/CX1 (audit B-M1): the sibling toggles ride the per-id chains —
+      // the render-snapshot PATCH off the row prop lost the second of two
+      // rapid clicks to the stale base (the BX10 class).
       onToggleMyDay: (task) =>
-        void run(
-          mutations.updateTask(task.id, { myDay: !task.myDay }),
-          "Could not update the task.",
-        ),
+        void run(mutations.toggleTaskMyDay(task.id), "Could not update the task."),
       onToggleImportant: (task) =>
-        void run(
-          mutations.updateTask(task.id, { important: !task.important }),
-          "Could not update the task.",
-        ),
+        void run(mutations.toggleTaskImportant(task.id), "Could not update the task."),
       onEdit: (task) => {
         setEditing(task);
         setDialogOpen(true);

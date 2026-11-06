@@ -215,8 +215,18 @@ export function LoginSurface() {
       // user waited for a code that never came). The route's own copy now
       // rides the status channel; every other failure keeps the uniform
       // no-enumeration line.
+      // S149/CX3 (audit B-L1): TRANSPORT failures get their honest copy —
+      // the deadline firing (isTimeoutError) and the offline ApiError(0)
+      // never left the browser, so "a new code is on its way" was a claim
+      // about a request that never ran. Transport is distinguishable from
+      // account state with ZERO enumeration surface (the CF8 contract
+      // covers account-state responses; a connection failure is not one).
       if (err instanceof ApiError && err.status === 429) {
         setStatus("Too many verification requests. Try again shortly.");
+      } else if (isTimeoutError(err)) {
+        setStatus("That took too long. Check your connection and try again.");
+      } else if (err instanceof ApiError && err.status === 0) {
+        setStatus(err.message);
       } else {
         setStatus("If that account needs verification, a new code is on its way.");
       }

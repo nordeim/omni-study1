@@ -4902,3 +4902,93 @@ chunked sub-tx + resume token (its own ADR-021 cycle, now carrying the
 B-L2 import lock-hold finding); the B-I3 trim rider stays logged for a
 validation-family cycle; the B-I census-granularity design change stays
 the named deferral.
+
+## Session 160 — Batch CX (Cycle 99): the sibling-toggle-chain + members-chain + resend-transport + calc-save-latch + settings-me-failure set
+
+The workspace (the prior session's standing tree at `3fea61c` on
+`main` — the Batch CW fix `3d4ac01` + the operator's session_170
+transcript commit; pulled fast-forward, clean). Environment verified
+standing: `.env` `DATABASE_URL="file:../db/custom.db"`, `db/custom.db`
+seeded, the dev daemon on :3000. Cold baseline = the documented
+S148-final state exactly: lint ✓ · tsc ✓ · unit 1519→**1530/1530**
+(48 files) · the drawer check GREEN (**the 64th consecutive**
+no-Tailwind-v4-mobile-nav-bug confirmation) · the desktop parity
+probe MATCH (all five checks, live reference login).
+
+The audits (Mode-C; every M/L re-verified by direct read): **A** —
+the Batch CW recent-changes axis (`3d4ac01`): **clean** (all four CW
+claims confirmed at the source level). **B** — the FE/views +
+auth/crypto rotation (two cycles stale; two halves): the auth/crypto
+half clean (the scrypt/HMAC core, the login route, the 11-route
+census, the boot guards — every S147 family re-confirmed closed);
+the FE/views half (22 views + store + seams, a read-only subagent
+dispatch): **0C/0H/2M/3L/4I**. The findings: **B-M1** the
+myDay/important row toggles retained the BX10 stale-base
+double-toggle race (the S127/CB16 chain fixed ONE toggle —
+`completed`; the siblings PATCHed from the render snapshot);
+**B-M2** the study-group member add/remove ops interleaved on a
+call-time store read (still not a chain — a remove during an add's
+PATCH+refetch window silently dropped the add); **B-L1** the resend
+catch rendered the success line for transport failures; **B-L2** the
+calculator's three save affordances carried no in-flight guard; 
+**B-L3** the Settings me-fetch failure left the Account card stuck
+loading forever. The Is recorded (the 401 seam, the departed-note
+flush, the in-band code delivery, the tag length cap); the
+TaskDialog/GroupDialog edit-form snapshot pattern adjudicated
+designed last-writer-wins.
+
+The plan (`docs/remediation-plan-session149.md`) written BEFORE any
+source change, validated against the codebase, executed TDD-first.
+
+**The fixes (the unit REDs 13/13 — the import failure IS the red,
+the CW2 precedent, for the three new store mutations + the ten
+census legs).** CX1 `toggleTaskMyDay`/`toggleTaskImportant` ride the
+SHARED `taskToggleChains` map (the toggleTask idiom; the four view
+call sites rewired). CX2 `setStudyGroupMembers(groupId, update)` —
+the per-group members chain with the UPDATER form (the caller
+declares the effect, the chain supplies the post-settle base through
+normalizeMembers — the S85/AL1 seam); the add/remove handlers
+rewired. CX3 the resend catch splits TRANSPORT first (timeout → the
+deadline copy; offline ApiError(0) → the human offline message; the
+CF8 uniform line stays for account-state failures). CX4 the `=`
+re-press no-op guard (a synchronous justEvaluated ref read) + the
+GPA/unit Save latches (the CI4 pattern). CX5 the Settings Account
+card's failed me-fetch renders the honest copy + the red
+sf-alert-red role="alert" block with a real Retry (the page.tsx
+boot() inner-async shape — the set-state-in-effect lint error fixed
+at the root, never by weakening the rule).
+
+**Re-cert (the FINAL tree).** lint ✓ · tsc ✓ · unit **1543/1543**
+(48 files, +13: data-store +8, script-conventions +5) · build ✓
+(exit 0; the wiring verified shipped in the standalone client + SSR
+chunks; the 6 warnings the documented baseline) · the targeted e2e
+run (calculator + parity-session5/8 + s17-fresh-user + tasks — the
+cycle's five surfaces) **148/148** · the cold 5-chunk e2e cert
+**150 + 189 + 91 + 95 + 89 — every chunk first-pass, ZERO flakes**
+= the e2e census 614/614 unchanged · **census 2157 green** (was
+2144).
+
+**Evidence.** Four `docs/screenshots/149-clone-*.png` frames (the
+standing desktop + mobile drawer + the cycle's study-groups detail
+and settings-profile surfaces), self-verifying (the capture script's
+JSON verdict ok:true; dimensions + non-white shares machine-checked).
+The CX1 machine proof rides the unit layer (the double-toggle
+opposite-value legs — a race is not screenshot-provable).
+
+**Docs.** README badge/census (2144 → 2157) + the Session-149 row;
+AGENTS census (1530 → 1543) + the S149 lessons block (two lessons: a
+chain fixed at one call site leaves its siblings a generation behind
+— grep the field family in the same change; an anti-enumeration
+catch must not swallow transport failures — partition by "did the
+server decide about the account?", with the loading-surface twin);
+CLAUDE counts; PAD v1.3.57 (the revision block + the five §11
+closure rows); the SKILL census (both sites); the vitest header
+re-anchor; the cert runner unchanged; `docs/session_171.md`; this
+entry; the `.env.example` contract re-verified (no env-var reads
+changed this cycle).
+
+**Next cycle.** The rotation continues — the entities/factory +
+data-layer axis, or the A-M3 stage-2 chunked sub-tx + resume token
+(its own ADR-021 cycle, carrying the B-L2 import lock-hold finding);
+the B-I3 trim rider stays logged for a validation-family cycle; the
+B-I census-granularity design change stays the named deferral.

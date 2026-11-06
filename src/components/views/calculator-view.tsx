@@ -172,6 +172,12 @@ export function CalculatorView() {
       }
       if (token === "=") {
         if (expression.trim() === "") return;
+        // S149/CX4 (audit B-L2): a re-press right after an evaluation is a
+        // NO-OP — the display already holds the result, and re-evaluating
+        // the committed value only appended a derived noise row ("5 = 5")
+        // to the history. The ref write is synchronous before the history
+        // await below, so even a same-tick double-press is guarded.
+        if (justEvaluated.current) return;
         // S119/BT12: the evaluation and the history save have SEPARATE
         // failure modes — a successful evaluation whose history POST failed
         // (offline) used to toast "could not be evaluated" while the display
@@ -499,7 +505,15 @@ function GpaPanel() {
   const update = (id: string, patch: Partial<GpaCourse>) =>
     setCourses((list) => list.map((c) => (c.id === id ? { ...c, ...patch } : c)));
 
+  // S149/CX4 (audit B-L2): the GPA Save in-flight guard (the CI4 pattern —
+  // the myday quick-add idiom): a rapid double-click fired one POST per
+  // click and duplicated the history row; the latch serializes the saves
+  // and the button disables while the POST is in flight.
+  const [savingGpa, setSavingGpa] = React.useState(false);
+
   const saveGpaToHistory = async () => {
+    if (savingGpa) return;
+    setSavingGpa(true);
     try {
       await mutations.createCalculatorEntry({
         expression: "GPA",
@@ -509,6 +523,8 @@ function GpaPanel() {
       toast.success("GPA saved to history");
     } catch (err: unknown) {
       toast.error(errorMessage(err, "Could not save the GPA."));
+    } finally {
+      setSavingGpa(false);
     }
   };
 
@@ -584,7 +600,7 @@ function GpaPanel() {
               {gpa.toFixed(2)}
             </p>
           </div>
-          <Button variant="gradient" className="sf-gradient-shadow" onClick={() => void saveGpaToHistory()}>
+          <Button variant="gradient" className="sf-gradient-shadow" onClick={() => void saveGpaToHistory()} disabled={savingGpa}>
             Save
           </Button>
         </div>
@@ -636,6 +652,12 @@ function UnitPanel() {
     setTo(pair.to);
   };
 
+  // S149/CX4 (audit B-L2): the unit Save in-flight guard (the CI4 pattern —
+  // the GpaPanel twin above): a rapid double-click fired one POST per click
+  // and duplicated the history row; the latch serializes the saves and the
+  // button disables while the POST is in flight.
+  const [savingUnit, setSavingUnit] = React.useState(false);
+
   const parsed = Number(value);
   let converted: string | null = null;
   if (Number.isFinite(parsed)) {
@@ -645,6 +667,22 @@ function UnitPanel() {
       converted = null;
     }
   }
+
+  const saveUnitToHistory = async () => {
+    if (savingUnit) return;
+    setSavingUnit(true);
+    try {
+      await mutations.createCalculatorEntry({
+        expression: `${value} ${from} → ${to}`,
+        result: converted ?? "",
+        mode: "unit",
+      });
+    } catch (err: unknown) {
+      toast.error(errorMessage(err, "Could not save the conversion."));
+    } finally {
+      setSavingUnit(false);
+    }
+  };
 
   const unitSelect = (which: "from" | "to", unit: string, setUnit: (u: string) => void) => (
     <Select value={unit} onValueChange={setUnit}>
@@ -716,14 +754,9 @@ function UnitPanel() {
         <Button
           variant="outline"
           className="self-start"
+          disabled={savingUnit}
           onClick={() => {
-            void mutations
-              .createCalculatorEntry({
-                expression: `${value} ${from} → ${to}`,
-                result: converted ?? "",
-                mode: "unit",
-              })
-              .catch((err: unknown) => toast.error(errorMessage(err, "Could not save the conversion.")));
+            void saveUnitToHistory();
           }}
         >
           Save to history
