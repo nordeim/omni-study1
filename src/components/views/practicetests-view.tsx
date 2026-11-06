@@ -176,6 +176,14 @@ function TestDialog({
       : [],
   );
   const [saving, setSaving] = React.useState(false);
+  // S152/DA3 (the S151 audit's B-L2, the product decision adjudicated):
+  // the replace-confirm state — the AI generate silently REPLACED the
+  // whole drafts list (an editing user's pre-populated questions). The
+  // adjudication: replace semantics KEPT (the reference behavior), gated
+  // by this confirm when drafts exist; the confirm sits BEFORE the AI
+  // call so a cancel never burns the ai: budget; the fresh-test path (an
+  // empty editor) generates directly.
+  const [replaceConfirmOpen, setReplaceConfirmOpen] = React.useState(false);
 
   const updateDraft = (index: number, patch: Partial<DraftQuestion>) => {
     setDrafts((list) => list.map((d, i) => (i === index ? { ...d, ...patch } : d)));
@@ -302,6 +310,7 @@ function TestDialog({
   };
 
   return (
+    <>
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-lg">
         <DialogHeader>
@@ -357,7 +366,15 @@ function TestDialog({
                 type="button"
                 variant="outline"
                 size="sm"
-                onClick={() => void generateQuestions()}
+                onClick={() => {
+                  // S152/DA3: the gate — generating over a non-empty editor
+                  // opens the replace-confirm instead of running directly.
+                  if (drafts.length > 0) {
+                    setReplaceConfirmOpen(true);
+                    return;
+                  }
+                  void generateQuestions();
+                }}
                 disabled={generating}
               >
                 {generating ? <Spinner className="size-4" /> : <Sparkles className="size-4" strokeWidth={2} />}
@@ -485,6 +502,35 @@ function TestDialog({
         </form>
       </DialogContent>
     </Dialog>
+
+    {/* S152/DA3 (the S151 audit's B-L2): the AI-generate replace-confirm —
+        the delete-confirm family pattern applied to the destructive
+        replace (an editing user's whole drafts list). Replace semantics
+        kept (the reference behavior), confirmed. */}
+    <AlertDialog open={replaceConfirmOpen} onOpenChange={setReplaceConfirmOpen}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Replace current questions?</AlertDialogTitle>
+          <AlertDialogDescription>
+            Generating new questions will replace the {drafts.length}{" "}
+            {drafts.length === 1 ? "question" : "questions"} currently in the
+            editor. This cannot be undone.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <AlertDialogAction
+            onClick={() => {
+              setReplaceConfirmOpen(false);
+              void generateQuestions();
+            }}
+          >
+            Replace
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+    </>
   );
 }
 

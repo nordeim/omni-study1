@@ -165,6 +165,24 @@ export function TimetableView() {
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (busy) return;
+    // S152/DA2 (the S151 audit's B-L6): the hand-guard — the noValidate
+    // form's empty required fields answer HERE with human copy (the
+    // S127/CB17 files-view pattern), never the server's raw Zod issue
+    // text. The time inputs carry dialog defaults ("09:00"/"10:30") but
+    // are clearable — all three required fields guard. Before setBusy:
+    // an early return must not strand the busy latch.
+    if (!form.name.trim()) {
+      setError("Please enter a name.");
+      return;
+    }
+    if (!form.startTime) {
+      setError("Please pick a start time.");
+      return;
+    }
+    if (!form.endTime) {
+      setError("Please pick an end time.");
+      return;
+    }
     setBusy(true);
     setError("");
     const payload: TimetableClassInput = {

@@ -5225,3 +5225,143 @@ hand-guard sweep (B-L6) as a dialog/deck-honesty cycle; the A-M3
 stage-2 chunked sub-tx + resume token stays its own ADR-021 cycle
 (carrying the S150/B-L2 import lock-hold finding); the db-path
 percent-decode stays recorded for a db-path-family cycle.
+
+## Session 163 — Batch DA (Cycle 102): the delete-latch + hand-guard + replace-confirm + order-letter set
+
+**Context.** The workspace was a FRESH CLONE at `7fb8e23` on `main`
+(the Batch CZ fix `b9b35f6` + the operator's session_176 transcript
+commit; the sandbox had reset). Environment re-provisioned through the
+documented fresh-clone path: install 510 pkgs · `.env` from the
+current `.env.example` (`DATABASE_URL="file:../db/custom.db"` — the
+repo-root `db/` contract) · `db:push` + `db:seed` (the 389 KiB seeded
+demo account) · chromium-1243 · the dev daemon on :3000 (preflight
+GREEN).
+
+**Cold baseline (before any work).** lint ✓ · tsc ✓ · unit
+**1555/1555** (48 files — the documented S151 final state exactly) ·
+the drawer check GREEN (**the 67th consecutive no-Tailwind-v4-
+mobile-nav-bug confirmation**) · the desktop parity probe **MATCH**
+(all five formal checks, live reference login). Baseline noise: none.
+
+**The audits (Mode-C; every M/L finding re-verified by direct read).**
+Audit A — the Batch CZ recent-changes axis (`b9b35f6`):
+**0C/0H/0M/0L/0I — clean**; all four CZ claims verified at the source
+level (the CZ1 setNoteTags chain + the parseNoteTags single source +
+the saveTags retirement, the CZ2 files failed-load alert+Retry, the
+CZ3 phantom-session gate [byte-verified `durations[mode]` via od —
+the display-pipeline `[m`-eating artifact documented], the CZ4
+unit-save toast); the doc census machine-verified with FIVE stale
+prose sites found (README ×2 at an S146-era "1513", the import-cap
+"10 MiB" doubly stale vs the S137/CL2 64 MiB, the SKILL §11
+green-state line at S150 figures under an S151 label, the SKILL CD3
+prose "1449+605"). Audit B — the entities/factory + data-layer
+rotation (two cycles stale — the S150/CY-swept axis; the breadth scan
+dispatched to a read-only subagent against the web-application
+skill's §4/§5/§6/§7/§16 rubric, every M/L re-verified by direct
+read): **0C/0H/1M/2L/3I** — all eight historically-real families
+re-verified closed (ownership scoping + P2025→404, route authz, error
+taxonomy, the CR7 delegate pattern, bounded readers, the CR3 own-keys
+patch discipline, the rate-limit keying census, the Zod boundary —
+query params consumed nowhere), all seven past fixes verified landed.
+The findings: **B-M1** the aggregate CPU-containment discharge model
+1:1 dischargable by attacker-mintable successes under the default
+posture (Reasoned; the per-account guessing bounds hold — not an
+account-takeover vector; deferred to its own rate-limit-model cycle
+with the e2e budget-arithmetic study); **B-L1** withUserParams
+answered 404 before 401 on unauthenticated malformed-id calls; **B-L2**
+the /export page renders the full envelope unbudgeted (deferred — the
+s21/s23 page-visit interplay needs its own pass); **B-I1** fullName
+the last untrimmed text atom; **B-I2** force-dynamic adjudicated as
+documented convention (the cookies() structural mitigation); **B-I3**
+the 64 MiB context refresh. The S151-carried fix set: **B-L5** the
+seven fire-and-forget delete handlers (Verified at all sites; the
+four confirm-gated cousins already latch via setDeleting(null)); **B-L6**
+the seven noValidate dialogs surfacing Zod's raw copy; **B-L2/S151**
+the AI-generate silent replace.
+
+The plan (`docs/remediation-plan-session152.md`) written BEFORE any
+source change, validated against the codebase (every anchor re-read;
+the e2e-interplay probe of every spec touching the cycle's surfaces —
+the Generate button visibility-asserted only, the CB3 pin API-level,
+the CB7 anon probe on a valid id, no double-delete specs, no raw-copy
+pins). The product decision adjudicated per the operator's standing
+best-judgement instruction: **the AI-generate replace-confirm —
+replace semantics KEPT, confirmed** (the delete-confirm family
+pattern; the confirm BEFORE the AI call so a cancel never burns the
+ai: budget; the fresh-test path unchanged).
+
+**The fixes (the unit REDs 23/23 — the DA1 heptet + the DA2 heptet +
+the DA3 pair + the DA4 census + the DA5 functional pair + the DA6
+doc-pins quartet).** DA1 the delete double-fire latch — the per-view
+`deletingIds` set (the membership guard before the DELETE, the finally
+removal keeping retry honest, `disabled` on the plain-button sites;
+the menu sites close on click so the handler latch alone covers
+them). DA2 the noValidate hand-guard sweep — the seven dialogs'
+required-field guards with human copy BEFORE setBusy (an early return
+after arming the busy latch strands it; the guards mirror the
+schema's required set — dueDate optional, title-only there; the
+server's Zod boundary stays). DA3 the replace-confirm — the
+drafts.length gate on the Generate click + the AlertDialog (inside
+the TestDialog scope) whose Replace action runs the generate. DA4 the
+401-order — requireUser() before the CN11 id bound. DA5 the fullName
+trim at the validation atom (the CY2 shape). DA6 the five doc sites +
+four SELF-ANCHORING count-claims pins (the CQ6 cross-read family —
+each derives its expectation from the cited source: the vitest
+header, the cert map, IMPORT_MAX_BYTES itself; historical
+session-row narratives out of scope by design). Two census
+tripwires tripped and closed as designed: the hue-tokens registers
+re-anchored (flashcards 394 → 437, notes 705 → 736 — the third
+consecutive cycle the anchored legs tripped on view-line drift). Two
+RED-leg authoring bugs fixed DURING the RED phase (the `\n  };`
+handler-close anchor so a nested payload object cannot end the slice
+early; the handler-relative finallyAt index).
+
+**Re-cert (the FINAL tree).** lint ✓ · tsc ✓ (after the AlertDialog
+relocated into the TestDialog scope) · unit **1578/1578** (48 files,
++23: validation +2, script-conventions +21) · build ✓ (exit 0; the 6
+documented warnings; every fix wiring verified shipped in the
+standalone chunks) · the targeted e2e — four cold-booted per-chunk
+groups (parity-session7 + s14-hardening 83 · s17-fresh-user +
+calculator 25 · parity-session8 + mobile-navigation 86 ·
+parity-session5 47): 241 legs, two single-leg P1008 machine-load
+flakes each root-caused three ways (the exact Prisma error lines, the
+same-shape siblings, the clean cold re-runs) · the cold 5-chunk e2e
+cert **150 + 189 + 91 + 95 + 89 — 614/614** (chunk 1's single
+first-attempt BZ3 500 root-caused as the same machine-load class by
+the three-granularity re-verification — the isolated leg 2/2 clean,
+parity-session8 alone 67/67 cold, the exact chunk-1 combination
+re-run directly 150/150 clean) = the e2e census 614/614 unchanged ·
+**census 2192 green** (was 2169).
+
+**Evidence.** Five `docs/screenshots/152-clone-*.png` frames (the
+standing desktop + mobile drawer + the Events dialog with the
+hand-guard's inline error [DA2's visible proof — the guard text
+awaited before the frame] + the Flashcards deck grid [DA1] + the
+practice-test editor with the gated Generate [DA3]), self-verifying
+(the capture script's JSON verdict ok:true; dimensions machine-checked
+1440x900 / 390x844). The DA4/DA5 proofs ride the unit layer (the CW2
+runtime-split precedent).
+
+**Docs.** README badge/census (2169 → 2192) + the Session-152 row +
+the two unit-count sites + the two import-cap sites; AGENTS census
+(1555 → 1578) + the S152 lessons block (four lessons: pin the prose
+to the source it cites; the hand-guard before the busy latch with
+field-naming copy; the destructive replace is a delete wearing a
+different verb — same confirm family, confirm before the expensive
+call; auth precedes shape at every wrapper); CLAUDE counts; PAD
+v1.3.60 (the revision block + the six §11 closure rows); the SKILL
+census (both sites + the CD3 prose); the vitest header re-anchor
+(+23 with the register re-anchor note); the cert runner unchanged;
+`docs/session_177.md`; this entry; the plan §6 as-executed close;
+the `.env.example` contract re-verified (no env-var reads changed
+this cycle).
+
+**Next cycle.** The rotation continues — the **B-M1 rate-limit-model
+cycle** is the named candidate (the discharge-model design change with
+the e2e budget-arithmetic study: the CN9 never-discharge shape
+re-sized, or a gated/capped discharge); the **export-page budget**
+(B-L2-audit: the dedicated exportPage: key + the s21/s23 page-visit
+cert arithmetic) pairs with it as the budget-family cycle; the A-M3
+stage-2 chunked sub-tx + resume token stays its own ADR-021 cycle
+(carrying the S150/B-L2 import lock-hold finding); the db-path
+percent-decode stays recorded for a db-path-family cycle.

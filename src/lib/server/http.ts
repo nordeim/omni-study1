@@ -387,6 +387,13 @@ type AuthedItemHandler = (
 export function withUserParams(handler: AuthedItemHandler) {
   return async (request: NextRequest, context: ItemRouteContext): Promise<Response> => {
     try {
+      // S152/DA4 (audit B-L1): the auth gate fires FIRST — the 401
+      // envelope answers every unauthenticated path, malformed id
+      // included (the wrapper's own "unauthenticated requests still
+      // 401" contract, previously false on this path: the CN11 bound
+      // below answered 404 to unauthenticated >64-char ids). The
+      // no-oracle 404 semantics for authed callers are unchanged.
+      const user = await requireUser();
       const { id } = await context.params;
       // S139/CN11 (audit B-L1): the route-param id honors the same 64-char
       // bound the body atoms enforce (validation.ts idField) — an 8 KB
@@ -397,7 +404,6 @@ export function withUserParams(handler: AuthedItemHandler) {
       if (id.length === 0 || id.length > 64) {
         throw new NotFoundError();
       }
-      const user = await requireUser();
       return await handler(user, request, id);
     } catch (err: unknown) {
       return toErrorResponse(err);

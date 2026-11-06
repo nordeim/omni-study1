@@ -120,6 +120,11 @@ export function EventsView() {
   const [reminders, setReminders] = React.useState<number[]>([]);
   const [busy, setBusy] = React.useState(false);
   const [error, setError] = React.useState("");
+  // S152/DA1 (the S151 audit's B-L5): the delete double-fire latch — a
+  // per-row in-flight set, so a second click inside the first DELETE's
+  // window is a no-op instead of a spurious "Delete failed." 404 toast
+  // (the finally removal keeps retry honest: a FAILED delete re-arms).
+  const [deletingIds, setDeletingIds] = React.useState<ReadonlySet<string>>(new Set());
 
   // The day-focus carousel state (Batch U): the header + list track the
   // FOCUSED day; the relative Today/Tomorrow labels never do (they read
@@ -174,6 +179,19 @@ export function EventsView() {
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (busy) return;
+    // S152/DA2 (the S151 audit's B-L6): the hand-guard — the noValidate
+    // form's empty required fields answer HERE with human copy (the
+    // S127/CB17 files-view pattern), never the server's raw Zod issue
+    // text ("title: Too small: expected string to have >=1 characters").
+    // Before setBusy: an early return must not strand the busy latch.
+    if (!form.title.trim()) {
+      setError("Please enter a title.");
+      return;
+    }
+    if (!form.startDate) {
+      setError("Please pick a start date.");
+      return;
+    }
     setBusy(true);
     setError("");
     const payload: EventInput = {
@@ -204,11 +222,19 @@ export function EventsView() {
   };
 
   const remove = async (id: string) => {
+    if (deletingIds.has(id)) return;
+    setDeletingIds((prev) => new Set(prev).add(id));
     try {
       await deleteEvent(id);
       toast.success("Event deleted.");
     } catch (err: unknown) {
       toast.error(err instanceof ApiError ? err.message : "Delete failed.");
+    } finally {
+      setDeletingIds((prev) => {
+        const next = new Set(prev);
+        next.delete(id);
+        return next;
+      });
     }
   };
 
@@ -400,7 +426,8 @@ export function EventsView() {
                               type="button"
                               aria-label={`Delete ${e.title}`}
                               onClick={() => remove(e.id)}
-                              className="flex size-8 items-center justify-center rounded-lg text-slate-400 hover:bg-slate-700 hover:text-red-400"
+                              disabled={deletingIds.has(e.id)}
+                              className="flex size-8 items-center justify-center rounded-lg text-slate-400 hover:bg-slate-700 hover:text-red-400 disabled:opacity-50"
                             >
                               <Trash2 className="size-4" strokeWidth={2} />
                             </button>

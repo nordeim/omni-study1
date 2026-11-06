@@ -2027,3 +2027,274 @@ describe("S151/CZ4: the unit-save success feedback (B-L4 — the GPA twin's mirr
     expect(handler).toMatch(/toast\.success\(/);
   });
 });
+
+// ---------------------------------------------------------------------------
+// S152/DA1 (the S151 audit's B-L5): the seven-site delete double-fire
+// latch. The seven fire-and-forget delete handlers (events, exams,
+// assignments, flashcards deck+card, notes note+notebook) carried no
+// in-flight guard — a double-click fired the second DELETE into the
+// first's PATCH window and toasted its 404 as an error ("Delete failed."
+// on a delete that SUCCEEDED). The latch: a per-view deletingIds Set —
+// the handler guards on membership, adds on start, and removes in the
+// finally (a FAILED delete re-arms for retry; a successful one removes
+// the row through the store refresh). The four confirm-gated deletes
+// (grades/subjects/holidays/groups) already latch via the
+// setDeleting(null) pre-call pattern and are out of scope by design.
+// ---------------------------------------------------------------------------
+describe("S152/DA1: the delete double-fire latch (B-L5 — the seven fire-and-forget sites)", () => {
+  const VIEWS_DIR = path.resolve(process.cwd(), "src/components/views");
+
+  type Site = { file: string; handler: string; marker: string };
+  const SITES: Site[] = [
+    { file: "events-view.tsx", handler: "const remove = async (id: string) => {", marker: "deleteEvent(id)" },
+    { file: "exams-view.tsx", handler: "const remove = async (id: string) => {", marker: "deleteExam(id)" },
+    { file: "assignments-view.tsx", handler: "const remove = async (id: string) => {", marker: "deleteAssignment(id)" },
+    { file: "flashcards-view.tsx", handler: "const removeDeck = async (deck: FlashcardDeckRow) => {", marker: "deleteFlashcardDeck(deck.id)" },
+    { file: "flashcards-view.tsx", handler: "const removeCard = async (id: string) => {", marker: "deleteFlashcard(id)" },
+    { file: "notes-view.tsx", handler: "const removeNote = async (id: string) => {", marker: "deleteNote(id)" },
+    { file: "notes-view.tsx", handler: "const removeNotebook = async (row: NotebookRow) => {", marker: "deleteNotebook(row.id)" },
+  ];
+
+  it.each(SITES.map((s) => [s.file, s.handler] as const))(
+    "%s :: %s carries the in-flight latch",
+    (file, handlerSig) => {
+      const src = readFileSync(path.resolve(VIEWS_DIR, file), "utf8");
+      const site = SITES.find((s) => s.file === file && s.handler === handlerSig)!;
+      const handlerAt = src.indexOf(handlerSig);
+      expect(handlerAt, `the handler exists in ${file}`).toBeGreaterThan(-1);
+      const handler = src.slice(handlerAt, src.indexOf("\n  };", handlerAt));
+      // The latch: the membership guard BEFORE the delete call.
+      const guardAt = handler.indexOf("deletingIds.has(");
+      expect(guardAt, "the membership guard exists").toBeGreaterThan(-1);
+      const deleteAt = handler.indexOf(site.marker);
+      expect(deleteAt, `the delete call (${site.marker}) exists`).toBeGreaterThan(-1);
+      expect(guardAt, "the guard fires BEFORE the delete").toBeLessThan(deleteAt);
+      // The add on start (the latch arms) + the finally removal (retry
+      // stays honest — a failed delete re-arms).
+      expect(handler).toMatch(/setDeletingIds\(\(prev\) => new Set\(prev\)\.add\(/);
+      const finallyAt = handler.indexOf("} finally {");
+      expect(finallyAt, "the finally block exists").toBeGreaterThan(deleteAt);
+      const finallyBlock = handler.slice(finallyAt);
+      expect(finallyBlock).toMatch(/next\.delete\(/);
+      // The view owns the state the latch rides.
+      expect(src).toMatch(/const \[deletingIds, setDeletingIds\] = React\.useState/);
+    },
+  );
+});
+
+// ---------------------------------------------------------------------------
+// S152/DA2 (the S151 audit's B-L6): the noValidate hand-guard copy sweep.
+// Seven dialogs (events, assignments, exams, notes, timetable, flashcards
+// deck + card) rode noValidate forms whose empty-required-field submit
+// went to the SERVER and surfaced Zod's raw library copy through the
+// dialog's setError (formatZodError passes the default issue message —
+// "title: Too small: expected string to have >=1 characters"). The
+// S127/CB17 files-view precedent ("Name and URL are both required.")
+// generalized: each submit gains the required-field guard AFTER the busy
+// guard and BEFORE the try, with the copy naming the FIELD (never the
+// library). The server's Zod boundary stays (the API door keeps its
+// validation — the guard is the dialog's hand-copy mirror).
+// ---------------------------------------------------------------------------
+describe("S152/DA2: the noValidate hand-guard sweep (B-L6 — the seven dialogs)", () => {
+  const VIEWS_DIR = path.resolve(process.cwd(), "src/components/views");
+
+  type Guard = { file: string; handler: string; copy: string };
+  const GUARDS: Guard[] = [
+    { file: "events-view.tsx", handler: "const submit = async (e: React.FormEvent) => {", copy: "Please enter a title." },
+    { file: "assignments-view.tsx", handler: "const submit = async (e: React.FormEvent) => {", copy: "Please enter a title." },
+    { file: "exams-view.tsx", handler: "const submit = async (e: React.FormEvent) => {", copy: "Please enter a title." },
+    { file: "notes-view.tsx", handler: "const submit = async (e: React.FormEvent) => {", copy: "Please enter a name." },
+    { file: "timetable-view.tsx", handler: "const submit = async (e: React.FormEvent) => {", copy: "Please enter a name." },
+    { file: "flashcards-view.tsx", handler: "const submitDeck = async (e: React.FormEvent) => {", copy: "Please enter a deck name." },
+    { file: "flashcards-view.tsx", handler: "const submitCard = async (e: React.FormEvent) => {", copy: "Please enter the card front." },
+  ];
+
+  it.each(GUARDS.map((g) => [g.file, g.handler] as const))(
+    "%s :: %s guards the empty required fields with human copy",
+    (file, handlerSig) => {
+      const src = readFileSync(path.resolve(VIEWS_DIR, file), "utf8");
+      const guard = GUARDS.find((g) => g.file === file && g.handler === handlerSig)!;
+      const handlerAt = src.indexOf(handlerSig);
+      expect(handlerAt, `the handler exists in ${file}`).toBeGreaterThan(-1);
+      // The \n-anchored close: the handler's own two-space `};` (a nested
+      // `    };` — e.g. a payload object — must not end the slice early).
+      const handler = src.slice(handlerAt, src.indexOf("\n  };", handlerAt));
+      // The hand-guard copy exists INSIDE the handler.
+      const guardAt = handler.indexOf(guard.copy);
+      expect(guardAt, `the guard copy (${guard.copy}) exists`).toBeGreaterThan(-1);
+      // The guard fires BEFORE the first await (no network round-trip for
+      // an empty form — the round-trip is where the raw Zod copy came
+      // from).
+      const tryAt = handler.indexOf("try {");
+      expect(tryAt, "the try block exists").toBeGreaterThan(-1);
+      expect(guardAt).toBeLessThan(tryAt);
+      // The guard speaks through the dialog's existing error slot (the
+      // same a11y path the ApiError branch rides).
+      expect(handler.slice(guardAt - 200, guardAt + 200)).toMatch(/setError\(/);
+    },
+  );
+});
+
+// ---------------------------------------------------------------------------
+// S152/DA3 (the S151 audit's B-L2, the product decision adjudicated):
+// the AI-generate replace-confirm. The practice-test editor's Generate
+// button silently REPLACED the whole drafts list (setDrafts(drafts) at
+// :220) — an editing user's pre-populated questions vanished with no
+// confirmation. The adjudication: replace semantics KEPT (the reference
+// behavior), gated by an AlertDialog confirm when drafts exist — the
+// app's delete-confirm family pattern; the confirm sits BEFORE the AI
+// call so a cancel never burns the ai: budget; the fresh-test path (an
+// empty editor) generates directly.
+// ---------------------------------------------------------------------------
+describe("S152/DA3: the AI-generate replace-confirm (B-L2 — the adjudicated product decision)", () => {
+  const VIEW = path.resolve(process.cwd(), "src/components/views/practicetests-view.tsx");
+
+  it("the Generate click gates on existing drafts (the confirm state opens, the AI call does not)", () => {
+    const src = readFileSync(VIEW, "utf8");
+    // The confirm state exists.
+    expect(src).toMatch(/const \[replaceConfirmOpen, setReplaceConfirmOpen\] = React\.useState\(false\)/);
+    // The gate: the button's onClick routes through a gate that opens the
+    // confirm when drafts exist.
+    const gateAt = src.indexOf("drafts.length > 0");
+    expect(gateAt, "the drafts.length gate exists").toBeGreaterThan(-1);
+    const gateBlock = src.slice(gateAt - 300, gateAt + 300);
+    expect(gateBlock).toMatch(/setReplaceConfirmOpen\(true\)/);
+    // The generate flow itself stays intact (the s127-CB3 API twin + the
+    // generating latch unchanged).
+    const generateAt = src.indexOf("const generateQuestions = async () => {");
+    expect(generateAt, "the generate flow exists").toBeGreaterThan(-1);
+  });
+
+  it("the confirm dialog's Replace action runs the generate (replace semantics kept, confirmed)", () => {
+    const src = readFileSync(VIEW, "utf8");
+    // The AlertDialog wiring: the open state + the Replace action.
+    const dialogAt = src.indexOf("open={replaceConfirmOpen}");
+    expect(dialogAt, "the confirm dialog rides the state").toBeGreaterThan(-1);
+    const dialogBlock = src.slice(dialogAt, dialogAt + 1600);
+    expect(dialogBlock).toMatch(/AlertDialogTitle/);
+    const actionAt = dialogBlock.indexOf("void generateQuestions()");
+    expect(actionAt, "the Replace action runs the generate").toBeGreaterThan(-1);
+    // The dialog names the destruction (the count of questions replaced).
+    expect(dialogBlock).toMatch(/Replace current questions\?/);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// S152/DA4 (Audit B B-L1): the withUserParams 401-order. The item-route
+// wrapper applied the CN11 id bound BEFORE requireUser() — an
+// unauthenticated request with a malformed (>64-char) id answered 404,
+// not the documented 401 envelope (http.ts's own "unauthenticated
+// requests still 401" contract, false on that path). The reorder:
+// requireUser() FIRST, then the id bound — the no-oracle 404 semantics
+// for authed callers unchanged (a >64-char id still cannot exist).
+// ---------------------------------------------------------------------------
+describe("S152/DA4: the withUserParams 401-order (B-L1 — auth precedes the id bound)", () => {
+  const HTTP = path.resolve(process.cwd(), "src/lib/server/http.ts");
+
+  it("requireUser() precedes the CN11 id bound (unauthenticated malformed-id calls answer 401)", () => {
+    const src = readFileSync(HTTP, "utf8");
+    const wrapperAt = src.indexOf("export function withUserParams(handler: AuthedItemHandler) {");
+    expect(wrapperAt, "the withUserParams wrapper exists").toBeGreaterThan(-1);
+    const wrapper = src.slice(wrapperAt, src.indexOf("    } catch (err: unknown) {", wrapperAt));
+    const authAt = wrapper.indexOf("const user = await requireUser();");
+    expect(authAt, "the auth gate exists in the wrapper").toBeGreaterThan(-1);
+    const boundAt = wrapper.indexOf("id.length > 64");
+    expect(boundAt, "the CN11 id bound exists in the wrapper").toBeGreaterThan(-1);
+    // Ordered: the auth gate fires FIRST — the 401 envelope answers
+    // every unauthenticated path, malformed id included.
+    expect(authAt).toBeLessThan(boundAt);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// S152/DA6 (the Audit A doc-census drift): the count-claims machine gate,
+// the CQ6 cross-read family extended to the README + SKILL prose sites
+// that rotted while every machine-pinned anchor stayed green (README:108
+// + :167 carried an S146-era "1513"; README:184 carried a pre-CL2 "10
+// MiB" import cap while IMPORT_MAX_BYTES has been 64 MiB since S137;
+// SKILL:630 carried the S150 figures under an S151 label; SKILL:138
+// carried a "1449+605" census four cycles stale). The pins are
+// SELF-ANCHORING: each derives the expected value from the same source
+// the docs cite (the vitest header, the cert script's expected map,
+// IMPORT_MAX_BYTES itself) — the next count change forces the doc
+// update in the same commit or the leg fails.
+// ---------------------------------------------------------------------------
+describe("S152/DA6: the doc-counts cross-read pins (the CQ6 family, self-anchoring)", () => {
+  const README = path.resolve(process.cwd(), "README.md");
+  const SKILL = path.resolve(process.cwd(), "omni-study1_SKILL.md");
+  const VITEST_CONFIG = path.resolve(process.cwd(), "vitest.config.ts");
+  const CERT_SCRIPT = path.resolve(process.cwd(), "scripts/e2e-chunked-cert.sh");
+  const DATA_IMPORT = path.resolve(process.cwd(), "src/lib/data-import.ts");
+
+  function vitestHeaderCounts(): { files: number; tests: number } {
+    const src = readFileSync(VITEST_CONFIG, "utf8");
+    const m = src.match(/(\d+) files \/ (\d+) tests/);
+    expect(m, "the vitest header count line exists").not.toBeNull();
+    return { files: Number(m![1]), tests: Number(m![2]) };
+  }
+
+  function certTotal(): number {
+    const src = readFileSync(CERT_SCRIPT, "utf8");
+    const m = src.match(/Expected: (\d+) \+ (\d+) \+ (\d+) \+ (\d+) \+ (\d+) = (\d+)/);
+    expect(m, "the cert script expected map exists").not.toBeNull();
+    return Number(m![6]);
+  }
+
+  it("README's two unit-count prose sites agree with the vitest header (the tree diagram + the testing section)", () => {
+    const header = vitestHeaderCounts();
+    const readme = readFileSync(README, "utf8");
+    const tree = readme.match(/Vitest unit layer \((\d+) tests, (\d+) files\)/);
+    expect(tree, "the tree-diagram unit-count site exists").not.toBeNull();
+    expect(Number(tree![1]), "the tree-diagram test count agrees").toBe(header.tests);
+    expect(Number(tree![2]), "the tree-diagram file count agrees").toBe(header.files);
+    const testing = readme.match(/Vitest — (\d+) unit tests/);
+    expect(testing, "the testing-section unit-count site exists").not.toBeNull();
+    expect(Number(testing![1]), "the testing-section count agrees").toBe(header.tests);
+  });
+
+  it("README's import-cap prose agrees with IMPORT_MAX_BYTES (the CL2 64 MiB, not the S124-era figure)", () => {
+    const importSrc = readFileSync(DATA_IMPORT, "utf8");
+    // The constant is a byte EXPRESSION (64 * 1024 * 1024) — evaluate the
+    // multiplicative expression, not a bare integer.
+    const capMatch = importSrc.match(/IMPORT_MAX_BYTES = ([\d*\s]+);/);
+    expect(capMatch, "the IMPORT_MAX_BYTES constant exists").not.toBeNull();
+    const capBytes = capMatch![1]
+      .split("*")
+      .map((part) => Number(part.trim()))
+      .reduce((a: number, b: number) => a * b, 1);
+    const capMiB = capBytes / (1024 * 1024);
+    const readme = readFileSync(README, "utf8");
+    // The CURRENT-STATE import-cap prose sites: the feature-table row (the
+    // Data portability row's Restore card) + the API-table row. Historical
+    // session-row narratives record their own era (S117/S118 rows cite the
+    // then-current caps; the readJson 10 MiB body cap is a DIFFERENT
+    // still-current constant) — out of scope by design.
+    const featureRow = readme.match(/Restore from a backup[^\n]*?(\d+) MiB cap/);
+    expect(featureRow, "the feature-row cap prose exists").not.toBeNull();
+    expect(Number(featureRow![1]), "the feature-row cap agrees").toBe(capMiB);
+    const apiRow = readme.match(/\/api\/import\/data[^\n]*?(\d+) MiB body cap/);
+    expect(apiRow, "the API-table cap prose exists").not.toBeNull();
+    expect(Number(apiRow![1]), "the API-table cap agrees with the seam constant").toBe(capMiB);
+  });
+
+  it("SKILL's green-state line agrees with the vitest header + the cert total (the §11 site that rotted under an S151 label)", () => {
+    const header = vitestHeaderCounts();
+    const e2e = certTotal();
+    const skill = readFileSync(SKILL, "utf8");
+    const green = skill.match(/(\d+) unit ✓ · build ✓[^\n]*· (\d+) e2e ✓ \((\d+) green\)/);
+    expect(green, "the SKILL green-state line exists").not.toBeNull();
+    expect(Number(green![1]), "the unit count agrees with the vitest header").toBe(header.tests);
+    expect(Number(green![2]), "the e2e count agrees with the cert map").toBe(e2e);
+    expect(Number(green![3]), "the census total is the sum").toBe(header.tests + e2e);
+  });
+
+  it("SKILL's CD3-posture prose census agrees with the same derived pair (the \"N+M test suites\" site)", () => {
+    const header = vitestHeaderCounts();
+    const e2e = certTotal();
+    const skill = readFileSync(SKILL, "utf8");
+    const prose = skill.match(/the (\d+)\+(\d+) test\s+suites/);
+    expect(prose, "the CD3-posture census prose exists").not.toBeNull();
+    expect(Number(prose![1]), "the prose unit count agrees").toBe(header.tests);
+    expect(Number(prose![2]), "the prose e2e count agrees").toBe(e2e);
+  });
+});

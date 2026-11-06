@@ -9,7 +9,7 @@ High-signal instructions for coding agents working in this repo. Everything here
 | `bun install` | Install deps (Bun ≥ 1.3) |
 | `bun run dev` | Dev server on :3000 (Turbopack), logs tee'd to `dev.log` |
 | `bun run lint` / `bun run typecheck` | ESLint / `tsc --noEmit` — both must be clean |
-| `bun run test` | Vitest unit layer (1555 tests; `*.test.ts` only — never picks up e2e specs) |
+| `bun run test` | Vitest unit layer (1578 tests; `*.test.ts` only — never picks up e2e specs) |
 | `bun run build` | Production build → `.next/standalone` (**required before e2e**) |
 | `bun run test:e2e` | Playwright vs the standalone build on :3100 with `db/e2e.db` (614 tests across the 5-chunk cold map — 150+189+91+95+89, 30 spec files; a single-process full run trips the register rate-limiter budget by design, the chunked map re-boots the server per chunk). NOTE (S45, the day-boundary lesson): the global setup re-seeds every run, but the seed's IDEMPOTENT UPSERTS do NOT refresh day-relative dates on existing rows — a scratch `db/e2e.db` that ages across a UTC midnight keeps its original day-relative dates (today's tasks, the +1-day exam badge, the due-in pills, the import round-trip dates each read one day stale → 4 deterministic failures in parity-session6/parity-session9/s23-import). Delete `db/e2e.db` when a run crosses a day boundary — the global setup re-creates it fresh with current dates. NOTE (S46, TWO more aged-scratch-db classes + a build-input one): (1) ALWAYS run e2e COLD — S131/CF5 chained `scripts/e2e-cold-reset.sh` into `bun run test:e2e` (port-guard + `rm -f db/e2e.db` BEFORE playwright boots anything — global-setup is TOO LATE: Playwright starts the webServer before globalSetup), so the default runner self-colds; any DIRECT `playwright test` invocation still needs the manual `rm -f db/e2e.db` before every full run: the s23-import round-trip posts a FIXED-id envelope, so a second consecutive run against the aged db reads `created: 0, updated: 1` instead of `created: 1, updated: 0` and fails — not just across midnights, across ANY re-run; (2) the s22 negative-spawn spec reads the BUNDLED `.env` — Next's standalone output COPIES the repo-root `.env` into `.next/standalone/.env` at build time, so a REAL AUTH_SECRET in the dev `.env` leaks into the bundle and the guard CORRECTLY boots (the spec times out waiting for the exit) — keep the repo-root `.env`'s AUTH_SECRET EMPTY (the `.env.example` dev posture: `AUTH_SECRET=""` — dev falls back to the local constant with the boot warning) when building for e2e |
 | `node scripts/capture-studyflow.mjs` | Refresh all 31 `docs/screenshots/` captures from the dev server (24 light + 7 dark) |
@@ -2351,3 +2351,53 @@ Hover-parity probing must run in Playwright, not a touch-emulating browser — v
    state, check what the DERIVED value means when that state is at its
    initial value — and gate on the initial state itself (the gate
    before the POST, with its reason named — never a floored phantom).
+
+## S152 lessons (Batch DA — the delete-latch + hand-guard + replace-confirm + order-letter set)
+
+1. **A count claimed in prose rots exactly as fast as a count claimed in
+   a badge — pin the PROSE to the source it cites.** Five stale census
+   sites survived three cycles of machine-verified badge updates: the
+   README unit-count prose sat at an S146-era "1513", the import-cap
+   prose at a pre-CL2 "10 MiB" while the seam constant read 64 MiB, the
+   SKILL §11 green-state line carried S150 figures under an S151 label.
+   The existing pins read the BADGE-adjacent anchors (AGENTS, the cert
+   script) — the prose sites had no reader. Lesson: the CQ6 cross-read
+   family generalizes to SELF-ANCHORING pins — derive the expected
+   value from the source the doc cites (the vitest header's counts, the
+   cert script's expected map, `IMPORT_MAX_BYTES` itself), so the next
+   count change fails the pin until the doc moves in the same commit.
+   Historical session-row narratives are out of scope by design — they
+   record their own era (the Session-23 row's 10 MiB was TRUE then).
+2. **A hand-guard belongs BEFORE the busy latch, and its copy names the
+   FIELD, never the library.** The noValidate dialogs shipped empty
+   required fields to the server and rendered Zod's raw issue text
+   ("title: Too small: expected string to have >=1 characters") in the
+   dialog's error slot — technically correct, library-voiced, useless.
+   The S127/CB17 pattern generalized: check the required fields after
+   the busy guard and before `setBusy(true)` — an early return AFTER
+   arming the busy latch strands it (the finally lives inside the try
+   the guard skips). Lesson: the guard mirrors the SCHEMA's required
+   set (dueDate is optional — only the title guards there), the copy is
+   the field's human name, and the server's Zod boundary stays (the
+   guard is the dialog's mirror, not the API's replacement).
+3. **A destructive replace is a delete wearing a different verb — gate
+   it with the same confirm family.** The practice-test Generate
+   silently replaced the whole drafts list (an editing user's questions
+   vanished on one click). The product decision that kept getting
+   deferred ("replace vs append semantics") resolved WITHOUT changing
+   the semantics: replace stays (the reference behavior), confirmed —
+   an AlertDialog naming the count and the irreversibility, the app's
+   own delete-confirm pattern. Lesson: when a deferred "product
+   decision" is really about destructiveness, the confirm-dialog
+   adjudication usually satisfies both camps — and the confirm belongs
+   BEFORE the expensive call (a cancel that burns the `ai:` budget is
+   its own bug).
+4. **Auth precedes shape at every wrapper.** The item-route wrapper
+   bounded the id (the no-oracle 404) BEFORE the auth gate — an
+   unauthenticated oversized-id request answered 404, contradicting the
+   wrapper's own documented "unauthenticated requests still 401."
+   No data leaked (the bound is shape-only), but the monitoring
+   contract lied. Lesson: in a wrapper that chains guards, the AUTH
+   gate is first by definition — any shape/param validation that
+   precedes it changes what an unauthenticated caller can learn (here:
+   only that the id was malformed, but the class is the point).

@@ -99,6 +99,11 @@ export function FlashcardsView() {
   const [generating, setGenerating] = React.useState(false);
   const [busy, setBusy] = React.useState(false);
   const [error, setError] = React.useState("");
+  // S152/DA1 (the S151 audit's B-L5): the delete double-fire latch — the
+  // per-row in-flight set for BOTH delete handlers (decks + cards); the
+  // menu sites close on click, so the handler latch alone covers them;
+  // the finally removal keeps retry honest.
+  const [deletingIds, setDeletingIds] = React.useState<ReadonlySet<string>>(new Set());
 
   const filteredDecks = React.useMemo(
     () =>
@@ -158,6 +163,15 @@ export function FlashcardsView() {
   const submitDeck = async (e: React.FormEvent) => {
     e.preventDefault();
     if (busy) return;
+    // S152/DA2 (the S151 audit's B-L6): the hand-guard — the noValidate
+    // form's empty required field answers HERE with human copy (the
+    // S127/CB17 files-view pattern), never the server's raw Zod issue
+    // text. Before setBusy: an early return must not strand the busy
+    // latch.
+    if (!deckForm.name.trim()) {
+      setError("Please enter a deck name.");
+      return;
+    }
     setBusy(true);
     setError("");
     try {
@@ -183,6 +197,19 @@ export function FlashcardsView() {
     // selectedDeckId is null until an explicit click, so the old guard
     // silently no-op'd every Add Card on first visit.
     if (busy || !effectiveDeckId) return;
+    // S152/DA2 (the S151 audit's B-L6): the hand-guard — the noValidate
+    // form's empty required fields answer HERE with human copy (the
+    // S127/CB17 files-view pattern), never the server's raw Zod issue
+    // text. Before setBusy: an early return must not strand the busy
+    // latch.
+    if (!cardForm.front.trim()) {
+      setError("Please enter the card front.");
+      return;
+    }
+    if (!cardForm.back.trim()) {
+      setError("Please enter the card back.");
+      return;
+    }
     setBusy(true);
     setError("");
     const payload = {
@@ -207,20 +234,36 @@ export function FlashcardsView() {
   };
 
   const removeDeck = async (deck: FlashcardDeckRow) => {
+    if (deletingIds.has(deck.id)) return;
+    setDeletingIds((prev) => new Set(prev).add(deck.id));
     try {
       await deleteFlashcardDeck(deck.id);
       toast.success("Deck deleted — its cards went with it.");
     } catch (err: unknown) {
       toast.error(err instanceof ApiError ? err.message : "Delete failed.");
+    } finally {
+      setDeletingIds((prev) => {
+        const next = new Set(prev);
+        next.delete(deck.id);
+        return next;
+      });
     }
   };
 
   const removeCard = async (id: string) => {
+    if (deletingIds.has(id)) return;
+    setDeletingIds((prev) => new Set(prev).add(id));
     try {
       await deleteFlashcard(id);
       toast.success("Card deleted.");
     } catch (err: unknown) {
       toast.error(err instanceof ApiError ? err.message : "Delete failed.");
+    } finally {
+      setDeletingIds((prev) => {
+        const next = new Set(prev);
+        next.delete(id);
+        return next;
+      });
     }
   };
 
@@ -709,7 +752,8 @@ export function FlashcardsView() {
                           type="button"
                           aria-label={`Delete card ${card.front}`}
                           onClick={() => removeCard(card.id)}
-                          className="flex size-7 items-center justify-center rounded-lg text-slate-400 hover:bg-red-50 hover:text-red-500 dark:hover:bg-red-950"
+                          disabled={deletingIds.has(card.id)}
+                          className="flex size-7 items-center justify-center rounded-lg text-slate-400 hover:bg-red-50 hover:text-red-500 disabled:opacity-50 dark:hover:bg-red-950"
                         >
                           <Trash2 className="size-3.5" strokeWidth={2} />
                         </button>

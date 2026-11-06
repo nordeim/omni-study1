@@ -103,6 +103,11 @@ export function AssignmentsView() {
   });
   const [busy, setBusy] = React.useState(false);
   const [error, setError] = React.useState("");
+  // S152/DA1 (the S151 audit's B-L5): the delete double-fire latch (the
+  // events-view twin — the per-row in-flight set; the menu closes on
+  // click, so the handler latch alone covers the DropdownMenuItem site;
+  // the finally removal keeps retry honest).
+  const [deletingIds, setDeletingIds] = React.useState<ReadonlySet<string>>(new Set());
 
   const filtered = React.useMemo(() => {
     const today = startOfDay(new Date());
@@ -147,6 +152,16 @@ export function AssignmentsView() {
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (busy) return;
+    // S152/DA2 (the S151 audit's B-L6): the hand-guard — the noValidate
+    // form's empty required fields answer HERE with human copy (the
+    // S127/CB17 files-view pattern), never the server's raw Zod issue
+    // text. Before setBusy: an early return must not strand the busy
+    // latch. dueDate is OPTIONAL in the schema — the title is the only
+    // required empty-submittable field.
+    if (!form.title.trim()) {
+      setError("Please enter a title.");
+      return;
+    }
     setBusy(true);
     setError("");
     const payload: AssignmentInput = {
@@ -177,11 +192,19 @@ export function AssignmentsView() {
   };
 
   const remove = async (id: string) => {
+    if (deletingIds.has(id)) return;
+    setDeletingIds((prev) => new Set(prev).add(id));
     try {
       await deleteAssignment(id);
       toast.success("Assignment deleted.");
     } catch (err: unknown) {
       toast.error(err instanceof ApiError ? err.message : "Delete failed.");
+    } finally {
+      setDeletingIds((prev) => {
+        const next = new Set(prev);
+        next.delete(id);
+        return next;
+      });
     }
   };
 

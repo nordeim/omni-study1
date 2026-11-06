@@ -476,10 +476,14 @@ const VIOLET_RESIDUALS: ReadonlyArray<{ file: string; line: number; pattern: Reg
   // updater-form calls + the selected guards — added lines above the
   // site) — the anchored leg tripped as designed both times; the re-anchor
   // is the documented census maintenance (the site itself is
-  // byte-unchanged).
+  // byte-unchanged). S152/DA1+DA2 note: the notes-view anchor moved
+  // 705 → 736 (the delete-latch state + the hand-guard added lines above
+  // the site) and the flashcards-view anchor moved 394 → 437 (the same
+  // DA1/DA2 pair) — tripped as designed again; the sites are
+  // byte-unchanged.
   { file: "src/components/views/tasks-view.tsx", line: 115, pattern: /dark:hover:border-violet-800/, why: "the row-card hover border's DARK half (the light half rides --sf-primary-edge since S135/CJ3; no reference ground truth for dark — the clone's dark mode is the documented superset)" },
-  { file: "src/components/views/flashcards-view.tsx", line: 394, pattern: /dark:border-violet-800/, why: "the study-card face border's DARK half (the light half rides --sf-primary-edge since S135/CJ3; the 800-vs-900 divergence from notes is the S92 divergent-variant class)" },
-  { file: "src/components/views/notes-view.tsx", line: 705, pattern: /dark:border-violet-900/, why: "the selected-note row border's DARK half (the light border rides --sf-primary-edge and the bg rides --sf-primary-softest since S135/CJ3; softDark's 900 value is byte-equal but the dark-edge family waits for a uniform design pass)" },
+  { file: "src/components/views/flashcards-view.tsx", line: 437, pattern: /dark:border-violet-800/, why: "the study-card face border's DARK half (the light half rides --sf-primary-edge since S135/CJ3; the 800-vs-900 divergence from notes is the S92 divergent-variant class)" },
+  { file: "src/components/views/notes-view.tsx", line: 736, pattern: /dark:border-violet-900/, why: "the selected-note row border's DARK half (the light border rides --sf-primary-edge and the bg rides --sf-primary-softest since S135/CJ3; softDark's 900 value is byte-equal but the dark-edge family waits for a uniform design pass)" },
   { file: "src/components/views/analytics-view.tsx", line: 430, pattern: /dark:bg-violet-900\/50/, why: "the Tasks-Completed chip's DARK half (the light bg rides --sf-primary-empty since S135/CJ3; the /50 opacity serializes through the trap-7 family — a dark empty-step token would change the form)" },
 ];
 
@@ -488,9 +492,9 @@ const VIOLET_RESIDUALS: ReadonlyArray<{ file: string; line: number; pattern: Reg
 // a prose mention; the S92/AS1 discriminator).
 const EDGE_CONSUMERS: ReadonlyArray<{ file: string; line: number; pattern: RegExp; why: string }> = [
   { file: "src/components/views/tasks-view.tsx", line: 115, pattern: /hover:border-sf-primary-edge/, why: "the row-card hover border" },
-  { file: "src/components/views/flashcards-view.tsx", line: 394, pattern: /border-sf-primary-edge/, why: "the study-card face border" },
-  { file: "src/components/views/notes-view.tsx", line: 705, pattern: /border-sf-primary-edge/, why: "the selected-note row border" },
-  { file: "src/components/views/notes-view.tsx", line: 705, pattern: /bg-sf-primary-softest/, why: "the selected-note row tint" },
+  { file: "src/components/views/flashcards-view.tsx", line: 437, pattern: /border-sf-primary-edge/, why: "the study-card face border" },
+  { file: "src/components/views/notes-view.tsx", line: 736, pattern: /border-sf-primary-edge/, why: "the selected-note row border" },
+  { file: "src/components/views/notes-view.tsx", line: 736, pattern: /bg-sf-primary-softest/, why: "the selected-note row tint" },
   { file: "src/components/views/analytics-view.tsx", line: 430, pattern: /bg-sf-primary-empty/, why: "the Tasks-Completed chip" },
 ];
 

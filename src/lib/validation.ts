@@ -132,7 +132,13 @@ export const loginSchema = z.object({
 });
 
 export const registerSchema = z.object({
-  fullName: z.string().max(100).optional().default(""),
+  // S152/DA5 (Audit B B-I1): the trim at the ATOM — the trim-before-store
+  // doctrine's last gap (the CY2 schoolName shape verbatim; Zod 4 orders
+  // .trim() BEFORE .max(), and the transformed key survives the parsed
+  // object). A whitespace-padded or whitespace-only name now lands trimmed
+  // ("" = the column's natural cleared state) instead of persisting
+  // verbatim.
+  fullName: z.string().trim().max(100).optional().default(""),
   email: emailField,
   password: passwordField,
 });

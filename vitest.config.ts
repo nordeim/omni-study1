@@ -1,7 +1,30 @@
 import { defineConfig } from "vitest/config";
 import path from "node:path";
 
-// Unit-test layer for the pure domain seams — 48 files / 1555 tests
+// Unit-test layer for the pure domain seams — 48 files / 1578 tests
+// (re-anchored S152/DA — the delete-latch + hand-guard + replace-confirm
+// + order-letter set: census 1555 → 1578, +23 net [validation +2: the
+// S152/DA5 registerSchema fullName-trim pair (the padded-value-trims leg
+// + the whitespace-only→cleared-state leg with the post-trim bound
+// witness — the CY2 schoolName shape on the register atom);
+// script-conventions +21: the S152/DA1 delete double-fire latch census
+// (the seven fire-and-forget sites — the per-view deletingIds set, the
+// membership guard before the DELETE, the finally removal keeping retry
+// honest) + the S152/DA2 noValidate hand-guard census (the seven dialogs
+// — the required-field guard with human copy before setBusy, never the
+// server's raw Zod issue text) + the S152/DA3 replace-confirm census
+// pair (the drafts.length gate before the AI call + the AlertDialog
+// Replace action) + the S152/DA4 withUserParams 401-order census
+// (requireUser before the CN11 id bound) + the S152/DA6 doc-counts
+// cross-read pins ×4 (the CQ6 family, self-anchoring: the README
+// unit-count sites + the import-cap prose vs IMPORT_MAX_BYTES + the
+// SKILL green-state line + the CD3-posture census prose — each deriving
+// its expectation from the vitest header / the cert map / the seam
+// constant so the next count change forces the doc update in the same
+// commit). The hue-tokens notes-view register re-anchored 705 → 711 and
+// the flashcards-view registers re-anchored in the same cycle — the
+// anchored legs tripped as designed when the DA1/DA2 edits added lines
+// above the sites; the census maintenance, not a count change.])
 // (re-anchored S151/CZ — the tags-chain + load-honesty + phantom-row +
 // save-feedback set: census 1547 → 1555, +8 net [data-store +3: the
 // S151/CZ1 notes-tags chain triple (the add-then-remove post-settle-base

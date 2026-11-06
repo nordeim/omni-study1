@@ -27,6 +27,7 @@ import {
   normalizeHhmmForInput,
   nullableId,
   resetPasswordSchema,
+  registerSchema,
   rumBatchSchema,
   rumEventSchema,
   studyGroupSchema,
@@ -1271,6 +1272,49 @@ describe("S150/CY2: the schoolName trim at the validation atom", () => {
     // ordering witness.
     const padded = preferencesSchema.safeParse({
       schoolName: ` ${"x".repeat(120)} `,
+    });
+    expect(padded.success).toBe(true);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// S152/DA5 (Audit B B-I1): the registerSchema fullName trim at the
+// validation ATOM — the trim-before-store doctrine's last gap (the CY2
+// schoolName shape verbatim). boundedTitle, emailField, schoolName, the
+// group members, the upload names, and the route-side displayName.trim()
+// all trim; fullName was the one untrimmed text atom at a write boundary —
+// a whitespace-padded or whitespace-only name persisted verbatim (the
+// register response + the /api/auth/me card render it). One canonical
+// atom: the register route parses through this schema and every future
+// consumer lands the trim for free.
+// Pre-fix RED: the schema returns the padded value verbatim.
+// ---------------------------------------------------------------------------
+describe("S152/DA5: the registerSchema fullName trim at the validation atom", () => {
+  it("trims a padded full name before the store (the boundedTitle convention)", () => {
+    const out = registerSchema.safeParse({
+      fullName: "  Ada Lovelace  ",
+      email: "ada@studyflow.app",
+      password: "Demo1234!",
+    });
+    expect(out.success).toBe(true);
+    if (out.success) expect(out.data.fullName).toBe("Ada Lovelace");
+  });
+
+  it("normalizes a whitespace-only full name to the default cleared state, with the bound still post-trim", () => {
+    const out = registerSchema.safeParse({
+      fullName: "   ",
+      email: "ada@studyflow.app",
+      password: "Demo1234!",
+    });
+    expect(out.success).toBe(true);
+    if (out.success) expect(out.data.fullName).toBe("");
+    // The trim orders BEFORE .max(): a padded raw value that trims within
+    // 100 passes (pre-trim the raw length would have failed) — the
+    // ordering witness (the CY2 probe shape).
+    const padded = registerSchema.safeParse({
+      fullName: ` ${"x".repeat(100)} `,
+      email: "ada@studyflow.app",
+      password: "Demo1234!",
     });
     expect(padded.success).toBe(true);
   });

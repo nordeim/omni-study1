@@ -102,6 +102,10 @@ export function ExamsView() {
   const [topicInput, setTopicInput] = React.useState("");
   const [busy, setBusy] = React.useState(false);
   const [error, setError] = React.useState("");
+  // S152/DA1 (the S151 audit's B-L5): the delete double-fire latch (the
+  // events-view twin — the per-row in-flight set; the finally removal
+  // keeps retry honest).
+  const [deletingIds, setDeletingIds] = React.useState<ReadonlySet<string>>(new Set());
 
   // The subtitle's live counts read the FULL list (the reference reported
   // "0 upcoming · 0 this week" while its Upcoming filter was active).
@@ -180,6 +184,19 @@ export function ExamsView() {
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (busy) return;
+    // S152/DA2 (the S151 audit's B-L6): the hand-guard — the noValidate
+    // form's empty required fields answer HERE with human copy (the
+    // S127/CB17 files-view pattern), never the server's raw Zod issue
+    // text. Before setBusy: an early return must not strand the busy
+    // latch.
+    if (!form.title.trim()) {
+      setError("Please enter a title.");
+      return;
+    }
+    if (!form.date) {
+      setError("Please pick an exam date.");
+      return;
+    }
     setBusy(true);
     setError("");
     const payload: ExamInput = {
@@ -210,11 +227,19 @@ export function ExamsView() {
   };
 
   const remove = async (id: string) => {
+    if (deletingIds.has(id)) return;
+    setDeletingIds((prev) => new Set(prev).add(id));
     try {
       await deleteExam(id);
       toast.success("Exam deleted.");
     } catch (err: unknown) {
       toast.error(err instanceof ApiError ? err.message : "Delete failed.");
+    } finally {
+      setDeletingIds((prev) => {
+        const next = new Set(prev);
+        next.delete(id);
+        return next;
+      });
     }
   };
 
@@ -408,7 +433,8 @@ export function ExamsView() {
                         type="button"
                         aria-label={`Delete ${exam.title}`}
                         onClick={() => remove(exam.id)}
-                        className="flex size-7 items-center justify-center rounded-lg text-slate-400 hover:bg-red-50 hover:text-red-500 dark:hover:bg-red-950"
+                        disabled={deletingIds.has(exam.id)}
+                        className="flex size-7 items-center justify-center rounded-lg text-slate-400 hover:bg-red-50 hover:text-red-500 disabled:opacity-50 dark:hover:bg-red-950"
                       >
                         <Trash2 className="size-3.5" strokeWidth={2} />
                       </button>

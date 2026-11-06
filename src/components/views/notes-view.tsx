@@ -184,6 +184,11 @@ export function NotesView() {
   const [name, setName] = React.useState("");
   const [busy, setBusy] = React.useState(false);
   const [error, setError] = React.useState("");
+  // S152/DA1 (the S151 audit's B-L5): the delete double-fire latch — the
+  // per-row in-flight set for BOTH delete handlers (notes + notebooks);
+  // the Popover action sites close on click, so the handler latch alone
+  // covers them; the finally removal keeps retry honest.
+  const [deletingIds, setDeletingIds] = React.useState<ReadonlySet<string>>(new Set());
   // S77/AD: the editor's measured chrome state — the Font row typeface and
   // the tag-row draft.
   const [font, setFont] = React.useState<EditorFont>("sans");
@@ -347,6 +352,16 @@ export function NotesView() {
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (busy || !dialog.open) return;
+    // S152/DA2 (the S151 audit's B-L6): the hand-guard — the noValidate
+    // form's empty required field answers HERE with human copy (the
+    // S127/CB17 files-view pattern), never the server's raw Zod issue
+    // text. Both dialog kinds ride the same required name field (the
+    // note title / the notebook name). Before setBusy: an early return
+    // must not strand the busy latch.
+    if (!name.trim()) {
+      setError("Please enter a name.");
+      return;
+    }
     setBusy(true);
     setError("");
     try {
@@ -378,20 +393,36 @@ export function NotesView() {
   };
 
   const removeNote = async (id: string) => {
+    if (deletingIds.has(id)) return;
+    setDeletingIds((prev) => new Set(prev).add(id));
     try {
       await deleteNote(id);
       toast.success("Note deleted.");
     } catch (err: unknown) {
       toast.error(err instanceof ApiError ? err.message : "Delete failed.");
+    } finally {
+      setDeletingIds((prev) => {
+        const next = new Set(prev);
+        next.delete(id);
+        return next;
+      });
     }
   };
 
   const removeNotebook = async (row: NotebookRow) => {
+    if (deletingIds.has(row.id)) return;
+    setDeletingIds((prev) => new Set(prev).add(row.id));
     try {
       await deleteNotebook(row.id);
       toast.success("Notebook deleted. Its notes are kept.");
     } catch (err: unknown) {
       toast.error(err instanceof ApiError ? err.message : "Delete failed.");
+    } finally {
+      setDeletingIds((prev) => {
+        const next = new Set(prev);
+        next.delete(row.id);
+        return next;
+      });
     }
   };
 
