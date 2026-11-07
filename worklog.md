@@ -5484,3 +5484,132 @@ S150/B-L2 import lock-hold finding); the **db-path percent-decode**
 stays recorded for the db-path-family cycle; the N1 re-order
 alternative stays rejected-and-documented; the N3/N4 notes ride the
 next rotation's file list.
+
+## Session 165 — the S154 cycle (Batch DC: the no-op-elision + questions-mirror + import-doc-reconciliation set)
+
+**Context.** The workspace was a FRESH CLONE at `b6df05f` on `main`
+(the Batch DB fix `2914f0d` + the operator's session_180 transcript
+commit; the sandbox had reset — the environment re-provisioned from
+zero: `.env` from `.env.example`, `db/` + push + seed, `bun install`,
+the Playwright chromium cache re-provisioned [the S103 lesson-1
+class]). Cold baseline matched the documented S153-final state exactly:
+lint ✓ · tsc ✓ · unit 1582/1582 (48 files) · the drawer check GREEN
+(**the 69th consecutive no-Tailwind-v4-mobile-nav-bug confirmation**)
+· the desktop parity probe **MATCH** (live reference login).
+
+**The audits (Mode-C, every M/L finding re-verified by direct read;
+the axis read dispatched to a read-only subagent against the
+web-application skill's rubric — the S148-S153 precedent).** A — the
+Batch DB recent-changes axis (`2914f0d`): **0C/0H/0M/0L/0I — clean**,
+all four DB claims confirmed at the source level, the doc census
+machine-verified with zero stale sites. B — the data-portability/
+import-restore rotation (the fix surfaces, swept at S148):
+**0C/0H/0M/4L/2I** — no injection/authz/secret/enumeration defect in
+the axis. The findings: **L1** the practiceTests.questions item-shape
+parity gap (the members precedent's missed twin — the atom refines
+every item, the import checked array-ness only); **L2** ADR-021's
+Decision stale on two counts (the 25 MiB cap, the per-row findFirst
+shape); **L3** AGENTS.md's import row stale on three counts (the cap,
+the write-loop shape, the false budget-exclusivity claim); **L4** the
+write-only-tx property pinned only by presence-markers; **I-A** the
+export peak-memory residual (the streaming family); **I-B** the two
+verified non-gaps. The S153 N3/N4 notes closed by re-verification.
+
+**The measurement (the cycle's first duty — the S141 condition
+answered).** The S141 deferral made the A-M3 stage-2 conditional
+("stage-2 if measurement shows a residual window"); a scratch probe
+(the exact tx shape against a throwaway db/measure.db) measured the
+sequential update loop at **0.32 ms/row, linear — 1k = 430 ms · 10k
+= 3.5 s · 50k = 16.0 s · 100k = 32.0 s** (1.9× headroom inside the
+60 s timeout at the IMPORT_MAX_ROWS cap; the S141-era 0.6 ms/row
+estimate was 2× pessimistic), and the full-row probe (the elision's
+read cost) at **2.1 s at the same cap — 15× cheaper than the writes
+it can elide**. Adjudication: the stage-2 chunked sub-tx + resume
+token stays deferred **ON MEASUREMENT**; the cycle ships the
+contract-preserving move the measurement does justify.
+
+**The plan** (`docs/remediation-plan-session154.md`) written BEFORE any
+source change, validated against the codebase (every anchor re-read;
+the RED inventory sized +6 unit legs, +0 e2e legs by design — the CV1
+runtime-split precedent: the elision is wire-invisible by construction).
+
+**The fixes (the unit REDs 4/4 on their designed markers + the
+elision census RED + the DC4 negative census green-on-arrival by
+design — the CS3/CL9 precedent).** DC1 the no-op update elision — a
+pre-tx pass (after the collision pre-flight, immediately before the
+transaction) reads the full stored rows for the update-branch ids
+(chunked, ownership-scoped, the cards deck-scope included) and drops
+every write whose planned payload already holds; the diff is the pure
+seam's `plannedUpdateIsNoOp` (diff over PLANNED keys only — exactly
+Prisma's update semantics; CONSERVATIVE — any doubt keeps the write;
+Date↔ISO exact-ms comparison); the elided rows still count in
+`updated` (the wire shape unchanged by construction — the s23
+idempotence pin's updated: 3 holds with all three writes elided); a
+row vanishing in the pass→tx window joins the documented accepted
+read-hoist TOCTOU class, and the P2025 → named-409 door stays open
+for changed rows. DC2 the questions item-shape mirror (the atom's
+predicates verbatim — never stricter; `["garbage"]` now answers the
+named 400). DC3 the doc-reconciliation pair (ADR-021's Decision +
+AGENTS.md's import row). DC4 the write-only negative census (no
+`.findFirst(` call form) + the elision census markers.
+
+**The operational traps hit and closed (both self-inflicted, both
+documented).** (1) The first backgrounded chunk-3 run was REAPED
+mid-flight — the subshell-waiting form keeps the descendant alive
+(the S110 descent lesson); the foreground re-run was clean (91/91).
+(2) **The S153 edit-the-runner lesson RE-OFFENDED** — the cert header
+note was inserted at the top of e2e-chunked-cert.sh WHILE bash
+executed chunk 2 (the in-place write shifted the post-loop offsets
+under the running fd). Caught within the repair window: the insertion
+REVERTED to the byte-identical original (git diff empty) while the
+loop held chunks 3-5 in memory, so the cert completed with its DONE
+line and exit code intact; the note re-applied post-run. The
+sharpened lesson: the rule needs its RECOVERY recipe — an in-place
+edit under a running bash is recoverable IF the file is restored
+byte-identical before the parser reads past its buffered position.
+
+**Re-cert (the FINAL tree).** lint ✓ · tsc ✓ · unit **1588/1588**
+(48 files, +6: data-import +4, script-conventions +2) · build ✓
+(exit 0; the 6 documented warnings; the elision verified shipped in
+the standalone chunk — the minified Date.parse/getTime diff guard) ·
+the targeted e2e: chunk 3 **91/91 first-pass** cold (the import
+413/409 family + the CL1 equal-times round-trip) · chunk 5 **89/89
+first-pass** cold (the s23 round-trip + the idempotent re-import
+[created=0, updated=3 with all three writes elided — the elision's
+behavioral proof] + the 400 family + rollback) — the cold 5-chunk
+cert: chunk 1 152/152 · chunk 2 189/189 · chunk 3 **91/91 on the
+identical-combo cold re-run** (the cert-run attempt carried TWO
+failures root-caused as the documented P1008 machine-load class —
+the ambient Prisma socket-timeout signature, the files-upload legs;
+closed by the clean first-pass re-run) · chunk 4 95/95 · chunk 5
+89/89 — **616/616** (the e2e census unchanged
+by design) · **census 2204 green** (was 2198).
+
+**Evidence.** The `docs/screenshots/154-clone-*.png` frames (the
+standing desktop + mobile drawer [the 69th drawer-GREEN companion] +
+the Restore card's completed re-import result [the elision's
+user-visible wire proof — created 0, updated N]) + the
+`154-import-elision-evidence.json` record (the wire round-trip + the
+measurement table), self-verifying (the capture script's JSON verdict
+ok:true; dimensions machine-checked 1440x900 / 390x844). The DC1
+diff's proof rides the unit trio + the censuses + the s23/resilience
+re-cert (the CW2 runtime-split precedent).
+
+**Docs.** README badge/census (2198 → 2204) + the unit/e2e prose
+sites + the Data-portability feature row's elision note + the
+Session-154 row; AGENTS census (1582 → 1588) + the import row's
+three-count reconciliation + the S154 lessons block (four lessons);
+CLAUDE counts; PAD v1.3.62 (the revision block + the ADR-021 Decision
+reconciliation); the SKILL census (all three sites); the vitest header
+re-anchor (+6 with the no-e2e-by-design note); the cert runner re-tag
+(applied post-run); `docs/session_181.md`; this entry; the plan §6
+as-executed close; the `.env.example` contract re-verified (no
+env-var reads changed this cycle).
+
+**Next cycle.** The rotation continues — the raw-SQL bulk upsert (the
+changed-rows tail's next step IF profiling ever shows the 60 s budget
+pressed) and the export streaming (the I-A peak-memory residual) stay
+the import family's recorded candidates; the db-path percent-decode
+stays recorded for the db-path-family cycle; the A-M3 stage-2 stays
+deferred ON MEASUREMENT (re-measure if the hardware or the row cap
+changes).

@@ -76,6 +76,7 @@ import {
   importProbeTargets,
   importRowIdError,
   importRestoreError,
+  plannedUpdateIsNoOp,
   sanitizeImportRow,
   sortFoldersParentsFirst,
   stripSecrets,
@@ -542,6 +543,53 @@ export const POST = async (request: NextRequest) => {
       }
     }
 
+    // ---- S154/DC1: the no-op update elision (the last pre-tx pass) ----
+    // The B-L2 availability answer, MEASUREMENT-BACKED (the S141
+    // condition "stage-2 if measurement shows a residual window" answered
+    // by probe): the sequential per-row update loop measures 0.32 ms/row
+    // on this build — 32 s at the IMPORT_MAX_ROWS cap, inside the 60 s
+    // timeout with 1.9× headroom — so the stage-2 chunked sub-tx (breaking
+    // the all-or-nothing ADR-021 contract) stays deferred ON MEASUREMENT.
+    // The dominant heavy case is the IDEMPOTENT RE-IMPORT (restore over a
+    // mostly-unchanged account — the e2e suite's own scenario): every
+    // update-branch row whose stored values already equal the planned
+    // payload is a write that changes nothing — elide it. The diff rides
+    // the pure seam (plannedUpdateIsNoOp: conservative — any doubt keeps
+    // the write; the write is today's behavior, the skip is the
+    // optimization). The elided rows still count in `updated` (the wire
+    // contract's idempotence pin expects updated: N on a re-import where
+    // every row is a no-op — the response shape is UNCHANGED by
+    // construction). A row that vanishes between this pass and the
+    // transaction either was read-and-proven-equal (the silent-skip
+    // narrowing — the milliseconds-wide pass→tx window, joining the
+    // documented accepted read-hoist TOCTOU class) or was kept as changed
+    // (the P2025 → named-409 door stays open exactly as today). The read
+    // is bounded by the envelope's own update set (envelope ids only,
+    // chunked, ownership-scoped — the cards deck-scope included), pre-tx,
+    // no lock; measured 2.1 s at the 100k cap vs the 32 s of writes it
+    // can elide.
+    const elidedUpdates = new Map<Collection, number>();
+    for (const [collection, plan] of plans) {
+      if (plan.updates.length === 0) continue;
+      const model = MODEL[collection] as keyof PrismaClient;
+      const delegate = importDelegateOps(db, model);
+      const stored = new Map<string, Row>();
+      for (const chunk of chunkImportIds(plan.updates.map((u) => u.id))) {
+        const found = await delegate.findMany({
+          where: { id: { in: chunk }, ...ownershipScope(collection, user.id) },
+        });
+        for (const row of found as Row[]) stored.set(row.id as string, row);
+      }
+      const changed = plan.updates.filter(({ id, data }) => {
+        const row = stored.get(id);
+        // A vanished row keeps its write (the loud P2025 door); a row
+        // proven equal drops it.
+        return row === undefined || !plannedUpdateIsNoOp(row, data);
+      });
+      elidedUpdates.set(collection, plan.updates.length - changed.length);
+      plan.updates = changed;
+    }
+
     // ---- the all-or-nothing write (WRITE-ONLY since S141/CP3) ------------
     const imported: Record<string, { created: number; updated: number }> = {};
     let created = 0;
@@ -606,9 +654,13 @@ export const POST = async (request: NextRequest) => {
           c += chunkRows.length;
         }
 
-        imported[collection] = { created: c, updated: u };
+        // S154/DC1: the counted-as-updated wire — the elided no-op rows
+        // join the `updated` counter (the idempotence pin's contract:
+        // updated: N on a re-import where every row is a no-op).
+        const elided = elidedUpdates.get(collection) ?? 0;
+        imported[collection] = { created: c, updated: u + elided };
         created += c;
-        updated += u;
+        updated += u + elided;
       }
 
       // S127/CB19: the envelope's user profile block — the export

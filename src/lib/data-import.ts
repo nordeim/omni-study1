@@ -1171,6 +1171,34 @@ function checkDomainCaps(collection: string, row: ImportRow, index: number): voi
           }
         }
       }
+      // S154/DC2 (audit B L1 — the members precedent's missed twin): the
+      // ITEM shape — the interactive atom (practiceTestSchema.questions)
+      // refines every item: an object with a question string and a type
+      // in the three-member vocabulary. The import's array-ness check
+      // alone admitted '["garbage"]' (a row every interactive route
+      // would 400 — the CB11/CA14 parity contract). The predicates
+      // mirror the ATOM verbatim (never stricter — the round-trip
+      // contract outranks the nicety); no per-item length bounds
+      // because the atom carries none (the whole-blob 100k-char field
+      // cap already governs).
+      if (collection === "practiceTests" && field === "questions") {
+        for (const item of parsed) {
+          if (
+            typeof item !== "object" ||
+            item === null ||
+            typeof (item as Record<string, unknown>).question !== "string" ||
+            !["multiple_choice", "true_false", "short_answer"].includes(
+              String((item as Record<string, unknown>).type),
+            )
+          ) {
+            throw new ImportRowError(
+              collection,
+              index,
+              'field "questions" items must each be an object with a question and a type (multiple_choice, true_false, or short_answer).',
+            );
+          }
+        }
+      }
     }
   }
 }
@@ -1226,6 +1254,66 @@ export function importProfilePatch(
     if (value !== undefined) patch[key] = value;
   }
   return Object.keys(patch).length > 0 ? patch : null;
+}
+
+// ---------------------------------------------------------------------------
+// S154/DC1 (audit B B-L2's contract-preserving answer) · the no-op update
+// elision diff. The S141 condition ("stage-2 if measurement shows a
+// residual window") answered by probe: the sequential per-row update loop
+// measures 0.32 ms/row on this build (32 s at the IMPORT_MAX_ROWS cap —
+// 1.9× headroom inside the 60 s timeout), so the chunked-sub-tx stage-2
+// stays deferred ON MEASUREMENT and the cycle ships the elision instead:
+// the route's pre-tx pass reads the full stored rows for the
+// update-branch ids and drops every write whose planned payload already
+// holds (the dominant heavy case — the idempotent re-import over a
+// mostly-unchanged account — collapses from N lock-held writes to ~0 at
+// read-cost). This pure seam is the diff.
+//
+// The semantics (the load-bearing choices):
+//  - Diff over PLANNED keys only — exactly Prisma's update semantics
+//    (absent keys never ride the write), so "the update would change
+//    nothing" is proven iff every planned key already holds its value.
+//  - CONSERVATIVE failure direction: any doubt (a key missing from the
+//    stored row, a typeof mismatch, null-vs-value, an unparseable date,
+//    an object value) keeps the write — the write is today's behavior,
+//    the skip is the optimization. A false "not equal" costs one
+//    redundant write; a false "equal" is impossible by construction
+//    (equality is proven key-by-key, never assumed).
+//  - Date↔ISO: the stored row's DateTime fields are Date objects, the
+//    envelope's are ISO strings; the export's serialize → JSON.parse
+//    round-trip recovers the exact millisecond, so an untouched
+//    updatedAt/createdAt/dueDate compares equal (a row TOUCHED since the
+//    export keeps its write).
+//  - No Json columns exist in the schema (JSON columns are String-typed
+//    both sides), so any object value is a doubt — never equal.
+// ---------------------------------------------------------------------------
+export function plannedUpdateIsNoOp(
+  stored: Record<string, unknown>,
+  planned: Record<string, unknown>,
+): boolean {
+  for (const [key, value] of Object.entries(planned)) {
+    // Prisma's skip semantics: an undefined value never rides the update,
+    // so it can never make the update non-no-op.
+    if (value === undefined) continue;
+    const current = stored[key];
+    // Not carried by the stored row — equality cannot be proven.
+    if (current === undefined) return false;
+    if (current === null || value === null) {
+      // null vs value writes (either direction); null vs null holds.
+      if (current !== value) return false;
+      continue;
+    }
+    if (current instanceof Date) {
+      if (typeof value !== "string") return false;
+      const t = Date.parse(value);
+      if (Number.isNaN(t) || t !== current.getTime()) return false;
+      continue;
+    }
+    if (typeof current !== typeof value) return false;
+    if (typeof current === "object") return false;
+    if (current !== value) return false;
+  }
+  return true;
 }
 
 /** Validate one imported row against the export format's primitive-value

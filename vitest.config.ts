@@ -1,7 +1,27 @@
 import { defineConfig } from "vitest/config";
 import path from "node:path";
 
-// Unit-test layer for the pure domain seams — 48 files / 1582 tests
+// Unit-test layer for the pure domain seams — 48 files / 1588 tests
+// (re-anchored S154/DC — the no-op-elision + questions-mirror +
+// import-doc-reconciliation set: census 1582 → 1588, +6 net
+// [data-import +4: the S154/DC2 questions item-shape mirror leg (the
+// members twin — the non-object item, the wrong type vocabulary, the
+// missing type, and the three valid shapes) + the S154/DC1
+// plannedUpdateIsNoOp trio (the identical-row elides leg — Date↔ISO
+// exact-ms + nulls + primitives, the re-import shape; the
+// changed-value-never-elides leg — string/date/number/boolean; the
+// every-doubt-keeps-the-write leg — the missing stored key, the typeof
+// mismatch, null-vs-value both directions, the unparseable date, the
+// object value, with the Prisma-skip undefined leg holding true);
+// script-conventions +2: the S154/DC4 write-only negative census (no
+// `.findFirst(` call form anywhere in the import route — green-on-
+// arrival by design, the CS3/CL9 precedent) + the S154/DC1 elision
+// census (the marker + the plannedUpdateIsNoOp call + the
+// counted-as-updated `updated: u + ` wire)]. The e2e census stays 616 —
+// no new e2e legs by design, the CV1 runtime-split precedent: the
+// elision is wire-invisible by construction, and the s23 idempotent
+// re-import pin IS the behavioral leg [all three rows elide, the wire
+// still says updated: 3 — verified in the chunk-5 cert].)
 // (re-anchored S153/DB — the rate-limit-model + export-page-budget set:
 // census 1578 → 1582, +4 net [auth +2: the S153/DB1 capped-discharge pair
 // (the discharge ceiling's 21st-decrement no-op leg — the success-only

@@ -1,0 +1,42 @@
+{
+  "cycle": "S154/DC1 — the no-op update elision",
+  "wire": {
+    "firstImport": {
+      "status": 200,
+      "created": 0,
+      "updated": 71
+    },
+    "reImport": {
+      "status": 200,
+      "created": 0,
+      "updated": 71
+    },
+    "contract": "the re-import answers created 0 + updated N (the counted-as-updated wire) while the pre-tx diff elided every update write — the response shape is UNCHANGED by construction"
+  },
+  "measurement": {
+    "probe": "the exact tx shape (sequential per-row updates + chunked createMany inside $transaction({timeout:60_000, maxWait:5_000})) against a throwaway db/measure.db",
+    "rows": [
+      {
+        "rows": 1000,
+        "updateLoopMs": 430,
+        "fullRowProbeMs": 24
+      },
+      {
+        "rows": 10000,
+        "updateLoopMs": 3543,
+        "fullRowProbeMs": 298
+      },
+      {
+        "rows": 50000,
+        "updateLoopMs": 16005,
+        "fullRowProbeMs": 1173
+      },
+      {
+        "rows": 100000,
+        "updateLoopMs": 31972,
+        "fullRowProbeMs": 2088
+      }
+    ],
+    "verdict": "0.32 ms/row, linear — 32 s at the IMPORT_MAX_ROWS cap, 1.9x headroom inside the 60 s timeout: the A-M3 stage-2 chunked sub-tx stays deferred ON MEASUREMENT (the S141 condition answered); the elision collapses the dominant heavy case (the idempotent re-import) from N lock-held writes to one bounded read pass (2.1 s at the cap, 15x cheaper)"
+  }
+}

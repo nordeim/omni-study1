@@ -1736,3 +1736,128 @@ describe("S143/CR6 · importRestoreError (the catch's error→response mapping, 
     expect(out.message).toContain("collides with an existing record");
   });
 });
+
+// ---------------------------------------------------------------------------
+// S154/DC2 (audit B L1) · the practiceTests questions item-shape mirror —
+// the members precedent's missed twin. The interactive atom refines EVERY
+// item (object + question string + the three-member type vocabulary,
+// validation.ts practiceTestSchema); the import's JSON_STRING_FIELDS pass
+// checked string-ness + parse + array-ness only, so '["garbage"]' persisted
+// a practiceTests row every interactive route would 400 (the CB11/CA14
+// parity contract). studyGroups.members got its item-shape mirror at
+// S139/CN1; questions waited 15 cycles.
+// ---------------------------------------------------------------------------
+describe("S154/DC2 · the practiceTests questions item-shape mirror (the members twin)", () => {
+  it("rejects a questions item with a bad shape (a non-object item; a wrong type vocabulary) — the valid shapes pass", () => {
+    expect(() =>
+      sanitizeImportRow("practiceTests", { id: "pt1", questions: JSON.stringify(["garbage"]) }, 0),
+    ).toThrow(/questions/);
+    expect(() =>
+      sanitizeImportRow("practiceTests", { id: "pt1", questions: JSON.stringify([{ question: "Q", type: "essay" }]) }, 0),
+    ).toThrow(/questions/);
+    expect(() =>
+      sanitizeImportRow("practiceTests", { id: "pt1", questions: JSON.stringify([{ question: "Q" }]) }, 0),
+    ).toThrow(/questions/);
+    expect(() =>
+      sanitizeImportRow(
+        "practiceTests",
+        {
+          id: "pt1",
+          questions: JSON.stringify([
+            { question: "Solve for x.", type: "multiple_choice" },
+            { question: "The sky is blue.", type: "true_false" },
+            { question: "Name the theorem.", type: "short_answer" },
+          ]),
+        },
+        0,
+      ),
+    ).not.toThrow();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// S154/DC1 (audit B B-L2's contract-preserving answer) · the no-op update
+// elision diff — plannedUpdateIsNoOp. The S141 condition ("stage-2 if
+// measurement shows a residual window") answered by probe: the sequential
+// update loop measures 0.32 ms/row (32 s at the 100k cap — 1.9× headroom
+// inside the 60 s timeout), so the chunked sub-tx stays deferred ON
+// MEASUREMENT and the cycle ships the elision: the pre-tx pass reads the
+// full stored rows for the update-branch ids and drops every write whose
+// planned payload already holds — the dominant heavy case (the idempotent
+// re-import over a mostly-unchanged account) collapses from N lock-held
+// writes to ~0 at read-cost. The diff is CONSERVATIVE: any doubt keeps the
+// write (the write is today's behavior, the skip is the optimization).
+// ---------------------------------------------------------------------------
+describe("S154/DC1 · the no-op update elision diff (plannedUpdateIsNoOp)", () => {
+  it("an identical row is a no-op (DateTime columns as ISO strings against stored Dates, nulls, primitives — the re-import shape)", async () => {
+    const { plannedUpdateIsNoOp } = await import("../src/lib/data-import");
+    const stored = {
+      title: "Chapter 4 review",
+      notes: "redo the odd problems",
+      completed: false,
+      important: true,
+      dueDate: new Date("2026-03-04T05:06:07.000Z"),
+      createdAt: new Date("2026-01-02T03:04:05.000Z"),
+      updatedAt: new Date("2026-01-02T03:04:05.000Z"),
+      listId: null,
+      subjectId: "subj-1",
+      userId: "u1",
+      subtasks: '[{"id":"st-1","title":"a","done":false}]',
+      priority: "medium",
+      repeat: "none",
+      myDay: false,
+    };
+    const planned = {
+      title: "Chapter 4 review",
+      notes: "redo the odd problems",
+      completed: false,
+      important: true,
+      dueDate: "2026-03-04T05:06:07.000Z",
+      createdAt: "2026-01-02T03:04:05.000Z",
+      updatedAt: "2026-01-02T03:04:05.000Z",
+      listId: null,
+      subjectId: "subj-1",
+      userId: "u1",
+      subtasks: '[{"id":"st-1","title":"a","done":false}]',
+      priority: "medium",
+      repeat: "none",
+      myDay: false,
+    };
+    expect(plannedUpdateIsNoOp(stored, planned)).toBe(true);
+  });
+
+  it("a changed value is never a no-op (a string field; a date field moved; a number; a boolean)", async () => {
+    const { plannedUpdateIsNoOp } = await import("../src/lib/data-import");
+    const stored = {
+      title: "T",
+      score: 89.5,
+      completed: false,
+      updatedAt: new Date("2026-01-02T03:04:05.000Z"),
+    };
+    expect(plannedUpdateIsNoOp(stored, { ...stored, updatedAt: "2026-01-02T03:04:05.001Z", title: "T", score: 89.5, completed: false })).toBe(false);
+    expect(plannedUpdateIsNoOp(stored, { title: "T2", score: 89.5, completed: false, updatedAt: "2026-01-02T03:04:05.000Z" })).toBe(false);
+    expect(plannedUpdateIsNoOp(stored, { title: "T", score: 90, completed: false, updatedAt: "2026-01-02T03:04:05.000Z" })).toBe(false);
+    expect(plannedUpdateIsNoOp(stored, { title: "T", score: 89.5, completed: true, updatedAt: "2026-01-02T03:04:05.000Z" })).toBe(false);
+  });
+
+  it("every doubt keeps the write (a key missing from the stored row; a typeof mismatch; null vs value; an unparseable date; an object value)", async () => {
+    const { plannedUpdateIsNoOp } = await import("../src/lib/data-import");
+    // A key the stored row does not carry — cannot prove equality.
+    expect(plannedUpdateIsNoOp({ title: "T" }, { title: "T", room: "201" })).toBe(false);
+    // A typeof mismatch (the write would 400 at Prisma — today's behavior).
+    expect(plannedUpdateIsNoOp({ score: 89.5 }, { score: "89.5" })).toBe(false);
+    // null vs a value (either direction writes).
+    expect(plannedUpdateIsNoOp({ listId: null }, { listId: "l1" })).toBe(false);
+    expect(plannedUpdateIsNoOp({ listId: "l1" }, { listId: null })).toBe(false);
+    // null vs null is equal (no write needed).
+    expect(plannedUpdateIsNoOp({ listId: null }, { listId: null })).toBe(true);
+    // A stored Date against a non-string planned value.
+    expect(plannedUpdateIsNoOp({ dueDate: new Date("2026-01-02T03:04:05.000Z") }, { dueDate: 1767337445000 })).toBe(false);
+    // An unparseable date string (conservative: keep the write; Prisma answers).
+    expect(plannedUpdateIsNoOp({ dueDate: new Date("2026-01-02T03:04:05.000Z") }, { dueDate: "not-a-date" })).toBe(false);
+    // An object value (the schema carries no Json columns — any object is a doubt).
+    expect(plannedUpdateIsNoOp({ meta: {} }, { meta: { a: 1 } })).toBe(false);
+    // An undefined planned value rides Prisma's skip semantics (never part of the write).
+    expect(plannedUpdateIsNoOp({ title: "T", x: 1 }, { title: "T", x: undefined })).toBe(true);
+  });
+});

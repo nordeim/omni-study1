@@ -1,4 +1,15 @@
 #!/usr/bin/env bash
+# (S154/DC re-tag — census 616 UNCHANGED: no new e2e legs by design, the
+# CV1 runtime-split precedent. The S154/DC1 no-op update elision is
+# wire-invisible by construction (the elided rows count in `updated`, so
+# the s23 idempotent re-import pin's created=0/updated=3 holds with all
+# three writes elided — that pin IS the elision's behavioral leg, and it
+# rides chunk 5's cold boot in this very map; the CL1 equal-times
+# round-trip leg rides chunk 3). The cycle's proof instead rides the
+# unit layer: the plannedUpdateIsNoOp trio + the DC4 write-only
+# negative census + the DC1 elision census in script-conventions. The
+# import family's doc reconciliation (ADR-021 + AGENTS.md) carries no
+# count change.)
 # (S153/DB re-tag — census 614 → 616, net +2: chunk 1 +2 [the S153/DB1
 # success-loop trip pin (parity-session8's new TERMINAL describe — the
 # capped-discharge wire proof: a throwaway's correct-credential login

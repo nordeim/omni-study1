@@ -1306,6 +1306,26 @@ describe("the restore-availability census (S141/CP3)", () => {
     const src = readFileSync(IMPORT_ROUTE, "utf8");
     expect(src).toContain("S141/CP3: the cross-account collision pre-flight");
   });
+
+  it("S154/DC4: the transaction is WRITE-ONLY — no findFirst CALL form anywhere in the import route (the CP3 property, negatively pinned)", () => {
+    const src = readFileSync(IMPORT_ROUTE, "utf8");
+    // The CALL is the property (`.findFirst(`); the route's comments may
+    // legitimately NAME the removed read (the S141/CP3 provenance). A
+    // regression that re-interleaves a per-row read inside the
+    // $transaction callback ships RED here even with every
+    // presence-marker above intact.
+    expect(src).not.toMatch(/\.\s*findFirst\s*\(/);
+  });
+
+  it("S154/DC1: the no-op update elision rides the pre-tx pass (the full-row read + the conservative diff + the counted-as-updated wire)", () => {
+    const src = readFileSync(IMPORT_ROUTE, "utf8");
+    expect(src).toContain("S154/DC1: the no-op update elision");
+    expect(src).toContain("plannedUpdateIsNoOp");
+    // The counted-as-updated wire: the elided rows join the `updated`
+    // counter (the idempotence pin's updated: N on a re-import where
+    // every row is a no-op — the wire shape unchanged by construction).
+    expect(src).toMatch(/updated: u \+ /);
+  });
 });
 
 // ---------------------------------------------------------------------------
