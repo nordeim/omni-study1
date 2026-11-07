@@ -1,0 +1,36 @@
+{
+  "cycle": "S155/DD1 — the module-anchor percent-decode (the S150 B-I3 class)",
+  "probe": "scripts/probe-dbpath-spaced-s155.mjs (the live spaced-path probe: the REAL module copied into '/tmp/s155 My Repo', imported from the foreign cwd /tmp, the documented relative DATABASE_URL pinned)",
+  "before": {
+    "candidateRoots": [
+      "/tmp"
+    ],
+    "resolved": "file:/tmp/db/custom.db",
+    "verdict": "the module anchor silently DROPPED (the raw .pathname kept '%20', the existsSync self-check failed) — resolution fell back to the foreign CWD rule, the documented 'regardless of the process working directory' invariant broken"
+  },
+  "after": {
+    "candidateRoots": [
+      "/tmp/s155 My Repo",
+      "/tmp"
+    ],
+    "resolved": "file:/tmp/s155 My Repo/db/custom.db",
+    "verdict": "the module anchor percent-DECODED (fileURLToPath) — resolution lands inside the spaced fixture; the invariant restored"
+  },
+  "buildMeasurement": {
+    "preFix": {
+      "standalone": "144M",
+      "warnings": 6
+    },
+    "helperWrappedDesign": {
+      "standalone": "699M",
+      "warnings": 8,
+      "verdict": "REJECTED — Turbopack's file tracer cannot see through a wrapper around fileURLToPath(import.meta.url); whole-project tracing"
+    },
+    "shippedDirectCallDesign": {
+      "standalone": "144M",
+      "warnings": 7,
+      "verdict": "SHIPPED — the trace identical to pre-fix; the +1 warning is the node:url Edge-Runtime advisory, the same server-only false-positive class as node:fs/node:path"
+    }
+  },
+  "rawFormNote": "the raw .pathname form on the same class of URL: '/tmp/s155%20My%20Repo/src/lib/db-path.ts' (never decodes); the shipped form: fileURLToPath -> '/tmp/s155 My Repo/src/lib/db-path.ts'"
+}

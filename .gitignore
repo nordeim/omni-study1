@@ -34,6 +34,10 @@ dev-server.pid
 # database binaries — recreate with db:push + db:seed
 db/*.db
 db/*.db-journal
+# S155/DD4b: the SQLite sidecar patterns (a crash-left -wal/-shm must not
+# ride a commit; the e2e cold-reset globs them away for the same reason)
+db/*.db-wal
+db/*.db-shm
 
 # prisma generated client
 node_modules/

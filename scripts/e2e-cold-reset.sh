@@ -28,5 +28,9 @@ if curl -s -o /dev/null --max-time 2 "http://localhost:${port}/api/health"; then
     exit 1
   fi
 fi
-rm -f db/e2e.db
+# S155/DD4a: the glob (not the bare db/e2e.db) — a crash-left -journal
+# sidecar survives a bare rm and would hot-journal-recover against the
+# freshly pushed db; the -wal/-shm patterns are the same hygiene (nothing
+# else matches this glob).
+rm -f db/e2e.db*
 echo "[e2e-cold-reset] port ${port} clear, db/e2e.db removed — the run starts cold"

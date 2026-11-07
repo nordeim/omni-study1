@@ -2390,3 +2390,37 @@ describe("S153/DB2: the /export page carries its own per-user budget before the 
     expect(src).toMatch(/sf-alert-amber/);
   });
 });
+
+// ---------------------------------------------------------------------------
+// S155/DD1 — the db-path module-anchor census pair (the S154/DC4 family
+// precedent): the percent-decode fix is structurally pinned so a regression
+// back to the raw `.pathname` form ships RED here, not silently in
+// production under a spaced checkout path.
+// ---------------------------------------------------------------------------
+describe("the S155/DD1 db-path module-anchor censuses", () => {
+  const DB_PATH = path.resolve(process.cwd(), "src/lib/db-path.ts");
+
+  it("S155/DD1: the module anchor converts through the DIRECT fileURLToPath call (the import + the inline form + the marker)", () => {
+    const src = readFileSync(DB_PATH, "utf8");
+    // The sanctioned conversion: imported from node:url and CALLED DIRECTLY
+    // on import.meta.url inside candidateRoots — the measured-design record:
+    // a helper-wrapped form is opaque to Turbopack's file tracer and grew
+    // the standalone output 144M → 699M, so the census pins the DIRECT form
+    // (a regression back to either the raw .pathname or an opaque wrapper
+    // ships RED in one of this pair).
+    expect(src).toMatch(/import \{ fileURLToPath \} from "node:url"/);
+    expect(src).toContain("S155/DD1");
+    expect(src).toMatch(/const self = fileURLToPath\(import\.meta\.url\)/);
+  });
+
+  it("S155/DD1: the raw pathname form is GONE from db-path.ts (the B-I3 defect, negatively pinned)", () => {
+    const src = readFileSync(DB_PATH, "utf8");
+    // The CALL is the property (the DC4 precedent): no ASSIGNMENT deriving
+    // the module path from the raw pathname form may survive. The module's
+    // own comment block legitimately MENTIONS the removed form verbatim
+    // (the provenance convention), so the pin anchors on the assignment
+    // shape — `= new URL(import.meta.url).pathname` — which exists only in
+    // code.
+    expect(src).not.toMatch(/=\s*new URL\(import\.meta\.url\)\.pathname/);
+  });
+});

@@ -1,7 +1,29 @@
 import { defineConfig } from "vitest/config";
 import path from "node:path";
 
-// Unit-test layer for the pure domain seams — 48 files / 1588 tests
+// Unit-test layer for the pure domain seams — 48 files / 1594 tests
+// (re-anchored S155/DD — the module-anchor percent-decode + db-path-family
+// doc-reconciliation set: census 1588 → 1594, +6 net [db-path +4: the
+// S155/DD1 module-anchor percent-decode family in the INTEGRATION form —
+// each leg copies the REAL module into a fixture repo whose path carries
+// the class trigger (a space, non-ASCII, plain-ASCII, a planted malformed
+// URL literal), imports the copy through its own percent-encoded
+// import.meta.url, and asserts resolution through the real candidateRoots
+// (the spaced/non-ASCII legs are the B-I3 class's behavioral proof; the
+// plain leg is the identity regression guard; the mutated-copy leg proves
+// the URIError guard — the anchor skipped, the CWD fallback, never a
+// throw); script-conventions +2: the S155/DD1 census pair (the DIRECT
+// fileURLToPath call form — the import + the inline `const self =` shape +
+// the marker, pinning the measured-design record: a helper-wrapped form is
+// opaque to Turbopack's file tracer and grew the standalone output 144M →
+// 699M — + the raw-pathform negative census, the assignment-anchored
+// `= new URL(import.meta.url).pathname` shape, the DC4 precedent)]. The
+// e2e census stays 616 — no new e2e legs by design, the CV1 runtime-split
+// precedent: the decode is wire-invisible for every non-percent-encodable
+// runner path (the decoded path is byte-identical where the pathname form
+// worked), and the behavioral proof rides the integration legs + the
+// live spaced-path probe + the full cert (every chunk boots the standalone
+// through db-path).)
 // (re-anchored S154/DC — the no-op-elision + questions-mirror +
 // import-doc-reconciliation set: census 1582 → 1588, +6 net
 // [data-import +4: the S154/DC2 questions item-shape mirror leg (the

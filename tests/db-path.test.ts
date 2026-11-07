@@ -1,6 +1,7 @@
-import { mkdtempSync, mkdirSync, rmSync, writeFileSync, existsSync } from "node:fs";
+import { mkdtempSync, mkdirSync, rmSync, writeFileSync, existsSync, copyFileSync, readFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
+import { pathToFileURL } from "node:url";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { resolveDatabaseUrl, standaloneRepoRoot } from "@/lib/db-path";
 
@@ -214,6 +215,139 @@ describe("S124/BY2: the db-path production gate", () => {
       expect(toPosix(out)).toBe(`file:${toPosix(path.join(gate, "db", "custom.db"))}`);
     } finally {
       rmSync(path.join(gate, "db", "custom.db"), { force: true });
+    }
+  });
+});
+
+// ---------------------------------------------------------------------------
+// S155/DD1 — the module-anchor percent-decode (the S150 B-I3 class, landed
+// at its named db-path-family cycle). The module anchor's URL→path
+// conversion must percent-DECODE (fileURLToPath): the raw
+// `new URL(import.meta.url).pathname` form kept "%20"/"%C3%A9", so a repo
+// checked out under a spaced or non-ASCII path failed the existsSync
+// self-check and the anchor was silently DROPPED — resolution fell back to
+// the CWD rule, breaking the documented "regardless of the process working
+// directory" invariant (.env.example's own promise) for every
+// percent-encodable checkout path.
+//
+// The INTEGRATION form (the measured-design record): each leg copies the
+// REAL module into a fixture repo whose path carries the class trigger,
+// imports the copy (its own import.meta.url is then the percent-encoded
+// fixture path — exactly the production shape), and asserts resolution
+// through the real candidateRoots(). A helper-wrapped seam was the first
+// design, but Turbopack's file tracer cannot see through a wrapper around
+// fileURLToPath(import.meta.url) — the standalone output measured 144M →
+// 699M (whole-project tracing) — so the fix ships as the DIRECT call form
+// (see db-path.ts's WHY-THE-DIRECT-CALL comment) and these legs pin the
+// behavior end-to-end instead of pinning a helper.
+// ---------------------------------------------------------------------------
+describe("S155/DD1: the module-anchor percent-decode (integration legs)", () => {
+  const fixtures: string[] = [];
+
+  afterAll(() => {
+    for (const f of fixtures) rmSync(f, { recursive: true, force: true });
+  });
+
+  function buildFixtureRepo(name: string): string {
+    // The name embeds the class trigger (a space / non-ASCII); mkdtemp's
+    // unique suffix keeps parallel runs collision-free.
+    const repo = mkdtempSync(path.join(tmpdir(), name));
+    fixtures.push(repo);
+    mkdirSync(path.join(repo, "src", "lib"), { recursive: true });
+    mkdirSync(path.join(repo, "prisma"), { recursive: true });
+    mkdirSync(path.join(repo, "db"), { recursive: true });
+    writeFileSync(
+      path.join(repo, "prisma", "schema.prisma"),
+      'datasource db { provider = "sqlite" }',
+    );
+    copyFileSync(
+      path.resolve(process.cwd(), "src", "lib", "db-path.ts"),
+      path.join(repo, "src", "lib", "db-path.ts"),
+    );
+    return repo;
+  }
+
+  async function importFixtureModule(repo: string) {
+    // pathToFileURL percent-encodes the trigger characters — the copy's
+    // import.meta.url then carries exactly the production shape.
+    return import(pathToFileURL(path.join(repo, "src", "lib", "db-path.ts")).href);
+  }
+
+  it("a SPACED checkout path keeps its module anchor — resolution lands inside the repo (the S150 B-I3 class)", async () => {
+    const repo = buildFixtureRepo("My Repo-");
+    const prev = process.env.DATABASE_URL;
+    process.env.DATABASE_URL = "file:../db/custom.db";
+    try {
+      const mod = await importFixtureModule(repo);
+      expect(mod.candidateRoots()[0]).toBe(repo);
+      expect(mod.resolveProcessDatabaseUrl()).toBe(
+        `file:${path.join(repo, "db", "custom.db")}`,
+      );
+    } finally {
+      process.env.DATABASE_URL = prev;
+    }
+  });
+
+  it("a NON-ASCII checkout path keeps its module anchor (a repo at 'café')", async () => {
+    const repo = buildFixtureRepo("café-");
+    const prev = process.env.DATABASE_URL;
+    process.env.DATABASE_URL = "file:../db/custom.db";
+    try {
+      const mod = await importFixtureModule(repo);
+      expect(mod.candidateRoots()[0]).toBe(repo);
+      expect(mod.resolveProcessDatabaseUrl()).toBe(
+        `file:${path.join(repo, "db", "custom.db")}`,
+      );
+    } finally {
+      process.env.DATABASE_URL = prev;
+    }
+  });
+
+  it("a plain-ASCII checkout path is the identity — today's anchor behavior preserved", async () => {
+    const repo = buildFixtureRepo("plainrepo-");
+    const prev = process.env.DATABASE_URL;
+    process.env.DATABASE_URL = "file:../db/custom.db";
+    try {
+      const mod = await importFixtureModule(repo);
+      expect(mod.candidateRoots()[0]).toBe(repo);
+      expect(mod.resolveProcessDatabaseUrl()).toBe(
+        `file:${path.join(repo, "db", "custom.db")}`,
+      );
+    } finally {
+      process.env.DATABASE_URL = prev;
+    }
+  });
+
+  it("a MALFORMED module URL skips the anchor without crashing — the CWD fallback, never a throw", async () => {
+    // The mutated-copy form: the copy's fileURLToPath(import.meta.url) is
+    // replaced with fileURLToPath(<malformed literal>) — the exact
+    // production guard (a bundler-synthesized value carrying a raw "%").
+    // The import itself would throw URIError if the guard were absent;
+    // with it, the anchor is skipped and the CWD fallback answers.
+    const repo = buildFixtureRepo("malformed-");
+    const modulePath = path.join(repo, "src", "lib", "db-path.ts");
+    // The CODE-ANCHORED mutation (the module's own comment block mentions
+    // the call form verbatim — a bare substring replace would hit the
+    // comment and leave the code intact, the exact trap this leg's first
+    // draft fell into): the const-anchored target exists only at the code
+    // site.
+    const original = readFileSync(modulePath, "utf8");
+    const mutated = original.replace(
+      "const self = fileURLToPath(import.meta.url);",
+      'const self = fileURLToPath("file:///a%zzb/src/lib/db-path.ts");',
+    );
+    if (mutated === original) {
+      throw new Error("the mutation anchor (const self = fileURLToPath(import.meta.url);) was not found — the leg needs re-anchoring");
+    }
+    writeFileSync(modulePath, mutated);
+    const prev = process.env.DATABASE_URL;
+    process.env.DATABASE_URL = "file:../db/custom.db";
+    try {
+      const mod = await importFixtureModule(repo);
+      // No crash; the anchor is skipped; the CWD is the only root.
+      expect(mod.candidateRoots()).toEqual([process.cwd()]);
+    } finally {
+      process.env.DATABASE_URL = prev;
     }
   });
 });

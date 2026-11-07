@@ -5613,3 +5613,107 @@ the import family's recorded candidates; the db-path percent-decode
 stays recorded for the db-path-family cycle; the A-M3 stage-2 stays
 deferred ON MEASUREMENT (re-measure if the hardware or the row cap
 changes).
+
+## Session 166 — the S155 cycle (Batch DD: the module-anchor percent-decode + db-path-family doc-reconciliation set)
+
+**Workspace**: warm continuation at `2c4b5f4` on `main` (the Batch DC
+fix `32c2221` + the operator's session_182 transcript commit; `git
+pull` fast-forward, environment intact). **Cold baseline**: lint ✓ ·
+tsc ✓ · unit 1588/1588 (48 files — the documented S154 final state) ·
+preflight GREEN · the drawer check GREEN (**the 70th consecutive**
+no-Tailwind-v4-mobile-nav-bug confirmation) · the desktop parity
+probe **MATCH** (all five formal checks, live reference login).
+
+**The audits.** A — the Batch DC recent-changes axis (`32c2221`):
+**clean** (all four DC claims verified at the source level — the
+elision pass + the counted-as-updated wire, the questions mirror, the
+census pair; the doc census machine-verified, zero stale sites). B —
+the db-path/database-resolution family (never swept as an axis,
+carrying the nine-cycles-old S150 B-I3; dispatched to a read-only
+subagent against the web-application skill's §3/§4/§6/§16/§17
+rubric): **0C/0H/0M/5L/4I** — the core discipline HOLDS (one
+sanctioned read site, one PrismaClient site, the seed through the
+seam, the e2e/docker/.env.example triangle consistent); the findings:
+L1/L2 the module anchor's raw `.pathname` form does not
+percent-decode `import.meta.url` (empirically confirmed by a /tmp
+spaced-fixture probe — the anchor silently dropped, resolution
+falling back to the foreign-CWD rule; plus the Windows drive-letter
+asymmetry); L3 DEPLOYMENT.md §4's seed line promised a wipe the
+idempotent seed never performs; L4 §6 carried the nonexistent
+smoke-test.sh; L5 the single-file e2e row invites the direct
+invocation the cold-reset chain-lock forbids.
+
+**The plan** (`docs/remediation-plan-session155.md`) written BEFORE
+any source change, validated against the codebase (the RED inventory
+sized +8 unit legs, +0 e2e legs by design — the CV1 runtime-split
+precedent).
+
+**The mid-cycle design correction (the cycle's load-bearing finding,
+MEASURED).** The first DD1 design was a `moduleAnchorPath` helper
+seam (the S124/BY2 explicit-args doctrine) — but the build measured
+the standalone output at **699M vs the pre-fix 144M**: Turbopack's
+file tracer statically evaluates `fileURLToPath(import.meta.url)`
+(the bundler knows import.meta.url) yet cannot see through a wrapper
+around it — the opaque form trips whole-project tracing. The shipped
+form is the DIRECT call inside candidateRoots (the URIError caught
+by the existing try/catch), and the unit layer was re-architected to
+INTEGRATION legs: fixture-repo copies imported through their own
+percent-encoded import.meta.url (spaced + non-ASCII + plain-identity
++ the mutated-copy malformed-URL guard). **Shipped build: 144M
+byte-identical to pre-fix; 7 warnings (the 6 documented + the
+node:url advisory, the same server-only false-positive class).**
+
+**The fixes (the unit REDs 6/6 on their designed markers after the
+re-architecture; both census legs proven LIVE by a temporary
+regression — RED on the raw-pathname tree, GREEN on the fix).** DD1
+the module-anchor percent-decode — the direct `fileURLToPath` call
+(a spaced/non-ASCII checkout path KEEPS its anchor — the S150 B-I3
+class closed; the Windows drive-letter form carried by the same
+call; the header anchor-order list reconciled to the code's push
+order). DD2 the DEPLOYMENT.md pair (the honest seed early-return
+language + the dropped smoke-test.sh residue line). DD3 the
+AGENTS.md single-file e2e row's cold-reset caveat. DD4 the sidecar
+hygiene (`rm -f db/e2e.db*` + the .gitignore -wal/-shm patterns).
+
+**The live spaced-path probe** (`scripts/probe-dbpath-spaced-s155.mjs`):
+BEFORE — the anchor dropped, resolution `file:/tmp/db/custom.db` (the
+WRONG database); AFTER — the anchor decoded, resolution
+`file:/tmp/s155 My Repo/db/custom.db`. The before/after pair + the
+build-measurement table preserved as
+`docs/screenshots/155-dbpath-percent-decode-evidence.json`.
+
+**Re-cert (the FINAL tree).** lint ✓ · tsc ✓ · unit **1594/1594**
+(48 files, +6: db-path +4, script-conventions +2) · build ✓ (exit 0;
+7 warnings; the standalone 144M byte-identical — the tracing
+regression designed away) · the targeted e2e: chunk 1 **152/152
+first-pass** cold — the 5-chunk cold cert: chunk 1 152/152 · chunk 2
+189/189 · chunk 3 **90/91** (ONE failure — the resilience
+files-upload leg, the documented P1008 machine-load class: the
+ambient Prisma socket-timeout signature in the cert log, the
+same-shape siblings passing, closed by the three-signal protocol)
+· chunk 4 95/95 · chunk 5 89/89 — the chunk-3 identical-combo cold
+re-run **91/91 first-pass clean** — the cert tally **616/616** (the
+e2e census unchanged by design) · **census 2210 green** (was 2204).
+
+**Evidence.** The `docs/screenshots/155-clone-*.png` frames (the
+standing desktop + mobile drawer [the 71st drawer-GREEN companion]),
+self-verifying (ok:true; dimensions machine-checked 1440x900 /
+390x844) + the percent-decode before/after JSON record. The DD1
+proof rides the integration legs + the censuses + the probe + the
+cert (the CW2 runtime-split precedent).
+
+**Docs.** README badge/census (2204 → 2210) + the unit-count prose
+sites + the Session-155 row; AGENTS census (1588 → 1594) + the :82
+row's cold-reset caveat + the S155 lessons block (four lessons);
+CLAUDE counts; PAD v1.3.63 (the revision block); the SKILL census
+(all three sites); the vitest header re-anchor; `docs/session_183.md`;
+this entry; the plan §6 as-executed close; the `.env.example`
+contract re-verified (no env-var reads changed; .env and
+.env.example byte-identical at the documented dev posture).
+
+**Next cycle.** The rotation continues — the export streaming (the
+I-A peak-memory residual, its own streaming-design cycle) stays the
+import family's recorded candidate; the raw-SQL bulk upsert (IF
+profiling ever presses the 60 s budget); the A-M3 stage-2 stays
+deferred ON MEASUREMENT (re-measure only if the hardware or the row
+cap changes).

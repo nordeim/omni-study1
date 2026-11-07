@@ -1,5 +1,6 @@
 import { existsSync } from "node:fs";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 
 // ---------------------------------------------------------------------------
 // SQLite URL resolution (v2.3, extracted from db.ts into a tested seam)
@@ -12,17 +13,20 @@ import path from "node:path";
 // the standalone server alike, regardless of the process working directory.
 //
 // Anchor order (candidateRoots):
-//   1. this module's own repo root (src/lib → ../../) — covers next dev
-//      and next build, which execute modules from source. Guarded: bundlers
-//      may rewrite or drop import.meta (the standalone build), in which
-//      case this anchor is simply skipped.
-//   2. the standalone build's repo root — Next's standalone server.js runs
+//   1. the standalone build's repo root — Next's standalone server.js runs
 //      `process.chdir(__dirname)` into <repo>/.next/standalone BEFORE any
 //      module executes, and the file tracer copies prisma/schema.prisma
 //      into that folder, so the plain CWD rule would resolve a relative
 //      `file:` URL against the BUILD OUTPUT. When the CWD is that in-repo
 //      standalone dir (detected by standaloneRepoRoot below), the real repo
-//      two levels up takes precedence.
+//      two levels up takes precedence. (S155/DD1: this header list is
+//      reconciled to the code's actual push order — the detector comes
+//      FIRST because the bundled module's import.meta.url is a virtual
+//      chunk-map path that must not outrank it.)
+//   2. this module's own repo root (src/lib → ../../) — covers next dev
+//      and next build, which execute modules from source. Guarded: bundlers
+//      may rewrite or drop import.meta (the standalone build), in which
+//      case this anchor is simply skipped.
 //   3. process.cwd() — the pre-v2.3 rule, kept as the fallback (a standalone
 //      copy deployed elsewhere owns its own CWD; DEPLOYMENT.md §4 tells
 //      production to use an absolute file: URL anyway).
@@ -114,11 +118,36 @@ export function candidateRoots(): string[] {
     //    and next build, which execute modules from source. Validated by
     //    the source file existing on disk: the standalone runtime's virtual
     //    mapping fails this check and is skipped.
-    const self = new URL(import.meta.url).pathname;
-    const here = path.dirname(self);
-    if (here && existsSync(self)) roots.push(path.resolve(here, "..", ".."));
+    //
+    //    S155/DD1 — the URL→path conversion percent-DECODES: fileURLToPath
+    //    (NOT `new URL(import.meta.url).pathname`) so a repo checked out
+    //    under a spaced or non-ASCII path ("My Repo", "café") KEEPS its
+    //    module anchor (the S150 B-I3 class: the raw .pathname kept "%20"
+    //    and the existsSync self-check silently dropped the anchor, falling
+    //    back to the CWD rule — breaking the documented "regardless of the
+    //    process working directory" invariant, .env.example's own promise,
+    //    for every percent-encodable checkout path). fileURLToPath also
+    //    carries Node's documented Windows drive-letter conversion (the
+    //    value side of this module already supports drive letters — the
+    //    anchor side now matches).
+    //
+    //    WHY THE DIRECT CALL FORM (not a helper): Turbopack's file tracer
+    //    statically evaluates `fileURLToPath(import.meta.url)` — the
+    //    bundler knows import.meta.url — but NOT a wrapper function around
+    //    it; the helper-wrapped form measured a whole-project trace (the
+    //    standalone output grew 144M → 699M, the "dynamic filesystem
+    //    access" warning). The direct form keeps the trace identical to
+    //    the pre-fix build. A malformed URL (a raw "%" in a
+    //    bundler-synthesized value) throws URIError — caught by this same
+    //    try/catch: the anchor is skipped, remaining anchors apply, never
+    //    a crash (the skip is today's degraded path, byte-identical).
+    const self = fileURLToPath(import.meta.url);
+    if (existsSync(self)) {
+      roots.push(path.resolve(path.dirname(self), "..", ".."));
+    }
   } catch {
-    // import.meta unavailable in this context — remaining anchors apply.
+    // import.meta unavailable in this context, or the URL malformed —
+    // remaining anchors apply.
   }
   // 3. The process CWD — the pre-v2.3 rule, kept as the fallback.
   roots.push(process.cwd());

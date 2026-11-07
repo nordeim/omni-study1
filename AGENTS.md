@@ -9,7 +9,7 @@ High-signal instructions for coding agents working in this repo. Everything here
 | `bun install` | Install deps (Bun ≥ 1.3) |
 | `bun run dev` | Dev server on :3000 (Turbopack), logs tee'd to `dev.log` |
 | `bun run lint` / `bun run typecheck` | ESLint / `tsc --noEmit` — both must be clean |
-| `bun run test` | Vitest unit layer (1588 tests; `*.test.ts` only — never picks up e2e specs) |
+| `bun run test` | Vitest unit layer (1594 tests; `*.test.ts` only — never picks up e2e specs) |
 | `bun run build` | Production build → `.next/standalone` (**required before e2e**) |
 | `bun run test:e2e` | Playwright vs the standalone build on :3100 with `db/e2e.db` (616 tests across the 5-chunk cold map — 152+189+91+95+89, 30 spec files; a single-process full run trips the register rate-limiter budget by design, the chunked map re-boots the server per chunk). NOTE (S45, the day-boundary lesson): the global setup re-seeds every run, but the seed's IDEMPOTENT UPSERTS do NOT refresh day-relative dates on existing rows — a scratch `db/e2e.db` that ages across a UTC midnight keeps its original day-relative dates (today's tasks, the +1-day exam badge, the due-in pills, the import round-trip dates each read one day stale → 4 deterministic failures in parity-session6/parity-session9/s23-import). Delete `db/e2e.db` when a run crosses a day boundary — the global setup re-creates it fresh with current dates. NOTE (S46, TWO more aged-scratch-db classes + a build-input one): (1) ALWAYS run e2e COLD — S131/CF5 chained `scripts/e2e-cold-reset.sh` into `bun run test:e2e` (port-guard + `rm -f db/e2e.db` BEFORE playwright boots anything — global-setup is TOO LATE: Playwright starts the webServer before globalSetup), so the default runner self-colds; any DIRECT `playwright test` invocation still needs the manual `rm -f db/e2e.db` before every full run: the s23-import round-trip posts a FIXED-id envelope, so a second consecutive run against the aged db reads `created: 0, updated: 1` instead of `created: 1, updated: 0` and fails — not just across midnights, across ANY re-run; (2) the s22 negative-spawn spec reads the BUNDLED `.env` — Next's standalone output COPIES the repo-root `.env` into `.next/standalone/.env` at build time, so a REAL AUTH_SECRET in the dev `.env` leaks into the bundle and the guard CORRECTLY boots (the spec times out waiting for the exit) — keep the repo-root `.env`'s AUTH_SECRET EMPTY (the `.env.example` dev posture: `AUTH_SECRET=""` — dev falls back to the local constant with the boot warning) when building for e2e |
 | `node scripts/capture-studyflow.mjs` | Refresh all 31 `docs/screenshots/` captures from the dev server (24 light + 7 dark) |
@@ -79,7 +79,7 @@ High-signal instructions for coding agents working in this repo. Everything here
 | `node scripts/capture-s14-evidence.mjs` | The S14 hardening evidence captures (offline banner, rate-limit toast, display-name guard, Thinking live region) |
 | `bun run db:push` / `db:seed` | Create schema + demo data at `db/custom.db` |
 | `bunx vitest run tests/calculator.test.ts` | One unit file |
-| `bunx playwright test tests/e2e/tasks.spec.ts --project=chromium` | One e2e file (needs a current build) |
+| `bunx playwright test tests/e2e/tasks.spec.ts --project=chromium` | One e2e file (needs a current build). S155/DD3: run `bash scripts/e2e-cold-reset.sh` FIRST — the cold reset rides only the `test:e2e` chain, and a direct invocation against an aged `db/e2e.db` fails deterministically (the S45 day-boundary + S46 fixed-id classes) |
 
 **Gate order before pushing:** `lint → typecheck → test → build → test:e2e`. There is no hosted CI; the local gate is the only gate. Pushes go to `main` only, via `docs/ssh_git_wrapper_v3.py` (see `docs/how-to-git-push-using-ssh-wrapper_SKILL.md`).
 
@@ -2517,3 +2517,67 @@ Hover-parity probing must run in Playwright, not a touch-emulating browser — v
    (subtasks/topics/reminders correctly carry no mirror — their atoms
    are array-ness only — but that is a VERIFIED exemption, not an
    unexamined one.)
+
+## S155 lessons (Batch DD — the module-anchor percent-decode + db-path-family doc-reconciliation set)
+
+1. **A "pure seam with fixture tests" is the house style, but the BUNDLER
+   owns the final word on call-site shape — measure the build artifact,
+   not just the tests, when the seam wraps a bundler-visible
+   expression.** The first DD1 design extracted a `moduleAnchorPath`
+   helper (the S124/BY2 explicit-args doctrine) and pinned it with
+   arg-injected legs — lint ✓ tsc ✓ unit ✓ — but the build measured the
+   standalone output at 699M against the pre-fix 144M: Turbopack's file
+   tracer statically evaluates `fileURLToPath(import.meta.url)` (the
+   bundler knows import.meta.url) yet cannot see through a wrapper
+   function around it, and the opaque form trips whole-project tracing.
+   The shipped form is the DIRECT call inside candidateRoots (the
+   URIError caught by the existing try/catch), with the unit layer
+   re-architected to INTEGRATION legs — fixture-repo copies imported
+   through their own percent-encoded import.meta.url — which test the
+   real runtime path more honestly than the helper's arg-injected legs
+   ever could. The general rule: when a fix touches an expression the
+   bundler transforms (import.meta.*, require.resolve, dynamic import
+   specifiers), the build SIZE and warning count are part of the gate,
+   and a seam extraction can be a behavior change even when every unit
+   test stays green.
+
+2. **A comment that documents a removed call form defeats naive
+   substring tooling — anchor mutations and negative censuses on the
+   CODE shape, not the bare mention.** The malformed-URL leg's first
+   draft mutated the fixture copy with a bare `.replace(
+   "fileURLToPath(import.meta.url)", …)` — which hit the module's own
+   comment block (the provenance convention names the removed form
+   verbatim) and left the CODE intact, so the leg "passed" against an
+   unmutated module. The same trap fired on the negative census: the
+   raw-pathname regex matched the comment's mention of the removed
+   form. Both re-anchored on code-only shapes (the `const self =`
+   prefix; the `= new URL(...)` assignment form) — the DC4
+   "call-not-comment" precedent, now sharpened twice: it applies to
+   TESTS THAT MUTATE SOURCE, not just to censuses that read it.
+
+3. **The e2e cold-reset discipline is chain-locked, and the documented
+   debug workflow advertised a bypass.** AGENTS.md's own single-file
+   e2e row (`bunx playwright test tests/e2e/tasks.spec.ts`) invites
+   exactly the direct invocation the S45/S46 lessons forbid: the cold
+   reset rides only the `test:e2e` npm chain (Playwright starts the
+   webServer before globalSetup, so no config-native hook can cover a
+   direct run), and an aged db/e2e.db fails deterministically — the
+   s23 fixed-id re-run class reads created:0/updated:1 instead of
+   created:1/updated:0. The row now carries the caveat (run
+   `bash scripts/e2e-cold-reset.sh` first). The general rule: every
+   documented "shortcut" command that bypasses a guard chain must name
+   the guard it bypasses, in place, at the point of invitation.
+
+4. **DEPLOYMENT.md prose rots in both directions: commands that no
+   longer exist (smoke-test.sh) AND behavior descriptions that were
+   never true (db:seed "wipes domain tables" — the seed has
+   early-returned since S122/BW13).** The §6 checklist carried a
+   pre-clone scaffold residue for 150+ sessions (the SKILL's own AP-74
+   note had already identified the file's vitest-header sibling), and
+   §4's seed parenthetical promised a wipe the idempotent seed never
+   performed — an operator following it to "refresh" demo data got a
+   silent no-op. The AP-74 guard generalizes: grep every doc layer for
+   the COMMANDS it tells operators to run (not just the quantities it
+   repeats), and verify each against the tree — `ls` the script path,
+   read the script's actual behavior — in the same commit that changes
+   either side.
