@@ -790,20 +790,20 @@ describe("the S135/CJ2 route-side collection censuses", () => {
     expect(reads.length, "the export seam must carry exactly 20 findMany reads (the manifest census)").toBe(20);
   });
 
-  it("the export assembly hands every manifest collection to buildDataExport (an omitted literal key fails)", async () => {
+  it("the export assembly hands every manifest collection to a READERS entry (an omitted reader fails)", async () => {
     const src = readFileSync(EXPORT_BUILD, "utf8");
     const { EXPORT_COLLECTIONS } = await import("../src/lib/data-export");
     const missing: string[] = [];
     for (const name of EXPORT_COLLECTIONS) {
-      // The literal's shorthand form: a line that is exactly the key + comma
-      // (the destructure block carries them inline — "name, " — so the
-      // whole-line match discriminates the literal from the destructure).
-      const literalKey = new RegExp(`^\\s*${name},\\s*$`, "m");
-      if (!literalKey.test(src)) missing.push(name);
+      // S156/DE1 re-anchor: the destructure block became the READERS map —
+      // the whole-line key form discriminates the map entry from any
+      // comment/prose mention (a key + the reader signature + the db call).
+      const readerKey = new RegExp(`^\\s*${name}: \\(userId\\) => db\\.`, "m");
+      if (!readerKey.test(src)) missing.push(name);
     }
     expect(
       missing,
-      `manifest collections absent from the export seam's buildDataExport literal (a Partial-key omission silently exports an empty family): ${missing.join(", ")}`,
+      `manifest collections absent from the export seam's READERS map (an omitted reader silently exports an empty family): ${missing.join(", ")}`,
     ).toEqual([]);
   });
 
@@ -817,6 +817,21 @@ describe("the S135/CJ2 route-side collection censuses", () => {
     expect(page).toContain("renderExportEnvelope");
     // The route's own body never re-declares the reads (the twin-drift guard).
     expect((route.match(/\.findMany\(/g) ?? []).length).toBe(0);
+  });
+
+  it("S156/DE1: the route STREAMS the fragments (the wire shape — the body never joins into a second full-body string)", () => {
+    const route = readFileSync(
+      path.resolve(process.cwd(), "src/app/api/export/data/route.ts"),
+      "utf8",
+    );
+    // The stream construction + the ordered enqueue loop + the close.
+    expect(route).toContain("new ReadableStream");
+    expect(route).toContain("controller.enqueue(chunk)");
+    expect(route).toContain("controller.close()");
+    // The fragments (never a joined json string) are the response body.
+    expect(route).toContain("fragments");
+    expect(route).not.toContain("fragments.join");
+    expect(route).not.toContain("const json");
   });
 
   it("the import route IMPORT_ORDER rides the seam (no route-local re-declaration — RED pre-fix: the const lives in the route)", () => {
@@ -1353,23 +1368,26 @@ describe("the S142/CQ source censuses", () => {
     expect(src).not.toContain("child.replaceWith(child.textContent");
   });
 
-  it("CQ2: the export size signal is byte-based end-to-end (the seam derives it once)", () => {
+  it("CQ2/S156-DE1: the export size signal is byte-based end-to-end (the driver derives it once, per fragment)", () => {
     const seam = readFileSync(EXPORT_SEAM, "utf8");
     const route = readFileSync(EXPORT_ROUTE, "utf8");
     const page = readFileSync(EXPORT_PAGE, "utf8");
     const pure = readFileSync(DATA_EXPORT, "utf8");
-    // The pure derivation exists and is TextEncoder-based (client-imported
-    // seam — Buffer is a node global the browser bundle must never need).
-    expect(pure).toContain("export function exportByteSize(");
-    expect(pure).toContain("new TextEncoder().encode(json).length");
+    // S156/DE1 re-anchor: the whole-body encode-for-length is GONE — the
+    // pure driver counts its own per-fragment encodes (every encoded
+    // fragment is RETAINED payload, never a length-only allocation — the
+    // F2 finding closed structurally). The pure seam stays TextEncoder-
+    // based (client-imported module — Buffer is a node global the browser
+    // bundle must never need).
+    expect(pure).toContain("export async function buildExportFragments(");
+    expect(pure).toContain("bytes += encoded.byteLength");
     expect(pure).not.toContain("Buffer.byteLength");
-    // The seam returns bytes; both consumers read `.bytes` — never
-    // `json.length` (the A-M2 code-unit under-report).
-    // S148/CW2 re-anchor: the derivation moved from the return literal to
-    // a named const (the export byte ceiling gate reads it before the
-    // return — the ceiling is census-pinned in data-export.test.ts).
-    expect(seam).toContain("const bytes = exportByteSize(json)");
-    expect(seam).toContain("return { json, bytes }");
+    expect(pure).not.toContain("export function exportByteSize(");
+    // The driver returns the fragments + the exact byte total; the server
+    // wiring delegates; both consumers read `.bytes` — never `json.length`
+    // (the A-M2 code-unit under-report).
+    expect(pure).toContain("return { fragments, bytes }");
+    expect(seam).toContain("buildExportFragments");
     expect(route).toContain("String(bytes)");
     expect(page).toContain(".bytes");
     expect(route).not.toContain("String(json.length)");

@@ -37,7 +37,14 @@ test.describe("S21 the full-data export", () => {
     expect(res.headers()["x-content-type-options"]).toBe("nosniff");
     expect(res.headers()["cache-control"]).toContain("private, no-store");
 
-    const body = (await res.json()) as {
+    // S156/DE3 (the F4 finding): the size pin reads the RAW served body —
+    // the header against the actual bytes on the wire, never a
+    // re-serialization identity (the old form silently assumed V8-stable
+    // re-stringify; a serializer drift that preserved lengths coincidentally
+    // would have stayed green). One body read, both uses: the byte
+    // arithmetic below + the parsed shape assertions.
+    const raw = (await res.text()) as string;
+    const body = JSON.parse(raw) as {
       format: string;
       version: number;
       exportedAt: string;
@@ -64,16 +71,19 @@ test.describe("S21 the full-data export", () => {
     expect(body.data).not.toHaveProperty("verificationTokens");
     expect(body.data).not.toHaveProperty("passwordResetTokens");
 
-    // S141/CP4 + S142/CQ2: the size signal rides the response — the
-    // X-Export-Bytes header carries the exact UTF-8 BYTE size of the body
-    // (the same number the /export page renders for the panel's over-cap
-    // warning; pinned here against the actual body so a stale header fails
-    // loudly). BYTES, not code units: json.length under-reports non-ASCII
-    // bodies up to 3x (the A-M2 defect — this seed itself carries — / ·).
+    // S141/CP4 + S142/CQ2 + S156/DE3: the size signal rides the response —
+    // the X-Export-Bytes header carries the exact UTF-8 BYTE size of the
+    // body (the same number the /export page renders for the panel's
+    // over-cap warning). S156/DE3: pinned against the RAW served body —
+    // not a parse→re-stringify of it (the old identity form silently
+    // assumed V8-stable re-serialization; the streamed body's own bytes
+    // are the honest oracle). BYTES, not code units: json.length
+    // under-reports non-ASCII bodies up to 3x (the A-M2 defect — this
+    // seed itself carries — / ·).
     const sizeHeader = res.headers()["x-export-bytes"];
     expect(sizeHeader).toBeDefined();
     expect(Number(sizeHeader)).toBeGreaterThan(0);
-    expect(Number(sizeHeader)).toBe(Buffer.byteLength(JSON.stringify(body)));
+    expect(Number(sizeHeader)).toBe(Buffer.byteLength(raw));
   });
 
   test("GET /api/export/data rejects anonymous callers (401)", async ({ browser }) => {

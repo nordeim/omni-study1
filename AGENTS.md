@@ -9,7 +9,7 @@ High-signal instructions for coding agents working in this repo. Everything here
 | `bun install` | Install deps (Bun ≥ 1.3) |
 | `bun run dev` | Dev server on :3000 (Turbopack), logs tee'd to `dev.log` |
 | `bun run lint` / `bun run typecheck` | ESLint / `tsc --noEmit` — both must be clean |
-| `bun run test` | Vitest unit layer (1594 tests; `*.test.ts` only — never picks up e2e specs) |
+| `bun run test` | Vitest unit layer (1602 tests; `*.test.ts` only — never picks up e2e specs) |
 | `bun run build` | Production build → `.next/standalone` (**required before e2e**) |
 | `bun run test:e2e` | Playwright vs the standalone build on :3100 with `db/e2e.db` (616 tests across the 5-chunk cold map — 152+189+91+95+89, 30 spec files; a single-process full run trips the register rate-limiter budget by design, the chunked map re-boots the server per chunk). NOTE (S45, the day-boundary lesson): the global setup re-seeds every run, but the seed's IDEMPOTENT UPSERTS do NOT refresh day-relative dates on existing rows — a scratch `db/e2e.db` that ages across a UTC midnight keeps its original day-relative dates (today's tasks, the +1-day exam badge, the due-in pills, the import round-trip dates each read one day stale → 4 deterministic failures in parity-session6/parity-session9/s23-import). Delete `db/e2e.db` when a run crosses a day boundary — the global setup re-creates it fresh with current dates. NOTE (S46, TWO more aged-scratch-db classes + a build-input one): (1) ALWAYS run e2e COLD — S131/CF5 chained `scripts/e2e-cold-reset.sh` into `bun run test:e2e` (port-guard + `rm -f db/e2e.db` BEFORE playwright boots anything — global-setup is TOO LATE: Playwright starts the webServer before globalSetup), so the default runner self-colds; any DIRECT `playwright test` invocation still needs the manual `rm -f db/e2e.db` before every full run: the s23-import round-trip posts a FIXED-id envelope, so a second consecutive run against the aged db reads `created: 0, updated: 1` instead of `created: 1, updated: 0` and fails — not just across midnights, across ANY re-run; (2) the s22 negative-spawn spec reads the BUNDLED `.env` — Next's standalone output COPIES the repo-root `.env` into `.next/standalone/.env` at build time, so a REAL AUTH_SECRET in the dev `.env` leaks into the bundle and the guard CORRECTLY boots (the spec times out waiting for the exit) — keep the repo-root `.env`'s AUTH_SECRET EMPTY (the `.env.example` dev posture: `AUTH_SECRET=""` — dev falls back to the local constant with the boot warning) when building for e2e |
 | `node scripts/capture-studyflow.mjs` | Refresh all 31 `docs/screenshots/` captures from the dev server (24 light + 7 dark) |
@@ -2581,3 +2581,49 @@ Hover-parity probing must run in Playwright, not a touch-emulating browser — v
    repeats), and verify each against the tree — `ls` the script path,
    read the script's actual behavior — in the same commit that changes
    either side.
+
+## S156 lessons (Batch DE — the streaming-export cycle)
+
+1. **A shared derived value needs ONE producer, and the producer's SHAPE
+   is itself a contract that censuses will pin.** The S141 lesson
+   ("extract the shared producer") held for ten cycles — but the
+   producer's return shape (`return { json, bytes }`) was census-pinned,
+   so the streaming redesign had to update the pin deliberately, in the
+   same commit, or ship red. Lesson: when a seam's shape is load-bearing
+   enough to pin, record WHY in the pin's comment (what shapes are
+   forbidden and what replaced them) so the next re-architecture reads
+   the intent before it reads the failure.
+
+2. **The peak-memory fix for an O(account) serialization is
+   fragmentation + injection, not a bigger machine.** The materializing
+   form (Promise.all of 20 findMany → the envelope object → the
+   whole-body stringify → the length-encode) held ~3-4x the body
+   simultaneously; the fragment driver (sequential reads through an
+   injected reader, per-row stringify, per-fragment counting,
+   retain-while-under-ceiling) holds ~1x + one collection and refuses
+   the multi-GB tail at bounded cost. The enabling move was the
+   S124/BY2 explicit-args doctrine applied to the READS: taking the
+   collection reader as a parameter made the whole assembly PURE and
+   unit-testable — the oracle legs (byte-identity vs the reference
+   object form) could not exist against a db-carrying seam. Lesson:
+   when a server seam resists unit testing, look for the dependency to
+   inject; the testability and the memory profile improve together.
+
+3. **An oracle beats a twin.** The streaming driver could have been a
+   hand-written expected-JSON test (fragile) or a parse-based
+   reimplementation of buildDataExport (churn). Instead buildDataExport
+   STAYS as the executable reference and the oracle welds the two forms
+   byte-for-byte — any scaffold, key-order, or normalizer divergence
+   fails the unit layer, not the e2e. Lesson: when two representations
+   of one format must agree, keep the reference and weld with a test
+   that compares them directly; do not delete the reference because
+   production stopped calling it.
+
+4. **Headers that must precede the body constrain streaming — retain,
+   then serve.** A pure single-pass stream cannot know X-Export-Bytes
+   before the first byte, and a two-pass (measure, then stream) serves
+   a body the header may not describe. The retain-then-serve middle
+   (build all fragments, count exactly, gate, then stream the array)
+   keeps the header exact AND the peak bounded. Lesson: "streaming" is
+   a spectrum; pick the point on it that preserves the wire contract,
+   and name the retained bound honestly in the seam's header.

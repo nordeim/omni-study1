@@ -1,0 +1,25 @@
+{
+ "declaredBytes": 19832,
+ "actualBytes": 19832,
+ "bodyPreview": "{\"format\":\"studyflow-data-export\",\"version\":1,\"exportedAt\":\"2026-11-07T06:33:56.795Z\",\"user\":{\"id\":\"cmw5ssy820000pz1shfh",
+ "checks": {
+  "status200": true,
+  "contentType": true,
+  "disposition": true,
+  "nosniff": true,
+  "headerExact": true,
+  "transferMode": "chunked",
+  "parses": true,
+  "format": true,
+  "version": true,
+  "manifestKeys": true,
+  "countsMatch": true,
+  "secretGuard": true,
+  "roundTrip200": true,
+  "roundTripIdempotent": true
+ },
+ "probe": "scripts/probe-export-stream-s156.mjs",
+ "capturedAt": "2026-11-07T06:33:57.773790+00:00",
+ "verdict": "EXPORT STREAM PROBE: GREEN",
+ "context": "The S156/DE1 live evidence \u2014 the streamed export endpoint on the remediated dev tree: GET /api/export/data answers 200 with the download headers; the body arrives CHUNKED (transfer-encoding) and is byte-complete (X-Export-Bytes === the actual received UTF-8 byte count \u2014 the strengthened s21/DE3 contract, live); the envelope parses with all 20 manifest keys and internally-consistent counts; the secret guard holds; and the LIVE round-trip POSTs the streamed body back to /api/import/data for the idempotent restore (created: 0 \u2014 the S139-CN2 witness class). The build-time memory ledger (measured by design analysis, pinned by the unit oracle): the materializing form held ~3-4x the serialized body simultaneously (all 20 findMany sets + the normalized copy + the whole-body string + the length-encode) with the 256 MiB gate firing only after the peak; the streaming driver holds ~1x the body as retained fragments + one collection at a time, and refuses the multi-GB tail at <= ceiling + head + one piece."
+}

@@ -13,6 +13,7 @@
 
 import { NextResponse, type NextRequest } from "next/server";
 import { Prisma } from "@prisma/client";
+import { ExportTooLargeError } from "@/lib/data-export";
 
 import { checkRateLimit } from "@/lib/auth";
 import type { ZodError, ZodType } from "zod";
@@ -155,25 +156,19 @@ export class BodyTooLargeError extends ValidationError {
   }
 }
 
-/** S148/CW2 (audit B-L3) — the over-ceiling EXPORT error. Thrown by the
- *  shared renderExportEnvelope seam (server/export-build.ts) when the
- *  serialized envelope exceeds EXPORT_MAX_BYTES (data-export.ts — 256 MiB,
- *  4x the import restore cap): the one unbounded read family in the API
- *  surface gets a served-body bound. NOT a ValidationError subclass (the
- *  body was never read from the client — this is a response-size refusal,
- *  the request itself was fine), so it maps straight to the 413 family
- *  with the database-file remedy. Carries `bytes` so the consumers (the
- *  /export page's over-ceiling panel render) can show the computed size
- *  without re-serializing. */
-export class ExportTooLargeError extends Error {
-  constructor(
-    public readonly bytes: number,
-    message = "That export is too large to build in one pass (over 256 MB).",
-  ) {
-    super(message);
-    this.name = "ExportTooLargeError";
-  }
-}
+/** S148/CW2 (audit B-L3) → S156/DE1: the over-ceiling EXPORT error —
+ *  MOVED to the pure seam (src/lib/data-export.ts, beside the ceiling
+ *  family it belongs to: EXPORT_MAX_BYTES + exportOverCeiling + the
+ *  throw), because the S156/DE1 streaming driver (pure, browser-safe,
+ *  import-free) now owns the gate and must throw it without importing
+ *  server/ code. Re-exported HERE so every existing consumer (the
+ *  /export page's catch, toErrorResponse's instanceof below) keeps its
+ *  import green — same class object, same 413 mapping, same `bytes`
+ *  payload. NOT a ValidationError subclass (the body was never read from
+ *  the client — this is a response-size refusal, the request itself was
+ *  fine), so it maps straight to the 413 family with the
+ *  database-file remedy. */
+export { ExportTooLargeError };
 
 /** The BR5 Content-Type policy as a shared seam (S119/BT1a): a non-JSON
  * Content-Type is unparseable-by-policy — a form POST with `text/plain`

@@ -999,8 +999,9 @@ test.describe("S135/CJ4+CJ5 the import 400-message contract (the demo session, t
 });
 
 // S124/BY5 — the export-family limiter. The two heaviest enumerations
-// (export/data: 20 tables + base64 payloads + the full in-memory
-// JSON.stringify; rum/export: 2000 rows → CSV) answered unlimited GETs
+// (export/data: 20 tables + base64 payloads + the fragment-streamed
+// serialization [S156/DE1 — was "the full in-memory JSON.stringify"];
+// rum/export: 2000 rows → CSV) answered unlimited GETs
 // while every other write/enumeration family is budgeted (the S14
 // posture). One shared per-user key `export:${user.id}` 10/15-min — the
 // ai: shared-key precedent; the family shape is the pin (exhausting one

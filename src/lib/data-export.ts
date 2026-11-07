@@ -5,6 +5,19 @@
 // dropped, Date → ISO, ids/FKs passed through), and the SECRET GUARD
 // (passwordHash can never ride an export — enforced here AND by the route's
 // explicit select, which never reads the column in the first place).
+//
+// S156/DE1 — the streaming fragment driver (the I-A peak-memory fix;
+// docs/remediation-plan-session156.md §2): `buildExportFragments` assembles
+// the SAME envelope as `buildDataExport` but as per-row scaffold FRAGMENTS,
+// reading the collections SEQUENTIALLY through an injected reader (the
+// S124/BY2 explicit-args doctrine — one collection's rows in memory at a
+// time, so the build-time peak drops from ~3-4x the body [all 20 row sets
+// + the normalized copy + the whole-body string + the length-encode,
+// simultaneously] to ~1x the body as retained fragments + one collection).
+// `buildDataExport` STAYS as the executable reference: the unit oracle
+// welds the two forms byte-for-byte (the streaming path must never drift
+// from the object form's serialization). Browser-safe module — the export
+// panel imports from it: TextEncoder, never Buffer.
 // ---------------------------------------------------------------------------
 
 export const DATA_EXPORT_FORMAT = "studyflow-data-export";
@@ -118,24 +131,13 @@ export function formatExportBytes(bytes: number): string {
   return `${Math.round((bytes / MIB) * 10) / 10} MB`;
 }
 
-/**
- * S142/CQ2 — the envelope's UTF-8 BYTE size. The S141 signal consumed
- * `json.length` (UTF-16 code units) while every cap in the family counts
- * real bytes: the import route's body reader (http.ts, `byteLength`),
- * the panel's file-picker pre-check (`picked.size`), IMPORT_MAX_BYTES
- * itself. A non-ASCII account (the seed's own — / · / 👋) under-reports
- * by up to 3x under code units — an export straddling the 64 MiB cap
- * showed NO warning. One derivation, consumed by the seam → the route
- * header, the /export page prop, and the panel threshold alike.
- *
- * TextEncoder (NOT Buffer): this seam is client-imported by the export
- * panel — Buffer is a node global the browser bundle must never depend
- * on. TextEncoder.encode().length is the same UTF-8 byte count, a web
- * standard available in every runtime the seam loads in.
- */
-export function exportByteSize(json: string): number {
-  return new TextEncoder().encode(json).length;
-}
+// S142/CQ2 · exportByteSize — REMOVED at S156/DE2: the whole-body
+// encode-for-length (a full body-sized Uint8Array allocated just to read
+// .length) is structurally gone — the S156/DE1 driver counts its own
+// per-fragment encodes, where every encoded fragment is RETAINED payload
+// (the F2 finding). The A-M2 doctrine (bytes, never UTF-16 code units)
+// carries in the driver's `bytes`, pinned against the TextEncoder byte
+// count of the whole body on the multi-byte fixture (— · 👋).
 
 // ---- S148/CW2: the export byte ceiling (audit B-L3) ---------------------------
 //
@@ -174,4 +176,160 @@ export const EXPORT_MAX_BYTES = 256 * 1024 * 1024;
  * shape). */
 export function exportOverCeiling(bytes: number): boolean {
   return bytes > EXPORT_MAX_BYTES;
+}
+
+// ---- S156/DE1: the streaming fragment driver (the I-A fix) --------------------
+//
+// The recorded I-A residual (S148's audit, ten cycles recorded): the
+// materializing form held ALL 20 findMany sets + the envelope's normalized
+// copy + the whole-body JSON string + the byte-size encode SIMULTANEOUSLY
+// (~3-4x the serialized body), and the 256 MiB gate fired only AFTER the
+// peak — a multi-GB account was fully materialized before being refused.
+// The driver replaces it:
+//
+// - SEQUENTIAL reads through the injected reader (the explicit-args
+//   doctrine) — one collection's rows live at a time; each row
+//   serializes through the SAME normalizer (serializeExportRow) as the
+//   object form, so the concatenation is BYTE-IDENTICAL to
+//   JSON.stringify(buildDataExport(...)) — compositional JSON.stringify
+//   over plain values, and the scaffold reproduces the object literal's
+//   insertion order (format → version → exportedAt → user → counts →
+//   data; collections in EXPORT_COLLECTIONS order; counts keyed in the
+//   same loop). The unit oracle pins the weld; buildDataExport stays as
+//   the executable reference.
+// - PER-FRAGMENT byte counting (every encoded fragment is RETAINED
+//   payload, never a length-only allocation — the S156/F2 finding closed
+//   structurally); `bytes` is the exact UTF-8 total (the A-M2 doctrine).
+// - RETAIN-WHILE-UNDER: once the running total crosses the ceiling the
+//   pass stops retaining (keeps counting) — a multi-GB account is
+//   refused at ≤ ceiling + head + one piece, and ExportTooLargeError
+//   still carries the EXACT total (the page renders it).
+// - The error class lives HERE (moved from server/http.ts at S156/DE1):
+//   the ceiling family — EXPORT_MAX_BYTES + exportOverCeiling + the
+//   throw — is reunited in the pure seam, and the driver can throw it
+//   without importing server/ code (http.ts re-exports it for the
+//   existing consumers; this module stays import-free).
+
+/** S148/CW2 → S156/DE1 (moved from server/http.ts): the typed error the
+ * driver throws past the 256 MiB ceiling. Carries `bytes` (the exact
+ * serialized size) so the consumers (the /export page's over-ceiling
+ * panel render) can show the computed size without re-serializing.
+ * NOT a ValidationError (the body was never read from the client — this
+ * is a response-size refusal); http.ts's toErrorResponse maps it to the
+ * 413 family with the database-file remedy. */
+export class ExportTooLargeError extends Error {
+  constructor(
+    public readonly bytes: number,
+    message = "That export is too large to build in one pass (over 256 MB).",
+  ) {
+    super(message);
+    this.name = "ExportTooLargeError";
+  }
+}
+
+/** The S156/DE1 driver's collection reader — one read per manifest
+ * collection, sequential. The server wiring injects the Prisma readers
+ * (export-build.ts's READERS map); the unit layer injects in-memory
+ * fakes (the oracle legs). */
+export type ExportCollectionReader = (collection: ExportCollection) => Promise<ExportRow[]>;
+
+/** The assembled export: the ordered body fragments (their concatenation
+ * is byte-identical to the object form's JSON.stringify) + the exact
+ * UTF-8 byte total (the X-Export-Bytes header, the /export page prop,
+ * and the ceiling gate all read this one number). */
+export type RenderedExport = {
+  fragments: Uint8Array[];
+  bytes: number;
+};
+
+/** One collection's scaffold pieces: `"name":[` + the per-row
+ * serializations joined by `,` + `]`. Per-ROW fragmentation (not
+ * per-collection) so the counting can cross the ceiling mid-collection —
+ * the bounded-refusal property. Every manifest name is interpolation-safe
+ * (unit-pinned: ^[A-Za-z]+$ — no JSON escaping ever needed). */
+function* collectionFragments(name: string, rows: readonly ExportRow[]): Generator<string> {
+  yield `"${name}":[`;
+  for (let i = 0; i < rows.length; i++) {
+    if (i > 0) yield ",";
+    yield JSON.stringify(serializeExportRow(rows[i]));
+  }
+  yield "]";
+}
+
+/** The envelope head: everything before the first collection. Built
+ * AFTER the reads (counts are complete then — the retain-then-serve
+ * design frees the emission order from the read order; the response is
+ * assembled from retained fragments, never streamed live out of the
+ * reads). Key order matches buildDataExport's literal exactly. */
+function headFragment(user: ExportRow, counts: Record<string, number>, exportedAt: Date): string {
+  return (
+    `{"format":${JSON.stringify(DATA_EXPORT_FORMAT)}` +
+    `,"version":${JSON.stringify(DATA_EXPORT_VERSION)}` +
+    `,"exportedAt":${JSON.stringify(exportedAt.toISOString())}` +
+    `,"user":${JSON.stringify(serializeExportRow(user))}` +
+    `,"counts":${JSON.stringify(counts)}` +
+    `,"data":{`
+  );
+}
+
+/** S156/DE1 — the streaming assembly. Reads the 20 collections
+ * SEQUENTIALLY through `readCollection` (one collection's rows in memory
+ * at a time), serializes each row through the normalizer, encodes each
+ * scaffold piece (retaining while at-or-under the ceiling), and answers
+ * the ordered fragments + the exact byte total. Throws ExportTooLargeError
+ * past EXPORT_MAX_BYTES with the exact total. */
+export async function buildExportFragments(
+  user: ExportRow,
+  readCollection: ExportCollectionReader,
+  exportedAt: Date,
+): Promise<RenderedExport> {
+  const encoder = new TextEncoder();
+  const perCollection: Uint8Array[][] = [];
+  const counts: Record<string, number> = {};
+  let bytes = 0;
+  let retaining = true;
+
+  const encode = (piece: string): Uint8Array => {
+    const encoded = encoder.encode(piece);
+    bytes += encoded.byteLength;
+    return encoded;
+  };
+
+  // Pass 1 — the collections, one read at a time. The rows array of each
+  // collection goes out of scope at the loop's bottom edge: the peak is
+  // one collection's rows + the fragments retained so far. The
+  // read-skew window stretches with the serialization time (the accepted
+  // F3 class, documented in export-build.ts's header — the export never
+  // writes, and the import resolves FKs against envelope ∪ owned rows).
+  for (const collection of EXPORT_COLLECTIONS) {
+    const rows = await readCollection(collection);
+    counts[collection] = rows.length;
+    const pieces: Uint8Array[] = [];
+    for (const piece of collectionFragments(collection, rows)) {
+      const encoded = encode(piece);
+      // Retain-while-under: the first piece past the ceiling is the last
+      // retained one; the pass keeps COUNTING (never retaining) so the
+      // thrown bytes stay the exact total. At-cap is the last ALLOWED
+      // count (the CL2 boundary doctrine — at-cap fragments are all
+      // retained, and the gate below does not refuse them).
+      if (retaining) pieces.push(encoded);
+      if (exportOverCeiling(bytes)) retaining = false;
+    }
+    perCollection.push(pieces);
+  }
+
+  // Pass 2 — the head (counts complete) + the assembly in envelope
+  // order. Loop-push, never spread: a 100k-row account holds 200k+
+  // fragments and `push(...arr)` would blow the call stack.
+  const fragments: Uint8Array[] = [encode(headFragment(user, counts, exportedAt))];
+  for (let i = 0; i < EXPORT_COLLECTIONS.length; i++) {
+    if (i > 0) fragments.push(encode(","));
+    for (const piece of perCollection[i]) fragments.push(piece);
+  }
+  fragments.push(encode("}}"));
+
+  if (exportOverCeiling(bytes)) {
+    throw new ExportTooLargeError(bytes);
+  }
+  return { fragments, bytes };
 }

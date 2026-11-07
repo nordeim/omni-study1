@@ -1,7 +1,29 @@
 import { defineConfig } from "vitest/config";
 import path from "node:path";
 
-// Unit-test layer for the pure domain seams — 48 files / 1594 tests
+// Unit-test layer for the pure domain seams — 48 files / 1602 tests
+// (re-anchored S156/DE — the streaming-export cycle: census 1594 → 1602,
+// +8 net [data-export +9: the S156/DE1 driver family — the two ORACLE
+// legs (the streaming form's concatenation is byte-identical to
+// JSON.stringify(buildDataExport(...)) on the empty + the populated
+// edge fixtures — the weld that keeps buildDataExport meaningful as the
+// executable reference), the read-order leg, the SEQUENTIAL-reads leg
+// (deferred-promise readers — the one-collection-at-a-time mechanism,
+// the I-A fix's load-bearing property), the counts leg, the byte-count
+// leg (the A-M2 carry-over: bytes === the whole body's UTF-8 count on
+// the multi-byte fixture — · 👋), the name-safety leg, the user-block
+// leg, the exportedAt leg; script-conventions +1: the route-streaming
+// census (ReadableStream + enqueue + close, never fragments.join);
+// data-export −2: the superseded exportByteSize its — the S142/CQ2
+// whole-body encode-for-length is structurally gone (the F2 finding),
+// its A-M2 lesson carried into the driver's byte leg]. The e2e census
+// stays 616 — no new e2e legs by design, the CV1 runtime-split
+// precedent: the four live consumers re-certify the wire (s21's
+// strengthened RAW-BODY size pin — S156/DE3, the F4 finding; the
+// s14/S139-CN2 live round-trip; resilience's budget family;
+// navigation's page-budget twin), and the behavioral proof rides the
+// unit oracle + the live stream probe (chunked transfer, exact header,
+// idempotent restore) + the full cert.)
 // (re-anchored S155/DD — the module-anchor percent-decode + db-path-family
 // doc-reconciliation set: census 1588 → 1594, +6 net [db-path +4: the
 // S155/DD1 module-anchor percent-decode family in the INTEGRATION form —

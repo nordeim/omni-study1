@@ -226,36 +226,14 @@ describe("S141/CP4 · formatExportBytes (the size-signal formatting)", () => {
   });
 });
 
-describe("S142/CQ2 · exportByteSize (the byte-based size signal)", () => {
-  // The A-M2 defect: the S141 size signal consumed json.length — UTF-16
-  // CODE UNITS — while the import cap (http.ts's byte counter) and the
-  // panel's file-picker (picked.size) count real UTF-8 bytes. A non-ASCII
-  // account straddling the 64 MiB cap got NO warning (the code-unit count
-  // under-reports by up to 3x). The signal must be byte-based end-to-end.
-  it("computes the UTF-8 byte size, not the UTF-16 code-unit count", async () => {
-    const { exportByteSize } = await import("../src/lib/data-export");
-    // ASCII: bytes === code units.
-    expect(exportByteSize("")).toBe(0);
-    expect(exportByteSize("abc")).toBe(3);
-    // Multi-byte divergence — the seed's own em-dash/middot class.
-    expect(exportByteSize("—")).toBe(3);
-    expect(exportByteSize("·")).toBe(2);
-    expect(exportByteSize("—")).not.toBe("—".length);
-    const body = "Read chapter 4 — vectors";
-    expect(exportByteSize(body)).toBe(Buffer.byteLength(body));
-    expect(exportByteSize(body)).toBeGreaterThan(body.length);
-  });
-
-  it("matches Buffer.byteLength on a representative envelope fragment", async () => {
-    const { exportByteSize } = await import("../src/lib/data-export");
-    const fragment = JSON.stringify({
-      title: "Read chapter 4 — vectors",
-      note: "Q&A — R&D · 5 < 6",
-      emoji: "👋",
-    });
-    expect(exportByteSize(fragment)).toBe(Buffer.byteLength(fragment));
-  });
-});
+// S142/CQ2 · exportByteSize — REMOVED at S156/DE2 (the streaming cycle):
+// the function had no consumer left after the driver's own per-fragment
+// counting replaced the whole-body encode-for-length (the F2 audit
+// finding: a full body-sized Uint8Array allocated just to read .length).
+// The A-M2 lesson (bytes, never UTF-16 code units) carries into the
+// S156/DE1 driver legs below — `bytes` is pinned against the
+// TextEncoder byte count of the whole body on a fixture that carries
+// the multi-byte divergence class (— · 👋).
 
 // S148/CW2 — the export byte ceiling (audit B-L3, the s148 data-layer
 // rotation; docs/remediation-plan-session148.md).
@@ -315,13 +293,19 @@ describe("S148/CW2: the export byte ceiling (EXPORT_MAX_BYTES + exportOverCeilin
 
   // ---- the wiring census (the CV1 precedent: four files, four pins) ----
 
-  it("the census: the shared seam throws the typed error at the ceiling (export-build.ts)", () => {
-    const src = readFileSync(
+  it("the census: the shared seam throws the typed error at the ceiling (S156/DE1 re-anchor: the gate lives in the PURE DRIVER — data-export.ts — and the server wiring delegates to it)", () => {
+    const driver = readFileSync(
+      path.resolve(process.cwd(), "src/lib/data-export.ts"),
+      "utf8",
+    );
+    expect(driver).toContain("exportOverCeiling");
+    expect(driver).toContain("ExportTooLargeError");
+    expect(driver).toContain("buildExportFragments");
+    const seam = readFileSync(
       path.resolve(process.cwd(), "src/lib/server/export-build.ts"),
       "utf8",
     );
-    expect(src).toContain("exportOverCeiling");
-    expect(src).toContain("ExportTooLargeError");
+    expect(seam).toContain("buildExportFragments");
   });
 
   it("the census: toErrorResponse maps ExportTooLargeError to the 413 family (http.ts, the CU3 precedent)", () => {
@@ -353,5 +337,180 @@ describe("S148/CW2: the export byte ceiling (EXPORT_MAX_BYTES + exportOverCeilin
       "utf8",
     );
     expect(src).toContain("exportOverCeiling");
+  });
+});
+
+// ---------------------------------------------------------------------------
+// S156/DE1 · buildExportFragments (the streaming assembly — the I-A
+// peak-memory fix; docs/remediation-plan-session156.md §2).
+//
+// The driver takes the collection reader AS A PARAMETER (the S124/BY2
+// explicit-args doctrine), reads the 20 collections SEQUENTIALLY (one
+// collection's rows in memory at a time — the mechanism that drops the
+// build-time peak from ~3-4x the body to ~1x + one collection), and emits
+// the envelope as per-row scaffold fragments whose concatenation is
+// BYTE-IDENTICAL to JSON.stringify(buildDataExport(...)). THE ORACLE legs
+// below are the weld: buildDataExport stays in the tree as the executable
+// reference the streaming form must never drift from (any scaffold/key-
+// order/normalizer divergence fails the oracle, not the e2e).
+// ---------------------------------------------------------------------------
+describe("S156/DE1 · buildExportFragments (the streaming assembly)", () => {
+  const USER = {
+    id: "user_1",
+    email: "demo@studyflow.app",
+    name: "Demo",
+    createdAt: new Date("2026-01-01T00:00:00.000Z"),
+    userId: "user_1", // stripped by the normalizer (the fixture proves it)
+  };
+
+  // The edge fixture: unicode (the seed's own — · 👋 class), null, Date,
+  // number, boolean, FK fields — every value shape a Prisma row carries —
+  // plus a NON-manifest key both forms must ignore.
+  const rowsFixture = () => ({
+    subjects: [
+      { id: "s1", name: "Math — vectors", color: "#2563eb", createdAt: WHEN, userId: "user_1" },
+    ],
+    tasks: [
+      { id: "t1", title: "Read chapter 4 — vectors", done: false, priority: 2, dueDate: null, createdAt: WHEN },
+      { id: "t2", title: "👋 emoji row", done: true, priority: 1, dueDate: new Date("2026-11-01T09:30:00.000Z"), createdAt: WHEN },
+    ],
+    holidays: [{ id: "h1", name: "Labor Day · the middot", date: new Date("2026-05-01T00:00:00.000Z") }],
+    rumEvents: [{ id: "x1" }], // never a manifest member — ignored by both forms
+  });
+
+  const readerOver =
+    (rows: Record<string, Array<Record<string, unknown>>>, calls?: string[]) =>
+    async (collection: string) => {
+      calls?.push(collection);
+      return rows[collection] ?? [];
+    };
+
+  const concatBytes = (chunks: Uint8Array[]): Uint8Array => {
+    const total = chunks.reduce((n, c) => n + c.byteLength, 0);
+    const out = new Uint8Array(total);
+    let offset = 0;
+    for (const c of chunks) {
+      out.set(c, offset);
+      offset += c.byteLength;
+    }
+    return out;
+  };
+
+  it("THE ORACLE (empty account): the fragments concatenate to exactly JSON.stringify(buildDataExport(...))", async () => {
+    const { buildExportFragments } = await import("../src/lib/data-export");
+    const { fragments } = await buildExportFragments(USER, readerOver({}), WHEN);
+    const text = new TextDecoder().decode(concatBytes(fragments));
+    expect(text).toBe(JSON.stringify(buildDataExport(USER, {}, WHEN)));
+    // The empty shape: every manifest key present as [] (never absent).
+    expect(text).toContain('"subjects":[]');
+    expect(text).toContain('"holidays":[]');
+    expect(text.endsWith("}}")).toBe(true);
+  });
+
+  it("THE ORACLE (populated edge fixture): byte-identical to the object form — unicode, null, Date, number, boolean, non-manifest keys", async () => {
+    const { buildExportFragments } = await import("../src/lib/data-export");
+    const rows = rowsFixture();
+    const { fragments } = await buildExportFragments(USER, readerOver(rows), WHEN);
+    const text = new TextDecoder().decode(concatBytes(fragments));
+    expect(text).toBe(JSON.stringify(buildDataExport(USER, rows, WHEN)));
+    // The welded properties, spot-checked through the parsed form:
+    const parsed = JSON.parse(text) as {
+      counts: Record<string, number>;
+      data: Record<string, Array<Record<string, unknown>>>;
+    };
+    expect(parsed.data.subjects[0]).toEqual({ id: "s1", name: "Math — vectors", color: "#2563eb", createdAt: WHEN.toISOString() });
+    expect(parsed.data.tasks[1]?.dueDate).toBe("2026-11-01T09:30:00.000Z");
+    expect(parsed.data.tasks[0]?.dueDate).toBeNull();
+    expect(parsed.data.rumEvents).toBeUndefined();
+  });
+
+  it("reads the collections in EXPORT_COLLECTIONS order (the stable wire order)", async () => {
+    const { buildExportFragments } = await import("../src/lib/data-export");
+    const calls: string[] = [];
+    await buildExportFragments(USER, readerOver(rowsFixture(), calls), WHEN);
+    expect(calls).toEqual([...EXPORT_COLLECTIONS]);
+  });
+
+  it("reads SEQUENTIALLY — reader N+1 is not called until N resolves (the one-collection-at-a-time mechanism)", async () => {
+    const { buildExportFragments } = await import("../src/lib/data-export");
+    // Deferred readers: each returns a promise the test controls. If the
+    // driver fired reads concurrently (the old Promise.all shape), reader
+    // 2 would be invoked before reader 1's release and `started` would
+    // record both — the mechanism pin for the I-A fix.
+    const started: string[] = [];
+    const gates: Array<() => void> = [];
+    const reader = async (collection: string) => {
+      started.push(collection);
+      const gate = new Promise<void>((resolve) => gates.push(resolve));
+      await gate;
+      return collection === "tasks" ? [{ id: "t1", title: "gated", createdAt: WHEN }] : [];
+    };
+    const pending = buildExportFragments(USER, reader, WHEN);
+    // Let the microtask queue settle: only the FIRST reader may have started.
+    await new Promise((r) => setTimeout(r, 5));
+    expect(started).toEqual([EXPORT_COLLECTIONS[0]]);
+    // Releasing one-by-one walks the whole manifest strictly in order.
+    for (let i = 0; i < EXPORT_COLLECTIONS.length; i++) {
+      gates[i]();
+      await new Promise((r) => setTimeout(r, 5));
+      const expectedSoFar = EXPORT_COLLECTIONS.slice(0, i + 2);
+      expect(started).toEqual(expectedSoFar.slice(0, EXPORT_COLLECTIONS.length));
+    }
+    const done = await pending;
+    expect(done.bytes).toBeGreaterThan(0);
+  });
+
+  it("the parsed envelope's counts equal the per-reader row counts (the head's counts block)", async () => {
+    const { buildExportFragments } = await import("../src/lib/data-export");
+    const rows: Record<string, Array<Record<string, unknown>>> = rowsFixture();
+    const { fragments } = await buildExportFragments(USER, readerOver(rows), WHEN);
+    const parsed = JSON.parse(new TextDecoder().decode(concatBytes(fragments))) as {
+      counts: Record<string, number>;
+    };
+    for (const name of EXPORT_COLLECTIONS) {
+      expect(parsed.counts[name]).toBe((rows[name] ?? []).length);
+    }
+  });
+
+  it("bytes is the exact UTF-8 byte count of the whole body (the A-M2 carry-over: bytes, never code units)", async () => {
+    const { buildExportFragments } = await import("../src/lib/data-export");
+    const rows = rowsFixture(); // carries — · 👋 (multi-byte divergence)
+    const { fragments, bytes } = await buildExportFragments(USER, readerOver(rows), WHEN);
+    const text = new TextDecoder().decode(concatBytes(fragments));
+    expect(bytes).toBe(new TextEncoder().encode(text).length);
+    // The oracle string is the same body — both derivations agree, and
+    // neither is the code-unit count (the fixture guarantees divergence).
+    expect(bytes).toBe(new TextEncoder().encode(JSON.stringify(buildDataExport(USER, rows, WHEN))).length);
+    expect(bytes).toBeGreaterThan(text.length);
+  });
+
+  it("every manifest name is interpolation-safe (^[A-Za-z]+$ — the \"${name}\" scaffold needs no JSON escaping)", () => {
+    for (const name of EXPORT_COLLECTIONS) {
+      expect(name).toMatch(/^[A-Za-z]+$/);
+    }
+  });
+
+  it("the user block rides serialized (userId stripped, Date → ISO) through the driver's head", async () => {
+    const { buildExportFragments } = await import("../src/lib/data-export");
+    const { fragments } = await buildExportFragments(USER, readerOver({}), WHEN);
+    const parsed = JSON.parse(new TextDecoder().decode(concatBytes(fragments))) as {
+      user: Record<string, unknown>;
+    };
+    expect(parsed.user).toEqual({
+      id: "user_1",
+      email: "demo@studyflow.app",
+      name: "Demo",
+      createdAt: "2026-01-01T00:00:00.000Z",
+    });
+    expect(parsed.user).not.toHaveProperty("userId");
+  });
+
+  it("the exportedAt param rides the head verbatim (the injectable point-in-time stamp)", async () => {
+    const { buildExportFragments } = await import("../src/lib/data-export");
+    const { fragments } = await buildExportFragments(USER, readerOver({}), WHEN);
+    const parsed = JSON.parse(new TextDecoder().decode(concatBytes(fragments))) as {
+      exportedAt: string;
+    };
+    expect(parsed.exportedAt).toBe(WHEN.toISOString());
   });
 });

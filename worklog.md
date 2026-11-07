@@ -5717,3 +5717,110 @@ import family's recorded candidate; the raw-SQL bulk upsert (IF
 profiling ever presses the 60 s budget); the A-M3 stage-2 stays
 deferred ON MEASUREMENT (re-measure only if the hardware or the row
 cap changes).
+
+## Session 167 — the S156 cycle (Batch DE: the streaming-export cycle)
+
+**Workspace**: warm continuation at `68da300` on `main` (the Batch DD
+fix `a1aa229` + the operator's session_184 transcript commit; `git
+pull` fast-forward, environment intact). **Cold baseline**: lint ✓ ·
+tsc ✓ · unit 1594/1594 (48 files — the documented S155 final state) ·
+preflight GREEN · the drawer check GREEN (**the 72nd consecutive**
+no-Tailwind-v4-mobile-nav-bug confirmation) · the desktop parity probe
+**MATCH** (all five formal checks, live reference login).
+
+**The audits.** A — the Batch DD recent-changes axis (`a1aa229`):
+**clean** (all four DD claims verified at the source level — the
+direct fileURLToPath call + the census pair, the DEPLOYMENT.md pair,
+the AGENTS.md caveat, the sidecar hygiene; the doc census
+machine-verified, zero stale sites). B — the export/data-portability
+family (the S155 close's recorded rotation — "the export streaming,
+its own streaming-design cycle"; dispatched to a read-only subagent
+against the web-application skill's §3/§4/§6/§16/§17 rubric):
+**0C/0H/1M/3L/4I** — the family coherent, well-pinned, and secure;
+the findings: **F1 (M)** the recorded I-A residual confirmed and
+quantified — the peak memory is O(account) at **≈ 3–4× the serialized
+body** (all 20 findMany sets + the normalized copy + the whole-body
+string + the length-encode, simultaneously) with the 256 MiB gate
+firing only AFTER the peak (a multi-GB account fully materializes
+before being refused; the serve-time floor adds undici's eager
+encode); **F2 (L)** exportByteSize allocates a full body-sized
+Uint8Array just to read .length; **F3 (L)** the 20-read snapshot is
+not transactional (the documented honest-failing skew class —
+deferred with the lock-measurement reason); **F4 (L)** the s21 size
+pin asserted a re-serialization identity, not the raw served bytes;
+F5–F8 the informationals.
+
+**The plan** (`docs/remediation-plan-session156.md`) written BEFORE
+any source change, validated against the codebase (the RED inventory
+sized: +9 unit legs / −2 superseded / +1 route-stream census, +0 e2e
+legs by design — the CV1 runtime-split precedent).
+
+**The fixes (the unit REDs 12/12 on their designed markers).** DE1 the
+streaming fragment serialization — the PURE driver
+`buildExportFragments(user, readCollection, exportedAt)` in
+data-export.ts (the S124/BY2 explicit-args doctrine applied to the
+READS: the collection reader injected as a parameter — the assembly
+becomes unit-testable AND one-collection-at-a-time): sequential reads
+in EXPORT_COLLECTIONS order, per-row serialization through the same
+normalizer, per-fragment byte counting (every encoded fragment is
+RETAINED payload — F2 closed structurally), retain-while-under-ceiling
+(a multi-GB account refused at ≤ ceiling + head + one piece, the error
+carrying the EXACT total), and the concatenation **byte-identical to
+JSON.stringify(buildDataExport(...))** — pinned by the unit ORACLE
+legs (buildDataExport stays as the executable reference). export-build
+rewrites to the thin READERS-map wiring (the Record key type makes an
+omitted collection a compile error; the exactly-20 findMany census
+survives verbatim); the route STREAMS the fragments (ReadableStream,
+chunked transfer — serve-time peak ≈ 1× body; X-Export-Bytes stays the
+exact served byte count); ExportTooLargeError moves to the pure seam
+(http.ts re-exports — every existing import green, no cycle). **The
+memory ledger: build peak 3–4×B + all rows → ~1×B + one collection;
+serve peak 2–3×B → ~1×B; the over-ceiling refusal unbounded → ≤
+ceiling + ε** (the single->memory-collection cursor bound recorded as
+the phase-2 residual). DE2 the exportByteSize retirement (the BZ15
+dead-export precedent; the A-M2 byte lesson carried into the driver's
+byte leg). DE3 the s21 raw-body pin (the header against the ACTUAL
+served bytes — the F4 finding).
+
+**The live stream probe** (`scripts/probe-export-stream-s156.mjs`):
+the body arrives **chunked** and byte-complete (**X-Export-Bytes 19832
+=== the actual received bytes**), the envelope parses with all 20 keys
++ consistent counts, the secret guard holds, and the **LIVE round-trip
+restores idempotently (created: 0** — the S139-CN2 witness class).
+Preserved as `docs/screenshots/156-export-stream-evidence.json`.
+
+**Re-cert (the FINAL tree).** lint ✓ · tsc ✓ · unit **1602/1602**
+(48 files, +8: data-export +9, script-conventions +1, −2 superseded) ·
+build ✓ (exit 0; 7 warnings — the documented set; **the standalone
+144M byte-identical** — no tracing regression: globals only, the S155
+lesson honored by construction) · the remediated-tree re-confirmation:
+preflight GREEN · drawer GREEN (**the 73rd**) · parity **MATCH** · the
+targeted e2e: chunk 1 **152/152 first-pass** cold — the 5-chunk cold
+cert: **all five chunks FIRST-PASS CLEAN, zero flakes** (152/152 ·
+189/189 · 91/91 · 95/95 · 89/89) — the cert tally **616/616** (the
+e2e census unchanged by design; the four live export consumers
+re-certified) · **census 2218 green** (was 2210).
+
+**Evidence.** The `docs/screenshots/156-clone-*.png` frames (the
+standing desktop + mobile drawer [the 73rd drawer-GREEN companion]),
+self-verifying (ok:true; dimensions machine-checked 1440x900 /
+390x844) + the live stream-probe JSON record. The DE1 proof rides the
+unit oracle legs + the re-anchored censuses + the live probe + the
+cert (the CW2 runtime-split precedent).
+
+**Docs.** README badge/census (2210 → 2218) + the unit-count prose
+sites + the data-export row extension + the Session-156 row; AGENTS
+census (1594 → 1602) + the S156 lessons block (four lessons); CLAUDE
+counts; PAD v1.3.64 (the revision block); the SKILL census (all three
+sites); the vitest header re-anchor; `docs/session_185.md`; this
+entry; the plan §6 as-executed close; the `.env.example` contract
+re-verified (no env-var reads changed; .env and .env.example
+byte-identical at the documented dev posture).
+
+**Next cycle.** The rotation continues — the recorded deferrals: F3's
+$transaction snapshot (the lock-behavior measurement against the
+import's 60 s write-tx family), F5's page-grid-from-envelope + the
+count-only page consumption (the phase-2 leaner page), the
+single-collection cursor pagination, the raw-SQL bulk upsert (IF
+profiling ever presses the 60 s budget), the A-M3 stage-2 (re-measure
+only if the hardware or the row cap changes).
