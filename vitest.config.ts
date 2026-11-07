@@ -1,27 +1,33 @@
 import { defineConfig } from "vitest/config";
 import path from "node:path";
 
-// Unit-test layer for the pure domain seams — 48 files / 1604 tests
-// (re-anchored S157/DF — the leaner-page cycle: census 1602 → 1604,
-// +2 net [data-export +2: the S157/DF1 grid-from-envelope family — the
-// counts-weld leg (the driver's returned counts record equals the parsed
-// envelope's counts block AND the per-reader row counts — the
-// structured-vs-serialized weld the /export page's chip grid now rides,
-// one read pass feeding the grid AND the size signal) + the
-// over-ceiling-counts leg (ExportTooLargeError carries the COMPLETE
-// record — the required-arg constructor + the throw-site census twin;
-// the over-ceiling /export render keeps its grid)]. The e2e census
-// stays 616 — no new e2e legs by design, the CV1 runtime-split
-// precedent: the three live consumers re-certify the wire (s21's page
-// leg — the grid region + the Tasks chip + the raw-body size pin;
-// s23's CH7 refresh leg — the Tasks chip 0→1 flip rides the ONE
-// envelope render; navigation's DB2 twin — the page budget + the
-// Download JSON presence). The cycle's other half — S157/DF2, the F3
-// $transaction-snapshot lock measurement — is a probe, not a test
-// layer (scripts/measure-export-lock-s157.mjs: the snapshot REJECTED ON
-// MEASUREMENT — an open read tx delays every concurrent writer's COMMIT
-// by the full read+serialize window; past the 5 s busy_timeout,
-// outright failures).)
+// Unit-test layer for the pure domain seams — 48 files / 1611 tests
+// (re-anchored S158/DG — the keyset-batched-reads cycle: census 1604 →
+// 1611, +7 net [data-export +3: the S158/DG1 paged-reader family — the
+// multi-batch byte-identity weld (batchSize 2 pages concatenate to
+// EXACTLY the object form — the separator-across-pages correctness),
+// the paging-contract leg (every continuation anchored at the previous
+// page's LAST row; counts page-sum; the terminal hasMore), and the
+// defensive-terminal leg (an empty page ends the collection even under
+// a misbehaving empty+hasMore reader — the no-infinite-loop pin);
+// script-conventions +4: the DG1 driver-mechanism census (the paged
+// contract, the accumulation, the defensive break, the separator
+// scaffolding), the DG1 server-wiring census (the BATCH+1 page, the
+// unique-id keyset cursor + skip 1, all 20 readers ride pageAfter),
+// the DG2 scoped-update census (the import tx's update where carries
+// { id, userId } for the 19 userId-carrying collections — cards
+// excepted, no userId column), and the DG3 panel-reset census (the
+// Restore card's file input resets its value on EVERY pick — the
+// stale-snapshot guard)]. The e2e census stays 616 — no new e2e legs
+// by design, the CV1 runtime-split precedent: the three live consumers
+// re-certify the wire (s21's page leg + the raw-body size pin — the
+// wire is byte-identical through the pagination; s23's import legs —
+// the DG2 update path re-certified compatible; navigation's DB2 twin).
+// The REAL-Prisma keyset continuation (cursor + skip + orderBy at
+// multi-batch scale) is verified by the committed probe
+// scripts/measure-export-heap-s158.mjs's keyset-verify pass (counts ✓ ·
+// unique ✓ · order ✓ at 50k rows per shape — the unit fakes cannot
+// prove Prisma's cursor semantics and the e2e data is single-batch).)
 // (re-anchored S156/DE — the streaming-export cycle: census 1594 → 1602,
 // +8 net [data-export +9: the S156/DE1 driver family — the two ORACLE
 // legs (the streaming form's concatenation is byte-identical to

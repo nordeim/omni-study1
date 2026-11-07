@@ -234,11 +234,24 @@ export class ExportTooLargeError extends Error {
   }
 }
 
-/** The S156/DE1 driver's collection reader — one read per manifest
- * collection, sequential. The server wiring injects the Prisma readers
- * (export-build.ts's READERS map); the unit layer injects in-memory
- * fakes (the oracle legs). */
-export type ExportCollectionReader = (collection: ExportCollection) => Promise<ExportRow[]>;
+/** The S158/DG1 driver's paged collection reader — one page per call.
+ * `after` is the last row of the previous page (the keyset anchor — the
+ * RAW row object; the server wiring builds its keyset cursor from the
+ * row's unique id, with the orderBy pair carrying the order semantics);
+ * the reader owns the page size; `hasMore:
+ * false` (or an empty page — the driver's defensive terminal) ends the
+ * collection. The S156/DE1 form read each collection through ONE
+ * unbounded call: a dominant collection fully materialized as row
+ * objects (measured 3.04–3.12× the envelope's own bytes at 50k rows vs
+ * 1.51× spread — scripts/measure-export-heap-s158.mjs); the paged form
+ * keeps ONE BATCH's row objects live at a time. The server wiring
+ * injects the Prisma readers (export-build.ts's READERS map + pageAfter);
+ * the unit layer injects in-memory fakes (the oracle legs). */
+export type ExportCollectionPage = { rows: ExportRow[]; hasMore: boolean };
+export type ExportCollectionReader = (
+  collection: ExportCollection,
+  after?: ExportRow,
+) => Promise<ExportCollectionPage>;
 
 /** The assembled export: the ordered body fragments (their concatenation
  * is byte-identical to the object form's JSON.stringify) + the exact
@@ -255,18 +268,19 @@ export type RenderedExport = {
   counts: Record<string, number>;
 };
 
-/** One collection's scaffold pieces: `"name":[` + the per-row
- * serializations joined by `,` + `]`. Per-ROW fragmentation (not
- * per-collection) so the counting can cross the ceiling mid-collection —
- * the bounded-refusal property. Every manifest name is interpolation-safe
- * (unit-pinned: ^[A-Za-z]+$ — no JSON escaping ever needed). */
-function* collectionFragments(name: string, rows: readonly ExportRow[]): Generator<string> {
-  yield `"${name}":[`;
+/** One page's row fragments: the per-row serializations joined by `,`
+ * — and each NON-FIRST page's first row carries its own leading `,`
+ * (the separator-across-batches correctness, the piece the single-array
+ * form got for free; `first` is the collection's first page). Per-ROW
+ * fragmentation (not per-collection) so the counting can cross the
+ * ceiling mid-collection — the bounded-refusal property. Every manifest
+ * name is interpolation-safe (unit-pinned: ^[A-Za-z]+$ — no JSON
+ * escaping ever needed). */
+function* rowFragments(rows: readonly ExportRow[], first: boolean): Generator<string> {
   for (let i = 0; i < rows.length; i++) {
-    if (i > 0) yield ",";
+    if (i > 0 || !first) yield ",";
     yield JSON.stringify(serializeExportRow(rows[i]));
   }
-  yield "]";
 }
 
 /** The envelope head: everything before the first collection. Built
@@ -285,12 +299,15 @@ function headFragment(user: ExportRow, counts: Record<string, number>, exportedA
   );
 }
 
-/** S156/DE1 — the streaming assembly. Reads the 20 collections
- * SEQUENTIALLY through `readCollection` (one collection's rows in memory
- * at a time), serializes each row through the normalizer, encodes each
- * scaffold piece (retaining while at-or-under the ceiling), and answers
- * the ordered fragments + the exact byte total. Throws ExportTooLargeError
- * past EXPORT_MAX_BYTES with the exact total. */
+/** S156/DE1 → S158/DG1 — the streaming assembly, keyset-batched. Reads
+ * the 20 collections SEQUENTIALLY through `readCollection` — and, since
+ * DG1, one PAGE at a time (the reader answers { rows, hasMore }; the
+ * continuation anchor is the previous page's last row): one batch's row
+ * objects live at a time, never a whole collection's. Serializes each
+ * row through the normalizer, encodes each scaffold piece (retaining
+ * while at-or-under the ceiling), and answers the ordered fragments +
+ * the exact byte total. Throws ExportTooLargeError past EXPORT_MAX_BYTES
+ * with the exact total. */
 export async function buildExportFragments(
   user: ExportRow,
   readCollection: ExportCollectionReader,
@@ -308,26 +325,46 @@ export async function buildExportFragments(
     return encoded;
   };
 
-  // Pass 1 — the collections, one read at a time. The rows array of each
-  // collection goes out of scope at the loop's bottom edge: the peak is
-  // one collection's rows + the fragments retained so far. The
-  // read-skew window stretches with the serialization time (the accepted
-  // F3 class, documented in export-build.ts's header — the export never
-  // writes, and the import resolves FKs against envelope ∪ owned rows).
+  // Pass 1 — the collections, one PAGE at a time. The S158/DG1 batch
+  // loop: a single collection's rows no longer all materialize at once
+  // (the measured 3× dominant-collection peak → ~1.2×; the probe record
+  // in scripts/measure-export-heap-s158.mjs). The read-skew window
+  // stretches with the serialization time (the accepted F3 class,
+  // documented in export-build.ts's header — the export never writes,
+  // and the import resolves FKs against envelope ∪ owned rows).
   for (const collection of EXPORT_COLLECTIONS) {
-    const rows = await readCollection(collection);
-    counts[collection] = rows.length;
+    counts[collection] = 0;
     const pieces: Uint8Array[] = [];
-    for (const piece of collectionFragments(collection, rows)) {
-      const encoded = encode(piece);
-      // Retain-while-under: the first piece past the ceiling is the last
-      // retained one; the pass keeps COUNTING (never retaining) so the
-      // thrown bytes stay the exact total. At-cap is the last ALLOWED
-      // count (the CL2 boundary doctrine — at-cap fragments are all
-      // retained, and the gate below does not refuse them).
-      if (retaining) pieces.push(encoded);
-      if (exportOverCeiling(bytes)) retaining = false;
+    let first = true;
+    let anchor: ExportRow | undefined;
+    for (;;) {
+      const page = await readCollection(collection, anchor);
+      // The defensive terminal: an empty page ends the collection
+      // regardless of hasMore (a reader answering empty+hasMore would
+      // otherwise loop forever on an undefined anchor).
+      if (page.rows.length === 0) break;
+      if (first && retaining) pieces.push(encode(`"${collection}":[`));
+      for (const piece of rowFragments(page.rows, first)) {
+        const encoded = encode(piece);
+        // Retain-while-under: the first piece past the ceiling is the last
+        // retained one; the pass keeps COUNTING (never retaining) so the
+        // thrown bytes stay the exact total. At-cap is the last ALLOWED
+        // count (the CL2 boundary doctrine — at-cap fragments are all
+        // retained, and the gate below does not refuse them).
+        if (retaining) pieces.push(encoded);
+        if (exportOverCeiling(bytes)) retaining = false;
+      }
+      counts[collection] += page.rows.length;
+      first = false;
+      if (!page.hasMore) break;
+      anchor = page.rows[page.rows.length - 1];
     }
+    // An empty collection still rides its scaffold (the "name":[] shape);
+    // a non-empty collection already pushed its "[" before page one. The
+    // pushes stay retention-conditional (the retain-while-under contract:
+    // past the ceiling nothing new is retained — only counted).
+    if (first && retaining) pieces.push(encode(`"${collection}":[`));
+    if (retaining) pieces.push(encode("]"));
     perCollection.push(pieces);
   }
 

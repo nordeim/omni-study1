@@ -245,6 +245,13 @@ export function ExportPanel({
               setFile(picked);
               setResult(null);
               setError("");
+              // S158/DG3 (audit B/L-1): reset the input's value on EVERY
+              // pick — after a failed import, re-picking the SAME (edited)
+              // file fires no change event while the value is unchanged,
+              // and the Import button would re-send the ORIGINAL File
+              // snapshot. The oversized branch already reset; the success
+              // branch now matches (the both-branches reset).
+              e.target.value = "";
             }}
             className="text-sm text-slate-600 dark:text-slate-300"
           />

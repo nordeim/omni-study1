@@ -795,10 +795,11 @@ describe("the S135/CJ2 route-side collection censuses", () => {
     const { EXPORT_COLLECTIONS } = await import("../src/lib/data-export");
     const missing: string[] = [];
     for (const name of EXPORT_COLLECTIONS) {
-      // S156/DE1 re-anchor: the destructure block became the READERS map —
-      // the whole-line key form discriminates the map entry from any
-      // comment/prose mention (a key + the reader signature + the db call).
-      const readerKey = new RegExp(`^\\s*${name}: \\(userId\\) => db\\.`, "m");
+      // S158/DG1 re-anchor: the reader became the paged form — every
+      // reader rides the keyset page wrapper (pageAfter), the whole-line
+      // key form still discriminating the map entry from any
+      // comment/prose mention.
+      const readerKey = new RegExp(`^\\s*${name}: \\(userId, after\\) => pageAfter\\(`, "m");
       if (!readerKey.test(src)) missing.push(name);
     }
     expect(
@@ -2457,5 +2458,83 @@ describe("the S155/DD1 db-path module-anchor censuses", () => {
     // shape — `= new URL(import.meta.url).pathname` — which exists only in
     // code.
     expect(src).not.toMatch(/=\s*new URL\(import\.meta\.url\)\.pathname/);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// S158/DG source censuses (the keyset-batched export reads + the scoped
+// import updates + the panel input reset — the audit-driven hardening
+// cycle; docs/remediation-plan-session158.md §3–§5).
+// ---------------------------------------------------------------------------
+describe("the S158/DG source censuses", () => {
+  const DRIVER = path.resolve(process.cwd(), "src/lib/data-export.ts");
+  const EXPORT_BUILD = path.resolve(process.cwd(), "src/lib/server/export-build.ts");
+  const IMPORT_ROUTE = path.resolve(process.cwd(), "src/app/api/import/data/route.ts");
+  const EXPORT_PANEL = path.resolve(process.cwd(), "src/components/export/export-panel.tsx");
+
+  it("S158/DG1: the driver loops PAGES (the paged contract + the accumulation + the defensive terminal + the separator scaffolding)", () => {
+    const src = readFileSync(DRIVER, "utf8");
+    // The paged reader contract is exported (the server wiring + the unit
+    // fakes both ride it).
+    expect(src).toContain("export type ExportCollectionPage");
+    // The accumulation: counts page-sum across batches (a count that
+    // ASSIGNS page.rows.length would lose every page after the first).
+    expect(src).toMatch(/counts\[collection\] \+= page\.rows\.length/);
+    // The defensive terminal: an empty page ends the collection regardless
+    // of hasMore (a reader answering empty+hasMore would otherwise loop
+    // forever on an undefined anchor).
+    expect(src).toMatch(/if \(page\.rows\.length === 0\) break;/);
+    // The separator-across-batches shape: the per-page generator takes the
+    // first-page flag (each non-first page's first row carries its own
+    // leading "," — the byte-identity oracle pins the output).
+    expect(src).toMatch(/rowFragments\(page\.rows, first\)/);
+  });
+
+  it("S158/DG1: the server wiring rides the keyset page wrapper (BATCH+1, the compound ARRAY cursor — createdAt-primary)", async () => {
+    const src = readFileSync(EXPORT_BUILD, "utf8");
+    const { EXPORT_COLLECTIONS } = await import("../src/lib/data-export");
+    // The one-extra-row page: take BATCH+1, answer the first BATCH rows +
+    // the hasMore bit (no empty roundtrip per collection).
+    expect(src).toContain("EXPORT_BATCH_ROWS + 1");
+    expect(src).toMatch(/hasMore: rows\.length > EXPORT_BATCH_ROWS/);
+    // The unique-id cursor + skip 1 — the documented Prisma keyset idiom:
+    // the orderBy pair (createdAt, id) is a total order, so positioning at
+    // the unique anchor row and stepping past it continues the SAME order
+    // losslessly (the compound-array-cursor form is unnecessary when the
+    // cursor field is itself unique).
+    expect(src).toContain("cursor: { id: after.id as string }");
+    expect(src).toContain("skip: 1");
+    // The keyset is a TOTAL order on every collection (unique id) — the
+    // pagination is lossless by construction.
+    expect(src).toContain("EXPORT_ORDER");
+    // Every reader is paged (the READERS census twin — belt and braces
+    // with the CJ2 re-anchor, same site, same shape).
+    const paged = (src.match(/^\s*[a-zA-Z]+: \(userId, after\) => pageAfter\(/gm) ?? []).length;
+    expect(paged, "all 20 readers ride the keyset page wrapper").toBe(EXPORT_COLLECTIONS.length);
+  });
+
+  it("S158/DG2: the import tx's update writes are OWNERSHIP-SCOPED for the userId-carrying collections (cards excepted — no userId column)", () => {
+    const src = readFileSync(IMPORT_ROUTE, "utf8");
+    // The scoped where: an id owned by the importer at probe time but
+    // deleted + re-created by ANOTHER account inside the probe→tx window
+    // would otherwise be overwritten AND its ownership flipped (the
+    // payload re-attaches userId). The scoped form throws P2025 → the
+    // existing named-409 leg (the CQ4 family) on every vanished/foreign
+    // shape — behavior-compatible on every current path.
+    expect(src).toMatch(/where: collection === "cards" \? \{ id \} : \{ id, userId: user\.id \}/);
+    // The cards exception is documented at the site (the residual: a
+    // one-row content re-parent with NO ownership column to flip).
+    expect(src).toContain("S158/DG2");
+  });
+
+  it("S158/DG3: the Restore card's file input resets its value on EVERY pick (the stale-snapshot guard — both branches)", () => {
+    const src = readFileSync(EXPORT_PANEL, "utf8");
+    // The oversized branch reset pre-dates this cycle; the SUCCESS branch
+    // now matches: re-picking the same (edited) file after a failed
+    // import fires no change event while the value is unchanged, and the
+    // Import button would re-send the ORIGINAL File snapshot.
+    const resets = src.match(/e\.target\.value = ""/g) ?? [];
+    expect(resets.length, "both pick branches reset the input value (oversized + success)").toBe(2);
+    expect(src).toContain("S158/DG3");
   });
 });

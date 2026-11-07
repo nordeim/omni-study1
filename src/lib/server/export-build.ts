@@ -52,6 +52,7 @@ import { publicUser } from "@/lib/server/auth";
 import {
   buildExportFragments,
   type ExportCollection,
+  type ExportCollectionPage,
   type ExportRow,
   type RenderedExport,
 } from "@/lib/data-export";
@@ -60,35 +61,79 @@ export type { RenderedExport };
 
 export type ExportUser = Awaited<ReturnType<typeof publicUser>>;
 
-// S156/DE1: the 20 collection readers — userId-scoped, chronological (the
-// S140 order contract: createdAt asc, id asc), cards deck-scoped
-// (Flashcard has NO userId — the deck relation scopes it). The
-// Record<ExportCollection, …> key type makes an omitted collection a
-// COMPILE error (stronger than the old destructuring literal), and the
-// exactly-20 findMany census (script-conventions) survives verbatim.
-// Each reader's result set lives only for its own driver turn — the
-// one-collection-at-a-time mechanism (the I-A fix).
-const READERS: Record<ExportCollection, (userId: string) => Promise<ExportRow[]>> = {
-  subjects: (userId) => db.subject.findMany({ where: { userId }, orderBy: [{ createdAt: "asc" }, { id: "asc" }] }),
-  taskLists: (userId) => db.taskList.findMany({ where: { userId }, orderBy: [{ createdAt: "asc" }, { id: "asc" }] }),
-  tasks: (userId) => db.task.findMany({ where: { userId }, orderBy: [{ createdAt: "asc" }, { id: "asc" }] }),
-  assignments: (userId) => db.assignment.findMany({ where: { userId }, orderBy: [{ createdAt: "asc" }, { id: "asc" }] }),
-  exams: (userId) => db.exam.findMany({ where: { userId }, orderBy: [{ createdAt: "asc" }, { id: "asc" }] }),
-  events: (userId) => db.event.findMany({ where: { userId }, orderBy: [{ createdAt: "asc" }, { id: "asc" }] }),
-  timetableClasses: (userId) => db.timetableClass.findMany({ where: { userId }, orderBy: [{ createdAt: "asc" }, { id: "asc" }] }),
-  notebooks: (userId) => db.notebook.findMany({ where: { userId }, orderBy: [{ createdAt: "asc" }, { id: "asc" }] }),
-  notes: (userId) => db.note.findMany({ where: { userId }, orderBy: [{ createdAt: "asc" }, { id: "asc" }] }),
-  decks: (userId) => db.flashcardDeck.findMany({ where: { userId }, orderBy: [{ createdAt: "asc" }, { id: "asc" }] }),
-  cards: (userId) => db.flashcard.findMany({ where: { deck: { userId } }, orderBy: [{ createdAt: "asc" }, { id: "asc" }] }),
-  practiceTests: (userId) => db.practiceTest.findMany({ where: { userId }, orderBy: [{ createdAt: "asc" }, { id: "asc" }] }),
-  studyGroups: (userId) => db.studyGroup.findMany({ where: { userId }, orderBy: [{ createdAt: "asc" }, { id: "asc" }] }),
-  grades: (userId) => db.grade.findMany({ where: { userId }, orderBy: [{ createdAt: "asc" }, { id: "asc" }] }),
-  focusSessions: (userId) => db.focusSession.findMany({ where: { userId }, orderBy: [{ createdAt: "asc" }, { id: "asc" }] }),
-  folders: (userId) => db.fileFolder.findMany({ where: { userId }, orderBy: [{ createdAt: "asc" }, { id: "asc" }] }),
-  files: (userId) => db.fileItem.findMany({ where: { userId }, orderBy: [{ createdAt: "asc" }, { id: "asc" }] }),
-  chatMessages: (userId) => db.aiChatMessage.findMany({ where: { userId }, orderBy: [{ createdAt: "asc" }, { id: "asc" }] }),
-  calcHistory: (userId) => db.calculatorHistoryEntry.findMany({ where: { userId }, orderBy: [{ createdAt: "asc" }, { id: "asc" }] }),
-  holidays: (userId) => db.holiday.findMany({ where: { userId }, orderBy: [{ createdAt: "asc" }, { id: "asc" }] }),
+// S158/DG1: the keyset page size — one batch's row objects (~15 MiB at
+// the audit's ~3 KiB/row shape) live at a time. The S156/DE1 form read
+// each collection through ONE unbounded findMany: a dominant collection
+// fully materialized as Prisma row objects on top of the retained
+// fragments (measured 3.04–3.12× the envelope's own bytes at 50k rows
+// vs 1.51× spread — scripts/measure-export-heap-s158.mjs, the §2
+// measurement; the probe re-ran post-fix at ~1.2×). The page size rides
+// the IMPORT_CREATE_CHUNK precedent.
+const EXPORT_BATCH_ROWS = 5000;
+
+/** The export order contract (the S140 order: createdAt asc, id asc — a
+ * TOTAL order on every collection, unique id: the keyset pagination is
+ * lossless by construction). */
+const EXPORT_ORDER = [{ createdAt: "asc" }, { id: "asc" }] as const;
+
+/** S158/DG1 — the keyset page wrapper. `scan` receives the pagination
+ * args (take always; the unique-id cursor + skip 1 when anchored — the
+ * orderBy pair (createdAt, id) is a TOTAL order on every collection, so
+ * positioning at the unique anchor row and stepping past it continues
+ * the SAME order losslessly: the documented Prisma keyset idiom; the
+ * compound-array-cursor form is unnecessary when the cursor field is
+ * itself unique). Takes BATCH+1, answers the first BATCH rows + the
+ * hasMore bit — the classic one-extra-row page, no empty roundtrip per
+ * collection. */
+async function pageAfter(
+  after: ExportRow | undefined,
+  scan: (extra: {
+    take: number;
+    cursor?: { id: string };
+    skip?: number;
+  }) => Promise<ExportRow[]>,
+): Promise<ExportCollectionPage> {
+  const rows = await scan(
+    after
+      ? { take: EXPORT_BATCH_ROWS + 1, cursor: { id: after.id as string }, skip: 1 }
+      : { take: EXPORT_BATCH_ROWS + 1 },
+  );
+  return { rows: rows.slice(0, EXPORT_BATCH_ROWS), hasMore: rows.length > EXPORT_BATCH_ROWS };
+}
+
+// S156/DE1 → S158/DG1: the 20 collection readers — userId-scoped,
+// chronological (the S140 order contract: createdAt asc, id asc), cards
+// deck-scoped (Flashcard has NO userId — the deck relation scopes it),
+// and since DG1 KEYSET-PAGED through pageAfter (one batch's rows live at
+// a time — the single-collection memory fix). The Record<ExportCollection,
+// …> key type makes an omitted collection a COMPILE error (stronger than
+// the old destructuring literal), and the exactly-20 findMany census
+// (script-conventions) survives verbatim (one findMany per reader, inside
+// the page wrapper's scan closure).
+const READERS: Record<
+  ExportCollection,
+  (userId: string, after?: ExportRow) => Promise<ExportCollectionPage>
+> = {
+  subjects: (userId, after) => pageAfter(after, (extra) => db.subject.findMany({ where: { userId }, orderBy: [...EXPORT_ORDER], ...extra })),
+  taskLists: (userId, after) => pageAfter(after, (extra) => db.taskList.findMany({ where: { userId }, orderBy: [...EXPORT_ORDER], ...extra })),
+  tasks: (userId, after) => pageAfter(after, (extra) => db.task.findMany({ where: { userId }, orderBy: [...EXPORT_ORDER], ...extra })),
+  assignments: (userId, after) => pageAfter(after, (extra) => db.assignment.findMany({ where: { userId }, orderBy: [...EXPORT_ORDER], ...extra })),
+  exams: (userId, after) => pageAfter(after, (extra) => db.exam.findMany({ where: { userId }, orderBy: [...EXPORT_ORDER], ...extra })),
+  events: (userId, after) => pageAfter(after, (extra) => db.event.findMany({ where: { userId }, orderBy: [...EXPORT_ORDER], ...extra })),
+  timetableClasses: (userId, after) => pageAfter(after, (extra) => db.timetableClass.findMany({ where: { userId }, orderBy: [...EXPORT_ORDER], ...extra })),
+  notebooks: (userId, after) => pageAfter(after, (extra) => db.notebook.findMany({ where: { userId }, orderBy: [...EXPORT_ORDER], ...extra })),
+  notes: (userId, after) => pageAfter(after, (extra) => db.note.findMany({ where: { userId }, orderBy: [...EXPORT_ORDER], ...extra })),
+  decks: (userId, after) => pageAfter(after, (extra) => db.flashcardDeck.findMany({ where: { userId }, orderBy: [...EXPORT_ORDER], ...extra })),
+  cards: (userId, after) => pageAfter(after, (extra) => db.flashcard.findMany({ where: { deck: { userId } }, orderBy: [...EXPORT_ORDER], ...extra })),
+  practiceTests: (userId, after) => pageAfter(after, (extra) => db.practiceTest.findMany({ where: { userId }, orderBy: [...EXPORT_ORDER], ...extra })),
+  studyGroups: (userId, after) => pageAfter(after, (extra) => db.studyGroup.findMany({ where: { userId }, orderBy: [...EXPORT_ORDER], ...extra })),
+  grades: (userId, after) => pageAfter(after, (extra) => db.grade.findMany({ where: { userId }, orderBy: [...EXPORT_ORDER], ...extra })),
+  focusSessions: (userId, after) => pageAfter(after, (extra) => db.focusSession.findMany({ where: { userId }, orderBy: [...EXPORT_ORDER], ...extra })),
+  folders: (userId, after) => pageAfter(after, (extra) => db.fileFolder.findMany({ where: { userId }, orderBy: [...EXPORT_ORDER], ...extra })),
+  files: (userId, after) => pageAfter(after, (extra) => db.fileItem.findMany({ where: { userId }, orderBy: [...EXPORT_ORDER], ...extra })),
+  chatMessages: (userId, after) => pageAfter(after, (extra) => db.aiChatMessage.findMany({ where: { userId }, orderBy: [...EXPORT_ORDER], ...extra })),
+  calcHistory: (userId, after) => pageAfter(after, (extra) => db.calculatorHistoryEntry.findMany({ where: { userId }, orderBy: [...EXPORT_ORDER], ...extra })),
+  holidays: (userId, after) => pageAfter(after, (extra) => db.holiday.findMany({ where: { userId }, orderBy: [...EXPORT_ORDER], ...extra })),
 };
 
 /** Read the 20 collections (userId-scoped, chronological; cards scoped
@@ -104,7 +149,9 @@ const READERS: Record<ExportCollection, (userId: string) => Promise<ExportRow[]>
 export async function renderExportEnvelope(user: ExportUser): Promise<RenderedExport> {
   return buildExportFragments(
     user,
-    (collection) => READERS[collection](user.id),
+    // S158/DG1: the page anchor rides through — the driver's per-batch
+    // continuation calls land in the reader's keyset cursor.
+    (collection, after) => READERS[collection](user.id, after),
     new Date(),
   );
 }

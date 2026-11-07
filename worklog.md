@@ -5941,3 +5941,118 @@ materializes — census-breaking, its own cycle), F7's cosmetic edges
 cross-account TOCTOU documentation note, the raw-SQL bulk upsert (IF
 profiling ever presses the 60 s budget), the A-M3 stage-2 (re-measure
 only if the hardware or the row cap changes).
+
+## Session 169 — the S158 cycle (Batch DG: the keyset-batched-reads cycle)
+
+**Workspace**: COLD — a fresh `git clone` at `69cebc0` on `main` (the
+Batch DF fix `0c6fa3d` + the operator's session_188 transcript commit);
+the environment rebuilt (`.env` from the byte-identical `.env.example`,
+`bun install`, `db:push && db:seed` → the repo-root `db/custom.db`, the
+Playwright chromium cache restored). **Cold baseline**: lint ✓ · tsc ✓ ·
+unit 1604/1604 (48 files — the documented S157 final state) · preflight
+GREEN · the drawer check GREEN (**the 76th consecutive**
+no-Tailwind-v4-mobile-nav-bug confirmation) · the desktop parity probe
+**MATCH** (all five formal checks, live reference login — the S142
+outer-footprint probe).
+
+**The audits.** A — the Batch DF recent-changes axis (`0c6fa3d`;
+`69cebc0` docs-only): **clean** (all six DF claims verified at the
+source level — the counts return, the required-arg error, the page's
+count-family retirement, the measured-record header, the S157/DF1
+describe, the DB2 negative censuses; the doc census machine-verified,
+zero stale count sites). B — the export/import data-portability family
+(the S157 close's recorded rotation; dispatched to a read-only
+subagent against the web-application skill's §3/§4/§6/§16/§17 rubric):
+**0C/0H/0M/2L/5I** — the family coherent, well-pinned, and secure; the
+findings: **L-1** the Restore card's file input resets its value on
+the oversized branch only (a re-picked, edited backup after a failed
+import silently re-sends the ORIGINAL File snapshot); **L-2** the
+import tx's update writes are unscoped and the payload re-attaches
+`userId` — the read-hoist TOCTOU's under-documented ownership-flip
+sub-variant. The three recorded candidates adjudicated: the
+single-collection cursor pagination → measurement-gated, run FIRST;
+F7's cosmetic edges (the UTC stamp, the 429-through-the-anchor) →
+REJECTED AS NOT-A-GAP (the polish options recorded); the I-1 TOCTOU
+note → the cheap hardening is behavior-compatible (DG2).
+
+**The DG0 measurement (run FIRST — the S154/S157 measurement-first
+doctrine): the heap probe** (`scripts/measure-export-heap-s158.mjs`,
+committed — three synthetic 50k-row users against a throwaway
+`db/measure-s158.db`, gc'd baselines + a 25 ms sampler around the REAL
+`renderExportEnvelope`, isolated per shape via the SHAPES env after a
+diagnosed GC-suppression artifact): **SPREAD 1.51× · DOMINANT-notes
+3.04× · DOMINANT-chat 3.12×** the envelope's own bytes — the
+single-collection row-object term ≈ 2× the fragment term; at the
+256 MiB ceiling a dominant account peaks at ~780 MiB heap (an OOM
+class on small containers). **The verdict: the S157 close's "its own
+cycle" condition was MET — the pagination became the cycle core** (and
+the "census-breaking" premise was falsified: the oracle, the counts
+record, and the throw were all pagination-invariant by construction).
+
+**The fixes (TDD, RED 13/13 on their designed markers — the
+contract-change surface):**
+
+- **DG1 — the keyset-batched export reads (the cycle core).** The
+  reader contract becomes paged (`(collection, after?) =>
+  Promise<{ rows, hasMore }>`); the driver loops batches (the
+  separator-across-pages correctness, counts page-summed, the
+  defensive empty-page terminal, the retention/ceiling logic
+  untouched); the server wiring rides `pageAfter` (5000-row BATCH+1
+  pages, the unique-id cursor + skip 1 on the createdAt/id total
+  order — the documented Prisma keyset idiom; all 20 readers, cards
+  deck-scoped as ever). **The proof of fix (the probe re-run):
+  dom-notes 3.04× → 1.28×, dom-chat 3.12× → 1.31× — both BELOW the
+  spread shape's own 1.51×; the keyset-verify pass proves the
+  real-Prisma continuation lossless at 50k rows per shape (counts ✓ ·
+  unique ✓ · order ✓ — 150k rows verified; the unit fakes cannot
+  prove Prisma's cursor semantics and the e2e data is single-batch,
+  so the committed probe IS the fourth test tier).**
+- **DG2 — the ownership-scoped import updates (the L-2 close).**
+  `where: { id, userId: user.id }` for the 19 userId-carrying
+  collections (cards excepted — no userId column, the residual named
+  at the site); behavior-compatible on every current path (a
+  vanished/foreign row throws P2025 → the existing named-409 leg).
+- **DG3 — the Restore-card input reset (the L-1 close).** The success
+  branch gains `e.target.value = ""` — the stale-snapshot class gone.
+
+**Gates.** lint ✓ · tsc ✓ · unit **1611/1611** (48 files, +7 exactly
+as enumerated — the plan draft's "+6" corrected in the plan §6
+honestly) · build ✓ (7 warnings — the documented set; standalone
+**144M**) · the live page probe GREEN (20 chips, the grid counts MATCH
+the API envelope, X-Export-Bytes 19832 exact, the secret guard holds —
+byte-identical through the pagination) · the remediated-tree
+re-confirmation: preflight GREEN (after the documented S9/S31
+stale-Turbopack remedy) · drawer GREEN (**the 77th consecutive**) ·
+parity **MATCH** · the targeted e2e s21+s23 **21/21 first-pass** cold ·
+the 5-chunk cold cert: 152/152 · 189/189 · 90/91 with one machine-load
+flake (resilience's S120/BU1 Rename-dialog prefill leg — untouched by
+this cycle's diff; standalone-cold re-run **41/41 first-pass, EXIT:0**
+— the S139 machine-load class, the S157 BZ3 precedent) · 95/95 ·
+89/89 — the cert tally **616/616** · **census 2227 green** (was 2220;
+the final full unit re-run post-doc-edits 1611/1611).
+
+**Evidence.** The `docs/screenshots/158-clone-*.png` frames (the
+standing desktop + the mobile drawer [the 77th drawer-GREEN companion]
++ the cycle's surface: the /export page on the keyset-paged reads),
+self-verifying (ok:true; dimensions machine-checked) + the committed
+heap/keyset probe (the before/after record + the keyset-verify pass).
+
+**Docs.** README badge/census (2220 → 2227) + the unit-count prose
+sites + the data-portability row extension + the Session-158 row;
+AGENTS census (1604 → 1611) + the export row re-anchor (the
+keyset-paged wording) + the import row extension (DG2/DG3) + the S158
+lessons block (three lessons); CLAUDE counts; PAD v1.3.66 (the
+revision block); the SKILL census (all four sites); the vitest header
+re-anchor (+7 with the probe-as-evidence note);
+`docs/session_189.md`; this entry; the plan §7 as-executed close; the
+`.env.example` contract re-verified (no env-var reads changed this
+cycle — .env and .env.example byte-identical at the documented dev
+posture).
+
+**Next cycle.** The rotation continues — the recorded deferrals: F7's
+polish options (the client `?stamp=`, the fetch→blob unification —
+rejected as gaps, recorded), the raw-SQL bulk upsert (IF profiling
+ever presses the 60 s budget), the A-M3 stage-2 (re-measure only if
+the hardware or the row cap changes), the I-2 parse-amplification
+posture (documented), the import's create-side raw-SQL sibling (the
+same measurement gate).

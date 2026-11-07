@@ -172,7 +172,10 @@ const MODEL: Record<Collection, keyof PrismaClient> = {
  * without a cast). The inline any-casts are gone (census-pinned). */
 interface ImportDelegateOps {
   findMany(args: { where: Record<string, unknown>; select?: Record<string, unknown> }): Promise<Array<Record<string, unknown>>>;
-  update(args: { where: { id: string }; data: Record<string, unknown> }): Promise<Record<string, unknown>>;
+  // S158/DG2: the where grows the ownership scope (Prisma's extended
+  // where-unique — id unique + the userId filter); cards omit it (no
+  // userId column on Flashcard).
+  update(args: { where: { id: string; userId?: string }; data: Record<string, unknown> }): Promise<Record<string, unknown>>;
   createMany(args: { data: Array<Record<string, unknown>> }): Promise<{ count: number }>;
 }
 
@@ -620,8 +623,25 @@ export const POST = async (request: NextRequest) => {
         // distinct-payload update; the probe-hoist already removed the
         // per-row findFirst read — these are fast indexed-PK writes with
         // zero read-awaits inside the lock window).
+        //
+        // S158/DG2 (audit B/L-2): the update where is OWNERSHIP-SCOPED
+        // for the 19 userId-carrying collections. The read-hoist class's
+        // under-documented sub-variant: an id owned by the importer at
+        // probe time, deleted, then RE-CREATED by another account inside
+        // the widened probe→tx window would otherwise be overwritten AND
+        // its ownership FLIPPED (the payload re-attaches userId). The
+        // scoped form is behavior-compatible on every current path — a
+        // vanished row (the CQ4 concurrent-delete class) throws P2025 →
+        // the named-409 leg (importRestoreError); the foreign-row
+        // variant now lands there too. CARDS stay unscoped — Flashcard
+        // carries NO userId column (Prisma's update-where cannot express
+        // the deck relation); their residual is a one-row content
+        // re-parent with no ownership column to flip (accepted, named).
         for (const { id, data } of plan.updates) {
-          await delegate.update({ where: { id }, data });
+          await delegate.update({
+            where: collection === "cards" ? { id } : { id, userId: user.id },
+            data,
+          });
           u += 1;
         }
 

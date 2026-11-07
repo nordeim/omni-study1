@@ -380,11 +380,19 @@ describe("S156/DE1 · buildExportFragments (the streaming assembly)", () => {
     rumEvents: [{ id: "x1" }], // never a manifest member — ignored by both forms
   });
 
+  // S158/DG1 re-anchor: the fake rides the PAGED reader contract —
+  // `after` is the previous page's last row (the keyset anchor); the fake
+  // slices the fixture by identityIndexOf(anchor)+1. batchSize defaults to
+  // a single page (the legacy legs' semantics unchanged); the DG1 legs
+  // pass a small batchSize to force many pages.
   const readerOver =
-    (rows: Record<string, Array<Record<string, unknown>>>, calls?: string[]) =>
-    async (collection: string) => {
+    (rows: Record<string, Array<Record<string, unknown>>>, calls?: string[], batchSize = Number.MAX_SAFE_INTEGER) =>
+    async (collection: string, after?: Record<string, unknown>) => {
       calls?.push(collection);
-      return rows[collection] ?? [];
+      const all = rows[collection] ?? [];
+      const start = after ? all.indexOf(after) + 1 : 0;
+      const page = all.slice(start, start + batchSize);
+      return { rows: page, hasMore: start + batchSize < all.length };
     };
 
   const concatBytes = (chunks: Uint8Array[]): Uint8Array => {
@@ -441,11 +449,14 @@ describe("S156/DE1 · buildExportFragments (the streaming assembly)", () => {
     // record both — the mechanism pin for the I-A fix.
     const started: string[] = [];
     const gates: Array<() => void> = [];
-    const reader = async (collection: string) => {
+    const reader = async (collection: string, _after?: Record<string, unknown>) => {
       started.push(collection);
       const gate = new Promise<void>((resolve) => gates.push(resolve));
       await gate;
-      return collection === "tasks" ? [{ id: "t1", title: "gated", createdAt: WHEN }] : [];
+      return {
+        rows: collection === "tasks" ? [{ id: "t1", title: "gated", createdAt: WHEN }] : [],
+        hasMore: false,
+      };
     };
     const pending = buildExportFragments(USER, reader, WHEN);
     // Let the microtask queue settle: only the FIRST reader may have started.
@@ -548,8 +559,10 @@ describe("S157/DF1 · the structured counts return (grid-from-envelope)", () => 
   });
   const readerOver =
     (rows: Record<string, Array<Record<string, unknown>>>) =>
-    async (collection: string) =>
-      rows[collection] ?? [];
+    async (collection: string, _after?: Record<string, unknown>) => ({
+      rows: rows[collection] ?? [],
+      hasMore: false,
+    });
   const concatBytes = (chunks: Uint8Array[]): Uint8Array => {
     const total = chunks.reduce((n, c) => n + c.byteLength, 0);
     const out = new Uint8Array(total);
@@ -601,5 +614,132 @@ describe("S157/DF1 · the structured counts return (grid-from-envelope)", () => 
       "utf8",
     );
     expect(driver).toContain("throw new ExportTooLargeError(bytes, counts)");
+  });
+});
+
+// ---------------------------------------------------------------------------
+// S158/DG1 — the keyset-batched export reads (the single-collection
+// memory fix; docs/remediation-plan-session158.md §3). The S156/DE1
+// driver read each collection through ONE unbounded findMany — a dominant
+// collection fully materialized as Prisma row objects (measured 3.04–3.12x
+// the envelope's own bytes at 50k rows; 1.51x spread —
+// scripts/measure-export-heap-s158.mjs). The paged contract: the reader
+// receives the previous page's last row as the keyset anchor and answers
+// { rows, hasMore }; one batch's row objects live at a time.
+// ---------------------------------------------------------------------------
+describe("S158/DG1 · the keyset-batched export reads (the paged reader contract)", () => {
+  const USER = {
+    id: "user_1",
+    email: "demo@studyflow.app",
+    name: "Demo",
+    createdAt: new Date("2026-01-01T00:00:00.000Z"),
+    userId: "user_1",
+  };
+  // A multi-batch fixture: tasks carries 7 rows (batchSize 2 → 4 pages:
+  // 2+2+2+1), subjects 3 (2 pages), holidays 0 — every page-count shape.
+  const rowsFixture = (): Record<string, Array<Record<string, unknown>>> => ({
+    subjects: [
+      { id: "s1", name: "Math", createdAt: WHEN },
+      { id: "s2", name: "Physics", createdAt: WHEN },
+      { id: "s3", name: "History", createdAt: WHEN },
+    ],
+    tasks: Array.from({ length: 7 }, (_, i) => ({
+      id: `t${i + 1}`,
+      title: `Task ${i + 1} — the batched row`,
+      done: i % 2 === 0,
+      dueDate: null,
+      createdAt: WHEN,
+    })),
+    holidays: [],
+  });
+  const BATCH = 2;
+  // The paged fake with an anchor ledger — records every (collection,
+  // after) call so the paging-contract leg can assert the anchors.
+  const pagedReader =
+    (rows: Record<string, Array<Record<string, unknown>>>, ledger?: Array<{ collection: string; after: unknown }>) =>
+    async (collection: string, after?: Record<string, unknown>) => {
+      ledger?.push({ collection, after: after ?? null });
+      const all = rows[collection] ?? [];
+      const start = after ? all.indexOf(after) + 1 : 0;
+      const page = all.slice(start, start + BATCH);
+      return { rows: page, hasMore: start + BATCH < all.length };
+    };
+  const concatBytes = (chunks: Uint8Array[]): Uint8Array => {
+    const total = chunks.reduce((n, c) => n + c.byteLength, 0);
+    const out = new Uint8Array(total);
+    let offset = 0;
+    for (const c of chunks) {
+      out.set(c, offset);
+      offset += c.byteLength;
+    }
+    return out;
+  };
+
+  it("the multi-batch byte-identity weld: batchSize 2 pages concatenate to EXACTLY the object form (the separator-across-pages correctness)", async () => {
+    const { buildExportFragments, buildDataExport } = await import("../src/lib/data-export");
+    const rows = rowsFixture();
+    const { fragments, counts } = await buildExportFragments(USER, pagedReader(rows), WHEN);
+    const text = new TextDecoder().decode(concatBytes(fragments));
+    // THE ORACLE, across page boundaries: every non-first page's first
+    // row carries its own leading "," — the piece the single-array form
+    // got for free. A missing separator breaks JSON; a doubled one too.
+    expect(text).toBe(JSON.stringify(buildDataExport(USER, rows, WHEN)));
+    // The parsed spot-checks: all 7 tasks present, in order, uncorrupted.
+    const parsed = JSON.parse(text) as { counts: Record<string, number>; data: { tasks: Array<{ id: string }> } };
+    expect(parsed.data.tasks.map((t) => t.id)).toEqual(["t1", "t2", "t3", "t4", "t5", "t6", "t7"]);
+    expect(counts).toEqual(parsed.counts);
+    expect(counts.tasks).toBe(7);
+    expect(counts.subjects).toBe(3);
+    expect(counts.holidays).toBe(0);
+  });
+
+  it("the paging contract: the driver anchors every continuation at the previous page's LAST row and accumulates counts across pages", async () => {
+    const { buildExportFragments } = await import("../src/lib/data-export");
+    const rows = rowsFixture();
+    const ledger: Array<{ collection: string; after: unknown }> = [];
+    const { counts } = await buildExportFragments(USER, pagedReader(rows, ledger), WHEN);
+    // tasks: 4 pages (2+2+2+1) — the first call unanchored, every
+    // continuation anchored at the PREVIOUS page's last row.
+    const taskCalls = ledger.filter((e) => e.collection === "tasks");
+    expect(taskCalls.length).toBe(4);
+    expect(taskCalls[0]?.after).toBeNull();
+    expect(taskCalls[1]?.after).toBe(rows.tasks[1]);
+    expect(taskCalls[2]?.after).toBe(rows.tasks[3]);
+    expect(taskCalls[3]?.after).toBe(rows.tasks[5]);
+    // subjects: 2 pages (2+1); holidays: 1 empty page, no continuation.
+    expect(ledger.filter((e) => e.collection === "subjects").length).toBe(2);
+    expect(ledger.filter((e) => e.collection === "holidays").length).toBe(1);
+    // The accumulation: counts are page-summed, still in manifest order.
+    expect(counts.tasks).toBe(7);
+    expect(Object.keys(counts)).toEqual([...EXPORT_COLLECTIONS]);
+  });
+
+  it("the defensive terminal: an empty page ends the collection even when a misbehaving reader answers hasMore: true (the no-infinite-loop pin)", async () => {
+    const { buildExportFragments } = await import("../src/lib/data-export");
+    const rows = rowsFixture();
+    let tasksCalls = 0;
+    const misbehaving = async (collection: string, _after?: Record<string, unknown>) => {
+      const all = rows[collection] ?? [];
+      if (collection !== "tasks") {
+        return { rows: all, hasMore: false };
+      }
+      tasksCalls += 1;
+      // Page 1 answers honestly; page 2 answers EMPTY + hasMore: true —
+      // the driver must terminate the collection on the empty page
+      // (an anchor of rows[-1] would otherwise loop forever).
+      if (tasksCalls === 1) return { rows: all.slice(0, 2), hasMore: true };
+      return { rows: [], hasMore: true };
+    };
+    const { counts, fragments } = await buildExportFragments(USER, misbehaving, WHEN);
+    expect(tasksCalls).toBe(2); // terminated on the empty page — no third call
+    expect(counts.tasks).toBe(2); // the two rows that DID land
+    // The body closes cleanly: both landed rows present, the tasks array
+    // terminated (the ] rides), the JSON parses — tasks' next manifest
+    // sibling is assignments.
+    const text = new TextDecoder().decode(concatBytes(fragments));
+    const parsed = JSON.parse(text) as { data: { tasks: Array<{ id: string }> } };
+    expect(parsed.data.tasks.map((t) => t.id)).toEqual(["t1", "t2"]);
+    expect(text).toContain('"tasks":[{"id":"t1"');
+    expect(text).toMatch(/"id":"t2"[\s\S]*\],"assignments"/);
   });
 });
