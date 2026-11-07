@@ -25,7 +25,7 @@ tags:
 
 > **What this is:** the single-source-of-truth reference for working in
 > `nordeim/omni-study1`. Every fact below is verified against the codebase
-> (2192 tests green, re-anchored at the S152 update: 1578 Vitest unit [48 files] + 614 Playwright e2e [the 5-chunk census: 609 chromium specs + the per-chunk setup re-runs — 150+189+91+95+89]) — the census re-anchored through
+> (2198 tests green, re-anchored at the S153 update: 1582 Vitest unit [48 files] + 616 Playwright e2e [the 5-chunk census: 611 chromium specs + the per-chunk setup re-runs — 152+189+91+95+89]) — the census re-anchored through
 > the s117–s124 hardening cycles; the 2.0 baseline was 834 + 299 in six
 > chunks after the parity re-application + account-flow completion +
 > regression hardening).
@@ -135,7 +135,7 @@ touch resolution.
   wholesale disables (~25 rules, unchanged since commit `01cb829`) stay the
   deliberate repo posture — the compensating controls are tsc strict
   (`noUnusedLocals`/`noUnusedParameters`, `_`-prefix as deliberate-unused),
-  the ACTIVE `react-hooks/set-state-in-effect` gate, and the 1578+614 test
+  the ACTIVE `react-hooks/set-state-in-effect` gate, and the 1582+616 test
   suites. Do not re-litigate the remaining disables without a violation
   census first (the s129 probe: 55 unused-vars are the `_`-prefix
   convention, 11 prefer-const are scaffold style, 6 exhaustive-deps were
@@ -627,13 +627,13 @@ tail -40 dev.log                            # request traces + prisma queries
 ```bash
 bun run lint && bun run typecheck && bun run test && bun run build && bun run test:e2e
 ```
-Current green state (re-anchored at S152/DA): lint ✓ · tsc ✓ (`noImplicitAny` + `noUnusedLocals`/`noUnusedParameters` — the BV16 machine guard; plus the S129/CD3 re-enabled `react-hooks/exhaustive-deps` as an error) · 1578 unit ✓ · build ✓ (the type gate live — `ignoreBuildErrors` removed) · 614 e2e ✓ (2192 green).
+Current green state (re-anchored at S153/DB): lint ✓ · tsc ✓ (`noImplicitAny` + `noUnusedLocals`/`noUnusedParameters` — the BV16 machine guard; plus the S129/CD3 re-enabled `react-hooks/exhaustive-deps` as an error) · 1582 unit ✓ · build ✓ (the type gate live — `ignoreBuildErrors` removed) · 616 e2e ✓ (2198 green).
 
 **Full-suite chunk map** (one server-boot per chunk; the 10-min tool cap makes
 one-shot full runs unreliable — the 2.0 six-chunk map: chrome+s14 104 ·
 S5+calc+S6 46 · S7+S8+S9 79 · tasks/resilience/s16/s17 20 · auth+s18–s23 35 ·
 s24–s26 18. Re-anchored at 2.2: the FIVE-chunk cold map of
-`scripts/e2e-chunked-cert.sh` — 150+189+91+95+89 = 614 (re-anchored S146/CU — the S144-era updates re-anchored the head + the green-state line but missed THIS site, which still carried the S139-era 603 [150+185+87+95+86], the s140 doc-drift class reborn; the pre-S139 line said 597 [150+184+82+95+86], the S138-era map, always run COLD
+`scripts/e2e-chunked-cert.sh` — 152+189+91+95+89 = 616 (re-anchored S153/DB [chunk 1 +2: the S153/DB1 success-loop pin + the S153/DB2 page-budget pin, both in chunk 1]; the prior map said 614 [150+189+91+95+89], re-anchored S146/CU — the S144-era updates re-anchored the head + the green-state line but missed THIS site, which still carried the S139-era 603 [150+185+87+95+86], the s140 doc-drift class reborn; the pre-S139 line said 597 [150+184+82+95+86], the S138-era map, always run COLD
 [`rm -f db/e2e.db`]: the s23 round-trip posts a FIXED-id envelope and the
 seed's idempotent upserts never refresh day-relative dates).
 

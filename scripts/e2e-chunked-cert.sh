@@ -1,4 +1,20 @@
 #!/usr/bin/env bash
+# (S153/DB re-tag — census 614 → 616, net +2: chunk 1 +2 [the S153/DB1
+# success-loop trip pin (parity-session8's new TERMINAL describe — the
+# capped-discharge wire proof: a throwaway's correct-credential login
+# loop self-calibrates to the loginGlobal: 429 within M+D = 60 admits,
+# RED pre-fix where the loop never tripped) + the S153/DB2 export-page
+# budget pin (navigation.spec.ts — the B-L2-audit close: a throwaway's
+# 11th /export view renders the honest amber alert, the first 10 the
+# panel; the pin's FIRST home was s21-data-export [chunk 5] but the
+# chunk-5 registerGlobal: budget MEASURED 40/40 exactly [37 by
+# self-calibrating probe + s26's 3], the pin's throwaway register made
+# s26's re-issue the 41st → a codeless 429 → the verify's uniform 400,
+# root-caused by trace — the pin relocated to chunk 1 where the
+# register arithmetic has 38 of headroom, the CK1 budget-driven
+# pin-home doctrine]). The unit census 1578 → 1582 (+4: the auth cap
+# pair + the script-conventions census pair) rides the vitest header
+# re-anchor.)
 # (S146/CU re-tag — census 612 → 614, net +2: chunk 2 +2 [the S146/CU1
 # multipart-mime pair in s14-hardening — the derivation tripwire (a
 # hostile 150-char DECLARED part Content-Type on a .txt upload stores the
@@ -173,7 +189,7 @@
 # 192.0.2.139, 3/10 per-IP, 3/40 registerGlobal), the demo import
 # budget at 8/10; END-of-file, the CK1 flood pin stays TERMINAL in
 # s16]. The full CN map: docs/remediation-plan-session139.md.)
-# Expected: 150 + 189 + 91 + 95 + 89 = 614 (each chunk's count includes its
+# Expected: 152 + 189 + 91 + 95 + 89 = 616 (each chunk's count includes its
 # auth setup — the current census; the historical re-tag blocks beneath.)
 # (S131/CF re-tag — census 567 → 570, net +3: chunk 1 +1 [the CF9
 # drawer focus-restore leg in mobile-navigation — crossing the lg

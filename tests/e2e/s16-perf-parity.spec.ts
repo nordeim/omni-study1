@@ -150,15 +150,22 @@ test.describe("S16-A dashboard load stability (CLS guard)", () => {
 // ---------------------------------------------------------------------------
 test.describe("S136/CK1: the login global containment budget", () => {
   test("a rotated-XFF flood of non-existent-email logins trips the process-wide bucket (RED pre-fix: all 41 answer the uniform 401 — no global bound existed)", async ({ request }) => {
-    // CLEAN-SLATE PRE-RESET: one successful demo login zeroes the global
-    // bucket (the route's success-reset — the progressive model extended
-    // to the global budget). Without it the pin's arithmetic would depend
-    // on whatever failures preceded it in the chunk; with it the count
-    // starts at 0 and first429 is exactly 41.
+    // CLEAN-SLATE PRE-RESET (the S153/DB1 honest arithmetic): the warm
+    // login NETS 0 on the global (the CM3 decrement returns the success's
+    // OWN +1, never a prior fail's — the old "success-reset zeroes the
+    // bucket" comment was the N2 drift) — it does NOT zero anything. The
+    // pin's deterministic arithmetic rests on the CHUNK's prior spends
+    // instead, which the cert arithmetic holds at zero login FAILS: the
+    // setup project's single success nets 0, and parity-session5 +
+    // resilience + this file's earlier tests carry no login POSTs. The
+    // warm stays as the door-proof (the login route answers before the
+    // flood) and consumes one discharge of the window's S153/DB1
+    // allowance — irrelevant to the 41-fail arithmetic below (fails
+    // never discharge).
     const warm = await request.post("/api/auth/login", {
       data: { email: "demo@studyflow.app", password: "Demo1234!" },
     });
-    expect(warm.status(), "the clean-slate login succeeds (and resets the global window)").toBe(200);
+    expect(warm.status(), "the warm login succeeds (nets 0 on the global)").toBe(200);
 
     const statuses: number[] = [];
     let first429Body = "";

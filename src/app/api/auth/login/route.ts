@@ -141,9 +141,17 @@ export async function POST(request: NextRequest) {
     // credentials): 39 failed logins + 1 scripted success reset the
     // process-wide CPU containment to zero, forever — the exact
     // single-worker-starvation shape CK1 was built to bound. The decrement
-    // keeps the model net-of-successes: only FAILED logins accumulate
-    // (consecutive successes oscillate just under the budget and never
-    // trip; a pure flood still trips at 40 net).
+    // keeps the model net-of-successes: only FAILED logins accumulate.
+    // S153/DB1 (audit B-M1, the corrected mechanics): a success NETS 0 —
+    // the global check above incremented +1, this decrement returns that
+    // SAME +1 (never a prior fail's spend) — so under CM3 alone a
+    // SUCCESS-ONLY loop of scriptable own credentials burned the full
+    // scrypt pair per request with nothing binding it (the aggregate
+    // never tripped; these two per-key resets above even kept the loop's
+    // own buckets clean). The decrement is now CAPPED per window
+    // (MAX_DISCHARGES_PER_WINDOW = 20): the first 20 successes in a
+    // window net 0, every success past the ceiling nets +1, and the
+    // loop trips at M+D = 60 admitted requests per window.
     resetRateLimit(`login:${ip}`);
     resetRateLimit(`loginAcct:${user.id}`);
     decrementRateLimit("loginGlobal:");

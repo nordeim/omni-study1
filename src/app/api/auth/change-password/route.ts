@@ -65,8 +65,14 @@ export async function POST(request: NextRequest) {
     });
 
     // S140/CO2: the CM3 discharge — the aggregate's net-of-successes form
-    // (a success nets -1; consecutive successes oscillate just under the
-    // bound; a pure flood still trips at 40 net).
+    // (a success NETS 0: the check above's +1, this decrement's −1 — it
+    // returns the success's own increment, never a prior fail's spend;
+    // consecutive successes oscillate just under the bound; a pure flood
+    // still trips at 40 net). S153/DB1: the discharge is CAPPED per
+    // window (MAX_DISCHARGES_PER_WINDOW) — under CM3 alone a success-only
+    // loop of scriptable own credentials burned the scrypt pair per
+    // request with nothing binding it; past the ceiling every success
+    // nets +1 and the loop trips at M+D.
     decrementRateLimit("authBurnGlobal:");
 
     return NextResponse.json({ ok: true });

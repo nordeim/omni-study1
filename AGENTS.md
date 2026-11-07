@@ -9,9 +9,9 @@ High-signal instructions for coding agents working in this repo. Everything here
 | `bun install` | Install deps (Bun ≥ 1.3) |
 | `bun run dev` | Dev server on :3000 (Turbopack), logs tee'd to `dev.log` |
 | `bun run lint` / `bun run typecheck` | ESLint / `tsc --noEmit` — both must be clean |
-| `bun run test` | Vitest unit layer (1578 tests; `*.test.ts` only — never picks up e2e specs) |
+| `bun run test` | Vitest unit layer (1582 tests; `*.test.ts` only — never picks up e2e specs) |
 | `bun run build` | Production build → `.next/standalone` (**required before e2e**) |
-| `bun run test:e2e` | Playwright vs the standalone build on :3100 with `db/e2e.db` (614 tests across the 5-chunk cold map — 150+189+91+95+89, 30 spec files; a single-process full run trips the register rate-limiter budget by design, the chunked map re-boots the server per chunk). NOTE (S45, the day-boundary lesson): the global setup re-seeds every run, but the seed's IDEMPOTENT UPSERTS do NOT refresh day-relative dates on existing rows — a scratch `db/e2e.db` that ages across a UTC midnight keeps its original day-relative dates (today's tasks, the +1-day exam badge, the due-in pills, the import round-trip dates each read one day stale → 4 deterministic failures in parity-session6/parity-session9/s23-import). Delete `db/e2e.db` when a run crosses a day boundary — the global setup re-creates it fresh with current dates. NOTE (S46, TWO more aged-scratch-db classes + a build-input one): (1) ALWAYS run e2e COLD — S131/CF5 chained `scripts/e2e-cold-reset.sh` into `bun run test:e2e` (port-guard + `rm -f db/e2e.db` BEFORE playwright boots anything — global-setup is TOO LATE: Playwright starts the webServer before globalSetup), so the default runner self-colds; any DIRECT `playwright test` invocation still needs the manual `rm -f db/e2e.db` before every full run: the s23-import round-trip posts a FIXED-id envelope, so a second consecutive run against the aged db reads `created: 0, updated: 1` instead of `created: 1, updated: 0` and fails — not just across midnights, across ANY re-run; (2) the s22 negative-spawn spec reads the BUNDLED `.env` — Next's standalone output COPIES the repo-root `.env` into `.next/standalone/.env` at build time, so a REAL AUTH_SECRET in the dev `.env` leaks into the bundle and the guard CORRECTLY boots (the spec times out waiting for the exit) — keep the repo-root `.env`'s AUTH_SECRET EMPTY (the `.env.example` dev posture: `AUTH_SECRET=""` — dev falls back to the local constant with the boot warning) when building for e2e |
+| `bun run test:e2e` | Playwright vs the standalone build on :3100 with `db/e2e.db` (616 tests across the 5-chunk cold map — 152+189+91+95+89, 30 spec files; a single-process full run trips the register rate-limiter budget by design, the chunked map re-boots the server per chunk). NOTE (S45, the day-boundary lesson): the global setup re-seeds every run, but the seed's IDEMPOTENT UPSERTS do NOT refresh day-relative dates on existing rows — a scratch `db/e2e.db` that ages across a UTC midnight keeps its original day-relative dates (today's tasks, the +1-day exam badge, the due-in pills, the import round-trip dates each read one day stale → 4 deterministic failures in parity-session6/parity-session9/s23-import). Delete `db/e2e.db` when a run crosses a day boundary — the global setup re-creates it fresh with current dates. NOTE (S46, TWO more aged-scratch-db classes + a build-input one): (1) ALWAYS run e2e COLD — S131/CF5 chained `scripts/e2e-cold-reset.sh` into `bun run test:e2e` (port-guard + `rm -f db/e2e.db` BEFORE playwright boots anything — global-setup is TOO LATE: Playwright starts the webServer before globalSetup), so the default runner self-colds; any DIRECT `playwright test` invocation still needs the manual `rm -f db/e2e.db` before every full run: the s23-import round-trip posts a FIXED-id envelope, so a second consecutive run against the aged db reads `created: 0, updated: 1` instead of `created: 1, updated: 0` and fails — not just across midnights, across ANY re-run; (2) the s22 negative-spawn spec reads the BUNDLED `.env` — Next's standalone output COPIES the repo-root `.env` into `.next/standalone/.env` at build time, so a REAL AUTH_SECRET in the dev `.env` leaks into the bundle and the guard CORRECTLY boots (the spec times out waiting for the exit) — keep the repo-root `.env`'s AUTH_SECRET EMPTY (the `.env.example` dev posture: `AUTH_SECRET=""` — dev falls back to the local constant with the boot warning) when building for e2e |
 | `node scripts/capture-studyflow.mjs` | Refresh all 31 `docs/screenshots/` captures from the dev server (24 light + 7 dark) |
 | `node scripts/dark-sweep.mjs` | Dark-mode contrast audit over all 20 views (flashbulb/unreadable detector). S27: sets dark mode through the settings API (the real lifecycle) and SELF-VERIFIES the precondition — fails loudly (exit 1, no findings) if the dark class is not applied; the applied mode rides the JSON envelope. Never force the class directly (the session-10 approach silently rotted after S11) |
 | `node scripts/accent-dark-sweep.mjs` | Accent × dark-mode audit (S38-extended): all 7 accents × 20 desktop views × 20 MOBILE views at 390×844 + the drawer per accent (FAIL <2.2, WARN <3.2 for accent text; the mobile records also carry scrollWidth — >390 is a finding). The S38 shape is unit-pinned anti-phantom: every view recorded EXPLICITLY on both surfaces (clean views carry empty detector arrays), the per-accent `applied` self-verified readings + `mode: "dark"` + `mobileViewport` ride the envelope, and the seam's ALL-ACCENTS + ALL-VIEWS + drawer-present guards make every silently-skipped dimension a LOUD shape-error (the pre-S38 mobile pass swept only 6 views — MOBILE_VIEWS — and the omission-means-clean recording could not distinguish "clean because measured" from "clean because never rendered") |
@@ -2401,3 +2401,56 @@ Hover-parity probing must run in Playwright, not a touch-emulating browser — v
    gate is first by definition — any shape/param validation that
    precedes it changes what an unauthenticated caller can learn (here:
    only that the id was malformed, but the class is the point).
+
+## S153 lessons (Batch DB — the rate-limit-model + export-page-budget set)
+
+1. **Re-derive a discharge model's arithmetic from the INCREMENT
+   semantics, not from the prose that describes it.** The S152 plan
+   carried B-M1 as "a self-success −1 discharging the victim-fail's +1"
+   for a full cycle — but `checkRateLimit` INCREMENTS every admitted
+   request and the decrement fires on the success's own path, so a
+   success NETS 0 (it discharges its own +1, never a prior fail's). The
+   described alternation attack actually bounded itself at 2×; the REAL
+   door was the SUCCESS-ONLY loop (net 0 forever + both per-keys
+   resetting on login), unbounded. Lesson: when a deferred finding's fix
+   arrives, re-verify the finding's own MECHANICS by direct read before
+   designing — the deferral note is a hypothesis, not a spec (the S151
+   "durations[mode]" false-alarm class, on the design side).
+2. **An aggregate budget's discharge must be CAPPED per window —
+   "successes are free" is the unbounded door, not a feature.** The CM3
+   net-of-successes model made successes free so legitimate interleaved
+   bursts never trip the containment; under scriptable own credentials
+   (the default in-band posture) "free" means an attacker saturates the
+   worker at scrypt throughput with no budget ever binding. The
+   per-window discharge ceiling (D = 20, M/2 = 2× the per-IP budget)
+   keeps the legitimate property (a window's first 20 successes net 0 —
+   a fresh window re-arms) while bounding every discharge-bearing
+   aggregate at M+D = 60 admitted requests. And the ceiling's sizing
+   must be MEASURED against the suite's own success counts (chunk 5's
+   13 login successes/boot — D=20 keeps the cert arithmetic
+   byte-identical BY CONSTRUCTION; a D below the suite's own usage would
+   have changed every chunk's trip arithmetic).
+3. **A page door that renders an API's work needs its OWN budget — a
+   route-level budget does not cover the page that duplicates it.** The
+   /export page rendered the full envelope (20 counts + the complete
+   serialize — byte-identical to the budgeted download) per view with
+   no budget, because the budget lived on the ROUTE the page shadows.
+   Lesson: budget the WORK, not the endpoint — wherever a second door
+   renders the same expensive query set (the CP4 size-signal doubling),
+   it carries its own key (dedicated, per-user, checked after auth and
+   before the work; a page that cannot 429 answers the honest amber
+   alert render, which is cheap by construction precisely because the
+   check precedes the work).
+4. **A chunk's budget ceiling is a PIN-HOME constraint, not a
+   footnote.** Chunk 5's registerGlobal budget sits at 40/40 EXACTLY
+   (37 measured by self-calibrating probe + s26's 3) — one register add
+   from tripping the whole chunk since S152, undocumented until the DB2
+   pin's first home died there (its throwaway register made s26's
+   re-issue the 41st: a codeless 429 → the verify's uniform 400 —
+   root-caused by TRACE, not by spec-reading; five register sites were
+   invisible to the `post("/api/auth/register"` grep). Lesson: measure
+   the boot's budget spend empirically (a self-calibrating probe spec
+   that counts the REMAINING admits), pin new budget-consuming tests
+   where the arithmetic has headroom (the CK1 budget-driven pin-home
+   doctrine), and correct the sizing comment to the measured number —
+   the "≤ 3 per chunk" prose had rotted 13 cycles.

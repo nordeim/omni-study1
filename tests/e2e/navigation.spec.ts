@@ -1053,3 +1053,82 @@ test.describe("S134/CI5 · the calculator History loading gate", () => {
     }
   });
 });
+
+// ---------------------------------------------------------------------------
+// S153/DB2 · the export-page budget (the B-L2-audit close): the /export
+// PAGE renders the full envelope per view (the 20-count grid + the
+// 20-findMany serialize — byte-identical work to the budgeted download)
+// while its route twin rode export:${user.id} 10/15-min. The page now
+// carries its OWN dedicated per-user budget — exportPage:${user.id}
+// 10/15-min, checked after the auth gate and before the expensive work,
+// answering the honest amber alert render when spent (a page cannot
+// answer 429; the rate-limited render skips the counts + the envelope
+// entirely, so past the budget a view costs one cookie verify and a
+// ~200-byte body).
+//
+// PLACEMENT (the budget-driven pin-home doctrine — the CK1 precedent):
+// the pin's natural family file (s21-data-export) rides CHUNK 5, whose
+// registerGlobal: budget sits at 40/40 (measured by trace: s26's
+// re-issue register is the 40th admitted post — one register add from
+// tripping the whole chunk since S152); this pin's throwaway register
+// was the +1 that made s26's re-issue the 41st (a 429 without a code →
+// the verify's uniform 400 — the failure this relocation closes). This
+// file rides CHUNK 1 (mobile-navigation < navigation < parity-session8),
+// whose register count is 2 (this pin's + the S153/DB1 terminal pin's),
+// and runs BEFORE parity-session8 — whose terminal DB1 pin spends
+// loginGlobal: to its trip point, so nothing after it may log in (this
+// pin's own login nets 0 and precedes it in file order).
+//
+// The throwaway rides the request fixture (the BZ5 pattern — the demo
+// user's own exportPage: bucket is never touched: the s21/s23 demo legs
+// keep their 3-of-10 headroom; the throwaway's login nets 0 on
+// loginGlobal:).
+// ---------------------------------------------------------------------------
+test.describe("S153/DB2: the /export page's own per-user budget", () => {
+  test("the 11th page view in a window renders the rate-limited alert, the first 10 the panel (RED pre-fix: all 11 render the count grid)", async ({
+    request,
+  }) => {
+    test.setTimeout(60_000);
+    const stamp = Date.now();
+    const email = `s153-db2-${stamp}@studyflow.app`;
+    const ip = { "x-forwarded-for": "192.0.2.154" };
+
+    const reg = await request.post("/api/auth/register", {
+      headers: ip,
+      data: { email, password: "Fresh1234!", name: "S153 DB2 Probe" },
+    });
+    expect(reg.ok(), `register failed: ${reg.status()}`).toBe(true);
+    const { code } = (await reg.json()) as { code: string };
+    const verify = await request.post("/api/auth/verify-email", {
+      headers: ip,
+      data: { email, code },
+    });
+    expect(verify.ok(), `verify failed: ${verify.status()}`).toBe(true);
+    const login = await request.post("/api/auth/login", {
+      headers: ip,
+      data: { email, password: "Fresh1234!" },
+    });
+    expect(login.ok(), `login failed: ${login.status()}`).toBe(true);
+
+    // The first 10 views render the panel (the fresh user's grid counts
+    // are all zero — the panel renders, which is the point: the budget
+    // never interferes with legitimate use before its ceiling).
+    for (let i = 1; i <= 10; i++) {
+      const res = await request.get("/export");
+      expect(res.status(), `page view ${i}`).toBe(200);
+      const html = await res.text();
+      expect(html, `page view ${i} renders the panel`).toContain("Download JSON");
+    }
+    // The 11th: the dedicated budget's honest amber render — the panel
+    // chrome, the count grid, and the envelope build are all skipped.
+    const blocked = await request.get("/export");
+    expect(blocked.status()).toBe(200);
+    const blockedHtml = await blocked.text();
+    expect(blockedHtml, "the rate-limited alert renders").toContain("Too many export page views");
+    expect(blockedHtml, "the expensive work is skipped (no panel CTA)").not.toContain("Download JSON");
+    // The page budget is DEDICATED: the route twin still answers (the
+    // throwaway's export: budget is untouched by the page loop).
+    const route = await request.get("/api/export/data");
+    expect(route.status(), "the route twin rides its own export: budget").toBe(200);
+  });
+});

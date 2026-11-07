@@ -131,7 +131,11 @@ describe("the chunked cert runner's truth contract (S128/CC2)", () => {
     // 88 → 89 (the CT3 gradient-CTA leg) — 609 → 612.
     // S146/CU: chunk 2 187 → 189 (the CU1 multipart-mime pair — the
     // derivation tripwire + the clean .pdf round-trip) — 612 → 614.
-    expect(certSource).toContain("Expected: 150 + 189 + 91 + 95 + 89 = 614");
+    // S153/DB: chunk 1 150 → 152 (the DB1 success-loop trip pin in
+    // parity-session8 [the new terminal] + the DB2 export-page budget pin
+    // in navigation [relocated from its first s21 home on the measured
+    // 40/40 chunk-5 registerGlobal boundary]) — 614 → 616.
+    expect(certSource).toContain("Expected: 152 + 189 + 91 + 95 + 89 = 616");
   });
 
   it("propagates a failing chunk's exit code (never a green cert on a red run)", () => {
@@ -2296,5 +2300,73 @@ describe("S152/DA6: the doc-counts cross-read pins (the CQ6 family, self-anchori
     expect(prose, "the CD3-posture census prose exists").not.toBeNull();
     expect(Number(prose![1]), "the prose unit count agrees").toBe(header.tests);
     expect(Number(prose![2]), "the prose e2e count agrees").toBe(e2e);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// S153/DB1 (the rate-limit-model cycle, the corrected B-M1 mechanics): the
+// aggregate discharge is CAPPED per window. Under the CM3 net-of-successes
+// model a success nets 0 (the check's +1, the decrement's −1), so a
+// SUCCESS-ONLY loop — scriptable own credentials under the default
+// in-band posture — burned the synchronous scrypt pair per request with
+// nothing binding it (the aggregate never trips; login's success path
+// even resets both per-keys). The seam's per-window discharge ceiling
+// (MAX_DISCHARGES_PER_WINDOW = 20 — 2× the per-IP budget, sized above the
+// e2e chunk-5 login-success count of 13 so the cert arithmetic stays
+// byte-identical) bounds every discharge-bearing aggregate at M+D = 60
+// admitted requests per window. The structural pin: the constant exists,
+// the Bucket carries the counter, and the decrement guards on it.
+// ---------------------------------------------------------------------------
+describe("S153/DB1: the capped aggregate discharge (B-M1 — the success-only loop bound)", () => {
+  const AUTH = path.resolve(process.cwd(), "src/lib/auth.ts");
+
+  it("auth.ts declares MAX_DISCHARGES_PER_WINDOW = 20 and the decrement guards on it", () => {
+    const src = readFileSync(AUTH, "utf8");
+    expect(src, "the constant is declared").toMatch(/MAX_DISCHARGES_PER_WINDOW = 20/);
+    expect(src, "the Bucket shape carries the per-window counter").toMatch(/discharges: number/);
+    // The guard: the discharge applies only while the window's
+    // discharges sit under the ceiling (a fresh bucket starts at 0 —
+    // the rollover IS the allowance reset).
+    expect(src).toMatch(/bucket\.discharges < MAX_DISCHARGES_PER_WINDOW/);
+    expect(src).toMatch(/discharges: 0/);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// S153/DB2 (the export-page budget, the B-L2-audit close): the /export
+// page renders the full envelope per view (20 counts + the 20-findMany
+// serialize — byte-identical work to the budgeted download) while its
+// route twin rode export:${user.id} 10/15-min. The page now carries its
+// OWN dedicated per-user budget AFTER the auth gate (the DA4 doctrine —
+// the anon redirect stays budget-free) and BEFORE the count grid + the
+// envelope build (the rate-limited render is the cheap path by
+// construction). The structural pin: the key, the sizing, the ordering,
+// and the honest rate-limited render all exist at the page.
+// ---------------------------------------------------------------------------
+describe("S153/DB2: the /export page carries its own per-user budget before the envelope work", () => {
+  const PAGE = path.resolve(process.cwd(), "src/app/export/page.tsx");
+
+  it("the page checks exportPage:${user.id} (10/15-min) before the counts + the envelope build, with the honest rate-limited render", () => {
+    const src = readFileSync(PAGE, "utf8");
+    expect(src, "the dedicated page budget key exists").toMatch(/checkRateLimit\(`exportPage:\$\{user\.id\}`, 10\)/);
+    // Ordered: the budget sits after the auth gate (the redirect) and
+    // before the expensive work (the count grid + the envelope). The
+    // envelope anchor is the CALL (the bare name also matches the import
+    // at the file head).
+    const redirectAt = src.indexOf("redirect(\"/login\")");
+    const budgetAt = src.indexOf("exportPage:");
+    const countsAt = src.indexOf("db.subject.count");
+    const envelopeAt = src.indexOf("renderExportEnvelope(publicUser(user))");
+    expect(redirectAt, "the auth gate exists").toBeGreaterThan(-1);
+    expect(countsAt, "the count grid exists").toBeGreaterThan(-1);
+    expect(envelopeAt, "the envelope build exists").toBeGreaterThan(-1);
+    expect(redirectAt).toBeLessThan(budgetAt);
+    expect(budgetAt).toBeLessThan(countsAt);
+    expect(budgetAt).toBeLessThan(envelopeAt);
+    // The honest rate-limited render (a page cannot answer 429 — the
+    // amber alert is the documented shape, cheap by construction).
+    expect(src).toContain("Too many export page views");
+    expect(src).toMatch(/role="alert"/);
+    expect(src).toMatch(/sf-alert-amber/);
   });
 });

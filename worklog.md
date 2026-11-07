@@ -5365,3 +5365,122 @@ cert arithmetic) pairs with it as the budget-family cycle; the A-M3
 stage-2 chunked sub-tx + resume token stays its own ADR-021 cycle
 (carrying the S150/B-L2 import lock-hold finding); the db-path
 percent-decode stays recorded for a db-path-family cycle.
+
+## Session 164 — the S153 cycle (Batch DB: the rate-limit-model + export-page-budget set)
+
+**Context.** The workspace was a continuation at `73c51eb` on `main`
+(the Batch DA fix `028271d` + the operator's session_178 transcript
+commit; the sandbox preserved the tree — the environment re-validated
+in place rather than re-provisioned). Cold baseline matched the
+documented S152-final state exactly: lint ✓ · tsc ✓ · unit
+1578/1578 (48 files) · the drawer check GREEN (**the 68th consecutive
+no-Tailwind-v4-mobile-nav-bug confirmation**) · the desktop parity
+probe **MATCH** (live reference login).
+
+**The audits (Mode-C, every M/L finding re-verified by direct read;
+the axis read dispatched to a read-only subagent against the
+web-application skill's rubric — the S148-S152 precedent).** A — the
+Batch DA recent-changes axis (`028271d`): **0C/0H/0M/0L/0I — clean**,
+all six DA claims confirmed at the source level, the doc census
+machine-verified with ZERO stale sites (the DA6 self-anchoring pins
+holding on their first re-read). B — the rate-limiter/auth-family +
+export/data-portability rotation (the fix surfaces, swept at S124):
+**0C/0H/2M/2L/2I** — the full 30-key rate-limit census re-verified
+consistent. **B-M1's mechanics CORRECTED by the audit's direct read**:
+a success NETS 0 (the check's +1, the decrement's −1 — the −1 lands on
+the success's OWN increment, never a prior fail's), so the S152 plan's
+stated alternation attack was mis-modeled (it self-bounds at 2×); the
+REAL unbounded door is the SUCCESS-ONLY loop — scriptable own
+credentials burning the synchronous scrypt pair per request with
+NOTHING binding it (the aggregate never trips; login's success path
+even resets both per-keys; ~24-37× the intended containment — the CK1
+single-worker-starvation shape reopened by the CM3 decrement). **B-L2**
+the /export page renders the full envelope per view unbudgeted (the
+route twin rides `export:` 10/15-min). **N1** the garbage-flood lockout
+(the accepted fixed-window trade-off — documented). **N2** the
+success-reset drift trio (three sites carrying the pre-CM3 reset
+semantics).
+
+**The plan** (`docs/remediation-plan-session153.md`) written BEFORE any
+source change, validated against the codebase (the chunk-5 login tally
+derived by direct read: 52 posts/boot, 13 successes + 39 fails → the
+live count 39/40 — the D-cap sizing derived from it: D = 20 > 13 keeps
+the cert arithmetic byte-identical by construction).
+
+**The fixes (the unit REDs 4/4 + the e2e pins RED-verified on the
+pre-fix build).** DB1 the capped discharge —
+`MAX_DISCHARGES_PER_WINDOW = 20` on the new `Bucket.discharges`
+counter: the decrement applies only while the window's discharges sit
+under the ceiling (successes 1-20 net 0, past the ceiling +1 each →
+every discharge-bearing aggregate bounded at M+D = 60 admitted requests
+per window); the five call sites unchanged (the cap internal to the
+seam); the fresh-window rollover re-arms the allowance. DB2 the
+export-page budget — the dedicated `exportPage:${user.id}` 10/15-min
+after the auth gate and before the counts + envelope, answering the
+honest amber alert render (a page cannot 429; the render is cheap by
+construction); the hue-tokens CONSUMERS register gains the page entry.
+DB3 the N2 drift sweep (the net-0 language at auth.ts + login +
+change-password + DEPLOYMENT.md + the s16 pin's comment — the CK1
+arithmetic itself preserved: first429 = 41). DB4 the N1 note. Plus the
+stale registerGlobal sizing comment corrected to the S153-measured
+arithmetic.
+
+**The mid-cycle correction (the honest record).** The DB2 pin's first
+home (s21, chunk 5) broke s26's round-trip twice — root-caused by
+TRACE: the s26 helper's re-issue register 429'd ("Too many registration
+attempts") because the chunk-5 `registerGlobal:` budget sits at
+**40/40 EXACTLY** (37 by self-calibrating probe + s26's 3 — the
+"≤ 3 per chunk" comment rotted 13 cycles); the pin's throwaway register
+made the re-issue the 41st → a codeless response → the verify's
+uniform 400. The pin relocated to navigation.spec.ts (chunk 1, before
+the DB1 terminal pin — the CK1 budget-driven pin-home doctrine). Two
+operational traps hit and closed en route: the first cert launch was
+reaped (the daemon-start lesson), and editing the cert script WHILE
+bash ran it corrupted the offsets (the never-build-during-e2e lesson's
+sibling: never edit the runner during a run — chunk 5's own result was
+already complete). The BU7 investigation host hit the deleted-inode +
+CWD-anchoring traps in sequence (a stray `../db/custom.db` from a bare
+`prisma db push` — cleaned; the :3200 server restarted after the
+proper push+seed).
+
+**Re-cert (the FINAL tree).** lint ✓ · tsc ✓ · unit **1582/1582**
+(48 files, +4: auth +2, script-conventions +2) · build ✓ (exit 0; the 6
+documented warnings; the cap guard + the page render verified shipped
+in the standalone chunks) · the targeted e2e: chunk 1 **152/152
+first-pass** on the clean environment (the earlier BU7 leg root-caused
+by a live 5-round repro on an isolated host — the create POST 500s
+under co-resident load [the P1008 class] while the clean rounds pass
+byte-exact) · chunk 2 **189/189 first-pass** · chunk 3 **91/91
+first-pass** on the re-run (the cert-run attempt contaminated by the
+orchestrator's own parallel repro — 11 failures under self-inflicted
+load, invalid by construction; one AK1d P1008 flake closed by the
+isolation + first-pass re-run) · chunk 4 **95/95 first-pass** · chunk 5
+**89/89 first-pass** (s26 green after the relocation) — **the e2e
+census 616/616 (was 614) · census 2198 green** (was 2192).
+
+**Evidence.** Three `docs/screenshots/153-clone-*.png` frames (the
+standing desktop + mobile drawer [the 68th drawer-GREEN companion] +
+the export page's rate-limited amber render [DB2's visible proof — the
+capture script awaited the alert text before the frame]), self-verifying
+(the capture script's JSON verdict ok:true; dimensions machine-checked
+1440x900 / 390x844). The DB1 cap's proof rides the unit pair + the
+wire pin (the CW2 runtime-split precedent).
+
+**Docs.** README badge/census (2192 → 2198) + the Session-153 row;
+AGENTS census + the S153 lessons block (four lessons: re-derive the
+discharge arithmetic from the increment semantics, never the prose; cap
+the discharge — free successes are the unbounded door; budget the WORK
+not the endpoint; a chunk's budget ceiling is a pin-home constraint —
+measure it empirically); CLAUDE counts; PAD v1.3.61 (the revision
+block); the SKILL census (all four sites); the vitest header re-anchor;
+the cert runner re-tag + the CC2 tripwire re-anchor; the DEPLOYMENT.md
+N2 fix + N1 note; `docs/session_179.md`; this entry; the plan §6
+as-executed close; the `.env.example` contract re-verified (no env-var
+reads changed this cycle).
+
+**Next cycle.** The rotation continues — the **A-M3 ADR-021 stage-2
+chunked sub-tx + resume token** stays the named candidate (carrying the
+S150/B-L2 import lock-hold finding); the **db-path percent-decode**
+stays recorded for the db-path-family cycle; the N1 re-order
+alternative stays rejected-and-documented; the N3/N4 notes ride the
+next rotation's file list.

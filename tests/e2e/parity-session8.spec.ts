@@ -1631,3 +1631,90 @@ test.describe("S127/CB17 · the Add Link dialog guards its own required fields",
     await dlg.getByRole("button", { name: "Close" }).click();
   });
 });
+
+// ---------------------------------------------------------------------------
+// S153/DB1 · the capped aggregate discharge (the corrected B-M1 mechanics),
+// pinned at the WIRE with the actual attack shape: a SUCCESS-ONLY login
+// loop. Under the S138/CM3 net-of-successes model a success nets 0 on
+// loginGlobal: (checkRateLimit's +1, the decrement's −1) while resetting
+// both per-keys — so under the default in-band posture (open registration
+// + the OTP in the response → scriptable own credentials) a loop of
+// CORRECT-credential logins burned the full synchronous scrypt pair per
+// request with NOTHING binding it: the aggregate never tripped (~24-37×
+// the intended 40/15-min containment, the CK1 single-worker-starvation
+// shape reopened by the discharge). The S153/DB1 per-window discharge
+// ceiling (MAX_DISCHARGES_PER_WINDOW = 20) bounds the loop: successes
+// 1-20 net 0, every success past the ceiling nets +1, and the loop trips
+// at M+D = 60 admitted requests per window.
+//
+// TERMINAL-POSITION RULE (the CK1 doctrine): this pin SPENDS loginGlobal:
+// to its trip point and cannot clean it from the wire (a post-trip login
+// is itself gated), so it MUST be its chunk's TERMINAL test — this file
+// is chunk 1's alphabetically-LAST file (mobile-navigation < navigation <
+// parity-session8) and this describe is the file's LAST; nothing after it
+// in the chunk logs in. The pin's own budget fit: chunk 1's prior
+// loginGlobal spends are the setup project's ONE success (net 0, one
+// discharge consumed) and this file's earlier tests carry no login POSTs
+// — the self-calibrating loop absorbs the exact prior count either way.
+// The throwaway rides the request fixture (the BZ5 pattern — the demo
+// user is never mutated; the register is registerGlobal's 2nd of 40 in
+// this chunk's boot).
+// ---------------------------------------------------------------------------
+test.describe("S153/DB1: the capped aggregate discharge (the success-only loop bound)", () => {
+  test("a success-only login loop trips loginGlobal: within M+D (RED pre-fix: the loop never trips — every success nets 0, unlimited discharges)", async ({ request }) => {
+    test.setTimeout(120_000);
+    const stamp = Date.now();
+    const email = `s153-db1-${stamp}@studyflow.app`;
+    const ip = { "x-forwarded-for": "192.0.2.153" };
+
+    // Register + verify the throwaway (the s125/BZ5 pattern); its
+    // credentials are the loop's fuel — the exact attacker posture the
+    // default in-band posture makes scriptable.
+    const reg = await request.post("/api/auth/register", {
+      headers: ip,
+      data: { email, password: "Fresh1234!", name: "S153 DB1 Probe" },
+    });
+    expect(reg.ok(), `register failed: ${reg.status()}`).toBe(true);
+    const { code } = (await reg.json()) as { code: string };
+    const verify = await request.post("/api/auth/verify-email", {
+      headers: ip,
+      data: { email, code },
+    });
+    expect(verify.ok(), `verify failed: ${verify.status()}`).toBe(true);
+
+    // The SUCCESS-ONLY loop: correct credentials every time. Each
+    // iteration burns the full synchronous scrypt pair; pre-fix each
+    // nets 0 on the global (and resets both per-keys) so the loop never
+    // trips — post-fix the discharge ceiling caps the netting and the
+    // 429 lands by request ~60 (M 40 + D 20, minus the chunk's prior
+    // discharge consumption). Self-calibrating to the 429 (the BZ5
+    // pattern), bounded at 80.
+    let first429 = 0;
+    let tripped = false;
+    for (let i = 1; i <= 80; i++) {
+      const res = await request.post("/api/auth/login", {
+        headers: ip,
+        data: { email, password: "Fresh1234!" },
+      });
+      if (res.status() === 429) {
+        expect(res.headers()["retry-after"], "the honest Retry-After header").toBeTruthy();
+        const body = (await res.json()) as { error?: string };
+        expect(body.error).toContain("Too many login attempts");
+        first429 = i;
+        tripped = true;
+        break;
+      }
+      // Every admitted iteration is a SUCCESS (the loop's premise) —
+      // any 401/403 here means the loop lost its credentials, not that
+      // the budget tripped.
+      expect(res.status(), `login ${i} status`).toBe(200);
+    }
+    // The containment: the loop trips (pre-fix: tripped stays false at
+    // 80 iterations — the RED discriminator), and the trip point sits
+    // at the M+D bound (≤ 61 admits the chunk's prior discharge
+    // consumption; the loop's own 40-fail twin is the CK1 pin's shape).
+    expect(tripped, "the success-only loop trips the aggregate (the S153/DB1 bound)").toBe(true);
+    expect(first429).toBeLessThanOrEqual(61);
+    expect(first429).toBeGreaterThanOrEqual(40);
+  });
+});

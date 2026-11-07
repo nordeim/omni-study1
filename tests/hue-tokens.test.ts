@@ -255,6 +255,9 @@ const CONSUMERS: Record<string, string[]> = {
   "src/components/views/practicetests-view.tsx": ["sf-pill-red"],
   "src/components/auth/login-surface.tsx": ["sf-alert-emerald"],
   "src/components/export/export-panel.tsx": ["sf-alert-emerald", "sf-alert-red"],
+  // S153/DB2: the /export page's rate-limited render (the page's own
+  // budget answering the honest amber alert — the family, not a fork).
+  "src/app/export/page.tsx": ["sf-alert-amber"],
   "src/components/ui/toast.tsx": ["sf-alert-red", "sf-alert-emerald"],
   "src/components/views/events-view.tsx": ["sf-alert-red"],
   "src/components/views/notes-view.tsx": ["sf-alert-red"],

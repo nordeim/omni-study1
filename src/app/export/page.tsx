@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 
 import { ExportPanel } from "@/components/export/export-panel";
 import { db } from "@/lib/db";
+import { checkRateLimit } from "@/lib/auth";
 import { getCurrentUser, publicUser } from "@/lib/server/auth";
 import { renderExportEnvelope } from "@/lib/server/export-build";
 import { ExportTooLargeError } from "@/lib/server/http";
@@ -16,6 +17,32 @@ export const metadata: Metadata = { title: "Export Your Data" };
 export default async function ExportPage() {
   const user = await getCurrentUser();
   if (!user) redirect("/login");
+
+  // S153/DB2 (audit B-L2): the page's OWN dedicated budget — the page
+  // renders the SAME envelope the route serves (the S141/CP4 size
+  // signal: 20 counts + the full 20-findMany serialize) per view, so a
+  // scripted authed session looping this linked-from-nowhere door drove
+  // byte-identical work to the budgeted download at line rate, unbudgeted
+  // (the route twin rides export:${user.id} 10/15-min). The key is
+  // DEDICATED (exportPage:) — the shared-key variant would spend the
+  // demo user's export: budget the e2e s21/s23 legs need (3 of 10 per
+  // boot). Checked AFTER the auth gate (the DA4 doctrine — the anon
+  // redirect above stays budget-free) and BEFORE the expensive work:
+  // the rate-limited render below skips the counts + the envelope
+  // entirely, so past the budget a view costs one cookie verify and a
+  // ~200-byte body (a page cannot answer 429 — the honest amber alert
+  // is the documented shape; the in-process single-node limiter is the
+  // family posture).
+  const pageLimit = checkRateLimit(`exportPage:${user.id}`, 10);
+  if (!pageLimit.ok) {
+    return (
+      <main className="mx-auto w-full max-w-3xl p-6 pt-10">
+        <div role="alert" className="sf-alert-amber rounded-lg px-3 py-2 text-sm">
+          Too many export page views. Please wait a few minutes and try again.
+        </div>
+      </main>
+    );
+  }
 
   // The count grid is server-rendered from the owner's live rows.
   const [

@@ -583,6 +583,69 @@ describe("decrementRateLimit (S138/CM3 — the aggregate-budget seam)", () => {
     expect(() => decrementRateLimit("loginGlobal:")).not.toThrow();
     expect(rateLimitBucketCount()).toBe(0);
   });
+
+  // S153/DB1 (audit B-M1, the CORRECTED mechanics): a success nets 0 —
+  // checkRateLimit's +1 then the decrement's −1 — so under the CM3 model
+  // a SUCCESS-ONLY loop (scriptable own credentials under the default
+  // in-band posture) burns the synchronous scrypt pair per request with
+  // NOTHING binding it: the aggregate never trips, and login's success
+  // path even RESETS both per-keys. The per-window discharge ceiling
+  // (MAX_DISCHARGES_PER_WINDOW) bounds the loop at M+D admitted
+  // requests — the 21st discharge in one window is a no-op.
+  it("caps the discharge at MAX_DISCHARGES_PER_WINDOW — the 21st discharge in a window no-ops (the success-only loop bound)", () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-11-01T10:00:00Z"));
+    resetAllRateLimits();
+    try {
+      // 21 check+decrement pairs — the success shape, 21 times.
+      for (let i = 0; i < 21; i++) {
+        checkRateLimit("loginGlobal:", 40);
+        decrementRateLimit("loginGlobal:");
+      }
+      // The first 20 discharged (each net 0); the 21st no-opped, so its
+      // +1 stays: the bucket holds EXACTLY count 1 (pre-fix every
+      // discharge applied and the count returned to 0 — the unbounded
+      // door this leg closes at the seam).
+      expect(checkRateLimit("loginGlobal:", 1).ok).toBe(false);
+      // Exactly 1 (not more): the not-ok above did not increment, and a
+      // second pair still leaves the count at 1 net (+1, then the 22nd
+      // discharge no-ops too).
+      checkRateLimit("loginGlobal:", 40);
+      decrementRateLimit("loginGlobal:");
+      expect(checkRateLimit("loginGlobal:", 2).ok).toBe(false);
+      expect(rateLimitBucketCount()).toBe(1);
+    } finally {
+      resetAllRateLimits();
+      vi.useRealTimers();
+    }
+  });
+
+  it("re-arms the discharge allowance on window rollover (a fresh window's 20 fresh discharges)", () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-11-01T10:00:00Z"));
+    resetAllRateLimits();
+    try {
+      // Exhaust the allowance: 20 discharged pairs + the 21st no-op.
+      for (let i = 0; i < 20; i++) {
+        checkRateLimit("loginGlobal:", 40);
+        decrementRateLimit("loginGlobal:");
+      }
+      checkRateLimit("loginGlobal:", 40);
+      decrementRateLimit("loginGlobal:"); // the 21st — no-op, count 1
+      expect(checkRateLimit("loginGlobal:", 1).ok).toBe(false);
+      // +16 min: the window rolls, the next check mints a FRESH bucket
+      // with a FRESH allowance — the discharge applies again (the
+      // legitimate co-tenant story: a new window starts clean).
+      vi.setSystemTime(new Date("2026-11-01T10:16:00Z"));
+      checkRateLimit("loginGlobal:", 40); // fresh bucket: count 1, discharges 0
+      decrementRateLimit("loginGlobal:"); // discharges (count 0, allowance 1 used)
+      expect(checkRateLimit("loginGlobal:", 1).ok).toBe(true);
+      expect(rateLimitBucketCount()).toBe(1);
+    } finally {
+      resetAllRateLimits();
+      vi.useRealTimers();
+    }
+  });
 });
 
 // S131/CF7 — the OTP digest family (docs/remediation-plan-session131.md).

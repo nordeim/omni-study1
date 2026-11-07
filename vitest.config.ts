@@ -1,7 +1,22 @@
 import { defineConfig } from "vitest/config";
 import path from "node:path";
 
-// Unit-test layer for the pure domain seams — 48 files / 1578 tests
+// Unit-test layer for the pure domain seams — 48 files / 1582 tests
+// (re-anchored S153/DB — the rate-limit-model + export-page-budget set:
+// census 1578 → 1582, +4 net [auth +2: the S153/DB1 capped-discharge pair
+// (the discharge ceiling's 21st-decrement no-op leg — the success-only
+// loop bound at the seam — + the window-rollover re-arm leg with the
+// fresh-bucket allowance witness); script-conventions +2: the S153/DB1
+// structural census (MAX_DISCHARGES_PER_WINDOW = 20 declared + the
+// Bucket.discharges counter + the decrement's ceiling guard) + the
+// S153/DB2 page-budget census (the exportPage: key + the
+// redirect→budget→counts→envelope ordering + the honest rate-limited
+// render markers)]. The e2e census 614 → 616 rides the two new pins:
+// the S153/DB1 success-loop trip pin [parity-session8, chunk 1's new
+// terminal] + the S153/DB2 page-budget pin [navigation.spec.ts, chunk
+// 1 — relocated from its first s21 home when the chunk-5 registerGlobal:
+// budget measured 40/40 exactly, the pin's throwaway register making
+// s26's re-issue the 41st].)
 // (re-anchored S152/DA — the delete-latch + hand-guard + replace-confirm
 // + order-letter set: census 1555 → 1578, +23 net [validation +2: the
 // S152/DA5 registerSchema fullName-trim pair (the padded-value-trims leg

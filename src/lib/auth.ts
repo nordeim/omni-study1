@@ -274,7 +274,27 @@ export function readSessionToken(token: string): { uid: string; iat: number; exp
 export const MAX_ATTEMPTS = 10;
 const WINDOW_MS = 15 * 60 * 1000; // 15 minutes
 
-type Bucket = { count: number; windowStart: number };
+// S153/DB1 (audit B-M1, the corrected mechanics): the per-window discharge
+// ceiling for the AGGREGATE budgets. Under the S138/CM3 net-of-successes
+// model a success nets 0 — checkRateLimit's +1 then the decrement's −1 —
+// so a SUCCESS-ONLY loop (scriptable own credentials under the default
+// in-band posture: open registration + the OTP in the response) burned
+// the full synchronous scrypt pair per request with NOTHING binding it:
+// the aggregate never tripped, and login's success path even RESET both
+// per-keys. (The S152 plan's stated alternation mechanics were wrong —
+// a self-success's −1 lands on its OWN +1, never a prior fail's — the
+// audit's direct-read correction; the real door was the free success.)
+// The ceiling bounds every discharge-bearing aggregate at M+D = 60
+// admitted requests per window (40 + 20): successes 1-20 net 0, every
+// success past the ceiling nets +1, and the loop trips. Sizing: D = 2×
+// the per-IP budget (10) = M/2 — and measured above the e2e chunk-5
+// login-success count (13/boot: auth.setup 1 + auth.spec 3 + auth-flows
+// 5 + s24 2 + s25 0 + s26 2), so the cert's per-boot global count stays
+// byte-identical (52 posts − 13 discharged = 39/40 — the cap only binds
+// when a window's successes exceed 20; chunk 5's never do).
+export const MAX_DISCHARGES_PER_WINDOW = 20;
+
+type Bucket = { count: number; windowStart: number; discharges: number };
 const buckets = new Map<string, Bucket>();
 
 export type RateLimitResult = { ok: boolean; retryAfterSec: number };
@@ -294,7 +314,7 @@ export function checkRateLimit(key: string, max: number = MAX_ATTEMPTS): RateLim
       // trade-off, strictly better than unbounded growth).
       if (buckets.size >= MAX_BUCKETS) evictOldestBucket();
     }
-    buckets.set(key, { count: 1, windowStart: now });
+    buckets.set(key, { count: 1, windowStart: now, discharges: 0 });
     return { ok: true, retryAfterSec: 0 };
   }
   if (bucket.count >= max) {
@@ -319,10 +339,28 @@ export function resetRateLimit(key: string): void {
  *  in-band posture — 39 fails + 1 scripted success, forever). The
  *  net-of-successes model: only FAILED logins accumulate; consecutive
  *  successes oscillate just under the budget and never trip. No-op on a
- *  missing/expired key; never re-arms a window; floors at zero. */
+ *  missing/expired key; never re-arms a window; floors at zero.
+ *
+ *  S153/DB1 (audit B-M1, the corrected mechanics): the discharge is
+ *  CAPPED per window (MAX_DISCHARGES_PER_WINDOW). The CM3 shape made a
+ *  success NET 0 (the check's +1, this decrement's −1) — so a
+ *  SUCCESS-ONLY loop of scriptable own credentials burned the
+ *  synchronous scrypt pair per request with nothing binding it (the
+ *  aggregate never tripped; login's success path even resets both
+ *  per-keys; ~24-37× the intended containment). The ceiling bounds the
+ *  loop at M+D admitted requests per window: the first D successes net
+ *  0, every success past the ceiling nets +1, and the loop trips. A
+ *  fresh window (the rollover mints a fresh bucket) re-arms the
+ *  allowance — the legitimate co-tenant story: a new window starts
+ *  clean. The −1 always lands on the SUCCESS'S OWN +1 (its check
+ *  incremented the same bucket first) — never on a prior fail's spend,
+ *  so the CM3 anti-reset property is untouched. */
 export function decrementRateLimit(key: string): void {
   const bucket = buckets.get(key);
-  if (bucket && bucket.count > 0) bucket.count -= 1;
+  if (bucket && bucket.count > 0 && bucket.discharges < MAX_DISCHARGES_PER_WINDOW) {
+    bucket.count -= 1;
+    bucket.discharges += 1;
+  }
 }
 
 /** S120/BU6: the size observable — the eviction contract's test/ops probe. */

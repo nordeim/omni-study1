@@ -42,12 +42,19 @@ export async function POST(request: NextRequest) {
     // mints a fresh per-IP key per request; a distinct-email flood passes
     // every per-email key), and each passing request costs one scrypt burn
     // + up to two unauthenticated rows (User + VerificationToken) from ONE
-    // host. 40/15-min process-wide bounds that churn (generous: the e2e
-    // fresh-user journeys register ≤ 3 per chunk and each chunk re-boots
-    // the server, so the in-process bucket never trips in tests; a
-    // legitimate multi-user deploy fronted by a proxy with
-    // TRUSTED_PROXY_HOPS≥1 derives per-IP keys that never sum here). A
-    // volume-containment 429 leaks nothing the per-IP 429 doesn't already.
+    // host. 40/15-min process-wide bounds that churn (the e2e cert
+    // arithmetic, S153-measured: chunk 5 — the auth-family boot — rides
+    // this budget to 40/40 EXACTLY [37 measured by self-calibrating
+    // probe across the pre-s26 files + s26's 3: its re-issue register is
+    // the 40th admitted post — the one-add-from-tripping boundary the
+    // cert arithmetic now documents; the S153/DB2 pin's first home died
+    // exactly there, its throwaway register making s26's re-issue the
+    // 41st → a codeless 429 → the verify's uniform 400]; every other
+    // chunk sits ≤ 4, and each chunk re-boots the server, so the bucket
+    // never trips in tests; a legitimate multi-user deploy fronted by a
+    // proxy with TRUSTED_PROXY_HOPS≥1 derives per-IP keys that never sum
+    // here). A volume-containment 429 leaks nothing the per-IP 429
+    // doesn't already.
     // S139/CN9 (Mode-C I-2): this route deliberately NEVER discharge its
     // globals (no reset, no decrement — login decrements loginGlobal: at
     // CM3) — a register "success" is credential-free and scriptable under
