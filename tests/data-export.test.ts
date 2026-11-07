@@ -14,6 +14,7 @@ import {
   DATA_EXPORT_VERSION,
   EXPORT_COLLECTIONS,
   EXPORT_MAX_BYTES,
+  ExportTooLargeError,
   buildDataExport,
   exportOverCeiling,
   serializeExportRow,
@@ -250,7 +251,8 @@ describe("S141/CP4 · formatExportBytes (the size-signal formatting)", () => {
 // EXPORT_MAX_BYTES (4x the restore cap) + the exportOverCeiling
 // predicate (the nodeEnvCasingWarning pattern — the gate is named
 // logic, the display helpers stay display-only) + the typed
-// ExportTooLargeError thrown by the shared renderExportEnvelope seam
+// ExportTooLargeError thrown by the PURE DRIVER (buildExportFragments —
+// S156/DE1 moved the throw into the seam; the server wiring delegates)
 // (the BW8 single-source doctrine: neither consumer owns the ceiling),
 // mapped by toErrorResponse to the 413 family (the CU3 discrimination
 // precedent). No e2e leg BY DESIGN (the CV1 runtime-split precedent):
@@ -512,5 +514,92 @@ describe("S156/DE1 · buildExportFragments (the streaming assembly)", () => {
       exportedAt: string;
     };
     expect(parsed.exportedAt).toBe(WHEN.toISOString());
+  });
+});
+
+// ---------------------------------------------------------------------------
+// S157/DF1 — the leaner /export page family (grid-from-envelope;
+// docs/remediation-plan-session157.md §3). The driver's return grows the
+// STRUCTURED counts record (the same loop-local headFragment serializes
+// into fragment[0] — the structured twin of the head's counts block), and
+// the over-ceiling error carries the COMPLETE record so the page's grid
+// survives both states. The page drops its own 20-count query family and
+// rides the envelope (one read pass feeds the grid AND the size signal —
+// the CP4 single-source doctrine completed; the page-internal skew class
+// eliminated; the L-1 manifest-completeness gap closed structurally).
+// ---------------------------------------------------------------------------
+describe("S157/DF1 · the structured counts return (grid-from-envelope)", () => {
+  const USER = {
+    id: "user_1",
+    email: "demo@studyflow.app",
+    name: "Demo",
+    createdAt: new Date("2026-01-01T00:00:00.000Z"),
+    userId: "user_1",
+  };
+  const rowsFixture = (): Record<string, Array<Record<string, unknown>>> => ({
+    subjects: [
+      { id: "s1", name: "Math — vectors", color: "#2563eb", createdAt: WHEN },
+    ],
+    tasks: [
+      { id: "t1", title: "Read chapter 4 — vectors", done: false, priority: 2, dueDate: null, createdAt: WHEN },
+      { id: "t2", title: "👋 emoji row", done: true, priority: 1, dueDate: new Date("2026-11-01T09:30:00.000Z"), createdAt: WHEN },
+    ],
+    holidays: [{ id: "h1", name: "Labor Day · the middot", date: new Date("2026-05-01T00:00:00.000Z") }],
+  });
+  const readerOver =
+    (rows: Record<string, Array<Record<string, unknown>>>) =>
+    async (collection: string) =>
+      rows[collection] ?? [];
+  const concatBytes = (chunks: Uint8Array[]): Uint8Array => {
+    const total = chunks.reduce((n, c) => n + c.byteLength, 0);
+    const out = new Uint8Array(total);
+    let offset = 0;
+    for (const c of chunks) {
+      out.set(c, offset);
+      offset += c.byteLength;
+    }
+    return out;
+  };
+
+  it("the counts weld: the returned counts record equals the parsed envelope's counts block AND the per-reader row counts (the structured-vs-serialized weld)", async () => {
+    const { buildExportFragments } = await import("../src/lib/data-export");
+    const rows = rowsFixture();
+    const { fragments, counts } = await buildExportFragments(USER, readerOver(rows), WHEN);
+    // The head's own counts block — the serialized twin.
+    const parsed = JSON.parse(new TextDecoder().decode(concatBytes(fragments))) as {
+      counts: Record<string, number>;
+    };
+    expect(counts).toEqual(parsed.counts);
+    // The per-reader truth — the grid the /export page renders.
+    for (const name of EXPORT_COLLECTIONS) {
+      expect(counts[name]).toBe((rows[name] ?? []).length);
+    }
+    // Insertion order = EXPORT_COLLECTIONS loop order (the page's chip
+    // order derives from Object.entries — the panel renders
+    // byte-identically to the hand-written literal it replaces).
+    expect(Object.keys(counts)).toEqual([...EXPORT_COLLECTIONS]);
+  });
+
+  it("the over-ceiling error carries the COMPLETE counts record (the over-ceiling page grid source; the required-arg constructor)", async () => {
+    // The driver always holds the complete record when it throws (the
+    // throw is post-loop — every collection read + counted, retention
+    // stopped or not), so the payload is REQUIRED at the constructor:
+    // any future construction site must answer "what does the grid
+    // show?" — the over-ceiling /export render keeps its grid.
+    const counts: Record<string, number> = {};
+    for (const name of EXPORT_COLLECTIONS) counts[name] = name === "tasks" ? 2 : 0;
+    const err = new ExportTooLargeError(EXPORT_MAX_BYTES + 1, counts);
+    expect(err).toBeInstanceOf(ExportTooLargeError);
+    expect(err.bytes).toBe(EXPORT_MAX_BYTES + 1);
+    expect(err.counts).toEqual(counts);
+    expect(Object.keys(err.counts)).toEqual([...EXPORT_COLLECTIONS]);
+    // The census twin (the CW2 pattern — the driver passes the real
+    // record at the throw site; driving a real >256 MiB fixture account
+    // stays impractical, the S148 decision unchanged).
+    const driver = readFileSync(
+      path.resolve(process.cwd(), "src/lib/data-export.ts"),
+      "utf8",
+    );
+    expect(driver).toContain("throw new ExportTooLargeError(bytes, counts)");
   });
 });

@@ -1055,16 +1055,17 @@ test.describe("S134/CI5 · the calculator History loading gate", () => {
 });
 
 // ---------------------------------------------------------------------------
-// S153/DB2 · the export-page budget (the B-L2-audit close): the /export
-// PAGE renders the full envelope per view (the 20-count grid + the
-// 20-findMany serialize — byte-identical work to the budgeted download)
-// while its route twin rode export:${user.id} 10/15-min. The page now
-// carries its OWN dedicated per-user budget — exportPage:${user.id}
-// 10/15-min, checked after the auth gate and before the expensive work,
-// answering the honest amber alert render when spent (a page cannot
-// answer 429; the rate-limited render skips the counts + the envelope
-// entirely, so past the budget a view costs one cookie verify and a
-// ~200-byte body).
+// S153/DB2 · the export-page budget (the B-L2-audit close; re-anchored
+// S157/DF1 grid-from-envelope): the /export PAGE renders the full
+// envelope per view (the 20-findMany serialize — byte-identical work to
+// the budgeted download; the count grid rides the envelope's OWN counts
+// since S157/DF1 — one read pass) while its route twin rode
+// export:${user.id} 10/15-min. The page carries its OWN dedicated
+// per-user budget — exportPage:${user.id} 10/15-min, checked after the
+// auth gate and before the expensive work, answering the honest amber
+// alert render when spent (a page cannot answer 429; the rate-limited
+// render skips the envelope render entirely, so past the budget a view
+// costs one cookie verify and a ~200-byte body).
 //
 // PLACEMENT (the budget-driven pin-home doctrine — the CK1 precedent):
 // the pin's natural family file (s21-data-export) rides CHUNK 5, whose

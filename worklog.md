@@ -5824,3 +5824,120 @@ count-only page consumption (the phase-2 leaner page), the
 single-collection cursor pagination, the raw-SQL bulk upsert (IF
 profiling ever presses the 60 s budget), the A-M3 stage-2 (re-measure
 only if the hardware or the row cap changes).
+
+## Session 168 — the S157 cycle (Batch DF: the leaner-page cycle)
+
+**Workspace**: warm continuation at `6befbab` on `main` (the Batch DE
+fix `cf1fb4d` + the operator's session_186 transcript commit; `git
+pull` fast-forward, environment intact). **Cold baseline**: lint ✓ ·
+tsc ✓ · unit 1602/1602 (48 files — the documented S156 final state) ·
+preflight GREEN · the drawer check GREEN (**the 74th consecutive**
+no-Tailwind-v4-mobile-nav-bug confirmation) · the desktop parity probe
+**MATCH** (all five formal checks, live reference login — the S142
+outer-footprint probe; the s141 probe's 258px navWidth is the known
+inner-nav artifact).
+
+**The audits.** A — the Batch DE recent-changes axis (`cf1fb4d`):
+**clean** (all five DE claims verified at the source level — the
+driver, the READERS map, the ReadableStream route, the DE2 retirement,
+the DE3 raw-body pin; the doc census machine-verified, zero stale
+count sites). B — the export/import data-portability family (the S156
+close's recorded rotation; dispatched to a read-only subagent against
+the web-application skill's §3/§4/§6/§16/§17 rubric):
+**0C/0H/1M/2L/6I** — the family coherent, well-pinned, and secure;
+the findings: **M-1** the repo's own query-engine binary carries
+`BEGIN IMMEDIATE` (×2), NOT `BEGIN DEFERRED` — the F3 wrap's lock
+premise needed empirical probing; **L-1** the /export page's 20-count
+grid had NO manifest-completeness census (a dropped collection ships
+a 19-chip grid with every gate green); **L-2** the AGENTS.md export
+row still said "read in parallel" (stale since S156/DE1); I-1..I-6
+the informationals (the unscoped-update TOCTOU note, the
+force-dynamic posture, the bounded Pass-2 encodes, the stale pin
+comments, the F3/F5/F7 confirmations, the census integrity).
+
+**The F3 measurement ran FIRST (the S154 measurement-first doctrine)
+— and REJECTED the deferred design.** The lock probe
+(`scripts/measure-export-lock-s157.mjs`, two Prisma clients against a
+throwaway db): while a read-only interactive `$transaction` is open, a
+concurrent write **waits the full remaining hold** (2435 ms against a
+2500 ms hold; 1332 ms in the 20-read export rehearsal) then succeeds;
+reads coexist (2 ms); past the 5 s busy_timeout writers fail outright
+— exactly the large accounts the snapshot would serve. **The F3
+$transaction snapshot is REJECTED ON MEASUREMENT** — the
+honest-failing skew posture is the correct endpoint; the deferral
+converts from cautionary to MEASURED-REJECTED.
+
+**The plan** (`docs/remediation-plan-session157.md`) written BEFORE
+any source change, validated against the codebase (the RED inventory
+sized: +2 unit legs / +0 e2e — the CV1 runtime-split precedent).
+
+**The fixes (the unit REDs 4/4 on their designed markers).** DF1
+grid-from-envelope (the F5 close, the cycle core) — the driver's
+return grows the STRUCTURED counts record
+(`RenderedExport = { fragments, bytes, counts }` — the loop-local the
+head fragment already serializes; zero new work), ExportTooLargeError
+grows a REQUIRED counts payload (the over-ceiling /export render keeps
+its grid), and the page RETIRES its own 20 `count()` query family +
+the hand-written counts literal + the `db` import: ONE
+`renderExportEnvelope` call feeds the grid AND the size signal. **The
+properties: per-view queries halve; the page-internal skew class is
+eliminated (one pass by construction); L-1 closes STRUCTURALLY (the
+grid derives from EXPORT_COLLECTIONS through the seam — a dropped
+collection is a READERS compile error); the panel renders
+byte-identically** (chip order = EXPORT_COLLECTIONS = the retired
+literal's order). The count-only page-consumption half was REJECTED by
+adjudication (the exact bytes are only knowable from the full
+serialization — the CP4 size signal; the single-path doctrine holds).
+DF2 the measured-record rider (export-build.ts's read-skew header
+re-words with the probe's numbers + the rejection). Riders: L-2 (the
+AGENTS export row re-anchor), I-4 (the two stale pin comments), the
+DB2 census + comment re-anchors.
+
+**The live page probe** (`scripts/probe-export-page-s157.mjs`): the
+/export page renders **20 chips in EXPORT_COLLECTIONS order**; the
+grid counts **MATCH the API envelope's own counts** (the cross-check
+through GET /api/export/data); the size signal renders; **X-Export-Bytes
+19832 === the actual received body bytes**; the secret guard holds.
+
+**Re-cert (the FINAL tree).** lint ✓ · tsc ✓ · unit **1604/1604**
+(48 files, +2: the counts-weld leg + the over-ceiling-counts leg) ·
+build ✓ (exit 0; 7 warnings — the documented set; **the standalone
+144M byte-identical** — the diff only REMOVES an import) · the
+remediated-tree re-confirmation: preflight GREEN · drawer GREEN (**the
+75th**) · parity **MATCH** · the targeted e2e: chunk 5 **89/89
+first-pass** cold (s21 + s23 — the direct page consumers) + chunk 1
+151/152 with one machine-load flake (parity-session8's BZ3
+popover-keyboard leg — **standalone-cold re-run 68/68 first-pass**,
+the S139 machine-load class, unrecurring in the cert) — the 5-chunk
+cold cert: **all five chunks FIRST-PASS CLEAN** (152/152 · 189/189 ·
+91/91 · 95/95 · 89/89) — the cert tally **616/616** (the e2e census
+unchanged by design; the three live export consumers re-certified) ·
+**census 2220 green** (was 2218).
+
+**Evidence.** The `docs/screenshots/157-clone-*.png` frames (the
+standing desktop + mobile drawer [the 75th drawer-GREEN companion] +
+**the cycle's surface: the remediated /export page — 20 chips,
+machine-counted by the capture script**), self-verifying (ok:true;
+dimensions machine-checked) + the live page-probe record. The DF1
+proof rides the unit counts-weld leg + the re-anchored censuses + the
+live probe + the cert; the DF2 proof rides the committed probe script
++ the measured numbers recorded in the seam header, the plan, and the
+session log.
+
+**Docs.** README badge/census (2218 → 2220) + the unit-count prose
+sites + the data-portability row extension + the Session-157 row;
+AGENTS census (1602 → 1604) + the export row re-anchor (the L-2 fix) +
+the S157 lessons block (three lessons); CLAUDE counts; PAD v1.3.65
+(the revision block); the SKILL census (all five sites); the vitest
+header re-anchor; `docs/session_187.md`; this entry; the plan §6
+as-executed close; the `.env.example` contract re-verified (no
+env-var reads changed; .env and .env.example byte-identical at the
+documented dev posture).
+
+**Next cycle.** The rotation continues — the recorded deferrals: the
+single-collection cursor pagination (a >memory single collection still
+materializes — census-breaking, its own cycle), F7's cosmetic edges
+(the UTC filename stamp, the 429-through-the-download anchor), I-1's
+cross-account TOCTOU documentation note, the raw-SQL bulk upsert (IF
+profiling ever presses the 60 s budget), the A-M3 stage-2 (re-measure
+only if the hardware or the row cap changes).

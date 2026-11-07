@@ -1,4 +1,4 @@
-# StudyFlow (Omni-Study) — Master Project Architecture Document (PAD) v1.3.64
+# StudyFlow (Omni-Study) — Master Project Architecture Document (PAD) v1.3.65
 
 **Classification:** Internal Engineering Reference
 **Status:** DEFINITIVE, PRODUCTION-LOCKED BLUEPRINT
@@ -8,6 +8,12 @@
 **Rule:** Every architectural decision in this document traces to a specific rationale. Nothing is here "because it's popular."
 
 ---
+
+#### Revision Block — v1.3.65 (Session-157 / Batch DF, Cycle 107)
+
+- `[SR]` Current test census anchor (the v1.2.0 convention, re-anchored): **1604/1604 Vitest unit** (48 files — the S157 additions: data-export +2 [the S157/DF1 grid-from-envelope family — the counts-weld leg (the driver's returned counts record equals the parsed envelope's counts block AND the per-reader row counts, insertion order = EXPORT_COLLECTIONS: the structured-vs-serialized weld the /export page's chip grid now rides) + the over-ceiling-counts leg (ExportTooLargeError carries the COMPLETE record — the required-arg constructor + the throw-site census twin; the over-ceiling /export render keeps its grid)]). The e2e census UNCHANGED at 616 (the 5-chunk cold map 152+189+91+95+89 — no e2e legs by design, the CV1 runtime-split precedent: the three live consumers re-certify the wire — s21's page leg, s23's CH7 refresh flip, navigation's DB2 twin) — census 2220 green.
+- `[AR]` **S157/DF1 — grid-from-envelope (the /export page's leaner consumption):** the page's own 20 `count()` query family is RETIRED — the chip grid rides the envelope's structured `counts` (the driver's return grew the loop-local record the head fragment already serializes; `RenderedExport = { fragments, bytes, counts }`), the per-view query count halves (20 count + 20 findMany → 20 findMany), the page-internal skew class is eliminated (the grid and the size signal derive from ONE read pass), the L-1 manifest-completeness census gap closes structurally (the grid derives from EXPORT_COLLECTIONS through the seam — a dropped collection is a READERS compile error), and the over-ceiling render keeps its grid via the error's required counts payload. The panel output is byte-identical (chip order = EXPORT_COLLECTIONS = the retired literal's order).
+- `[AR]` **S157/DF2 — the F3 $transaction-snapshot verdict, REJECTED ON MEASUREMENT:** the lock-mode probe (scripts/measure-export-lock-s157.mjs — two Prisma clients against a throwaway db) measured that an open read `$transaction` delays every concurrent writer's COMMIT by the full read+serialize window (2435 ms against a 2500 ms hold; 1332 ms in the 20-read export rehearsal — the journal_mode=delete SHARED-blocks-EXCLUSIVE-commit tail), with outright writer failures past the 5 s busy_timeout — exactly the large accounts the snapshot would serve. The read-skew class stays accepted-and-documented (the honest-failing posture is the correct endpoint); the page-internal skew component was eliminated by DF1. The cursor-pagination + cosmetic-edge deferrals carry unchanged.
 
 #### Revision Block — v1.3.64 (Session-156 / Batch DE, Cycle 106)
 

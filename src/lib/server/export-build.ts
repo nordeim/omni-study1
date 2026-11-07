@@ -20,17 +20,26 @@
 // (tests/data-export.test.ts), and the wire is pinned by the s21 raw-body
 // leg + the s14/S139-CN2 live round-trip.
 //
-// Read-skew honesty (the accepted F3 class, extended): the sequential
-// reads stretch the cross-collection skew window from ~the Promise.all
-// spread to ~the serialization duration (seconds for a large account).
-// The export never writes; the envelope's internal counts/data stay
-// consistent by construction (both derive from the same per-collection
+// Read-skew honesty (the accepted F3 class, MEASURED at S157/DF2): the
+// sequential reads stretch the cross-collection skew window from ~the
+// Promise.all spread to ~the serialization duration (seconds for a large
+// account). The export never writes; the envelope's internal counts/data
+// stay consistent by construction (both derive from the same per-collection
 // arrays); and the import resolves FKs against envelope ∪ owned-existing
 // rows (the S117 e2e-proven tolerance — a fresh-account restore answers
 // the actionable required-FK 400 on the hard edge). A $transaction
-// snapshot would close it but holds a read transaction open across the
-// serialization CPU work — its own measurement cycle (the recorded F3
-// deferral).
+// snapshot was the recorded F3 candidate and is REJECTED ON MEASUREMENT
+// (S157/DF2, scripts/measure-export-lock-s157.mjs — the throwaway-db
+// lock probe): an open read $transaction delays every concurrent
+// writer's COMMIT by the full read+serialize window (measured: a 2435 ms
+// wait against a 2500 ms hold; a 1332 ms wait in the 20-read export
+// rehearsal — the journal_mode=delete SHARED-blocks-EXCLUSIVE-commit
+// tail), and past the 5 s busy_timeout concurrent writes fail outright
+// (SQLITE_BUSY → P2028) — exactly the large accounts the snapshot would
+// serve. The skew class stays accepted-and-documented (the
+// honest-failing posture); S157/DF1 additionally eliminated the
+// PAGE-INTERNAL skew component (the /export grid now derives from the
+// envelope's own counts — one read pass).
 //
 // Cost honesty (unchanged): the page renders the envelope per view — the
 // same work the download does, on a linked-from-nowhere owner surface;

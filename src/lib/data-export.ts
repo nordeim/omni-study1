@@ -213,13 +213,20 @@ export function exportOverCeiling(bytes: number): boolean {
 /** S148/CW2 → S156/DE1 (moved from server/http.ts): the typed error the
  * driver throws past the 256 MiB ceiling. Carries `bytes` (the exact
  * serialized size) so the consumers (the /export page's over-ceiling
- * panel render) can show the computed size without re-serializing.
- * NOT a ValidationError (the body was never read from the client — this
- * is a response-size refusal); http.ts's toErrorResponse maps it to the
- * 413 family with the database-file remedy. */
+ * panel render) can show the computed size without re-serializing, and
+ * `counts` (the COMPLETE per-collection record — S157/DF1) so the
+ * over-ceiling /export render keeps its chip grid: the driver always
+ * holds the full record when it throws (the throw is post-loop — every
+ * collection read + counted, retention stopped or not), so the payload
+ * is REQUIRED at the constructor — any future construction site must
+ * answer "what does the grid show?". NOT a ValidationError (the body
+ * was never read from the client — this is a response-size refusal);
+ * http.ts's toErrorResponse maps it to the 413 family with the
+ * database-file remedy. */
 export class ExportTooLargeError extends Error {
   constructor(
     public readonly bytes: number,
+    public readonly counts: Record<string, number>,
     message = "That export is too large to build in one pass (over 256 MB).",
   ) {
     super(message);
@@ -236,10 +243,16 @@ export type ExportCollectionReader = (collection: ExportCollection) => Promise<E
 /** The assembled export: the ordered body fragments (their concatenation
  * is byte-identical to the object form's JSON.stringify) + the exact
  * UTF-8 byte total (the X-Export-Bytes header, the /export page prop,
- * and the ceiling gate all read this one number). */
+ * and the ceiling gate all read this one number) + the STRUCTURED counts
+ * record (S157/DF1 grid-from-envelope — the same loop-local record the
+ * head fragment serializes; insertion order = EXPORT_COLLECTIONS, so the
+ * /export page's chip grid rides it byte-identically to the hand-written
+ * literal it replaces, and the grid + the size signal derive from ONE
+ * read pass — the page-internal skew class eliminated). */
 export type RenderedExport = {
   fragments: Uint8Array[];
   bytes: number;
+  counts: Record<string, number>;
 };
 
 /** One collection's scaffold pieces: `"name":[` + the per-row
@@ -329,7 +342,7 @@ export async function buildExportFragments(
   fragments.push(encode("}}"));
 
   if (exportOverCeiling(bytes)) {
-    throw new ExportTooLargeError(bytes);
+    throw new ExportTooLargeError(bytes, counts);
   }
-  return { fragments, bytes };
+  return { fragments, bytes, counts };
 }

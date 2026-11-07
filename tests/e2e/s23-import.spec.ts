@@ -564,7 +564,9 @@ test.describe("S133/CH2+CH7 the import parity + the counts refresh (fresh TEST-N
 
     // …and the server-rendered count grid goes honest WITHOUT a reload:
     // the Tasks chip flips 0 → 1 (router.refresh() re-runs the page's
-    // 20 db counts; pre-CH7 the grid kept showing the pre-import zero).
+    // ONE envelope render — S157/DF1 grid-from-envelope: the chip grid
+    // rides the envelope's own counts; pre-CH7 the grid kept showing the
+    // pre-import zero).
     await expect(tasksChip).toContainText("1", { timeout: 10_000 });
   });
 });

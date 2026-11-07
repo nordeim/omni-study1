@@ -1383,10 +1383,16 @@ describe("the S142/CQ source censuses", () => {
     expect(pure).toContain("bytes += encoded.byteLength");
     expect(pure).not.toContain("Buffer.byteLength");
     expect(pure).not.toContain("export function exportByteSize(");
-    // The driver returns the fragments + the exact byte total; the server
-    // wiring delegates; both consumers read `.bytes` — never `json.length`
-    // (the A-M2 code-unit under-report).
-    expect(pure).toContain("return { fragments, bytes }");
+    // The driver returns the fragments + the exact byte total + the
+    // STRUCTURED counts record (S157/DF1 grid-from-envelope: the /export
+    // page's chip grid rides the envelope's own counts — one read pass
+    // feeds the grid AND the size signal). The return shape is pinned
+    // DELIBERATELY (the S156 lesson: a load-bearing seam shape carries
+    // its WHY here) — the forbidden shapes are the materializing
+    // `{ json, bytes }` form and any counts-free form (the page would
+    // have to re-query); both consumers read `.bytes` — never
+    // `json.length` (the A-M2 code-unit under-report).
+    expect(pure).toContain("return { fragments, bytes, counts }");
     expect(seam).toContain("buildExportFragments");
     expect(route).toContain("String(bytes)");
     expect(page).toContain(".bytes");
@@ -2371,36 +2377,47 @@ describe("S153/DB1: the capped aggregate discharge (B-M1 — the success-only lo
 });
 
 // ---------------------------------------------------------------------------
-// S153/DB2 (the export-page budget, the B-L2-audit close): the /export
-// page renders the full envelope per view (20 counts + the 20-findMany
-// serialize — byte-identical work to the budgeted download) while its
-// route twin rode export:${user.id} 10/15-min. The page now carries its
-// OWN dedicated per-user budget AFTER the auth gate (the DA4 doctrine —
-// the anon redirect stays budget-free) and BEFORE the count grid + the
-// envelope build (the rate-limited render is the cheap path by
-// construction). The structural pin: the key, the sizing, the ordering,
-// and the honest rate-limited render all exist at the page.
+// S153/DB2 (the export-page budget, the B-L2-audit close) · re-anchored
+// S157/DF1 (grid-from-envelope): the /export page renders the full
+// envelope per view (the 20-findMany serialize — byte-identical work to
+// the budgeted download) while its route twin rode export:${user.id}
+// 10/15-min. The page carries its OWN dedicated per-user budget AFTER the
+// auth gate (the DA4 doctrine — the anon redirect stays budget-free) and
+// BEFORE the ONE work call (the rate-limited render is the cheap path by
+// construction). S157/DF1: the page's own 20-count query family is GONE —
+// the grid rides the envelope's structured counts (one read pass; the
+// L-1 manifest-completeness gap closed structurally: the grid derives
+// from EXPORT_COLLECTIONS through the seam, never hand-listed at the
+// page). The structural pin: the key, the sizing, the ordering, the
+// count-free posture, and the honest rate-limited render all exist at
+// the page.
 // ---------------------------------------------------------------------------
 describe("S153/DB2: the /export page carries its own per-user budget before the envelope work", () => {
   const PAGE = path.resolve(process.cwd(), "src/app/export/page.tsx");
 
-  it("the page checks exportPage:${user.id} (10/15-min) before the counts + the envelope build, with the honest rate-limited render", () => {
+  it("the page checks exportPage:${user.id} (10/15-min) before the ONE envelope render (S157/DF1 grid-from-envelope), with the honest rate-limited render", () => {
     const src = readFileSync(PAGE, "utf8");
     expect(src, "the dedicated page budget key exists").toMatch(/checkRateLimit\(`exportPage:\$\{user\.id\}`, 10\)/);
     // Ordered: the budget sits after the auth gate (the redirect) and
-    // before the expensive work (the count grid + the envelope). The
-    // envelope anchor is the CALL (the bare name also matches the import
-    // at the file head).
+    // before the expensive work — the ONE envelope render (S157/DF1:
+    // the grid + the size signal both ride it; the page's own count
+    // query family is gone). The envelope anchor is the CALL (the bare
+    // name also matches the import at the file head).
     const redirectAt = src.indexOf("redirect(\"/login\")");
     const budgetAt = src.indexOf("exportPage:");
-    const countsAt = src.indexOf("db.subject.count");
     const envelopeAt = src.indexOf("renderExportEnvelope(publicUser(user))");
     expect(redirectAt, "the auth gate exists").toBeGreaterThan(-1);
-    expect(countsAt, "the count grid exists").toBeGreaterThan(-1);
     expect(envelopeAt, "the envelope build exists").toBeGreaterThan(-1);
     expect(redirectAt).toBeLessThan(budgetAt);
-    expect(budgetAt).toBeLessThan(countsAt);
     expect(budgetAt).toBeLessThan(envelopeAt);
+    // S157/DF1 — grid-from-envelope, pinned structurally: the page runs
+    // NO count query of its own (the grid rides the envelope's counts;
+    // a re-introduced db.*.count here would re-open the L-1
+    // hand-maintained-literal drift class + the page-internal skew) and
+    // holds NO db client at all (the unused-import guard, made
+    // deliberate).
+    expect(src).not.toMatch(/db\.[a-zA-Z]+\.count\(/);
+    expect(src).not.toContain('from "@/lib/db"');
     // The honest rate-limited render (a page cannot answer 429 — the
     // amber alert is the documented shape, cheap by construction).
     expect(src).toContain("Too many export page views");
