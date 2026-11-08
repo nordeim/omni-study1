@@ -23,6 +23,10 @@ export const GET = withUser(async (user) => {
     orderBy: [{ createdAt: "desc" }, { id: "desc" }],
     take: TRANSCRIPT_WINDOW,
   });
+  // S160/DI4 (the s160 audit B/L-4): updatedAt joins the map — the
+  // AiChatMessageRow store type has declared it since the slice existed
+  // while the wire never delivered it (the family's factory GETs return
+  // full rows; the hand-written AI GET joins the convention).
   return NextResponse.json(
     messages.reverse().map((m) => ({
       id: m.id,
@@ -30,6 +34,7 @@ export const GET = withUser(async (user) => {
       content: m.content,
       surface: m.surface,
       createdAt: m.createdAt.toISOString(),
+      updatedAt: m.updatedAt.toISOString(),
     })),
   );
 });

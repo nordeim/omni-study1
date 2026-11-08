@@ -135,7 +135,10 @@ describe("the chunked cert runner's truth contract (S128/CC2)", () => {
     // parity-session8 [the new terminal] + the DB2 export-page budget pin
     // in navigation [relocated from its first s21 home on the measured
     // 40/40 chunk-5 registerGlobal boundary]) — 614 → 616.
-    expect(certSource).toContain("Expected: 152 + 189 + 91 + 95 + 89 = 616");
+    // S160/DI: chunk 1 152 → 154 (the DI5 CB8 solver/flashcards twins in
+    // parity-session8) + chunk 3 91 → 92 (the DI6 generate-cards pre-LLM
+    // wire pin in resilience) — 616 → 619.
+    expect(certSource).toContain("Expected: 154 + 189 + 92 + 95 + 89 = 619");
   });
 
   it("propagates a failing chunk's exit code (never a green cert on a red run)", () => {

@@ -563,7 +563,15 @@ export const aiChatSchema = z.object({
       }),
     )
     .min(1)
-    .max(40),
+    .max(40)
+    // S160/DI2 (the s160 audit B/L-2): an all-assistant payload would
+    // persist a content-less user row (the chat route's lastUserMessage
+    // fallback answers ""), so the schema demands at least one user
+    // message — the client always appends a trailing user turn, so only
+    // crafted API payloads ever hit the refine.
+    .refine((msgs) => msgs.some((m) => m.role === "user"), {
+      message: "A conversation needs at least one message from you.",
+    }),
   surface: z.enum(CHAT_SURFACES).optional().default("assistant"),
 });
 

@@ -1601,6 +1601,72 @@ test.describe("S127/CB8 · a failed post-send refresh is not a failed send", () 
     await expect(page.getByText("The assistant could not respond. Try again.")).toHaveCount(0);
     await expect(page.getByText(/refresh/i)).toBeVisible();
   });
+
+  // S160/DI5 (the s160 audit B/M-2): the CB8 split-failure-domain pins for
+  // the two UNPINNED surfaces — the chat leg above was the family's only
+  // pin ("didn't refresh" matched ZERO e2e assertions), so a refactor
+  // collapsing the solver's or the flashcards view's nested try/catch
+  // would re-open the exact pre-CB8 bug class (the false "could not
+  // solve"/"Generation failed" toast after a DELIVERED write; a retry
+  // duplicating the drafted cards) with no failing test. Both twins mock
+  // the send as SUCCESS and abort the refresh — the chat pin's exact
+  // shape, on the twin surfaces.
+  test("a failed post-solve history refresh never toasts a failed solve (the solver twin)", async ({ page }) => {
+    await page.goto("/MathSolver");
+    await hydrated(page);
+    // The solve is a SUCCESS — the solution IS delivered server-side.
+    await page.route("**/api/math/solve", (route) =>
+      route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({ solution: "x = 5 (the s160-di5 delivered probe)" }),
+      }),
+    );
+    // The history refresh fails (the flaky-network condition — both the
+    // first attempt and the retry).
+    await page.route("**/api/ai/messages*", (route) => route.abort("failed"));
+    const problem = page.getByLabel("Math problem");
+    await problem.fill("S160-DI5 solver probe");
+    await page.getByRole("button", { name: "Solve" }).click();
+    // Let the flow settle — the refresh retry window lands well inside
+    // it; toasts outlive it.
+    await page.waitForTimeout(1500);
+    // The solution IS rendered (the write was delivered).
+    await expect(page.getByText("x = 5 (the s160-di5 delivered probe)")).toBeVisible();
+    // The false solve-failure toast NEVER appears; the honest soft toast
+    // does (the retry leg of the refresh also aborts).
+    await expect(page.getByText(/could not solve that problem/i)).toHaveCount(0);
+    await expect(page.getByText("Solved — but the history didn't refresh. Reload to catch up.")).toBeVisible();
+  });
+
+  test("a failed post-generate deck refresh never toasts a failed generation (the flashcards twin)", async ({ page }) => {
+    await page.goto("/Flashcards");
+    await hydrated(page);
+    // The generation is a SUCCESS — the cards ARE drafted server-side.
+    await page.route("**/api/ai/generate-cards", (route) =>
+      route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({ cards: [] }),
+      }),
+    );
+    // The deck refresh fails (loadCollections(["flashcards"]) fetches
+    // decks + cards in one Promise.all — one abort fails the pair; both
+    // the first attempt and the retry).
+    await page.route("**/api/flashcards/cards*", (route) => route.abort("failed"));
+    // A deck is selected by the render-derived default (list[0]) — the
+    // AI Generate button is enabled in the deck detail pane.
+    await page.getByRole("button", { name: "AI Generate" }).click();
+    // Let the flow settle — the refresh retry window lands well inside
+    // it; toasts outlive it.
+    await page.waitForTimeout(1500);
+    // The false generation-failure toast NEVER appears; the honest soft
+    // toast does (the retry leg of the refresh also aborts).
+    await expect(page.getByText(/generation failed/i)).toHaveCount(0);
+    await expect(
+      page.getByText("Drafted — but the deck didn't refresh. Reload to see the new cards."),
+    ).toBeVisible();
+  });
 });
 
 // S127/CB17 — the Add Link dialog's dead required contract (the s127 FE

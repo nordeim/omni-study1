@@ -1,4 +1,12 @@
 #!/usr/bin/env bash
+# (S160/DI re-tag — census 616 → 619, net +3: chunk 1 +2 [the S160/DI5
+# CB8 twins in parity-session8 — the solver + flashcards refresh-failure
+# soft-toast pins, the chat leg's unpinned siblings, network-mocked, no
+# LLM/no budget]; chunk 3 +1 [the S160/DI6 generate-cards pre-LLM wire
+# boundary in resilience — anon 401 + count-bound 400 + the foreign-deck
+# 404 on ONE fresh TEST-NET user (probe IP 192.0.2.139, the file's per-IP
+# total 4/10, registerGlobal 4/40)]. The full DI map:
+# docs/remediation-plan-session160.md.)
 # (S154/DC re-tag — census 616 UNCHANGED: no new e2e legs by design, the
 # CV1 runtime-split precedent. The S154/DC1 no-op update elision is
 # wire-invisible by construction (the elided rows count in `updated`, so
@@ -200,7 +208,7 @@
 # 192.0.2.139, 3/10 per-IP, 3/40 registerGlobal), the demo import
 # budget at 8/10; END-of-file, the CK1 flood pin stays TERMINAL in
 # s16]. The full CN map: docs/remediation-plan-session139.md.)
-# Expected: 152 + 189 + 91 + 95 + 89 = 616 (each chunk's count includes its
+# Expected: 154 + 189 + 92 + 95 + 89 = 619 (each chunk's count includes its
 # auth setup — the current census; the historical re-tag blocks beneath.)
 # (S131/CF re-tag — census 567 → 570, net +3: chunk 1 +1 [the CF9
 # drawer focus-restore leg in mobile-navigation — crossing the lg

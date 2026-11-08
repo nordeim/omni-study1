@@ -4466,7 +4466,7 @@ bug is worse than the 500 it replaced); CLAUDE.md counts (correcting
 its own two-cycles-stale 605 — the s140 doc-drift class reborn); PAD
 v1.3.52 (the revision block + the §11 closure row); the SKILL census
 (both sites); the vitest header re-anchor; the cert re-tag; the plan
-§6 as-executed close; `docs/session_161.md`; this entry; the
+§6 as-executed close; `docs/session_193.md`; this entry; the
 `.env.example` contract re-verified complete against every env var the
 code reads (unchanged — the S143 verification held).
 
@@ -6168,3 +6168,122 @@ numbers — 3.07× headroom on the worst mixed shape); the I-2/I-3 riders
 (rejected as measurement-covered / documented trade-off, the options
 recorded in the plan §6); the I-4 parse-amplification posture
 (documented, S144/CS5).
+
+## Session 171 — the S160 cycle (Batch DI: the AI-routes hardening cycle)
+
+**Workspace**: WARM at `db30190` on `main` (the Batch DH fix `21efe2b`
++ the operator's session_192 transcript commit; `git pull`
+fast-forwarded docs-only). The environment verified in place (`.env`
+byte-identical to `.env.example` at the documented dev posture —
+`DATABASE_URL="file:../db/custom.db"`, the repo-root `db/`, the
+Playwright chromium cache, bun 1.3.14). **Cold baseline**: lint ✓ ·
+tsc ✓ · unit 1611→**1619/1619** (48 files — the documented S159 final
+state) · preflight GREEN · the drawer check GREEN (**the 80th
+consecutive** no-Tailwind-v4-mobile-nav-bug confirmation) · the
+desktop parity probe **MATCH** (all five formal checks, live reference
+login). The config posture re-validated for the operator's standing
+ask: the vitest/playwright/tsconfig/eslint surfaces all exclude the
+repo-included `skills/` folder from checking, testing, and
+compilation.
+
+**The audits.** A — the Batch DH recent-changes axis (`21efe2b`;
+`db30190` docs-only): **clean** (all three DH claims verified at the
+source anchors — the optional-FK rejection block, the value-parity
+census legs, the dead-ternary collapse; the doc census
+machine-verified, zero stale count sites). B — the AI routes + AI
+persistence family (the rotation's fresh axis — the family last
+deep-swept at cycle 72/session-122's BW set, the most stale family on
+the board after four consecutive export/import cycles; dispatched to
+a read-only subagent against the web-application skill's
+§3/§4/§5/§6/§7/§16/§17 rubric): **0C/0H/2M/4L/3I** — the family
+coherent, secure, and substantially well-pinned (the auth gate
+ordering, the shared 20/15-min budget on all four POST routes, the
+Zod bounds, the SDK isolation, the BW2/CA1/CB8 contracts all held);
+the findings: **M-1** generate-cards had ZERO round-trip coverage;
+**M-2** the CB8 send/refresh split pinned only for chat ("didn't
+refresh" matched zero e2e assertions — the solver/flashcards twins
+unpinned); **L-1** generate-cards' `$transaction` lacked the siblings'
+CE9 timeout; **L-2** `aiChatSchema` accepted an all-assistant payload
+→ a content-less user row; **L-3** the shared `ai:${user.id}`, 20 form
+not machine-pinned per route; **L-4** `AiChatMessageRow.updatedAt`
+typed but never delivered by the messages GET. The round-trip
+compatibility verdict: COMPATIBLE (the only wire-vs-type drift was
+L-4). No measurement-gated candidate this cycle.
+
+**The fixes (TDD, the unit REDs 2/2 on their designed markers — the
+DI2 refine leg + the DI3 tx-timeout census leg RED pre-DI1 on
+generate-cards; the DI3 budget-key census leg green-on-arrival, the
+guard; the DI4 e2e RED proven both directions — the CA1-extension's
+updatedAt assertion failed against the pre-DI4 build, GREEN post-fix):**
+
+- **DI1 — the generate-cards tx deadline (the L-1 close,
+  mechanism-corrected).** The audit's "rides Prisma's 5 s interactive
+  default" was imprecise — the ARRAY overload's options accept only
+  `isolationLevel` (tsc names it), so the pre-fix shape carried NO
+  deadline at all. The fix converts to the INTERACTIVE form with
+  `{ timeout: 15_000 }` (both siblings' form), bounding the whole
+  20-create write; the 201 wire unchanged.
+- **DI2 — the aiChatSchema user-message refine (the L-2 close).** At
+  least one user message required — the named 400 at the parse
+  boundary; the route's `lastUserMessage` `""` fallback unreachable;
+  no client impact (the client always appends a trailing user turn).
+- **DI3 — the AI-routes source census (the L-3 + L-1 machine guard;
+  tests/ai-routes-census.test.ts NEW).** Every AI POST route carries
+  the exact shared budget form; every tx-carrying route pairs the CE9
+  timeout option — a forked key/limit or a bare `$transaction` fails
+  the unit layer.
+- **DI4 — the updatedAt wire reconciliation (the L-4 close).** The
+  messages GET map gains the field — the wire honors the store type
+  (the generic fetchAndSet flows the wire verbatim; the factory GETs
+  already returned full rows).
+- **DI5 — the CB8 solver/flashcards twin pins (the M-2 close).** The
+  chat pin's exact shape on the two unpinned surfaces: mock the send
+  SUCCESS, abort the refresh, assert the honest soft toast + the
+  ABSENCE of the false-failure toast (no LLM, no budget).
+- **DI6 — the generate-cards pre-LLM wire pin (the M-1 close).** One
+  fresh TEST-NET user: the anon 401, the count-bound 400, the
+  foreign-deck 404 with the named copy — the route's
+  auth/validation/ownership boundary pinned at the wire for the first
+  time. The LLM-side residual documented with its reasoning.
+
+**Gates.** lint ✓ · tsc ✓ · unit **1622/1622** (49 files, +3 exactly
+as designed) · build ✓ · the remediated-tree re-confirmation:
+preflight GREEN (the S9/S31 stale-cache remedy applied) · drawer GREEN
+(**the 81st consecutive**) · parity **MATCH** · the 5-chunk cold cert:
+chunk 1 **154/154** (+2, the DI5 twins, first-pass clean) · chunk 2
+**189/189** · chunk 3 **92/92** (+1, the DI6 wire pin) · chunk 4
+**95/95** · chunk 5 **89/89** — **all five chunks first-pass clean,
+zero flakes, the cert tally 619/619** = **census 2241 green** (was
+2235). A tooling find on the way: a combined 3-spec direct run tripped
+the P1008 socket-timeout machine-load class (the heavy write legs fail
+fast under combined load on this sandbox) — the serial per-file runs
+and the one-server-boot-per-chunk cert are the load-safe shapes,
+exactly why the chunked map exists.
+
+**Evidence.** The `docs/screenshots/160-clone-*.png` frames (the
+standing desktop + the mobile drawer [the 81st drawer-GREEN companion]
++ the cycle's Flashcards surface — the AI Generate route this cycle
+hardened), self-verifying (ok: true; the non-blank pixel ratios
+verified: 22.3% / 41.4% / 11.2%).
+
+**Docs.** README badge/census (2235 → 2241) + the count prose sites +
+the Session-160 row; AGENTS census (1619 → 1622) + the
+security-hardening row extension + the S160 lessons block (three
+lessons: the array-vs-interactive typing fact; the family-level
+pinning asymmetry; the hand-written-map type-vs-wire lie); CLAUDE
+counts + the contract extension; PAD v1.3.68 (the revision block);
+the SKILL census (all four sites) + the green-state + the chunk-map
+re-anchor; the vitest header re-anchor (+3); the cert runner re-tag
+(616 → 619); `docs/session_193.md`; this entry; the plan §9
+as-executed close; the `.env.example` contract re-verified (no
+env-var reads changed this cycle — .env and .env.example byte-identical
+at the documented dev posture).
+
+**Next cycle.** The rotation continues — the recorded deferrals: the
+A-M3 stage-2 (re-measure only if the hardware or the row cap
+changes); the update-side raw-SQL bulk upsert (closed HARDER on the
+DH0 numbers); the S159 plan §6 options (rejected as
+measurement-covered / documented trade-off); the I-4 parse posture
+(documented); the M-1 LLM-side residual (the generate-cards 502/201
+legs — documented, bounded by the unit-pinned parse atoms + the DI5
+client-path coverage).

@@ -88,18 +88,42 @@ export const POST = withUser(async (user, request) => {
       return errorResponse(502, "The assistant's reply was not usable card data. Try again.");
     }
 
+    // S160/DI1 (the s160 audit B/L-1, mechanism-corrected): the card create
+    // converts to the INTERACTIVE transaction form with the explicit CE9
+    // timeout. The pre-DI1 array form carried NO deadline at all — the
+    // array overload's options accept only isolationLevel, so a hung
+    // create (disk stall, lock contention) held the request open until the
+    // client's own 120 s timeout. The interactive form bounds the whole
+    // 20-create write at 15 s, matching both siblings (chat's pair write,
+    // solve's pair write — the S130/CE9 doctrine).
     const created = await db.$transaction(
-      parsed.data.map((card) =>
-        db.flashcard.create({
-          data: {
-            deckId: deck.id,
-            front: card.front,
-            back: card.back,
-            difficulty: "medium",
-            mastered: false,
-          },
-        }),
-      ),
+      async (tx) => {
+        const rows: Array<{
+          id: string;
+          deckId: string;
+          front: string;
+          back: string;
+          difficulty: string;
+          mastered: boolean;
+          createdAt: Date;
+          updatedAt: Date;
+        }> = [];
+        for (const card of parsed.data) {
+          rows.push(
+            await tx.flashcard.create({
+              data: {
+                deckId: deck.id,
+                front: card.front,
+                back: card.back,
+                difficulty: "medium",
+                mastered: false,
+              },
+            }),
+          );
+        }
+        return rows;
+      },
+      { timeout: 15_000 },
     );
 
     return NextResponse.json({ cards: created }, { status: 201 });

@@ -1645,3 +1645,62 @@ test.describe("S139/CN2+CN4+CN10 · the cross-user import/factory wire pins", ()
     }
   });
 });
+
+// ---------------------------------------------------------------------------
+// S160/DI6 · the generate-cards wire pins (the s160 audit B/M-1): the route
+// had ZERO round-trip coverage ("generate-cards" matched no test anywhere)
+// while its three siblings were each pinned at the wire. This describe pins
+// the route's PRE-LLM boundary — the auth gate, the Zod bound, the
+// ownership-scoped findFirst — none of which touches the external LLM
+// service (the e2e environment must not depend on it). One fresh TEST-NET
+// user (the CN registerFreshUser helper, probe IP 192.0.2.139 — the file's
+// per-IP total becomes 4/10, registerGlobal 4/40; the demo import budget
+// untouched). The fresh user's ai: budget spends 2 of 20 (the 404 + 400
+// legs; the 401 leg is pre-auth). The honest residual (documented in the
+// plan §7): the LLM-side legs (the 502 garbage-reply parse fallback, the
+// 201 happy-path create) stay unpinned — the parse atoms are individually
+// unit-pinned and the client's 201 consumption is covered by the DI5
+// flashcards twin.
+// ---------------------------------------------------------------------------
+test.describe("S160/DI6 · the generate-cards pre-LLM wire boundary", () => {
+  test.use({ storageState: { cookies: [], origins: [] } });
+
+  test("anon 401 · the count bound 400 · the foreign-deck 404 (one fresh user)", async ({ page, browser }) => {
+    await registerFreshUser(page, "di6-cards");
+    const demo = await browser.newContext({ storageState: "tests/e2e/.auth/user.json" });
+    try {
+      // The anon gate: the limiter sits AFTER auth (the s14 C1 anon
+      // convention, extended to the unpinned route).
+      const anon = await page.request.post("/api/ai/generate-cards", {
+        data: { deckId: "any", count: 8 },
+        headers: { cookie: "" },
+        maxRedirects: 0,
+      });
+      expect(anon.status()).toBe(401);
+
+      // The count bound: the Zod 1..20 limit answers 400 at the parse
+      // boundary (the pre-LLM validation — no LLM call is made).
+      const overCount = await page.request.post("/api/ai/generate-cards", {
+        data: { deckId: "any-deck-id", count: 21 },
+      });
+      expect(overCount.status()).toBe(400);
+
+      // The foreign-deck 404: the DEMO user's seeded deck id, POSTed as
+      // the fresh user's deckId — the ownership-scoped findFirst
+      // ({ id, userId }) finds nothing → the named 404 copy (the route's
+      // userId-scoped WHERE, pinned at the wire for the first time).
+      const decks = await demo.request.get("/api/flashcards/decks");
+      expect(decks.ok(), `demo decks read failed: ${decks.status()}`).toBe(true);
+      const deckList = (await decks.json()) as Array<{ id: string }>;
+      expect(deckList.length, "the seed must carry at least one demo deck").toBeGreaterThan(0);
+      const foreign = await page.request.post("/api/ai/generate-cards", {
+        data: { deckId: deckList[0].id, count: 8 },
+      });
+      expect(foreign.status()).toBe(404);
+      const body = (await foreign.json()) as { error: string };
+      expect(body.error).toContain("That deck does not exist.");
+    } finally {
+      await demo.close();
+    }
+  });
+});

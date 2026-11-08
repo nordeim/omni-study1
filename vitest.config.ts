@@ -1,8 +1,24 @@
 import { defineConfig } from "vitest/config";
 import path from "node:path";
 
-// Unit-test layer for the pure domain seams — 48 files / 1619 tests
-// (re-anchored S159/DH — the optional-FK-mirror + value-parity-census
+// Unit-test layer for the pure domain seams — 49 files / 1622 tests
+// (re-anchored S160/DI — the AI-routes hardening cycle: census 1619 →
+// 1622, +3 net [validation +1: the S160/DI2 aiChatSchema user-message
+// refine — an all-assistant payload now answers the NAMED 400 at the
+// parse boundary instead of persisting a content-less user row through
+// the chat route's lastUserMessage fallback; ai-routes-census +2: the
+// S160/DI3 AI-family source census — every AI POST route carries the
+// exact shared checkRateLimit(`ai:${user.id}`, 20) budget form (a
+// forked key/limit on ANY route fails loudly — previously pinned only
+// through the chat-route e2e exhaustion leg) and every tx-carrying AI
+// route pairs each $transaction with the CE9 { timeout: 15_000 } option
+// (RED pre-DI1 on generate-cards, the audit's L-1)]. The e2e census
+// moves 616 → 619 [+3: the S160/DI5 CB8 solver/flashcards twins in
+// parity-session8 + the S160/DI6 generate-cards pre-LLM wire pin in
+// resilience — the route's auth/validation/ownership boundary pinned at
+// the wire for the first time].)
+//
+// (prior re-anchor, S159/DH — the optional-FK-mirror + value-parity-census
 // cycle: census 1611 → 1619, +8 net [data-import +8: the S159/DH1
 // optional-FK non-string rejection family — the CJ4 mirror at the
 // optional boundary (a number/boolean/object optional-FK value now

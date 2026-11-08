@@ -489,6 +489,7 @@ test.describe("S126/CA1 · the AI transcript window is the newest 500", () => {
 
     const messages = (await (await request.get("/api/ai/messages")).json()) as Array<{
       id: string;
+      updatedAt: string;
     }>;
     // RED pre-fix: length 500 but the OLDEST window (row[0] = msg-0).
     expect(messages.length).toBe(500);
@@ -497,6 +498,13 @@ test.describe("S126/CA1 · the AI transcript window is the newest 500", () => {
     );
     expect(messages[499].id).toBe("s126-ca1-msg-504");
     expect(messages.some((m) => m.id === "s126-ca1-msg-0")).toBe(false);
+    // S160/DI4 (the s160 audit B/L-4): updatedAt is ON the wire — the
+    // AiChatMessageRow store type has declared it since the slice existed
+    // while the hand-written GET map omitted it (the factory GETs return
+    // full rows; the AI GET joins the convention). RED pre-DI4: the field
+    // was undefined on every row.
+    expect(messages[0].updatedAt).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/);
+    expect(messages[499].updatedAt).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/);
   });
 });
 

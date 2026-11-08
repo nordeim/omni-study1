@@ -512,6 +512,47 @@ describe("aiChatSchema", () => {
       aiChatSchema.safeParse({ messages: [{ role: "user", content: "" }] }).success,
     ).toBe(false);
   });
+
+  // S160/DI2 (the s160 audit B/L-2): the all-assistant payload is REJECTED —
+  // the chat route's lastUserMessage fallback would otherwise persist a
+  // content-less user row (userContent: ""). The client always appends a
+  // trailing user message, so only crafted API payloads ever hit the refine;
+  // the mixed transcript-replay shape (the client's own) stays legal.
+  it("rejects an all-assistant payload while the mixed replay shape stays legal (S160/DI2)", () => {
+    const result = aiChatSchema.safeParse({
+      messages: [
+        { role: "assistant", content: "hello" },
+        { role: "assistant", content: "still no user" },
+      ],
+    });
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      const message = result.error.issues.map((i) => i.message).join(" ");
+      expect(message).toContain("at least one message from you");
+    }
+    // The legal mixed history (a transcript replay ending in a user turn —
+    // the client's own payload shape) parses clean.
+    expect(
+      aiChatSchema.safeParse({
+        messages: [
+          { role: "user", content: "earlier question" },
+          { role: "assistant", content: "earlier answer" },
+          { role: "user", content: "the new turn" },
+        ],
+      }).success,
+    ).toBe(true);
+    // A user message anywhere in the payload satisfies the refine — the
+    // route's [...messages].reverse().find(role === "user") becomes
+    // unreachable-empty by validation.
+    expect(
+      aiChatSchema.safeParse({
+        messages: [
+          { role: "user", content: "the only turn" },
+          { role: "assistant", content: "the reply" },
+        ],
+      }).success,
+    ).toBe(true);
+  });
 });
 
 describe("mathSolveSchema", () => {
