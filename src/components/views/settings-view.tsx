@@ -1244,7 +1244,13 @@ function SignOutCard() {
     try {
       await apiSend("POST", "/api/auth/logout");
     } catch {
-      // clearing the cookie client-side still ends the session UX
+      // S161/DJ6 (comment honesty, the s161 audit B/F-6): a failed logout
+      // POST leaves the session alive server-side — the cookie is httpOnly,
+      // so no client-side clearing exists (or could). The redirect still
+      // exits the UX (no loop: /login has no authed-user gate), and any
+      // authed surface's next /api/auth/me answers 401 only after the
+      // cookie expires or a later logout succeeds. The theme cache is
+      // cleared in the finally either way (the sign-out hygiene, S11).
     } finally {
       useThemeStore.getState().clearThemeCache();
       window.location.replace("/login");

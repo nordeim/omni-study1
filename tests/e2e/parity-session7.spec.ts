@@ -606,6 +606,75 @@ test.describe("S7-AD · the Notes rich-text editor (Batch AD)", () => {
   });
 });
 
+// S161/DJ1 (the s161 audit B/F-1): the notes tag-mutation failure feedback.
+// The S151/CZ1 rewire moved the tags onto the per-note chain but dropped
+// the pre-CZ error catch — setNoteTags REJECTS to the caller by design
+// (data.ts: "the CALLER still gets the real rejection"), so an
+// offline/flaky PATCH discarded the rejection entirely: the draft was
+// already cleared, nothing landed in the store, NO toast fired (the
+// exact "input cleared, nothing happened, no reason" class S150/CY3
+// fixed for these handlers' validation guards), plus an unhandled
+// promise rejection. The CB8-twin network-mock shape: abort the note
+// PATCH, add a tag through the real input, assert the honest failure
+// toast IS visible. RED pre-fix: no toast ever fired.
+test.describe("S161/DJ1 · the notes tag failure surfaces (Batch DJ)", () => {
+  test("a failed tag PATCH toasts the honest failure (never the silent drop)", async ({ page }) => {
+    await page.goto("/Notes");
+    await hydrated(page);
+    await page.getByRole("button", { name: /Dot product intuition/ }).first().click();
+    // The tag PATCH fails (the flaky-network condition).
+    await page.route("**/api/notes/*", (route) =>
+      route.fulfill({ status: 503, contentType: "application/json", body: JSON.stringify({ error: "Service unavailable." }) }),
+    );
+    const tagInput = page.locator('input[placeholder="Add tag..."]');
+    await tagInput.fill("s161-dj1-probe");
+    await tagInput.press("Enter");
+    // The honest failure toast lands through the aria-live stack (the
+    // ApiError message surfaces — a 503 body carries one).
+    await expect(page.getByText("Service unavailable.")).toBeVisible({ timeout: 10_000 });
+    // The draft stays cleared (the CY3 honesty: the toast explains the
+    // drop; the input does not resurrect the typed tag).
+    await expect(tagInput).toHaveValue("");
+  });
+});
+
+// S161/DJ2 (the s161 audit B/F-2): the timetable band hand-guard. The
+// S127/CB6b min/max attributes never bound the TYPED path — the form
+// carries noValidate, which disables all interactive constraint
+// validation on submission, so a typed 06:30 start submitted cleanly
+// and the class then matched no HOURS row (7..20): it silently VANISHED
+// from the desktop week grid (perceived data loss on the primary
+// surface). The submit() hand-guard owns the band now. RED pre-fix: the
+// dialog closed with "Class added." and the class was gone from the
+// grid.
+test.describe("S161/DJ2 · the timetable band hand-guard (Batch DJ)", () => {
+  test("a typed out-of-band start answers the named error and never POSTs", async ({ page }) => {
+    await page.goto("/Timetable");
+    await hydrated(page);
+    await page.getByRole("button", { name: "Add Class" }).first().click();
+    await page.locator("#class-name").fill("S161-DJ2 probe");
+    // TYPE the out-of-band start — page.fill bypasses the picker UI (the
+    // exact surface the inert min/max never bound).
+    await page.locator("#class-start").fill("06:30");
+    await page.locator("#class-end").fill("07:30");
+    // No POST may fire: a route probe counts the timetable writes.
+    let posts = 0;
+    await page.route("**/api/timetable**", (route) => {
+      if (route.request().method() !== "GET") posts += 1;
+      return route.continue();
+    });
+    // The dialog's submit is "Add class" (lowercase c — the S120/BU9
+    // measured copy; exact:true discriminates it from the toolbar's
+    // "Add Class" that opened the dialog).
+    await page.getByRole("button", { name: "Add class", exact: true }).click();
+    // The named inline error surfaces (the DA2 human copy), the dialog
+    // STAYS OPEN, and the count probe reads zero writes.
+    await expect(page.getByText("Classes must start between 7 AM and 8 PM.")).toBeVisible();
+    await expect(page.getByRole("dialog")).toBeVisible();
+    expect(posts).toBe(0);
+  });
+});
+
 test.describe("S7-AD · the Flashcards study mode rework (Batch AD)", () => {
   test("AD8/AD9: study renders IN-PAGE (no fixed overlay) with the black Exit Study + '1 / 1' counter (S126/CA6 re-anchor)", async ({ page }) => {
     await page.goto("/Flashcards");

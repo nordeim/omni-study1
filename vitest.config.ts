@@ -1,22 +1,31 @@
 import { defineConfig } from "vitest/config";
 import path from "node:path";
 
-// Unit-test layer for the pure domain seams — 49 files / 1622 tests
-// (re-anchored S160/DI — the AI-routes hardening cycle: census 1619 →
-// 1622, +3 net [validation +1: the S160/DI2 aiChatSchema user-message
-// refine — an all-assistant payload now answers the NAMED 400 at the
-// parse boundary instead of persisting a content-less user row through
-// the chat route's lastUserMessage fallback; ai-routes-census +2: the
-// S160/DI3 AI-family source census — every AI POST route carries the
-// exact shared checkRateLimit(`ai:${user.id}`, 20) budget form (a
-// forked key/limit on ANY route fails loudly — previously pinned only
-// through the chat-route e2e exhaustion leg) and every tx-carrying AI
-// route pairs each $transaction with the CE9 { timeout: 15_000 } option
-// (RED pre-DI1 on generate-cards, the audit's L-1)]. The e2e census
-// moves 616 → 619 [+3: the S160/DI5 CB8 solver/flashcards twins in
-// parity-session8 + the S160/DI6 generate-cards pre-LLM wire pin in
-// resilience — the route's auth/validation/ownership boundary pinned at
-// the wire for the first time].)
+// Unit-test layer for the pure domain seams — 50 files / 1632 tests
+// (re-anchored S161/DJ — the FE/views hardening cycle: census 1622 →
+// 1632, +10 net [enum-single-source +6: the S161/DJ3 view enum
+// single-source census — every view that renders a schema-enum's
+// options must import it from validation.ts and declare no local twin
+// (RED pre-fix on the exams-view EXAM_TYPES twin — the exact S127/CB9
+// drift class; the assignments/settings siblings green-on-arrival, the
+// guards); theme +2: the S161/DJ4 dark-edge token family pins — all 7
+// accents emit --sf-primary-edge-dark at the 800-level step of their
+// own hue family, violet exactly the measured violet-800; hue-tokens +2:
+// the VIOLET_RESIDUALS closure pin (the register is EMPTY and stays
+// empty — the harmonization pass executed) + the treated-dark-half
+// census (the four migrated sites pinned to their edge-dark utilities)].
+// The e2e census moves 619 → 623 [+4: the S161/DJ1 notes tag-failure
+// toast + the S161/DJ2 timetable band hand-guard in parity-session7 +
+// the S161/DJ4 dark-accent leg in theme-system + the S161/DJ5 slider
+// resync pageerror-free pin in resilience]. The theme-cache 19-token
+// census re-tags in the same lockstep.)
+//
+// (prior re-anchor, S160/DI — the AI-routes hardening cycle: census
+// 1619 → 1622, +3 net [validation +1: the S160/DI2 aiChatSchema
+// user-message refine; ai-routes-census +2: the S160/DI3 AI-family
+// source census]; the e2e census moved 616 → 619 [+3: the S160/DI5 CB8
+// solver/flashcards twins + the S160/DI6 generate-cards pre-LLM wire
+// pin].)
 //
 // (prior re-anchor, S159/DH — the optional-FK-mirror + value-parity-census
 // cycle: census 1611 → 1619, +8 net [data-import +8: the S159/DH1

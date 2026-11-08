@@ -476,15 +476,40 @@ export function NotesView() {
     // is idempotent (the belt-and-braces dedupe): a double-Enter on the
     // same tag inside the window appends nothing when the fresh base
     // already carries it.
-    void mutations.setNoteTags(selected.id, (tags) =>
+    // S161/DJ1 (the s161 audit B/F-1): and the transport failure speaks
+    // too — the S151/CZ1 rewire dropped the pre-CZ error catch:
+    // setNoteTags REJECTS to the caller by design (data.ts — "the CALLER
+    // still gets the real rejection"), so an offline/flaky PATCH discarded
+    // the rejection entirely — the draft was already cleared, nothing
+    // landed in the store, no toast fired (the exact "input cleared,
+    // nothing happened, no reason" class S150/CY3 fixed for these
+    // handlers' validation guards, plus an unhandled promise rejection —
+    // the S118/BS9 class). Both tag mutations now route through
+    // mutateTags — the patchSelected shape (the AG6 departed-note guard):
+    // the id is captured before the async op and the toast only lands if
+    // the user hasn't switched notes.
+    void mutateTags(selected.id, (tags) =>
       tags.includes(tag) ? tags : [...tags, tag]);
   };
 
   const removeTag = (tag: string) => {
     if (!selected) return; // the addTag guard's twin
-    // S151/CZ1: the remove twin — the effect declaration, the chain's
-    // fresh base (see addTag).
-    void mutations.setNoteTags(selected.id, (tags) => tags.filter((t) => t !== tag));
+    // S161/DJ1: the remove twin rides the same catch (see addTag).
+    void mutateTags(selected.id, (tags) => tags.filter((t) => t !== tag));
+  };
+
+  const mutateTags = async (
+    noteId: string,
+    update: (tags: string[]) => string[],
+  ) => {
+    try {
+      await mutations.setNoteTags(noteId, update);
+    } catch (err: unknown) {
+      // The AG6/AH2 surface-lie guard: a rejection that settles after the
+      // user switched notes must not toast onto the NEW note's surface.
+      if (selectedIdRef.current !== noteId) return;
+      toast.error(err instanceof ApiError ? err.message : "Tag not saved — check your connection.");
+    }
   };
 
   // The Quill wrapper debounces its own change events (autosave superset);
@@ -733,7 +758,7 @@ export function NotesView() {
                   className={cn(
                     "block w-full rounded-xl border-2 p-3 text-left outline-none transition-colors focus-visible:ring-2 focus-visible:ring-sf-primary/40",
                     effectiveNoteId === note.id
-                      ? "border-sf-primary-edge bg-sf-primary-softest dark:border-violet-900 dark:bg-slate-800"
+                      ? "border-sf-primary-edge bg-sf-primary-softest dark:border-sf-primary-edge-dark dark:bg-slate-800"
                       : "border-transparent bg-slate-50 hover:border-slate-200 dark:bg-slate-800/50 dark:hover:border-slate-700",
                   )}
                 >

@@ -9,9 +9,9 @@ High-signal instructions for coding agents working in this repo. Everything here
 | `bun install` | Install deps (Bun ≥ 1.3) |
 | `bun run dev` | Dev server on :3000 (Turbopack), logs tee'd to `dev.log` |
 | `bun run lint` / `bun run typecheck` | ESLint / `tsc --noEmit` — both must be clean |
-| `bun run test` | Vitest unit layer (1622 tests; `*.test.ts` only — never picks up e2e specs) |
+| `bun run test` | Vitest unit layer (1632 tests; `*.test.ts` only — never picks up e2e specs) |
 | `bun run build` | Production build → `.next/standalone` (**required before e2e**) |
-| `bun run test:e2e` | Playwright vs the standalone build on :3100 with `db/e2e.db` (619 tests across the 5-chunk cold map — 154+189+92+95+89, 30 spec files; a single-process full run trips the register rate-limiter budget by design, the chunked map re-boots the server per chunk). NOTE (S45, the day-boundary lesson): the global setup re-seeds every run, but the seed's IDEMPOTENT UPSERTS do NOT refresh day-relative dates on existing rows — a scratch `db/e2e.db` that ages across a UTC midnight keeps its original day-relative dates (today's tasks, the +1-day exam badge, the due-in pills, the import round-trip dates each read one day stale → 4 deterministic failures in parity-session6/parity-session9/s23-import). Delete `db/e2e.db` when a run crosses a day boundary — the global setup re-creates it fresh with current dates. NOTE (S46, TWO more aged-scratch-db classes + a build-input one): (1) ALWAYS run e2e COLD — S131/CF5 chained `scripts/e2e-cold-reset.sh` into `bun run test:e2e` (port-guard + `rm -f db/e2e.db` BEFORE playwright boots anything — global-setup is TOO LATE: Playwright starts the webServer before globalSetup), so the default runner self-colds; any DIRECT `playwright test` invocation still needs the manual `rm -f db/e2e.db` before every full run: the s23-import round-trip posts a FIXED-id envelope, so a second consecutive run against the aged db reads `created: 0, updated: 1` instead of `created: 1, updated: 0` and fails — not just across midnights, across ANY re-run; (2) the s22 negative-spawn spec reads the BUNDLED `.env` — Next's standalone output COPIES the repo-root `.env` into `.next/standalone/.env` at build time, so a REAL AUTH_SECRET in the dev `.env` leaks into the bundle and the guard CORRECTLY boots (the spec times out waiting for the exit) — keep the repo-root `.env`'s AUTH_SECRET EMPTY (the `.env.example` dev posture: `AUTH_SECRET=""` — dev falls back to the local constant with the boot warning) when building for e2e |
+| `bun run test:e2e` | Playwright vs the standalone build on :3100 with `db/e2e.db` (623 tests across the 5-chunk cold map — 154+192+93+95+89, 30 spec files; a single-process full run trips the register rate-limiter budget by design, the chunked map re-boots the server per chunk). NOTE (S45, the day-boundary lesson): the global setup re-seeds every run, but the seed's IDEMPOTENT UPSERTS do NOT refresh day-relative dates on existing rows — a scratch `db/e2e.db` that ages across a UTC midnight keeps its original day-relative dates (today's tasks, the +1-day exam badge, the due-in pills, the import round-trip dates each read one day stale → 4 deterministic failures in parity-session6/parity-session9/s23-import). Delete `db/e2e.db` when a run crosses a day boundary — the global setup re-creates it fresh with current dates. NOTE (S46, TWO more aged-scratch-db classes + a build-input one): (1) ALWAYS run e2e COLD — S131/CF5 chained `scripts/e2e-cold-reset.sh` into `bun run test:e2e` (port-guard + `rm -f db/e2e.db` BEFORE playwright boots anything — global-setup is TOO LATE: Playwright starts the webServer before globalSetup), so the default runner self-colds; any DIRECT `playwright test` invocation still needs the manual `rm -f db/e2e.db` before every full run: the s23-import round-trip posts a FIXED-id envelope, so a second consecutive run against the aged db reads `created: 0, updated: 1` instead of `created: 1, updated: 0` and fails — not just across midnights, across ANY re-run; (2) the s22 negative-spawn spec reads the BUNDLED `.env` — Next's standalone output COPIES the repo-root `.env` into `.next/standalone/.env` at build time, so a REAL AUTH_SECRET in the dev `.env` leaks into the bundle and the guard CORRECTLY boots (the spec times out waiting for the exit) — keep the repo-root `.env`'s AUTH_SECRET EMPTY (the `.env.example` dev posture: `AUTH_SECRET=""` — dev falls back to the local constant with the boot warning) when building for e2e |
 | `node scripts/capture-studyflow.mjs` | Refresh all 31 `docs/screenshots/` captures from the dev server (24 light + 7 dark) |
 | `node scripts/dark-sweep.mjs` | Dark-mode contrast audit over all 20 views (flashbulb/unreadable detector). S27: sets dark mode through the settings API (the real lifecycle) and SELF-VERIFIES the precondition — fails loudly (exit 1, no findings) if the dark class is not applied; the applied mode rides the JSON envelope. Never force the class directly (the session-10 approach silently rotted after S11) |
 | `node scripts/accent-dark-sweep.mjs` | Accent × dark-mode audit (S38-extended): all 7 accents × 20 desktop views × 20 MOBILE views at 390×844 + the drawer per accent (FAIL <2.2, WARN <3.2 for accent text; the mobile records also carry scrollWidth — >390 is a finding). The S38 shape is unit-pinned anti-phantom: every view recorded EXPLICITLY on both surfaces (clean views carry empty detector arrays), the per-accent `applied` self-verified readings + `mode: "dark"` + `mobileViewport` ride the envelope, and the seam's ALL-ACCENTS + ALL-VIEWS + drawer-present guards make every silently-skipped dimension a LOUD shape-error (the pre-S38 mobile pass swept only 6 views — MOBILE_VIEWS — and the omission-means-clean recording could not distinguish "clean because measured" from "clean because never rendered") |
@@ -2807,3 +2807,55 @@ Hover-parity probing must run in Playwright, not a touch-emulating browser — v
    wire shape itself (the CA1-extension form: assert the field on the
    GET's actual response), and treat any store type without a wire
    witness as a lie until proven otherwise.
+
+## S161 lessons (Batch DJ — the FE/views hardening cycle: the tag-failure-feedback + band-hand-guard + enum-census + dark-edge-token + resync-catch set)
+
+1. **`noValidate` kills attribute-level constraint guards on the TYPED
+   path — and an attribute-presence pin proves nothing about
+   enforcement.** The S127/CB6b fix put `min="07:00" max="20:59"` on
+   the timetable start input with a comment claiming "the native
+   constraint keeps every new/edited start inside the band" — but the
+   form already carried `noValidate` (the DA2 era's answer to raw Zod
+   issue text), which disables ALL interactive constraint validation
+   on submission. The attributes bound only the PICKER UI; a typed
+   `06:30` submitted cleanly and the class VANISHED from the grid (the
+   exact perceived-data-loss class the comment said was prevented).
+   The e2e pin asserted `toHaveAttribute("min", "07:00")` — the
+   attribute existed, the guard was dead. Lesson: under `noValidate`,
+   every attribute-borne contract needs its own hand-guard in the
+   submit path (the DA2 pattern), and the pin must DRIVE the typed
+   path (`page.fill` bypasses the picker) and assert the named error +
+   the zero-POST outcome — never the attribute's presence.
+
+2. **A refactor that improves the call shape can silently drop the
+   error path — the mutation seam's rejection contract makes the
+   discard an unhandled rejection.** The S151/CZ1 rewire moved the
+   notes tags onto the per-note chain (a real correctness win — the
+   fresh post-settle base) and in the same change dropped the pre-CZ
+   error catch, because the chain "never rejects" — true for the
+   CHAIN, false for the CALLER (`setNoteTags` awaits the chained
+   promise and re-throws by design). The handler looked better than
+   ever while regressing to the exact silent-failure class the
+   previous cycle had fixed on the same lines. Lesson: when a seam
+   documents a caller-facing rejection contract, every `void`-discard
+   call site is a BS9 violation waiting for the next offline user —
+   and a wiring census that pins the CALL SHAPE (not just the seam)
+   catches the drop at the unit layer before it ships.
+
+3. **A register-guarded deferral is cheap to close and stays closed:
+   the file:line-anchored register IS the executable plan.** The
+   S135/CJ3 cycle deferred the four dark-violet sites into the
+   VIOLET_RESIDUALS register with exact file:line anchors and a
+   fifth-site negative guard; 26 cycles later, executing the
+   harmonization pass needed NO re-audit (the register named every
+   site), and the closure itself is machine-verified (the
+   empty-register pin + the treated-dark-half census). The
+   count-lockstep tripwires each fired exactly once in the same
+   change: the S3-J 18→19 entry count, the theme-cache 18→19 suffix
+   census, the hue file:line anchors (736→761 — the DJ1 block added
+   lines above the site; tripped as designed), the CZ1 census's
+   call-shape assertions. Lesson: defer family-wide changes into
+   file:line-anchored registers (never prose), close them when the
+   named condition arrives, and let the tripwires do the bookkeeping —
+   a deferral that cannot be executed verbatim later is a decision
+   that will be re-derived badly.

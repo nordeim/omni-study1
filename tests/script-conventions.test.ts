@@ -138,7 +138,11 @@ describe("the chunked cert runner's truth contract (S128/CC2)", () => {
     // S160/DI: chunk 1 152 → 154 (the DI5 CB8 solver/flashcards twins in
     // parity-session8) + chunk 3 91 → 92 (the DI6 generate-cards pre-LLM
     // wire pin in resilience) — 616 → 619.
-    expect(certSource).toContain("Expected: 154 + 189 + 92 + 95 + 89 = 619");
+    // S161/DJ: chunk 2 189 → 192 (the DJ1 notes tag-failure toast + the
+    // DJ2 timetable band hand-guard in parity-session7 + the DJ4 dark-edge
+    // accent leg in theme-system) + chunk 3 92 → 93 (the DJ5 slider
+    // resync pageerror-free pin in resilience) — 619 → 623.
+    expect(certSource).toContain("Expected: 154 + 192 + 93 + 95 + 89 = 623");
   });
 
   it("propagates a failing chunk's exit code (never a green cert on a red run)", () => {
@@ -1949,8 +1953,18 @@ describe("S151/CZ1: the notes tags wiring census (B-M1 — the updater-form chai
     expect(removeAt, "the removeTag handler exists").toBeGreaterThan(-1);
     const handlersEnd = src.indexOf("\n  return (", removeAt);
     const handlers = src.slice(addAt, handlersEnd === -1 ? undefined : handlersEnd);
-    // The chained, updater-form calls (the caller declares the effect).
-    expect(handlers).toContain("mutations.setNoteTags(selected.id, (tags) =>");
+    // S161/DJ1 rewire: the handlers declare their effects through the
+    // guarded mutateTags wrapper (the patchSelected shape — the id is
+    // captured for the departed-note guard) which rides the chained
+    // mutations.setNoteTags(noteId, update) — the caller still declares
+    // the effect; the chain still supplies the post-settle base.
+    expect(handlers).toContain("mutateTags(selected.id, (tags) =>");
+    expect(handlers).toContain("await mutations.setNoteTags(noteId, update);");
+    // S161/DJ1: the rejection surfaces — the wrapper's catch toasts through
+    // the aria-live stack behind the AG6 departed-note guard (the pre-DJ1
+    // shape discarded the chain's designed caller rejection).
+    expect(handlers).toContain("if (selectedIdRef.current !== noteId) return;");
+    expect(handlers).toContain("Tag not saved — check your connection.");
     // The absolute-array shapes are GONE (the render-snapshot PATCHes).
     expect(handlers).not.toContain("saveTags(");
     // The idempotent add updater: the fresh-base dedupe (a double-Enter on

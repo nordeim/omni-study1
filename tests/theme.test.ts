@@ -176,12 +176,18 @@ describe("accentCssVars", () => {
       // design — the dedicated key, the AO5 precedent).
       expect(vars["--sf-primary-empty"]).toBe(t.empty);
       expect(vars["--sf-primary-empty"]).toBe(t.emptyFrom);
-      // S135/CJ3: the accent-edge token joins the set (18 vars) — the
-      // 200-level border tint the three migrated violet sites ride.
+      // S135/CJ3: the accent-edge token joins the set — the
+      // 200-level border tint the migrated light-border sites ride.
       expect(vars["--sf-primary-edge"]).toBe(
         (ACCENT_TOKENS[accent] as Record<string, string | undefined>).edge,
       );
-      expect(Object.keys(vars)).toHaveLength(18);
+      // S161/DJ4: the DARK half of the edge family joins the set (19 vars)
+      // — the 800-level border tint the four migrated dark sites ride
+      // (the S135/CJ3 VIOLET_RESIDUALS harmonization pass, executed).
+      expect(vars["--sf-primary-edge-dark"]).toBe(
+        (ACCENT_TOKENS[accent] as Record<string, string | undefined>).edgeDark,
+      );
+      expect(Object.keys(vars)).toHaveLength(19);
     }
   });
 });
@@ -209,6 +215,32 @@ describe("the S135/CJ3 accent-edge token family", () => {
     expect(
       (ACCENT_TOKENS.violet as Record<string, string | undefined>).edge,
     ).toBe("221 214 254");
+  });
+});
+
+describe("the S161/DJ4 dark-edge token family", () => {
+  it("emits --sf-primary-edge-dark for every accent at the 800-level step of its own hue family", () => {
+    const EXPECTED: Record<string, string> = {
+      violet: "91 33 182", // violet-800 #5b21b6 — the measured dark-border value three of the four sites already rendered
+      blue: "30 64 175", // blue-800 #1e40af
+      green: "6 95 70", // emerald-800 #065f46
+      orange: "146 64 14", // amber-800 #92400e
+      pink: "157 23 77", // pink-800 #9d174d
+      red: "153 27 27", // red-800 #991b1b
+      teal: "17 94 89", // teal-800 #115e59
+    };
+    for (const accent of ACCENTS) {
+      expect(
+        accentCssVars(accent)["--sf-primary-edge-dark"],
+        `the ${accent} dark-edge tint`,
+      ).toBe(EXPECTED[accent]);
+    }
+  });
+
+  it("violet's edge-dark is EXACTLY violet-800 (the measured value the border sites already rendered — byte-identical at the default accent)", () => {
+    expect(
+      (ACCENT_TOKENS.violet as Record<string, string | undefined>).edgeDark,
+    ).toBe("91 33 182");
   });
 });
 

@@ -414,9 +414,19 @@ export function AssignmentsView() {
                           // refetching the collection (the fetchAndSet
                           // sequence guard makes the refresh safe; the thumb
                           // snaps back to a.progress).
-                          void useDataStore
+                          // S161/DJ5 (the s161 audit B/F-5): the resync is
+                          // BEST-EFFORT by design — loadCollections rejects
+                          // when its GET fails (most likely in exactly the
+                          // offline state that failed this commit), and the
+                          // discarded rejection surfaced as an unhandled
+                          // promise rejection ON TOP of the toast this catch
+                          // already showed (the S118/BS9 class). The failure
+                          // state is surfaced ONCE (here); the stale thumb
+                          // self-heals on the next successful load.
+                          useDataStore
                             .getState()
-                            .loadCollections(["assignments"]);
+                            .loadCollections(["assignments"])
+                            .catch(() => undefined);
                         },
                       )
                     }

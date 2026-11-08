@@ -1,4 +1,13 @@
 #!/usr/bin/env bash
+# (S161/DJ re-tag — census 619 → 623, net +4: chunk 2 +3 [the S161/DJ1
+# notes tag-failure toast pin + the S161/DJ2 timetable band hand-guard pin
+# in parity-session7 — network-mocked, no server writes; the S161/DJ4
+# dark-edge accent leg in theme-system — the CJ3 sweep's dark sibling:
+# blue + dark, the notes selected-row border computes blue-800, the
+# pre-fix violet-900]; chunk 3 +1 [the S161/DJ5 slider rollback resync
+# pageerror-free pin in resilience — the PATCH AND the resync GET abort,
+# the keyboard-committed drag, ONE toast + ZERO pageerrors]. The full DJ
+# map: docs/remediation-plan-session161.md.)
 # (S160/DI re-tag — census 616 → 619, net +3: chunk 1 +2 [the S160/DI5
 # CB8 twins in parity-session8 — the solver + flashcards refresh-failure
 # soft-toast pins, the chat leg's unpinned siblings, network-mocked, no
@@ -208,7 +217,7 @@
 # 192.0.2.139, 3/10 per-IP, 3/40 registerGlobal), the demo import
 # budget at 8/10; END-of-file, the CK1 flood pin stays TERMINAL in
 # s16]. The full CN map: docs/remediation-plan-session139.md.)
-# Expected: 154 + 189 + 92 + 95 + 89 = 619 (each chunk's count includes its
+# Expected: 154 + 192 + 93 + 95 + 89 = 623 (each chunk's count includes its
 # auth setup — the current census; the historical re-tag blocks beneath.)
 # (S131/CF re-tag — census 567 → 570, net +3: chunk 1 +1 [the CF9
 # drawer focus-restore leg in mobile-navigation — crossing the lg

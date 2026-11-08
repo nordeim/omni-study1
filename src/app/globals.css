@@ -266,6 +266,7 @@
   --color-sf-primary-strong: rgb(var(--sf-primary-strong));
   --color-sf-primary-strong-dark: rgb(var(--sf-primary-strong-dark));
   --color-sf-primary-edge: rgb(var(--sf-primary-edge)); /* S135/CJ3 — the 200-level border tint */
+  --color-sf-primary-edge-dark: rgb(var(--sf-primary-edge-dark)); /* S161/DJ4 — the 800-level dark half of the border family (the VIOLET_RESIDUALS harmonization pass) */
   --color-sf-primary-softest: rgb(var(--sf-primary-softest)); /* S135/CJ3 — the 50-level selected-row tint */
   --color-sf-primary-empty: rgb(var(--sf-primary-empty)); /* S135/CJ3 — the solid 100-level empty step (the stat-chip bg) */
 }
@@ -297,6 +298,7 @@
   --sf-primary-softest-adjacent: 238 242 255;
   --sf-primary-empty: 237 233 254;
   --sf-primary-edge: 221 214 254; /* S135/CJ3 — violet-200 #ddd6fe (the pre-hydration fallback; the boot script + accentCssVars own the runtime value) */
+  --sf-primary-edge-dark: 91 33 182; /* S161/DJ4 — violet-800 #5b21b6 (the pre-hydration fallback; the boot script + accentCssVars own the runtime value) */
   --sf-primary-gradient-to: 79 70 229;
   --sf-primary-gradient-to-strong: 67 56 202;
   --sf-primary-avatar-from: 167 139 250;

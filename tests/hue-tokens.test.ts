@@ -472,22 +472,34 @@ describe("the analytics accent tokenization (S130/CE8)", () => {
 // migrated sites to their tokens with the S92 quote-adjacency discriminator
 // (the class string, never a comment mention).
 // ---------------------------------------------------------------------------
+// S161/DJ4 — the VIOLET_RESIDUALS harmonization pass, EXECUTED: the
+// register is now EMPTY (the four dark sites converted to
+// --sf-primary-edge-dark — the 800-level dark-border token added to the
+// accent set this cycle; three of the four border values were already
+// violet-800, the notes site's violet-900 collapses to the family value —
+// the S92 divergent-variant collapse the register itself named as the
+// condition for this pass). The register STAYS as the closure pin: a
+// future hardcoded dark-violet site re-populates it and FAILS the
+// closure leg below (the fifth-site guard, generalized to every site).
 const VIOLET_RESIDUALS: ReadonlyArray<{ file: string; line: number; pattern: RegExp; why: string }> = [
-  // S150/CY3 note: the notes-view anchors moved 686 → 700 (the addTag
-  // honest-feedback block added lines above the site). S151/CZ1 note: the
-  // anchors moved 700 → 705 this cycle (the tags chain rewire — the
-  // updater-form calls + the selected guards — added lines above the
-  // site) — the anchored leg tripped as designed both times; the re-anchor
-  // is the documented census maintenance (the site itself is
-  // byte-unchanged). S152/DA1+DA2 note: the notes-view anchor moved
-  // 705 → 736 (the delete-latch state + the hand-guard added lines above
-  // the site) and the flashcards-view anchor moved 394 → 437 (the same
-  // DA1/DA2 pair) — tripped as designed again; the sites are
-  // byte-unchanged.
-  { file: "src/components/views/tasks-view.tsx", line: 115, pattern: /dark:hover:border-violet-800/, why: "the row-card hover border's DARK half (the light half rides --sf-primary-edge since S135/CJ3; no reference ground truth for dark — the clone's dark mode is the documented superset)" },
-  { file: "src/components/views/flashcards-view.tsx", line: 437, pattern: /dark:border-violet-800/, why: "the study-card face border's DARK half (the light half rides --sf-primary-edge since S135/CJ3; the 800-vs-900 divergence from notes is the S92 divergent-variant class)" },
-  { file: "src/components/views/notes-view.tsx", line: 736, pattern: /dark:border-violet-900/, why: "the selected-note row border's DARK half (the light border rides --sf-primary-edge and the bg rides --sf-primary-softest since S135/CJ3; softDark's 900 value is byte-equal but the dark-edge family waits for a uniform design pass)" },
-  { file: "src/components/views/analytics-view.tsx", line: 430, pattern: /dark:bg-violet-900\/50/, why: "the Tasks-Completed chip's DARK half (the light bg rides --sf-primary-empty since S135/CJ3; the /50 opacity serializes through the trap-7 family — a dark empty-step token would change the form)" },
+  // S135/CJ3 → S161/DJ4: the four dark halves rode violet literals for 26
+  // cycles under the register's documented deferral ("a dark-edge token
+  // family waits for a harmonization pass"); this cycle executed the pass.
+  // History: the pre-S161 anchors were tasks-view:115
+  // dark:hover:border-violet-800 · flashcards-view:437
+  // dark:border-violet-800 · notes-view:736 dark:border-violet-900 ·
+  // analytics-view:430 dark:bg-violet-900/50.
+];
+
+// The S161/DJ4 treated-dark-half census: the four migrations, pinned to
+// their edge-dark token utilities at file:line anchors (quote-adjacency —
+// the class VALUE, not a prose mention; the S92/AS1 discriminator, the
+// CJ3 treated-light-half shape mirrored).
+const EDGE_DARK_CONSUMERS: ReadonlyArray<{ file: string; line: number; pattern: RegExp; why: string }> = [
+  { file: "src/components/views/tasks-view.tsx", line: 115, pattern: /dark:hover:border-sf-primary-edge-dark/, why: "the row-card hover border's dark half (violet-800 → the edge-dark token; byte-identical at violet)" },
+  { file: "src/components/views/flashcards-view.tsx", line: 437, pattern: /dark:border-sf-primary-edge-dark/, why: "the study-card face border's dark half (violet-800 → the edge-dark token)" },
+  { file: "src/components/views/notes-view.tsx", line: 761, pattern: /dark:border-sf-primary-edge-dark/, why: "the selected-note row border's dark half (violet-900 → the family value — the S92 divergent-variant collapse; anchor 736 → 761 re-anchored S161/DJ1, the mutateTags block added lines above the site — tripped as designed)" },
+  { file: "src/components/views/analytics-view.tsx", line: 430, pattern: /dark:bg-sf-primary-edge-dark\/50/, why: "the Tasks-Completed chip's dark half (violet-900/50 → the edge-dark token at /50 — both serialize through the v4 color-mix family)" },
 ];
 
 // The S135/CJ3 treated-light-half census: the five migrations, pinned to
@@ -496,8 +508,8 @@ const VIOLET_RESIDUALS: ReadonlyArray<{ file: string; line: number; pattern: Reg
 const EDGE_CONSUMERS: ReadonlyArray<{ file: string; line: number; pattern: RegExp; why: string }> = [
   { file: "src/components/views/tasks-view.tsx", line: 115, pattern: /hover:border-sf-primary-edge/, why: "the row-card hover border" },
   { file: "src/components/views/flashcards-view.tsx", line: 437, pattern: /border-sf-primary-edge/, why: "the study-card face border" },
-  { file: "src/components/views/notes-view.tsx", line: 736, pattern: /border-sf-primary-edge/, why: "the selected-note row border" },
-  { file: "src/components/views/notes-view.tsx", line: 736, pattern: /bg-sf-primary-softest/, why: "the selected-note row tint" },
+  { file: "src/components/views/notes-view.tsx", line: 761, pattern: /border-sf-primary-edge/, why: "the selected-note row border (anchor 736 → 761 re-anchored S161/DJ1 — the mutateTags block added lines above the site; tripped as designed)" },
+  { file: "src/components/views/notes-view.tsx", line: 761, pattern: /bg-sf-primary-softest/, why: "the selected-note row tint (re-anchored with its border sibling, S161/DJ1)" },
   { file: "src/components/views/analytics-view.tsx", line: 430, pattern: /bg-sf-primary-empty/, why: "the Tasks-Completed chip" },
 ];
 
@@ -554,6 +566,24 @@ describe("the accent-semantic violet register (S134/CI8 → S135/CJ3, the dark h
         lineText,
         `${r.file}:${r.line} — the registered site must keep its dark violet class (${r.why})`,
       ).toMatch(r.pattern);
+    }
+  });
+
+  it("the S161/DJ4 closure pin — the register is EMPTY and stays empty (a re-populated entry means a NEW hardcoded dark-violet site landed unconverted)", () => {
+    expect(
+      VIOLET_RESIDUALS,
+      "the harmonization pass closed the register — a new dark-violet site joins the edge-dark token family (or this register with a why), never the literal",
+    ).toHaveLength(0);
+  });
+
+  it("the S161/DJ4 treated dark-half sites carry their edge-dark token utilities at the recorded lines (the consumer census — the class VALUE, never a comment)", () => {
+    for (const c of EDGE_DARK_CONSUMERS) {
+      const src = readConsumer(path.resolve(process.cwd(), c.file));
+      const lineText = src.split("\n")[c.line - 1];
+      expect(
+        lineText,
+        `${c.file}:${c.line} — the treated dark site must keep its edge-dark token class (${c.why})`,
+      ).toMatch(c.pattern);
     }
   });
 

@@ -183,6 +183,23 @@ export function TimetableView() {
       setError("Please pick an end time.");
       return;
     }
+    // S161/DJ2 (the s161 audit B/F-2): the band hand-guard. The S127/CB6b
+    // min/max attributes never bound the TYPED path — this form carries
+    // noValidate, which disables ALL interactive constraint validation on
+    // submission, so a typed 06:30 start submitted cleanly and the class
+    // then matched no HOURS row (7..20) — it silently VANISHED from the
+    // desktop week grid, the exact perceived-data-loss class the CB6b
+    // comment claimed the native constraint prevented. The hand-guard
+    // owns the band now (the DA2 position — before setBusy, no stranded
+    // latch). The end time keeps no band by design: an end past 20:59
+    // renders a taller card (cosmetic, the class still renders at its
+    // start hour's row) — the documented residual; the end-before-start
+    // ordering stays the server schema's check.
+    const startHour = Number(form.startTime.split(":")[0]);
+    if (startHour < 7 || startHour > 20) {
+      setError("Classes must start between 7 AM and 8 PM.");
+      return;
+    }
     setBusy(true);
     setError("");
     const payload: TimetableClassInput = {
@@ -628,14 +645,17 @@ export function TimetableView() {
                   value={form.startTime}
                   onChange={(e) => setForm((f) => ({ ...f, startTime: e.target.value }))}
                   required
-                  // S127/CB6b: the band guard — a class whose start hour
-                  // falls outside the rendered band (7 AM…8 PM) matched no
-                  // row and silently VANISHED from the desktop grid after
-                  // save (perceived data loss on the primary surface; the
-                  // mobile accordion and My Classes cards still showed
-                  // it). The native constraint keeps every new/edited
-                  // start inside the band; legacy/imported out-of-band
-                  // rows still render in the accordion + cards.
+                  // S127/CB6b → S161/DJ2: the band guard's picker half —
+                  // a class whose start hour falls outside the rendered
+                  // band (7 AM…8 PM) matched no row and silently VANISHED
+                  // from the desktop grid after save (perceived data loss
+                  // on the primary surface; the mobile accordion and My
+                  // Classes cards still showed it). HONESTY (S161/DJ2):
+                  // these min/max attributes bound ONLY the picker UI —
+                  // the form's noValidate kills them on the TYPED submit
+                  // path — the submit() hand-guard owns the band now;
+                  // legacy/imported out-of-band rows still render in the
+                  // accordion + cards.
                   min="07:00"
                   max="20:59"
                 />

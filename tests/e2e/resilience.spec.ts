@@ -1704,3 +1704,48 @@ test.describe("S160/DI6 · the generate-cards pre-LLM wire boundary", () => {
     }
   });
 });
+
+// S161/DJ5 (the s161 audit B/F-5): the assignments slider rollback resync
+// must never surface an unhandled promise rejection. The CI7d rollback
+// refetches the collection after a failed progress commit — but
+// loadCollections REJECTS when its GET fails (most likely in exactly the
+// offline state that failed the commit), and the pre-DJ5 shape discarded
+// that rejection with a bare `void` (the S118/BS9 class: an unhandled
+// rejection stacked on top of the already-shown error toast). The pin
+// drives the real double-failure condition: abort the PATCH AND the GET,
+// commit a slider drag by keyboard (Radix commits on key release), assert
+// the primary error toast IS visible AND the pageerror ledger stays
+// empty. RED pre-fix: the discarded resync rejection fires a pageerror.
+test.describe("S161/DJ5 · the slider rollback resync surfaces no unhandled rejection", () => {
+  test("a failed commit + failed resync shows the ONE toast and ZERO pageerrors", async ({ page }) => {
+    const pageErrors: string[] = [];
+    page.on("pageerror", (err) => pageErrors.push(String(err)));
+    await page.goto("/Assignments");
+    await expect(page.getByRole("heading", { name: "Assignments" })).toBeVisible();
+    // The seeded assignment rows carry the progress slider (aria-label
+    // "Progress for <title>").
+    const slider = page.getByRole("slider").first();
+    await slider.focus();
+    // Both the commit PATCH and the rollback resync GET fail (the
+    // flaky-network condition) — the trailing-star pattern covers the
+    // collection path AND the per-id path.
+    await page.route("**/api/assignments*", (route) => route.abort("failed"));
+    try {
+      await slider.press("ArrowRight");
+      // The PRIMARY failure toast fires exactly once (the commit's own
+      // catch — the honest surfacing: the abort maps to the S14 offline
+      // ApiError, whose message wins).
+      await expect(page.getByText(/progress update failed|offline/i).first()).toBeVisible({ timeout: 10_000 });
+      // Let the resync rejection window settle (the discarded promise
+      // lands well inside it).
+      await page.waitForTimeout(1500);
+      // The resync failure must NOT surface as an unhandled rejection.
+      expect(
+        pageErrors,
+        `unhandled pageerrors from the resync: ${pageErrors.join(" | ")}`,
+      ).toEqual([]);
+    } finally {
+      await page.unroute("**/api/assignments*");
+    }
+  });
+});

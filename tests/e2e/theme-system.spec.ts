@@ -420,6 +420,40 @@ test.describe("S135/CJ3 · the accent-edge token tracks the accent (the violet-2
   });
 });
 
+// S161/DJ4 — the CJ3 sweep's DARK sibling: the selected-row border's dark
+// half rides --sf-primary-edge-dark (the 800-level step of the accent's
+// own hue family) instead of the hardcoded violet-900 the S135/CJ3
+// VIOLET_RESIDUALS register deferred ("a dark-edge token family waits
+// for a harmonization pass"). This cycle executed the pass. RED pre-fix:
+// under blue + dark the border stays violet-900 rgb(76, 29, 149).
+test.describe("S161/DJ4 · the dark-edge token tracks the accent (the violet-900 border family's dark half)", () => {
+  test("the notes selected-row DARK border follows the accent: violet-900 → blue-800 (RED pre-fix: the hardcoded violet ignores the switch)", async ({ page }) => {
+    // The accent + mode switch rides the REAL settings API (the S27
+    // doctrine); the restore rides afterEach + the explicit finally PATCH.
+    await page.request.patch(PREFERENCES, { data: { accentColor: "blue", themeMode: "dark" } });
+    try {
+      await page.goto("/Notes");
+      await page.waitForFunction(() => {
+        const root = document.documentElement;
+        return (
+          root.style.getPropertyValue("--sf-primary") === "59 130 246" &&
+          root.classList.contains("dark")
+        );
+      });
+      const row = page.getByRole("button", { name: /Dot product intuition/ }).first();
+      await row.click();
+      // transition-colors races the class swap (the AD7 pin's settle note).
+      await page.waitForTimeout(300);
+      const darkBorder = await row.evaluate((el) => getComputedStyle(el).borderTopColor);
+      // RED pre-fix: the hardcoded dark:border-violet-900 stays
+      // rgb(76, 29, 149) under every accent.
+      expect(darkBorder).toContain("rgb(30, 64, 175)"); // blue-800 (--sf-primary-edge-dark at blue)
+    } finally {
+      await page.request.patch(PREFERENCES, { data: { accentColor: "violet", themeMode: "light" } });
+    }
+  });
+});
+
 test.describe("S129/CD1 · the Radix overlay animation parity (the reference-measured enter family)", () => {
   test("the Add Task dialog's overlay and content run the enter animation at the reference's 0.15s (pre-fix: none/0s — the family was inert)", async ({ page }) => {
     await page.goto("/Tasks");

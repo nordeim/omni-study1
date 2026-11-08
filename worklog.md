@@ -6287,3 +6287,125 @@ measurement-covered / documented trade-off); the I-4 parse posture
 (documented); the M-1 LLM-side residual (the generate-cards 502/201
 legs — documented, bounded by the unit-pinned parse atoms + the DI5
 client-path coverage).
+
+## Session 172 — the S161 cycle (Batch DJ: the FE/views hardening cycle)
+
+**Workspace**: COLD — a fresh `git clone` at `e8fe09f` on `main` (the
+S160/Batch DI fix `36e0554` + the operator's session_194 transcript
+commit). The environment rebuilt from the documented quickstart (`.env`
+from `.env.example` [byte-identical at the documented dev posture],
+`bun install` [510 packages], `db:push && db:seed` [the repo-root
+`db/custom.db` 389 KB], the Playwright chromium cache installed, bun
+1.3.14). **Cold baseline**: lint ✓ · tsc ✓ · unit **1622/1622** (49
+files — the documented S160 final state) · preflight GREEN · the drawer
+check GREEN (**the 82nd consecutive** no-Tailwind-v4-mobile-nav-bug
+confirmation) · the desktop parity probe **MATCH** (all five formal
+checks, live reference login). The config posture re-validated for the
+operator's standing ask: the vitest/playwright/tsconfig/eslint surfaces
+all exclude the repo-included `skills/` folder from checking, testing,
+and compilation.
+
+**The audits.** A — the Batch DI recent-changes axis (`36e0554`;
+`e8fe09f` docs-only): **clean** (all six DI claims verified at the
+source anchors — the interactive-tx deadline on all three AI routes,
+the aiChatSchema refine, the AI-routes census legs, the updatedAt map,
+the CB8 twins, the DI6 wire pin; the doc census machine-verified, zero
+stale count sites). B — the FE/views family (the rotation's fresh axis:
+last deep-swept at S151/CZ, 9 cycles stale, the most stale family on
+the board; dispatched to a read-only subagent against the
+web-application skill's §4/§9/§12/§13/§16/§17 rubric — all 23 view
+files + the 6 layout files + the auth surfaces + the data-layer seams +
+the round-trip verification): **0C/0H/2M/3L/3I** — the family coherent
+and unusually well-shaped (all 69 store selectors stable slice reads;
+no `as any`; the CB8 splits correct at all four AI sites; the
+round-trip verdict COMPATIBLE — the S160/DI4 delivery verified
+end-to-end); the findings: **M-1** the Notes tag mutations discarded
+`setNoteTags`'s designed caller rejection (the S151/CZ1 rewire dropped
+the pre-CZ catch — an offline tag add/remove was fully silent PLUS an
+unhandled promise rejection); **M-2** the Timetable band guard was
+INERT (the form's `noValidate` killed the S127/CB6b min/max on the
+TYPED path — a typed 06:30 start saved and the class silently VANISHED
+from the desktop grid); **L-1** exams-view's local EXAM_TYPES twin (the
+CB9 drift class — no single-source census pinning any of the three
+swept enums); **L-2** the four hardcoded violet DARK branches (the
+documented S135/CJ3 VIOLET_RESIDUALS deferral); **L-3** the assignments
+slider rollback resync discarded `loadCollections`' rejection (the
+S118/BS9 class). No measurement-gated candidate.
+
+**The fixes (TDD — the unit REDs 7/7 on their designed markers; all
+four e2e legs RED-proven against the pre-fix standalone build via the
+stash/rebuild/re-run sequence, GREEN post-fix):**
+
+- **DJ1 — the Notes tag-mutation error feedback (the M-1 close).** The
+  mutateTags wrapper (the patchSelected shape): the id captured before
+  the async op, the rejection toasting through the aria-live stack
+  behind the AG6 departed-note guard; the CZ1 chain semantics untouched.
+  E2e: the CB8-twin network-mock — abort the PATCH, add the tag, assert
+  the honest toast + the draft stays cleared.
+- **DJ2 — the Timetable band hand-guard (the M-2 close).** The DA2
+  position: the start hour outside 7–20 answers the named human copy;
+  the CB6b comment corrected (the native constraint never bound the
+  typed path). E2e: TYPE the out-of-band start, submit, assert the
+  named error + the open dialog + the zero-POST probe.
+- **DJ3 — the view enum single-source census (the L-1 close;
+  tests/enum-single-source.test.ts NEW).** exams-view imports the single
+  source (the twin deleted); the census pins all THREE enums — RED
+  pre-fix on the exams twin, the siblings guarded green-on-arrival.
+- **DJ4 — the dark-edge token harmonization pass EXECUTED (the L-2
+  close; the S135/CJ3 recorded deferral).** `--sf-primary-edge-dark`
+  joins the 19-var accent set at the 800-level step of each accent's
+  own hue family (violet EXACTLY the measured violet-800); the four
+  registered sites convert; the boot-script suffix list + the
+  globals.css utility + the :root fallback ride the same change; the
+  VIOLET_RESIDUALS register EMPTIES with the closure pin + the
+  treated-dark-half census. E2e: the CJ3 sweep's dark sibling — blue +
+  dark, the selected-row border computes blue-800. The count-lockstep
+  tripwires each fired exactly once in the same change (the S3-J 19
+  pin; the theme-cache 19 suffix census; the hue anchors 736→761; the
+  CZ1 census's call-shape update).
+- **DJ5 — the slider rollback resync catch (the L-3 close).** The
+  best-effort `.catch` with the honest comment. E2e: the PATCH AND the
+  resync GET abort, the keyboard-committed drag, ONE toast + the
+  ZERO-pageerror ledger.
+- **DJ6 — the SignOutCard comment honesty (the I-1 rider).** The
+  cookie-clearing claim that never existed, rewritten to the real
+  trade-off.
+
+**Gates.** lint ✓ · tsc ✓ · unit **1632/1632** (50 files, +10 exactly
+as designed) · build ✓ · the remediated-tree re-confirmation:
+preflight GREEN (the S9/S31 stale-cache remedy applied) · drawer GREEN
+(**the 83rd consecutive**) · parity **MATCH** · the 5-chunk cold cert:
+chunk 1 **154/154** · chunk 2 **192/192** (+3, first-pass clean) ·
+chunk 3 **93/93** (+1 — the AK1c/d pair flaked once on the documented
+P1008 machine-load class, 93/93 clean on the immediate re-run; the
+pair passes in isolation and touches nothing this cycle changed) ·
+chunk 4 **95/95** · chunk 5 **89/89** — the cert tally **623/623** =
+**census 2255 green** (was 2241).
+
+**Evidence.** The `docs/screenshots/161-clone-*.png` frames (the
+standing desktop + the mobile drawer [the 83rd drawer-GREEN companion]
++ the cycle's Notes surface — the DJ1/DJ4 surface), self-verifying (ok:
+true; the non-blank pixel ratios verified: 8.6% / 33.6% / 6.8%).
+
+**Docs.** README badge/census (2241 → 2255) + the count prose sites +
+the Session-161 row; AGENTS census + the e2e map re-tag + the S161
+lessons block (three lessons: the noValidate attribute-guard trap; the
+refactor-dropped-catch re-opening the silent-failure class; the
+register-guarded deferral as the executable plan); CLAUDE counts + the
+19-var token-set contract extension; PAD v1.3.69 (the revision block);
+the SKILL census (all four sites) + the green-state + the chunk-map
+re-anchor; the vitest header re-anchor (+10); the cert runner re-tag
+(619 → 623); `docs/session_195.md`; this entry; the plan §9
+as-executed close; the `.env.example` contract re-verified (no env-var
+reads changed this cycle — .env and .env.example byte-identical at the
+documented dev posture).
+
+**Next cycle.** The rotation continues — the recorded deferrals: the
+events `expandOccurrences` promotion to a `src/lib/` seam with unit
+pins (the F-7 candidate, the next events-family cycle); the files
+refresh-failure toast copy harmonization (the F-8 candidate); the S160
+close's ledger (the A-M3 stage-2 triggers; the update-side raw-SQL bulk
+upsert; the I-4 parse posture; the M-1 LLM-side residual); the
+gradetracker/studygroups/settings-CRUD and AlertDialog-confirm e2e gaps
+the audit's coverage census surfaced (the unpinned seams where both
+Mediums hid).

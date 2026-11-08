@@ -43,10 +43,16 @@ import { EmptyState, Spinner, SubjectTagChip } from "@/components/views/shared";
 import { mutations, useDataStore, type ExamInput, type ExamRow } from "@/lib/data";
 import { daysUntil } from "@/lib/date";
 import { ApiError } from "@/lib/api";
+import { EXAM_TYPES } from "@/lib/validation";
 import { fromDatetimeLocalInput, toDatetimeLocalValue } from "@/lib/date";
 import { cn } from "@/lib/utils";
 
-const EXAM_TYPES = ["test", "quiz", "midterm", "final", "oral", "practical"];
+// S161/DJ3 (the s161 audit B/F-3): the type vocabulary imports
+// validation.ts's single source — the local value-equal twin was the exact
+// S127/CB9 drift class (the assignments twin missed "worksheet" and
+// blanked the Edit select on seeded rows; a future schema value would 400
+// from this dialog while the server accepts it). Machine-guarded by the
+// tests/enum-single-source.test.ts census.
 
 function urgency(row: ExamRow): { text: string; className: string } {
   const diff = daysUntil(new Date(row.date), new Date());
