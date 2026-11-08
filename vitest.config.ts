@@ -1,8 +1,33 @@
 import { defineConfig } from "vitest/config";
 import path from "node:path";
 
-// Unit-test layer for the pure domain seams — 48 files / 1611 tests
-// (re-anchored S158/DG — the keyset-batched-reads cycle: census 1604 →
+// Unit-test layer for the pure domain seams — 48 files / 1619 tests
+// (re-anchored S159/DH — the optional-FK-mirror + value-parity-census
+// cycle: census 1611 → 1619, +8 net [data-import +8: the S159/DH1
+// optional-FK non-string rejection family — the CJ4 mirror at the
+// optional boundary (a number/boolean/object optional-FK value now
+// answers the NAMED 400 at validateImportEnvelope instead of riding to
+// Prisma's generic "fields do not match" — 3 rejection legs + the
+// null/undefined acceptance guards proving the SetNull semantics and
+// the update-branch untouched case survive, + the parseImportEnvelope
+// delegation leg) and the S159/DH2 length-cap VALUE-parity census — the
+// IMPORT_FIELD_LENGTHS mirror made self-guarding against its FIVE
+// hand-mirrored source sites (validation.ts's boundedTitle/jsonArray
+// atoms + per-schema .max() literals, the folders route-local atom,
+// ai.ts's PERSISTED_CONTENT_MAX, http.ts's UPLOAD_MIME_MAX_CHARS): a
+// future relaxation in ANY source trips the census before the import
+// bricks a restore the app itself minted — 3 census legs (the map
+// completeness, the validation.ts parity, the other-source parity)].
+// The e2e census stays 616 — no new e2e legs by design, the CV1
+// runtime-split precedent: the route consumes the seam's error
+// verbatim (already wired), and the S158 DG2/DG3 precedent held unit
+// pins only. The DH0 measurement probe
+// scripts/measure-import-create-s159.mjs records the create-side
+// budget numbers (0.046 ms/row creates; the worst mixed tx 19.6 s of
+// the 60 s budget — 3.07× headroom; pre-tx CPU 747 ms at the 100k-row
+// cap), rejecting the raw-SQL create sibling ON MEASUREMENT.
+//
+// (prior re-anchor, S158/DG — the keyset-batched-reads cycle: census 1604 →
 // 1611, +7 net [data-export +3: the S158/DG1 paged-reader family — the
 // multi-batch byte-identity weld (batchSize 2 pages concatenate to
 // EXACTLY the object form — the separator-across-pages correctness),

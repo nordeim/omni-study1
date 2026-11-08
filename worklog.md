@@ -6056,3 +6056,115 @@ ever presses the 60 s budget), the A-M3 stage-2 (re-measure only if
 the hardware or the row cap changes), the I-2 parse-amplification
 posture (documented), the import's create-side raw-SQL sibling (the
 same measurement gate).
+
+## Session 170 — the S159 cycle (Batch DH: the optional-FK-mirror + value-parity-census cycle)
+
+**Workspace**: COLD — a fresh `git clone` at `6cf1167` on `main` (the
+Batch DG fix `3103b8b` + the operator's session_190 transcript commit);
+the environment rebuilt (`.env` from the byte-identical `.env.example`,
+`bun install`, `db:push && db:seed` → the repo-root `db/custom.db`, the
+Playwright chromium cache restored). **Cold baseline**: lint ✓ · tsc ✓ ·
+unit 1611/1611 (48 files — the documented S158 final state) · preflight
+GREEN · the drawer check GREEN (**the 78th consecutive**
+no-Tailwind-v4-mobile-nav-bug confirmation) · the desktop parity probe
+**MATCH** (all five formal checks, live reference login). The config
+posture re-validated for the operator's standing ask: the
+vitest/playwright/tsconfig/eslint surfaces all exclude the repo-included
+`skills/` folder from checking, testing, and compilation.
+
+**The audits.** A — the Batch DG recent-changes axis (`3103b8b`;
+`6cf1167` docs-only): **clean** (all three DG claims verified at the
+source anchors — the paged-reader contract, the scoped updates, the
+both-branches input reset; the doc census machine-verified, zero stale
+count sites). B — the import create-path family (the S158 close's
+recorded rotation; dispatched to a read-only subagent against the
+web-application skill's §3/§4/§6/§7/§16/§17 rubric): **0C/0H/0M/3L/6I**
+— the family coherent, well-pinned, and secure; the findings: **L-1**
+the optional-FK non-string divergence (the seam's reference parser nulls
+a numeric `subjectId` while production's twin guard skips it → Prisma's
+generic "fields do not match" 400 — the CJ4 degradation class on the
+optional boundary); **L-2** the length-cap parity machine-enforced at
+the KEY level only, never the VALUE level (34 hand-mirrored atoms across
+five source files); **L-3** the create-side measurement gate unanswered
+in the recorded evidence. The round-trip compatibility verdict:
+COMPATIBLE, pinned (the DG1 pagination is wire-invisible).
+
+**The DH0 measurement (run FIRST — the measurement-first doctrine): the
+create-side probe** (`scripts/measure-import-create-s159.mjs`,
+committed — riding the REAL validateImportEnvelope/sanitizeImportRow
+stages and the route's exact tx shapes against a throwaway
+`db/measure-s159.db`): the chunked createMany loop **0.046 ms/row at
+the 100k cap** (~7× cheaper than the update loop); the worst legal
+MIXED tx (50k updates + 50k creates in one 60 s transaction) **19.6 s —
+3.07× headroom**; the pre-tx CPU **747 ms** at the cap; the end-to-end
+**20.3 s of the 120 s client deadline — 5.91× headroom**. **The
+verdict: the raw-SQL create-side sibling's deferral STAYS CLOSED,
+rejected on measurement; L-3 closed by data.**
+
+**The fixes (TDD, RED 3/3 on the designed markers — the DH2 census legs
+green-on-arrival by design, the guard, with the loud-extraction property
+demonstrated live mid-cycle):**
+
+- **DH1 — the optional-FK non-string rejection (the L-1 close, the CJ4
+  mirror).** `validateImportEnvelope` rejects a non-string non-null
+  non-undefined optional-FK value with the named 400; null keeps the
+  SetNull semantics, undefined keeps the update-branch untouched case.
+  **Verified live: the named 400 on the number shape (previously the
+  generic Prisma fallback); the dangling-STRING twin still imports clean
+  end-to-end (200, created: 1).**
+- **DH2 — the length-cap VALUE-parity census (the L-2 close).** Three
+  census legs make the IMPORT_FIELD_LENGTHS mirror self-guarding against
+  its five source sites (validation.ts's atoms/literals, the folders
+  route-local atom, ai.ts's PERSISTED_CONTENT_MAX, http.ts's
+  UPLOAD_MIME_MAX_CHARS) — a future relaxation trips the census before
+  the import bricks a restore the app itself minted.
+- **DH3 — the riders.** The dead ternary in the referenced-ids loop
+  collapsed; the S154 probe's stale "Deleted after" header reconciled to
+  the honest retention record.
+
+**Gates.** lint ✓ · tsc ✓ · unit **1619/1619** (48 files, +8 exactly as
+designed) · build ✓ (7 warnings — the documented set; standalone
+**144M**) · the live page probe GREEN (20 chips, the grid counts MATCH
+the API envelope, X-Export-Bytes 19832 exact, the secret guard holds) ·
+the live DH1 probe GREEN (the named 400 + the clean SetNull import) ·
+the remediated-tree re-confirmation: preflight GREEN (after the
+documented S9/S31 stale-Turbopack remedy) · drawer GREEN (**the 79th
+consecutive**) · parity **MATCH** · the 5-chunk cold cert: chunk 1
+**151/152** (one machine-load flake — parity-session8's S125/BZ3 "Tab
+closed the menu" leg, the documented S139/S157 class, untouched by
+this cycle's diff; standalone-cold re-run **68/68 first-pass clean**)
+· chunk 2 **185/189 with the four UTC-midnight day-boundary legs**
+(the cert run CROSSED 00:00 UTC — the documented S45 class: the chunk
+seeded pre-midnight and read its day-relative dates one day stale;
+the full-chunk standalone-cold re-run **189/189 first-pass clean**) ·
+chunk 3 **90/91** (one machine-load flake — resilience's files-upload
+"unrelated folder succeeds" leg, untouched by this cycle's diff; the
+settled standalone-cold re-run **41/41 first-pass clean** — the S158
+precedent's exact numbers; a first back-to-back re-run under post-run
+load showed 39/41 before the machine settled) · chunk 4 **95/95** ·
+chunk 5 **89/89** — the cert tally **616/616 with the three flake
+classes each adjudicated standalone-clean** · **census 2235 green**
+(was 2227; the final full unit re-run post-doc-edits 1619/1619).
+
+**Evidence.** The `docs/screenshots/159-clone-*.png` frames (the
+standing desktop + the mobile drawer [the 79th drawer-GREEN companion]
++ the cycle's surface: the /export page whose Restore card the cycle
+hardened), self-verifying (ok: true; dimensions machine-checked) + the
+committed DH0 probe (its budget numbers ARE the L-3 close).
+
+**Docs.** README badge/census (2227 → 2235) + the unit-count prose
+sites + the Session-159 row; AGENTS census (1611 → 1619) + the import
+row extension (DH0/DH1/DH2) + the S159 lessons block (three lessons);
+CLAUDE counts; PAD v1.3.67 (the revision block); the SKILL census (all
+four sites); the vitest header re-anchor (+8); `docs/session_191.md`;
+this entry; the plan §7 as-executed close; the `.env.example` contract
+re-verified (no env-var reads changed this cycle — .env and
+.env.example byte-identical at the documented dev posture).
+
+**Next cycle.** The rotation continues — the recorded deferrals: the
+A-M3 stage-2 (re-measure only if the hardware or the row cap changes);
+the update-side raw-SQL bulk upsert (the gate closed HARDER on the DH0
+numbers — 3.07× headroom on the worst mixed shape); the I-2/I-3 riders
+(rejected as measurement-covered / documented trade-off, the options
+recorded in the plan §6); the I-4 parse-amplification posture
+(documented, S144/CS5).

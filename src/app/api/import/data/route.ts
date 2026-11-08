@@ -328,6 +328,10 @@ export const POST = async (request: NextRequest) => {
     // The referenced FK values per target (collected BEFORE resolution —
     // the resolution consumes the probe results). The "self" target form
     // (folders.parentId → folders) mirrors the resolution loop's shape.
+    // S159/DH3 (audit B/I-1): the target IS the probe bucket's key — the
+    // pre-DH3 `target === source ? source : target` ternary was a
+    // tautology (both branches yield target) that read as if the self
+    // form needed a redirect; it never did.
     const referencedIds = new Map<Collection, Set<string>>();
     for (const [source, specs] of Object.entries(IMPORT_FK_MAP) as [
       Collection,
@@ -337,11 +341,10 @@ export const POST = async (request: NextRequest) => {
         for (const { field, target } of specs) {
           const value = row[field];
           if (typeof value !== "string") continue;
-          const targetCollection = target === source ? source : target;
-          let bucket = referencedIds.get(targetCollection);
+          let bucket = referencedIds.get(target);
           if (!bucket) {
             bucket = new Set<string>();
-            referencedIds.set(targetCollection, bucket);
+            referencedIds.set(target, bucket);
           }
           bucket.add(value);
         }

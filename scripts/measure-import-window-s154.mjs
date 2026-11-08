@@ -5,7 +5,14 @@
 // runs (sequential per-row updates + chunked createMany inside ONE
 // $transaction with { timeout: 60_000, maxWait: 5_000 }) at increasing
 // row counts, against a THROWAWAY db (db/measure.db — never custom.db,
-// never e2e.db). Deleted after the measurement is recorded.
+// never e2e.db).
+//
+// S159/DH3 (audit B/I-6): the original header said "Deleted after the
+// measurement is recorded" — the script is RETAINED (correctly: the
+// S157/S158 docs cite it as the measure-import-window-s154 precedent,
+// and the S159 create-side sibling extends its pattern in
+// scripts/measure-import-create-s159.mjs). The header now records the
+// retention honestly instead of instructing a deletion nobody should do.
 //
 // Run: DATABASE_URL="file:../db/measure.db" bun scripts/measure-import-window-s154.mjs
 // (after DATABASE_URL="file:../db/measure.db" bunx prisma db push --skip-generate)

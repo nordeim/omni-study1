@@ -521,6 +521,38 @@ export function validateImportEnvelope(
       }
     }
   }
+  // S159/DH1 (audit B/L-1): the CJ4 mirror at the OPTIONAL boundary. A
+  // non-string non-null optional FK previously sailed BOTH validators —
+  // this validator's own finish() nulling loop String()-coerced it into
+  // the SetNull branch (clean import through the unit-pinned reference
+  // parser), while the route's twin guard SKIPPED it
+  // (`typeof value !== "string" → continue`) and the raw value rode to
+  // Prisma → PrismaClientValidationError → the GENERIC "fields do not
+  // match" 400 — the same actionable-message degradation CJ4 closed for
+  // the required twin, on the optional boundary, with the unit pins
+  // describing unreachable production behavior (the CH4 doctrine). null
+  // stays legal (the SetNull semantics — a dangling optional FK still
+  // nulls downstream); undefined stays legal (the update branch's
+  // untouched case).
+  for (const collection of EXPORT_COLLECTIONS) {
+    const specs = IMPORT_FK_MAP[collection].filter((s) => !s.required);
+    if (specs.length === 0) continue;
+    const rows = input.data[collection];
+    if (!Array.isArray(rows)) continue;
+    for (const row of rows) {
+      if (!isPlainObject(row)) continue;
+      for (const spec of specs) {
+        const value = row[spec.field];
+        if (value === undefined || value === null) continue;
+        if (typeof value !== "string") {
+          return {
+            ok: false,
+            error: `Collection "${collection}" row "${String(row.id)}" carries a ${spec.field} that is not a string id — an optional reference can never be a non-string value.`,
+          };
+        }
+      }
+    }
+  }
   return { ok: true, data: input.data };
 }
 
@@ -625,6 +657,9 @@ function finish(rawData: Record<string, unknown>): ImportParseResult {
         const value = row[spec.field];
         if (value === undefined) continue;
         if (value === null) continue; // already null — stays null
+        // S159/DH1: validateImportEnvelope rejects non-string FK values
+        // upstream, so String() here is the identity on a string — the
+        // coercion stays as belt-and-suspenders typing, never behavior.
         const resolvable = idSets.get(spec.target)?.has(String(value)) ?? false;
         if (resolvable) continue;
         if (spec.required) {

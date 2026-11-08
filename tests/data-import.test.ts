@@ -22,6 +22,8 @@
 //  - IMPORT_FK_MAP completeness (every collection has an entry — a new
 //    collection without one fails this test, the INITIAL_COLLECTIONS
 //    pattern)
+import { readFileSync } from "node:fs";
+import path from "node:path";
 import { describe, expect, it } from "vitest";
 import {
   IMPORT_FK_MAP,
@@ -1859,5 +1861,225 @@ describe("S154/DC1 · the no-op update elision diff (plannedUpdateIsNoOp)", () =
     expect(plannedUpdateIsNoOp({ meta: {} }, { meta: { a: 1 } })).toBe(false);
     // An undefined planned value rides Prisma's skip semantics (never part of the write).
     expect(plannedUpdateIsNoOp({ title: "T", x: 1 }, { title: "T", x: undefined })).toBe(true);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// S159/DH1 (audit B/L-1) — the optional-FK non-string rejection. The CJ4
+// mirror at the OPTIONAL boundary: the seam's reference parser String()-
+// coerced a non-string optional FK into the SetNull branch (data-import.ts's
+// nulling loop) while the production route's twin guard SKIPPED it
+// (`typeof value !== "string" → continue`) and the raw number rode to
+// Prisma → PrismaClientValidationError → the GENERIC "fields do not match"
+// 400. A hand-crafted `subjectId: 42` imported CLEAN through the unit-pinned
+// parser and 400'd generically through production — the pins described
+// unreachable production behavior (the CH4 doctrine). The seam now rejects
+// the shape at validateImportEnvelope (the route consumes its error
+// verbatim); null stays legal (the SetNull semantics); undefined stays
+// legal (the update branch's untouched case).
+// ---------------------------------------------------------------------------
+describe("S159/DH1 · the optional-FK non-string rejection (the CJ4 mirror)", () => {
+  const tasksEnvelope = (subjectId: unknown): Record<string, unknown> => ({
+    format: "studyflow-data-export",
+    version: 1,
+    exportedAt: "2026-11-07T00:00:00.000Z",
+    user: { id: "u-dh1", email: "dh1@account.dev", name: "DH1" },
+    counts: { tasks: 1 },
+    data: {
+      tasks: [
+        {
+          id: "t-dh1",
+          title: "Task",
+          subjectId,
+          createdAt: "2026-10-01T00:00:00.000Z",
+        },
+      ],
+    },
+  });
+
+  it("rejects a tasks row with a NUMBER subjectId — the named message, not the generic Prisma fallback (RED pre-fix: ok:true)", async () => {
+    const { validateImportEnvelope } = await import("../src/lib/data-import");
+    const res = validateImportEnvelope(tasksEnvelope(42));
+    expect(res.ok).toBe(false);
+    if (res.ok) return;
+    expect(res.error).toContain("tasks");
+    expect(res.error).toContain("subjectId");
+    expect(res.error).toContain("t-dh1");
+    expect(res.error).toContain("not a string id");
+  });
+
+  it("rejects the non-string non-null shape family (a boolean and an object subjectId — every non-string rides the same door)", async () => {
+    const { validateImportEnvelope } = await import("../src/lib/data-import");
+    for (const bad of [true, { id: "s1" }]) {
+      const res = validateImportEnvelope(tasksEnvelope(bad));
+      expect(res.ok).toBe(false);
+      if (res.ok) continue;
+      expect(res.error).toContain("subjectId");
+    }
+  });
+
+  it("still ACCEPTS a null subjectId — the SetNull semantics preserved (the dangling-optional nulling path untouched)", async () => {
+    const { validateImportEnvelope } = await import("../src/lib/data-import");
+    expect(validateImportEnvelope(tasksEnvelope(null)).ok).toBe(true);
+  });
+
+  it("still ACCEPTS an absent subjectId — the update branch's untouched case", async () => {
+    const { validateImportEnvelope } = await import("../src/lib/data-import");
+    expect(validateImportEnvelope(tasksEnvelope(undefined)).ok).toBe(true);
+  });
+
+  it("parseImportEnvelope rejects the same shape — the reference parser can no longer describe the unreachable nulling (the delegation leg)", async () => {
+    const res = parseImportEnvelope(tasksEnvelope(42));
+    expect(res.ok).toBe(false);
+    if (res.ok) return;
+    expect(res.error).toContain("subjectId");
+  });
+});
+
+// ---------------------------------------------------------------------------
+// S159/DH2 (audit B/L-2) — the import↔interactive length-cap VALUE parity
+// census. The key-set parity was machine-pinned (S133/CH1/CH2) but the atom
+// VALUES were hand-mirrored: IMPORT_FIELD_LENGTHS copies the inline Zod
+// literals (boundedTitle 200, notes 5000, description 1000/5000, front/back
+// 2000, tags 2000, room 100, the JSON-blob 100k atoms, calc 500, chat
+// 100k, mime 100) that live in validation.ts, the folders route, ai.ts,
+// and http.ts. A future relaxation in ANY source silently made the import
+// STRICTER than the app — one row the app itself minted then bricked the
+// ENTIRE all-or-nothing restore with a message blaming the user's backup
+// (the S137/CL1 lesson class). This census makes the mirror self-guarding
+// the script-conventions way: read the source, extract the atom, assert
+// the registry agrees. The parser FAILS LOUDLY when it cannot extract (a
+// renamed schema/atom/field is a parity question, never a silent pass).
+// ---------------------------------------------------------------------------
+describe("S159/DH2 · the length-cap VALUE parity census (the mirror made self-guarding)", () => {
+  const VALIDATION_TS = path.resolve(process.cwd(), "src/lib/validation.ts");
+  const validationSource = readFileSync(VALIDATION_TS, "utf8");
+
+  const num = (s: string) => Number(s.replace(/_/g, ""));
+  // A function DECLARATION with the explicit never return type — the only
+  // form TS's control-flow analysis accepts for never-call narrowing (a
+  // const-inferred arrow leaves every `if (!m) die(...)` site un-narrowed).
+  function die(what: string): never {
+    throw new Error(`the DH2 census could not extract ${what} — the parity source moved; re-anchor the census`);
+  }
+
+  // The shared atoms (boundedTitle / jsonArray) — extracted once.
+  function atomMax(atom: string): number {
+    const m = validationSource.match(new RegExp(`const ${atom} = [^;]*?\\.max\\((\\d[\\d_]*)\\)`, "s"));
+    if (!m) die(`the ${atom} atom's .max() from validation.ts`);
+    return num(m[1]);
+  }
+
+  // A schema's z.object({...}) block — brace-counted (practiceTestSchema's
+  // questions refine carries nested braces; a first-`});` scan would
+  // truncate the block and silently miss later fields).
+  function schemaBlock(schema: string): string {
+    const head = validationSource.match(new RegExp(`export const ${schema} = z\\.object\\(`));
+    if (!head || head.index === undefined) die(`the ${schema} block head from validation.ts`);
+    const open = validationSource.indexOf("{", head.index);
+    let depth = 0;
+    for (let i = open; i < validationSource.length; i++) {
+      if (validationSource[i] === "{") depth += 1;
+      else if (validationSource[i] === "}") {
+        depth -= 1;
+        if (depth === 0) return validationSource.slice(open, i + 1);
+      }
+    }
+    return die(`the ${schema} block's balanced close from validation.ts`);
+  }
+
+  // The first .max() on a field's chain is the string-length atom the
+  // registry mirrors (every mapped field is a string field with exactly
+  // one length bound; numeric caps like progress/duration are unmapped).
+  // The chain may span MULTIPLE lines (practiceTestSchema.questions
+  // breaks its .string()/.max()/.refine() across lines with comments) —
+  // capture from the field name until the NEXT 2-space field line.
+  function resolveCap(schema: string, field: string): number {
+    const block = schemaBlock(schema);
+    const start = block.match(new RegExp(`^ {2}${field}:\\s*`, "m"));
+    if (!start || start.index === undefined) die(`the ${schema}.${field} field line from validation.ts`);
+    const rest = block.slice(start.index + start[0].length);
+    const nextField = rest.match(/^ {2}[A-Za-z]/m);
+    const chain = nextField && nextField.index !== undefined ? rest.slice(0, nextField.index) : rest;
+    if (/\bboundedTitle\b/.test(chain)) return atomMax("boundedTitle");
+    if (/\bjsonArray\b/.test(chain)) return atomMax("jsonArray");
+    const cap = chain.match(/\.max\((\d[\d_]*)\)/);
+    if (!cap) die(`the ${schema}.${field} .max() literal from validation.ts`);
+    return num(cap[1]);
+  }
+
+  // The 31 validation.ts-sourced atoms (schema, field) per registry key.
+  const VALIDATION_TS_MAP: Record<string, [string, string]> = {
+    "subjects.name": ["subjectSchema", "name"],
+    "taskLists.name": ["taskListSchema", "name"],
+    "tasks.title": ["taskSchema", "title"],
+    "tasks.notes": ["taskSchema", "notes"],
+    "tasks.subtasks": ["taskSchema", "subtasks"],
+    "assignments.title": ["assignmentSchema", "title"],
+    "assignments.description": ["assignmentSchema", "description"],
+    "exams.title": ["examSchema", "title"],
+    "exams.location": ["examSchema", "location"],
+    "exams.topics": ["examSchema", "topics"],
+    "events.title": ["eventSchema", "title"],
+    "events.location": ["eventSchema", "location"],
+    "events.description": ["eventSchema", "description"],
+    "events.reminders": ["eventSchema", "reminders"],
+    "timetableClasses.name": ["timetableClassSchema", "name"],
+    "timetableClasses.room": ["timetableClassSchema", "room"],
+    "notebooks.name": ["notebookSchema", "name"],
+    "notes.title": ["noteSchema", "title"],
+    "notes.content": ["noteSchema", "content"],
+    "notes.tags": ["noteSchema", "tags"],
+    "decks.name": ["flashcardDeckSchema", "name"],
+    "decks.description": ["flashcardDeckSchema", "description"],
+    "cards.front": ["flashcardSchema", "front"],
+    "cards.back": ["flashcardSchema", "back"],
+    "practiceTests.title": ["practiceTestSchema", "title"],
+    "practiceTests.questions": ["practiceTestSchema", "questions"],
+    "studyGroups.name": ["studyGroupSchema", "name"],
+    "grades.title": ["gradeSchema", "title"],
+    "holidays.name": ["holidaySchema", "name"],
+    "calcHistory.expression": ["calculatorHistorySchema", "expression"],
+    "calcHistory.result": ["calculatorHistorySchema", "result"],
+  };
+
+  // The 3 atoms whose interactive twin lives OUTSIDE validation.ts (a
+  // route-local schema, a server-side persist cap, an upload-door cap).
+  const OTHER_SOURCE_MAP: Array<{ key: string; file: string; re: RegExp }> = [
+    { key: "folders.name", file: "src/app/api/files/folders/route.ts", re: /name:\s*z\.string\(\)\.trim\(\)\.min\(1\)\.max\((\d[\d_]*)\)/ },
+    { key: "chatMessages.content", file: "src/lib/server/ai.ts", re: /PERSISTED_CONTENT_MAX = (\d[\d_]*)/ },
+    { key: "files.mime", file: "src/lib/server/http.ts", re: /UPLOAD_MIME_MAX_CHARS = (\d[\d_]*)/ },
+  ];
+
+  it("the census maps cover the registry EXACTLY — a new registry key without a parity source fails loudly, and a map entry without its registry key fails too", async () => {
+    const { IMPORT_FIELD_LENGTHS } = await import("../src/lib/data-import");
+    const registryKeys = new Set(Object.keys(IMPORT_FIELD_LENGTHS));
+    const mappedKeys = new Set([...Object.keys(VALIDATION_TS_MAP), ...OTHER_SOURCE_MAP.map((s) => s.key)]);
+    // every registry key is mapped (a dropped mapping = the 1 M default drift class)
+    for (const key of registryKeys) expect(mappedKeys.has(key), `unmapped registry key: ${key}`).toBe(true);
+    // every map entry exists in the registry (a stale map entry = a lie)
+    for (const key of mappedKeys) expect(registryKeys.has(key), `stale map entry: ${key}`).toBe(true);
+    // the maps are disjoint (a double-mapped key is an ambiguity)
+    for (const source of OTHER_SOURCE_MAP) {
+      expect(VALIDATION_TS_MAP[source.key], `double-mapped key: ${source.key}`).toBeUndefined();
+    }
+  });
+
+  it("every validation.ts-sourced registry value equals its extracted schema atom (the future relaxation trips THIS leg)", async () => {
+    const { IMPORT_FIELD_LENGTHS } = await import("../src/lib/data-import");
+    for (const [key, [schema, field]] of Object.entries(VALIDATION_TS_MAP)) {
+      const source = resolveCap(schema, field);
+      expect(source, `${key}: the census extracted ${source}, the registry says ${IMPORT_FIELD_LENGTHS[key]}`).toBe(IMPORT_FIELD_LENGTHS[key]);
+    }
+  });
+
+  it("the three non-validation.ts atoms equal their own sources (the folders route atom, the persist cap, the upload mime cap)", async () => {
+    const { IMPORT_FIELD_LENGTHS } = await import("../src/lib/data-import");
+    for (const { key, file, re } of OTHER_SOURCE_MAP) {
+      const src = readFileSync(path.resolve(process.cwd(), file), "utf8");
+      const m = src.match(re);
+      if (!m) die(`the ${key} atom from ${file}`);
+      expect(num(m[1]), `${key}: the census extracted ${m[1]}, the registry says ${IMPORT_FIELD_LENGTHS[key]}`).toBe(IMPORT_FIELD_LENGTHS[key]);
+    }
   });
 });
