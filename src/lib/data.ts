@@ -697,18 +697,31 @@ export const mutations = {
     await fetchAndSet("events").catch(() => undefined);
   },
 
-  // ---- timetable --------------------------------------------------------------
+  // ---- timetable (S165/DN1: the CB8 failure-domain split) -------------------
+  // The write and the post-write refresh are SEPARATE failure domains (the
+  // S127/CB8 doctrine, the DK1 events + DL1 exams + DM1 assignments ports —
+  // the recorded family-wide port, this the fourth family): a refresh GET
+  // that fails after a COMMITTED write must not reject the mutation — the
+  // caller's catch would claim a save failure on a saved row ("Something
+  // went wrong." in the still-open dialog, no success toast) and arm the
+  // retry that DUPLICATES the class. The refresh rejection is contained
+  // here; the stale slice self-heals on the next successful load (the S16
+  // view-switch pre-warm + the next mutation's own refresh — the DJ5
+  // doctrine: the write's own success toast is the surfacing; a second
+  // toast for the same offline window is noise). The WRITE leg keeps
+  // rejecting honestly — the view's dialog catch still sees real save
+  // failures. Pinned by tests/data-store.test.ts (the DN1 pair set).
   createTimetableClass: async (input: TimetableClassInput): Promise<void> => {
     await apiSend("POST", PATHS.timetable, input);
-    await fetchAndSet("timetable");
+    await fetchAndSet("timetable").catch(() => undefined);
   },
   updateTimetableClass: async (id: string, patch: Partial<TimetableClassInput>): Promise<void> => {
     await apiSend("PATCH", `${PATHS.timetable}/${id}`, patch);
-    await fetchAndSet("timetable");
+    await fetchAndSet("timetable").catch(() => undefined);
   },
   deleteTimetableClass: async (id: string): Promise<void> => {
     await apiSend("DELETE", `${PATHS.timetable}/${id}`);
-    await fetchAndSet("timetable");
+    await fetchAndSet("timetable").catch(() => undefined);
   },
 
   // ---- notebooks + notes --------------------------------------------------------

@@ -1,4 +1,4 @@
-# StudyFlow (Omni-Study) — Master Project Architecture Document (PAD) v1.3.72
+# StudyFlow (Omni-Study) — Master Project Architecture Document (PAD) v1.3.73
 
 **Classification:** Internal Engineering Reference
 **Status:** DEFINITIVE, PRODUCTION-LOCKED BLUEPRINT
@@ -8,6 +8,11 @@
 **Rule:** Every architectural decision in this document traces to a specific rationale. Nothing is here "because it's popular."
 
 ---
+
+#### Revision Block — v1.3.73 (Session-165 / Batch DN, Cycle 115)
+
+- `[SR]` Current test census anchor (the v1.2.0 convention, re-anchored): **1669/1669 Vitest unit** (51 files — the S165 additions: data-store +4 [the S165/DN1 timetable mutation CB8 split — a committed write + a failed refresh RESOLVES for create/update/delete, RED pre-fix on the three resolve legs, + the failed-write-still-rejects guard, the DK1/DL1/DM1 pair-set template ported to the FOURTH family of the recorded family-wide port]; enum-single-source +2 [the S165/DN3 WEEK_TYPES census site — the view's hard-coded ALL/A/B triple in two Selects + the state type + the label-map keys converted to the map-over-the-import form with the derived `WeekType` alias + the exhaustively-typed label map, the import leg RED pre-fix + the no-local-twin guard]). The e2e census moves **626 → 627** (the 5-chunk cold map 155+194+94+95+89 — chunk 2 +1 [the S165/DN1 timetable CB8 leg in parity-session9: the POST continues, the refresh GET aborts, a committed create answers the success toast + the closed dialog, never the false save-failure that armed the duplicate-creating retry]) — census 2296 green.
+- `[AR]` The timetable view (§ the views catalog): the three mutations' post-write refresh is now a CONTAINED failure domain (the CB8 doctrine — the fourth family ported after events/exams/assignments); the loading gate carries `role="status"` + `aria-label="Loading timetable"` (the DM2/DL2/DK4 precedent family extended to the timetable sibling) + the unreachable S130/CE3 day-detail gate is REMOVED (the calendar-pattern copy that landed inside the has-classes ternary branch — dead code with a protective comment, the ownership documented at the outer gate that actually owns the in-flight window); the week-type vocabulary consumes validation.ts's WEEK_TYPES single source (the DJ3 census's sixth site — the inline-twin blind spot closed).
 
 #### Revision Block — v1.3.72 (Session-164 / Batch DM, Cycle 114)
 

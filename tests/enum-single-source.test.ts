@@ -55,6 +55,11 @@ const SITES = [
     enumName: "ASSIGNMENT_PRIORITIES",
     why: "the S164/DM3 twin (the local 4-value PRIORITIES array beside validation.ts:101's single source — value-equal, the aliased-twin form the four prior sites never guarded)",
   },
+  {
+    view: "src/components/views/timetable-view.tsx",
+    enumName: "WEEK_TYPES",
+    why: "the S165/DN3 twin (the view hard-coded the ALL/A/B triple in two Selects + the state type + the label-map keys beside validation.ts:123's S133/CH2-promoted single source — the inline-twin form, the DM3 census-blind-spot class)",
+  },
 ] as const;
 
 function readView(rel: string): string {

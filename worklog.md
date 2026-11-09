@@ -6794,3 +6794,124 @@ S160 close's ledger (the A-M3 stage-2 triggers; the update-side raw-SQL
 bulk upsert; the I-4 parse posture; the M-1 LLM-side residual); the
 gradetracker/studygroups/settings-CRUD and AlertDialog-confirm e2e
 gaps.
+
+## Session 176 — the S165 cycle (Batch DN: the timetable-family hardening set)
+
+**The warm-workspace cycle.** The prior session's S164 was pushed and
+remote-verified (`e3fc2f8`), the operator added the session_202
+transcript (`7926ff8`), and this cycle pulled to it with the
+environment INTACT (node_modules, the repo-root `db/`, `.env`
+byte-identical to `.env.example` at the documented dev posture, the
+dev daemon alive on :3000). Cold baseline: lint ✓ · tsc ✓ · unit
+**1663/1663** (the documented S164 final state exactly) ·
+preflight GREEN · the drawer check GREEN (the 90th consecutive
+no-Tailwind-v4-mobile-nav-bug confirmation) · the desktop parity
+probe MATCH (live reference login). The config posture re-validated
+(the `skills/` folder excluded from code checking, testing, and
+compilation on every axis).
+
+**Audits (Mode-C; every H/L finding re-verified by direct read).**
+A — the Batch DM recent-changes axis (`e3fc2f8` + the docs-only
+`7926ff8`): **0C/0H/0M/0L/0I — clean** (all four DM claims confirmed
+at the source anchors — the three CB8 catches, the DM2 aria gate,
+the DM3 PRIORITIES alias, the DM4 corrected glob; the test anchors
+verified; the doc census chain machine-verified, zero stale count
+sites; the commit diff surgical). B — the timetable family (the
+rotation's fresh axis, FIRST in the S164 close's recorded order):
+**0C/1H/0M/2L/0I** — the family coherent (the delegate factory's
+ownership-in-the-WHERE-clause, the BW7/BX1 ordering guard, the
+owned-FK map + the transactional merge guard, take:500, zero
+useEffect, the BX1/DJ2/DA2/BT9/BU9/CM6/CO4c/AE12 heritage); the
+findings: **H-1** the timetable mutations rejected on the refresh leg
+after a COMMITTED write — a flaky refresh GET showed "Something went
+wrong." in the still-open dialog, no success toast, the form armed: a
+RETRY duplicated the class (the CB8 letter, the fourth family of the
+recorded port); **L-1** the loading gate carried no aria contract AND
+the mobile day-detail gate was provably dead code (the
+calendar-pattern copy landed inside the has-classes ternary branch —
+`loading && classes.length === 0` could never hold where the
+accordion renders, while its S130/CE3 comment claimed a live
+protection); **L-2** the WEEK_TYPES inline twin (the view hard-coded
+the ALL/A/B triple in the filter Select + the dialog Select + the
+state type + the label-map keys beside validation.ts:123's
+S133/CH2-promoted single source — the DM3 census-blind-spot class).
+
+**Fixed TDD-first (every RED on its designed marker).** **DN1** the
+timetable mutation CB8 split — the three mutations contain the
+refresh rejection at the seam (`fetchAndSet("timetable").catch(() =>
+undefined)`, the DK1/DL1/DM1 doctrine comment re-tagged for the
+fourth family; the WRITE leg keeps rejecting honestly; unit +4 the
+CZ1 pair set [the resolve trio RED pre-fix exactly + the failed-write
+guard green-on-arrival]; e2e +1 the CB8-twin network-mock leg in
+parity-session9 [the POST continues, the collection GET aborts — the
+glob `**/api/timetable` ends at the collection URL per the DM4
+lesson re-derived in the leg's comment — the "Class added." toast +
+the closed dialog], RED-proven against the pre-fix standalone build
+failing exactly at the toast assertion). **DN2** the loading gate
+gains `role="status"` + `aria-label="Loading timetable"` + the dead
+day-detail gate REMOVED with the honest ownership comment
+(behavior-preserving by construction). **DN3** the WEEK_TYPES
+single-source port — the DK2 map-over-the-import form + the derived
+`type WeekType` alias + the exhaustively-typed `Record<WeekType,
+string>` label map (a future vocabulary value fails typecheck until
+labeled); both Selects render from the map; the DJ3 census gains its
+SIXTH site (the import leg RED pre-fix, the no-local-twin leg
+green-on-arrival; unit +2).
+
+**The mid-edit regression the gates caught.** The DN3 import edit
+accidentally rewrote `@/lib/date` as `@lib/date` — one character, the
+line LOOKED right, and tsc failed within the minute (TS2307 + the
+downstream TS7006 pair on the setWeekStart callbacks whose contextual
+type died with the module). Fixed immediately; the lesson recorded in
+the AGENTS S165 block: the single import line is the highest-risk
+edit surface in a view — diff the hunk character by character and
+keep tsc between edit batches.
+
+**Gates.** lint ✓ · tsc ✓ · unit **1669/1669** (51 files, +6 exactly
+as designed: data-store +4, enum-single-source +2) · build ✓ · the
+full touched spec file: parity-session9 **39/39** (+1, the DN1 leg) ·
+the 5-chunk cold cert: chunk 1 **155/155** · chunk 2 **194/194**
+(+1; one socket-timeout signature logged, zero failures) · chunk 3
+**94/94 on the cold re-run** (the first run's single AI6 files-upload
+leg — the documented P1008 machine-load class: a diff-untouched
+surface, 1.2 s clean in isolation, the full chunk clean cold; the
+DM4-corrected DJ5 leg GREEN at 2.5 s throughout) · chunk 4 **95/95**
+· chunk 5 **89/89** — the cert tally **627/627** = **census 2296
+green** (the e2e census 626 → 627) · the drawer check GREEN on the
+remediated tree (**the 91st consecutive** no-Tailwind-v4-mobile-nav
+bug confirmation) · the desktop parity probe **MATCH** (all five
+formal checks, live reference login).
+
+**Evidence.** The `docs/screenshots/165-clone-*.png` frames (the
+standing desktop + the mobile drawer [the drawer-GREEN companion] +
+the cycle's Timetable surface — the seeded week grid with its class
+cells + the week filter, the DN3 single-source render path), captured
+by `scripts/capture-s165-evidence.mjs` (the S164 precedent),
+self-verifying (ok: true, md5s distinct) + the non-blank pixel-ratio
+verification (14.96% / 33.56% / 8.65%).
+
+**Docs.** README badge/census (2289 → 2296) + the count prose sites +
+the Session-165 row; AGENTS census + the e2e map re-tag + the S165
+lessons block (two lessons: the dead-branch-with-a-badge lesson — a
+guard citing a precedent pattern must have the structural
+precondition that makes the pattern live; the import-line lesson);
+CLAUDE counts (1669 + 627); PAD v1.3.73 (the revision block); the
+SKILL census (all four sites); the vitest header re-anchor (+6); the
+cert runner re-tag (both scripts, 626 → 627, chunk 2 193 → 194,
+machine-pinned by the script-conventions tripwire — the DA6/CQ6
+count-claims gates re-verified GREEN after the re-anchor: 136/136);
+`docs/session_203.md`; this entry; the plan §9 as-executed close; the
+`.env.example` contract re-verified (no env-var reads changed this
+cycle — .env and .env.example byte-identical at the documented dev
+posture).
+
+**Next cycle.** The rotation continues — the recorded deferrals: the
+family-wide CB8 port's REMAINING families (notes/flashcards/tasks +
+the subject/taskList/notebook/deck/studyGroup/practiceTest seams —
+each family gets its own rotation-axis audit + pin set; the
+events/exams/assignments/timetable pin sets are the templates); the
+files refresh-failure toast copy harmonization (the F-8 candidate);
+the S160 close's ledger (the A-M3 stage-2 triggers; the update-side
+raw-SQL bulk upsert; the I-4 parse posture; the M-1 LLM-side
+residual); the gradetracker/studygroups/settings-CRUD and
+AlertDialog-confirm e2e gaps.

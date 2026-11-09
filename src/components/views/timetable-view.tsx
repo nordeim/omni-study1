@@ -41,7 +41,14 @@ import { EmptyState, Spinner } from "@/components/views/shared";
 import { mutations, useDataStore, type TimetableClassInput, type TimetableClassRow } from "@/lib/data";
 import { addDays, formatHHMMRange, formatWeekdayMonthDay, formatShortDate, startOfDay } from "@/lib/date";
 import { ApiError } from "@/lib/api";
-import { normalizeHhmmForInput } from "@/lib/validation";
+// S165/DN3: the WEEK_TYPES single source joins the import (the DK2
+// events-REPEATS port's map-over-the-import form) — the view had
+// hard-coded the ALL/A/B triple in two Selects + the state type + the
+// label-map keys beside validation.ts:123's S133/CH2-promoted source
+// (the DM3 census-blind-spot class: a future schema value would be
+// accepted by the API but un-selectable in the UI — the CB9 drift
+// class). The census's sixth site pins the import.
+import { normalizeHhmmForInput, WEEK_TYPES } from "@/lib/validation";
 import { cn } from "@/lib/utils";
 
 const DAY_NAMES = [
@@ -61,7 +68,14 @@ const HOURS = Array.from({ length: 14 }, (_, i) => i + 7); // 7 AM … 8 PM
 /** Sunday-first display column → ISO weekday (0=Monday). */
 const columnToIso = (col: number): number => (col + 6) % 7;
 
-const WEEK_TYPE_LABELS: Record<string, string> = {
+// S165/DN3: the derived alias — typed OFF the imported single source (it
+// cannot fork; the census's no-local-twin leg guards the const form).
+type WeekType = (typeof WEEK_TYPES)[number];
+
+// S165/DN3: the label map typed off the source — a future vocabulary value
+// FAILS TYPECHECK until the map covers it (the machine guard the hard-coded
+// triple never had). The labels are the reference-measured copy.
+const WEEK_TYPE_LABELS: Record<WeekType, string> = {
   ALL: "All Weeks",
   A: "Week A",
   B: "Week B",
@@ -84,7 +98,7 @@ export function TimetableView() {
   // misaligned every head's date by one day ("Sunday 12" for a Monday).
   const sundayOffset = today.getDay();
   const [weekStart, setWeekStart] = React.useState(() => addDays(today, -sundayOffset));
-  const [weekType, setWeekType] = React.useState<"ALL" | "A" | "B">("ALL");
+  const [weekType, setWeekType] = React.useState<WeekType>("ALL");
   // S138/CM6 (audit FE-2): the Grid Builder's toggle state, pressed
   // semantics, and dead canvas attribute produced NO functional or
   // visible change — a control announcing a state that does not exist
@@ -106,7 +120,7 @@ export function TimetableView() {
     endTime: "10:30",
     subjectId: "",
     room: "",
-    weekType: "ALL" as "ALL" | "A" | "B",
+    weekType: "ALL" as WeekType,
   });
   const [busy, setBusy] = React.useState(false);
   const [error, setError] = React.useState("");
@@ -256,15 +270,20 @@ export function TimetableView() {
         <div className="flex flex-wrap items-center gap-2">
           <Select
             value={weekType}
-            onValueChange={(v) => setWeekType(v as "ALL" | "A" | "B")}
+            onValueChange={(v) => setWeekType(v as WeekType)}
           >
             <SelectTrigger className="h-9 w-32" aria-label="Week filter">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="ALL">All Weeks</SelectItem>
-              <SelectItem value="A">Week A</SelectItem>
-              <SelectItem value="B">Week B</SelectItem>
+              {/* S165/DN3: the options render from validation.ts's WEEK_TYPES
+                  single source (the census's sixth site —
+                  tests/enum-single-source.test.ts). */}
+              {WEEK_TYPES.map((w) => (
+                <SelectItem key={w} value={w}>
+                  {WEEK_TYPE_LABELS[w]}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
           <Button type="button" variant="outline">
@@ -278,7 +297,17 @@ export function TimetableView() {
       </div>
 
       {loading && classes.length === 0 ? (
-        <div className="sf-card flex justify-center py-16 text-sf-primary">
+        <div
+          className="sf-card flex justify-center py-16 text-sf-primary"
+          role="status"
+          aria-label="Loading timetable"
+          /* S165/DN2 (the s165 audit B/L-1): the CE3 loading gate announces
+             itself (role="status" — the DM2 assignments/DL2 exams/DK4
+             events-calendar precedent; the Spinner itself is aria-hidden, so
+             the unlabeled div was silent to assistive tech during the
+             in-flight window). This OUTER gate owns the whole in-flight
+             window — see the day-detail note below. */
+        >
           <Spinner className="size-6" />
         </div>
       ) : classes.length === 0 ? (
@@ -488,14 +517,16 @@ export function TimetableView() {
                     </button>
                     {open && (
                       <div className="flex flex-col gap-2 px-3 pb-3">
-                        {/* S130/CE3: the day-detail's own gate (the calendar
-                            day-detail pattern — an in-flight timetable must
-                            not read "No classes this day."). */}
-                        {loading && classes.length === 0 ? (
-                          <div className="flex justify-center py-2 text-sf-primary">
-                            <Spinner className="size-5" />
-                          </div>
-                        ) : dayClasses.length === 0 ? (
+                        {/* S165/DN2: the S130/CE3 day-detail gate is GONE — it
+                            was UNREACHABLE dead code (the calendar-pattern
+                            copy landed inside the has-classes ternary branch,
+                            which guarantees classes.length > 0 whenever this
+                            accordion renders, so `loading && classes.length
+                            === 0` could never hold here). The OUTER gate at
+                            the top of the view owns the in-flight window; a
+                            settled-empty day is the honest "No classes this
+                            day." */}
+                        {dayClasses.length === 0 ? (
                           <p className="py-2 text-sm text-slate-500 dark:text-slate-400">No classes this day.</p>
                         ) : (
                           dayClasses.map((c) => {
@@ -625,15 +656,19 @@ export function TimetableView() {
                 <Label htmlFor="class-week">Week</Label>
                 <Select
                   value={form.weekType}
-                  onValueChange={(v) => setForm((f) => ({ ...f, weekType: v as "ALL" | "A" | "B" }))}
+                  onValueChange={(v) => setForm((f) => ({ ...f, weekType: v as WeekType }))}
                 >
                   <SelectTrigger id="class-week" className="h-9">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="ALL">All Weeks</SelectItem>
-                    <SelectItem value="A">Week A</SelectItem>
-                    <SelectItem value="B">Week B</SelectItem>
+                    {/* S165/DN3: the dialog's week options render from the
+                        same WEEK_TYPES single source as the filter above. */}
+                    {WEEK_TYPES.map((w) => (
+                      <SelectItem key={w} value={w}>
+                        {WEEK_TYPE_LABELS[w]}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>

@@ -1,8 +1,26 @@
 import { defineConfig } from "vitest/config";
 import path from "node:path";
 
-// Unit-test layer for the pure domain seams — 51 files / 1663 tests
-// (re-anchored S164/DM — the assignments-family hardening cycle: census
+// Unit-test layer for the pure domain seams — 51 files / 1669 tests
+// (re-anchored S165/DN — the timetable-family hardening cycle: census
+// 1663 → 1669, +6 net [data-store +4: the S165/DN1 timetable mutation
+// CB8 split — a committed write + a failed refresh RESOLVES for
+// create/update/delete (RED pre-fix: the mutation rejected on the
+// refresh leg — the false save-failure that armed the
+// duplicate-creating retry, the DK1/DL1/DM1 events/exams/assignments
+// ports to the FOURTH family of the recorded family-wide port) + the
+// failed-write-still-rejects guard; enum-single-source +2: the
+// S165/DN3 WEEK_TYPES census site — the view's hard-coded ALL/A/B
+// triple (two Selects + the state type + the label-map keys) beside
+// validation.ts:123's S133/CH2-promoted single source (the
+// inline-twin form, the DM3 census-blind-spot class) converted to
+// the map-over-the-import form, pinned by the import +
+// no-local-twin pair].
+// The e2e census moves 626 → 627 [+1: the S165/DN1 timetable CB8
+// leg in parity-session9 — the POST continues, the refresh GET aborts,
+// a committed create answers the success toast + the closed dialog].)
+//
+// (prior re-anchor, S164/DM — the assignments-family hardening cycle: census
 // 1657 → 1663, +6 net [data-store +4: the S164/DM1 assignments mutation
 // CB8 split — a committed write + a failed refresh RESOLVES for
 // create/update/delete (RED pre-fix: the mutation rejected on the

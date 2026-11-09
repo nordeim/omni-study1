@@ -752,3 +752,72 @@ describe("S164/DM1: the assignments mutation CB8 split (B-H1 — committed write
     await expect(mutations.createAssignment(assignmentInput as never)).rejects.toThrow("offline");
   });
 });
+
+// S165/DN1 (the s165 audit B/H-1): the timetable mutation CB8 split —
+// the DK1/DL1/DM1 pair set ported to the FOURTH family of the recorded
+// family-wide port ("the family-wide CB8 port's REMAINING families
+// (timetable/notes/flashcards/tasks …) — each family gets its own
+// rotation-axis audit + pin set; the events/exams/assignments pin sets
+// are the templates"). The pre-DN1 timetable mutations were `await
+// apiSend(...)` then `await fetchAndSet("timetable")` (data.ts:700-712),
+// and fetchAndSet REJECTS when its GET fails (the CD2 20 s deadline): a
+// write that COMMITTED server-side followed by a flaky refresh rejected
+// the WHOLE mutation — the view's catch showed "Something went wrong."
+// in the still-open dialog (timetable-view.tsx:223-224), fired no
+// success toast, and kept the form armed, so a RETRY re-POSTed and
+// duplicated the class (the CB8 letter: a false mutation-failure claim
+// on a committed row). The fix contains the refresh rejection AT THE
+// SEAM (the DK1/DL1/DM1 .catch doctrine, ported verbatim): the write's
+// own success toast ("Class added.") is the surfacing; the stale slice
+// self-heals on the next load (the S16 view-switch pre-warm + the next
+// mutation's own refresh). These legs pin the behavioral contract with
+// the CZ1 mock shape: apiSend resolves (the committed write) + apiGet
+// rejects (the flaky refresh) → the mutation RESOLVES; and apiSend
+// itself rejecting still rejects (the honest save-failure contract the
+// view's dialog catch depends on).
+describe("S165/DN1: the timetable mutation CB8 split (B-H1 — committed write + failed refresh)", () => {
+  const classInput = {
+    name: "DN1 probe",
+    dayOfWeek: 0,
+    startTime: "09:00",
+    endTime: "10:30",
+    subjectId: null,
+    room: "",
+    weekType: "ALL",
+  } as const;
+
+  beforeEach(() => {
+    apiGetMock.mockReset();
+    apiSendMock.mockReset();
+    apiGetMock.mockResolvedValue([]);
+    apiSendMock.mockResolvedValue(undefined);
+    useDataStore.setState({ timetable: [] });
+  });
+
+  it("createTimetableClass: a committed write + a failed refresh RESOLVES (never the false save-failure)", async () => {
+    apiSendMock.mockResolvedValueOnce(undefined); // the POST 201s
+    apiGetMock.mockRejectedValueOnce(new Error("offline")); // the refresh GET fails
+    // RED pre-fix: the mutation rejected with "offline" — the caller's
+    // catch claimed a save failure on a row the server committed.
+    await expect(mutations.createTimetableClass(classInput as never)).resolves.toBeUndefined();
+  });
+
+  it("updateTimetableClass: a committed write + a failed refresh RESOLVES", async () => {
+    apiSendMock.mockResolvedValueOnce(undefined);
+    apiGetMock.mockRejectedValueOnce(new Error("offline"));
+    await expect(mutations.updateTimetableClass("t1", { room: "M202" })).resolves.toBeUndefined();
+  });
+
+  it("deleteTimetableClass: a committed write + a failed refresh RESOLVES", async () => {
+    apiSendMock.mockResolvedValueOnce(undefined);
+    apiGetMock.mockRejectedValueOnce(new Error("offline"));
+    await expect(mutations.deleteTimetableClass("t1")).resolves.toBeUndefined();
+  });
+
+  it("createTimetableClass: a FAILED write still rejects (the honest save-failure reaches the caller)", async () => {
+    apiSendMock.mockRejectedValueOnce(new Error("offline"));
+    // The write leg keeps rejecting — the view's dialog stays open with
+    // the honest error, and the retry is legitimate (nothing committed).
+    await expect(mutations.createTimetableClass(classInput as never)).rejects.toThrow("offline");
+  });
+});

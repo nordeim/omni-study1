@@ -4,9 +4,16 @@
 # SIGKILL escalation → rm db/e2e.db → run the chunk), one chunk per
 # invocation so each foreground run fits the tool timeout.
 # Usage: bash /home/z/my-project/omni-study1/scripts/run-cert-chunk.sh <1-5>
-# Expected (S164/DM re-tag): 155 + 193 + 94 + 95 + 89 = 626 — the same
+# Expected (S165/DN re-tag): 155 + 194 + 94 + 95 + 89 = 627 — the same
 # census as scripts/e2e-chunked-cert.sh (machine-enforced by
 # tests/script-conventions.test.ts, including the identical-CHUNKS pin).
+# (S165/DN net +1: chunk 2 +1 [the S165/DN1 timetable CB8
+# failure-domain split pin in parity-session9 — the POST continues, the
+# refresh GET aborts: a committed create answers the success toast + the
+# closed dialog, never the false save-failure that armed the
+# duplicate-creating retry; the DK1/DL1/DM1 events/exams/assignments
+# ports to the FOURTH family of the recorded family-wide port]. The
+# full DN map: docs/remediation-plan-session165.md.)
 # (S164/DM net +1: chunk 2 +1 [the S164/DM1 assignments CB8
 # failure-domain split pin in parity-session9 — the POST continues, the
 # refresh GET aborts: a committed create answers the success toast + the

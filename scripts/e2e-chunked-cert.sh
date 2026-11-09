@@ -1,4 +1,12 @@
 #!/usr/bin/env bash
+# (S165/DN re-tag — census 626 → 627, net +1: chunk 2 +1 [the
+# S165/DN1 timetable CB8 failure-domain split pin in parity-session9 —
+# the POST continues, the refresh GET aborts: a committed create answers
+# the success toast + the closed dialog, never the false save-failure
+# that armed the duplicate-creating retry (the DK1/DL1/DM1 events/exams/
+# assignments ports to the FOURTH family of the recorded family-wide
+# port); network-mocked, no server writes]. The full DN map:
+# docs/remediation-plan-session165.md.)
 # (S163/DL re-tag — census 624 → 625, net +1: chunk 1 +1 [the
 # S163/DL1 exams CB8 failure-domain split pin in parity-session8 — the
 # POST continues, the refresh GET aborts: a committed create answers the
@@ -243,7 +251,7 @@
 # leg was green by pinning the CB8 false-failure as correct behavior;
 # count-neutral, proven by the DM1 bisect pair). The full DM map:
 # docs/remediation-plan-session164.md.)
-# Expected: 155 + 193 + 94 + 95 + 89 = 626 (each chunk's count includes its
+# Expected: 155 + 194 + 94 + 95 + 89 = 627 (each chunk's count includes its
 # auth setup — the current census; the historical re-tag blocks beneath.)
 # (S131/CF re-tag — census 567 → 570, net +3: chunk 1 +1 [the CF9
 # drawer focus-restore leg in mobile-navigation — crossing the lg
