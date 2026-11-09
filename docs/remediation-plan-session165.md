@@ -371,4 +371,4 @@ read before the plan was written):
 - [x] The drawer check (91st) + the desktop parity probe re-run (MATCH)
 - [x] Evidence frames (docs/screenshots/165-clone-*)
 - [x] Docs lockstep: README badge/census (2289 → 2296) + prose + the Session-165 row; AGENTS census + e2e map + the S165 lessons block; CLAUDE counts; PAD v1.3.73; the SKILL census; the vitest header (+6); the cert runner re-tag (both scripts + the script-conventions tripwire); docs/session_203.md; the worklog Session-176 entry; this §9; the `.env.example` contract re-verified
-- [ ] Commit to main + push via the SSH wrapper + remote verify
+- [x] Commit to main + push via the SSH wrapper + remote verify
