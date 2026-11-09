@@ -681,3 +681,74 @@ describe("S163/DL3: parseExamTopics (the promoted topics seam)", () => {
     expect(parseExamTopics("")).toEqual([]);
   });
 });
+
+// S164/DM1 (the s164 audit B/H-1): the assignments mutation CB8 split —
+// the DK1/DL1 pair set ported to the third family of the recorded
+// family-wide port ("assignments/timetable/notes/flashcards/tasks share
+// the H-1 shape — each family gets its own rotation-axis audit + pin
+// set, the events/exams pin sets are the templates"). The pre-DM1
+// assignments mutations were `await apiSend(...)` then
+// `await fetchAndSet("assignments")` (data.ts:618-629), and fetchAndSet
+// REJECTS when its GET fails (the CD2 20 s deadline): a write that
+// COMMITTED server-side followed by a flaky refresh rejected the WHOLE
+// mutation — the view's catch showed "Something went wrong." in the
+// still-open dialog (assignments-view.tsx:187-188), fired no success
+// toast, and kept the form armed, so a RETRY re-POSTed and duplicated
+// the assignment (the CB8 letter: a false mutation-failure claim on a
+// committed row). The slider's onValueCommit leg routes through the
+// SAME updateAssignment — a flaky refresh after a COMMITTED progress
+// drag fired the error toast on a SAVED row. The fix contains the
+// refresh rejection AT THE SEAM (the DK1/DJ5 .catch doctrine, ported
+// verbatim): the write's own success toast ("Assignment added.") is
+// the surfacing; the stale slice self-heals on the next load (the S16
+// view-switch pre-warm + the next mutation's own refresh). These legs
+// pin the behavioral contract with the CZ1 mock shape: apiSend resolves
+// (the committed write) + apiGet rejects (the flaky refresh) → the
+// mutation RESOLVES; and apiSend itself rejecting still rejects (the
+// honest save-failure contract the view's dialog catch depends on).
+describe("S164/DM1: the assignments mutation CB8 split (B-H1 — committed write + failed refresh)", () => {
+  const assignmentInput = {
+    title: "DM1 probe",
+    description: "",
+    subjectId: null,
+    dueDate: null,
+    type: "homework",
+    progress: 0,
+    priority: "medium",
+  } as const;
+
+  beforeEach(() => {
+    apiGetMock.mockReset();
+    apiSendMock.mockReset();
+    apiGetMock.mockResolvedValue([]);
+    apiSendMock.mockResolvedValue(undefined);
+    useDataStore.setState({ assignments: [] });
+  });
+
+  it("createAssignment: a committed write + a failed refresh RESOLVES (never the false save-failure)", async () => {
+    apiSendMock.mockResolvedValueOnce(undefined); // the POST 201s
+    apiGetMock.mockRejectedValueOnce(new Error("offline")); // the refresh GET fails
+    // RED pre-fix: the mutation rejected with "offline" — the caller's
+    // catch claimed a save failure on a row the server committed.
+    await expect(mutations.createAssignment(assignmentInput as never)).resolves.toBeUndefined();
+  });
+
+  it("updateAssignment: a committed write + a failed refresh RESOLVES", async () => {
+    apiSendMock.mockResolvedValueOnce(undefined);
+    apiGetMock.mockRejectedValueOnce(new Error("offline"));
+    await expect(mutations.updateAssignment("a1", { progress: 40 })).resolves.toBeUndefined();
+  });
+
+  it("deleteAssignment: a committed write + a failed refresh RESOLVES", async () => {
+    apiSendMock.mockResolvedValueOnce(undefined);
+    apiGetMock.mockRejectedValueOnce(new Error("offline"));
+    await expect(mutations.deleteAssignment("a1")).resolves.toBeUndefined();
+  });
+
+  it("createAssignment: a FAILED write still rejects (the honest save-failure reaches the caller)", async () => {
+    apiSendMock.mockRejectedValueOnce(new Error("offline"));
+    // The write leg keeps rejecting — the view's dialog stays open with
+    // the honest error, and the retry is legitimate (nothing committed).
+    await expect(mutations.createAssignment(assignmentInput as never)).rejects.toThrow("offline");
+  });
+});

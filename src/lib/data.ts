@@ -614,18 +614,34 @@ export const mutations = {
     await Promise.all([fetchAndSet("taskLists"), fetchAndSet("tasks")]);
   },
 
-  // ---- assignments ----------------------------------------------------------
+  // ---- assignments (S164/DM1: the CB8 failure-domain split) ------------------
+  // The write and the post-write refresh are SEPARATE failure domains (the
+  // S127/CB8 doctrine, the DK1 events + DL1 exams ports — the recorded
+  // family-wide port, this the third family): a refresh GET that fails
+  // after a COMMITTED write must not reject the mutation — the caller's
+  // catch would claim a save failure on a saved row ("Something went
+  // wrong." in the still-open dialog, no success toast) and arm the retry
+  // that DUPLICATES the assignment. The slider's onValueCommit leg routes
+  // through the same updateAssignment — a flaky refresh after a COMMITTED
+  // progress drag fired the error toast on a SAVED row. The refresh
+  // rejection is contained here; the stale slice self-heals on the next
+  // successful load (the S16 view-switch pre-warm + the next mutation's
+  // own refresh — the DJ5 doctrine: the write's own success toast is the
+  // surfacing; a second toast for the same offline window is noise). The
+  // WRITE leg keeps rejecting honestly — the view's dialog catch still
+  // sees real save failures. Pinned by tests/data-store.test.ts (the
+  // DM1 pair set).
   createAssignment: async (input: AssignmentInput): Promise<void> => {
     await apiSend("POST", PATHS.assignments, input);
-    await fetchAndSet("assignments");
+    await fetchAndSet("assignments").catch(() => undefined);
   },
   updateAssignment: async (id: string, patch: Partial<AssignmentInput>): Promise<void> => {
     await apiSend("PATCH", `${PATHS.assignments}/${id}`, patch);
-    await fetchAndSet("assignments");
+    await fetchAndSet("assignments").catch(() => undefined);
   },
   deleteAssignment: async (id: string): Promise<void> => {
     await apiSend("DELETE", `${PATHS.assignments}/${id}`);
-    await fetchAndSet("assignments");
+    await fetchAndSet("assignments").catch(() => undefined);
   },
 
   // ---- exams (S163/DL1: the CB8 failure-domain split) ------------------------

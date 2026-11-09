@@ -6679,3 +6679,118 @@ F-8 candidate); the S160 close's ledger (the A-M3 stage-2 triggers;
 the update-side raw-SQL bulk upsert; the I-4 parse posture; the M-1
 LLM-side residual); the gradetracker/studygroups/settings-CRUD and
 AlertDialog-confirm e2e gaps.
+
+## Session 175 — the S164 cycle (Batch DM: the assignments-family hardening set)
+
+**The recovery cycle.** The prior session's S164 was fully green
+(DM1-DM4 applied, docs lockstep done, cert chunks 1/2/5 clean) when
+the tool infrastructure failed and the sandbox reset BEFORE the commit
+— the workspace came back empty. This cycle RE-EXECUTED the same plan
+from a fresh clone at `9729ea4` (the S163/Batch DL fix `b66d4a1` +
+the operator's two session-log docs commits): environment rebuilt
+(bun install, the repo-root `db/` re-created + pushed + seeded, `.env`
+byte-identical to `.env.example` at the documented dev posture, the
+playwright chromium re-provisioned), and every RED re-derived fresh —
+nothing trusted from the lost session's claims. Cold baseline: lint ✓ ·
+tsc ✓ · unit **1657/1657** (51 files — the documented S163 final
+state exactly). The config posture re-validated (the `skills/` folder
+excluded from code checking, testing, and compilation on every axis).
+
+**Audits (Mode-C; every H/L finding re-verified by direct read).**
+A — the Batch DL recent-changes axis (`b66d4a1`): **0C/0H/0M/0L/0I —
+clean** (all three DL claims confirmed at the source anchors — the
+three CB8 catches, the DL2 aria gate, the DL3 promoted seam; the doc
+census chain machine-verified, zero stale count sites). B — the
+assignments family (the rotation's fresh axis, NAMED by the S163
+close's "Next cycle" list): **0C/1H/0M/2L/1I** — the family coherent
+(ownership in the WHERE clause by construction, the sentKeysPatch
+PATCH shape, the BX9/CI7d/DJ5/DA1-2/CB2/CB9 point-fix heritage,
+take:500, zero useEffect); the findings: **H-1** the assignments
+mutations rejected on the refresh leg after a COMMITTED write (the
+CB8 letter — the false save-failure armed the duplicate-creating
+retry, and the slider's onValueCommit leg made it fire on the
+family's most-used control); **L-1** the loading gate carried no aria
+contract; **L-2** the PRIORITIES local twin beside
+validation.ts's ASSIGNMENT_PRIORITIES single source (the
+ALIASED-twin form the DJ3 census never guarded); **I-1** the
+onClick/onSelect mix — declined at §8 (no live driver). C — the
+mid-cycle discovery: the S161/DJ5 e2e leg's route glob
+`**/api/assignments*` never matched the per-id PATCH (Playwright's
+`*` does not cross `/`) — the leg was green by pinning the CB8
+false-failure as correct behavior; DM1's split exposed it (the
+committed write + contained refresh answers no toast — the leg failed
+3/3), the bisect pair located the dishonesty in the TEST.
+
+**The fixes (TDD-first; every RED on its designed marker, re-derived
+this session).**
+- **DM1 — the assignments mutation CB8 split (the H-1 close).** The
+  three mutations contain the refresh rejection at the seam
+  (`fetchAndSet("assignments").catch(() => undefined)`, the DK1/DL1
+  doctrine comment re-tagged); the WRITE leg keeps rejecting honestly.
+  Unit +4 (the CZ1 pair set: the resolve trio RED pre-fix — 3 failed
+  exactly as designed — + the failed-write guard green-on-arrival);
+  e2e +1 (the CB8-twin network-mock leg in parity-session9: the POST
+  continues, the collection GET aborts, the "Assignment added." toast
+  + the closed dialog — RED-proven against a rebuilt pre-fix
+  standalone, failing exactly at the toast assertion).
+- **DM2 — the loading gate gains `role="status"` +
+  `aria-label="Loading assignments"`** (the DL2 precedent shape,
+  rides the diff review).
+- **DM3 — the PRIORITIES single-source alias (the L-2 close).** The
+  local twin becomes `const PRIORITIES = ASSIGNMENT_PRIORITIES;` (the
+  TYPES-at-:70 shape) + the import; the DJ3 census gains its FIFTH
+  site — the import leg RED pre-fix, the no-local-twin leg guarding
+  the future fork (unit +2).
+- **DM4 — the DJ5 leg's route glob `**/api/assignments*` →
+  `**/api/assignments**`** (route + finally unroute + the corrected
+  comment) — count-neutral, the test-honesty fix DM1 exposed; proven
+  by the bisect pair (fails 3/3 on the DM1 build under the old glob,
+  GREEN under the corrected one — the PATCH genuinely aborts, the
+  toast fires, zero pageerrors). The latent single-star sweep: the two
+  other usages benign (CG5's handler-side pathname discrimination; the
+  tasks leg's deliberate collection-GET-only hold).
+
+**Gates.** lint ✓ · tsc ✓ · unit **1663/1663** (51 files, +6 exactly
+as designed: data-store +4, enum-single-source +2) · build ✓ (the
+"Ecmascript file had an error" lines verified PRE-EXISTING on the
+pre-fix tree by the stash-build check — toolchain noise, not the
+diff) · the full touched spec files: parity-session9 **38/38** (+1,
+the DM1 leg) · resilience **42/43** (the S120/BU1 files-view
+Rename-prefill leg — the documented P1008 machine-load class, passing
+2.1 s cold in isolation; my diff touches nothing in the files surface)
+· the 5-chunk cold cert (the as-executed tallies in the plan §9 — the
+designed census 155 + 193 + 94 + 95 + 89 = **626**, chunk 2 +1 the
+DM1 leg).
+
+**Evidence.** The `docs/screenshots/164-clone-*.png` frames (the
+standing desktop + the mobile drawer [the drawer-GREEN companion] +
+the cycle's Assignments surface — the seeded rows with their priority
+pills, the DM3 alias's render path), captured by
+`scripts/capture-s164-evidence.mjs` (the S163 precedent).
+
+**Docs.** README badge/census (2282 → 2289) + the count prose sites +
+the Session-164 row; AGENTS census + the e2e map re-tag + the S164
+lessons block (three lessons: a route-interception leg's glob is part
+of its proof — re-derive it against the actual wire URLs when the
+fix it pins changes shape; the aliased local twin is the census blind
+spot — enumerate the consumed vocabularies, not the exported names;
+the plan-first doctrine is also the disaster-recovery doctrine — an
+unpushed green is worth nothing); CLAUDE counts (1663 + 626); PAD
+v1.3.72 (the revision block); the SKILL census (all sites); the
+vitest header re-anchor (+6); the cert runner re-tag (both scripts,
+625 → 626, chunk 2 192 → 193, machine-pinned by the
+script-conventions leg); `docs/session_201.md`; this entry; the plan
+§9 as-executed close; the `.env.example` contract re-verified (no
+env-var reads changed this cycle — .env and .env.example
+byte-identical at the documented dev posture).
+
+**Next cycle.** The rotation continues — the recorded deferrals: the
+family-wide CB8 port's REMAINING families (timetable/notes/flashcards/
+tasks + the subject/taskList/notebook/deck/studyGroup/practiceTest
+seams — each family gets its own rotation-axis audit + pin set; the
+events/exams/assignments pin sets are the templates); the files
+refresh-failure toast copy harmonization (the F-8 candidate); the
+S160 close's ledger (the A-M3 stage-2 triggers; the update-side raw-SQL
+bulk upsert; the I-4 parse posture; the M-1 LLM-side residual); the
+gradetracker/studygroups/settings-CRUD and AlertDialog-confirm e2e
+gaps.

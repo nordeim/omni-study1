@@ -61,14 +61,18 @@ import {
 } from "@/lib/data";
 import { daysUntil, fromDueDateInput, startOfDay, toDateInputValue } from "@/lib/date";
 import { ApiError } from "@/lib/api";
-import { ASSIGNMENT_TYPES } from "@/lib/validation";
+import { ASSIGNMENT_PRIORITIES, ASSIGNMENT_TYPES } from "@/lib/validation";
 import { cn } from "@/lib/utils";
 
 // S127/CB9: the shared vocabulary (the CA14 single-source) — the local
 // 7-value twin was missing "worksheet", so Edit on the seeded worksheet
 // rows blanked the Type select and the type was un-creatable from the UI.
 const TYPES = ASSIGNMENT_TYPES;
-const PRIORITIES = ["low", "medium", "high", "urgent"];
+// S164/DM3: the priorities single-source alias (the s164 audit B/L-2) —
+// the local 4-value twin was value-equal today but outside the DJ3
+// census (the aliased-twin form); a future schema value the twin missed
+// would blank the Priority select on Edit (the CB9 drift class).
+const PRIORITIES = ASSIGNMENT_PRIORITIES;
 
 type StatusFilter = "all" | "active" | "completed";
 
@@ -308,7 +312,15 @@ export function AssignmentsView() {
       </div>
 
       {loading && assignments.length === 0 ? (
-        <div className="sf-card flex justify-center py-16 text-sf-primary">
+        <div
+          className="sf-card flex justify-center py-16 text-sf-primary"
+          role="status"
+          aria-label="Loading assignments"
+          /* S164/DM2 (the s164 audit B/L-1): the CE3 loading gate announces
+             itself (role="status" — the DL2 exams/DK4 events-calendar
+             precedent; the Spinner itself is aria-hidden, so the unlabeled
+             div was silent to assistive tech during the in-flight window). */
+        >
           <Spinner className="size-6" />
         </div>
       ) : filtered.length === 0 ? (

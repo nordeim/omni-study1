@@ -725,6 +725,56 @@ test.describe("S127/CB9 · the assignments Type select is the shared 8-value voc
   });
 });
 
+// S164/DM1 — the assignments CB8 failure-domain split (the s164 audit
+// B/H-1): the write and the post-write refresh are SEPARATE failure
+// domains (the DK1/DL1 doctrine ported to the third family of the
+// recorded family-wide port). Pre-DM1 the create mutation was `await
+// apiSend(POST)` then `await fetchAndSet("assignments")`, and the flaky
+// refresh rejected the WHOLE mutation — the dialog stayed open with
+// "Something went wrong." on a row the server COMMITTED (and the armed
+// retry re-POSTed → the duplicate-creating loop). The pin drives the
+// real condition: the collection GET (the refresh) ABORTS, the POST
+// (the write) CONTINUES — a committed create answers the SUCCESS toast
+// + the closed dialog. RED pre-fix: the success toast never fired.
+test.describe("S164/DM1 · the assignments save succeeds through a failed refresh (CB8 split)", () => {
+  test("a committed create + an aborted refresh answers the success toast, never the false save-failure", async ({ page }) => {
+    await page.goto("/Assignments");
+    await hydrated(page);
+    const rows = page.locator('[aria-label="Assignment rows"] > *');
+    await expect(rows.first()).toBeVisible();
+    // Abort the collection GET (the refresh leg) — the POST (the write
+    // leg) continues through the same URL, discriminated by method.
+    await page.route("**/api/assignments", (route) => {
+      if (route.request().method() === "GET") route.abort("failed");
+      else route.continue();
+    });
+    let createdId: string | null = null;
+    try {
+      await page.getByRole("button", { name: "Add Assignment" }).first().click();
+      const dlg = page.getByRole("dialog");
+      await expect(dlg).toBeVisible();
+      await dlg.getByLabel("Title").fill("S164-DM1 committed-write probe");
+      const saved = page.waitForResponse(
+        (r) => r.request().method() === "POST" && r.url().includes("/api/assignments"),
+      );
+      await dlg.getByRole("button", { name: "Add Assignment" }).click();
+      const res = await saved;
+      // The write itself COMMITTED server-side.
+      expect(res.ok()).toBe(true);
+      createdId = ((await res.json()) as { id: string }).id;
+      // The SUCCESS toast fires (the write's own surfacing — the
+      // contained refresh rejection must not claim a save failure).
+      await expect(page.getByText("Assignment added.")).toBeVisible({ timeout: 10_000 });
+      // The dialog closes — the form is not armed for the retry.
+      await expect(dlg).toHaveCount(0);
+    } finally {
+      await page.unroute("**/api/assignments");
+      // Zero residue on the shared demo user (the CC4/AR3 convention).
+      if (createdId) await page.request.delete(`/api/assignments/${createdId}`);
+    }
+  });
+});
+
 // S140/CO1 — the legacy-row RENDER gate (A-L3 closed): the global setup
 // plants one PRE-FIX hostile note on the demo user (scripts/e2e-
 // plant-legacy-note.ts — a remote tracking pixel + iframe + handler bait,

@@ -149,7 +149,14 @@ describe("the chunked cert runner's truth contract (S128/CC2)", () => {
     // pin in parity-session8 — the DK1 events port to the second family
     // of the recorded family-wide port; a committed create + an aborted
     // refresh answers the success toast) — 624 → 625.
-    expect(certSource).toContain("Expected: 155 + 192 + 94 + 95 + 89 = 625");
+    // S164/DM: chunk 2 192 → 193 (the DM1 assignments CB8
+    // failure-domain split pin in parity-session9 — the DK1/DL1
+    // events/exams ports to the third family of the recorded
+    // family-wide port; a committed create + an aborted refresh answers
+    // the success toast; the cycle also carries the count-neutral DM4
+    // test-honesty fix — the DJ5 leg's route glob `**/api/assignments*`
+    // → `**`, Playwright's single star never crossed `/`) — 625 → 626.
+    expect(certSource).toContain("Expected: 155 + 193 + 94 + 95 + 89 = 626");
   });
 
   it("propagates a failing chunk's exit code (never a green cert on a red run)", () => {

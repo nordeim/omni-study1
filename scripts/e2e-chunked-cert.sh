@@ -230,7 +230,20 @@
 # 192.0.2.139, 3/10 per-IP, 3/40 registerGlobal), the demo import
 # budget at 8/10; END-of-file, the CK1 flood pin stays TERMINAL in
 # s16]. The full CN map: docs/remediation-plan-session139.md.)
-# Expected: 155 + 192 + 94 + 95 + 89 = 625 (each chunk's count includes its
+# (S164/DM re-tag — census 625 → 626, net +1: chunk 2 +1 [the
+# S164/DM1 assignments CB8 failure-domain split pin in
+# parity-session9 — the POST continues, the refresh GET aborts: a
+# committed create answers the success toast + the closed dialog,
+# never the false save-failure that armed the duplicate-creating
+# retry (the DK1/DL1 events/exams ports to the third family of the
+# recorded family-wide port); network-mocked, no server writes]. The
+# cycle also carries the S164/DM4 test-honesty fix (the S161/DJ5
+# leg's route glob `**/api/assignments*` → `**` — Playwright's `*`
+# never crossed `/`, so the designed PATCH-abort never fired and the
+# leg was green by pinning the CB8 false-failure as correct behavior;
+# count-neutral, proven by the DM1 bisect pair). The full DM map:
+# docs/remediation-plan-session164.md.)
+# Expected: 155 + 193 + 94 + 95 + 89 = 626 (each chunk's count includes its
 # auth setup — the current census; the historical re-tag blocks beneath.)
 # (S131/CF re-tag — census 567 → 570, net +3: chunk 1 +1 [the CF9
 # drawer focus-restore leg in mobile-navigation — crossing the lg

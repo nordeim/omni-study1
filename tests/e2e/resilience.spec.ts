@@ -1727,9 +1727,18 @@ test.describe("S161/DJ5 · the slider rollback resync surfaces no unhandled reje
     const slider = page.getByRole("slider").first();
     await slider.focus();
     // Both the commit PATCH and the rollback resync GET fail (the
-    // flaky-network condition) — the trailing-star pattern covers the
-    // collection path AND the per-id path.
-    await page.route("**/api/assignments*", (route) => route.abort("failed"));
+    // flaky-network condition). S164/DM4 (the test-honesty fix): the
+    // pattern MUST be `**/api/assignments**` — Playwright's glob `*`
+    // does NOT cross `/`, so the pre-DM4 single-star pattern matched
+    // the collection GET but NEVER the per-id PATCH
+    // (/api/assignments/<id>): the leg's designed PATCH-abort never
+    // fired and the leg was green by pinning the CB8 false-failure
+    // (committed PATCH + failed refresh) as correct behavior — exposed
+    // by the DM1 split (the contained refresh answers no toast) and
+    // proven by bisect in the S164 plan §5. The double-star crosses
+    // the segment boundary; BOTH the route and the finally unroute
+    // carry it.
+    await page.route("**/api/assignments**", (route) => route.abort("failed"));
     try {
       await slider.press("ArrowRight");
       // The PRIMARY failure toast fires exactly once (the commit's own
@@ -1745,7 +1754,7 @@ test.describe("S161/DJ5 · the slider rollback resync surfaces no unhandled reje
         `unhandled pageerrors from the resync: ${pageErrors.join(" | ")}`,
       ).toEqual([]);
     } finally {
-      await page.unroute("**/api/assignments*");
+      await page.unroute("**/api/assignments**");
     }
   });
 });

@@ -9,9 +9,9 @@ High-signal instructions for coding agents working in this repo. Everything here
 | `bun install` | Install deps (Bun ≥ 1.3) |
 | `bun run dev` | Dev server on :3000 (Turbopack), logs tee'd to `dev.log` |
 | `bun run lint` / `bun run typecheck` | ESLint / `tsc --noEmit` — both must be clean |
-| `bun run test` | Vitest unit layer (1657 tests; `*.test.ts` only — never picks up e2e specs) |
+| `bun run test` | Vitest unit layer (1663 tests; `*.test.ts` only — never picks up e2e specs) |
 | `bun run build` | Production build → `.next/standalone` (**required before e2e**) |
-| `bun run test:e2e` | Playwright vs the standalone build on :3100 with `db/e2e.db` (625 tests across the 5-chunk cold map — 155+192+94+95+89, 30 spec files; a single-process full run trips the register rate-limiter budget by design, the chunked map re-boots the server per chunk). NOTE (S45, the day-boundary lesson): the global setup re-seeds every run, but the seed's IDEMPOTENT UPSERTS do NOT refresh day-relative dates on existing rows — a scratch `db/e2e.db` that ages across a UTC midnight keeps its original day-relative dates (today's tasks, the +1-day exam badge, the due-in pills, the import round-trip dates each read one day stale → 4 deterministic failures in parity-session6/parity-session9/s23-import). Delete `db/e2e.db` when a run crosses a day boundary — the global setup re-creates it fresh with current dates. NOTE (S46, TWO more aged-scratch-db classes + a build-input one): (1) ALWAYS run e2e COLD — S131/CF5 chained `scripts/e2e-cold-reset.sh` into `bun run test:e2e` (port-guard + `rm -f db/e2e.db` BEFORE playwright boots anything — global-setup is TOO LATE: Playwright starts the webServer before globalSetup), so the default runner self-colds; any DIRECT `playwright test` invocation still needs the manual `rm -f db/e2e.db` before every full run: the s23-import round-trip posts a FIXED-id envelope, so a second consecutive run against the aged db reads `created: 0, updated: 1` instead of `created: 1, updated: 0` and fails — not just across midnights, across ANY re-run; (2) the s22 negative-spawn spec reads the BUNDLED `.env` — Next's standalone output COPIES the repo-root `.env` into `.next/standalone/.env` at build time, so a REAL AUTH_SECRET in the dev `.env` leaks into the bundle and the guard CORRECTLY boots (the spec times out waiting for the exit) — keep the repo-root `.env`'s AUTH_SECRET EMPTY (the `.env.example` dev posture: `AUTH_SECRET=""` — dev falls back to the local constant with the boot warning) when building for e2e |
+| `bun run test:e2e` | Playwright vs the standalone build on :3100 with `db/e2e.db` (626 tests across the 5-chunk cold map — 155+193+94+95+89, 30 spec files; a single-process full run trips the register rate-limiter budget by design, the chunked map re-boots the server per chunk). NOTE (S45, the day-boundary lesson): the global setup re-seeds every run, but the seed's IDEMPOTENT UPSERTS do NOT refresh day-relative dates on existing rows — a scratch `db/e2e.db` that ages across a UTC midnight keeps its original day-relative dates (today's tasks, the +1-day exam badge, the due-in pills, the import round-trip dates each read one day stale → 4 deterministic failures in parity-session6/parity-session9/s23-import). Delete `db/e2e.db` when a run crosses a day boundary — the global setup re-creates it fresh with current dates. NOTE (S46, TWO more aged-scratch-db classes + a build-input one): (1) ALWAYS run e2e COLD — S131/CF5 chained `scripts/e2e-cold-reset.sh` into `bun run test:e2e` (port-guard + `rm -f db/e2e.db` BEFORE playwright boots anything — global-setup is TOO LATE: Playwright starts the webServer before globalSetup), so the default runner self-colds; any DIRECT `playwright test` invocation still needs the manual `rm -f db/e2e.db` before every full run: the s23-import round-trip posts a FIXED-id envelope, so a second consecutive run against the aged db reads `created: 0, updated: 1` instead of `created: 1, updated: 0` and fails — not just across midnights, across ANY re-run; (2) the s22 negative-spawn spec reads the BUNDLED `.env` — Next's standalone output COPIES the repo-root `.env` into `.next/standalone/.env` at build time, so a REAL AUTH_SECRET in the dev `.env` leaks into the bundle and the guard CORRECTLY boots (the spec times out waiting for the exit) — keep the repo-root `.env`'s AUTH_SECRET EMPTY (the `.env.example` dev posture: `AUTH_SECRET=""` — dev falls back to the local constant with the boot warning) when building for e2e |
 | `node scripts/capture-studyflow.mjs` | Refresh all 31 `docs/screenshots/` captures from the dev server (24 light + 7 dark) |
 | `node scripts/dark-sweep.mjs` | Dark-mode contrast audit over all 20 views (flashbulb/unreadable detector). S27: sets dark mode through the settings API (the real lifecycle) and SELF-VERIFIES the precondition — fails loudly (exit 1, no findings) if the dark class is not applied; the applied mode rides the JSON envelope. Never force the class directly (the session-10 approach silently rotted after S11) |
 | `node scripts/accent-dark-sweep.mjs` | Accent × dark-mode audit (S38-extended): all 7 accents × 20 desktop views × 20 MOBILE views at 390×844 + the drawer per accent (FAIL <2.2, WARN <3.2 for accent text; the mobile records also carry scrollWidth — >390 is a finding). The S38 shape is unit-pinned anti-phantom: every view recorded EXPLICITLY on both surfaces (clean views carry empty detector arrays), the per-accent `applied` self-verified readings + `mode: "dark"` + `mobileViewport` ride the envelope, and the seam's ALL-ACCENTS + ALL-VIEWS + drawer-present guards make every silently-skipped dimension a LOUD shape-error (the pre-S38 mobile pass swept only 6 views — MOBILE_VIEWS — and the omission-means-clean recording could not distinguish "clean because measured" from "clean because never rendered") |
@@ -2963,4 +2963,62 @@ Hover-parity probing must run in Playwright, not a touch-emulating browser — v
    (2) does it pass on the authoritative cert, (3) does the diff touch
    the surface — only a "no" at any step escalates to a real defect;
    the P1008 class never survives step 1.
+
+## S164 lessons (Batch DM — the assignments-family hardening cycle: the CB8 third family-port + the aliased-twin census + the test-honesty glob set)
+
+1. **A green e2e leg is not a proven e2e leg — the route glob must be
+   re-derived against the URL it claims to intercept, or the leg pins
+   the bug as the behavior.** The S161/DJ5 leg routed
+   `**/api/assignments*` and its comment claimed the pattern covered
+   "the collection path AND the per-id path" — but Playwright's glob
+   `*` does NOT cross `/`: the per-id PATCH never matched, never
+   aborted, and the leg's designed double-failure condition (abort the
+   PATCH AND the GET) never fired. The leg was green for four cycles
+   because the un-designed condition it ACTUALLY exercised (committed
+   PATCH + failed refresh → the mutation rejects → the toast fires)
+   produced the same assertions — it was pinning the CB8
+   false-failure as correct behavior. The DM1 split exposed it
+   mechanically: with the refresh contained, the committed write
+   answers NO toast, and the leg failed 3/3 — the bisect (fails on
+   the DM1 build, passes on the pre-DM1 rebuild, the instrumented
+   probe showing the PATCH 200ing through the "aborting" route)
+   located the dishonesty in the TEST, not the fix. Lesson: a
+   route-interception leg's glob is part of its proof — when the fix
+   it pins changes shape, re-derive the glob against the actual wire
+   URLs (single `*` stops at `/`; only `**` crosses), and treat a leg
+   that only passes under the OLD behavior as a finding about the
+   LEG.
+
+2. **The aliased local twin is the census blind spot the same-named
+   twin never had — guard the ALIAS form explicitly.** The DJ3 census
+   guarded four same-named view twins (EXAM_TYPES, ASSIGNMENT_TYPES,
+   GRADE_LEVELS, REPEATS) with an import leg + a no-local-twin leg,
+   but the assignments PRIORITIES twin was ALIASED
+   (`const PRIORITIES = ["low",...]` beside validation.ts's
+   ASSIGNMENT_PRIORITIES) — value-equal, shape-legal, and invisible
+   to a census keyed on the EXPORT name. The CB9 drift class (a
+   future schema value the twin misses blanks the Edit select) was
+   live exactly as before. The DM3 site closes it the same way the
+   CB9 fix closed TYPES: import the single source, alias it at the
+   consumption seam, and give the census the site — the import leg
+   RED pre-fix, the no-local-twin leg guarding the future fork.
+   Lesson: an enum-consumption census must enumerate the CONSUMED
+   VOCABULARIES, not the exported names — an aliased twin drifts
+   exactly as far as a same-named one.
+
+3. **A sandbox reset that eats an unpushed cycle is recoverable —
+   the plan document is the checkpoint, and the re-execution must
+   re-derive its own REDs.** The prior session's S164 was fully
+   green (DM1-DM4 applied, docs lockstep done, chunks 1/2/5 clean)
+   when the tool infrastructure failed and the sandbox reset — the
+   commit never landed, and the workspace came back empty. The
+   recovery re-cloned at the same SHA, re-ran the cold baseline
+   (1657/1657 exact), and re-executed the SAME plan from its own
+   §5/§6 — re-proving every RED fresh (the unit trio, the census
+   import leg, the e2e toast marker on a rebuilt pre-fix binary)
+   before re-applying the GREENs. Nothing was trusted from the lost
+   session's claims; everything was re-derived from the codebase.
+   Lesson: the plan-first doctrine is also the disaster-recovery
+   doctrine — a cycle is reproducible exactly as fast as its plan is
+   complete, and an unpushed green is worth nothing.
 

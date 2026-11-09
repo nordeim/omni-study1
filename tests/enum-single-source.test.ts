@@ -50,6 +50,11 @@ const SITES = [
     enumName: "REPEATS",
     why: "the S162/DK2 twin (four hard-coded SelectItems beside validation.ts:102's single source — value-equal, the CB9 drift class)",
   },
+  {
+    view: "src/components/views/assignments-view.tsx",
+    enumName: "ASSIGNMENT_PRIORITIES",
+    why: "the S164/DM3 twin (the local 4-value PRIORITIES array beside validation.ts:101's single source — value-equal, the aliased-twin form the four prior sites never guarded)",
+  },
 ] as const;
 
 function readView(rel: string): string {

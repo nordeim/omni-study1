@@ -1,13 +1,18 @@
-# StudyFlow (Omni-Study) — Master Project Architecture Document (PAD) v1.3.71
+# StudyFlow (Omni-Study) — Master Project Architecture Document (PAD) v1.3.72
 
 **Classification:** Internal Engineering Reference
 **Status:** DEFINITIVE, PRODUCTION-LOCKED BLUEPRINT
 **Companion Documents:** `README.md` (user-facing), `AGENTS.md` (agent quick-reference), `CLAUDE.md` (agent operating conventions), `docs/Tailwind-V4-Validation-Report.md` (parity trap log)
-**Last Updated:** 2026-11-09
+**Last Updated:** 2026-11-10
 **Audience:** Senior Engineers, Tech Leads, DevOps, Onboarding Engineers, and AI Coding Agents
 **Rule:** Every architectural decision in this document traces to a specific rationale. Nothing is here "because it's popular."
 
 ---
+
+#### Revision Block — v1.3.72 (Session-164 / Batch DM, Cycle 114)
+
+- `[SR]` Current test census anchor (the v1.2.0 convention, re-anchored): **1663/1663 Vitest unit** (51 files — the S164 additions: data-store +4 [the S164/DM1 assignments mutation CB8 split — a committed write + a failed refresh RESOLVES for create/update/delete, RED pre-fix on the three resolve legs, + the failed-write-still-rejects guard, the DK1/DL1 pair set ported to the third family of the recorded family-wide port]; enum-single-source +2 [the S164/DM3 ASSIGNMENT_PRIORITIES census site — the view's local 4-value PRIORITIES twin converted to the import alias, the import leg RED pre-fix + the no-local-twin guard]). The e2e census moves **625 → 626** (the 5-chunk cold map 155+193+94+95+89 — chunk 2 +1 [the S164/DM1 assignments CB8 leg in parity-session9: the POST continues, the refresh GET aborts, a committed create answers the success toast + the closed dialog, never the false save-failure that armed the duplicate-creating retry; the cycle also carries the count-neutral S164/DM4 test-honesty fix — the S161/DJ5 leg's route glob `**/api/assignments*` → `**`, Playwright's single star never crossed `/` so the designed PATCH-abort never fired and the leg was green by pinning the CB8 false-failure as correct behavior, exposed by the DM1 split and proven by the bisect pair]) — census 2289 green.
+- `[AR]` The assignments view (§ the views catalog): the three mutations' post-write refresh is now a CONTAINED failure domain (the CB8 doctrine — the third family ported after events/exams); the loading gate carries `role="status"` + `aria-label="Loading assignments"` (the DL2/DK4 precedent family completed for the assignments sibling); the Priority select consumes validation.ts's ASSIGNMENT_PRIORITIES single source through the alias (the DJ3 census's fifth site — the aliased-twin blind spot closed).
 
 #### Revision Block — v1.3.71 (Session-163 / Batch DL, Cycle 113)
 

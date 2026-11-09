@@ -1,8 +1,29 @@
 import { defineConfig } from "vitest/config";
 import path from "node:path";
 
-// Unit-test layer for the pure domain seams — 51 files / 1657 tests
-// (re-anchored S163/DL — the exams-family hardening cycle: census
+// Unit-test layer for the pure domain seams — 51 files / 1663 tests
+// (re-anchored S164/DM — the assignments-family hardening cycle: census
+// 1657 → 1663, +6 net [data-store +4: the S164/DM1 assignments mutation
+// CB8 split — a committed write + a failed refresh RESOLVES for
+// create/update/delete (RED pre-fix: the mutation rejected on the
+// refresh leg — the false save-failure that armed the
+// duplicate-creating retry, the DK1/DL1 events/exams ports to the
+// third family of the recorded family-wide port) + the
+// failed-write-still-rejects guard; enum-single-source +2: the
+// S164/DM3 ASSIGNMENT_PRIORITIES census site — the view's local
+// 4-value PRIORITIES twin beside validation.ts:101's single source
+// (value-equal, the aliased-twin form the four prior sites never
+// guarded) converted to the import alias, pinned by the import +
+// no-local-twin pair].
+// The e2e census moves 625 → 626 [+1: the S164/DM1 assignments CB8
+// leg in parity-session9 — the POST continues, the refresh GET aborts,
+// a committed create answers the success toast + the closed dialog;
+// the cycle also carries the count-neutral S164/DM4 test-honesty fix —
+// the S161/DJ5 leg's route glob `**/api/assignments*` → `**` (the
+// single star never crossed `/`, so the designed PATCH-abort never
+// fired)].)
+//
+// (prior re-anchor, S163/DL — the exams-family hardening cycle: census
 // 1648 → 1657, +9 net [data-store +9: the S163/DL1 exams mutation
 // CB8 split — a committed write + a failed refresh RESOLVES for
 // create/update/delete (RED pre-fix: the mutation rejected on the
