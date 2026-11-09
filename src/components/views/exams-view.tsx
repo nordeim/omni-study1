@@ -40,11 +40,10 @@ import {
 } from "@/components/ui/select";
 import { useToast } from "@/components/ui/toast";
 import { EmptyState, Spinner, SubjectTagChip } from "@/components/views/shared";
-import { mutations, useDataStore, type ExamInput, type ExamRow } from "@/lib/data";
-import { daysUntil } from "@/lib/date";
+import { mutations, parseExamTopics, useDataStore, type ExamInput, type ExamRow } from "@/lib/data";
 import { ApiError } from "@/lib/api";
 import { EXAM_TYPES } from "@/lib/validation";
-import { fromDatetimeLocalInput, toDatetimeLocalValue } from "@/lib/date";
+import { daysUntil, fromDatetimeLocalInput, toDatetimeLocalValue } from "@/lib/date";
 import { cn } from "@/lib/utils";
 
 // S161/DJ3 (the s161 audit B/F-3): the type vocabulary imports
@@ -157,13 +156,10 @@ export function ExamsView() {
   };
 
   const openEdit = (row: ExamRow) => {
-    let topics: string[] = [];
-    try {
-      const parsed: unknown = JSON.parse(row.topics);
-      topics = Array.isArray(parsed) ? parsed.filter((t): t is string => typeof t === "string") : [];
-    } catch {
-      topics = [];
-    }
+    // S163/DL3: the promoted seam (data.ts's parseExamTopics) — the twin
+    // lived byte-identical here and in the card render; the single source
+    // keeps the dialog and the card from drifting.
+    const topics = parseExamTopics(row.topics);
     setForm({
       title: row.title,
       // S123/BX3: the stored instant rendered in the USER's wall-clock —
@@ -299,7 +295,15 @@ export function ExamsView() {
       </div>
 
       {loading && exams.length === 0 ? (
-        <div className="sf-card flex justify-center py-16 text-sf-primary">
+        <div
+          className="sf-card flex justify-center py-16 text-sf-primary"
+          role="status"
+          aria-label="Loading exams"
+          /* S163/DL2 (the s163 audit B/L-1): the CE3 loading gate announces
+             itself (role="status" — the calculator-view/events-view
+             precedent; the Spinner itself is aria-hidden, so the unlabeled
+             div was silent to assistive tech during the in-flight window). */
+        >
           <Spinner className="size-6" />
         </div>
       ) : sorted.length === 0 ? (
@@ -322,13 +326,9 @@ export function ExamsView() {
             const subject = subjectOf(exam.subjectId);
             const urgencyBadge = urgency(exam);
             const date = new Date(exam.date);
-            let topics: string[] = [];
-            try {
-              const parsed: unknown = JSON.parse(exam.topics);
-              topics = Array.isArray(parsed) ? parsed.filter((t): t is string => typeof t === "string") : [];
-            } catch {
-              topics = [];
-            }
+            // S163/DL3: the promoted seam — the card render and openEdit
+            // share the single parseExamTopics source.
+            const topics = parseExamTopics(exam.topics);
             return (
               <div key={exam.id} className="group sf-card overflow-hidden">
                 <div

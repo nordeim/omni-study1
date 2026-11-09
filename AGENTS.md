@@ -9,9 +9,9 @@ High-signal instructions for coding agents working in this repo. Everything here
 | `bun install` | Install deps (Bun ≥ 1.3) |
 | `bun run dev` | Dev server on :3000 (Turbopack), logs tee'd to `dev.log` |
 | `bun run lint` / `bun run typecheck` | ESLint / `tsc --noEmit` — both must be clean |
-| `bun run test` | Vitest unit layer (1648 tests; `*.test.ts` only — never picks up e2e specs) |
+| `bun run test` | Vitest unit layer (1657 tests; `*.test.ts` only — never picks up e2e specs) |
 | `bun run build` | Production build → `.next/standalone` (**required before e2e**) |
-| `bun run test:e2e` | Playwright vs the standalone build on :3100 with `db/e2e.db` (624 tests across the 5-chunk cold map — 154+192+94+95+89, 30 spec files; a single-process full run trips the register rate-limiter budget by design, the chunked map re-boots the server per chunk). NOTE (S45, the day-boundary lesson): the global setup re-seeds every run, but the seed's IDEMPOTENT UPSERTS do NOT refresh day-relative dates on existing rows — a scratch `db/e2e.db` that ages across a UTC midnight keeps its original day-relative dates (today's tasks, the +1-day exam badge, the due-in pills, the import round-trip dates each read one day stale → 4 deterministic failures in parity-session6/parity-session9/s23-import). Delete `db/e2e.db` when a run crosses a day boundary — the global setup re-creates it fresh with current dates. NOTE (S46, TWO more aged-scratch-db classes + a build-input one): (1) ALWAYS run e2e COLD — S131/CF5 chained `scripts/e2e-cold-reset.sh` into `bun run test:e2e` (port-guard + `rm -f db/e2e.db` BEFORE playwright boots anything — global-setup is TOO LATE: Playwright starts the webServer before globalSetup), so the default runner self-colds; any DIRECT `playwright test` invocation still needs the manual `rm -f db/e2e.db` before every full run: the s23-import round-trip posts a FIXED-id envelope, so a second consecutive run against the aged db reads `created: 0, updated: 1` instead of `created: 1, updated: 0` and fails — not just across midnights, across ANY re-run; (2) the s22 negative-spawn spec reads the BUNDLED `.env` — Next's standalone output COPIES the repo-root `.env` into `.next/standalone/.env` at build time, so a REAL AUTH_SECRET in the dev `.env` leaks into the bundle and the guard CORRECTLY boots (the spec times out waiting for the exit) — keep the repo-root `.env`'s AUTH_SECRET EMPTY (the `.env.example` dev posture: `AUTH_SECRET=""` — dev falls back to the local constant with the boot warning) when building for e2e |
+| `bun run test:e2e` | Playwright vs the standalone build on :3100 with `db/e2e.db` (625 tests across the 5-chunk cold map — 155+192+94+95+89, 30 spec files; a single-process full run trips the register rate-limiter budget by design, the chunked map re-boots the server per chunk). NOTE (S45, the day-boundary lesson): the global setup re-seeds every run, but the seed's IDEMPOTENT UPSERTS do NOT refresh day-relative dates on existing rows — a scratch `db/e2e.db` that ages across a UTC midnight keeps its original day-relative dates (today's tasks, the +1-day exam badge, the due-in pills, the import round-trip dates each read one day stale → 4 deterministic failures in parity-session6/parity-session9/s23-import). Delete `db/e2e.db` when a run crosses a day boundary — the global setup re-creates it fresh with current dates. NOTE (S46, TWO more aged-scratch-db classes + a build-input one): (1) ALWAYS run e2e COLD — S131/CF5 chained `scripts/e2e-cold-reset.sh` into `bun run test:e2e` (port-guard + `rm -f db/e2e.db` BEFORE playwright boots anything — global-setup is TOO LATE: Playwright starts the webServer before globalSetup), so the default runner self-colds; any DIRECT `playwright test` invocation still needs the manual `rm -f db/e2e.db` before every full run: the s23-import round-trip posts a FIXED-id envelope, so a second consecutive run against the aged db reads `created: 0, updated: 1` instead of `created: 1, updated: 0` and fails — not just across midnights, across ANY re-run; (2) the s22 negative-spawn spec reads the BUNDLED `.env` — Next's standalone output COPIES the repo-root `.env` into `.next/standalone/.env` at build time, so a REAL AUTH_SECRET in the dev `.env` leaks into the bundle and the guard CORRECTLY boots (the spec times out waiting for the exit) — keep the repo-root `.env`'s AUTH_SECRET EMPTY (the `.env.example` dev posture: `AUTH_SECRET=""` — dev falls back to the local constant with the boot warning) when building for e2e |
 | `node scripts/capture-studyflow.mjs` | Refresh all 31 `docs/screenshots/` captures from the dev server (24 light + 7 dark) |
 | `node scripts/dark-sweep.mjs` | Dark-mode contrast audit over all 20 views (flashbulb/unreadable detector). S27: sets dark mode through the settings API (the real lifecycle) and SELF-VERIFIES the precondition — fails loudly (exit 1, no findings) if the dark class is not applied; the applied mode rides the JSON envelope. Never force the class directly (the session-10 approach silently rotted after S11) |
 | `node scripts/accent-dark-sweep.mjs` | Accent × dark-mode audit (S38-extended): all 7 accents × 20 desktop views × 20 MOBILE views at 390×844 + the drawer per accent (FAIL <2.2, WARN <3.2 for accent text; the mobile records also carry scrollWidth — >390 is a finding). The S38 shape is unit-pinned anti-phantom: every view recorded EXPLICITLY on both surfaces (clean views carry empty detector arrays), the per-accent `applied` self-verified readings + `mode: "dark"` + `mobileViewport` ride the envelope, and the seam's ALL-ACCENTS + ALL-VIEWS + drawer-present guards make every silently-skipped dimension a LOUD shape-error (the pre-S38 mobile pass swept only 6 views — MOBILE_VIEWS — and the omission-means-clean recording could not distinguish "clean because measured" from "clean because never rendered") |
@@ -2915,3 +2915,52 @@ Hover-parity probing must run in Playwright, not a touch-emulating browser — v
    re-read. Prose deferrals by axis are safe; prose deferrals by
    finding number require the plan re-read the standing doctrine
    already mandates.
+
+## S163 lessons (Batch DL — the exams-family hardening cycle: the CB8 family-port + the promoted topics seam set)
+
+1. **A family-wide fix ports one family per cycle — the fix's own
+   documentation names the next trigger, and the port is a copy of the
+   PROOF, not just the code.** The S162/DK1 events CB8 split sat at
+   data.ts:640-651 with its doctrine comment; the exams trio at
+   614-625 carried the identical unfixed shape eleven lines above it —
+   the family-wide port the S162 close recorded. The port itself was
+   three one-line `.catch(() => undefined)` edits, but the CYCLE's
+   value was the pair-set port: the CZ1 unit legs (create/update/
+   delete resolve + the failed-write guard) and the CB8-twin e2e leg
+   (POST continues, GET aborts, the success toast lands) — the proof
+   that the semantics, not just the syntax, arrived. Lesson: when a
+   fix's close names a family-wide port, the port's unit is the FAMILY,
+   and each family's cycle must re-derive its own RED (the pre-fix
+   rejection reproduced fresh) — a syntax copy without the pair-set
+   port is an unproven fix wearing a proven fix's clothes.
+
+2. **A promoted helper's pin set must pin the SEMANTICS THE TWINS HAD,
+   not the semantics of its sibling helper.** parseNoteTags (the
+   S151/CZ1 precedent) filters `t.length > 0`; the exams topics twins
+   kept every string. Promoting parseExamTopics beside it, the
+   copy-shaped hand would have imported the length guard — a silent
+   behavior change on a parity surface (empty-string topics from a
+   hand-edited row would flip from rendered to dropped). The VERBATIM
+   doctrine from DK5 applies to intra-file promotions too: the helper
+   documents the deliberate difference, the pin set pins the twins'
+   exact semantics (the mixed-array leg keeps `"also-ok"` and would
+   catch a length-guard regression). Lesson: promotion-by-precedent is
+   a two-step — copy the SHAPE from the sibling, re-derive the
+   SEMANTICS from the twins being replaced, and make the pin
+   discriminate between them.
+
+3. **The full-file e2e run and the chunk cert measure different
+   things — a full-file flake that passes both in isolation and on the
+   chunk is machine load, and chasing it is a false errand.** The
+   parity-session8 full-file run (71 legs, one server boot, ~1.8 min of
+   sustained load) flaked the BZ3 notebooks popover leg once; the
+   isolated re-run passed in 6.9 s; the cert's own chunk 1 (the same
+   spec, cold-booted, 155 legs) passed clean. The diff touches nothing
+   in that surface. The documented P1008 machine-load class has now
+   appeared in three consecutive cycles (S162 chunk 3 + chunk 4, S163
+   full-file) — always as one isolated leg, always clean on re-run.
+   Lesson: the flake triage order is (1) does it pass in isolation,
+   (2) does it pass on the authoritative cert, (3) does the diff touch
+   the surface — only a "no" at any step escalates to a real defect;
+   the P1008 class never survives step 1.
+

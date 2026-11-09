@@ -491,6 +491,24 @@ export function parseNoteTags(raw: string): string[] {
   }
 }
 
+/** The ExamRow.topics JSON contract → a string list (safe parse) — the
+ *  single source for the edit dialog AND the card render (moved from
+ *  exams-view.tsx at S163/DL3 where the twin lived byte-identical twice
+ *  — the parseNoteTags/CZ1 precedent). The twins' semantics preserved
+ *  VERBATIM: every string passes (no length guard — parseNoteTags'
+ *  t.length > 0 is the NOTES twins' semantics, deliberately different);
+ *  the raw || "[]" guard is behavior-identical to the twins' catch path
+ *  (JSON.parse("") throws → []). Pinned by tests/data-store.test.ts. */
+export function parseExamTopics(raw: string): string[] {
+  try {
+    const parsed: unknown = JSON.parse(raw || "[]");
+    if (!Array.isArray(parsed)) return [];
+    return parsed.filter((t): t is string => typeof t === "string");
+  } catch {
+    return [];
+  }
+}
+
 export const mutations = {
   // ---- tasks (the S6 reference flows) --------------------------------------
   createTask: async (input: TaskInput): Promise<void> => {
@@ -610,18 +628,31 @@ export const mutations = {
     await fetchAndSet("assignments");
   },
 
-  // ---- exams ------------------------------------------------------------------
+  // ---- exams (S163/DL1: the CB8 failure-domain split) ------------------------
+  // The write and the post-write refresh are SEPARATE failure domains (the
+  // S127/CB8 doctrine, the DK1 events port — the first family of the
+  // recorded family-wide port): a refresh GET that fails after a COMMITTED
+  // write must not reject the mutation — the caller's catch would claim a
+  // save failure on a saved row ("Something went wrong." in the still-open
+  // dialog, no success toast) and arm the retry that DUPLICATES the exam.
+  // The refresh rejection is contained here; the stale slice self-heals on
+  // the next successful load (the S16 view-switch pre-warm + the next
+  // mutation's own refresh — the DJ5 doctrine: the write's own success
+  // toast is the surfacing; a second toast for the same offline window is
+  // noise). The WRITE leg keeps rejecting honestly — the view's dialog
+  // catch still sees real save failures. Pinned by tests/data-store.test.ts
+  // (the DL1 pair set).
   createExam: async (input: ExamInput): Promise<void> => {
     await apiSend("POST", PATHS.exams, input);
-    await fetchAndSet("exams");
+    await fetchAndSet("exams").catch(() => undefined);
   },
   updateExam: async (id: string, patch: Partial<ExamInput>): Promise<void> => {
     await apiSend("PATCH", `${PATHS.exams}/${id}`, patch);
-    await fetchAndSet("exams");
+    await fetchAndSet("exams").catch(() => undefined);
   },
   deleteExam: async (id: string): Promise<void> => {
     await apiSend("DELETE", `${PATHS.exams}/${id}`);
-    await fetchAndSet("exams");
+    await fetchAndSet("exams").catch(() => undefined);
   },
 
   // ---- events (S162/DK1: the CB8 failure-domain split) ----------------------

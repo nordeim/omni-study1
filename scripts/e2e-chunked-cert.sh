@@ -1,4 +1,11 @@
 #!/usr/bin/env bash
+# (S163/DL re-tag — census 624 → 625, net +1: chunk 1 +1 [the
+# S163/DL1 exams CB8 failure-domain split pin in parity-session8 — the
+# POST continues, the refresh GET aborts: a committed create answers the
+# success toast + the closed dialog, never the false save-failure that
+# armed the duplicate-creating retry (the DK1 events port to the second
+# family of the recorded family-wide port); network-mocked, no server
+# writes]. The full DL map: docs/remediation-plan-session163.md.)
 # (S162/DK re-tag — census 623 → 624, net +1: chunk 3 +1 [the
 # S162/DK1 events CB8 failure-domain split pin in parity-session5 — the
 # POST continues, the refresh GET aborts: a committed create answers the
@@ -223,7 +230,7 @@
 # 192.0.2.139, 3/10 per-IP, 3/40 registerGlobal), the demo import
 # budget at 8/10; END-of-file, the CK1 flood pin stays TERMINAL in
 # s16]. The full CN map: docs/remediation-plan-session139.md.)
-# Expected: 154 + 192 + 94 + 95 + 89 = 624 (each chunk's count includes its
+# Expected: 155 + 192 + 94 + 95 + 89 = 625 (each chunk's count includes its
 # auth setup — the current census; the historical re-tag blocks beneath.)
 # (S131/CF re-tag — census 567 → 570, net +3: chunk 1 +1 [the CF9
 # drawer focus-restore leg in mobile-navigation — crossing the lg

@@ -1784,3 +1784,41 @@ test.describe("S153/DB1: the capped aggregate discharge (the success-only loop b
     expect(first429).toBeGreaterThanOrEqual(40);
   });
 });
+
+// S163/DL1 (the s163 audit B/M-1): the exams mutation CB8 split. The
+// pre-DL1 exams mutations rejected on the refresh leg after a COMMITTED
+// write — apiSend (the POST) then fetchAndSet (the GET, 20 s CD2
+// deadline), and the GET's failure rejected the whole mutation: the
+// view's catch showed "Something went wrong." in the STILL-OPEN dialog,
+// fired no success toast, and kept the form armed — a RETRY re-POSTed
+// and DUPLICATED the exam (the CB8 letter: a false mutation-failure
+// claim on a committed row; the DK1 events twin's exact shape, this
+// family's port — the first of the recorded family-wide CB8 port). The
+// CB8-twin network-mock shape (the S127/S160 family): the POST
+// continues (the write lands server-side), the GET aborts (the
+// flaky-refresh condition) — create an exam through the real dialog and
+// assert the honest success surface. RED pre-fix: no toast, the dialog
+// open with the false-failure copy.
+test.describe("S163/DL1 · the exams CB8 failure-domain split (Batch DL)", () => {
+  test("a committed create + a failed refresh answers the success toast (never the false save-failure)", async ({ page }) => {
+    await page.goto("/Exams");
+    await hydrated(page);
+    // The committed-write + flaky-refresh condition: the write continues
+    // (201 server-side), the refresh GET aborts.
+    await page.route("**/api/exams**", (route) => {
+      if (route.request().method() === "GET") return route.abort();
+      return route.continue();
+    });
+    await page.getByRole("button", { name: "Add Exam" }).first().click();
+    await page.locator("#exam-title").fill("S163-DL1 probe");
+    await page.locator("#exam-date").fill("2026-11-16T09:00");
+    await page.getByRole("button", { name: "Add exam" }).click();
+    // The write committed: the success toast lands through the aria-live
+    // stack and the dialog CLOSES. Pre-fix: the mutation rejected on the
+    // aborted refresh → "Something went wrong." in the open dialog, no
+    // success toast, the form armed for the duplicate-creating retry.
+    await expect(page.getByText("Exam added.")).toBeVisible({ timeout: 10_000 });
+    await expect(page.getByRole("dialog")).toBeHidden();
+    await expect(page.getByText("Something went wrong.")).toBeHidden();
+  });
+});

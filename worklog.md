@@ -6542,3 +6542,140 @@ close's ledger (the A-M3 stage-2 triggers; the update-side raw-SQL
 bulk upsert; the I-4 parse posture; the M-1 LLM-side residual); the
 gradetracker/studygroups/settings-CRUD and AlertDialog-confirm e2e gaps
 the prior audits surfaced.
+
+## Session 174 — the S163 cycle (Batch DL: the exams-family hardening set)
+
+The workspace was WARM at `b025e7e` on `main` (the S162/Batch DK fix
+`9a2da4d` + the operator's session_198 transcript commit; `git pull`
+delivered session_198.md, docs-only, tree clean; `.env` byte-identical
+to `.env.example` at the documented dev posture —
+`DATABASE_URL="file:../db/custom.db"`, the repo-root `db/` verified,
+bun 1.3.14 / node v24.22.2, node_modules pre-installed). Cold baseline
+matched the documented S162-final state exactly: lint ✓ · tsc ✓ ·
+unit 1648/1648 (51 files) · the dev-daemon preflight GREEN (booted
+with the S9/S31 stale-cache remedy through the reaper-proof python
+double-fork launcher — the S110 lesson applied) · the drawer check
+GREEN (**the 86th consecutive** no-Tailwind-v4-mobile-nav-bug
+confirmation — backdrop oklab(0 0 0 / 0.2) + blur(4px), 288px white
+panel, 20 links, no footer, Escape-close superset) · the desktop
+parity probe **MATCH** (all five formal checks, live reference login);
+the config posture re-validated (vitest include, playwright testDir +
+the e2e.db webServer, tsconfig + eslint `skills` exclusions).
+
+The audits (Mode-C; every M/L finding re-verified by direct read): A —
+the Batch DK recent-changes axis (`9a2da4d`; `108956e`/`b025e7e`
+docs-only): **0C/0H/0M/0L/0I — clean** (all six DK claims confirmed at
+the source anchors — the three CB8 catches at data.ts:642/646/650, the
+REPEATS import + render, the four referenceWeekNumber doc
+reconciliations, the three aria gates, the promoted events seam + its
+10 pins, the calendar pre-warm drop; the doc census machine-verified
+across all seven count sites, zero stale). B — the exams family (the
+rotation's fresh axis — the S162 close's own "Next cycle" list NAMED
+this axis: the family-wide CB8 port, exams FIRST in the recorded
+order; dispatched to a read-only subagent against the web-application
+skill's §4/§9/§12/§13/§16/§17 rubric — exams-view + the exams routes
+[the delegate factory + the withUser wrappers] + the seams + the
+round-trip verification): **0C/0H/1M/1L/3I** — the family coherent
+(ownership in the WHERE clause by construction, Zod at both boundaries
+with the sentKeysPatch PATCH shape, the BX3 datetime round-trip, the
+600/15-min write budget, take:500 bounded reads with the composite
+index, zero useEffect, zero space-y/x containers, EXAM_TYPES
+single-sourced with the census guard); the findings: **M-1** the exams
+mutations rejected on the refresh leg after a COMMITTED write — a
+flaky refresh GET showed "Something went wrong." in the still-open
+dialog, no success toast, the form armed: a RETRY duplicated the exam
+(the CB8 letter violated — the DK1 events fix sat ELEVEN LINES BELOW
+at data.ts:640-651, unfixed here; the 51-site fetchAndSet census
+showed 48 unfixed sites, this cycle closes 3); **L-1** the exams
+loading gate carried no aria contract (the DK4 pattern reached
+events/calendar/calculator but not the fourth view); **I-1** the
+topics safe-parse twin lived byte-identical twice in exams-view (the
+parseNoteTags/CZ1 duplication class) + a duplicated `@/lib/date`
+import pair. Round-trip verdict COMPATIBLE (the 7 examSchema keys 1:1,
+no field drift). The audit's I-2 (`as` cast on form.type — no live
+vector, the boundary/import/seed all enforce the vocabulary) and I-3
+(per-card subjects.find micro-perf — negligible under take:500)
+DECLINED at the plan §8.
+
+**The fixes (TDD — the plan `docs/remediation-plan-session163.md`
+written BEFORE any source change and validated against the codebase;
+the unit REDs on their designed markers [the DL1 resolve trio ×3 RED
+on the pre-fix refresh-leg rejection + the failed-write guard
+green-on-arrival — 3 failed | 1 passed, exactly the designed shape;
+the DL3 suite RED on the missing export — `TypeError: parseExamTopics
+is not a function`, 5 legs]; the e2e leg RED-proven against the
+pre-fix standalone build [the compile-blocking unit RED file set
+aside, the pre-fix build, the leg run — the "Exam added." toast never
+fired: element(s) not found; the file restored], GREEN post-fix):**
+
+- **DL1 — the exams mutation CB8 split (the M-1 close; the
+  family-wide port's first family).** The three exams mutations
+  contain the refresh rejection at the seam
+  (`fetchAndSet("exams").catch(() => undefined)` — the DK1/DJ5
+  doctrine comment ported verbatim): the WRITE leg keeps rejecting
+  honestly; a committed write + a failed refresh RESOLVES (the
+  "Exam added."/"Exam updated."/"Exam deleted." toast + the dialog
+  close proceed; the stale slice self-heals through the S16 pre-warm +
+  the next mutation's own refresh). Unit: the data-store pair set
+  (+4, the CZ1 mock shape). E2e: the CB8-twin network-mock (the POST
+  continues, the GET aborts, the success toast + the closed dialog) in
+  parity-session8 (chunk 1).
+- **DL2 — the exams loading gate gains `role="status"` +
+  `aria-label="Loading exams"` (the L-1 close; the DK4 precedent
+  shape, rides the diff review).**
+- **DL3 — the parseExamTopics promotion EXECUTED (the I-1 close).**
+  The safe-parse block moved VERBATIM to `src/lib/data.ts` beside
+  `parseNoteTags` (the S151/CZ1 precedent) — the helper preserves the
+  TWINS' semantics exactly (every string passes, NO length guard:
+  parseNoteTags' `t.length > 0` is the NOTES twins' semantics,
+  deliberately different, documented in the helper's doc comment; the
+  `raw || "[]"` guard is behavior-identical to the twins' catch
+  path). Both view sites consume the single source; the duplicated
+  `@/lib/date` import merges. Unit: the 5-leg pin set (the
+  mixed-array leg keeps "also-ok" — a length-guard regression would
+  fail it).
+
+**Gates.** lint ✓ · tsc ✓ · unit **1657/1657** (51 files, +9 exactly
+as designed: data-store +9) · build ✓ · the full touched spec file
+70/71 (the BZ3 notebooks popover leg flaked once on the documented
+P1008 machine-load class — passes in isolation in 6.9 s; the cert's
+own chunk-1 run of the same spec passed clean; my diff touches nothing
+in that surface) · the remediated-tree re-confirmation: preflight
+GREEN (the S9/S31 stale-cache remedy applied) · drawer GREEN (**the
+87th consecutive**) · parity **MATCH** · the 5-chunk cold cert: chunk
+1 **155/155** (+1, the DL1 leg) · chunk 2 **192/192** · chunk 3
+**94/94** · chunk 4 **95/95** · chunk 5 **89/89** — the cert tally
+**625/625** = **census 2282 green** (was 2272; 1657 unit + 625 e2e).
+
+**Evidence.** The `docs/screenshots/163-clone-*.png` frames (the
+standing desktop + the mobile drawer [the 87th drawer-GREEN companion]
++ the cycle's Exams surface — the seeded cards with their topic chips,
+the DL3 promoted seam's render path), self-verifying (ok: true; the
+non-blank pixel ratios verified: 45.9% / 34.5% / 58.3%), captured by
+`scripts/capture-s163-evidence.mjs` (the S162 precedent).
+
+**Docs.** README badge/census (2272 → 2282) + the count prose sites +
+the Session-163 row; AGENTS census + the e2e map re-tag + the S163
+lessons block (three lessons: the family-port's proof port — a syntax
+copy without the pair-set port is an unproven fix wearing a proven
+fix's clothes; the promoted helper pins the semantics the TWINS had,
+not the sibling helper's; the P1008 flake triage order — isolation →
+cert → diff-touch, escalating only on a "no"); CLAUDE counts (1657 +
+625); PAD v1.3.71 (the revision block); the SKILL census (both sites);
+the vitest header re-anchor (+9); the cert runner re-tag (624 → 625,
+chunk 1 154 → 155, machine-pinned by the script-conventions leg);
+`docs/session_199.md`; this entry; the plan §9 as-executed close; the
+`.env.example` contract re-verified (no env-var reads changed this
+cycle — .env and .env.example byte-identical at the documented dev
+posture).
+
+**Next cycle.** The rotation continues — the recorded deferrals: the
+family-wide CB8 port's REMAINING families (assignments/timetable/
+notes/flashcards/tasks + the subject/taskList/notebook/deck/
+studyGroup/practiceTest seams — each family gets its own
+rotation-axis audit + pin set; the events and exams pin sets are the
+templates); the files refresh-failure toast copy harmonization (the
+F-8 candidate); the S160 close's ledger (the A-M3 stage-2 triggers;
+the update-side raw-SQL bulk upsert; the I-4 parse posture; the M-1
+LLM-side residual); the gradetracker/studygroups/settings-CRUD and
+AlertDialog-confirm e2e gaps.

@@ -1,8 +1,25 @@
 import { defineConfig } from "vitest/config";
 import path from "node:path";
 
-// Unit-test layer for the pure domain seams — 51 files / 1648 tests
-// (re-anchored S162/DK — the events-family hardening cycle: census
+// Unit-test layer for the pure domain seams — 51 files / 1657 tests
+// (re-anchored S163/DL — the exams-family hardening cycle: census
+// 1648 → 1657, +9 net [data-store +9: the S163/DL1 exams mutation
+// CB8 split — a committed write + a failed refresh RESOLVES for
+// create/update/delete (RED pre-fix: the mutation rejected on the
+// refresh leg — the false save-failure that armed the
+// duplicate-creating retry, the DK1 events port to the second family
+// of the recorded family-wide port) + the failed-write-still-rejects
+// guard; +5: the S163/DL3 promoted parseExamTopics seam — the topics
+// safe-parse twin lived byte-identical twice in exams-view.tsx
+// (openEdit + the card render), the S151/CZ1 parseNoteTags precedent
+// executed for exams (the helper preserves the twins' semantics
+// verbatim — every string passes, no length guard) with the pin set:
+// valid-array/mixed-array-filter/non-array/invalid-JSON/empty-string].
+// The e2e census moves 624 → 625 [+1: the S163/DL1 exams CB8 leg in
+// parity-session8 — the POST continues, the refresh GET aborts, a
+// committed create answers the success toast + the closed dialog].)
+//
+// (prior re-anchor, S162/DK — the events-family hardening cycle: census
 // 1632 → 1648, +16 net [events +10: the S162/DK5 promoted recurrence
 // seam — expandOccurrences moved VERBATIM from events-view.tsx to
 // src/lib/events.ts (the S161-recorded F-7 deferral executed) with the

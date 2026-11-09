@@ -1,4 +1,4 @@
-# StudyFlow (Omni-Study) — Master Project Architecture Document (PAD) v1.3.70
+# StudyFlow (Omni-Study) — Master Project Architecture Document (PAD) v1.3.71
 
 **Classification:** Internal Engineering Reference
 **Status:** DEFINITIVE, PRODUCTION-LOCKED BLUEPRINT
@@ -8,6 +8,13 @@
 **Rule:** Every architectural decision in this document traces to a specific rationale. Nothing is here "because it's popular."
 
 ---
+
+#### Revision Block — v1.3.71 (Session-163 / Batch DL, Cycle 113)
+
+- `[SR]` Current test census anchor (the v1.2.0 convention, re-anchored): **1657/1657 Vitest unit** (51 files — the S163 additions: data-store +9 [the S163/DL1 exams mutation CB8 split — a committed write + a failed refresh RESOLVES for create/update/delete, RED pre-fix on the three resolve legs, + the failed-write-still-rejects guard, the DK1 pair set ported to the second family of the recorded family-wide port; +5: the S163/DL3 promoted parseExamTopics seam — the topics safe-parse twin lived byte-identical twice in exams-view.tsx, the pin set: valid-array/mixed-array-filter/non-array/invalid-JSON/empty-string]). The e2e census moves **624 → 625** (the 5-chunk cold map 155+192+94+95+89 — chunk 1 +1 [the S163/DL1 exams CB8 leg in parity-session8: the POST continues, the refresh GET aborts, a committed create answers the success toast + the closed dialog, never the false save-failure that armed the duplicate-creating retry]) — census 2282 green.
+- `[AR]` **S163/DL1 — the exams mutation CB8 failure-domain split (the audit-B/M-1 close; the family-wide port's first family):** the three exams mutations in data.ts (`createExam`/`updateExam`/`deleteExam`) contain the refresh rejection at the seam (`await fetchAndSet("exams").catch(() => undefined)`, the DK1 doctrine comment ported verbatim) — the WRITE leg keeps rejecting honestly. Pre-fix, a write that COMMITTED server-side followed by a flaky refresh GET rejected the WHOLE mutation: the view's catch showed "Something went wrong." in the still-open dialog, fired no success toast, and kept the form armed — a RETRY re-POSTed and DUPLICATED the exam (the CB8 letter). Pinned by the data-store pair set (unit, the CZ1 mock shape) + the parity-session8 network-mock leg (e2e, RED-proven against the pre-fix standalone build). The remaining families (assignments/timetable/notes/flashcards/tasks + the subject/taskList/notebook/deck/studyGroup/practiceTest seams) are the recorded rotation — each gets its own cycle.
+- `[AR]` **S163/DL2 — the exams loading gate gains the aria contract (the audit-B/L-1 close):** the CE3 gate (`loading && exams.length === 0`) renders `role="status"` + `aria-label="Loading exams"` (the calculator/events/calendar DK4 precedent shape) — the Spinner itself is aria-hidden, so the unlabeled div was silent to assistive tech during the in-flight window. Rides the diff review (the precedent's own gate carries no pin).
+- `[AR]` **S163/DL3 — the parseExamTopics promotion EXECUTED (the audit-B/I-1 close):** the topics safe-parse block moved VERBATIM from the two exams-view sites (openEdit + the card render) to `src/lib/data.ts` beside `parseNoteTags` (the S151/CZ1 precedent) — the helper preserves the TWINS' semantics exactly (every string passes; NO `t.length > 0` guard — parseNoteTags' length guard is the NOTES twins' semantics, deliberately different, documented in the helper's doc comment); the duplicated `@/lib/date` import pair merges. Unit pins: the 5-leg set (the mixed-array leg keeps `"also-ok"` — a length-guard regression would fail it).
 
 #### Revision Block — v1.3.70 (Session-162 / Batch DK, Cycle 112)
 

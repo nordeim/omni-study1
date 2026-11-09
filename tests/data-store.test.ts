@@ -28,7 +28,7 @@ vi.mock("@/lib/api", () => ({
   DEFAULT_GET_TIMEOUT_MS: 20_000,
 }));
 
-import { mutations, useDataStore } from "@/lib/data";
+import { mutations, parseExamTopics, useDataStore } from "@/lib/data";
 
 describe("fetchAndSet sequence guard (S119/BT8 — out-of-order GETs)", () => {
   beforeEach(() => {
@@ -572,5 +572,112 @@ describe("S162/DK1: the events mutation CB8 split (B-M1 — committed write + fa
     // The write leg keeps rejecting — the view's dialog stays open with
     // the honest error, and the retry is legitimate (nothing committed).
     await expect(mutations.createEvent(eventInput as never)).rejects.toThrow("offline");
+  });
+});
+
+// S163/DL1 (the s163 audit B/M-1): the exams mutation CB8 split — the
+// DK1 pair set ported to the second family of the recorded family-wide
+// port ("exams/assignments/timetable/notes/flashcards/tasks share the
+// M-1 shape — each family gets its own rotation-axis audit + pin set,
+// the events pin set is the template"). The pre-DL1 exams mutations
+// were `await apiSend(...)` then `await fetchAndSet("exams")`
+// (data.ts:614-625), and fetchAndSet REJECTS when its GET fails (the
+// CD2 20 s deadline): a write that COMMITTED server-side followed by a
+// flaky refresh rejected the WHOLE mutation — the view's catch showed
+// "Something went wrong." in the still-open dialog (exams-view.tsx:229),
+// fired no success toast, and kept the form armed, so a RETRY re-POSTed
+// and duplicated the exam (the CB8 letter: a false mutation-failure
+// claim on a committed row). The fix contains the refresh rejection AT
+// THE SEAM (the DK1/DJ5 .catch doctrine, ported verbatim): the write's
+// own success toast ("Exam added.") is the surfacing; the stale slice
+// self-heals on the next load. These legs pin the behavioral contract
+// with the CZ1 mock shape: apiSend resolves (the committed write) +
+// apiGet rejects (the flaky refresh) → the mutation RESOLVES; and
+// apiSend itself rejecting still rejects (the honest save-failure
+// contract the view's dialog catch depends on).
+describe("S163/DL1: the exams mutation CB8 split (B-M1 — committed write + failed refresh)", () => {
+  const examInput = {
+    title: "DL1 probe",
+    date: "2026-11-16T09:00",
+    subjectId: null,
+    type: "test",
+    duration: 90,
+    topics: "[]",
+    location: "",
+  } as const;
+
+  beforeEach(() => {
+    apiGetMock.mockReset();
+    apiSendMock.mockReset();
+    apiGetMock.mockResolvedValue([]);
+    apiSendMock.mockResolvedValue(undefined);
+    useDataStore.setState({ exams: [] });
+  });
+
+  it("createExam: a committed write + a failed refresh RESOLVES (never the false save-failure)", async () => {
+    apiSendMock.mockResolvedValueOnce(undefined); // the POST 201s
+    apiGetMock.mockRejectedValueOnce(new Error("offline")); // the refresh GET fails
+    // RED pre-fix: the mutation rejected with "offline" — the caller's
+    // catch claimed a save failure on a row the server committed.
+    await expect(mutations.createExam(examInput as never)).resolves.toBeUndefined();
+  });
+
+  it("updateExam: a committed write + a failed refresh RESOLVES", async () => {
+    apiSendMock.mockResolvedValueOnce(undefined);
+    apiGetMock.mockRejectedValueOnce(new Error("offline"));
+    await expect(mutations.updateExam("x1", { title: "renamed" })).resolves.toBeUndefined();
+  });
+
+  it("deleteExam: a committed write + a failed refresh RESOLVES", async () => {
+    apiSendMock.mockResolvedValueOnce(undefined);
+    apiGetMock.mockRejectedValueOnce(new Error("offline"));
+    await expect(mutations.deleteExam("x1")).resolves.toBeUndefined();
+  });
+
+  it("createExam: a FAILED write still rejects (the honest save-failure reaches the caller)", async () => {
+    apiSendMock.mockRejectedValueOnce(new Error("offline"));
+    // The write leg keeps rejecting — the view's dialog stays open with
+    // the honest error, and the retry is legitimate (nothing committed).
+    await expect(mutations.createExam(examInput as never)).rejects.toThrow("offline");
+  });
+});
+
+// S163/DL3 (the s163 audit B/I-1): the promoted topics seam — the topics
+// safe-parse twin lived BYTE-IDENTICAL in exams-view.tsx twice (openEdit's
+// JSON.parse(row.topics) + the card render's JSON.parse(exam.topics)), the
+// exact duplication class the S151/CZ1 fix removed for notes
+// (parseNoteTags → src/lib/data.ts). A future edit to one copy would drift
+// the dialog vs the card; the promotion puts the semantics in one place
+// with this pin set. The helper preserves the TWINS' semantics verbatim —
+// the filter keeps every string (NO t.length > 0 guard: parseNoteTags'
+// length guard is the NOTES twins' semantics, deliberately different); the
+// raw || "[]" empty-string guard is behavior-identical to the twins' catch
+// path (JSON.parse("") throws → []).
+describe("S163/DL3: parseExamTopics (the promoted topics seam)", () => {
+  it("a valid JSON string array parses", () => {
+    expect(parseExamTopics('["integration","differentiation"]')).toEqual([
+      "integration",
+      "differentiation",
+    ]);
+  });
+
+  it("non-string entries filter out (the mixed array)", () => {
+    expect(parseExamTopics('["ok", 42, null, true, {"nested": 1}, "also-ok"]')).toEqual([
+      "ok",
+      "also-ok",
+    ]);
+  });
+
+  it("a non-array JSON payload answers []", () => {
+    expect(parseExamTopics('{"not":"an array"}')).toEqual([]);
+    expect(parseExamTopics('"a json string"')).toEqual([]);
+  });
+
+  it("invalid JSON answers [] (the twins' catch path)", () => {
+    expect(parseExamTopics("not json at all")).toEqual([]);
+  });
+
+  it("the empty string answers [] (the raw || \"[]\" guard)", () => {
+    expect(parseExamTopics("")).toEqual([]);
   });
 });

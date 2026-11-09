@@ -25,7 +25,7 @@ tags:
 
 > **What this is:** the single-source-of-truth reference for working in
 > `nordeim/omni-study1`. Every fact below is verified against the codebase
-> (2272 tests green, re-anchored at the S162 update: 1648 Vitest unit [51 files] + 624 Playwright e2e [the 5-chunk census: 616 chromium specs + the per-chunk setup re-runs — 154+192+94+95+89]) — the census re-anchored through
+> (2282 tests green, re-anchored at the S163 update: 1657 Vitest unit [51 files] + 625 Playwright e2e [the 5-chunk census: 617 chromium specs + the per-chunk setup re-runs — 155+192+94+95+89]) — the census re-anchored through
 > the s117–s124 hardening cycles; the 2.0 baseline was 834 + 299 in six
 > chunks after the parity re-application + account-flow completion +
 > regression hardening).
@@ -135,7 +135,7 @@ touch resolution.
   wholesale disables (~25 rules, unchanged since commit `01cb829`) stay the
   deliberate repo posture — the compensating controls are tsc strict
   (`noUnusedLocals`/`noUnusedParameters`, `_`-prefix as deliberate-unused),
-  the ACTIVE `react-hooks/set-state-in-effect` gate, and the 1648+624 test
+  the ACTIVE `react-hooks/set-state-in-effect` gate, and the 1657+625 test
   suites. Do not re-litigate the remaining disables without a violation
   census first (the s129 probe: 55 unused-vars are the `_`-prefix
   convention, 11 prefer-const are scaffold style, 6 exhaustive-deps were
@@ -628,13 +628,13 @@ tail -40 dev.log                            # request traces + prisma queries
 ```bash
 bun run lint && bun run typecheck && bun run test && bun run build && bun run test:e2e
 ```
-Current green state (re-anchored at S162/DK): lint ✓ · tsc ✓ (`noImplicitAny` + `noUnusedLocals`/`noUnusedParameters` — the BV16 machine guard; plus the S129/CD3 re-enabled `react-hooks/exhaustive-deps` as an error) · 1648 unit ✓ · build ✓ (the type gate live — `ignoreBuildErrors` removed) · 624 e2e ✓ (2272 green).
+Current green state (re-anchored at S163/DL): lint ✓ · tsc ✓ (`noImplicitAny` + `noUnusedLocals`/`noUnusedParameters` — the BV16 machine guard; plus the S129/CD3 re-enabled `react-hooks/exhaustive-deps` as an error) · 1657 unit ✓ · build ✓ (the type gate live — `ignoreBuildErrors` removed) · 625 e2e ✓ (2282 green).
 
 **Full-suite chunk map** (one server-boot per chunk; the 10-min tool cap makes
 one-shot full runs unreliable — the 2.0 six-chunk map: chrome+s14 104 ·
 S5+calc+S6 46 · S7+S8+S9 79 · tasks/resilience/s16/s17 20 · auth+s18–s23 35 ·
 s24–s26 18. Re-anchored at 2.2: the FIVE-chunk cold map of
-`scripts/e2e-chunked-cert.sh` — 154+192+94+95+89 = 624 (re-anchored S162/DK [chunk 3 +1: the S162/DK1 events CB8 failure-domain split pin in parity-session5]; prior S161/DJ [chunk 2 +3: the S161/DJ1 notes tag-failure toast + the S161/DJ2 timetable band hand-guard in parity-session7 + the S161/DJ4 dark-accent leg in theme-system; chunk 3 +1: the S161/DJ5 slider resync pageerror-free pin in resilience; the prior map said 619 — 154+189+92+95+89, re-anchored S160/DI]; the prior map said 614 [150+189+91+95+89], re-anchored S146/CU — the S144-era updates re-anchored the head + the green-state line but missed THIS site, which still carried the S139-era 603 [150+185+87+95+86], the s140 doc-drift class reborn; the pre-S139 line said 597 [150+184+82+95+86], the S138-era map, always run COLD
+`scripts/e2e-chunked-cert.sh` — 155+192+94+95+89 = 625 (re-anchored S163/DL [chunk 1 +1: the S163/DL1 exams CB8 failure-domain split pin in parity-session8 — the DK1 events port to the second family of the recorded family-wide port]; prior S162/DK [chunk 3 +1: the S162/DK1 events CB8 failure-domain split pin in parity-session5]; prior S161/DJ [chunk 2 +3: the S161/DJ1 notes tag-failure toast + the S161/DJ2 timetable band hand-guard in parity-session7 + the S161/DJ4 dark-accent leg in theme-system; chunk 3 +1: the S161/DJ5 slider resync pageerror-free pin in resilience; the prior map said 619 — 154+189+92+95+89, re-anchored S160/DI]; the prior map said 614 [150+189+91+95+89], re-anchored S146/CU — the S144-era updates re-anchored the head + the green-state line but missed THIS site, which still carried the S139-era 603 [150+185+87+95+86], the s140 doc-drift class reborn; the pre-S139 line said 597 [150+184+82+95+86], the S138-era map, always run COLD
 [`rm -f db/e2e.db`]: the s23 round-trip posts a FIXED-id envelope and the
 seed's idempotent upserts never refresh day-relative dates).
 
