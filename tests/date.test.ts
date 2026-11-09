@@ -26,7 +26,7 @@ import {
 } from "@/lib/date";
 
 describe("isoWeekNumber", () => {
-  it("computes the ISO calendar week (the Events panel's CW label)", () => {
+  it("computes the ISO calendar week (a pinned pure helper — the Events CW label is referenceWeekNumber, S162/DK3)", () => {
     // The reference rendered "Oct 2026 CW 41" for Wednesday, October 7 2026.
     expect(isoWeekNumber(new Date(2026, 9, 7))).toBe(41);
     // Year boundaries: Jan 1 2026 is in week 1; Dec 28 2026 is in week 53.

@@ -624,18 +624,30 @@ export const mutations = {
     await fetchAndSet("exams");
   },
 
-  // ---- events -----------------------------------------------------------------
+  // ---- events (S162/DK1: the CB8 failure-domain split) ----------------------
+  // The write and the post-write refresh are SEPARATE failure domains (the
+  // S127/CB8 doctrine, ported to the CRUD mutation seam): a refresh GET
+  // that fails after a COMMITTED write must not reject the mutation — the
+  // caller's catch would claim a save failure on a saved row ("Something
+  // went wrong." in the still-open dialog, no success toast) and arm the
+  // retry that DUPLICATES the event. The refresh rejection is contained
+  // here; the stale slice self-heals on the next successful load (the S16
+  // view-switch pre-warm + the next mutation's own refresh — the DJ5
+  // doctrine: the write's own success toast is the surfacing; a second
+  // toast for the same offline window is noise). The WRITE leg keeps
+  // rejecting honestly — the view's dialog catch still sees real save
+  // failures. Pinned by tests/data-store.test.ts (the DK1 pair set).
   createEvent: async (input: EventInput): Promise<void> => {
     await apiSend("POST", PATHS.events, input);
-    await fetchAndSet("events");
+    await fetchAndSet("events").catch(() => undefined);
   },
   updateEvent: async (id: string, patch: Partial<EventInput>): Promise<void> => {
     await apiSend("PATCH", `${PATHS.events}/${id}`, patch);
-    await fetchAndSet("events");
+    await fetchAndSet("events").catch(() => undefined);
   },
   deleteEvent: async (id: string): Promise<void> => {
     await apiSend("DELETE", `${PATHS.events}/${id}`);
-    await fetchAndSet("events");
+    await fetchAndSet("events").catch(() => undefined);
   },
 
   // ---- timetable --------------------------------------------------------------

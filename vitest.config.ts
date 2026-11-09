@@ -1,8 +1,28 @@
 import { defineConfig } from "vitest/config";
 import path from "node:path";
 
-// Unit-test layer for the pure domain seams — 50 files / 1632 tests
-// (re-anchored S161/DJ — the FE/views hardening cycle: census 1622 →
+// Unit-test layer for the pure domain seams — 51 files / 1648 tests
+// (re-anchored S162/DK — the events-family hardening cycle: census
+// 1632 → 1648, +16 net [events +10: the S162/DK5 promoted recurrence
+// seam — expandOccurrences moved VERBATIM from events-view.tsx to
+// src/lib/events.ts (the S161-recorded F-7 deferral executed) with the
+// full recurrence-rule pin set: none/daily/weekly-across-the-month-
+// boundary/monthly-date-of-month (+ the Jan-31-skips-February
+// short-month semantics)/past-start-guard/DST-rounding-absorption/
+// start-day-only-parity-rule/return-contract/Date-typed-startDate;
+// data-store +4: the S162/DK1 events mutation CB8 split — a committed
+// write + a failed refresh RESOLVES for create/update/delete (RED
+// pre-fix: the mutation rejected on the refresh leg — the false
+// save-failure that armed the duplicate-creating retry) + the
+// failed-write-still-rejects guard; enum-single-source +2: the
+// census's FOURTH site — events-view imports REPEATS from
+// validation.ts's single source (the four hard-coded SelectItems were
+// the inline-twin form of the CB9 drift class) + the no-local-twin
+// guard]. The e2e census moves 623 → 624 [+1: the S162/DK1 events CB8
+// leg in parity-session5 — the POST continues, the refresh GET aborts,
+// a committed create answers the success toast + the closed dialog].)
+//
+// (prior re-anchor, S161/DJ — the FE/views hardening cycle: census 1622 →
 // 1632, +10 net [enum-single-source +6: the S161/DJ3 view enum
 // single-source census — every view that renders a schema-enum's
 // options must import it from validation.ts and declare no local twin
@@ -14,11 +34,11 @@ import path from "node:path";
 // the VIOLET_RESIDUALS closure pin (the register is EMPTY and stays
 // empty — the harmonization pass executed) + the treated-dark-half
 // census (the four migrated sites pinned to their edge-dark utilities)].
-// The e2e census moves 619 → 623 [+4: the S161/DJ1 notes tag-failure
+// The e2e census moved 619 → 623 [+4: the S161/DJ1 notes tag-failure
 // toast + the S161/DJ2 timetable band hand-guard in parity-session7 +
 // the S161/DJ4 dark-accent leg in theme-system + the S161/DJ5 slider
 // resync pageerror-free pin in resilience]. The theme-cache 19-token
-// census re-tags in the same lockstep.)
+// census re-tagged in the same lockstep.)
 //
 // (prior re-anchor, S160/DI — the AI-routes hardening cycle: census
 // 1619 → 1622, +3 net [validation +1: the S160/DI2 aiChatSchema

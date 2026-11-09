@@ -508,3 +508,69 @@ describe("S151/CZ1: the notes tags chain (B-M1 — add/remove interleave)", () =
     expect(apiSendMock).not.toHaveBeenCalled();
   });
 });
+
+// S162/DK1 (the s162 audit B/F-1): the events mutation CB8 split — the
+// write and the post-write refresh are SEPARATE failure domains. The
+// pre-DK1 events mutations were `await apiSend(...)` then
+// `await fetchAndSet("events")`, and fetchAndSet REJECTS when its GET
+// fails (the CD2 20 s deadline): a write that COMMITTED server-side
+// followed by a flaky refresh rejected the WHOLE mutation — the view's
+// catch showed "Something went wrong." in the still-open dialog, fired
+// no success toast, and kept the form armed, so a RETRY re-POSTed and
+// duplicated the event (the CB8 letter: a false mutation-failure claim
+// on a committed row). The fix contains the refresh rejection AT THE
+// SEAM (the DJ5 .catch doctrine: the write's own success toast is the
+// surfacing; the stale slice self-heals on the next load — the S16
+// view-switch pre-warm + the next mutation's own refresh). These legs
+// pin the behavioral contract with the CZ1 mock shape: apiSend resolves
+// (the committed write) + apiGet rejects (the flaky refresh) → the
+// mutation RESOLVES; and apiSend itself rejecting still rejects (the
+// honest save-failure contract the view's dialog catch depends on).
+describe("S162/DK1: the events mutation CB8 split (B-M1 — committed write + failed refresh)", () => {
+  const eventInput = {
+    title: "DK1 probe",
+    startDate: "2026-11-09T10:00",
+    endDate: null,
+    allDay: false,
+    color: "#8b5cf6",
+    location: "",
+    repeat: "none",
+    reminders: "[]",
+    description: "",
+  } as const;
+
+  beforeEach(() => {
+    apiGetMock.mockReset();
+    apiSendMock.mockReset();
+    apiGetMock.mockResolvedValue([]);
+    apiSendMock.mockResolvedValue(undefined);
+    useDataStore.setState({ events: [] });
+  });
+
+  it("createEvent: a committed write + a failed refresh RESOLVES (never the false save-failure)", async () => {
+    apiSendMock.mockResolvedValueOnce(undefined); // the POST 201s
+    apiGetMock.mockRejectedValueOnce(new Error("offline")); // the refresh GET fails
+    // RED pre-fix: the mutation rejected with "offline" — the caller's
+    // catch claimed a save failure on a row the server committed.
+    await expect(mutations.createEvent(eventInput as never)).resolves.toBeUndefined();
+  });
+
+  it("updateEvent: a committed write + a failed refresh RESOLVES", async () => {
+    apiSendMock.mockResolvedValueOnce(undefined);
+    apiGetMock.mockRejectedValueOnce(new Error("offline"));
+    await expect(mutations.updateEvent("e1", { title: "renamed" })).resolves.toBeUndefined();
+  });
+
+  it("deleteEvent: a committed write + a failed refresh RESOLVES", async () => {
+    apiSendMock.mockResolvedValueOnce(undefined);
+    apiGetMock.mockRejectedValueOnce(new Error("offline"));
+    await expect(mutations.deleteEvent("e1")).resolves.toBeUndefined();
+  });
+
+  it("createEvent: a FAILED write still rejects (the honest save-failure reaches the caller)", async () => {
+    apiSendMock.mockRejectedValueOnce(new Error("offline"));
+    // The write leg keeps rejecting — the view's dialog stays open with
+    // the honest error, and the retry is legitimate (nothing committed).
+    await expect(mutations.createEvent(eventInput as never)).rejects.toThrow("offline");
+  });
+});

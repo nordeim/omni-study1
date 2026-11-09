@@ -1342,12 +1342,12 @@ suggested next-cycle options included settling the populated-account
 probe for the other SectionCard consumers' ref header anatomy. The
 continuation-23 session ran the probes, wrote the 8 RED pins, and was
 stopped prematurely mid-implementation; this session resumed the
-workspace exactly there (HEAD `8332270`, the pins uncommitted, zero
+workspace exactly there (HEAD `8332272`, the pins uncommitted, zero
 source edits yet) and completed the cycle.
 
 **Work log.**
 
-1. **Resume-state verified.** `git status` clean-vs-`8332270` except the
+1. **Resume-state verified.** `git status` clean-vs-`8332272` except the
    8 uncommitted AB pins in `parity-session5.spec.ts` + the s72 sweep
    screenshots + 4 probe scripts (untracked). No pull needed (already
    up to date with origin/main). The s72 evidence re-read: the
@@ -1393,7 +1393,7 @@ source edits yet) and completed the cycle.
    **ok:true** — 9/9 invariants both hosts, brand tables byte-matched,
    mobile drawers green on both (the user-flagged surface).
 
-**Stage summary.** HEAD = `8332270` + this cycle's commit (Batch AB
+**Stage summary.** HEAD = `8332272` + this cycle's commit (Batch AB
 source + pins + s72/s73 evidence + doc chain). Baselines: e2e
 **389/389** (113+109+50+59+58, 30 spec files censused), unit **844/844**,
 lint/tsc clean, build fresh. New lesson AP-117 (avg==pill text
@@ -6409,3 +6409,136 @@ upsert; the I-4 parse posture; the M-1 LLM-side residual); the
 gradetracker/studygroups/settings-CRUD and AlertDialog-confirm e2e gaps
 the audit's coverage census surfaced (the unpinned seams where both
 Mediums hid).
+
+## Session 173 — the S162 cycle (Batch DK: the events-family hardening cycle)
+
+The workspace was WARM at `108956e` on `main` (the S161/Batch DJ fix
+`4eaa9cf` + the operator's session_196 transcript commit). `git pull`
+verified up-to-date with a clean tree; `.env` byte-identical to
+`.env.example` at the documented dev posture, the repo-root `db/`
+verified, `bun install` clean (516/609), bun 1.3.14, node v24.22.2.
+Cold baseline matched the documented S161-final state exactly: lint ✓ ·
+tsc ✓ · unit 1632/1632 (50 files) · the preflight GREEN (the S9/S31
+stale-cache remedy applied at boot) · the drawer check GREEN (**the
+84th consecutive** no-Tailwind-v4-mobile-nav-bug confirmation) · the
+desktop parity probe **MATCH** (all five formal checks, live reference
+login); the config posture re-validated (vitest include, playwright
+testDir + the e2e.db webServer, tsconfig + eslint `skills` exclusions).
+
+The audits (Mode-C; every M/L finding re-verified by direct read): A —
+the Batch DJ recent-changes axis (`4eaa9cf`; `108956e` docs-only):
+**0C/0H/0M/0L/0I — clean** (all six DJ claims confirmed at the source
+anchors — the mutateTags wrapper, the band hand-guard, the EXAM_TYPES
+import swap, the edge-dark token family + the four conversions, the
+resync catch, the comment honesty; the doc census machine-verified,
+zero stale count sites). B — the events family (the rotation's fresh
+axis — the S161 close's own "Next cycle" list NAMED this axis: the
+recorded F-7 deferral; the family last deep-swept at S152/DA, 9 cycles
+stale; dispatched to a read-only subagent against the web-application
+skill's §4/§9/§12/§13/§16/§17 rubric — events-view + calendar-view +
+the events routes + the seams they consume + the round-trip
+verification): **0C/0H/1M/3L/2I** — the family coherent (ownership in
+the WHERE clause, the CE5 ordering guards, the BV10/BX3 datetime
+round-trip, the 600/15-min write budget, take:500 bounded reads, zero
+useEffect, zero space-y/x containers, the dark panel carrying no
+dark: overrides); the findings: **M-1** the events mutations rejected
+on the refresh leg after a COMMITTED write — a flaky refresh GET showed
+"Something went wrong." in the still-open dialog, no success toast,
+the form armed: a RETRY duplicated the event (the CB8 letter violated;
+the AI family's three CB8 splits the behavioral precedent; the
+sibling views share the family-wide posture); **L-1** the REPEATS
+inline twin (four hard-coded SelectItems — the census's SITES list
+carried only the three S161 sites); **L-2** `isoWeekNumber` credited
+with the Events CW label by four stale doc sites (the view renders
+`referenceWeekNumber`); **L-3** the family's three loading gates
+carried no aria contract. Round-trip verdict COMPATIBLE. No
+measurement-gated candidate.
+
+**The fixes (TDD — the unit REDs 5/5 on their designed markers [the
+DK1 resolve trio + the DK2 census import leg + the DK5 missing-module
+suite]; the e2e leg RED-proven against the pre-fix standalone build
+[the compile-blocking unit RED set aside for the pre-fix build, the
+success toast never fired], GREEN post-fix):**
+
+- **DK1 — the events mutation CB8 split (the M-1 close).** The three
+  events mutations contain the refresh rejection at the seam
+  (`fetchAndSet("events").catch(() => undefined)` — the DJ5 doctrine
+  comment): the WRITE leg keeps rejecting honestly; a committed write +
+  a failed refresh RESOLVES (the success toast + the dialog close
+  proceed; the stale slice self-heals through the S16 pre-warm + the
+  next mutation's refresh). The soft-toast variant REJECTED (the toast
+  store lives above the lib/components layer boundary). Unit: the
+  data-store pair set (+4, the CZ1 mock shape). E2e: the CB8-twin
+  network-mock (the POST continues, the GET aborts, the success toast +
+  the closed dialog).
+- **DK2 — the REPEATS single-source + the census's fourth site (the
+  L-1 close).** The SelectItems render from validation.ts's array (the
+  reference-measured "No repeat" label preserved, zero visual delta);
+  the census gains the events site (+2) and tsc's noUnusedLocals
+  machine-forces the render to consume the import (the inline-twin
+  guard).
+- **DK3 — the isoWeekNumber doc reconciliation (the L-2 close).** The
+  four stale sites corrected (date.ts's doc, date.test.ts's describe
+  title, AGENTS.md's Events entry, SKILL.md's Events entry) —
+  `referenceWeekNumber` owns the Events CW claim; `isoWeekNumber` stays
+  the pinned no-caller ISO contrast (the S128 decision).
+- **DK4 — the three loading gates gain `role="status"` + aria-labels
+  (the L-3 close; the calculator-view precedent shape).**
+- **DK5 — the expandOccurrences promotion EXECUTED (the I-1 close; the
+  S161-recorded F-7 deferral).** The recurrence expansion moved
+  VERBATIM to `src/lib/events.ts` (the structural param type keeps the
+  seam pure — EventRow satisfies it structurally, the render call site
+  unchanged) with the 10-leg unit pin set (none/daily/weekly-across-
+  month-boundary/monthly + the Jan-31-skips-February semantics/
+  past-start/DST-rounding/start-day-only parity/return contract/
+  Date-typed startDate). The call-shape optimization DECLINED (§8).
+- **DK6 — the calendar pre-warm drop (the I-2 close).** `subjects`
+  left the calendar entry (the view reads exactly five collections,
+  grep-verified); the view-collections pin re-tags 6 → 5 keys (the
+  count-lockstep doctrine).
+
+**Gates.** lint ✓ · tsc ✓ · unit **1648/1648** (51 files, +16 exactly
+as designed: events +10, data-store +4, enum-single-source +2 — the
+plan's +8 DK5 estimate was low by 2, the honest arithmetic correction
+in the plan §9) · build ✓ · the remediated-tree re-confirmation:
+preflight GREEN (the S9/S31 stale-cache remedy applied) · drawer GREEN
+(**the 85th consecutive**) · parity **MATCH** · the 5-chunk cold cert:
+chunk 1 **154/154** · chunk 2 **192/192** · chunk 3 **94/94** (+1, the
+DK1 leg — the AK1c/d pair flaked once on the documented P1008
+machine-load class, 94/94 clean on the immediate re-run; the pair
+passes in isolation and touches nothing this cycle changed) · chunk 4
+**95/95** (the calculator-theme leg flaked once on the same
+machine-load class, clean on the re-run, passes in isolation) · chunk
+5 **89/89** — the cert tally **624/624** = **census 2272 green** (was
+2255; 1648 unit + 624 e2e).
+
+**Evidence.** The `docs/screenshots/162-clone-*.png` frames (the
+standing desktop + the mobile drawer [the 85th drawer-GREEN companion]
++ the cycle's Events surface — the dark terminal panel with the seeded
+recurring event's expanded occurrences), self-verifying (ok: true; the
+non-blank pixel ratios verified: 45.9% / 34.5% / 92.2% — the dark
+panel's by-design floor).
+
+**Docs.** README badge/census (2255 → 2272) + the count prose sites +
+the Session-162 row; AGENTS census + the e2e map re-tag + the S162
+lessons block (three lessons: the bundled write+refresh seam split at
+the seam; the inline-twin enum and the import+unused-import guard
+pair; the axis-named deferral as its own trigger) + the F-3 claim fix;
+CLAUDE counts + the S161-missed 619 e2e map site re-anchored; PAD
+v1.3.70 (the revision block); the SKILL census (all four sites) + the
+F-3 claim fix + the green-state re-anchor; the vitest header re-anchor
+(+16); the cert runner re-tag (623 → 624, chunk 3 93 → 94,
+machine-pinned by the script-conventions leg); `docs/session_197.md`;
+this entry; the plan §9 as-executed close; the `.env.example` contract
+re-verified (no env-var reads changed this cycle — .env and
+.env.example byte-identical at the documented dev posture).
+
+**Next cycle.** The rotation continues — the recorded deferrals: the
+family-wide CB8 port (exams/assignments/timetable/notes/flashcards/
+tasks share the M-1 shape — each family gets its own rotation-axis
+audit + pin set, the events pin set is the template); the files
+refresh-failure toast copy harmonization (the F-8 candidate); the S160
+close's ledger (the A-M3 stage-2 triggers; the update-side raw-SQL
+bulk upsert; the I-4 parse posture; the M-1 LLM-side residual); the
+gradetracker/studygroups/settings-CRUD and AlertDialog-confirm e2e gaps
+the prior audits surfaced.

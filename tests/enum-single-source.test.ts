@@ -22,6 +22,12 @@ import { describe, expect, it } from "vitest";
 // source and must not declare a local twin. A future forked twin (a new
 // schema value the view twin misses) fails the unit layer BEFORE it ships
 // the CB9 blanked-select class.
+//
+// S162/DK2: the census's FOURTH site — events-view's REPEATS rendered as
+// four hard-coded SelectItems (the inline-twin form; the no-local-twin
+// leg guards the const form, the import leg + tsc's noUnusedLocals gate
+// the inline form: an import that stops feeding the render fails
+// typecheck).
 
 const SITES = [
   {
@@ -38,6 +44,11 @@ const SITES = [
     view: "src/components/views/settings-view.tsx",
     enumName: "GRADE_LEVELS",
     why: "the S130/CE9 fix surface (the 12 reference-measured options the profile tab renders)",
+  },
+  {
+    view: "src/components/views/events-view.tsx",
+    enumName: "REPEATS",
+    why: "the S162/DK2 twin (four hard-coded SelectItems beside validation.ts:102's single source — value-equal, the CB9 drift class)",
   },
 ] as const;
 

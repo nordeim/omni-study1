@@ -9,9 +9,9 @@ High-signal instructions for coding agents working in this repo. Everything here
 | `bun install` | Install deps (Bun ≥ 1.3) |
 | `bun run dev` | Dev server on :3000 (Turbopack), logs tee'd to `dev.log` |
 | `bun run lint` / `bun run typecheck` | ESLint / `tsc --noEmit` — both must be clean |
-| `bun run test` | Vitest unit layer (1632 tests; `*.test.ts` only — never picks up e2e specs) |
+| `bun run test` | Vitest unit layer (1648 tests; `*.test.ts` only — never picks up e2e specs) |
 | `bun run build` | Production build → `.next/standalone` (**required before e2e**) |
-| `bun run test:e2e` | Playwright vs the standalone build on :3100 with `db/e2e.db` (623 tests across the 5-chunk cold map — 154+192+93+95+89, 30 spec files; a single-process full run trips the register rate-limiter budget by design, the chunked map re-boots the server per chunk). NOTE (S45, the day-boundary lesson): the global setup re-seeds every run, but the seed's IDEMPOTENT UPSERTS do NOT refresh day-relative dates on existing rows — a scratch `db/e2e.db` that ages across a UTC midnight keeps its original day-relative dates (today's tasks, the +1-day exam badge, the due-in pills, the import round-trip dates each read one day stale → 4 deterministic failures in parity-session6/parity-session9/s23-import). Delete `db/e2e.db` when a run crosses a day boundary — the global setup re-creates it fresh with current dates. NOTE (S46, TWO more aged-scratch-db classes + a build-input one): (1) ALWAYS run e2e COLD — S131/CF5 chained `scripts/e2e-cold-reset.sh` into `bun run test:e2e` (port-guard + `rm -f db/e2e.db` BEFORE playwright boots anything — global-setup is TOO LATE: Playwright starts the webServer before globalSetup), so the default runner self-colds; any DIRECT `playwright test` invocation still needs the manual `rm -f db/e2e.db` before every full run: the s23-import round-trip posts a FIXED-id envelope, so a second consecutive run against the aged db reads `created: 0, updated: 1` instead of `created: 1, updated: 0` and fails — not just across midnights, across ANY re-run; (2) the s22 negative-spawn spec reads the BUNDLED `.env` — Next's standalone output COPIES the repo-root `.env` into `.next/standalone/.env` at build time, so a REAL AUTH_SECRET in the dev `.env` leaks into the bundle and the guard CORRECTLY boots (the spec times out waiting for the exit) — keep the repo-root `.env`'s AUTH_SECRET EMPTY (the `.env.example` dev posture: `AUTH_SECRET=""` — dev falls back to the local constant with the boot warning) when building for e2e |
+| `bun run test:e2e` | Playwright vs the standalone build on :3100 with `db/e2e.db` (624 tests across the 5-chunk cold map — 154+192+94+95+89, 30 spec files; a single-process full run trips the register rate-limiter budget by design, the chunked map re-boots the server per chunk). NOTE (S45, the day-boundary lesson): the global setup re-seeds every run, but the seed's IDEMPOTENT UPSERTS do NOT refresh day-relative dates on existing rows — a scratch `db/e2e.db` that ages across a UTC midnight keeps its original day-relative dates (today's tasks, the +1-day exam badge, the due-in pills, the import round-trip dates each read one day stale → 4 deterministic failures in parity-session6/parity-session9/s23-import). Delete `db/e2e.db` when a run crosses a day boundary — the global setup re-creates it fresh with current dates. NOTE (S46, TWO more aged-scratch-db classes + a build-input one): (1) ALWAYS run e2e COLD — S131/CF5 chained `scripts/e2e-cold-reset.sh` into `bun run test:e2e` (port-guard + `rm -f db/e2e.db` BEFORE playwright boots anything — global-setup is TOO LATE: Playwright starts the webServer before globalSetup), so the default runner self-colds; any DIRECT `playwright test` invocation still needs the manual `rm -f db/e2e.db` before every full run: the s23-import round-trip posts a FIXED-id envelope, so a second consecutive run against the aged db reads `created: 0, updated: 1` instead of `created: 1, updated: 0` and fails — not just across midnights, across ANY re-run; (2) the s22 negative-spawn spec reads the BUNDLED `.env` — Next's standalone output COPIES the repo-root `.env` into `.next/standalone/.env` at build time, so a REAL AUTH_SECRET in the dev `.env` leaks into the bundle and the guard CORRECTLY boots (the spec times out waiting for the exit) — keep the repo-root `.env`'s AUTH_SECRET EMPTY (the `.env.example` dev posture: `AUTH_SECRET=""` — dev falls back to the local constant with the boot warning) when building for e2e |
 | `node scripts/capture-studyflow.mjs` | Refresh all 31 `docs/screenshots/` captures from the dev server (24 light + 7 dark) |
 | `node scripts/dark-sweep.mjs` | Dark-mode contrast audit over all 20 views (flashbulb/unreadable detector). S27: sets dark mode through the settings API (the real lifecycle) and SELF-VERIFIES the precondition — fails loudly (exit 1, no findings) if the dark class is not applied; the applied mode rides the JSON envelope. Never force the class directly (the session-10 approach silently rotted after S11) |
 | `node scripts/accent-dark-sweep.mjs` | Accent × dark-mode audit (S38-extended): all 7 accents × 20 desktop views × 20 MOBILE views at 390×844 + the drawer per accent (FAIL <2.2, WARN <3.2 for accent text; the mobile records also carry scrollWidth — >390 is a finding). The S38 shape is unit-pinned anti-phantom: every view recorded EXPLICITLY on both surfaces (clean views carry empty detector arrays), the per-accent `applied` self-verified readings + `mode: "dark"` + `mobileViewport` ride the envelope, and the seam's ALL-ACCENTS + ALL-VIEWS + drawer-present guards make every silently-skipped dimension a LOUD shape-error (the pre-S38 mobile pass swept only 6 views — MOBILE_VIEWS — and the omission-means-clean recording could not distinguish "clean because measured" from "clean because never rendered") |
@@ -125,7 +125,7 @@ The **`AUTH_SECRET` boot-guard contract** (session-22, ADR-020): `src/instrument
 - **Dashboard cards are FLUSH divide-y lists (session-8):** `SectionCard` (shared.tsx) takes `flush` — the body becomes `divide-y divide-slate-50` with NO padding; rows run edge-to-edge as `p-4 hover:bg-slate-50` rows (Today's Tasks bare rows; exam rows with `h3 font-medium text-slate-700` + a rounded-full red-100 urgency badge + calendar-icon date line; assignment rows with a 4px subject-color strip + clock-icon due line + yellow priority pill on the right). Default (padded) SectionCard bodies remain for other views.
 - **The Timetable week grid is a grid-cols-8 time table (session-7):** Time column + 7 day heads (`p-3 text-center border-l` + full day name `text-sm font-medium text-slate-600` + `text-lg font-bold` date); `h-[60px] border-b border-slate-50` hour cells labelled **"7 AM"** (trimmed hour, no minutes); `min-w-[900px]` inside `overflow-x-auto`; a `md:hidden` mobile accordion (40px rounded-xl date chips + "N classes" + rotating chevron). **Column→ISO mapping is `(col + 6) % 7`** — Sunday-first display columns vs ISO storage (0=Monday); the previous `(col+1)%7` form silently rendered every column two days ahead of its header. My Classes = `p-6` + header row (h2 `text-lg font-bold` + today's long date) + 3-col grid. The TODAY tint rides the column HEADER cell (`bg-violet-50` = `--sf-primary-softest`, S8-E) — body columns stay transparent (the old body-column `bg-sf-primary-softest/50` class was a DEAD utility — the only sf-primary color utilities defined in `@theme` are `--color-sf-primary{,-foreground,-soft,-soft-dark,-strong,-strong-dark}`); week-nav chevrons are ghost `h-9 w-9 rounded-lg`.
 - **Analytics stat cards are icon-block cards (session-7):** `rounded-xl bg-white shadow-sm` (r12, border-0) + `p-6` + 48px `w-12 h-12 rounded-xl` tinted blocks — Tasks Completed (square-check-big, **violet-100**), Assignments (book-open, **blue-100**), Focus Time (clock, **green-100** — the measured tint; NOT emerald-100), Upcoming Exams (graduation-cap, **orange-100**) — with fraction values + rate subs, on a `grid-cols-2 lg:grid-cols-4` grid (S8-I). Chart cards carry PER-CARD icons (S8-I): trending-up (Task Activity), clock (Focus Time), book-open (Assignment Status — an SVG donut, Not-Started sector #94a3b8 measured), target (Subject Workload — h-[250px] body); plus an "Active Items by Priority" card (flame icon, slate-50 r12 chips with color dot + count + label, medium #f59e0b / high #ef4444 measured); grade-trend stays as a superset chart. **The 7-day charts are SVG AREA charts with axes (S9-K, measured):** `AreaChart` in `analytics-view.tsx` renders X-axis day labels (12px `#666`), Y-axis ticks, horizontal `stroke-dasharray="3 3"` gridlines; Task Activity = single area filled `#e2e8f0` (slate-200); Focus Time = `#8b5cf6` line over a `url(#focusGradient)` violet area. Assignment rows default the status filter to "Active" (S9-I) and render NO subject span / description paragraph (title + pills + slider + ellipsis only); the exam 1-day bucket reads "Tomorrow" in `bg-orange-100 text-orange-600` (S9-J; ≥2 days stays amber).
-- **Events view is a DARK terminal panel (session-5):** `bg-slate-900 rounded-2xl shadow-2xl`, intentionally dark in BOTH themes — do not add dark: overrides inside it. Day sections run 7 days from the selected day with year-less labels; the header carries the `CW <n>` calendar-week (`isoWeekNumber`). Recurring events (repeat) expand into occurrences inside the visible window.
+- **Events view is a DARK terminal panel (session-5):** `bg-slate-900 rounded-2xl shadow-2xl`, intentionally dark in BOTH themes — do not add dark: overrides inside it. Day sections run 7 days from the selected day with year-less labels; the header carries the `CW <n>` calendar-week (`referenceWeekNumber` — the US Sunday-start convention, S162/DK3; `isoWeekNumber` is the pinned no-caller ISO contrast). Recurring events (repeat) expand into occurrences inside the visible window through the `src/lib/events.ts` seam (S162/DK5 — promoted + unit-pinned; the S161-recorded F-7 deferral executed).
 - **Notes and Study Groups are TWO-PANE views (S8-G/S8-H, measured):** `flex h-[calc(100vh-8rem)] gap-6` — a `w-80 border-r border-slate-100 pr-6` left pane (h1 + icon INSIDE, 36px gradient New button — Notes uses a DropdownMenu with New Note / New Notebook items; icon search; Radix Select comboboxes for notebook/tag filters on Notes) and a BARE right pane (`flex-1 flex flex-col min-w-0`, no card wrapper) holding the centered empty state or the editor (the editor itself keeps sf-card chrome). MyDay (S8-D): a 56px amber-gradient sun block + text-3xl h1 header, quick-add with an inline plus icon, space-y-3 task rows, and a BARE suggestions toggle (sparkles + rotating chevron) expanding bg-slate-50 rounded-xl rows. MathSolver (S8-L) is a single max-w-4xl column: input card (borderless min-h-[120px] text-lg textarea + border-t footer with camera/refresh-cw/sparkles icon buttons), solution below.
 - **The form-control palette is GRAY, not zinc/slate (session-5):** `--foreground` gray-950, `--input`/`--border` gray-200, `--muted-foreground` gray-400 (the reference's shadcn theme). View-level text stays slate. Dialogs are `max-w-md` + `rounded-lg` with `h-9` transparent inputs.
 - **Heading hierarchy (reference-measured):** h1 view titles → h2 card titles (SectionCard) → h3 stat values (StatCard) + empty-state titles + micro-labels ("My Lists" = `text-sm font-semibold text-slate-500 uppercase tracking-wider`). Views orchestrate; `shared.tsx` owns the patterns.
@@ -2859,3 +2859,59 @@ Hover-parity probing must run in Playwright, not a touch-emulating browser — v
    named condition arrives, and let the tripwires do the bookkeeping —
    a deferral that cannot be executed verbatim later is a decision
    that will be re-derived badly.
+
+## S162 lessons (Batch DK — the events-family hardening cycle: the CB8-seam-split + the promoted recurrence seam set)
+
+1. **A bundled write+refresh mutation cannot tell its caller WHICH leg
+   failed — and the caller's honest UI depends on that distinction.**
+   The events mutations were `await apiSend(...)` then `await
+   fetchAndSet("events")`, and the view's single catch showed "Something
+   went wrong." in the still-open dialog: correct for a failed WRITE,
+   a false save-failure claim for a COMMITTED write with a flaky refresh
+   — and the armed retry duplicated the row. The AI family had solved
+   this at the VIEW layer (apiSend + loadCollections as separate legs)
+   because AI routes have no mutation-seam entries; the CRUD family
+   cannot split at the view without breaking "every mutation refreshes
+   the touched collections" for 51 sibling sites. The seam-level
+   contained catch (`fetchAndSet(...).catch(() => undefined)` on the
+   refresh leg ONLY) delivers the defect's full closure in one line per
+   mutation: the write leg still rejects honestly, the refresh failure
+   self-heals through the documented pre-warm paths. Lesson: when a
+   seam bundles two failure domains, fix the bundling AT the seam —
+   view-level workarounds multiply across every consumer, and the
+   soft-toast variant is architecturally unavailable when the toast
+   store lives above the layer boundary (lib must never import
+   components).
+
+2. **An inline-twin enum is invisible to a no-local-twin census — the
+   guard needs the import leg plus the unused-import gate to bite.**
+   The S161/DJ3 census asserted "imports the enum" + "declares no local
+   const twin"; events-view's REPEATS violated the DOCTRINE in good
+   faith through four hard-coded `<SelectItem>`s — no const twin, so
+   the negative leg passed while the drift class (a future schema value
+   missing from the UI) lived on. The close: add the site to the census
+   (the import leg REDs on the missing import) and let tsc's
+   noUnusedLocals machine-force the render to actually consume it —
+   an import that stops feeding the render fails typecheck, so the
+   inline twin cannot silently return. Lesson: source-census guards
+   must enumerate the FORMS a twin can take, not just the form the last
+   finding wore; the import + unused-import pair covers both const and
+   inline twins with zero new machinery.
+
+3. **A recorded deferral whose "named condition" is a rotation axis
+   executes when that axis comes up — the S161 F-7 lesson inverted.**
+   The S161 plan deferred the expandOccurrences promotion to "the next
+   events-family cycle"; this cycle WAS that cycle (the rotation axis
+   arrived), and the promotion executed without re-audit (the plan
+   named the function, the move, and the pin set). The DJ4 lesson
+   ("defer family-wide changes into registers, close them when the
+   named condition arrives") holds — but the S162 addendum: a
+   deferral named by ROTATION AXIS needs no register at all, because
+   the audit rotation itself is the trigger (the axis read re-surfaces
+   the candidate every time the family comes up). The counter-example
+   that proves the rule: the S161 F-8 files toast-copy deferral (named
+   by FINDING, not axis) rode no register and was re-derived fresh this
+   cycle from the plan §8 — correct, but only because the plan was
+   re-read. Prose deferrals by axis are safe; prose deferrals by
+   finding number require the plan re-read the standing doctrine
+   already mandates.

@@ -44,13 +44,14 @@ describe("INITIAL_COLLECTIONS (S16-A pre-warm seam)", () => {
       "exams",
       "subjects",
     ]);
+    // S162/DK6: the calendar entry dropped its dead "subjects" key (the
+    // view reads exactly these five — one less wasted GET per cold boot).
     expect(INITIAL_COLLECTIONS.calendar).toEqual([
       "events",
       "exams",
       "assignments",
       "tasks",
       "timetable",
-      "subjects",
     ]);
     expect(INITIAL_COLLECTIONS.tasks).toEqual(["tasks", "taskLists", "subjects"]);
   });

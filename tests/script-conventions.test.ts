@@ -142,7 +142,10 @@ describe("the chunked cert runner's truth contract (S128/CC2)", () => {
     // DJ2 timetable band hand-guard in parity-session7 + the DJ4 dark-edge
     // accent leg in theme-system) + chunk 3 92 → 93 (the DJ5 slider
     // resync pageerror-free pin in resilience) — 619 → 623.
-    expect(certSource).toContain("Expected: 154 + 192 + 93 + 95 + 89 = 623");
+    // S162/DK: chunk 3 93 → 94 (the DK1 events CB8 failure-domain split
+    // pin in parity-session5 — a committed create + an aborted refresh
+    // answers the success toast) — 623 → 624.
+    expect(certSource).toContain("Expected: 154 + 192 + 94 + 95 + 89 = 624");
   });
 
   it("propagates a failing chunk's exit code (never a green cert on a red run)", () => {

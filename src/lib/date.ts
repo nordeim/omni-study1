@@ -48,7 +48,10 @@ export function addMonths(date: Date, months: number): Date {
   return new Date(date.getFullYear(), date.getMonth() + months, 1);
 }
 
-/** ISO 8601 calendar week (the Events panel's CW label). */
+/** ISO 8601 calendar week — a pinned pure helper with NO production caller
+ * (the S128 contrast decision). The Events panel's CW label is
+ * `referenceWeekNumber` (the US Sunday-start convention, measured CW 43
+ * on Sun 2026-10-18 where this reads 42). */
 export function isoWeekNumber(date: Date): number {
   const d = startOfDay(date);
   // Thursday of this ISO week decides the year.

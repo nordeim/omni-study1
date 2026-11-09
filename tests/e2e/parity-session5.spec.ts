@@ -929,3 +929,39 @@ test.describe("S127/CB1: the auto-path completion records the full duration", ()
     }
   });
 });
+
+// S162/DK1 (the s162 audit B/F-1): the events mutation CB8 split. The
+// pre-DK1 events mutations rejected on the refresh leg after a COMMITTED
+// write — apiSend (the POST) then fetchAndSet (the GET, 20 s CD2
+// deadline), and the GET's failure rejected the whole mutation: the
+// view's catch showed "Something went wrong." in the STILL-OPEN dialog,
+// fired no success toast, and kept the form armed — a RETRY re-POSTed
+// and DUPLICATED the event (the CB8 letter: a false mutation-failure
+// claim on a committed row). The CB8-twin network-mock shape (the
+// S127/S160 family): the POST continues (the write lands server-side),
+// the GET aborts (the flaky-refresh condition) — create an event
+// through the real dialog and assert the honest success surface. RED
+// pre-fix: no toast, the dialog open with the false-failure copy.
+test.describe("S162/DK1 · the events CB8 failure-domain split (Batch DK)", () => {
+  test("a committed create + a failed refresh answers the success toast (never the false save-failure)", async ({ page }) => {
+    await page.goto("/Events");
+    await hydrated(page);
+    // The committed-write + flaky-refresh condition: the write continues
+    // (201 server-side), the refresh GET aborts.
+    await page.route("**/api/events**", (route) => {
+      if (route.request().method() === "GET") return route.abort();
+      return route.continue();
+    });
+    await page.getByRole("button", { name: "New Event" }).click();
+    await page.locator("#event-title").fill("S162-DK1 probe");
+    await page.locator("#event-start").fill("2026-11-09T10:00");
+    await page.getByRole("button", { name: "Create event" }).click();
+    // The write committed: the success toast lands through the aria-live
+    // stack and the dialog CLOSES. Pre-fix: the mutation rejected on the
+    // aborted refresh → "Something went wrong." in the open dialog, no
+    // success toast, the form armed for the duplicate-creating retry.
+    await expect(page.getByText("Event created.")).toBeVisible({ timeout: 10_000 });
+    await expect(page.getByRole("dialog")).toBeHidden();
+    await expect(page.getByText("Something went wrong.")).toBeHidden();
+  });
+});

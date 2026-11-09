@@ -229,9 +229,11 @@ export function CalendarView() {
               (timelineDays below) — the OR-form gate covers both sources
               (the S138/CM2 doctrine: any primary source empty while
               loading owns the row; the events-only gate let a
-              mixed-landing state render a task-less timeline). */}
+              mixed-landing state render a task-less timeline). S162/DK4:
+              the gate announces itself (role="status" — the
+              calculator-view precedent). */}
           {loading && (events.length === 0 || tasks.length === 0) ? (
-            <div className="flex justify-center py-8 text-sf-primary">
+            <div className="flex justify-center py-8 text-sf-primary" role="status" aria-label="Loading calendar">
               <Spinner className="size-6" />
             </div>
           ) : timelineDays.length === 0 ? (
@@ -415,14 +417,15 @@ export function CalendarView() {
 
           {/* S140/CO4b (Audit A L-2): the day detail renders FIVE collections
               (events/tasks/assignments/exams/classes — see dayEmpty) — the
-              OR-form gate covers them all. */}
+              OR-form gate covers them all. S162/DK4: the gate announces
+              itself (role="status" — the calculator-view precedent). */}
           {loading &&
           (events.length === 0 ||
             tasks.length === 0 ||
             assignments.length === 0 ||
             exams.length === 0 ||
             timetable.length === 0) ? (
-            <div className="flex justify-center py-8 text-sf-primary">
+            <div className="flex justify-center py-8 text-sf-primary" role="status" aria-label="Loading day details">
               <Spinner className="size-6" />
             </div>
           ) : dayEmpty ? (

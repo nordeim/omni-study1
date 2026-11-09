@@ -19,7 +19,14 @@ export const INITIAL_COLLECTIONS: Record<ViewId, CollectionKey[]> = {
   dashboard: ["tasks", "assignments", "exams", "focusSessions", "subjects"],
   myday: ["tasks", "subjects"],
   tasks: ["tasks", "taskLists", "subjects"],
-  calendar: ["events", "exams", "assignments", "tasks", "timetable", "subjects"],
+  // S162/DK6: "subjects" LEFT the calendar entry — calendar-view reads
+  // exactly these five collections (tasks/events/assignments/exams/
+  // timetable, calendar-view.tsx:51-55; grep-verified zero subject
+  // references). The sixth key dated from the original implementation
+  // commit and predated the CI7a subjects-need audits that ADD the key
+  // where a view reads it — here it was one wasted parallel GET per cold
+  // /Calendar boot.
+  calendar: ["events", "exams", "assignments", "tasks", "timetable"],
   events: ["events"],
   timetable: ["timetable", "subjects"],
   assignments: ["assignments", "subjects"],

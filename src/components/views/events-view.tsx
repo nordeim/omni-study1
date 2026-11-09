@@ -7,7 +7,9 @@
 // step the focused day; the big date, the weekday abbrev and the
 // "Oct 2026 CW <referenceWeekNumber>" line all track it, and the 7-day list
 // re-anchors to the focused day while the Today/Tomorrow labels stay
-// anchored to the REAL today. Recurring events expand occurrences in-window.
+// anchored to the REAL today. Recurring events expand occurrences in-window
+// through the src/lib/events seam (S162/DK5 — the promoted recurrence
+// expansion, unit-pinned; the S161-recorded F-7 deferral executed).
 // ---------------------------------------------------------------------------
 
 import * as React from "react";
@@ -48,6 +50,8 @@ import { useToast } from "@/components/ui/toast";
 import { Spinner } from "@/components/views/shared";
 import { mutations, useDataStore, type EventInput, type EventRow } from "@/lib/data";
 import { addDays, daysUntil, formatWeekdayMonthDay, referenceWeekNumber, startOfDay } from "@/lib/date";
+import { expandOccurrences } from "@/lib/events";
+import { REPEATS } from "@/lib/validation";
 import { ApiError } from "@/lib/api";
 import { fromDatetimeLocalInput, toDatetimeLocalValue } from "@/lib/date";
 import { cn } from "@/lib/utils";
@@ -69,29 +73,8 @@ type DialogState =
   | { open: false }
   | { open: true; editing: EventRow | null };
 
-function expandOccurrences(event: EventRow, windowDays: Date[]): Date[] {
-  const start = startOfDay(new Date(event.startDate));
-  const hits: Date[] = [];
-  for (const day of windowDays) {
-    const d = startOfDay(day);
-    const diffDays = Math.round((d.getTime() - start.getTime()) / 86_400_000);
-    if (diffDays < 0) continue;
-    switch (event.repeat) {
-      case "daily":
-        hits.push(day);
-        break;
-      case "weekly":
-        if (diffDays % 7 === 0) hits.push(day);
-        break;
-      case "monthly":
-        if (d.getDate() === start.getDate()) hits.push(day);
-        break;
-      default:
-        if (diffDays === 0) hits.push(day);
-    }
-  }
-  return hits;
-}
+// expandOccurrences now lives in src/lib/events.ts (S162/DK5 — the
+// promoted seam, unit-pinned by tests/events.test.ts).
 
 export function EventsView() {
   const events = useDataStore((s) => s.events);
@@ -349,9 +332,12 @@ export function EventsView() {
           <div className="flex flex-col">
             {/* S130/CE3: the in-flight window renders ONE spinner, never the
                 seven false "No events" bands (a stale empty list is NOT an
-                empty calendar). */}
+                empty calendar). S162/DK4: the gate announces itself
+                (role="status" — the calculator-view precedent; the
+                Spinner itself is aria-hidden, so the unlabeled div was
+                silent to assistive tech). */}
             {loading && events.length === 0 ? (
-              <div className="flex justify-center py-10 text-sf-primary">
+              <div className="flex justify-center py-10 text-sf-primary" role="status" aria-label="Loading events">
                 <Spinner className="size-6" />
               </div>
             ) : (
@@ -536,10 +522,15 @@ export function EventsView() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="none">No repeat</SelectItem>
-                  <SelectItem value="daily">Daily</SelectItem>
-                  <SelectItem value="weekly">Weekly</SelectItem>
-                  <SelectItem value="monthly">Monthly</SelectItem>
+                  {/* S162/DK2: the options render from validation.ts's
+                      REPEATS single source (the census's fourth site —
+                      tests/enum-single-source.test.ts). The none label
+                      keeps the reference-measured "No repeat" copy. */}
+                  {REPEATS.map((r) => (
+                    <SelectItem key={r} value={r}>
+                      {r === "none" ? "No repeat" : r.charAt(0).toUpperCase() + r.slice(1)}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
