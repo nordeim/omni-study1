@@ -191,7 +191,17 @@ describe("the chunked cert runner's truth contract (S128/CC2)", () => {
     // answers the "Subject created" success toast + the CLOSED
     // dialog, never the false "Could not save the subject.") —
     // 631 → 632.
-    expect(certSource).toContain("Expected: 156 + 197 + 95 + 95 + 89 = 632");
+    // S170/DT: chunk 1 156 → 158 (the two DT2 chrome-parity pins —
+    // the DT2a desktop-sidebar leg in navigation [border-x hairlines
+    // + the xl shadow geometry + z-40 + transition-all 0.3s + the
+    // border-box 260/258 width contract] and the DT2b mobile app-bar
+    // leg in mobile-navigation [border-b hairline + the sm shadow +
+    // z-40] — the reference's post-S169 shell-chrome deployment +
+    // the longstanding mobile-bar miss, both measured live and pinned
+    // as computed-style ground truth; the DT1 task-lists CB8 port
+    // carries NO e2e leg — the family has no view consumer, the unit
+    // pair set pins the contract) — 632 → 634.
+    expect(certSource).toContain("Expected: 158 + 197 + 95 + 95 + 89 = 634");
   });
 
   it("propagates a failing chunk's exit code (never a green cert on a red run)", () => {

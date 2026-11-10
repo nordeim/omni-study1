@@ -128,7 +128,12 @@ export function MobileChrome() {
     <>
       {/* App bar (the page's banner): brand + clock on BOTH sides of the
           hamburger — the reference never swaps in the view title. */}
-      <header className="glass fixed left-0 right-0 top-0 z-30 flex h-16 items-center justify-between px-4 lg:hidden print:hidden">
+      {/* S170/DT2b (measured live at 390×844): the reference's banner
+          carries border-b (the glass border-color) + shadow-sm + z-40 —
+          the measured classes this spec's era documented; the clone
+          shipped z-30 bare (a longstanding miss the s170 parity
+          divergence pass converted into a finding). */}
+      <header className="glass fixed left-0 right-0 top-0 z-40 flex h-16 items-center justify-between border-b px-4 shadow-sm lg:hidden print:hidden">
         <div className="flex min-w-0 items-center gap-3">
           <button
             type="button"

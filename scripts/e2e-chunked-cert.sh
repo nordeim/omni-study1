@@ -295,7 +295,21 @@
 # refresh blast radius in the codebase, the ELEVEN-collection
 # SUBJECT_TOUCHED Promise.all); network-mocked, no server writes]. The
 # full DS map: docs/remediation-plan-session169.md.)
-# Expected: 156 + 197 + 95 + 95 + 89 = 632 (each chunk's count includes its
+# (S170/DT re-tag — census 632 → 634, net +2: chunk 1 +2 [the two DT2
+# chrome-parity pins — the DT2a desktop-sidebar leg in navigation (the
+# reference's post-S169 shell-chrome deployment, measured live at
+# 1440×900: the aside's border-x hairlines + the xl shadow geometry +
+# z-40 + transition-all 0.3s + the border-box 260/258 width contract)
+# and the DT2b mobile app-bar leg in mobile-navigation (the border-b
+# hairline + the sm shadow + z-40 — the reference's measured classes,
+# a longstanding clone miss the s170 parity-probe divergence pass
+# converted into a finding); both computed-style ground truth, no
+# server writes. The DT1 task-lists CB8 port carries NO e2e leg — the
+# family has no view consumer (the tasks-view aside is read-only, the
+# reference's own task dialog carries no list picker), so the unit
+# pair set alone pins the mutation contract]. The full DT map:
+# docs/remediation-plan-session170.md.)
+# Expected: 158 + 197 + 95 + 95 + 89 = 634 (each chunk's count includes its
 # auth setup — the current census; the historical re-tag blocks beneath.)
 # (S131/CF re-tag — census 567 → 570, net +3: chunk 1 +1 [the CF9
 # drawer focus-restore leg in mobile-navigation — crossing the lg

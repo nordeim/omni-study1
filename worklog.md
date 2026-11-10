@@ -7441,3 +7441,160 @@ stage-2 triggers; the update-side raw-SQL bulk upsert; the I-4 parse
 posture; the M-1 LLM-side residual); the
 gradetracker/studygroups/settings-CRUD (edit/delete journeys +
 holidays) and AlertDialog-confirm e2e gaps.
+
+## Session 181 — the S170 cycle (Batch DT: the task-lists-family hardening + the chrome catch-up set)
+
+The workspace was COLD — a fresh `git clone` at `5d6258f` on `main` (the
+S169/Batch DS fix `2ed1512` + the plan-tick `5699d1b` + the operator's
+session_211 transcript commit). The environment rebuilt from the
+documented quickstart: `.env` from `.env.example` (byte-identical at the
+documented dev posture `DATABASE_URL="file:../db/custom.db"`), `bun
+install` (510 packages), the Playwright chromium re-derived at the
+locked v1243 pin (the S103/S166 fresh-clone doctrine), `db:push &&
+db:seed` (the repo-root `db/custom.db`). The pre-fix standalone built
+at 07:41 on the clean S169-final tree — the TRUSTED pre-fix binary for
+the DT2 e2e RED proofs.
+
+The doc chain re-read (worklog tail, session_210, the S169 plan §8/§9,
+session_211 [the operator's raw S169 transcript], the census sites
+across README/AGENTS/CLAUDE/PAD/SKILL), then validated against the
+codebase: all three DS claims verified at their source anchors (the
+three contained catches + the S169/DS1 doctrine comment at data.ts:609-
+645, the DS2 aria gate, the DS1 pair set + e2e leg), the doc census
+chain machine-verified consistent at 1697 + 632 = 2329.
+
+Cold baseline (before any work): lint ✓ · tsc ✓ · the full Vitest run
+**1697/1697 (51 files — the documented S169 final state exactly)** ·
+dev-server preflight GREEN · **the drawer check GREEN (the 100th
+consecutive** no-Tailwind-v4-mobile-nav-bug confirmation) · **the
+desktop parity probe DIVERGENCE on navWidthMatch** — the FIRST
+standing-probe divergence since the parity gates were instituted,
+root-caused this session (below). Baseline noise: none. The config
+posture re-validated for the operator's standing ask (the `skills/`
+folder excluded from code checking, testing, and compilation on every
+axis).
+
+The audits (Mode-C; every H/L finding re-verified by direct read):
+
+- **A — the Batch DS recent-changes axis** (`2ed1512` fix +
+  `5699d1b`/`5d6258f` docs-only): **0C / 0H / 0M / 0L / 0I — clean.**
+- **B — the task lists family** (the rotation's fresh axis, the SECOND
+  of the eight remaining CB8 seams the S168 close's ledger names):
+  **0C / 1H / 0M / 0L / 0I.** The family coherent on every other axis
+  (the taskListDelegate's where-scoped queries — task lists carry no
+  owned FKs, they are the SetNull TARGET for Task.listId; Zod at both
+  boundaries [boundedTitle]; the factory routes). The finding:
+  **H-1** the THREE task-list mutations rejected on the refresh leg
+  after a COMMITTED write — createTaskList/updateTaskList the
+  single-collection fetchAndSet, deleteTaskList the TWO-collection
+  Promise.all ([taskLists, tasks] — the Task.listId SetNull
+  reconciliation set; EITHER failed GET rejected the whole delete) —
+  the CB8 letter's NINTH family, with NO view consumer today (the
+  tasks-view aside is read-only; the reference's own task dialog
+  carries no list picker — verified live), so the pinned surface is
+  the mutation CONTRACT itself.
+- **C — the standing gates**: the parity DIVERGENCE root-caused to a
+  LIVE REFERENCE DEPLOYMENT — the desktop aside gained border-x +
+  shadow-xl shadow-slate-200/50 + z-40 + transition-all duration-300
+  between the S169 close and this session (the S169 MATCH is
+  incompatible with the bordered form's 258px inner-nav reading; the
+  computed styles captured by the s170 probe scripts); the mobile
+  app-bar's z-40 + shadow-sm + border-b is a LONGSTANDING clone miss
+  the divergence pass surfaced (the reference's measured classes
+  documented in the mobile-navigation spec's own initial-era comment,
+  never pinned until now).
+
+The remediation plan written BEFORE any source change
+(`docs/remediation-plan-session170.md`, the plan-first doctrine),
+validated against the codebase surfaces, then executed TDD-first:
+
+- **DT1 — the task-lists-family mutation CB8 split (the H-1 close).**
+  Unit RED proven exactly as designed (the resolve set RED ×3 — the
+  trio, the delete leg's `mockRejectedValueOnce` rejecting ONE of the
+  two parallel refresh GETs — `Promise.all` rejects on its first
+  rejection, exactly the flaky-refresh condition — + the
+  failed-write guard green-on-arrival, the pair `3 failed | 1
+  passed`). NO e2e leg — the family has no view consumer (the
+  adjudicated deferral: inventing a list-CRUD UI beyond the
+  reference's own surface is out of scope for a CB8 seam cycle).
+  GREEN = the three contained catches at the seam (the create/update
+  pair + ONE catch on deleteTaskList's whole Promise.all — the S169
+  multi-collection-is-one-failure-domain lesson) + the doctrine
+  comment re-tagged for the ninth family.
+- **DT2a — the desktop sidebar chrome catch-up.** The reference's
+  post-S169 deployment measured live and pinned: border-x hairlines
+  (the glass border-color) + shadow-xl shadow-slate-200/50 + z-40 +
+  transition-all duration-300 on the aside; the border-box width
+  contract holds (w-[260px]/w-20 + border-x still computes 260/80
+  total; the inner nav reads 258 — the parity probe's restored MATCH).
+  The e2e leg RED-proven against the pre-fix build (failing exactly at
+  the border-left-width assertion), GREEN post-fix. The first run's
+  oklab shadow serialization tripped the pin's rgba expectation — the
+  trap-7 doctrine re-derived for shadows (v4's color-mix(in oklab)
+  serializes oklab even on the hex-pinned slate-200 step; the
+  reference's v3-era vars serialize rgba; the rendered colors are
+  equivalent) — the pin now asserts the GEOMETRY + the 0.5 alpha and
+  accepts either form.
+- **DT2b — the mobile app-bar chrome catch-up.** The reference's
+  measured classes: border-b + shadow-sm + z-40 (a longstanding miss —
+  the spec comment documented them since the initial era). The e2e leg
+  RED-proven against the pre-fix build, GREEN post-fix.
+
+**Gates**: lint ✓ · tsc ✓ · unit **1701/1701** (51 files, +4 exactly
+as designed) · build ✓ · the touched spec files green (navigation
+67/67 + mobile-navigation 21/21, full-file runs) · the 5-chunk cold
+cert (the authoritative gate) · the drawer check GREEN on the
+remediated tree (**the 101st consecutive** no-Tailwind-v4-mobile-nav-
+bug confirmation) · the desktop parity probe **MATCH** (all four
+formal checks — navWidth 258 = 258, the bordered content box on BOTH
+hosts; live reference login) with the probe itself HARDENED (the
+post-login chrome wait + bounded retry — the login page's own
+`<main>` false-positived the old wait and raced the reference's slow
+mounts under load; the hardening converts the gate's reference
+dependency from a fixed settle into a bounded convergence).
+
+**Evidence**: `docs/screenshots/170-clone-desktop.png` (the standing
+desktop dashboard — now carrying the DT2a chrome) ·
+`170-clone-mobile-drawer.png` (the 101st drawer-GREEN companion; the
+DT2b app-bar above it) · `170-clone-sidebar.png` (the cycle's surface
+— the desktop sidebar close-up, the DT2a border-x + xl-shadow chrome),
+captured by `scripts/capture-s170-evidence.mjs`, self-verifying (ok:
+true, md5s distinct) + the not-pure-white pixel-ratio verification.
+
+**Docs lockstep**: README badge/census (2329 → 2335) + the count
+prose sites (the tree diagram + the test-command block) + the
+Session-170 row; AGENTS census (1701 + 634) + the S170 lessons block
+(three lessons: a standing-probe divergence on a clean tree is a
+reference-side finding — probe the reference at the source and sweep
+the whole chrome family while in there; a gate script must wait for
+the POST-LOGIN chrome, never any `<main>`; v4 alpha shadows serialize
+oklab even on hex-pinned steps — pin the geometry + the alpha, accept
+either color form); CLAUDE counts (1701 + 634); PAD v1.3.78 (the
+revision block); the SKILL census (all four sites — the chromium-spec
+figure re-derived 624 → 629, a pre-existing small drift the re-anchor
+caught); the vitest header re-anchor (+4); the cert runner re-tag
+(both scripts, 632 → 634, chunk 1 156 → 158, machine-pinned by the
+script-conventions tripwire — the CQ6/DA6 count-claims gates verified
+GREEN after the re-anchor: 136/136); this log; the worklog Session-181
+entry; the plan §8 as-executed close; the `.env.example` contract
+re-verified (no env-var reads changed this cycle — .env and
+.env.example byte-identical at the documented dev posture); the
+cert-s170.log scratch swept before the commit (the tracked artifact
+is the launcher script).
+
+Next cycle. The rotation continues — the task-lists port closes the
+SECOND of the eight remaining CB8 seams. The recorded deferrals: the
+remaining six CB8 seams (the deck/studyGroup/practiceTest/grades/
+focusSessions/holidays families — each gets its own rotation-axis
+audit + pin set; deck is next in the recorded order); the task-lists
+e2e leg (arrives when/if a list surface ships — the reference carries
+no list-CRUD UI today); the unannounced loading-gate families
+(focustimer/gradetracker/dashboard/myday/studygroups/practicetests/
+analytics/settings-holidays); the files refresh-failure toast copy
+harmonization (the F-8 candidate); the S160 close's ledger (the A-M3
+stage-2 triggers; the update-side raw-SQL bulk upsert; the I-4 parse
+posture; the M-1 LLM-side residual); the gradetracker/studygroups/
+settings-CRUD (edit/delete journeys + holidays) and
+AlertDialog-confirm e2e gaps; a periodic re-probe of the reference's
+chrome (the live deployment this cycle caught proves the reference
+drifts — the standing probes are the tripwire).

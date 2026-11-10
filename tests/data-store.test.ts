@@ -1170,3 +1170,60 @@ describe("S169/DS1: the subjects family mutation CB8 split (B-H1 — committed w
     await expect(mutations.createSubject(subjectInput as never)).rejects.toThrow("offline");
   });
 });
+
+// S170/DT1 — the task lists family mutation CB8 split (B-H1 — committed
+// write + failed refresh): the write and the post-write refresh are
+// SEPARATE failure domains (the DK1/DL1/DM1/DN1/DP1/DQ1/DR1/DS1
+// doctrine, the NINTH family of the recorded family-wide port — the
+// second of the eight remaining seams the S168 close's ledger names).
+// Pre-DT1 all three task-list mutations rode the uncaught refresh —
+// createTaskList and updateTaskList the single-collection
+// fetchAndSet("taskLists"), deleteTaskList the TWO-collection
+// Promise.all([taskLists, tasks]) (the Task.listId SetNull
+// reconciliation set), so EITHER failed refresh GET rejected the whole
+// delete on a row the server deleted. The family has NO view consumer
+// today (the tasks-view aside is read-only navigation; the TaskDialog
+// carries no list picker — the reference's own shape), so the pinned
+// surface is the mutation CONTRACT itself: a committed write + a failed
+// refresh RESOLVES; the failed write still REJECTS.
+describe("S170/DT1: the task lists family mutation CB8 split (B-H1 — committed write + failed refresh)", () => {
+  const taskListInput = { name: "DT1 list probe" } as const;
+
+  beforeEach(() => {
+    apiGetMock.mockReset();
+    apiSendMock.mockReset();
+    apiGetMock.mockResolvedValue([]);
+    apiSendMock.mockResolvedValue(undefined);
+    useDataStore.setState({ taskLists: [] });
+  });
+
+  it("createTaskList: a committed write + a failed refresh RESOLVES (never the false save-failure)", async () => {
+    apiSendMock.mockResolvedValueOnce(undefined); // the POST 201s
+    apiGetMock.mockRejectedValueOnce(new Error("offline")); // the refresh GET fails
+    // RED pre-fix: the mutation rejected with "offline" — the caller's
+    // catch would claim a save failure on a row the server committed.
+    await expect(mutations.createTaskList(taskListInput as never)).resolves.toBeUndefined();
+  });
+
+  it("updateTaskList: a committed write + a failed refresh RESOLVES", async () => {
+    apiSendMock.mockResolvedValueOnce(undefined);
+    apiGetMock.mockRejectedValueOnce(new Error("offline"));
+    await expect(mutations.updateTaskList("tl1", { name: "Renamed" })).resolves.toBeUndefined();
+  });
+
+  it("deleteTaskList: a committed write + a failed refresh RESOLVES (ONE failed GET among the two-collection Promise.all is contained)", async () => {
+    apiSendMock.mockResolvedValueOnce(undefined); // the DELETE 200s
+    apiGetMock.mockRejectedValueOnce(new Error("offline")); // ONE of the two refresh GETs fails
+    // RED pre-fix: Promise.all rejected on its first rejection — the
+    // caller's catch would claim a delete failure on a list the server
+    // already deleted (its tasks already SetNull-released).
+    await expect(mutations.deleteTaskList("tl1")).resolves.toBeUndefined();
+  });
+
+  it("createTaskList: a FAILED write still rejects (the honest save-failure reaches the caller)", async () => {
+    apiSendMock.mockRejectedValueOnce(new Error("offline"));
+    // The write leg keeps rejecting — the honest failure reaches the
+    // caller, and the retry is legitimate (nothing committed).
+    await expect(mutations.createTaskList(taskListInput as never)).rejects.toThrow("offline");
+  });
+});

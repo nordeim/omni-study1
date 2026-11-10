@@ -36,7 +36,16 @@ export function Sidebar() {
   return (
     <aside
       className={cn(
-        "glass fixed bottom-0 left-0 top-0 z-30 hidden flex-col transition-[width] duration-200 lg:flex",
+        // S170/DT2a (measured live at 1440×900): the reference re-deployed
+        // its shell chrome between the S169 close and the s170 session —
+        // the aside carries border-x (the glass border-color,
+        // rgba(255,255,255,0.5) light / slate-700/50 dark) + shadow-xl
+        // shadow-slate-200/50 + z-40 + transition-all duration-300 (the
+        // old width-only 200ms transition is the pre-deployment form).
+        // The border-box width contract holds: w-[260px]/w-20 + border-x
+        // still computes 260/80 total (the content box narrows by 2px —
+        // the parity probe's inner-nav reading on BOTH hosts).
+        "glass fixed bottom-0 left-0 top-0 z-40 hidden flex-col border-x shadow-xl shadow-slate-200/50 transition-all duration-300 lg:flex",
         collapsed ? "w-20" : "w-[260px]",
       )}
     >

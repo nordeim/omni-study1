@@ -542,3 +542,29 @@ test.describe("S131/CF9 · the drawer focus restore across the lg breakpoint", (
     expect(active.tag).toBe("A");
   });
 });
+
+// ---------------------------------------------------------------------------
+// S170/DT2b — the mobile app-bar chrome catch-up (the s170 parity probe's
+// DIVERGENCE pass): the reference's banner carries border-b (1px, the glass
+// border-color rgba(255,255,255,0.5)) + shadow-sm + z-40 — measured live at
+// 390×844 this session, and documented as the reference's measured classes
+// in this spec's own header comment since the initial measurement era (the
+// clone shipped z-30 with no border and no shadow — a longstanding miss the
+// s170 divergence pass converted into a finding). Pinned here as
+// computed-style ground truth.
+// ---------------------------------------------------------------------------
+test.describe("S170/DT2b · the mobile app-bar carries the reference's chrome (border-b + shadow-sm + z-40)", () => {
+  test("the banner computes the border-b hairline, the sm shadow, and z-40", async ({ page }) => {
+    await page.goto("/Dashboard");
+    const bar = page.getByRole("banner");
+    await expect(bar).toBeVisible();
+    // The border-b hairline (the glass border-color, measured).
+    await expect(bar).toHaveCSS("border-bottom-width", "1px");
+    await expect(bar).toHaveCSS("border-bottom-color", "rgba(255, 255, 255, 0.5)");
+    // The sm shadow geometry (shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05)).
+    const shadow = await bar.evaluate((el) => getComputedStyle(el).boxShadow);
+    expect(shadow.replace(/\s+/g, " ")).toContain("0px 1px 2px");
+    // The z (the reference's measured class).
+    await expect(bar).toHaveCSS("z-index", "40");
+  });
+});

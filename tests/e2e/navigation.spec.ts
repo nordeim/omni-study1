@@ -1133,3 +1133,51 @@ test.describe("S153/DB2: the /export page's own per-user budget", () => {
     expect(route.status(), "the route twin rides its own export: budget").toBe(200);
   });
 });
+
+// ---------------------------------------------------------------------------
+// S170/DT2a — the desktop sidebar chrome catch-up (the s170 parity probe's
+// DIVERGENCE close): the reference re-deployed its shell chrome between the
+// S169 close and the s170 session — the aside now carries border-x (1px per
+// side, the glass border-color rgba(255,255,255,0.5)) + shadow-xl
+// shadow-slate-200/50 + z-40 + transition-all duration-300 (computed styles
+// measured live at 1440×900, scripts/probe-sidebar-styles-s170.mjs). The
+// S169 probe MATCHED at navWidth 260 on both hosts — impossible under the
+// bordered form (the inner nav reads 258 today) — so the border-x is a
+// post-S169 reference deployment. Pinned here as computed-style ground
+// truth: the borders, the xl shadow geometry, the z, the transition, and
+// the border-box width contract (the aside keeps its computed 260px under
+// border-x — the collapse pins at :90-92 hold).
+// ---------------------------------------------------------------------------
+test.describe("S170/DT2a · the desktop sidebar carries the reference's chrome (borders + shadow + z)", () => {
+  test("the aside computes the border-x hairlines, the xl shadow, z-40, and the all-transition", async ({ page }) => {
+    await page.goto("/Dashboard");
+    const aside = page.locator("aside");
+    await expect(aside).toBeVisible();
+    // The border-x hairlines (the glass border-color, measured).
+    await expect(aside).toHaveCSS("border-left-width", "1px");
+    await expect(aside).toHaveCSS("border-right-width", "1px");
+    await expect(aside).toHaveCSS("border-left-color", "rgba(255, 255, 255, 0.5)");
+    // The xl shadow geometry (shadow-xl shadow-slate-200/50 — the
+    // reference serializes the v3-hex rgba(226, 232, 240, 0.5); the
+    // clone's v4 color-mix(in oklab) rides the SAME pinned hex through
+    // the oklab round-trip and serializes oklab(0.9287… / 0.5) — the
+    // trap-7 family, the drawer-check precedent: the RENDERED color is
+    // equivalent, so the pin asserts the GEOMETRY + the 0.5 alpha and
+    // accepts either serialization).
+    const shadow = await aside.evaluate((el) => getComputedStyle(el).boxShadow);
+    const flat = shadow.replace(/\s+/g, " ");
+    expect(flat).toContain("0px 20px 25px -5px");
+    expect(flat).toContain("0px 8px 10px -6px");
+    expect(flat).toMatch(/(rgba\(226, 232, 240, 0\.5\)|oklab\([^)]*\/ 0\.5\))/);
+    // The z + the transition (the reference's measured classes).
+    await expect(aside).toHaveCSS("z-index", "40");
+    await expect(aside).toHaveCSS("transition-property", "all");
+    await expect(aside).toHaveCSS("transition-duration", "0.3s");
+    // The border-box width contract: w-[260px] + border-x still computes
+    // 260px total (the content box narrows to 258 — the parity probe's
+    // inner-nav reading on BOTH hosts).
+    await expect(aside).toHaveCSS("width", "260px");
+    const navWidth = await page.locator("aside nav").evaluate((el) => getComputedStyle(el).width);
+    expect(navWidth).toBe("258px");
+  });
+});

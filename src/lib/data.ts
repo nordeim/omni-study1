@@ -644,18 +644,40 @@ export const mutations = {
     await Promise.all(SUBJECT_TOUCHED.map((key) => fetchAndSet(key))).catch(() => undefined);
   },
 
-  // ---- task lists -----------------------------------------------------------
+  // ---- task lists (S170/DT1: the CB8 failure-domain split) ------------------
+  // The write and the post-write refresh are SEPARATE failure domains
+  // (the S127/CB8 doctrine, the DK1 events + DL1 exams + DM1 assignments
+  // + DN1 timetable + DP1 notes + DQ1 flashcards + DR1 tasks + DS1
+  // subjects ports — the recorded family-wide port, this the NINTH
+  // family, the second of the eight remaining seams the S168 close's
+  // ledger names): a refresh GET that fails after a COMMITTED write must
+  // not reject the mutation — the caller's catch would claim a save
+  // failure on a saved row, arming the duplicate-creating retry on the
+  // create leg and the false delete-failure claim on a row the server
+  // deleted. deleteTaskList's refresh is the TWO-collection Promise.all
+  // ([taskLists, tasks] — the Task.listId SetNull reconciliation set):
+  // the ONE contained catch rides the whole Promise.all — the
+  // multi-collection refresh is one failure domain (the S169/DS1
+  // lesson), and either failed GET must not reject the committed
+  // delete. The family has NO view consumer today (the tasks-view aside
+  // is read-only navigation; the TaskDialog carries no list picker —
+  // the reference's own shape), so the pinned surface is the mutation
+  // CONTRACT itself. The refresh rejection is contained here; the stale
+  // slices self-heal on the next successful load (the S16 view-switch
+  // pre-warm + the next mutation's own refresh — the DJ5 doctrine).
+  // The WRITE legs keep rejecting honestly. Pinned by
+  // tests/data-store.test.ts (the DT1 pair set).
   createTaskList: async (input: TaskListInput): Promise<void> => {
     await apiSend("POST", PATHS.taskLists, input);
-    await fetchAndSet("taskLists");
+    await fetchAndSet("taskLists").catch(() => undefined);
   },
   updateTaskList: async (id: string, patch: Partial<TaskListInput>): Promise<void> => {
     await apiSend("PATCH", `${PATHS.taskLists}/${id}`, patch);
-    await fetchAndSet("taskLists");
+    await fetchAndSet("taskLists").catch(() => undefined);
   },
   deleteTaskList: async (id: string): Promise<void> => {
     await apiSend("DELETE", `${PATHS.taskLists}/${id}`);
-    await Promise.all([fetchAndSet("taskLists"), fetchAndSet("tasks")]);
+    await Promise.all([fetchAndSet("taskLists"), fetchAndSet("tasks")]).catch(() => undefined);
   },
 
   // ---- assignments (S164/DM1: the CB8 failure-domain split) ------------------

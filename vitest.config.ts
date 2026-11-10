@@ -1,9 +1,32 @@
 import { defineConfig } from "vitest/config";
 import path from "node:path";
 
-// Unit-test layer for the pure domain seams — 51 files / 1697 tests
-// (re-anchored S169/DS — the subjects-family hardening cycle: census
-// 1693 → 1697, +4 net [data-store +4: the S169/DS1 subjects-family
+// Unit-test layer for the pure domain seams — 51 files / 1701 tests
+// (re-anchored S170/DT — the task-lists-family hardening cycle: census
+// 1697 → 1701, +4 net [data-store +4: the S170/DT1 task-lists-family
+// mutation CB8 split — a committed write + a failed refresh RESOLVES
+// for the create/update/delete trio (RED pre-fix ×3: the mutations
+// rejected on the refresh leg — the false save-failure that armed the
+// duplicate-creating retry, the DK1/DL1/DM1/DN1/DP1/DQ1/DR1/DS1
+// events/exams/assignments/timetable/notes/flashcards/tasks/subjects
+// ports to the NINTH family of the recorded family-wide port, the
+// second of the eight remaining seams the S168 close's ledger names;
+// the family has NO view consumer — the tasks-view aside is read-only
+// and the reference's own task dialog carries no list picker — so the
+// pair set pins the mutation CONTRACT itself; the deleteTaskList leg's
+// TWO-collection Promise.all [taskLists + tasks, the Task.listId
+// SetNull reconciliation] gains ONE contained catch on the whole
+// expression) + the failed-write-still-rejects guard]. The e2e census
+// moves 632 → 634 [+2: the two S170/DT2 chrome-parity pins — the DT2a
+// desktop-sidebar leg in navigation (the reference's post-S169
+// shell-chrome deployment: border-x + shadow-xl + z-40 +
+// transition-all 0.3s + the border-box 260/258 contract) + the DT2b
+// mobile app-bar leg in mobile-navigation (border-b + shadow-sm +
+// z-40 — the reference's measured classes, a longstanding clone miss
+// the s170 parity-probe divergence pass converted into a finding)].)
+//
+// (prior re-anchor, S169/DS — the subjects-family hardening cycle:
+// census 1693 → 1697, +4 net [data-store +4: the S169/DS1 subjects-family
 // mutation CB8 split — a committed write + a failed refresh RESOLVES
 // for the create/update/delete trio (RED pre-fix ×3: the mutations
 // rejected on the refresh leg — the false save-failure that armed the

@@ -1,4 +1,4 @@
-# StudyFlow (Omni-Study) — Master Project Architecture Document (PAD) v1.3.77
+# StudyFlow (Omni-Study) — Master Project Architecture Document (PAD) v1.3.78
 
 **Classification:** Internal Engineering Reference
 **Status:** DEFINITIVE, PRODUCTION-LOCKED BLUEPRINT
@@ -8,6 +8,11 @@
 **Rule:** Every architectural decision in this document traces to a specific rationale. Nothing is here "because it's popular."
 
 ---
+
+#### Revision Block — v1.3.78 (Session-170 / Batch DT, Cycle 120)
+
+- `[SR]` Current test census anchor (the v1.2.0 convention, re-anchored): **1701/1701 Vitest unit** (51 files — the S170 additions: data-store +4 [the S170/DT1 task-lists-family mutation CB8 split — a committed write + a failed refresh RESOLVES for the create/update/delete trio, RED pre-fix on the three resolve legs — the delete leg on ONE rejected GET among the TWO-collection Promise.all, + the failed-write-still-rejects guard, the DK1/DL1/DM1/DN1/DP1/DQ1/DR1/DS1 pair-set template ported to the NINTH family of the recorded family-wide port, the second of the eight remaining seams the S168 close's ledger names; the family has NO view consumer — the tasks-view aside is read-only and the reference's own task dialog carries no list picker — so the pair set pins the mutation CONTRACT itself]). The e2e census moves **632 → 634** (the 5-chunk cold map 158+197+95+95+89 — chunk 1 +2 [the two S170/DT2 chrome-parity computed-style pins: the DT2a desktop-sidebar leg in navigation — the aside's border-x hairlines + the xl shadow geometry + the 0.5 alpha with EITHER serialization accepted [the trap-7 oklab precedent extended to shadows — v4's color-mix(in oklab) serializes oklab even on the hex-pinned slate-200 step while the reference's v3-era vars serialize rgba] + z-40 + transition-all 0.3s + the border-box 260/258 width contract; the DT2b mobile app-bar leg in mobile-navigation — the border-b hairline + the sm shadow + z-40]) — census 2335 green.
+- `[AR]` The task lists family (§ the data layer): the THREE mutations' post-write refresh is now a CONTAINED failure domain (the CB8 doctrine — the ninth family ported after events/exams/assignments/timetable/notes/flashcards/tasks/subjects; deleteTaskList's TWO-collection Promise.all — the Task.listId SetNull reconciliation — carries ONE contained catch on the whole composed expression). The shell chrome (§ the layout): the desktop sidebar carries the reference's post-S169 deployment (border-x hairlines + shadow-xl shadow-slate-200/50 + z-40 + transition-all duration-300 — measured live after the standing parity probe went DIVERGENCE on a clean tree, the first standing-probe divergence since the parity gates were instituted) and the mobile app-bar carries the reference's measured border-b + shadow-sm + z-40 (a longstanding clone miss the divergence pass surfaced — the reference's classes were documented in the mobile-navigation spec's initial-era comment but never pinned until now); the desktop parity probe restored to MATCH (navWidth 258 = 258, the bordered content box on both hosts) with the probe itself HARDENED (the post-login chrome wait + bounded retry — the login page's own `<main>` false-positived the old wait and raced slow reference mounts).
 
 #### Revision Block — v1.3.77 (Session-169 / Batch DS, Cycle 119)
 

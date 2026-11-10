@@ -30,9 +30,22 @@ async function probe(browser, base, creds) {
   await page.fill("input[type=email]", creds.email);
   await page.fill("input[type=password]", creds.password);
   await page.click("button[type=submit]");
-  await page.waitForFunction(() => document.querySelector("main") !== null, null, { timeout: 30000 });
-  await page.waitForTimeout(1500);
-  const result = JSON.parse(await page.evaluate(PROBE));
+  // S170 hardening: the login page itself carries a <main>, so the old
+  // main-only wait resolved PRE-transition and the 1.5s settle raced the
+  // reference's slow dashboard mount (the probe read nulls under
+  // reference load). Wait for the POST-LOGIN chrome (nav + main) with a
+  // bounded settle retry instead — the standing gate must not flake on
+  // reference latency.
+  await page.waitForFunction(
+    () => document.querySelector("nav") !== null && document.querySelector("main") !== null,
+    null,
+    { timeout: 30000 },
+  );
+  let result = null;
+  for (let i = 0; i < 6 && (!result || result.navWidth === null); i++) {
+    await page.waitForTimeout(1500);
+    result = JSON.parse(await page.evaluate(PROBE));
+  }
   await ctx.close();
   return result;
 }
