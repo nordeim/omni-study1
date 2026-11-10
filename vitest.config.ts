@@ -1,8 +1,23 @@
 import { defineConfig } from "vitest/config";
 import path from "node:path";
 
-// Unit-test layer for the pure domain seams — 51 files / 1679 tests
-// (re-anchored S166/DP — the notes-family hardening cycle: census
+// Unit-test layer for the pure domain seams — 51 files / 1686 tests
+// (re-anchored S167/DQ — the flashcards-family hardening cycle: census
+// 1679 → 1686, +7 net [data-store +7: the S167/DQ1 flashcards-family
+// mutation CB8 split — a committed write + a failed refresh RESOLVES
+// for the deck trio + the card trio (RED pre-fix ×6: the mutations
+// rejected on the refresh leg — the false save-failure that armed the
+// duplicate-creating retry, the DK1/DL1/DM1/DN1/DP1
+// events/exams/assignments/timetable/notes ports to the SIXTH family
+// of the recorded family-wide port; the deleteFlashcardDeck double
+// refresh catches BOTH legs) + the failed-write-still-rejects guard].
+// The e2e census moves 629 → 630 [+1: the S167/DQ1 flashcards CB8 leg
+// in parity-session8 — the deck POST continues, the collection GET
+// aborts, a committed create answers the "Deck created." success
+// toast + the CLOSED dialog, never the false "Something went
+// wrong."].)
+//
+// (prior re-anchor, S166/DP — the notes-family hardening cycle: census
 // 1669 → 1679, +10 net [data-store +8: the S166/DP1 notes-family
 // mutation CB8 split — a committed write + a failed refresh RESOLVES
 // for the notebooks trio + the notes trio + the setNoteTags chain

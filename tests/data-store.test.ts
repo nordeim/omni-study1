@@ -936,3 +936,88 @@ describe("S166/DP1: the notes family mutation CB8 split (B-H1 — committed writ
     await expect(mutations.createNote(noteInput as never)).rejects.toThrow("offline");
   });
 });
+
+// S167/DQ1 (the s167 audit B/H-1): the flashcards family mutation CB8 split —
+// the DK1/DL1/DM1/DN1/DP1 pair set ported to the SIXTH family of the
+// recorded family-wide port ("the family-wide CB8 port's REMAINING families
+// (flashcards/tasks …) — each family gets its own rotation-axis audit + pin
+// set; the events/exams/assignments/timetable/notes pin sets are the
+// templates" — flashcards is next in the S165 close's recorded order). The
+// pre-DQ1 flashcards-family mutations were `await apiSend(...)` then an
+// UNCAUGHT `await fetchAndSet(...)` (data.ts:815-839 — six mutations: the
+// deck trio and the card trio, the deleteFlashcardDeck double refresh
+// riding Promise.all), and fetchAndSet REJECTS when its GET fails (the CD2
+// 20 s deadline): a write that COMMITTED server-side followed by a flaky
+// refresh rejected the WHOLE mutation — every failure surface in the view
+// then LIED on a committed row (the deck/card submit catches showed
+// "Something went wrong." in the still-open dialog with the form armed —
+// the RETRY re-POSTed and duplicated the deck/card, the CB8 letter; the
+// delete catches toasted "Delete failed." after the delete — or the whole
+// cascade — already COMMITTED). The fix contains the refresh rejection AT
+// THE SEAM (the DK1/DL1/DM1/DN1/DP1 .catch doctrine, ported verbatim — the
+// deleteFlashcardDeck double refresh catches BOTH legs): the stale slice
+// self-heals on the next load (the S16 view-switch pre-warm + the next
+// mutation's own refresh — the DJ5 doctrine). These legs pin the behavioral
+// contract with the CZ1 mock shape: apiSend resolves (the committed write)
+// + apiGet rejects (the flaky refresh) → the mutation RESOLVES; and
+// apiSend itself rejecting still rejects (the honest save-failure contract
+// the view's catches depend on).
+describe("S167/DQ1: the flashcards family mutation CB8 split (B-H1 — committed write + failed refresh)", () => {
+  const deckInput = { name: "DQ1 deck probe" } as const;
+  const cardInput = { front: "DQ1 front", back: "DQ1 back" } as const;
+
+  beforeEach(() => {
+    apiGetMock.mockReset();
+    apiSendMock.mockReset();
+    apiGetMock.mockResolvedValue([]);
+    apiSendMock.mockResolvedValue(undefined);
+    useDataStore.setState({ flashcardDecks: [], flashcards: [] });
+  });
+
+  it("createFlashcardDeck: a committed write + a failed refresh RESOLVES (never the false save-failure)", async () => {
+    apiSendMock.mockResolvedValueOnce(undefined); // the POST 201s
+    apiGetMock.mockRejectedValueOnce(new Error("offline")); // the refresh GET fails
+    // RED pre-fix: the mutation rejected with "offline" — the caller's
+    // catch claimed a save failure on a row the server committed.
+    await expect(mutations.createFlashcardDeck(deckInput as never)).resolves.toBeUndefined();
+  });
+
+  it("updateFlashcardDeck: a committed write + a failed refresh RESOLVES", async () => {
+    apiSendMock.mockResolvedValueOnce(undefined);
+    apiGetMock.mockRejectedValueOnce(new Error("offline"));
+    await expect(mutations.updateFlashcardDeck("d1", { name: "Renamed" })).resolves.toBeUndefined();
+  });
+
+  it("deleteFlashcardDeck: a committed write + a failed DOUBLE refresh RESOLVES (both legs caught)", async () => {
+    apiSendMock.mockResolvedValueOnce(undefined);
+    // The delete refreshes TWO collections (decks + cards — the cascade);
+    // either GET failing must not reject the committed delete.
+    apiGetMock.mockRejectedValueOnce(new Error("offline"));
+    await expect(mutations.deleteFlashcardDeck("d1")).resolves.toBeUndefined();
+  });
+
+  it("createFlashcard: a committed write + a failed refresh RESOLVES", async () => {
+    apiSendMock.mockResolvedValueOnce(undefined);
+    apiGetMock.mockRejectedValueOnce(new Error("offline"));
+    await expect(mutations.createFlashcard("d1", cardInput as never)).resolves.toBeUndefined();
+  });
+
+  it("updateFlashcard: a committed write + a failed refresh RESOLVES", async () => {
+    apiSendMock.mockResolvedValueOnce(undefined);
+    apiGetMock.mockRejectedValueOnce(new Error("offline"));
+    await expect(mutations.updateFlashcard("c1", { mastered: true })).resolves.toBeUndefined();
+  });
+
+  it("deleteFlashcard: a committed write + a failed refresh RESOLVES", async () => {
+    apiSendMock.mockResolvedValueOnce(undefined);
+    apiGetMock.mockRejectedValueOnce(new Error("offline"));
+    await expect(mutations.deleteFlashcard("c1")).resolves.toBeUndefined();
+  });
+
+  it("createFlashcardDeck: a FAILED write still rejects (the honest save-failure reaches the caller)", async () => {
+    apiSendMock.mockRejectedValueOnce(new Error("offline"));
+    // The write leg keeps rejecting — the view's dialog stays open with
+    // the honest error, and the retry is legitimate (nothing committed).
+    await expect(mutations.createFlashcardDeck(deckInput as never)).rejects.toThrow("offline");
+  });
+});

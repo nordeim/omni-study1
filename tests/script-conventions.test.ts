@@ -169,7 +169,13 @@ describe("the chunked cert runner's truth contract (S128/CC2)", () => {
     // rendered-text pin in parity-session7 — a tag-name query never
     // matches a formatted note, the visible word always does) —
     // 627 → 629.
-    expect(certSource).toContain("Expected: 155 + 196 + 94 + 95 + 89 = 629");
+    // S167/DQ: chunk 1 155 → 156 (the DQ1 flashcards-family CB8
+    // failure-domain split pin in parity-session8 — the DK1/DL1/DM1/
+    // DN1/DP1 ports to the SIXTH family of the recorded family-wide
+    // port; a committed deck create + an aborted refresh answers the
+    // "Deck created." success toast + the CLOSED dialog, never the
+    // false "Something went wrong.") — 629 → 630.
+    expect(certSource).toContain("Expected: 156 + 196 + 94 + 95 + 89 = 630");
   });
 
   it("propagates a failing chunk's exit code (never a green cert on a red run)", () => {

@@ -7052,3 +7052,138 @@ the S160 close's ledger (the A-M3 stage-2 triggers; the update-side
 raw-SQL bulk upsert; the I-4 parse posture; the M-1 LLM-side residual);
 the gradetracker/studygroups/settings-CRUD and AlertDialog-confirm e2e
 gaps.
+
+## Session 178 — the S167 cycle (Batch DQ: the flashcards-family hardening set)
+
+**The warm-workspace cycle.** The prior session's S166 was pushed and
+remote-verified (`5daa566` + the plan-tick `391abdb`), and this cycle
+found the workspace INTACT — `git pull` a no-op at `391abdb`, the
+environment verified in place (node_modules present, the repo-root
+`db/` carrying custom.db + e2e.db, `.env` byte-identical to
+`.env.example` at the documented dev posture, the dev daemon
+answering on :3000). Cold baseline: lint ✓ · tsc ✓ · unit
+**1679/1679** (51 files — the documented S166 final state exactly) ·
+preflight GREEN · the drawer check GREEN (the 94th consecutive
+no-Tailwind-v4-mobile-nav-bug confirmation) · the desktop parity
+probe MATCH (live reference login — through the s142 FORMAL probe;
+the s141 one-shot tripped its own documented inner-nav artifact
+[258px inside the 260px shell] exactly as the s142 header records,
+re-derived this cycle, zero code regression). The config posture
+re-validated (the `skills/` folder excluded from code checking,
+testing, and compilation on every axis).
+
+**Audits (Mode-C; every H/L finding re-verified by direct read).**
+A — the Batch DP recent-changes axis (`5daa566` + the docs-only
+`391abdb`): **0C/0H/0M/0L/0I — clean** (all three DP claims confirmed
+at the source anchors — the seven contained catches at
+data.ts:748-811, the DP2 aria gates at notes-view :756/:832, the DP3
+htmlToText extraction + the rendered-text search; the doc census
+chain machine-verified, zero stale count sites; the commit diff
+surgical) + one hygiene catch: an UNTRACKED scratch `cert-s166.log`
+at the repo root (the prior cycle's background-cert console log — the
+tracked artifacts are the `scripts/launch-cert-s*.py` runners),
+removed before this cycle's commit. B — the flashcards family (the
+rotation's fresh axis, NEXT in the S165 close's recorded order
+"notes/flashcards/tasks"; the family's point-fixes rode S77/AD9+
+AD10+AD11, S78/AE6, S79/AF1+AF7, S80/AG8+AG9, S81/AH6, S88/AO4+
+S89/AP1, S119/BT12, S120/BU17b+BU17c, S123/BX8, S125/BZ1+BZ12,
+S126/CA6, S127/CB8 [the generate-flow twin, already hardened],
+S130/CE3, S137/CL3, S138/CM5, S139/CN3, S140/CO4g+CO4h, S152/DA1+
+DA2 — but the family was never deep-swept as an axis): **0C/1H/0M/
+1L/0I** — the family coherent (the delegate factory's deck-ownership
+scoping + the card delegate's create-time deck check with the honest
+"That deck does not exist." rejection, Zod at both boundaries with
+the BZ12 optional-deckId PATCH contract, the CA5 newest-500 deck
+window + the CL3 take:5000 deck-completeness card window with the
+CN3 [createdAt, id] index, the Cascade deck-delete FK matching the
+honest "Deck deleted — its cards went with it." copy, ZERO useEffect
+in the view, the 18-aria-label surface, the name-only plain-text
+deck search [no DP3-class raw-HTML divergence possible by
+construction]); the findings: **H-1** the SIX flashcards-family
+mutations rejected on the refresh leg after a COMMITTED write — the
+deck trio and the card trio all rode the uncaught `fetchAndSet`, the
+deleteFlashcardDeck double refresh included (a flaky refresh GET
+showed "Something went wrong." in the still-open dialog with the form
+armed: a RETRY re-POSTed and DUPLICATED the deck/card — the CB8
+letter, the SIXTH family of the recorded port; the delete catches
+toasted "Delete failed." after the delete — or the whole cascade —
+already committed); **L-1** both loading gates carried no aria
+contract (the deck-list pane gate + the deck-detail pane gate, both
+live at list level — the DM2/DL2/DK4/DN2/DP2 precedent family; the
+S166 gate census counted flashcards ×2 in the unannounced remainder).
+
+**The remediation (TDD-first; the plan
+docs/remediation-plan-session167.md written BEFORE any source
+change).** **DQ1** the flashcards-family mutation CB8 split (the H-1
+close): the unit pair set RED exactly as designed (the resolve set
+RED ×6 — the deck trio + the card trio — + the failed-write guard
+green-on-arrival, the pair `6 failed | 1 passed`); the e2e leg RED
+against the pre-fix standalone build (failing exactly at the designed
+marker — the "Deck created." toast never fired while the POST 201 was
+witnessed, the dialog stayed open with the false "Something went
+wrong."); GREEN = the six contained catches at the seam
+(data.ts:833-860, the doctrine comment re-tagged S167/DQ1, the sixth
+family — the deleteFlashcardDeck double refresh catches BOTH legs)
+with the write legs still rejecting honestly. **DQ2** the two loading
+gates gain the aria contract (the L-1 close): `role="status"` +
+`aria-label="Loading decks"` on the deck-list pane gate +
+`role="status"` + `aria-label="Loading deck details"` on the
+deck-detail pane gate (differentiated labels — the calendar/notes
+two-gate precedent; both gates render simultaneously during the
+initial in-flight window). No hue-tokens census re-anchor: the
+flashcards pinned site (:437, the study-card face border) sits ABOVE
+both comment additions.
+
+**Gates.** lint ✓ · tsc ✓ · unit **1686/1686** (51 files, +7 exactly
+as designed: data-store +7) · build ✓ · the full touched spec file:
+parity-session8 **71/72 on the first full-file run, 72/72 verified**
+(the one first-run failure — the S125/BZ3 notebook-popover leg, a
+diff-untouched notes-family surface — passed in isolation per the
+documented P1008 machine-load triage: identify the failed leg →
+isolated re-run GREEN in 6.9 s; the cert's own cold chunk 1 then ran
+the file clean) · the 5-chunk cold cert: chunk 1 **156/156** (+1, the DQ1 leg) · chunk 2 **196/196** · chunk 3 **94/94** cold · chunk 4 **95/95 on the cold re-run** (the first run's 1 failure — the documented P1008 machine-load class: a diff-untouched accessibility surface [the E · Lighthouse red-700 contrast leg], the isolated re-run green in 1.9 s, the full chunk clean cold) · chunk 5 **89/89** — the cert tally **630/630** = **census 2316 green** (the e2e census 629 → 630) · the drawer check GREEN on the remediated tree (**the 95th
+consecutive** no-Tailwind-v4-mobile-nav-bug confirmation) · the
+desktop parity probe **MATCH** (all five formal checks, live
+reference login).
+
+**Evidence.** The `docs/screenshots/167-clone-*.png` frames (the
+standing desktop + the mobile drawer [the 95th drawer-GREEN
+companion] + the cycle's Flashcards surface — the seeded deck rows +
+the search input + the New Deck button + the deck-detail card grid,
+the DQ1/DQ2 surfaces), captured by
+`scripts/capture-s167-evidence.mjs` (the S166 precedent),
+self-verifying (ok: true, md5s distinct) + the not-pure-white
+pixel-ratio verification (45.93% / 34.50% / 72.94% — the desktop and
+drawer frames byte-for-byte the same ratios as the S166 pair, the
+unchanged surfaces).
+
+**Docs.** README badge/census (2308 → 2316) + the count prose sites +
+the Session-167 row; AGENTS census + the e2e map re-tag + the S167
+lessons block (two lessons: a stale one-shot probe's DIVERGENCE
+verdict is a hypothesis — re-derive the documented artifact before
+investigating a regression, the s141/s142 lineage; a
+background-launched cert's console log is scratch — sweep the root for
+it before the commit, the tracked artifact is the launcher script);
+CLAUDE counts (1686 + 630); PAD v1.3.75 (the revision block); the
+SKILL census (all four sites); the vitest header re-anchor (+7); the
+cert runner re-tag (both scripts, 629 → 630, chunk 1 155 → 156,
+machine-pinned by the script-conventions tripwire);
+`docs/session_206.md`; this entry; the plan §8 as-executed close; the
+`.env.example` contract re-verified (no env-var reads changed this
+cycle — .env and .env.example byte-identical at the documented dev
+posture).
+
+**Next cycle.** The rotation continues — the recorded deferrals: the
+family-wide CB8 port's REMAINING families (tasks + the
+subject/taskList/deck/studyGroup/practiceTest/grades/focusSessions/
+holidays seams — each family gets its own rotation-axis audit + pin
+set; the events/exams/assignments/timetable/notes/flashcards pin sets
+are the templates; tasks is NEXT in the S165 close's order); the
+unannounced loading-gate families (tasks/focustimer/gradetracker/
+dashboard/myday/studygroups/practicetests/analytics/settings — the
+machine count from the S166 gate census minus the flashcards ×2 this
+cycle closes); the files refresh-failure toast copy harmonization (the
+F-8 candidate); the S160 close's ledger (the A-M3 stage-2 triggers;
+the update-side raw-SQL bulk upsert; the I-4 parse posture; the M-1
+LLM-side residual); the gradetracker/studygroups/settings-CRUD and
+AlertDialog-confirm e2e gaps.

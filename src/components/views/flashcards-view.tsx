@@ -515,7 +515,20 @@ export function FlashcardsView() {
           {/* S130/CE3: the in-flight window renders the spinner, never the
               false "No decks yet." */}
           {loading && decks.length === 0 ? (
-            <div className="flex justify-center py-8 text-sf-primary">
+            <div
+              className="flex justify-center py-8 text-sf-primary"
+              role="status"
+              aria-label="Loading decks"
+              /* S167/DQ2 (the s167 audit B/L-1): the CE3 loading gate
+                 announces itself (role="status" — the DM2 assignments/DL2
+                 exams/DK4 events-calendar/DN2 timetable/DP2 notes
+                 precedent; the Spinner itself is aria-hidden, so the
+                 unlabeled div was silent to assistive tech during the
+                 in-flight window). The label distinguishes this LIST-pane
+                 region from the detail-pane gate below (the calendar's
+                 two-gate precedent — both gates can render simultaneously
+                 during the initial in-flight window). */
+            >
               <Spinner className="size-6" />
             </div>
           ) : filteredDecks.length === 0 ? (
@@ -657,7 +670,16 @@ export function FlashcardsView() {
         {/* S130/CE3: the detail pane's own gate (the notes-view main-pane
             pattern). */}
         {loading && decks.length === 0 ? (
-          <div className="sf-card flex flex-1 items-center justify-center text-sf-primary">
+          <div
+            className="sf-card flex flex-1 items-center justify-center text-sf-primary"
+            role="status"
+            aria-label="Loading deck details"
+            /* S167/DQ2 (the s167 audit B/L-1): the DETAIL-pane gate's own
+               aria contract (the DM2/DL2/DK4/DN2/DP2 precedent shape — the
+               sibling list-pane gate above carries "Loading decks"; the
+               differentiated label distinguishes the two
+               simultaneously-renderable status regions). */
+          >
             <Spinner className="size-6" />
           </div>
         ) : decks.length === 0 ? (

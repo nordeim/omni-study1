@@ -811,31 +811,52 @@ export const mutations = {
     await fetchAndSet("notes").catch(() => undefined);
   },
 
-  // ---- flashcards (decks cascade their cards) ------------------------------------
+  // ---- flashcards (decks cascade their cards) (S167/DQ1: the CB8 --------
+  // failure-domain split) — the write and the post-write refresh are
+  // SEPARATE failure domains (the S127/CB8 doctrine, the DK1 events +
+  // DL1 exams + DM1 assignments + DN1 timetable + DP1 notes ports — the
+  // recorded family-wide port, this the sixth family): a refresh GET
+  // that fails after a COMMITTED write must not reject the mutation —
+  // the caller's catch would claim a save failure on a saved row (the
+  // deck/card submit catches' "Something went wrong." in the
+  // still-open dialog with the form armed — the retry that DUPLICATES
+  // the deck/card; the delete catches' false "Delete failed." toast
+  // after the delete — or the whole cascade — already committed) and
+  // arm the duplicate-creating retry. The refresh rejection is
+  // contained here (the deleteFlashcardDeck double refresh catches BOTH
+  // legs); the stale slice self-heals on the next successful load (the
+  // S16 view-switch pre-warm + the next mutation's own refresh — the
+  // DJ5 doctrine: the write's own success surfacing is the
+  // toast/dialog-close; a second toast for the same offline window is
+  // noise). The WRITE legs keep rejecting honestly. Pinned by
+  // tests/data-store.test.ts (the DQ1 pair set).
   createFlashcardDeck: async (input: FlashcardDeckInput): Promise<void> => {
     await apiSend("POST", PATHS.flashcardDecks, input);
-    await fetchAndSet("flashcardDecks");
+    await fetchAndSet("flashcardDecks").catch(() => undefined);
   },
   updateFlashcardDeck: async (id: string, patch: Partial<FlashcardDeckInput>): Promise<void> => {
     await apiSend("PATCH", `${PATHS.flashcardDecks}/${id}`, patch);
-    await fetchAndSet("flashcardDecks");
+    await fetchAndSet("flashcardDecks").catch(() => undefined);
   },
   deleteFlashcardDeck: async (id: string): Promise<void> => {
     await apiSend("DELETE", `${PATHS.flashcardDecks}/${id}`);
-    await Promise.all([fetchAndSet("flashcardDecks"), fetchAndSet("flashcards")]);
+    await Promise.all([
+      fetchAndSet("flashcardDecks").catch(() => undefined),
+      fetchAndSet("flashcards").catch(() => undefined),
+    ]);
   },
 
   createFlashcard: async (deckId: string, input: Omit<FlashcardInput, "deckId">): Promise<void> => {
     await apiSend("POST", PATHS.flashcards, { ...input, deckId });
-    await fetchAndSet("flashcards");
+    await fetchAndSet("flashcards").catch(() => undefined);
   },
   updateFlashcard: async (id: string, patch: Partial<FlashcardInput>): Promise<void> => {
     await apiSend("PATCH", `${PATHS.flashcards}/${id}`, patch);
-    await fetchAndSet("flashcards");
+    await fetchAndSet("flashcards").catch(() => undefined);
   },
   deleteFlashcard: async (id: string): Promise<void> => {
     await apiSend("DELETE", `${PATHS.flashcards}/${id}`);
-    await fetchAndSet("flashcards");
+    await fetchAndSet("flashcards").catch(() => undefined);
   },
 
   // ---- practice tests --------------------------------------------------------------

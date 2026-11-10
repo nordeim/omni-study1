@@ -1,4 +1,4 @@
-# StudyFlow (Omni-Study) — Master Project Architecture Document (PAD) v1.3.74
+# StudyFlow (Omni-Study) — Master Project Architecture Document (PAD) v1.3.75
 
 **Classification:** Internal Engineering Reference
 **Status:** DEFINITIVE, PRODUCTION-LOCKED BLUEPRINT
@@ -8,6 +8,11 @@
 **Rule:** Every architectural decision in this document traces to a specific rationale. Nothing is here "because it's popular."
 
 ---
+
+#### Revision Block — v1.3.75 (Session-167 / Batch DQ, Cycle 117)
+
+- `[SR]` Current test census anchor (the v1.2.0 convention, re-anchored): **1686/1686 Vitest unit** (51 files — the S167 additions: data-store +7 [the S167/DQ1 flashcards-family mutation CB8 split — a committed write + a failed refresh RESOLVES for the deck trio + the card trio, RED pre-fix on the six resolve legs, + the failed-write-still-rejects guard, the DK1/DL1/DM1/DN1/DP1 pair-set template ported to the SIXTH family of the recorded family-wide port; the deleteFlashcardDeck double refresh catches BOTH legs]). The e2e census moves **629 → 630** (the 5-chunk cold map 156+196+94+95+89 — chunk 1 +1 [the S167/DQ1 flashcards CB8 leg in parity-session8: the deck POST continues, the collection GET aborts, a committed create answers the "Deck created." success toast + the CLOSED dialog, never the false "Something went wrong." that armed the duplicate-creating retry — zero residue via the finally DELETE]) — census 2316 green.
+- `[AR]` The flashcards family (§ the views catalog): the SIX mutations' post-write refresh is now a CONTAINED failure domain (the CB8 doctrine — the sixth family ported after events/exams/assignments/timetable/notes; the generate-flow twin was already S127/CB8-hardened); both loading gates carry `role="status"` with differentiated labels ("Loading decks" list pane / "Loading deck details" detail pane — the calendar/notes two-gate precedent, both gates simultaneously renderable during the initial in-flight window).
 
 #### Revision Block — v1.3.74 (Session-166 / Batch DP, Cycle 116)
 

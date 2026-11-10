@@ -264,7 +264,16 @@
 # leg was green by pinning the CB8 false-failure as correct behavior;
 # count-neutral, proven by the DM1 bisect pair). The full DM map:
 # docs/remediation-plan-session164.md.)
-# Expected: 155 + 196 + 94 + 95 + 89 = 629 (each chunk's count includes its
+# (S167/DQ re-tag — census 629 → 630, net +1: chunk 1 +1 [the
+# S167/DQ1 flashcards-family CB8 failure-domain split pin in
+# parity-session8 — the deck POST continues, the collection GET
+# aborts: a committed create answers the "Deck created." success
+# toast + the closed dialog, never the false "Something went
+# wrong." that armed the duplicate-creating retry (the
+# DK1/DL1/DM1/DN1/DP1 ports to the SIXTH family of the recorded
+# family-wide port); network-mocked, no server writes]. The full DQ
+# map: docs/remediation-plan-session167.md.)
+# Expected: 156 + 196 + 94 + 95 + 89 = 630 (each chunk's count includes its
 # auth setup — the current census; the historical re-tag blocks beneath.)
 # (S131/CF re-tag — census 567 → 570, net +3: chunk 1 +1 [the CF9
 # drawer focus-restore leg in mobile-navigation — crossing the lg
