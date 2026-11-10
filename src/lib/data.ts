@@ -606,18 +606,42 @@ export const mutations = {
     await fetchAndSet("tasks").catch(() => undefined);
   },
 
-  // ---- subjects -------------------------------------------------------------
+  // ---- subjects (S169/DS1: the CB8 failure-domain split) --------------
+  // The write and the post-write refresh are SEPARATE failure domains
+  // (the S127/CB8 doctrine, the DK1 events + DL1 exams + DM1 assignments
+  // + DN1 timetable + DP1 notes + DQ1 flashcards + DR1 tasks ports —
+  // the recorded family-wide port, this the EIGHTH family, the first of
+  // the eight remaining seams the S168 close's ledger names): a refresh
+  // GET that fails after a COMMITTED write must not reject the mutation
+  // — the caller's catch would claim a save failure on a saved row (the
+  // SubjectDialog submit catch's "Could not save the subject." toast
+  // with the dialog still open and the form armed — the retry that
+  // DUPLICATES the subject; the AlertDialogAction delete catch's false
+  // "Could not delete the subject." toast after the delete already
+  // committed, on a row the SetNull children already released).
+  // deleteSubject's refresh is the ELEVEN-collection Promise.all over
+  // SUBJECT_TOUCHED (the SetNull FK reconciliation set — the widest
+  // refresh blast radius in the codebase): the ONE contained catch rides
+  // the whole Promise.all — the multi-collection refresh is one failure
+  // domain, and any single failed GET among the eleven must not reject
+  // the committed delete. The refresh rejection is contained here; the
+  // stale slices self-heal on the next successful load (the S16
+  // view-switch pre-warm + the next mutation's own refresh — the DJ5
+  // doctrine: the write's own success surfacing is the toast/dialog-
+  // close; a second toast for the same offline window is noise). The
+  // WRITE legs keep rejecting honestly. Pinned by tests/data-store.test.ts
+  // (the DS1 pair set).
   createSubject: async (input: SubjectInput): Promise<void> => {
     await apiSend("POST", PATHS.subjects, input);
-    await fetchAndSet("subjects");
+    await fetchAndSet("subjects").catch(() => undefined);
   },
   updateSubject: async (id: string, patch: Partial<SubjectInput>): Promise<void> => {
     await apiSend("PATCH", `${PATHS.subjects}/${id}`, patch);
-    await fetchAndSet("subjects");
+    await fetchAndSet("subjects").catch(() => undefined);
   },
   deleteSubject: async (id: string): Promise<void> => {
     await apiSend("DELETE", `${PATHS.subjects}/${id}`);
-    await Promise.all(SUBJECT_TOUCHED.map((key) => fetchAndSet(key)));
+    await Promise.all(SUBJECT_TOUCHED.map((key) => fetchAndSet(key))).catch(() => undefined);
   },
 
   // ---- task lists -----------------------------------------------------------

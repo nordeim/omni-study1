@@ -1,4 +1,4 @@
-# StudyFlow (Omni-Study) — Master Project Architecture Document (PAD) v1.3.76
+# StudyFlow (Omni-Study) — Master Project Architecture Document (PAD) v1.3.77
 
 **Classification:** Internal Engineering Reference
 **Status:** DEFINITIVE, PRODUCTION-LOCKED BLUEPRINT
@@ -8,6 +8,11 @@
 **Rule:** Every architectural decision in this document traces to a specific rationale. Nothing is here "because it's popular."
 
 ---
+
+#### Revision Block — v1.3.77 (Session-169 / Batch DS, Cycle 119)
+
+- `[SR]` Current test census anchor (the v1.2.0 convention, re-anchored): **1697/1697 Vitest unit** (51 files — the S169 additions: data-store +4 [the S169/DS1 subjects-family mutation CB8 split — a committed write + a failed refresh RESOLVES for the create/update/delete trio, RED pre-fix on the three resolve legs — the delete leg on ONE rejected GET among the ELEVEN-collection SUBJECT_TOUCHED Promise.all, + the failed-write-still-rejects guard, the DK1/DL1/DM1/DN1/DP1/DQ1/DR1 pair-set template ported to the EIGHTH family of the recorded family-wide port, the first of the eight remaining seams the S168 close's ledger names]). The e2e census moves **631 → 632** (the 5-chunk cold map 156+197+95+95+89 — chunk 3 +1 [the S169/DS1 subjects CB8 leg in resilience: the POST continues, the collection GET aborts, a committed create answers the "Subject created" success toast + the CLOSED dialog, never the false "Could not save the subject." that armed the duplicate-creating retry — zero residue via the finally DELETE; the leg is also the FIRST e2e pin to drive the Settings Subjects CRUD surface]) — census 2329 green.
+- `[AR]` The subjects family (§ the views catalog): the THREE mutations' post-write refresh is now a CONTAINED failure domain (the CB8 doctrine — the eighth family ported after events/exams/assignments/timetable/notes/flashcards/tasks; deleteSubject's ELEVEN-collection SUBJECT_TOUCHED Promise.all — the SetNull FK reconciliation set, the widest refresh blast radius in the codebase — carries ONE contained catch on the whole composed expression: the multi-collection refresh is one failure domain); the Settings SubjectsTab loading gate carries `role="status"` + `aria-label="Loading subjects"` (the DM2/DL2/DK4/DN2/DP2/DQ2/DR2 precedent family extended to the subjects sibling — the first of the settings gates; the HolidaysTab twin stays the holidays family's ledger).
 
 #### Revision Block — v1.3.76 (Session-168 / Batch DR, Cycle 118)
 

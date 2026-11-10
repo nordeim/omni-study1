@@ -283,7 +283,19 @@
 # family-wide port — the create/update/delete trio + the three chained
 # toggles); network-mocked, no server writes]. The full DR map:
 # docs/remediation-plan-session168.md.)
-# Expected: 156 + 197 + 94 + 95 + 89 = 631 (each chunk's count includes its
+# (S169/DS re-tag — census 631 → 632, net +1: chunk 3 +1 [the
+# S169/DS1 subjects-family CB8 failure-domain split pin in resilience —
+# the POST continues, the refresh GET aborts: a committed create answers
+# the "Subject created" success toast + the CLOSED dialog, never the
+# false "Could not save the subject." that armed the duplicate-creating
+# retry (the DK1/DL1/DM1/DN1/DP1/DQ1/DR1 events/exams/assignments/
+# timetable/notes/flashcards/tasks ports to the EIGHTH family of the
+# recorded family-wide port — the first of the eight remaining seams the
+# S168 close's ledger names; the deleteSubject leg carries the widest
+# refresh blast radius in the codebase, the ELEVEN-collection
+# SUBJECT_TOUCHED Promise.all); network-mocked, no server writes]. The
+# full DS map: docs/remediation-plan-session169.md.)
+# Expected: 156 + 197 + 95 + 95 + 89 = 632 (each chunk's count includes its
 # auth setup — the current census; the historical re-tag blocks beneath.)
 # (S131/CF re-tag — census 567 → 570, net +3: chunk 1 +1 [the CF9
 # drawer focus-restore leg in mobile-navigation — crossing the lg

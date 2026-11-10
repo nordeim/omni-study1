@@ -818,7 +818,13 @@ function SubjectsTab() {
       </div>
       <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">Manage your subjects and classes</p>
       {loading && subjects.length === 0 ? (
-        <div className="flex justify-center py-8 text-sf-primary">
+        // S169/DS2: the in-flight window is announced — the Spinner is
+        // aria-hidden, so the gate carries the status role itself (the
+        // DM2/DL2/DK4/DN2/DP2/DQ2/DR2 precedent family, the subjects
+        // leg — the CB8-ported family's own gate, per the rotation's
+        // one-family-per-cycle doctrine; the HolidaysTab twin below
+        // stays the holidays family's ledger).
+        <div role="status" aria-label="Loading subjects" className="flex justify-center py-8 text-sf-primary">
           <Spinner className="size-6" />
         </div>
       ) : subjects.length === 0 ? (

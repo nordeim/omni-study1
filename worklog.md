@@ -7310,3 +7310,134 @@ stage-2 triggers; the update-side raw-SQL bulk upsert; the I-4 parse
 posture; the M-1 LLM-side residual); the
 gradetracker/studygroups/settings-CRUD and AlertDialog-confirm e2e
 gaps.
+
+## Session 180 — the S169 cycle (Batch DS: the subjects-family hardening set)
+
+**Workspace.** WARM — `git pull` fast-forwarded `c828182` → `cc936fc`
+on `main` (the S168/Batch DR fix `071a084` pushed + remote-verified +
+the plan-tick `c828182` + the operator's session_207/session_209
+transcript commits `848c0bf`/`cc936fc`; the only delta the session_209
+raw transcript, docs-only). The environment stood intact from the S168
+session: node_modules, the repo-root `db/` with custom.db (seeded),
+`.env` byte-identical to `.env.example` (diff clean) at the documented
+dev posture `DATABASE_URL="file:../db/custom.db"`, and the post-S168
+standalone build verified fresh against every touched-family source
+mtime (data.ts 02:32 / tasks-view 02:32 / settings-view 02:16, all
+pre-build; the static chunks carry the DR2 "Loading tasks" marker) —
+the TRUSTED pre-fix binary for the e2e RED proof without a rebuild.
+
+**Cold baseline.** lint ✓ · tsc ✓ · unit **1693/1693** (51 files — the
+documented S168 final state exactly) · preflight GREEN · **the drawer
+check GREEN (the 98th consecutive** no-Tailwind-v4-mobile-nav-bug
+confirmation) · the desktop parity probe **MATCH** (all five formal
+checks, live reference login — the s142 formal probe).
+
+**Audits.** A — the Batch DR recent-changes axis (`071a084` +
+`c828182`/`848c0bf`/`cc936fc` docs-only): **0C/0H/0M/0L/0I — clean**
+(all three DR claims verified at the source anchors — the six contained
+catches + the S168/DR1 doctrine comment, the DR2 aria gate at
+tasks-view :706-709, the DR1 pair set + e2e leg; the doc census chain
+machine-verified at 1693+631=2324; the root scratch sweep clean). B —
+the subjects family (the rotation's fresh axis, the FIRST of the eight
+remaining CB8 seams the S168 close's ledger names): **0C/1H/0M/1L/0I**
+— the family coherent (the subjectDelegate where-scoping [subjects are
+the SetNull FK TARGET, not a carrier], Zod at both boundaries
+[boundedTitle + hexColor with the violet default], the remount-via-key
+dialog contract with the saving busy-guard + the blank-name guards,
+the labeled-controls a11y surface, the AlertDialog delete-confirm with
+the SetNull-consequences copy); the findings: **H-1** the THREE
+subjects mutations rejected on the refresh leg after a COMMITTED write
+— createSubject/updateSubject the single-collection fetchAndSet,
+deleteSubject the ELEVEN-collection SUBJECT_TOUCHED Promise.all (the
+SetNull FK reconciliation set, the WIDEST refresh blast radius in the
+codebase: ANY one failed GET among the eleven rejected the whole
+delete on a row the server deleted; the SubjectDialog catch's "Could
+not save the subject." with the form armed — the retry duplicated the
+subject; the AlertDialogAction catch's false "Could not delete the
+subject." — the CB8 letter's EIGHTH family); **L-1** the SubjectsTab
+loading gate carried no aria contract (settings ×1 in the S166 gate
+census's unannounced remainder; the HolidaysTab twin stays the
+holidays family's ledger).
+
+**Fixes (TDD-first, every RED on its designed marker):**
+
+- **DS1 (H-1)** — the subjects-family mutation CB8 split: the three
+  refresh legs contained at the seam (the create/update pair +
+  ONE catch on deleteSubject's whole Promise.all — the
+  multi-collection refresh is one failure domain; a flaky refresh GET
+  among the eleven no longer rejects the committed delete), the
+  doctrine comment re-tagged S169/DS1 (the eighth family, the first of
+  the eight remaining seams). Unit +4 (the pair set: the resolve set
+  RED pre-fix ×3 — the delete leg rejecting ONE GET among the eleven,
+  `Promise.all`'s first-rejection semantics being exactly the
+  flaky-refresh condition — + the failed-write-still-rejects guard
+  green-on-arrival; the pair `3 failed | 1 passed`). E2e +1 (the CB8
+  leg in resilience: the POST continues, the collection GET aborts
+  [`**/api/subjects` ends at the collection URL — the per-id URLs pass
+  unrouted, the DM4 lesson re-derived], the "Subject created" success
+  toast + the CLOSED dialog, never the false "Could not save the
+  subject."; RED-proven against the pre-fix standalone failing exactly
+  at the toast assertion; zero residue via the finally DELETE; the leg
+  is also the FIRST e2e pin to drive the Settings Subjects CRUD
+  surface — the recorded settings-CRUD e2e gap partially closed).
+- **DS2 (L-1)** — the SubjectsTab loading gate gains `role="status"` +
+  `aria-label="Loading subjects"` (the precedent family's shape; rides
+  the diff review). No hue-tokens re-anchor (the RESIDUALS register
+  carries no settings-view sites).
+
+**Gates.** lint ✓ · tsc ✓ · unit **1697/1697** (51 files, +4 exactly
+as designed: data-store +4) · build ✓ · the full touched spec file:
+resilience.spec green (one P1008 machine-load flake triaged — the AK1b
+leg failed under the full-file run's load, GREEN in isolation) · the
+5-chunk cold cert: chunk 1 **156/156** · chunk 2 **197/197** (one
+socket-timeout signature logged, zero failures) · chunk 3 **94 passed
++ 1 triaged** (the AK1d files-upload leg failed under the documented
+`PrismaClientKnownRequestError: Socket timeout` machine-load
+signature; isolate-rerun GREEN at 1.2 s; the chunk then cold-re-run in
+full: **95/95**, every leg first-pass on the re-run, the DS1 leg
+included) · chunk 4 **95/95** cold · chunk 5 **89/89** cold — the cert
+tally **632/632** = **census 2329 green** (the e2e census 631 → 632) ·
+the drawer check GREEN on the remediated tree (**the 99th
+consecutive**) · the parity probe **MATCH** (all five formal checks,
+live reference login).
+
+**Evidence.** The `docs/screenshots/169-clone-*.png` frames (the
+standing desktop + the mobile drawer [the 99th drawer-GREEN companion]
++ the cycle's Settings-Subjects surface — the seeded subject rows
+[Mathematics/Physics/Chemistry/History/English/Biology] + the Add
+Subject button + the Manage-your-subjects prose, the DS1/DS2
+surfaces), captured by `scripts/capture-s169-evidence.mjs` (the S168
+precedent), self-verifying (ok: true; md5s distinct) + the
+not-pure-white pixel-ratio verification (45.87% desktop [byte-identical
+to the S168 measurement, the live-clock surface] / 34.50% drawer
+[byte-for-byte the S166/S167/S168 ratio, the unchanged static surface]
+/ 57.76% subjects [the seeded content]).
+
+**Docs.** README badge/census (2324 → 2329) + the count prose sites +
+the Session-169 row; AGENTS census + the e2e map re-tag + the S169
+lessons block (two lessons: a multi-collection refresh is ONE failure
+domain — the contained catch rides the whole `Promise.all`, not each
+leg; a warm-workspace cycle re-verifies the standing build's freshness
+by SOURCE MTIME before using it as the pre-fix RED baseline); CLAUDE
+counts (1697 + 632); PAD v1.3.77 (the revision block); the SKILL
+census (all four sites); the vitest header re-anchor (+4); the cert
+runner re-tag (both scripts, 631 → 632, chunk 3 94 → 95, machine-pinned
+by the script-conventions tripwire — the CQ6/DA6 count-claims gates
+verified GREEN after the re-anchor: 136/136); `docs/session_210.md`;
+this entry; the plan §8 as-executed close; the `.env.example` contract
+re-verified (no env-var reads changed this cycle — .env and
+.env.example byte-identical at the documented dev posture); the
+cert-s169.log scratch swept before the commit (the tracked artifact is
+the launcher script).
+
+**Next cycle.** The subjects port closes the FIRST of the eight
+remaining CB8 seams. The rotation continues into the remaining seven
+(the taskList/deck/studyGroup/practiceTest/grades/focusSessions/
+holidays families); the unannounced loading-gate families
+(focustimer/gradetracker/dashboard/myday/studygroups/practicetests/
+analytics/settings-holidays); the files refresh-failure toast copy
+harmonization (the F-8 candidate); the S160 close's ledger (the A-M3
+stage-2 triggers; the update-side raw-SQL bulk upsert; the I-4 parse
+posture; the M-1 LLM-side residual); the
+gradetracker/studygroups/settings-CRUD (edit/delete journeys +
+holidays) and AlertDialog-confirm e2e gaps.

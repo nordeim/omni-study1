@@ -1114,3 +1114,59 @@ describe("S168/DR1: the tasks family mutation CB8 split (B-H1 — committed writ
     await expect(mutations.createTask(taskInput as never)).rejects.toThrow("offline");
   });
 });
+
+// S169/DS1 — the subjects family mutation CB8 split (B-H1 — committed write +
+// failed refresh): the write and the post-write refresh are SEPARATE
+// failure domains (the DK1/DL1/DM1/DN1/DP1/DQ1/DR1 doctrine, the EIGHTH
+// family of the recorded family-wide port — the first of the eight
+// remaining seams the S168 close's ledger names). Pre-DS1 all three
+// subjects mutations rode the uncaught refresh — createSubject and
+// updateSubject the single-collection fetchAndSet("subjects"), deleteSubject
+// the ELEVEN-collection Promise.all over SUBJECT_TOUCHED (the widest
+// refresh blast radius in the codebase: the SetNull FK reconciliation set),
+// so ANY one failed refresh GET rejected the whole delete on a row the
+// server deleted. Pinned here: a committed write + a failed refresh
+// RESOLVES; the failed write still REJECTS.
+describe("S169/DS1: the subjects family mutation CB8 split (B-H1 — committed write + failed refresh)", () => {
+  const subjectInput = { name: "DS1 subject probe", color: "#8b5cf6" } as const;
+
+  beforeEach(() => {
+    apiGetMock.mockReset();
+    apiSendMock.mockReset();
+    apiGetMock.mockResolvedValue([]);
+    apiSendMock.mockResolvedValue(undefined);
+    useDataStore.setState({ subjects: [] });
+  });
+
+  it("createSubject: a committed write + a failed refresh RESOLVES (never the false save-failure)", async () => {
+    apiSendMock.mockResolvedValueOnce(undefined); // the POST 201s
+    apiGetMock.mockRejectedValueOnce(new Error("offline")); // the refresh GET fails
+    // RED pre-fix: the mutation rejected with "offline" — the
+    // SubjectDialog's catch toasted "Could not save the subject." with
+    // the dialog still open and the form armed on a row the server
+    // committed (the retry duplicates the subject).
+    await expect(mutations.createSubject(subjectInput as never)).resolves.toBeUndefined();
+  });
+
+  it("updateSubject: a committed write + a failed refresh RESOLVES", async () => {
+    apiSendMock.mockResolvedValueOnce(undefined);
+    apiGetMock.mockRejectedValueOnce(new Error("offline"));
+    await expect(mutations.updateSubject("s1", { name: "Renamed" })).resolves.toBeUndefined();
+  });
+
+  it("deleteSubject: a committed write + a failed refresh RESOLVES (ONE failed GET among the eleven-collection Promise.all is contained)", async () => {
+    apiSendMock.mockResolvedValueOnce(undefined); // the DELETE 200s
+    apiGetMock.mockRejectedValueOnce(new Error("offline")); // ONE of the eleven refresh GETs fails
+    // RED pre-fix: Promise.all rejected on its first rejection — the
+    // AlertDialogAction's catch toasted "Could not delete the subject."
+    // on a subject the server already deleted.
+    await expect(mutations.deleteSubject("s1")).resolves.toBeUndefined();
+  });
+
+  it("createSubject: a FAILED write still rejects (the honest save-failure reaches the caller)", async () => {
+    apiSendMock.mockRejectedValueOnce(new Error("offline"));
+    // The write leg keeps rejecting — the dialog stays open with the
+    // honest error, and the retry is legitimate (nothing committed).
+    await expect(mutations.createSubject(subjectInput as never)).rejects.toThrow("offline");
+  });
+});

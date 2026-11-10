@@ -1,9 +1,27 @@
 import { defineConfig } from "vitest/config";
 import path from "node:path";
 
-// Unit-test layer for the pure domain seams — 51 files / 1693 tests
-// (re-anchored S168/DR — the tasks-family hardening cycle: census
-// 1686 → 1693, +7 net [data-store +7: the S168/DR1 tasks-family
+// Unit-test layer for the pure domain seams — 51 files / 1697 tests
+// (re-anchored S169/DS — the subjects-family hardening cycle: census
+// 1693 → 1697, +4 net [data-store +4: the S169/DS1 subjects-family
+// mutation CB8 split — a committed write + a failed refresh RESOLVES
+// for the create/update/delete trio (RED pre-fix ×3: the mutations
+// rejected on the refresh leg — the false save-failure that armed the
+// duplicate-creating retry, the DK1/DL1/DM1/DN1/DP1/DQ1/DR1 events/
+// exams/assignments/timetable/notes/flashcards/tasks ports to the
+// EIGHTH family of the recorded family-wide port, the first of the
+// eight remaining seams the S168 close's ledger names; the
+// deleteSubject leg's ELEVEN-collection SUBJECT_TOUCHED Promise.all —
+// the widest refresh blast radius in the codebase — gains ONE
+// contained catch on the whole expression) + the
+// failed-write-still-rejects guard]. The e2e census moves 631 → 632
+// [+1: the S169/DS1 subjects CB8 leg in resilience — the POST
+// continues, the collection GET aborts, a committed create answers
+// the "Subject created" success toast + the CLOSED dialog, never the
+// false "Could not save the subject."].)
+//
+// (prior re-anchor, S168/DR — the tasks-family hardening cycle:
+// census 1686 → 1693, +7 net [data-store +7: the S168/DR1 tasks-family
 // mutation CB8 split — a committed write + a failed refresh RESOLVES
 // for the create/update/delete trio + the three chained toggles (RED
 // pre-fix ×6: the mutations rejected on the refresh leg — the false

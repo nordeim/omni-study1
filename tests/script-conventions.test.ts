@@ -182,7 +182,16 @@ describe("the chunked cert runner's truth contract (S128/CC2)", () => {
     // a committed task create + an aborted refresh answers the
     // "Task created" success toast + the CLOSED dialog, never the
     // false "Could not save the task.") — 630 → 631.
-    expect(certSource).toContain("Expected: 156 + 197 + 94 + 95 + 89 = 631");
+    // S169/DS: chunk 3 94 → 95 (the DS1 subjects-family CB8
+    // failure-domain split pin in resilience — the DK1/DL1/DM1/DN1/
+    // DP1/DQ1/DR1 events/exams/assignments/timetable/notes/flashcards/
+    // tasks ports to the EIGHTH family of the recorded family-wide
+    // port, the first of the eight remaining seams the S168 close's
+    // ledger names; a committed subject create + an aborted refresh
+    // answers the "Subject created" success toast + the CLOSED
+    // dialog, never the false "Could not save the subject.") —
+    // 631 → 632.
+    expect(certSource).toContain("Expected: 156 + 197 + 95 + 95 + 89 = 632");
   });
 
   it("propagates a failing chunk's exit code (never a green cert on a red run)", () => {

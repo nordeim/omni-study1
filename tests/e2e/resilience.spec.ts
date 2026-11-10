@@ -1260,6 +1260,75 @@ test.describe("S132/CG6 · the Settings loading gates", () => {
 });
 
 // ---------------------------------------------------------------------------
+// S169/DS1 — the subjects family CB8 failure-domain split (the s169 audit
+// B/H-1): the write and the post-write refresh are SEPARATE failure
+// domains (the DK1/DL1/DM1/DN1/DP1/DQ1/DR1 doctrine ported to the EIGHTH
+// family of the recorded family-wide port — the first of the eight
+// remaining seams the S168 close's ledger names). Pre-DS1 the create
+// mutation was `await apiSend(POST)` then `await
+// fetchAndSet("subjects")`, and the flaky refresh rejected the WHOLE
+// mutation — the SubjectDialog's catch toasted "Could not save the
+// subject." with the dialog STILL OPEN and the form armed on a row the
+// server COMMITTED (and the armed retry re-POSTed → the duplicate
+// subject). The pin drives the real condition: the collection GET (the
+// refresh) ABORTS, the POST (the write) CONTINUES — a committed create
+// answers the "Subject created" success toast + the CLOSED dialog, never
+// the false save-failure. RED pre-fix: the dialog stays open, the error
+// toast fires, the success toast never lands.
+// Route-glob note (the S164/DM4 lesson, re-derived): the pattern
+// `**/api/subjects` ends at the COLLECTION URL — per-id PATCH/DELETE URLs
+// do not match (Playwright's full-URL glob), so the interception is
+// collection-only by construction and the finally DELETE (the
+// zero-residue cleanup) passes through unrouted. This leg is also the
+// FIRST e2e pin to drive the Settings Subjects CRUD surface (the
+// recorded settings-CRUD e2e gap, partially closed).
+// ---------------------------------------------------------------------------
+test.describe("S169/DS1 · the subjects save succeeds through a failed refresh (CB8 split)", () => {
+  test("a committed create + an aborted refresh answers the success toast + closed dialog, never the false save-failure", async ({ page }) => {
+    const stamp = `s169-ds1-${Date.now()}`;
+    await page.goto("/Settings");
+    await page.getByRole("tab", { name: "Subjects" }).click();
+    // The settled proof: a seeded subject row renders (the slice has
+    // loaded before the interception installs — "Mathematics" is the
+    // first seeded subject).
+    await expect(page.getByText("Mathematics")).toBeVisible();
+    // Abort the collection GET (the refresh leg) — the POST (the write
+    // leg) continues through the same URL, discriminated by method.
+    await page.route("**/api/subjects", (route) => {
+      if (route.request().method() === "GET") route.abort("failed");
+      else route.continue();
+    });
+    let createdId: string | null = null;
+    try {
+      await page.getByRole("button", { name: "Add Subject" }).click();
+      const dlg = page.getByRole("dialog");
+      await expect(dlg).toBeVisible();
+      await dlg.getByLabel("Name").fill(`S169-DS1 committed-write probe ${stamp}`);
+      const saved = page.waitForResponse(
+        (r) => r.request().method() === "POST" && r.url().includes("/api/subjects"),
+      );
+      await dlg.getByRole("button", { name: "Add Subject" }).click();
+      const res = await saved;
+      // The write itself COMMITTED server-side.
+      expect(res.ok()).toBe(true);
+      createdId = ((await res.json()) as { id: string }).id;
+      // The success toast lands through the aria-live stack…
+      await expect(page.getByText("Subject created")).toBeVisible({ timeout: 10_000 });
+      // …the dialog CLOSES — the mutation resolved, the form is not
+      // armed for the duplicate-creating retry.
+      await expect(dlg).toBeHidden();
+      // The FALSE save-failure never renders (the contained refresh
+      // rejection must not claim a save failure on the committed row).
+      await expect(page.getByText("Could not save the subject.")).toHaveCount(0);
+    } finally {
+      await page.unroute("**/api/subjects");
+      // Zero residue on the shared demo user (the CC4/AR3 convention).
+      if (createdId) await page.request.delete(`/api/subjects/${createdId}`);
+    }
+  });
+});
+
+// ---------------------------------------------------------------------------
 // S136/CK4 (audits B-M1/M2) — the CE3 residual gates: the dashboard's
 // section cards and the gradetracker's summary grid render FALSE
 // empty-states/zeros during in-flight loads (the S132/CG6 class at the
