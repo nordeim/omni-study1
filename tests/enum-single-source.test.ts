@@ -60,6 +60,11 @@ const SITES = [
     enumName: "WEEK_TYPES",
     why: "the S165/DN3 twin (the view hard-coded the ALL/A/B triple in two Selects + the state type + the label-map keys beside validation.ts:123's S133/CH2-promoted single source — the inline-twin form, the DM3 census-blind-spot class)",
   },
+  {
+    view: "src/components/views/gradetracker-view.tsx",
+    enumName: "GRADE_TYPES",
+    why: "the S173/DW2 port (the measured reference type select — Homework/Quiz/Test/Midterm/Final/Project — promoted to validation.ts's single source beside EXAM_TYPES; the census guards the new family from its first day)",
+  },
 ] as const;
 
 function readView(rel: string): string {

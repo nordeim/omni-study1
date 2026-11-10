@@ -1412,3 +1412,73 @@ describe("S172/DV1: the practiceTests family mutation CB8 split (B-H1 — commit
     await expect(mutations.createPracticeTest(testInput as never)).rejects.toThrow("offline");
   });
 });
+
+// S173/DW1 — the grades family mutation CB8 split (B-H1 — committed
+// write + failed refresh): the write and the post-write refresh are
+// SEPARATE failure domains (the DK1/DL1/DM1/DN1/DP1/DQ1/DR1/DS1/DT1/
+// DU1/DV1 doctrine, the TWELFTH family of the recorded family-wide
+// port — the fifth of the eight remaining seams the S172 close's
+// ledger-corrected order names; after this family: focusSessions /
+// holidays + the createCalculatorEntry create-only observation).
+// Pre-DW1 all THREE family mutations rode the uncaught refresh —
+// createGrade and updateGrade the single-collection
+// fetchAndSet("grades"), deleteGrade the same — so a flaky refresh GET
+// rejected the whole call on a write the server COMMITTED. Like the
+// S171 studygroups + S172 practiceTests axes (and unlike the S170
+// taskLists axis), the family's mutations ALL have live view
+// consumers: the GradeDialog submit catch's "Could not save the
+// grade." toast with the dialog still open — the retry that
+// DUPLICATES the grade; the AlertDialogAction delete catch's false
+// "Could not delete the grade." on a row the server deleted. Pinned
+// here: a committed write + a failed refresh RESOLVES; the failed
+// write still REJECTS.
+describe("S173/DW1: the grades family mutation CB8 split (B-H1 — committed write + failed refresh)", () => {
+  const gradeInput = {
+    title: "DW1 grade probe",
+    score: 85,
+    maxScore: 100,
+    weight: 1,
+    subjectId: "",
+    type: "homework",
+    date: "",
+  } as const;
+
+  beforeEach(() => {
+    apiGetMock.mockReset();
+    apiSendMock.mockReset();
+    apiGetMock.mockResolvedValue([]);
+    apiSendMock.mockResolvedValue(undefined);
+    useDataStore.setState({ grades: [] });
+  });
+
+  it("createGrade: a committed write + a failed refresh RESOLVES (never the false save-failure)", async () => {
+    apiSendMock.mockResolvedValueOnce(undefined); // the POST 201s
+    apiGetMock.mockRejectedValueOnce(new Error("offline")); // the refresh GET fails
+    // RED pre-fix: the mutation rejected with "offline" — the GradeDialog's
+    // catch toasted "Could not save the grade." with the dialog still open
+    // and the form armed on a row the server committed (the retry
+    // duplicates the grade).
+    await expect(mutations.createGrade(gradeInput as never)).resolves.toBeUndefined();
+  });
+
+  it("updateGrade: a committed write + a failed refresh RESOLVES", async () => {
+    apiSendMock.mockResolvedValueOnce(undefined);
+    apiGetMock.mockRejectedValueOnce(new Error("offline"));
+    await expect(mutations.updateGrade("g-dw1", { title: "Renamed" })).resolves.toBeUndefined();
+  });
+
+  it("deleteGrade: a committed write + a failed refresh RESOLVES", async () => {
+    apiSendMock.mockResolvedValueOnce(undefined); // the DELETE 200s
+    apiGetMock.mockRejectedValueOnce(new Error("offline")); // the refresh GET fails
+    // RED pre-fix: the AlertDialogAction's catch toasted "Could not
+    // delete the grade." on a row the server already deleted.
+    await expect(mutations.deleteGrade("g-dw1")).resolves.toBeUndefined();
+  });
+
+  it("createGrade: a FAILED write still rejects (the honest save-failure reaches the caller)", async () => {
+    apiSendMock.mockRejectedValueOnce(new Error("offline"));
+    // The write leg keeps rejecting — the dialog stays open with the
+    // honest error, and the retry is legitimate (nothing committed).
+    await expect(mutations.createGrade(gradeInput as never)).rejects.toThrow("offline");
+  });
+});

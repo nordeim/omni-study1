@@ -329,7 +329,27 @@
 # superset — the reference's AI-only editor is not e2e-deterministic);
 # network-mocked, no server writes beyond the zero-residue create].
 # The full DV map: docs/remediation-plan-session172.md.)
-# Expected: 158 + 200 + 97 + 95 + 89 = 639 (each chunk's count includes its
+# (S173/DW re-tag — census 639 → 641, net +2: chunk 2 +1 [the
+# S173/DW2 grades create-dialog parity catch-up + type/date field-port
+# pin in parity-session7 — the reference's post-scaffold dialog
+# re-deployment, measured live at the s173 gated write-path probe: the
+# title "Add New Grade" + the capital-S "Max Score" label + the
+# "Weight (optional, default 1)" hint + the Type select's "Homework"
+# default + the native date input defaulting today + the footer's
+# measured [Cancel][Add Grade] order]; chunk 3 +1 [the S173/DW1
+# grades-family CB8 failure-domain split pin in resilience — the POST
+# continues, the refresh GET aborts: a committed create answers the
+# "Grade added" success toast + the CLOSED dialog, never the false
+# "Could not save the grade." that armed the duplicate-creating retry
+# (the DK1/DL1/DM1/DN1/DP1/DQ1/DR1/DS1/DT1/DU1/DV1 ports to the
+# TWELFTH family of the recorded family-wide port, the fifth of the
+# eight remaining seams the S172 close's ledger-corrected order names
+# — after this family: focusSessions / holidays + the
+# calculatorHistory observation); the DW2 type/date fields carry
+# deterministic defaults so the leg fills only the title + score +
+# max; network-mocked, no server writes beyond the zero-residue
+# create]. The full DW map: docs/remediation-plan-session173.md.)
+# Expected: 158 + 201 + 98 + 95 + 89 = 641 (each chunk's count includes its
 # auth setup — the current census; the historical re-tag blocks beneath.)
 # (S171/DU re-tag — census 634 → 637, net +3: chunk 2 +2 [the
 # S171/DU2 studygroups create-dialog parity catch-up pair in

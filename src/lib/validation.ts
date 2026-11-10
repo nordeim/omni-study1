@@ -120,6 +120,13 @@ export const CHAT_SURFACES = ["assistant", "solver"] as const;
 // single-source contract — the import seam's ENUM_VOCABULARIES mirrors
 // these arrays instead of re-typing them (the CA14 doctrine completed).
 export const EXAM_TYPES = ["test", "quiz", "midterm", "final", "oral", "practical"] as const;
+// S173/DW2 (measured live at the s173 gated write-path probe): the
+// reference's grade create dialog carries a Type select with exactly
+// these six options (Homework / Quiz / Test / Midterm / Final /
+// Project), defaulting Homework. Lowercase per the house enum
+// convention (the EXAM_TYPES/ASSIGNMENT_TYPES precedent); the view
+// renders the capitalized form (the exams-view capitalize idiom).
+export const GRADE_TYPES = ["homework", "quiz", "test", "midterm", "final", "project"] as const;
 export const WEEK_TYPES = ["ALL", "A", "B"] as const;
 export const FOCUS_SESSION_MODES = ["focus", "short-break", "long-break"] as const;
 export const CALCULATOR_MODES = ["basic", "scientific", "gpa", "unit"] as const;
@@ -494,6 +501,13 @@ export const gradeSchema = z.object({
   maxScore: z.number().min(1).max(1000).optional().default(100),
   weight: z.number().min(0).max(100).optional().default(1),
   subjectId: nullableId,
+  // S173/DW2: the measured reference fields (the type select + the date
+  // input). The type defaults "homework" (the measured combobox default);
+  // PATCH-safe by the S82/AI1 sentKeysPatch doctrine (absent keys are not
+  // writes). The date rides the optionalDate atom (the assignments
+  // dueDate pattern — ""-tolerant, null when cleared).
+  type: z.enum(GRADE_TYPES).optional().default("homework"),
+  date: optionalDate,
 });
 
 // S125/BZ6: the score ≤ maxScore ordering guard (the events BU22+BV1

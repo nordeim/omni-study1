@@ -247,12 +247,17 @@ async function main(): Promise<void> {
     },
   });
 
+  // S173/DW2: the ported type + date fields (measured on the reference's
+  // create dialog — its Type select + native date input). Types follow the
+  // measured vocabulary; dates spread over the recent weeks the seed's
+  // other day-relative rhythm uses.
+  const daysAgo = (n: number) => new Date(Date.now() - n * 24 * 60 * 60 * 1000);
   const gradeDefs = [
-    { title: "Problem set 6", score: 92, maxScore: 100, weight: 1, subjectId: math.id },
-    { title: "Quiz 4", score: 85, maxScore: 100, weight: 0.5, subjectId: math.id },
-    { title: "Kinetics quiz", score: 78, maxScore: 100, weight: 1, subjectId: chemistry.id },
-    { title: "Midterm essay", score: 88, maxScore: 100, weight: 2, subjectId: english.id },
-    { title: "Lab practical", score: 95, maxScore: 100, weight: 1, subjectId: physics.id },
+    { title: "Problem set 6", score: 92, maxScore: 100, weight: 1, subjectId: math.id, type: "homework", date: daysAgo(6) },
+    { title: "Quiz 4", score: 85, maxScore: 100, weight: 0.5, subjectId: math.id, type: "quiz", date: daysAgo(4) },
+    { title: "Kinetics quiz", score: 78, maxScore: 100, weight: 1, subjectId: chemistry.id, type: "quiz", date: daysAgo(9) },
+    { title: "Midterm essay", score: 88, maxScore: 100, weight: 2, subjectId: english.id, type: "midterm", date: daysAgo(13) },
+    { title: "Lab practical", score: 95, maxScore: 100, weight: 1, subjectId: physics.id, type: "test", date: daysAgo(2) },
   ];
   for (const g of gradeDefs) {
     await db.grade.create({ data: { ...g, userId: user.id } });

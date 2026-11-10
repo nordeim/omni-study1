@@ -7,6 +7,7 @@ import {
   CHAT_SURFACES,
   EXAM_TYPES,
   FOCUS_SESSION_MODES,
+  GRADE_TYPES,
   hhmmMinutes,
   preferencesSchema,
   REPEATS,
@@ -829,6 +830,9 @@ export const ENUM_VOCABULARIES: Record<string, readonly string[]> = {
   "chatMessages.surface": CHAT_SURFACES,
   "events.repeat": REPEATS,
   "exams.type": EXAM_TYPES,
+  // S173/DW2: the ported grade type (the measured reference vocabulary —
+  // the CA14 doctrine: the import seam mirrors validation.ts's array).
+  "grades.type": GRADE_TYPES,
   "timetableClasses.weekType": WEEK_TYPES,
   "focusSessions.mode": FOCUS_SESSION_MODES,
   "calcHistory.mode": CALCULATOR_MODES,

@@ -45,7 +45,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useToast } from "@/components/ui/toast";
-import { mutations, useDataStore, type GradeRow } from "@/lib/data";
+import { mutations, useDataStore, type GradeInput, type GradeRow } from "@/lib/data";
+import { formatShortDate, fromDueDateInput, toDateInputValue } from "@/lib/date";
+import { GRADE_TYPES } from "@/lib/validation";
 import {
   Spinner,
   SubjectChip,
@@ -111,6 +113,16 @@ function GradeDialog({
   const [maxScore, setMaxScore] = React.useState(grade ? String(grade.maxScore) : "100");
   const [weight, setWeight] = React.useState(grade ? String(grade.weight) : "1");
   const [subjectId, setSubjectId] = React.useState(grade?.subjectId ?? "none");
+  // S173/DW2 (measured live at the s173 gated write-path probe): the
+  // reference's dialog carries a Type select defaulting "Homework" and a
+  // native date input defaulting to today. The date rides the CB2 TZ
+  // atoms — never the UTC slice (the assignments dueDate pattern).
+  const [type, setType] = React.useState<GradeInput["type"]>(
+    (grade?.type as GradeInput["type"]) ?? "homework",
+  );
+  const [date, setDate] = React.useState(
+    grade ? toDateInputValue(grade.date) : toDateInputValue(new Date().toISOString()),
+  );
   const [saving, setSaving] = React.useState(false);
 
   const submit = async (event: React.FormEvent) => {
@@ -134,6 +146,12 @@ function GradeDialog({
         maxScore: maxNum,
         weight: Math.max(0, Number(weight) || 0),
         subjectId: subjectId === "none" ? "" : subjectId,
+        type,
+        // S173/DW2: the local-noon stamp (the CB2 doctrine — a raw
+        // yyyy-mm-dd stores as UTC midnight and drifts a day in every
+        // UTC-negative zone); the cleared input maps "" → null at the
+        // schema (the optionalDate atom).
+        date: fromDueDateInput(date),
       };
       if (grade) {
         await mutations.updateGrade(grade.id, payload);
@@ -154,9 +172,16 @@ function GradeDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>{grade ? "Edit Grade" : "Add Grade"}</DialogTitle>
+          {/* S173/DW2 (measured): the reference's create-leg title reads
+              "Add New Grade"; the edit leg is the clone's own superset
+              surface (the reference has NO edit affordance — its surface
+              carries the "Add Grade" opener ONLY, the grade pills are
+              read-only spans) and keeps the internal "Edit Grade". */}
+          <DialogTitle>{grade ? "Edit Grade" : "Add New Grade"}</DialogTitle>
         </DialogHeader>
         <form className="flex flex-col gap-4" onSubmit={(e) => void submit(e)}>
+          {/* The clone's superset Title field (the reference's dialog has
+              no title input) — first, per the house dialog convention. */}
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="grade-title">Title</Label>
             <Input
@@ -167,6 +192,43 @@ function GradeDialog({
               required
               autoFocus
             />
+          </div>
+          {/* S173/DW2 (measured): the Subject select sits FIRST on the
+              reference's dialog (the measured order: subject → type →
+              score → max → weight → date); the Type select joins it in
+              the 2-col pair. */}
+          <div className="grid grid-cols-2 gap-3">
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="grade-subject">Subject</Label>
+              <Select value={subjectId} onValueChange={setSubjectId}>
+                <SelectTrigger id="grade-subject" aria-label="Subject">
+                  <SelectValue placeholder="None" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">No subject</SelectItem>
+                  {subjects.map((s) => (
+                    <SelectItem key={s.id} value={s.id}>
+                      {s.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="grade-type">Type</Label>
+              <Select value={type} onValueChange={(v) => setType(v as GradeInput["type"])}>
+                <SelectTrigger id="grade-type" className="h-9 capitalize">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {GRADE_TYPES.map((t) => (
+                    <SelectItem key={t} value={t} className="capitalize">
+                      {t}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="flex flex-col gap-1.5">
@@ -183,7 +245,8 @@ function GradeDialog({
               />
             </div>
             <div className="flex flex-col gap-1.5">
-              <Label htmlFor="grade-max">Max score</Label>
+              {/* S173/DW2 (measured): the capital-S "Max Score" label. */}
+              <Label htmlFor="grade-max">Max Score</Label>
               <Input
                 id="grade-max"
                 type="number"
@@ -197,7 +260,10 @@ function GradeDialog({
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="flex flex-col gap-1.5">
-              <Label htmlFor="grade-weight">Weight</Label>
+              {/* S173/DW2 (measured): the "(optional, default 1)" hint —
+                  the reference's placeholder copy, ported to the visible
+                  Label (the clone's a11y superset pattern). */}
+              <Label htmlFor="grade-weight">Weight (optional, default 1)</Label>
               <Input
                 id="grade-weight"
                 type="number"
@@ -209,20 +275,16 @@ function GradeDialog({
               />
             </div>
             <div className="flex flex-col gap-1.5">
-              <Label htmlFor="grade-subject">Subject</Label>
-              <Select value={subjectId} onValueChange={setSubjectId}>
-                <SelectTrigger id="grade-subject" aria-label="Subject">
-                  <SelectValue placeholder="None" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">No subject</SelectItem>
-                  {subjects.map((s) => (
-                    <SelectItem key={s.id} value={s.id}>
-                      {s.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              {/* S173/DW2 (measured): the reference's native date input,
+                  defaulting to today (the state init) — the CB2 atoms own
+                  the string conversion. */}
+              <Label htmlFor="grade-date">Date</Label>
+              <Input
+                id="grade-date"
+                type="date"
+                value={date}
+                onChange={(e) => setDate(e.target.value)}
+              />
             </div>
           </div>
           <DialogFooter>
@@ -433,6 +495,15 @@ export function GradeTrackerView() {
                     <h2 className="truncate font-medium text-slate-800 dark:text-slate-100">{grade.title}</h2>
                     <div className="mt-1 flex flex-wrap items-center gap-2">
                       <SubjectChip name={subject?.name} color={subject?.color} />
+                      {/* S173/DW2: the ported type + date render (the
+                          clone's own superset rows — the reference renders
+                          read-only percent pills only). */}
+                      <span className="text-xs capitalize text-slate-500 dark:text-slate-400">{grade.type}</span>
+                      {grade.date ? (
+                        <span className="text-xs text-slate-500 dark:text-slate-400">
+                          {formatShortDate(new Date(grade.date))}
+                        </span>
+                      ) : null}
                       <span className="text-xs text-slate-500 dark:text-slate-400">weight {grade.weight}</span>
                     </div>
                   </div>

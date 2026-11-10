@@ -218,7 +218,17 @@ describe("the chunked cert runner's truth contract (S128/CC2)", () => {
     // the closed dialog; the ELEVENTH family, the fourth of the eight
     // remaining seams — after it: grades / focusSessions / holidays +
     // the calculatorHistory observation) — 637 → 639.
-    expect(certSource).toContain("Expected: 158 + 200 + 97 + 95 + 89 = 639");
+    // S173/DW: chunk 2 200 → 201 (the S173/DW2 grades create-dialog
+    // parity pin + type/date field port in parity-session7 — the measured
+    // "Add New Grade" title + "Max Score" label + "Weight (optional,
+    // default 1)" hint + the Type select's "Homework" default + the
+    // native date input + the [Cancel][Add Grade] footer order); chunk 3
+    // 97 → 98 (the S173/DW1 grades-family CB8 pin in resilience — the
+    // committed create + aborted refresh answers the "Grade added"
+    // success toast + the closed dialog; the TWELFTH family, the fifth
+    // of the eight remaining seams — after it: focusSessions / holidays
+    // + the calculatorHistory observation) — 639 → 641.
+    expect(certSource).toContain("Expected: 158 + 201 + 98 + 95 + 89 = 641");
   });
 
   it("propagates a failing chunk's exit code (never a green cert on a red run)", () => {

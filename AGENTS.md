@@ -9,9 +9,9 @@ High-signal instructions for coding agents working in this repo. Everything here
 | `bun install` | Install deps (Bun ≥ 1.3) |
 | `bun run dev` | Dev server on :3000 (Turbopack), logs tee'd to `dev.log` |
 | `bun run lint` / `bun run typecheck` | ESLint / `tsc --noEmit` — both must be clean |
-| `bun run test` | Vitest unit layer (1713 tests; `*.test.ts` only — never picks up e2e specs) |
+| `bun run test` | Vitest unit layer (1719 tests; `*.test.ts` only — never picks up e2e specs) |
 | `bun run build` | Production build → `.next/standalone` (**required before e2e**) |
-| `bun run test:e2e` | Playwright vs the standalone build on :3100 with `db/e2e.db` (639 tests across the 5-chunk cold map — 158+200+97+95+89, 30 spec files; a single-process full run trips the register rate-limiter budget by design, the chunked map re-boots the server per chunk). NOTE (S45, the day-boundary lesson): the global setup re-seeds every run, but the seed's IDEMPOTENT UPSERTS do NOT refresh day-relative dates on existing rows — a scratch `db/e2e.db` that ages across a UTC midnight keeps its original day-relative dates (today's tasks, the +1-day exam badge, the due-in pills, the import round-trip dates each read one day stale → 4 deterministic failures in parity-session6/parity-session9/s23-import). Delete `db/e2e.db` when a run crosses a day boundary — the global setup re-creates it fresh with current dates. NOTE (S46, TWO more aged-scratch-db classes + a build-input one): (1) ALWAYS run e2e COLD — S131/CF5 chained `scripts/e2e-cold-reset.sh` into `bun run test:e2e` (port-guard + `rm -f db/e2e.db` BEFORE playwright boots anything — global-setup is TOO LATE: Playwright starts the webServer before globalSetup), so the default runner self-colds; any DIRECT `playwright test` invocation still needs the manual `rm -f db/e2e.db` before every full run: the s23-import round-trip posts a FIXED-id envelope, so a second consecutive run against the aged db reads `created: 0, updated: 1` instead of `created: 1, updated: 0` and fails — not just across midnights, across ANY re-run; (2) the s22 negative-spawn spec reads the BUNDLED `.env` — Next's standalone output COPIES the repo-root `.env` into `.next/standalone/.env` at build time, so a REAL AUTH_SECRET in the dev `.env` leaks into the bundle and the guard CORRECTLY boots (the spec times out waiting for the exit) — keep the repo-root `.env`'s AUTH_SECRET EMPTY (the `.env.example` dev posture: `AUTH_SECRET=""` — dev falls back to the local constant with the boot warning) when building for e2e |
+| `bun run test:e2e` | Playwright vs the standalone build on :3100 with `db/e2e.db` (641 tests across the 5-chunk cold map — 158+201+98+95+89, 30 spec files; a single-process full run trips the register rate-limiter budget by design, the chunked map re-boots the server per chunk). NOTE (S45, the day-boundary lesson): the global setup re-seeds every run, but the seed's IDEMPOTENT UPSERTS do NOT refresh day-relative dates on existing rows — a scratch `db/e2e.db` that ages across a UTC midnight keeps its original day-relative dates (today's tasks, the +1-day exam badge, the due-in pills, the import round-trip dates each read one day stale → 4 deterministic failures in parity-session6/parity-session9/s23-import). Delete `db/e2e.db` when a run crosses a day boundary — the global setup re-creates it fresh with current dates. NOTE (S46, TWO more aged-scratch-db classes + a build-input one): (1) ALWAYS run e2e COLD — S131/CF5 chained `scripts/e2e-cold-reset.sh` into `bun run test:e2e` (port-guard + `rm -f db/e2e.db` BEFORE playwright boots anything — global-setup is TOO LATE: Playwright starts the webServer before globalSetup), so the default runner self-colds; any DIRECT `playwright test` invocation still needs the manual `rm -f db/e2e.db` before every full run: the s23-import round-trip posts a FIXED-id envelope, so a second consecutive run against the aged db reads `created: 0, updated: 1` instead of `created: 1, updated: 0` and fails — not just across midnights, across ANY re-run; (2) the s22 negative-spawn spec reads the BUNDLED `.env` — Next's standalone output COPIES the repo-root `.env` into `.next/standalone/.env` at build time, so a REAL AUTH_SECRET in the dev `.env` leaks into the bundle and the guard CORRECTLY boots (the spec times out waiting for the exit) — keep the repo-root `.env`'s AUTH_SECRET EMPTY (the `.env.example` dev posture: `AUTH_SECRET=""` — dev falls back to the local constant with the boot warning) when building for e2e |
 | `node scripts/capture-studyflow.mjs` | Refresh all 31 `docs/screenshots/` captures from the dev server (24 light + 7 dark) |
 | `node scripts/dark-sweep.mjs` | Dark-mode contrast audit over all 20 views (flashbulb/unreadable detector). S27: sets dark mode through the settings API (the real lifecycle) and SELF-VERIFIES the precondition — fails loudly (exit 1, no findings) if the dark class is not applied; the applied mode rides the JSON envelope. Never force the class directly (the session-10 approach silently rotted after S11) |
 | `node scripts/accent-dark-sweep.mjs` | Accent × dark-mode audit (S38-extended): all 7 accents × 20 desktop views × 20 MOBILE views at 390×844 + the drawer per accent (FAIL <2.2, WARN <3.2 for accent text; the mobile records also carry scrollWidth — >390 is a finding). The S38 shape is unit-pinned anti-phantom: every view recorded EXPLICITLY on both surfaces (clean views carry empty detector arrays), the per-accent `applied` self-verified readings + `mode: "dark"` + `mobileViewport` ride the envelope, and the seam's ALL-ACCENTS + ALL-VIEWS + drawer-present guards make every silently-skipped dimension a LOUD shape-error (the pre-S38 mobile pass swept only 6 views — MOBILE_VIEWS — and the omission-means-clean recording could not distinguish "clean because measured" from "clean because never rendered") |
@@ -3320,3 +3320,47 @@ Hover-parity probing must run in Playwright, not a touch-emulating browser — v
    order IS the assertion). Lesson: a footer-order pin must name its
    exact scope (form-scoped, submit-vs-secondary) or a section-local
    button silently joins the assertion set.
+
+## S173 lessons (Batch DW — the audit-driven hardening cycle: the grades-family hardening + the dialog catch-up + field-port set)
+
+1. **A reference dialog can drift at the FIELD level, not just the copy
+   level — measure the field SET, not only its labels.** Four
+   consecutive families showed reference dialog drift (S170 chrome,
+   S171 studygroups copy, S172 practiceTests copy), and the grades
+   surface revealed the deepest layer yet: the reference's dialog had
+   gained two FIELDS the clone's model could not record (the Type
+   select — Homework/Quiz/Test/Midterm/Final/Project — and the native
+   date input). A copy catch-up alone would have left the clone
+   functionally NARROWER than the reference on its own axis: a user
+   switching hosts loses the grade's kind and its date. Lesson: the
+   standing write-path probe must enumerate the dialog's FIELDS (names
+   + types + defaults), and the S171/DU2b description-port shape
+   (schema → validation → row type → dialog → seed → import mirror,
+   one cycle) is the template when the field set drifts.
+
+2. **A reference surface with NO delete affordance makes the probe's
+   cleanup an API exercise — and the entity API's auth rides
+   localStorage, not cookies.** The reference's GradeTracker measured
+   exactly ONE affordance (the Add Grade opener); the grade pills are
+   read-only spans and the subject cards carry no actions — there is
+   NO UI path to remove a probe row. The zero-residue cleanup had to
+   ride the platform's entity REST API (list + DELETE by id) with the
+   Bearer token from localStorage (`base44_access_token`), executed
+   IN-PAGE so the token never leaves the browser session. Lesson: when
+   a gated write-path probe targets a surface without delete
+   affordances, plan the API-side cleanup in the same session — a
+   residue left behind poisons the NEXT cycle's zero-state
+   measurements.
+
+3. **The e2e pin for a CSS-capitalized enum value asserts the DOM text
+   + the class, never the visually-transformed string.** The DW2 pin's
+   first draft asserted `toHaveText(/Homework/)` on the Type select
+   and failed: the clone's house convention renders the lowercase
+   schema value with the `capitalize` utility (the exams-view idiom),
+   so the DOM text is "homework" and only the COMPUTED rendering reads
+   "Homework". The corrected pin asserts the raw value + the
+   `capitalize` class — the value contract AND the visual convention,
+   both machine-checked. Lesson: pins over text-transform-styled
+   content must split the assertion (DOM text for the value, class or
+   computed style for the transform); asserting the transformed string
+   tests the browser's CSS engine, not the app.

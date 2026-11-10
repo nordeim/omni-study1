@@ -434,6 +434,15 @@ model Grade {
   maxScore  Float    @default(100)
   weight    Float    @default(1) // credit weight
   subjectId String?
+  // S173/DW2 (measured live at the s173 gated write-path probe): the
+  // reference's create dialog records BOTH the grade's kind and the day
+  // it was earned — its Type select (Homework/Quiz/Test/Midterm/Final/
+  // Project) and its native date input. Ported as the lowercase
+  // vocabulary (the EXAM_TYPES convention) + a nullable date (the
+  // assignments dueDate pattern); the clone's `title` stays (the
+  // superset — the reference's dialog carries no title input).
+  type      String   @default("homework")
+  date      DateTime?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)

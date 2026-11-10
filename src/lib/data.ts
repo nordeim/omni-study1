@@ -240,6 +240,10 @@ export type GradeRow = {
   maxScore: number;
   weight: number;
   subjectId: string | null;
+  // S173/DW2: the measured reference fields (the type select + the date
+  // input), flowing through the row shape like the assignments' dueDate.
+  type: string;
+  date: string | null;
   createdAt: string;
   updatedAt: string;
 };
@@ -1043,18 +1047,42 @@ export const mutations = {
     await fetchAndSet("studyGroups").catch(() => undefined);
   },
 
-  // ---- grades -----------------------------------------------------------------------
+  // ---- grades (S173/DW1: the CB8 failure-domain split) --------------------
+  // The write and the post-write refresh are SEPARATE failure domains
+  // (the S127/CB8 doctrine, the DK1 events + DL1 exams + DM1 assignments
+  // + DN1 timetable + DP1 notes + DQ1 flashcards + DR1 tasks + DS1
+  // subjects + DT1 task lists + DU1 study groups + DV1 practice tests
+  // ports — the recorded family-wide port, this the TWELFTH family, the
+  // fifth of the eight remaining seams the S172 close's
+  // ledger-corrected order names; after this family: focusSessions /
+  // holidays + the createCalculatorEntry create-only observation): a
+  // refresh GET that fails after a COMMITTED write must not reject the
+  // mutation — the caller's catch would claim a save failure on a saved
+  // row (the GradeDialog submit catch's "Could not save the grade."
+  // toast with the dialog still open and the form armed — the retry
+  // that DUPLICATES the grade; the AlertDialogAction delete catch's
+  // false "Could not delete the grade." toast after the delete already
+  // committed). The refresh rejection is contained here; the stale
+  // slices self-heal on the next successful load (the S16 view-switch
+  // pre-warm + the next mutation's own refresh — the DJ5 doctrine: the
+  // write's own success surfacing is the toast/dialog-close; a second
+  // toast for the same offline window is noise). The WRITE legs keep
+  // rejecting honestly. Pinned by tests/data-store.test.ts (the DW1
+  // pair set) + the DW1 e2e leg in tests/e2e/resilience.spec.ts (the
+  // create-through-failed-refresh journey — this family's mutations ALL
+  // have live view consumers, like the S171 studygroups + S172
+  // practiceTests axes).
   createGrade: async (input: GradeInput): Promise<void> => {
     await apiSend("POST", PATHS.grades, input);
-    await fetchAndSet("grades");
+    await fetchAndSet("grades").catch(() => undefined);
   },
   updateGrade: async (id: string, patch: Partial<GradeInput>): Promise<void> => {
     await apiSend("PATCH", `${PATHS.grades}/${id}`, patch);
-    await fetchAndSet("grades");
+    await fetchAndSet("grades").catch(() => undefined);
   },
   deleteGrade: async (id: string): Promise<void> => {
     await apiSend("DELETE", `${PATHS.grades}/${id}`);
-    await fetchAndSet("grades");
+    await fetchAndSet("grades").catch(() => undefined);
   },
 
   // ---- focus sessions ------------------------------------------------------------------

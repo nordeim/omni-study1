@@ -2323,3 +2323,77 @@ test.describe("S172/DV2 · the practiceTests create-dialog parity catch-up", () 
     expect(order.map((b) => b.text)).toEqual(["Create Test", "Close"]);
   });
 });
+
+// S173/DW2 — the grades create-dialog parity catch-up + the type/date
+// field port (the s173 audit B/L-1). Measured live at the s173 gated
+// write-path probe (TWO throwaway grade rows created through the real
+// dialog — one without a subject, one with a throwaway "Probe Math"
+// subject created through the reference's own Settings → Subjects
+// surface — captured, DELETEd via the entity API, zero residue verified
+// after each): the reference's create dialog reads title "Add New Grade"
+// (an H2), a SUBJECT select FIRST, a TYPE select defaulting "Homework"
+// with the six measured options (Homework / Quiz / Test / Midterm /
+// Final / Project), placeholder-labeled number inputs "Score" (required)
+// / "Max Score" (required) / "Weight (optional, default 1)", a NATIVE
+// date input defaulting to today, and the footer's DOM order
+// Cancel-then-submit ([Cancel][Add Grade]). The clone's copy was
+// scaffold-era (git -S provenance: the "Add Grade" title + "e.g.
+// Midterm exam" placeholder date from the initial 7b1e78d implementation
+// and were never re-measured) and its Grade model could record NEITHER
+// the reference's type NOR its date. The port: the GRADE_TYPES
+// vocabulary + the `type`/`date` columns (schema + validation + row +
+// dialog + seed + the import vocabulary — the S171/DU2b description-port
+// precedent). The reference's surface carries NO title field, NO edit
+// affordance, and NO delete affordance (measured: the "Add Grade" opener
+// is the ONLY interactive element in main; the grade pills are read-only
+// spans) — the clone's Title input + Edit icon + AlertDialog confirm are
+// the documented supersets and stay. The visible-Label pattern is the
+// clone's a11y superset (the S172/DV2 adjudication-7 precedent) — the
+// label COPY ports ("Max Score", "Weight (optional, default 1)").
+// The submit stays "Add Grade" on both hosts — identical pre-fix and
+// post-fix.
+// ---------------------------------------------------------------------------
+test.describe("S173/DW2 · the grades create-dialog parity catch-up + the type/date field port", () => {
+  test("the create dialog carries the reference's measured title, labels, type select, date input, and footer", async ({ page }) => {
+    await page.goto("/GradeTracker");
+    await hydrated(page);
+    await page.getByRole("button", { name: "Add Grade" }).first().click();
+    const dlg = page.getByRole("dialog");
+    await expect(dlg).toBeVisible();
+    // The measured title (RED pre-fix: the scaffold-era "Add Grade").
+    await expect(dlg.getByRole("heading", { name: "Add New Grade" })).toBeVisible();
+    // The measured label copy — the capital-S "Max Score" and the
+    // "(optional, default 1)" weight hint (exact).
+    await expect(dlg.getByText("Max Score", { exact: true })).toBeVisible();
+    await expect(dlg.getByText("Weight (optional, default 1)", { exact: true })).toBeVisible();
+    // The measured TYPE select: the trigger renders the "homework" default
+    // capitalized — the GRADE_TYPES single source's lowercase value with
+    // the exams-view `capitalize` idiom (the CSS transform owns the visual
+    // "Homework"; the DOM text carries the schema value).
+    await expect(dlg.locator("#grade-type")).toHaveText(/homework/);
+    await expect(dlg.locator("#grade-type")).toHaveClass(/capitalize/);
+    // The measured NATIVE date input (type="date"), defaulting to today.
+    const dateInput = dlg.locator("#grade-date");
+    await expect(dateInput).toHaveAttribute("type", "date");
+    const today = new Date();
+    const yyyy = today.getFullYear();
+    const mm = String(today.getMonth() + 1).padStart(2, "0");
+    const dd = String(today.getDate()).padStart(2, "0");
+    await expect(dateInput).toHaveValue(`${yyyy}-${mm}-${dd}`);
+    // The measured footer: [Cancel][Add Grade] — the secondary renders
+    // BEFORE the submit (both scoped to the form's footer).
+    const submit = dlg.getByRole("button", { name: "Add Grade", exact: true });
+    const cancel = dlg.locator("form").getByRole("button", { name: "Cancel", exact: true });
+    await expect(submit).toBeVisible();
+    await expect(cancel).toBeVisible();
+    const order = await dlg
+      .locator("form")
+      .getByRole("button")
+      .evaluateAll((els) =>
+        els
+          .map((el, i) => ({ i, text: (el.textContent ?? "").trim() }))
+          .filter((b) => b.text === "Add Grade" || b.text === "Cancel"),
+      );
+    expect(order.map((b) => b.text)).toEqual(["Cancel", "Add Grade"]);
+  });
+});

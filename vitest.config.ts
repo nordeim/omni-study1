@@ -1,8 +1,38 @@
 import { defineConfig } from "vitest/config";
 import path from "node:path";
 
-// Unit-test layer for the pure domain seams — 51 files / 1713 tests
-// (re-anchored S172/DV — the practicetests-family hardening cycle: census
+// Unit-test layer for the pure domain seams — 51 files / 1719 tests
+// (re-anchored S173/DW — the grades-family hardening cycle: census
+// 1713 → 1719, +6 net [data-store +4: the S173/DW1 grades-family
+// mutation CB8 split — a committed write + a failed refresh RESOLVES
+// for the create/update/delete trio (RED pre-fix ×3: the mutations
+// rejected on the refresh leg — the false "Could not save the grade."
+// that armed the duplicate-creating retry, the DK1/DL1/DM1/DN1/DP1/
+// DQ1/DR1/DS1/DT1/DU1/DV1 events/exams/assignments/timetable/notes/
+// flashcards/tasks/subjects/task-lists/study-groups/practice-tests
+// ports to the TWELFTH family of the recorded family-wide port, the
+// fifth of the eight remaining seams the S172 close's
+// ledger-corrected order names; like the studygroups + practiceTests
+// axes this family's mutations ALL have live view consumers) + the
+// createGrade failed-write guard (green-on-arrival — the honest
+// failure reaches the caller); enum-single-source +2: the SEVENTH
+// census site — gradetracker-view imports the S173/DW2-promoted
+// GRADE_TYPES single source (the measured reference type vocabulary —
+// Homework/Quiz/Test/Midterm/Final/Project — the import + no-local-
+// twin pair)]. The e2e census moves 639 → 641 [+2: the S173/DW1
+// grades CB8 leg in resilience (the POST continues, the collection GET
+// aborts, a committed create answers the "Grade added" success toast +
+// the CLOSED dialog, never the false save-failure — the DW2 type/date
+// fields carry deterministic defaults so the leg fills only the title
+// + score + max) + the S173/DW2 create-dialog parity pin +
+// type/date field port in parity-session7 (the reference's
+// post-scaffold dialog re-deployment, measured live at the s173 gated
+// write-path probe: the title "Add New Grade" + the capital-S "Max
+// Score" label + the "Weight (optional, default 1)" hint + the Type
+// select's "Homework" default + the native date input defaulting
+// today + the footer's measured [Cancel][Add Grade] order)].)
+//
+// (prior re-anchor, S172/DV — the practicetests-family hardening cycle: census
 // 1709 → 1713, +4 net [data-store +4: the S172/DV1 practiceTests-family
 // mutation CB8 split — a committed write + a failed refresh RESOLVES
 // for the create/update/delete trio (RED pre-fix ×3: the mutations
