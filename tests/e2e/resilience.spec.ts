@@ -1899,3 +1899,81 @@ test.describe("S171/DU1 · the studygroups save succeeds through a failed refres
     }
   });
 });
+
+// S172/DV1 — the practiceTests family CB8 failure-domain split (the s172
+// audit B/H-1): the write and the post-write refresh are SEPARATE failure
+// domains (the DK1/DL1/DM1/DN1/DP1/DQ1/DR1/DS1/DT1/DU1 doctrine ported to
+// the ELEVENTH family of the recorded family-wide port — the fourth of the
+// eight remaining seams the S171 close's ledger-corrected order names).
+// Pre-DV1 the create mutation was `await apiSend(POST)` then `await
+// fetchAndSet("practiceTests")`, and the flaky refresh rejected the WHOLE
+// mutation — the TestDialog's catch toasted "Could not save the practice
+// test." with the dialog STILL OPEN and the form armed on a row the server
+// COMMITTED (and the armed retry re-POSTed → the duplicate test). The pin
+// drives the real condition: the collection GET (the refresh) ABORTS, the
+// POST (the write) CONTINUES — a committed create answers the "Practice
+// test created" success toast + the CLOSED dialog, never the false
+// save-failure. RED pre-fix: the dialog stays open, the error toast fires,
+// the success toast never lands. The submit locator rides the dialog-scoped
+// exact "Create Test" match — the submit label is IDENTICAL pre-fix and
+// post-fix (the DV2 copy pin owns the title/label/placeholder/secondary
+// changes), and the dialog scoping avoids the page-opener collision (the
+// S7-B ".first()" hazard). The ONE question rides the clone's manual
+// "Add question" editor (the superset affordance — the reference's AI-only
+// editor is not e2e-deterministic).
+// Route-glob note (the S164/DM4 lesson, re-derived): the pattern
+// `**/api/practice-tests` ends at the COLLECTION URL — per-id PATCH/DELETE
+// URLs do not match (Playwright's full-URL glob), so the interception is
+// collection-only by construction and the finally DELETE (the zero-residue
+// cleanup) passes through unrouted.
+// ---------------------------------------------------------------------------
+test.describe("S172/DV1 · the practiceTests save succeeds through a failed refresh (CB8 split)", () => {
+  test("a committed create + an aborted refresh answers the success toast + closed dialog, never the false save-failure", async ({ page }) => {
+    const stamp = `s172-dv1-${Date.now()}`;
+    await page.goto("/PracticeTests");
+    await page.waitForFunction(() => document.documentElement.dataset.appHydrated === "true");
+    // The settled proof: a seeded test row renders (the slice has loaded
+    // before the interception installs — "Vectors practice set" is a
+    // seeded practice test).
+    await expect(page.getByText("Vectors practice set")).toBeVisible();
+    // Abort the collection GET (the refresh leg) — the POST (the write
+    // leg) continues through the same URL, discriminated by method.
+    await page.route("**/api/practice-tests", (route) => {
+      if (route.request().method() === "GET") route.abort("failed");
+      else route.continue();
+    });
+    let createdId: string | null = null;
+    try {
+      await page.getByRole("button", { name: "Create Test" }).first().click();
+      const dlg = page.getByRole("dialog");
+      await expect(dlg).toBeVisible();
+      await dlg.locator("#test-title").fill(`S172-DV1 committed-write probe ${stamp}`);
+      // The manual editor (the clone's superset): one multiple-choice
+      // question with two options + a matching correct answer.
+      await dlg.getByRole("button", { name: "Add question" }).click();
+      await dlg.getByLabel("Question 1 text").fill("What does the committed-write probe assert?");
+      await dlg.locator("#q-0-options").fill("The success toast, The false failure");
+      await dlg.locator("#q-0-correct").fill("The success toast");
+      const saved = page.waitForResponse(
+        (r) => r.request().method() === "POST" && r.url().includes("/api/practice-tests"),
+      );
+      await dlg.getByRole("button", { name: "Create Test", exact: true }).click();
+      const res = await saved;
+      // The write itself COMMITTED server-side.
+      expect(res.ok()).toBe(true);
+      createdId = ((await res.json()) as { id: string }).id;
+      // The success toast lands through the aria-live stack…
+      await expect(page.getByText("Practice test created")).toBeVisible({ timeout: 10_000 });
+      // …the dialog CLOSES — the mutation resolved, the form is not
+      // armed for the duplicate-creating retry.
+      await expect(dlg).toBeHidden();
+      // The FALSE save-failure never renders (the contained refresh
+      // rejection must not claim a save failure on the committed row).
+      await expect(page.getByText("Could not save the practice test.")).toHaveCount(0);
+    } finally {
+      await page.unroute("**/api/practice-tests");
+      // Zero residue on the shared demo user (the CC4/AR3 convention).
+      if (createdId) await page.request.delete(`/api/practice-tests/${createdId}`);
+    }
+  });
+});

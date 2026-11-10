@@ -1346,3 +1346,69 @@ describe("S171/DU1: the studygroups family mutation CB8 split (B-H1 — committe
     ).rejects.toThrow("offline");
   });
 });
+
+// S172/DV1 — the practiceTests family mutation CB8 split (B-H1 — committed
+// write + failed refresh): the write and the post-write refresh are
+// SEPARATE failure domains (the DK1/DL1/DM1/DN1/DP1/DQ1/DR1/DS1/DT1/DU1
+// doctrine, the ELEVENTH family of the recorded family-wide port — the
+// fourth of the eight remaining seams the S171 close's ledger-corrected
+// order names; after this family: grades / focusSessions / holidays + the
+// createCalculatorEntry create-only observation). Pre-DV1 all THREE
+// family mutations rode the uncaught refresh — createPracticeTest and
+// updatePracticeTest the single-collection fetchAndSet("practiceTests"),
+// deletePracticeTest the same — so a flaky refresh GET rejected the whole
+// call on a write the server COMMITTED. Like the S171 studygroups axis
+// (and unlike the S170 taskLists axis), the family's mutations ALL have
+// live view consumers: the TestDialog submit catch's "Could not save the
+// practice test." toast with the dialog still open — the retry that
+// DUPLICATES the test; the AlertDialogAction delete catch's false "Could
+// not delete the practice test." on a row the server deleted. Pinned
+// here: a committed write + a failed refresh RESOLVES; the failed write
+// still REJECTS.
+describe("S172/DV1: the practiceTests family mutation CB8 split (B-H1 — committed write + failed refresh)", () => {
+  const testInput = {
+    title: "DV1 practice test probe",
+    durationMinutes: 30,
+    questions: "[]",
+    subjectId: "",
+  } as const;
+
+  beforeEach(() => {
+    apiGetMock.mockReset();
+    apiSendMock.mockReset();
+    apiGetMock.mockResolvedValue([]);
+    apiSendMock.mockResolvedValue(undefined);
+    useDataStore.setState({ practiceTests: [] });
+  });
+
+  it("createPracticeTest: a committed write + a failed refresh RESOLVES (never the false save-failure)", async () => {
+    apiSendMock.mockResolvedValueOnce(undefined); // the POST 201s
+    apiGetMock.mockRejectedValueOnce(new Error("offline")); // the refresh GET fails
+    // RED pre-fix: the mutation rejected with "offline" — the TestDialog's
+    // catch toasted "Could not save the practice test." with the dialog
+    // still open and the form armed on a row the server committed (the
+    // retry duplicates the test).
+    await expect(mutations.createPracticeTest(testInput as never)).resolves.toBeUndefined();
+  });
+
+  it("updatePracticeTest: a committed write + a failed refresh RESOLVES", async () => {
+    apiSendMock.mockResolvedValueOnce(undefined);
+    apiGetMock.mockRejectedValueOnce(new Error("offline"));
+    await expect(mutations.updatePracticeTest("pt-dv1", { title: "Renamed" })).resolves.toBeUndefined();
+  });
+
+  it("deletePracticeTest: a committed write + a failed refresh RESOLVES", async () => {
+    apiSendMock.mockResolvedValueOnce(undefined); // the DELETE 200s
+    apiGetMock.mockRejectedValueOnce(new Error("offline")); // the refresh GET fails
+    // RED pre-fix: the AlertDialogAction's catch toasted "Could not
+    // delete the practice test." on a row the server already deleted.
+    await expect(mutations.deletePracticeTest("pt-dv1")).resolves.toBeUndefined();
+  });
+
+  it("createPracticeTest: a FAILED write still rejects (the honest save-failure reaches the caller)", async () => {
+    apiSendMock.mockRejectedValueOnce(new Error("offline"));
+    // The write leg keeps rejecting — the dialog stays open with the
+    // honest error, and the retry is legitimate (nothing committed).
+    await expect(mutations.createPracticeTest(testInput as never)).rejects.toThrow("offline");
+  });
+});

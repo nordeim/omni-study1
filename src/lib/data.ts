@@ -928,18 +928,41 @@ export const mutations = {
     await fetchAndSet("flashcards").catch(() => undefined);
   },
 
-  // ---- practice tests --------------------------------------------------------------
+  // ---- practice tests (S172/DV1: the CB8 failure-domain split) ----------------
+  // The write and the post-write refresh are SEPARATE failure domains
+  // (the S127/CB8 doctrine, the DK1 events + DL1 exams + DM1 assignments
+  // + DN1 timetable + DP1 notes + DQ1 flashcards + DR1 tasks + DS1
+  // subjects + DT1 task lists + DU1 study groups ports — the recorded
+  // family-wide port, this the ELEVENTH family, the fourth of the eight
+  // remaining seams the S171 close's ledger-corrected order names; after
+  // this family: grades / focusSessions / holidays + the
+  // createCalculatorEntry create-only observation): a refresh GET that
+  // fails after a COMMITTED write must not reject the mutation — the
+  // caller's catch would claim a save failure on a saved row (the
+  // TestDialog submit catch's "Could not save the practice test." toast
+  // with the dialog still open and the form armed — the retry that
+  // DUPLICATES the test; the AlertDialogAction delete catch's false
+  // "Could not delete the practice test." toast after the delete already
+  // committed). The refresh rejection is contained here; the stale
+  // slices self-heal on the next successful load (the S16 view-switch
+  // pre-warm + the next mutation's own refresh — the DJ5 doctrine: the
+  // write's own success surfacing is the toast/dialog-close; a second
+  // toast for the same offline window is noise). The WRITE legs keep
+  // rejecting honestly. Pinned by tests/data-store.test.ts (the DV1
+  // pair set) + the DV1 e2e leg in tests/e2e/resilience.spec.ts (the
+  // create-through-failed-refresh journey — this family's mutations ALL
+  // have live view consumers, like the S171 studygroups axis).
   createPracticeTest: async (input: PracticeTestInput): Promise<void> => {
     await apiSend("POST", PATHS.practiceTests, input);
-    await fetchAndSet("practiceTests");
+    await fetchAndSet("practiceTests").catch(() => undefined);
   },
   updatePracticeTest: async (id: string, patch: Partial<PracticeTestInput>): Promise<void> => {
     await apiSend("PATCH", `${PATHS.practiceTests}/${id}`, patch);
-    await fetchAndSet("practiceTests");
+    await fetchAndSet("practiceTests").catch(() => undefined);
   },
   deletePracticeTest: async (id: string): Promise<void> => {
     await apiSend("DELETE", `${PATHS.practiceTests}/${id}`);
-    await fetchAndSet("practiceTests");
+    await fetchAndSet("practiceTests").catch(() => undefined);
   },
 
   // ---- study groups (S171/DU1: the CB8 failure-domain split) ------------------

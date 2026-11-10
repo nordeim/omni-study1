@@ -2266,3 +2266,60 @@ test.describe("S171/DU2 · the studygroups create-dialog parity catch-up + the d
     }
   });
 });
+
+// S172/DV2 — the practiceTests create-dialog parity catch-up (the s172
+// audit B/L-1). Measured live at the s172 gated write-path probe (TWO
+// throwaway rows created through the real dialog, captured, DELETEd —
+// zero residue verified after each): the reference's create dialog reads
+// title "Create Practice Test" (an H2), a title INPUT with label
+// "Test Title *" (the required asterisk) and placeholder "e.g., Biology
+// Chapter 5 Review", a "N questions added" counter (the clone's
+// "{n} questions added" already matches exactly), and the footer's DOM
+// order submit-then-secondary ("Create Test" then "Close"). The clone's
+// copy was scaffold-era (git -S provenance: the "Create Test" title +
+// "e.g. Algebra Chapter 4 Quiz" placeholder date from the initial
+// 7b1e78d implementation and were never re-measured) and the footer was
+// Cancel-BEFORE-submit. The reference carries NO manual add-question
+// affordance, NO subject picker, and NO edit affordance at all (the card
+// menu measured Delete-only twice) — the clone's manual editor + Subject
+// select + Edit leg are the documented supersets and stay. The submit
+// stays "Create Test" on both hosts — identical pre-fix and post-fix.
+// ---------------------------------------------------------------------------
+test.describe("S172/DV2 · the practiceTests create-dialog parity catch-up", () => {
+  test("the create dialog carries the reference's measured title, label, placeholder, and footer", async ({ page }) => {
+    await page.goto("/PracticeTests");
+    await hydrated(page);
+    await page.getByRole("button", { name: "Create Test" }).first().click();
+    const dlg = page.getByRole("dialog");
+    await expect(dlg).toBeVisible();
+    // The measured title (RED pre-fix: the scaffold-era "Create Test").
+    await expect(dlg.getByRole("heading", { name: "Create Practice Test" })).toBeVisible();
+    // The measured label — the required asterisk included (exact).
+    await expect(dlg.getByText("Test Title *", { exact: true })).toBeVisible();
+    // The measured title placeholder.
+    await expect(dlg.locator("#test-title")).toHaveAttribute(
+      "placeholder",
+      "e.g., Biology Chapter 5 Review",
+    );
+    // The measured footer: submit "Create Test" + secondary "Close".
+    // The secondary is scoped to the FORM — the clone's shared shadcn
+    // dialog chrome adds a top-right X whose sr-only name is also
+    // "Close" (the documented superset; the reference carries no X —
+    // its measured dialog has ONE Close, the footer text button).
+    const submit = dlg.getByRole("button", { name: "Create Test", exact: true });
+    const close = dlg.locator("form").getByRole("button", { name: "Close", exact: true });
+    await expect(submit).toBeVisible();
+    await expect(close).toBeVisible();
+    // The measured DOM ORDER: the submit renders BEFORE the secondary
+    // (both scoped to the form's footer).
+    const order = await dlg
+      .locator("form")
+      .getByRole("button")
+      .evaluateAll((els) =>
+        els
+          .map((el, i) => ({ i, text: (el.textContent ?? "").trim() }))
+          .filter((b) => b.text === "Create Test" || b.text === "Close"),
+      );
+    expect(order.map((b) => b.text)).toEqual(["Create Test", "Close"]);
+  });
+});

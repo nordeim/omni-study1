@@ -309,6 +309,28 @@
 # reference's own task dialog carries no list picker), so the unit
 # pair set alone pins the mutation contract]. The full DT map:
 # docs/remediation-plan-session170.md.)
+# (S172/DV re-tag — census 637 → 639, net +2: chunk 2 +1 [the
+# S172/DV2 practiceTests create-dialog parity catch-up pin in
+# parity-session7 — the reference's post-scaffold dialog re-deployment,
+# measured live at the s172 gated write-path probe: the title "Create
+# Practice Test" + the label "Test Title *" + the title placeholder
+# "e.g., Biology Chapter 5 Review" + the footer's measured
+# [Create Test][Close] submit-then-secondary order]; chunk 3 +1 [the
+# S172/DV1 practiceTests-family CB8 failure-domain split pin in
+# resilience — the POST continues, the refresh GET aborts: a committed
+# create answers the "Practice test created" success toast + the CLOSED
+# dialog, never the false "Could not save the practice test." that
+# armed the duplicate-creating retry (the DK1/DL1/DM1/DN1/DP1/DQ1/
+# DR1/DS1/DT1/DU1 ports to the ELEVENTH family of the recorded
+# family-wide port, the fourth of the eight remaining seams the S171
+# close's ledger-corrected order names — after this family: grades /
+# focusSessions / holidays + the calculatorHistory observation); the
+# one question rides the clone's manual Add-question editor (the
+# superset — the reference's AI-only editor is not e2e-deterministic);
+# network-mocked, no server writes beyond the zero-residue create].
+# The full DV map: docs/remediation-plan-session172.md.)
+# Expected: 158 + 200 + 97 + 95 + 89 = 639 (each chunk's count includes its
+# auth setup — the current census; the historical re-tag blocks beneath.)
 # (S171/DU re-tag — census 634 → 637, net +3: chunk 2 +2 [the
 # S171/DU2 studygroups create-dialog parity catch-up pair in
 # parity-session7 — the reference's post-scaffold dialog re-deployment,
@@ -329,8 +351,6 @@
 # the decks have carried the DQ1 catches since S167); network-mocked,
 # no server writes]. The full DU map:
 # docs/remediation-plan-session171.md.)
-# Expected: 158 + 199 + 96 + 95 + 89 = 637 (each chunk's count includes its
-# auth setup — the current census; the historical re-tag blocks beneath.)
 # (S131/CF re-tag — census 567 → 570, net +3: chunk 1 +1 [the CF9
 # drawer focus-restore leg in mobile-navigation — crossing the lg
 # breakpoint hands focus to the desktop chrome, never <body>]; chunk 4 +1

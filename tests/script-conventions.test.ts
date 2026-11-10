@@ -209,7 +209,16 @@ describe("the chunked cert runner's truth contract (S128/CC2)", () => {
     // success toast + the closed dialog; the TENTH family, the
     // ledger-corrected third of the eight remaining seams) —
     // 634 → 637.
-    expect(certSource).toContain("Expected: 158 + 199 + 96 + 95 + 89 = 637");
+    // S172/DV: chunk 2 199 → 200 (the S172/DV2 practiceTests create-dialog
+    // parity pin in parity-session7 — the measured "Create Practice Test"
+    // title + "Test Title *" label + "e.g., Biology Chapter 5 Review"
+    // placeholder + the [Create Test][Close] footer order); chunk 3
+    // 96 → 97 (the S172/DV1 practiceTests-family CB8 pin in resilience —
+    // the committed create + aborted refresh answers the success toast +
+    // the closed dialog; the ELEVENTH family, the fourth of the eight
+    // remaining seams — after it: grades / focusSessions / holidays +
+    // the calculatorHistory observation) — 637 → 639.
+    expect(certSource).toContain("Expected: 158 + 200 + 97 + 95 + 89 = 639");
   });
 
   it("propagates a failing chunk's exit code (never a green cert on a red run)", () => {

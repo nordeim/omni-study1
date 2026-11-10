@@ -314,16 +314,25 @@ function TestDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle>{test ? "Edit Practice Test" : "Create Test"}</DialogTitle>
+          {/* S172/DV2: the measured create-leg title (the reference's
+              re-deployed dialog, measured live at the s172 gated
+              write-path probe — title "Create Practice Test", label
+              "Test Title *", placeholder "e.g., Biology Chapter 5
+              Review", footer [Create Test][Close] submit-then-secondary).
+              The edit leg keeps "Edit Practice Test" — the reference has
+              NO edit affordance at all (its card menu measured
+              Delete-only twice), so the edit leg is this clone's own
+              superset surface, the internal-consistency standard. */}
+          <DialogTitle>{test ? "Edit Practice Test" : "Create Practice Test"}</DialogTitle>
         </DialogHeader>
         <form className="flex flex-col gap-4" onSubmit={(e) => void submit(e)}>
           <div className="flex flex-col gap-1.5">
-            <Label htmlFor="test-title">Test Title</Label>
+            <Label htmlFor="test-title">Test Title *</Label>
             <Input
               id="test-title"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              placeholder="e.g. Algebra Chapter 4 Quiz"
+              placeholder="e.g., Biology Chapter 5 Review"
               required
               autoFocus
             />
@@ -491,13 +500,30 @@ function TestDialog({
           </div>
 
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              Cancel
-            </Button>
-            <Button type="submit" variant="gradient" disabled={saving}>
-              {saving ? <Spinner className="size-4" /> : null}
-              {test ? "Save changes" : "Create Test"}
-            </Button>
+            {/* S172/DV2: the measured create-leg footer — submit-then-secondary
+                with "Close" (the reference's DOM order, measured live); the
+                edit leg keeps its measured-era [Cancel][Save changes]. */}
+            {test ? (
+              <>
+                <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+                  Cancel
+                </Button>
+                <Button type="submit" variant="gradient" disabled={saving}>
+                  {saving ? <Spinner className="size-4" /> : null}
+                  Save changes
+                </Button>
+              </>
+            ) : (
+              <>
+                <Button type="submit" variant="gradient" disabled={saving}>
+                  {saving ? <Spinner className="size-4" /> : null}
+                  Create Test
+                </Button>
+                <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+                  Close
+                </Button>
+              </>
+            )}
           </DialogFooter>
         </form>
       </DialogContent>

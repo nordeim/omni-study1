@@ -7705,3 +7705,125 @@ families; the F-8 toast copy; the S160 ledger; the
 gradetracker/settings-CRUD + AlertDialog-confirm e2e gaps; a periodic
 re-probe of the reference's chrome AND dialog surfaces — this cycle
 proves the reference drifts beyond chrome).
+
+## Session 183 — the S172 cycle (Batch DV: the practicetests-family hardening + the dialog catch-up set)
+
+The workspace was COLD (a fresh `git clone` at `eb47326` on `main` —
+the S171/Batch DU fix `95c2b60` pushed + remote-verified, the
+operator's session_215 transcript `eb47326`). The environment
+rebuilt from the documented quickstart; the doc chain re-read and
+validated against the codebase (the DU1 catches + the DU2a/DU2b
+dialog surface at their source anchors; the census chain
+machine-consistent at 1709 + 637 = 2346).
+
+Cold baseline: lint ✓ · tsc ✓ · unit **1709/1709** (51 files — the
+documented S171 final state exactly) · preflight GREEN · **the drawer
+check GREEN (the 104th consecutive** no-Tailwind-v4-mobile-nav-bug
+confirmation) · **the desktop parity probe MATCH** (all five
+checks). The mobile nav ADDITIONALLY re-verified through a fresh
+agent-browser pass at 390×844 (the operator's standing ask): the
+drawer opens with all 20 links, a drawer-link navigation to
+/PracticeTests auto-closes, Escape closes (the superset), the
+backdrop click at an exposed point closes, the app-bar computes
+z-40 + border-b + fixed (the DT2b chrome live). The `skills/`
+exclusion posture re-verified on every axis; the `.env` ≡
+`.env.example` contract re-verified at the documented dev posture
+(`DATABASE_URL="file:../db/custom.db"`, the repo-root `db/`).
+
+**The rotation axis (verified at the source):** the S171 close's
+ledger-corrected order confirmed — the practiceTests trio
+(createPracticeTest / updatePracticeTest / deletePracticeTest) rode
+the uncaught `fetchAndSet("practiceTests")`. The remaining seams
+after this cycle: grades, focusSessions, holidays (+ the
+createCalculatorEntry create-only observation, still never
+ledgered).
+
+The audits (Mode-C): **A** — the recent-changes axis (docs-only):
+clean. **B** — the practiceTests family: **0C/1H/0M/1L/0I** — the
+THREE mutations rejected on the refresh leg after a COMMITTED
+write, ALL with live view consumers (the TestDialog submit catch's
+"Could not save the practice test." with the dialog open — the
+retry that duplicates the test; the AlertDialogAction delete
+catch's false claim); the create dialog's copy scaffold-era + the
+reference re-deployed its dialog. **C** — the standing gates clean
++ the reference's PracticeTests surface measured live through the
+GATED WRITE-PATH probe (TWO throwaway rows → captured → DELETEd →
+zero residue ×2): the measured dialog (title "Create Practice
+Test", the label "Test Title *", the title placeholder "e.g.,
+Biology Chapter 5 Review", the "N questions added" counter — the
+clone's matches exactly, the footer's [Create Test][Close]
+submit-then-secondary order) + **the reference's editor is
+AI-ONLY** (the clone's manual Add-question editor is the superset —
+and the deterministic e2e vehicle) + **its card menu is Delete-ONLY
+(measured twice — NO edit affordance anywhere; the clone's Edit
+icon + AlertDialog confirm are the supersets)** + the reference's
+create→list flow WORKS on this surface (both probe POSTs committed
+and listed — no reference-side data bug, unlike the S171
+studygroups surface).
+
+Fixed TDD-first (every RED on its designed marker): **DV1** the
+practiceTests-family CB8 split — the three contained catches + the
+unit pair set (RED `3 failed | 1 passed`) + the e2e leg in
+resilience (the dialog-scoped exact "Create Test" locator — the
+label identical pre-fix and post-fix, so the RED landed on the CB8
+behavior while DV2 owned the copy; the one question rides the
+clone's manual editor); **DV2** the create-dialog copy catch-up
+(the measured title + the "Test Title *" label + the placeholder +
+the [Create Test][Close] footer; the edit leg keeps "Edit Practice
+Test" + [Cancel][Save changes] — the reference has no edit
+affordance, so the edit leg is the clone's own superset surface) +
+the copy pin (RED at the title assertion; the form-scoped "Close"
+locator — the shadcn X's sr-only name collides otherwise).
+
+**Gates**: lint ✓ · tsc ✓ · unit **1713/1713** (+4: data-store +4,
+exactly as designed) · build ✓ (the documented toolchain noise
+pre-existing) · the touched spec files green in full-file cold runs
+(resilience: three cold full-file runs each lost ONE DIFFERENT
+files-upload-edge sibling to the documented moving-target
+under-load class — AK1c, then AK1b, then AJ1, every failed leg
+GREEN in cold isolation, zero files-flow code touched this cycle;
+parity-session7: the cert's chunk-2 cold re-run carried it 200/200)
+· the 5-chunk cold cert **639/639** (chunk 1 158/158 first-pass ·
+chunk 2 200/200 on the cold re-run — the first-pass lost the
+timing-sensitive S81-era AH2a departed-Save leg [a 2500ms-hold
+pin, untouched this cycle], green in cold isolation and in the
+re-run; chunk 3 97/97 first-pass — the DV1 leg green; chunk 4
+95/95 first-pass — the webServer LOGGED a
+PrismaClientKnownRequestError Socket timeout mid-chunk without
+failing a single leg, the documented P1008 signature appearing as
+noise; chunk 5 89/89 first-pass) · the drawer check GREEN on the
+remediated tree (**the 105th consecutive**) · the desktop parity
+probe **MATCH** · the tripwire 136/136 after the doc-chain
+lockstep.
+
+**Evidence**: `docs/screenshots/172-clone-desktop.png` ·
+`172-clone-mobile-drawer.png` (the 105th companion) ·
+`172-clone-practicetests.png` (the cycle's surface — the create
+dialog open with the measured copy + the superset Add-question/AI
+Generate editor), captured by `scripts/capture-s172-evidence.mjs`
+self-verifying (ok: true, md5s distinct + the not-pure-white
+pixel-ratio verification 0.458/0.869/0.345).
+
+**Docs lockstep**: README badge/census (2346 → 2352) + the prose
+sites + the Session-172 row; AGENTS census + the S172 lessons block
+(three lessons: a reference surface can carry NO edit affordance at
+all — enumerate the affordances explicitly so the superset doctrine
+knows which legs have a reference contract; the e2e vehicle for an
+AI-only reference editor is the clone's manual superset; count the
+dialog-footer DOM order from the MEASURED button list and scope the
+order assertion to the submit + secondary); CLAUDE counts; PAD
+v1.3.80; the SKILL census (all four sites, the chromium-spec figure
+632 → 634); the vitest header (+4); the cert runner re-tag
+(158 + 200 + 97 + 95 + 89 = 639, tripwire-pinned 136/136);
+`docs/session_216.md`; this entry; the plan §8 as-executed close;
+the `.env.example` contract re-verified (no env changes).
+
+Next cycle. The rotation continues with the remaining four CB8
+seams (grades / focusSessions / holidays + the calculatorHistory
+observation); the other recorded deferrals (the task-lists e2e
+leg; the unannounced loading-gate families; the F-8 toast copy;
+the S160 ledger; the gradetracker/settings-CRUD +
+AlertDialog-confirm e2e gaps; a periodic re-probe of the
+reference's chrome AND dialog surfaces — three consecutive
+families now show reference dialog drift; the standing probes are
+the tripwire).
