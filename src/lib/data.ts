@@ -510,14 +510,34 @@ export function parseExamTopics(raw: string): string[] {
 }
 
 export const mutations = {
-  // ---- tasks (the S6 reference flows) --------------------------------------
+  // ---- tasks (the S6 reference flows) (S168/DR1: the CB8 --------------
+  // failure-domain split) — the write and the post-write refresh are
+  // SEPARATE failure domains (the S127/CB8 doctrine, the DK1 events +
+  // DL1 exams + DM1 assignments + DN1 timetable + DP1 notes + DQ1
+  // flashcards ports — the recorded family-wide port, this the seventh
+  // family): a refresh GET that fails after a COMMITTED write must not
+  // reject the mutation — the caller's catch would claim a save failure
+  // on a saved row (the TaskDialog submit catch's "Could not save the
+  // task." toast with the dialog still open and the form armed — the
+  // retry that DUPLICATES the task; the row-action catches' false
+  // "Could not update/delete the task." toasts after the toggle or the
+  // delete already committed) and arm the duplicate-creating retry. The
+  // three chained toggles carry the refresh INSIDE their closures —
+  // each gains its own contained catch, so a flaky refresh neither
+  // rejects `await chained` nor poisons the chain. The refresh
+  // rejection is contained here; the stale slice self-heals on the next
+  // successful load (the S16 view-switch pre-warm + the next mutation's
+  // own refresh — the DJ5 doctrine: the write's own success surfacing
+  // is the toast/dialog-close; a second toast for the same offline
+  // window is noise). The WRITE legs keep rejecting honestly. Pinned by
+  // tests/data-store.test.ts (the DR1 pair set).
   createTask: async (input: TaskInput): Promise<void> => {
     await apiSend("POST", PATHS.tasks, input);
-    await fetchAndSet("tasks");
+    await fetchAndSet("tasks").catch(() => undefined);
   },
   updateTask: async (id: string, patch: Partial<TaskInput>): Promise<void> => {
     await apiSend("PATCH", `${PATHS.tasks}/${id}`, patch);
-    await fetchAndSet("tasks");
+    await fetchAndSet("tasks").catch(() => undefined);
   },
   // S127/CB16: the per-id chain — two rapid toggles before the first
   // refetch landed both read the SAME stale base and both PATCHed the same
@@ -531,7 +551,7 @@ export const mutations = {
       const task = useDataStore.getState().tasks.find((t) => t.id === id);
       if (!task) return;
       await apiSend("PATCH", `${PATHS.tasks}/${id}`, { completed: !task.completed });
-      await fetchAndSet("tasks");
+      await fetchAndSet("tasks").catch(() => undefined);
     });
     // S128/CC5: evict on settle when still latest — a deleted task's settled
     // chain otherwise lives in the module map for the whole page session
@@ -557,7 +577,7 @@ export const mutations = {
       const task = useDataStore.getState().tasks.find((t) => t.id === id);
       if (!task) return;
       await apiSend("PATCH", `${PATHS.tasks}/${id}`, { myDay: !task.myDay });
-      await fetchAndSet("tasks");
+      await fetchAndSet("tasks").catch(() => undefined);
     });
     const stored = chained.catch(() => undefined);
     taskToggleChains.set(id, stored);
@@ -572,7 +592,7 @@ export const mutations = {
       const task = useDataStore.getState().tasks.find((t) => t.id === id);
       if (!task) return;
       await apiSend("PATCH", `${PATHS.tasks}/${id}`, { important: !task.important });
-      await fetchAndSet("tasks");
+      await fetchAndSet("tasks").catch(() => undefined);
     });
     const stored = chained.catch(() => undefined);
     taskToggleChains.set(id, stored);
@@ -583,7 +603,7 @@ export const mutations = {
   },
   deleteTask: async (id: string): Promise<void> => {
     await apiSend("DELETE", `${PATHS.tasks}/${id}`);
-    await fetchAndSet("tasks");
+    await fetchAndSet("tasks").catch(() => undefined);
   },
 
   // ---- subjects -------------------------------------------------------------

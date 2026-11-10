@@ -1021,3 +1021,96 @@ describe("S167/DQ1: the flashcards family mutation CB8 split (B-H1 — committed
     await expect(mutations.createFlashcardDeck(deckInput as never)).rejects.toThrow("offline");
   });
 });
+
+// S168/DR1 — the tasks family mutation CB8 split (B-H1 — committed write +
+// failed refresh): the write and the post-write refresh are SEPARATE
+// failure domains (the DK1/DL1/DM1/DN1/DP1/DQ1 doctrine, the SEVENTH
+// family of the recorded family-wide port). Pre-DR1 all six tasks
+// mutations rode the uncaught fetchAndSet("tasks") — the three plain
+// mutations AND the three chained toggles (the refresh sits INSIDE the
+// chained closure, so a flaky refresh rejected `await chained` and the
+// caller's catch fired on a committed toggle). Pinned here: a committed
+// write + a failed refresh RESOLVES; the failed write still REJECTS.
+describe("S168/DR1: the tasks family mutation CB8 split (B-H1 — committed write + failed refresh)", () => {
+  const taskInput = { title: "DR1 task probe" } as const;
+  // The CX1 taskRow template — the chained toggles read the store for
+  // their base, so the toggle legs seed the row first (fresh unique ids:
+  // no cross-test chain-map residue; the CC5 eviction settles each entry).
+  const row = (id: string) => ({
+    id,
+    userId: "u1",
+    title: "DR1 chain pin",
+    notes: "",
+    listId: null,
+    subjectId: null,
+    completed: false,
+    important: false,
+    dueDate: null,
+    priority: "medium" as const,
+    repeat: "none" as const,
+    myDay: false,
+    subtasks: "[]",
+    createdAt: "2026-01-01T00:00:00.000Z",
+    updatedAt: "2026-01-01T00:00:00.000Z",
+  });
+
+  beforeEach(() => {
+    apiGetMock.mockReset();
+    apiSendMock.mockReset();
+    apiGetMock.mockResolvedValue([]);
+    apiSendMock.mockResolvedValue(undefined);
+    useDataStore.setState({ tasks: [] });
+  });
+
+  it("createTask: a committed write + a failed refresh RESOLVES (never the false save-failure)", async () => {
+    apiSendMock.mockResolvedValueOnce(undefined); // the POST 201s
+    apiGetMock.mockRejectedValueOnce(new Error("offline")); // the refresh GET fails
+    // RED pre-fix: the mutation rejected with "offline" — the TaskDialog's
+    // catch toasted "Could not save the task." with the form armed on a row
+    // the server committed (the retry duplicates the task).
+    await expect(mutations.createTask(taskInput as never)).resolves.toBeUndefined();
+  });
+
+  it("updateTask: a committed write + a failed refresh RESOLVES", async () => {
+    apiSendMock.mockResolvedValueOnce(undefined);
+    apiGetMock.mockRejectedValueOnce(new Error("offline"));
+    await expect(mutations.updateTask("t1", { title: "Renamed" })).resolves.toBeUndefined();
+  });
+
+  it("toggleTask: a committed write + a failed refresh RESOLVES (the chain's refresh rejection contained)", async () => {
+    useDataStore.setState({ tasks: [row("dr1-toggle-1")] });
+    apiSendMock.mockResolvedValueOnce(undefined); // the PATCH 200s
+    apiGetMock.mockRejectedValueOnce(new Error("offline"));
+    // RED pre-fix: the in-closure refresh rejected → `await chained`
+    // rejected → the row catch toasted "Could not update the task." on a
+    // toggle the server committed.
+    await expect(mutations.toggleTask("dr1-toggle-1")).resolves.toBeUndefined();
+  });
+
+  it("toggleTaskMyDay: a committed write + a failed refresh RESOLVES", async () => {
+    useDataStore.setState({ tasks: [row("dr1-myday-1")] });
+    apiSendMock.mockResolvedValueOnce(undefined);
+    apiGetMock.mockRejectedValueOnce(new Error("offline"));
+    await expect(mutations.toggleTaskMyDay("dr1-myday-1")).resolves.toBeUndefined();
+  });
+
+  it("toggleTaskImportant: a committed write + a failed refresh RESOLVES", async () => {
+    useDataStore.setState({ tasks: [row("dr1-imp-1")] });
+    apiSendMock.mockResolvedValueOnce(undefined);
+    apiGetMock.mockRejectedValueOnce(new Error("offline"));
+    await expect(mutations.toggleTaskImportant("dr1-imp-1")).resolves.toBeUndefined();
+  });
+
+  it("deleteTask: a committed write + a failed refresh RESOLVES", async () => {
+    apiSendMock.mockResolvedValueOnce(undefined);
+    apiGetMock.mockRejectedValueOnce(new Error("offline"));
+    await expect(mutations.deleteTask("t1")).resolves.toBeUndefined();
+  });
+
+  it("createTask: a FAILED write still rejects (the honest save-failure reaches the caller)", async () => {
+    apiSendMock.mockRejectedValueOnce(new Error("offline"));
+    // The write leg keeps rejecting — the dialog stays open with the
+    // honest error, and the retry is legitimate (nothing committed).
+    await expect(mutations.createTask(taskInput as never)).rejects.toThrow("offline");
+  });
+});

@@ -1,13 +1,30 @@
 import { defineConfig } from "vitest/config";
 import path from "node:path";
 
-// Unit-test layer for the pure domain seams — 51 files / 1686 tests
-// (re-anchored S167/DQ — the flashcards-family hardening cycle: census
-// 1679 → 1686, +7 net [data-store +7: the S167/DQ1 flashcards-family
+// Unit-test layer for the pure domain seams — 51 files / 1693 tests
+// (re-anchored S168/DR — the tasks-family hardening cycle: census
+// 1686 → 1693, +7 net [data-store +7: the S168/DR1 tasks-family
 // mutation CB8 split — a committed write + a failed refresh RESOLVES
-// for the deck trio + the card trio (RED pre-fix ×6: the mutations
-// rejected on the refresh leg — the false save-failure that armed the
-// duplicate-creating retry, the DK1/DL1/DM1/DN1/DP1
+// for the create/update/delete trio + the three chained toggles (RED
+// pre-fix ×6: the mutations rejected on the refresh leg — the false
+// save-failure that armed the duplicate-creating retry, the
+// DK1/DL1/DM1/DN1/DP1/DQ1 events/exams/assignments/timetable/notes/
+// flashcards ports to the SEVENTH family of the recorded family-wide
+// port; the three toggle refreshes sit INSIDE the chained closures —
+// each gained its own contained catch, so a flaky refresh neither
+// rejects `await chained` nor poisons the chain) + the
+// failed-write-still-rejects guard]. The e2e census moves 630 → 631
+// [+1: the S168/DR1 tasks CB8 leg in tasks.spec — the POST continues,
+// the collection GET aborts, a committed create answers the "Task
+// created" success toast + the CLOSED dialog, never the false "Could
+// not save the task."].)
+//
+// (prior re-anchor, S167/DQ — the flashcards-family hardening cycle:
+// census 1679 → 1686, +7 net [data-store +7: the S167/DQ1
+// flashcards-family mutation CB8 split — a committed write + a failed
+// refresh RESOLVES for the deck trio + the card trio (RED pre-fix ×6:
+// the mutations rejected on the refresh leg — the false save-failure
+// that armed the duplicate-creating retry, the DK1/DL1/DM1/DN1/DP1
 // events/exams/assignments/timetable/notes ports to the SIXTH family
 // of the recorded family-wide port; the deleteFlashcardDeck double
 // refresh catches BOTH legs) + the failed-write-still-rejects guard].

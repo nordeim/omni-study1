@@ -7187,3 +7187,126 @@ F-8 candidate); the S160 close's ledger (the A-M3 stage-2 triggers;
 the update-side raw-SQL bulk upsert; the I-4 parse posture; the M-1
 LLM-side residual); the gradetracker/studygroups/settings-CRUD and
 AlertDialog-confirm e2e gaps.
+
+## Session 179 — the S168 cycle (Batch DR: the tasks-family hardening set)
+
+**Workspace.** COLD — a fresh `git clone` at `848c0bf` on `main` (the
+S167/Batch DQ fix `8d25d9a` pushed + remote-verified + the plan-tick
+`bdf0352` + the operator's session_207 transcript `848c0bf`). The
+environment REBUILT from scratch: `bun install` (510 packages), the
+repo-root `db/` recreated by `db:push` + `db:seed`, `.env` copied from
+`.env.example` (byte-identical at the documented dev posture
+`DATABASE_URL="file:../db/custom.db"`), the standalone build compiled,
+the Playwright chromium v1243 cache re-provisioned (the machine cache
+carried only 1200 — the S103/S166 provisioning doctrine re-derived:
+the preflight's browserType.launch failure names the missing revision).
+
+**Cold baseline.** lint ✓ · tsc ✓ · unit **1686/1686** (51 files — the
+documented S167 final state exactly) · preflight GREEN · **the drawer
+check GREEN (the 96th consecutive** no-Tailwind-v4-mobile-nav-bug
+confirmation) · the desktop parity probe **MATCH** (all five formal
+checks, live reference login — the s142 formal probe).
+
+**Audits.** A — the Batch DQ recent-changes axis (`8d25d9a` +
+`bdf0352`/`848c0bf` docs-only): **0C/0H/0M/0L/0I — clean** (all three
+DQ claims verified at the source anchors — the six contained catches at
+data.ts:813-860, the DQ2 aria gates at flashcards-view :521/:676, the
+DQ1 pair set + e2e leg; the doc census chain machine-verified at
+1686+630=2316; the root scratch sweep clean — the S167 lesson held).
+B — the tasks family (the rotation's fresh axis, the LAST of the six
+view-mutation families the S165 close's order named): **0C/1H/0M/1L/0I**
+— the family coherent (the taskDelegate owned-FK scoping + the BV7
+actionable-404 guards, Zod at both boundaries, the CB16/CX1 per-id
+toggle chains with the CC5 eviction, the CI4 quick-add guard, the CH8
+blank-title guard, the instant-delete parity posture with MyDay's
+documented confirm superset, the measured AC8 pill form + the
+AF2/AG5/AG7 band shapes); the findings: **H-1** the SIX tasks-family
+mutations rejected on the refresh leg after a COMMITTED write — the
+create/update/delete trio + the three chained toggles (the refreshes
+sit INSIDE the closures, so a flaky refresh rejected `await chained`;
+the TaskDialog catch toasted "Could not save the task." with the form
+armed — the retry duplicated the task; the row-action catches toasted
+"Could not update/delete the task." on committed rows — the same seam
+serves tasks/myday/dashboard/calendar, the CB8 letter's SEVENTH
+family); **L-1** the tasks loading gate carried no aria contract (tasks
+×1 in the S166 gate census — the DM2/DL2/DK4/DN2/DP2/DQ2 precedent).
+
+**Fixes (TDD-first, every RED on its designed marker):**
+
+- **DR1 (H-1)** — the tasks-family mutation CB8 split: the six refresh
+  legs contained at the seam (`fetchAndSet("tasks").catch(() =>
+  undefined)` — the three plain mutations + the three in-closure toggle
+  refreshes, each caught so a flaky refresh neither rejects `await
+  chained` nor poisons the CB16/CX1 chains), the doctrine comment
+  re-tagged S168/DR1 (the seventh family). Unit +7 (the pair set: the
+  resolve set RED pre-fix ×6 — the toggle legs seeding the store rows
+  first, fresh unique ids, no chain-map residue — + the
+  failed-write-still-rejects guard green-on-arrival; the pair `6
+  failed | 1 passed`). E2e +1 (the CB8 leg in tasks.spec: the POST
+  continues, the collection GET aborts [`**/api/tasks` ends at the
+  collection URL — the per-id URLs pass unrouted, the DM4 lesson
+  re-derived], the "Task created" success toast + the CLOSED dialog,
+  never the false "Could not save the task."; RED-proven against the
+  pre-fix standalone failing exactly at the toast assertion; zero
+  residue via the finally DELETE).
+- **DR2 (L-1)** — the tasks loading gate gains `role="status"` +
+  `aria-label="Loading tasks"` (the precedent family's shape; rides
+  the diff review). No hue-tokens re-anchor (the tasks-view pinned
+  sites :115 sit above the gate).
+
+**Gates.** lint ✓ · tsc ✓ · unit **1693/1693** (51 files, +7 exactly
+as designed: data-store +7) · build ✓ · the full touched spec file:
+tasks.spec **13/13 first run** (the 12 prior legs + the DR1 leg) · the
+5-chunk cold cert: chunk 1 **156/156** · chunk 2 **197/197** (+1, the
+DR1 leg; one socket-timeout signature logged, zero failures) · chunk 3
+**94/94** cold · chunk 4 **95/95** cold · chunk 5 **89/89** — every
+chunk FIRST-PASS, zero triage needed — the cert tally **631/631** =
+**census 2324 green** (the e2e census 630 → 631) · the drawer check
+GREEN on the remediated tree (**the 97th consecutive**) · the desktop
+parity probe **MATCH** (all five formal checks, live reference login).
+
+**Evidence.** The `docs/screenshots/168-clone-*.png` frames (the
+standing desktop + the mobile drawer [the 97th drawer-GREEN companion]
++ the cycle's Tasks surface — the seeded task rows + the
+All Tasks/Important/My Lists aside + the search input + the Add Task
+button, the DR1/DR2 surfaces), captured by
+`scripts/capture-s168-evidence.mjs` (the S167 precedent),
+self-verifying (ok: true; md5s distinct) + the not-pure-white
+pixel-ratio verification (45.87% desktop [the live-clock surface, the
+S166/S167 pair measured 45.93% — the sub-0.1pp delta is the header
+clock chip] / 34.50% drawer [byte-for-byte the S166/S167 ratio, the
+unchanged static surface] / 47.84% tasks [the seeded content]). The
+capture script's first run tripped its own settled-anchor check — the
+aside's `uppercase` class is visual-only, textContent carries "My
+Lists" title-case; the anchor corrected, the frame captured clean.
+
+**Docs.** README badge/census (2316 → 2324) + the count prose sites +
+the Session-168 row; AGENTS census + the e2e map re-tag + the S168
+lessons block (two lessons: grep the prior cycle's re-tag block before
+inserting yours — the cert script's block placement drifted across
+cycles and a head-assumed insert corrupted the merge, caught by the
+diff read-back; a fresh-clone cycle re-derives the chromium build
+before the standing gates — the preflight's browserType.launch failure
+is provisioning, not regression); CLAUDE counts (1693 + 631); PAD
+v1.3.76 (the revision block); the SKILL census (all four sites); the
+vitest header re-anchor (+7); the cert runner re-tag (both scripts,
+630 → 631, chunk 2 196 → 197, machine-pinned by the
+script-conventions tripwire — the CQ6/DA6 count-claims gates verified
+GREEN after the re-anchor: 136/136); `docs/session_208.md`; this
+entry; the plan §8 as-executed close; the `.env.example` contract
+re-verified (no env-var reads changed this cycle — .env and
+.env.example byte-identical at the documented dev posture).
+
+**Next cycle.** The six view-mutation families the S165 close named
+are ALL ported (events S162 / exams S163 / assignments S164 /
+timetable S165 / notes S166 / flashcards S167 / tasks S168). The
+rotation continues into the remaining CB8 seams (the
+subject/taskList/deck/studyGroup/practiceTest/grades/focusSessions/
+holidays families); the unannounced loading-gate families
+(focustimer/gradetracker/dashboard/myday/studygroups/practicetests/
+analytics/settings); the files refresh-failure toast copy
+harmonization (the F-8 candidate); the S160 close's ledger (the A-M3
+stage-2 triggers; the update-side raw-SQL bulk upsert; the I-4 parse
+posture; the M-1 LLM-side residual); the
+gradetracker/studygroups/settings-CRUD and AlertDialog-confirm e2e
+gaps.

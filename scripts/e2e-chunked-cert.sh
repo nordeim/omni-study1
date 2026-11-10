@@ -273,7 +273,17 @@
 # DK1/DL1/DM1/DN1/DP1 ports to the SIXTH family of the recorded
 # family-wide port); network-mocked, no server writes]. The full DQ
 # map: docs/remediation-plan-session167.md.)
-# Expected: 156 + 196 + 94 + 95 + 89 = 630 (each chunk's count includes its
+# (S168/DR re-tag — census 630 → 631, net +1: chunk 2 +1 [the
+# S168/DR1 tasks-family CB8 failure-domain split pin in tasks.spec —
+# the POST continues, the refresh GET aborts: a committed create answers
+# the "Task created" success toast + the CLOSED dialog, never the false
+# "Could not save the task." that armed the duplicate-creating retry
+# (the DK1/DL1/DM1/DN1/DP1/DQ1 events/exams/assignments/timetable/
+# notes/flashcards ports to the SEVENTH family of the recorded
+# family-wide port — the create/update/delete trio + the three chained
+# toggles); network-mocked, no server writes]. The full DR map:
+# docs/remediation-plan-session168.md.)
+# Expected: 156 + 197 + 94 + 95 + 89 = 631 (each chunk's count includes its
 # auth setup — the current census; the historical re-tag blocks beneath.)
 # (S131/CF re-tag — census 567 → 570, net +3: chunk 1 +1 [the CF9
 # drawer focus-restore leg in mobile-navigation — crossing the lg

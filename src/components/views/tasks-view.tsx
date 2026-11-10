@@ -703,7 +703,10 @@ export function TasksView() {
 
         <div role="group" aria-label="Task rows" className="sf-scroll flex-1 space-y-3 overflow-y-auto pr-1">
           {loading && tasks.length === 0 ? (
-            <div className="flex justify-center py-16 text-sf-primary">
+            // S168/DR2: the in-flight window is announced — the Spinner is
+            // aria-hidden, so an unlabeled gate is silent to assistive tech
+            // (the DM2/DL2/DK4/DN2/DP2/DQ2 precedent, closed per family).
+            <div role="status" aria-label="Loading tasks" className="flex justify-center py-16 text-sf-primary">
               <Spinner className="size-6" />
             </div>
           ) : visible.length === 0 ? (

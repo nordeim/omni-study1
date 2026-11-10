@@ -1,4 +1,4 @@
-# StudyFlow (Omni-Study) — Master Project Architecture Document (PAD) v1.3.75
+# StudyFlow (Omni-Study) — Master Project Architecture Document (PAD) v1.3.76
 
 **Classification:** Internal Engineering Reference
 **Status:** DEFINITIVE, PRODUCTION-LOCKED BLUEPRINT
@@ -8,6 +8,11 @@
 **Rule:** Every architectural decision in this document traces to a specific rationale. Nothing is here "because it's popular."
 
 ---
+
+#### Revision Block — v1.3.76 (Session-168 / Batch DR, Cycle 118)
+
+- `[SR]` Current test census anchor (the v1.2.0 convention, re-anchored): **1693/1693 Vitest unit** (51 files — the S168 additions: data-store +7 [the S168/DR1 tasks-family mutation CB8 split — a committed write + a failed refresh RESOLVES for the create/update/delete trio + the three chained toggles, RED pre-fix on the six resolve legs, + the failed-write-still-rejects guard, the DK1/DL1/DM1/DN1/DP1/DQ1 pair-set template ported to the SEVENTH family of the recorded family-wide port; the three toggle refreshes sit INSIDE the chained closures — each gained its own contained catch, so a flaky refresh neither rejects `await chained` nor poisons the chain]). The e2e census moves **630 → 631** (the 5-chunk cold map 156+197+94+95+89 — chunk 2 +1 [the S168/DR1 tasks CB8 leg in tasks.spec: the POST continues, the collection GET aborts, a committed create answers the "Task created" success toast + the CLOSED dialog, never the false "Could not save the task." that armed the duplicate-creating retry — zero residue via the finally DELETE]) — census 2324 green.
+- `[AR]` The tasks family (§ the views catalog): the SIX mutations' post-write refresh is now a CONTAINED failure domain (the CB8 doctrine — the seventh family ported after events/exams/assignments/timetable/notes/flashcards, closing the last of the six view-mutation families the S165 close's order named; the CB16/CX1 per-id toggle chains keep their stale-base protection, the refresh rejection now contained inside each closure); the tasks loading gate carries `role="status"` + `aria-label="Loading tasks"` (the DM2/DL2/DK4/DN2/DP2/DQ2 precedent family extended to the tasks sibling — the last of the S166 gate census's CB8-family remainder).
 
 #### Revision Block — v1.3.75 (Session-167 / Batch DQ, Cycle 117)
 

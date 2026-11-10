@@ -175,7 +175,14 @@ describe("the chunked cert runner's truth contract (S128/CC2)", () => {
     // port; a committed deck create + an aborted refresh answers the
     // "Deck created." success toast + the CLOSED dialog, never the
     // false "Something went wrong.") — 629 → 630.
-    expect(certSource).toContain("Expected: 156 + 196 + 94 + 95 + 89 = 630");
+    // S168/DR: chunk 2 196 → 197 (the DR1 tasks-family CB8
+    // failure-domain split pin in tasks.spec — the DK1/DL1/DM1/DN1/
+    // DP1/DQ1 events/exams/assignments/timetable/notes/flashcards
+    // ports to the SEVENTH family of the recorded family-wide port;
+    // a committed task create + an aborted refresh answers the
+    // "Task created" success toast + the CLOSED dialog, never the
+    // false "Could not save the task.") — 630 → 631.
+    expect(certSource).toContain("Expected: 156 + 197 + 94 + 95 + 89 = 631");
   });
 
   it("propagates a failing chunk's exit code (never a green cert on a red run)", () => {
