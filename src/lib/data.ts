@@ -724,18 +724,39 @@ export const mutations = {
     await fetchAndSet("timetable").catch(() => undefined);
   },
 
-  // ---- notebooks + notes --------------------------------------------------------
+  // ---- notebooks + notes (S166/DP1: the CB8 failure-domain split) -----------
+  // The write and the post-write refresh are SEPARATE failure domains (the
+  // S127/CB8 doctrine, the DK1 events + DL1 exams + DM1 assignments + DN1
+  // timetable ports — the recorded family-wide port, this the fifth
+  // family): a refresh GET that fails after a COMMITTED write must not
+  // reject the mutation — the caller's catch would claim a save failure on
+  // a saved row (the submit catch's "Something went wrong." in the
+  // still-open dialog with the form armed — the retry that DUPLICATES the
+  // note/notebook; the autosave/tag/delete surfaces' false failure claims)
+  // and arm the duplicate-creating retry. The refresh rejection is
+  // contained here (the deleteNotebook double refresh catches BOTH legs;
+  // the setNoteTags chain's refresh is caught while its `await chained`
+  // still surfaces the WRITE leg's rejection to the caller — the honest
+  // save-failure contract the view's catches depend on); the stale slice
+  // self-heals on the next successful load (the S16 view-switch pre-warm
+  // + the next mutation's own refresh — the DJ5 doctrine: the write's own
+  // success surfacing is the toast/dialog-close; a second toast for the
+  // same offline window is noise). The WRITE legs keep rejecting
+  // honestly. Pinned by tests/data-store.test.ts (the DP1 pair set).
   createNotebook: async (input: NotebookInput): Promise<void> => {
     await apiSend("POST", PATHS.notebooks, input);
-    await fetchAndSet("notebooks");
+    await fetchAndSet("notebooks").catch(() => undefined);
   },
   updateNotebook: async (id: string, patch: Partial<NotebookInput>): Promise<void> => {
     await apiSend("PATCH", `${PATHS.notebooks}/${id}`, patch);
-    await fetchAndSet("notebooks");
+    await fetchAndSet("notebooks").catch(() => undefined);
   },
   deleteNotebook: async (id: string): Promise<void> => {
     await apiSend("DELETE", `${PATHS.notebooks}/${id}`);
-    await Promise.all([fetchAndSet("notebooks"), fetchAndSet("notes")]);
+    await Promise.all([
+      fetchAndSet("notebooks").catch(() => undefined),
+      fetchAndSet("notes").catch(() => undefined),
+    ]);
   },
 
   // Returns the created row's id — the notes view auto-selects the new note
@@ -743,12 +764,12 @@ export const mutations = {
   // received void here, so a freshly created note was never selected).
   createNote: async (input: NoteInput): Promise<string | null> => {
     const row = await apiSend<NoteRow>("POST", PATHS.notes, input);
-    await fetchAndSet("notes");
+    await fetchAndSet("notes").catch(() => undefined);
     return row?.id ?? null;
   },
   updateNote: async (id: string, patch: Partial<NoteInput>): Promise<void> => {
     await apiSend("PATCH", `${PATHS.notes}/${id}`, patch);
-    await fetchAndSet("notes");
+    await fetchAndSet("notes").catch(() => undefined);
   },
   // S151/CZ1 (audit B-M1): the per-note tags chain — the CX2 updater form
   // on the notes tags field (the members fix, one field over: the view's
@@ -772,7 +793,11 @@ export const mutations = {
       if (!note) return;
       const tags = update(parseNoteTags(note.tags));
       await apiSend("PATCH", `${PATHS.notes}/${noteId}`, { tags: JSON.stringify(tags) });
-      await fetchAndSet("notes");
+      // S166/DP1: the refresh leg is a separate failure domain — a
+      // committed tags PATCH + a flaky GET must not surface "Tag not
+      // saved" to the caller (the `await chained` below resolves; the
+      // WRITE leg above still rejects through it honestly).
+      await fetchAndSet("notes").catch(() => undefined);
     });
     const stored = chained.catch(() => undefined);
     noteTagsChains.set(noteId, stored);
@@ -783,7 +808,7 @@ export const mutations = {
   },
   deleteNote: async (id: string): Promise<void> => {
     await apiSend("DELETE", `${PATHS.notes}/${id}`);
-    await fetchAndSet("notes");
+    await fetchAndSet("notes").catch(() => undefined);
   },
 
   // ---- flashcards (decks cascade their cards) ------------------------------------

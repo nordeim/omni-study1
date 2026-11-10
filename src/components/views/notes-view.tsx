@@ -75,7 +75,7 @@ import {
   type NotebookRow,
 } from "@/lib/data";
 import { ApiError } from "@/lib/api";
-import { stripHtmlPreview } from "@/lib/text";
+import { htmlToText, stripHtmlPreview } from "@/lib/text";
 import { cn } from "@/lib/utils";
 
 // S125/BZ14: the note leg carries no `editing` — the dead "Rename note"
@@ -277,9 +277,19 @@ export function NotesView() {
         .filter((n) => {
           if (!query.trim()) return true;
           const q = query.toLowerCase();
+          // S166/DP3 (the s166 audit B/L-2): the content leg matches the
+          // RENDERED text (the preview contract — what the row shows is
+          // what the query matches), never the raw Quill HTML: the
+          // raw-source search false-matched tag names ("strong") and
+          // the single letter "p" inside every <p> wrapper. Plain-text
+          // notes pass through htmlToText byte-identically, so the
+          // legacy/seeded behavior is unchanged. The reference's own
+          // search is title-only (measured s166, the residue-zero
+          // probe) — this title+rendered-content form is the kept
+          // SUPERSET.
           return (
             n.title.toLowerCase().includes(q) ||
-            n.content.toLowerCase().includes(q)
+            htmlToText(n.content).toLowerCase().includes(q)
           );
         })
         .sort(
@@ -740,7 +750,20 @@ export function NotesView() {
               false "No notes yet." (a stale empty list is NOT an empty
               account). */}
           {loading && notes.length === 0 ? (
-            <div className="flex justify-center py-8 text-sf-primary">
+            <div
+              className="flex justify-center py-8 text-sf-primary"
+              role="status"
+              aria-label="Loading notes"
+              /* S166/DP2 (the s166 audit B/L-1): the CE3 loading gate
+                 announces itself (role="status" — the DM2 assignments/DL2
+                 exams/DK4 events-calendar/DN2 timetable precedent; the
+                 Spinner itself is aria-hidden, so the unlabeled div was
+                 silent to assistive tech during the in-flight window).
+                 The label distinguishes this LIST-pane region from the
+                 main-pane gate below (the calendar's two-gate
+                 precedent — both gates can render simultaneously during
+                 the initial in-flight window). */
+            >
               <Spinner className="size-6" />
             </div>
           ) : filtered.length === 0 ? (
@@ -803,7 +826,16 @@ export function NotesView() {
         {/* S130/CE3: the main pane's own gate (the e2e pin holds BOTH
             empty-state sites). */}
         {loading && notes.length === 0 ? (
-          <div className="sf-card flex flex-1 items-center justify-center text-sf-primary">
+          <div
+            className="sf-card flex flex-1 items-center justify-center text-sf-primary"
+            role="status"
+            aria-label="Loading note editor"
+            /* S166/DP2 (the s166 audit B/L-1): the MAIN-pane gate's own
+               aria contract (the DM2/DL2/DK4/DN2 precedent shape — the
+               sibling list-pane gate above carries "Loading notes";
+               the differentiated label distinguishes the two
+               simultaneously-renderable status regions). */
+          >
             <Spinner className="size-6" />
           </div>
         ) : notes.length === 0 ? (

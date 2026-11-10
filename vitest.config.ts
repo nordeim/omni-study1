@@ -1,8 +1,29 @@
 import { defineConfig } from "vitest/config";
 import path from "node:path";
 
-// Unit-test layer for the pure domain seams — 51 files / 1669 tests
-// (re-anchored S165/DN — the timetable-family hardening cycle: census
+// Unit-test layer for the pure domain seams — 51 files / 1679 tests
+// (re-anchored S166/DP — the notes-family hardening cycle: census
+// 1669 → 1679, +10 net [data-store +8: the S166/DP1 notes-family
+// mutation CB8 split — a committed write + a failed refresh RESOLVES
+// for the notebooks trio + the notes trio + the setNoteTags chain
+// (RED pre-fix ×7: the mutations rejected on the refresh leg — the
+// false save-failure that armed the duplicate-creating retry, the
+// DK1/DL1/DM1/DN1 events/exams/assignments/timetable ports to the
+// FIFTH family of the recorded family-wide port; the deleteNotebook
+// double refresh catches BOTH legs; the chain's write leg still
+// rejects honestly) + the failed-write-still-rejects guard;
+// text +2: the S166/DP3 htmlToText seam pins — the search's
+// rendered-text form (tags stripped, entities decoded, NO cap — the
+// full-body coverage; the capped stripHtmlPreview delegates to it
+// unchanged)].
+// The e2e census moves 627 → 629 [+2: the S166/DP1 notes CB8 leg in
+// parity-session9 — the POST continues, the refresh GET aborts, a
+// committed create answers the CLOSED dialog, never the false
+// "Something went wrong." + the S166/DP3 notes-search rendered-text
+// leg in parity-session7 — a tag-name query never matches a formatted
+// note, the visible word always does].)
+//
+// (prior re-anchor, S165/DN — the timetable-family hardening cycle: census
 // 1663 → 1669, +6 net [data-store +4: the S165/DN1 timetable mutation
 // CB8 split — a committed write + a failed refresh RESOLVES for
 // create/update/delete (RED pre-fix: the mutation rejected on the

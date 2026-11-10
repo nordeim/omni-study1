@@ -2115,3 +2115,63 @@ test.describe("S142 · the notebook mover is keyboard-reachable (CQ3)", () => {
     await page.unroute(/\/api\/notes\//);
   });
 });
+
+// S166/DP3 — the notes search matches the RENDERED text, never the markup
+// (the s166 audit B/L-2). The filtered memo matched n.content (the raw
+// Quill-persisted HTML) while the row preview renders
+// stripHtmlPreview(content) — so a query like "strong" (or the single
+// letter "p", inside every <p> wrapper) false-matched EVERY formatted
+// note while the visible text showed no such word. The reference's own
+// search was measured THIS cycle (the residue-zero probe,
+// scripts/ref-notes-search-semantics-s166.mjs): it is TITLE-ONLY — the
+// clone's title+content search is the kept SUPERSET, and this leg pins
+// the superset's own consistency: the content leg matches what the
+// preview SHOWS. The formatted probe note is planted through the real
+// API (strong is in the CO1 allowlist, src/lib/note-html.ts) and
+// deleted in the finally (the CC4/AR3 zero-residue convention).
+test.describe("S166/DP3 · the notes search matches the rendered text, not the HTML source", () => {
+  test("a tag-name query never matches; the visible word always does", async ({ page }) => {
+    await page.goto("/Notes");
+    await hydrated(page);
+    // The settled proof: a seeded row renders before the probe plants.
+    await expect(page.getByRole("button", { name: /Dot product intuition/ }).first()).toBeVisible();
+
+    const res = await page.request.post("/api/notes", {
+      data: {
+        title: "S166 DP3 probe",
+        content: "<p>xylophone <strong>quartz</strong> bridge</p>",
+        tags: "[]",
+        notebookId: "",
+        subjectId: "",
+      },
+    });
+    expect(res.ok(), `plant failed: ${res.status()}`).toBe(true);
+    const { id } = (await res.json()) as { id: string };
+    const row = page.getByRole("button", { name: /S166 DP3 probe/ });
+    try {
+      // The store refetches on view entry — reload to pick up the
+      // planted row (the direct API write bypasses the client store).
+      await page.reload();
+      await hydrated(page);
+      await expect(page.getByRole("button", { name: /Dot product intuition/ }).first()).toBeVisible();
+      await expect(row).toBeVisible({ timeout: 10_000 });
+
+      const search = page.getByLabel("Search notes");
+      // The TAG NAME is not in the rendered text — the row must NOT
+      // match. RED pre-fix: the raw-HTML search matched "strong".
+      await search.fill("strong");
+      await expect(row).toHaveCount(0);
+
+      // The rendered word IS in the text — the row MUST match (the
+      // superset's content-search contract, on the stripped form).
+      await search.fill("xylophone");
+      await expect(row).toBeVisible();
+
+      // And the title leg is untouched.
+      await search.fill("DP3 probe");
+      await expect(row).toBeVisible();
+    } finally {
+      await page.request.delete(`/api/notes/${id}`);
+    }
+  });
+});

@@ -1,4 +1,17 @@
 #!/usr/bin/env bash
+# (S166/DP re-tag — census 627 → 629, net +2: chunk 2 +2 [the
+# S166/DP1 notes-family CB8 failure-domain split pin in parity-session9
+# — the POST continues, the refresh GET aborts: a committed create answers
+# the CLOSED dialog, never the false "Something went wrong." that armed
+# the duplicate-creating retry (the DK1/DL1/DM1/DN1 events/exams/assignments/
+# timetable ports to the FIFTH family of the recorded family-wide port —
+# the notebooks trio + the notes trio + the setNoteTags chain); network-
+# mocked, no server writes. + the S166/DP3 notes-search rendered-text pin
+# in parity-session7 — a tag-name query ("strong") never matches a
+# formatted note, the visible word always does (the raw-HTML search
+# false-matched the markup; the API-planted probe note rides the real
+# write door, zero residue)]. The full DP map:
+# docs/remediation-plan-session166.md.)
 # (S165/DN re-tag — census 626 → 627, net +1: chunk 2 +1 [the
 # S165/DN1 timetable CB8 failure-domain split pin in parity-session9 —
 # the POST continues, the refresh GET aborts: a committed create answers
@@ -251,7 +264,7 @@
 # leg was green by pinning the CB8 false-failure as correct behavior;
 # count-neutral, proven by the DM1 bisect pair). The full DM map:
 # docs/remediation-plan-session164.md.)
-# Expected: 155 + 194 + 94 + 95 + 89 = 627 (each chunk's count includes its
+# Expected: 155 + 196 + 94 + 95 + 89 = 629 (each chunk's count includes its
 # auth setup — the current census; the historical re-tag blocks beneath.)
 # (S131/CF re-tag — census 567 → 570, net +3: chunk 1 +1 [the CF9
 # drawer focus-restore leg in mobile-navigation — crossing the lg

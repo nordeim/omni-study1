@@ -498,7 +498,7 @@ const VIOLET_RESIDUALS: ReadonlyArray<{ file: string; line: number; pattern: Reg
 const EDGE_DARK_CONSUMERS: ReadonlyArray<{ file: string; line: number; pattern: RegExp; why: string }> = [
   { file: "src/components/views/tasks-view.tsx", line: 115, pattern: /dark:hover:border-sf-primary-edge-dark/, why: "the row-card hover border's dark half (violet-800 → the edge-dark token; byte-identical at violet)" },
   { file: "src/components/views/flashcards-view.tsx", line: 437, pattern: /dark:border-sf-primary-edge-dark/, why: "the study-card face border's dark half (violet-800 → the edge-dark token)" },
-  { file: "src/components/views/notes-view.tsx", line: 761, pattern: /dark:border-sf-primary-edge-dark/, why: "the selected-note row border's dark half (violet-900 → the family value — the S92 divergent-variant collapse; anchor 736 → 761 re-anchored S161/DJ1, the mutateTags block added lines above the site — tripped as designed)" },
+  { file: "src/components/views/notes-view.tsx", line: 784, pattern: /dark:border-sf-primary-edge-dark/, why: "the selected-note row border's dark half (violet-900 → the family value — the S92 divergent-variant collapse; anchor 736 → 761 re-anchored S161/DJ1, the mutateTags block added lines above the site — tripped as designed; 761 → 784 re-anchored S166/DP2+DP3, the loading-gate aria contracts + the rendered-text search comment added lines above the site — tripped as designed)" },
   { file: "src/components/views/analytics-view.tsx", line: 430, pattern: /dark:bg-sf-primary-edge-dark\/50/, why: "the Tasks-Completed chip's dark half (violet-900/50 → the edge-dark token at /50 — both serialize through the v4 color-mix family)" },
 ];
 
@@ -508,8 +508,8 @@ const EDGE_DARK_CONSUMERS: ReadonlyArray<{ file: string; line: number; pattern: 
 const EDGE_CONSUMERS: ReadonlyArray<{ file: string; line: number; pattern: RegExp; why: string }> = [
   { file: "src/components/views/tasks-view.tsx", line: 115, pattern: /hover:border-sf-primary-edge/, why: "the row-card hover border" },
   { file: "src/components/views/flashcards-view.tsx", line: 437, pattern: /border-sf-primary-edge/, why: "the study-card face border" },
-  { file: "src/components/views/notes-view.tsx", line: 761, pattern: /border-sf-primary-edge/, why: "the selected-note row border (anchor 736 → 761 re-anchored S161/DJ1 — the mutateTags block added lines above the site; tripped as designed)" },
-  { file: "src/components/views/notes-view.tsx", line: 761, pattern: /bg-sf-primary-softest/, why: "the selected-note row tint (re-anchored with its border sibling, S161/DJ1)" },
+  { file: "src/components/views/notes-view.tsx", line: 784, pattern: /border-sf-primary-edge/, why: "the selected-note row border (anchor 736 → 761 re-anchored S161/DJ1 — the mutateTags block added lines above the site; tripped as designed; 761 → 784 re-anchored S166/DP2+DP3)" },
+  { file: "src/components/views/notes-view.tsx", line: 784, pattern: /bg-sf-primary-softest/, why: "the selected-note row tint (re-anchored with its border sibling, S161/DJ1; 761 → 784 re-anchored S166/DP2+DP3)" },
   { file: "src/components/views/analytics-view.tsx", line: 430, pattern: /bg-sf-primary-empty/, why: "the Tasks-Completed chip" },
 ];
 

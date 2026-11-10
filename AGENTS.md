@@ -9,9 +9,9 @@ High-signal instructions for coding agents working in this repo. Everything here
 | `bun install` | Install deps (Bun ≥ 1.3) |
 | `bun run dev` | Dev server on :3000 (Turbopack), logs tee'd to `dev.log` |
 | `bun run lint` / `bun run typecheck` | ESLint / `tsc --noEmit` — both must be clean |
-| `bun run test` | Vitest unit layer (1669 tests; `*.test.ts` only — never picks up e2e specs) |
+| `bun run test` | Vitest unit layer (1679 tests; `*.test.ts` only — never picks up e2e specs) |
 | `bun run build` | Production build → `.next/standalone` (**required before e2e**) |
-| `bun run test:e2e` | Playwright vs the standalone build on :3100 with `db/e2e.db` (627 tests across the 5-chunk cold map — 155+194+94+95+89, 30 spec files; a single-process full run trips the register rate-limiter budget by design, the chunked map re-boots the server per chunk). NOTE (S45, the day-boundary lesson): the global setup re-seeds every run, but the seed's IDEMPOTENT UPSERTS do NOT refresh day-relative dates on existing rows — a scratch `db/e2e.db` that ages across a UTC midnight keeps its original day-relative dates (today's tasks, the +1-day exam badge, the due-in pills, the import round-trip dates each read one day stale → 4 deterministic failures in parity-session6/parity-session9/s23-import). Delete `db/e2e.db` when a run crosses a day boundary — the global setup re-creates it fresh with current dates. NOTE (S46, TWO more aged-scratch-db classes + a build-input one): (1) ALWAYS run e2e COLD — S131/CF5 chained `scripts/e2e-cold-reset.sh` into `bun run test:e2e` (port-guard + `rm -f db/e2e.db` BEFORE playwright boots anything — global-setup is TOO LATE: Playwright starts the webServer before globalSetup), so the default runner self-colds; any DIRECT `playwright test` invocation still needs the manual `rm -f db/e2e.db` before every full run: the s23-import round-trip posts a FIXED-id envelope, so a second consecutive run against the aged db reads `created: 0, updated: 1` instead of `created: 1, updated: 0` and fails — not just across midnights, across ANY re-run; (2) the s22 negative-spawn spec reads the BUNDLED `.env` — Next's standalone output COPIES the repo-root `.env` into `.next/standalone/.env` at build time, so a REAL AUTH_SECRET in the dev `.env` leaks into the bundle and the guard CORRECTLY boots (the spec times out waiting for the exit) — keep the repo-root `.env`'s AUTH_SECRET EMPTY (the `.env.example` dev posture: `AUTH_SECRET=""` — dev falls back to the local constant with the boot warning) when building for e2e |
+| `bun run test:e2e` | Playwright vs the standalone build on :3100 with `db/e2e.db` (629 tests across the 5-chunk cold map — 155+196+94+95+89, 30 spec files; a single-process full run trips the register rate-limiter budget by design, the chunked map re-boots the server per chunk). NOTE (S45, the day-boundary lesson): the global setup re-seeds every run, but the seed's IDEMPOTENT UPSERTS do NOT refresh day-relative dates on existing rows — a scratch `db/e2e.db` that ages across a UTC midnight keeps its original day-relative dates (today's tasks, the +1-day exam badge, the due-in pills, the import round-trip dates each read one day stale → 4 deterministic failures in parity-session6/parity-session9/s23-import). Delete `db/e2e.db` when a run crosses a day boundary — the global setup re-creates it fresh with current dates. NOTE (S46, TWO more aged-scratch-db classes + a build-input one): (1) ALWAYS run e2e COLD — S131/CF5 chained `scripts/e2e-cold-reset.sh` into `bun run test:e2e` (port-guard + `rm -f db/e2e.db` BEFORE playwright boots anything — global-setup is TOO LATE: Playwright starts the webServer before globalSetup), so the default runner self-colds; any DIRECT `playwright test` invocation still needs the manual `rm -f db/e2e.db` before every full run: the s23-import round-trip posts a FIXED-id envelope, so a second consecutive run against the aged db reads `created: 0, updated: 1` instead of `created: 1, updated: 0` and fails — not just across midnights, across ANY re-run; (2) the s22 negative-spawn spec reads the BUNDLED `.env` — Next's standalone output COPIES the repo-root `.env` into `.next/standalone/.env` at build time, so a REAL AUTH_SECRET in the dev `.env` leaks into the bundle and the guard CORRECTLY boots (the spec times out waiting for the exit) — keep the repo-root `.env`'s AUTH_SECRET EMPTY (the `.env.example` dev posture: `AUTH_SECRET=""` — dev falls back to the local constant with the boot warning) when building for e2e |
 | `node scripts/capture-studyflow.mjs` | Refresh all 31 `docs/screenshots/` captures from the dev server (24 light + 7 dark) |
 | `node scripts/dark-sweep.mjs` | Dark-mode contrast audit over all 20 views (flashbulb/unreadable detector). S27: sets dark mode through the settings API (the real lifecycle) and SELF-VERIFIES the precondition — fails loudly (exit 1, no findings) if the dark class is not applied; the applied mode rides the JSON envelope. Never force the class directly (the session-10 approach silently rotted after S11) |
 | `node scripts/accent-dark-sweep.mjs` | Accent × dark-mode audit (S38-extended): all 7 accents × 20 desktop views × 20 MOBILE views at 390×844 + the drawer per accent (FAIL <2.2, WARN <3.2 for accent text; the mobile records also carry scrollWidth — >390 is a finding). The S38 shape is unit-pinned anti-phantom: every view recorded EXPLICITLY on both surfaces (clean views carry empty detector arrays), the per-accent `applied` self-verified readings + `mode: "dark"` + `mobileViewport` ride the envelope, and the seam's ALL-ACCENTS + ALL-VIEWS + drawer-present guards make every silently-skipped dimension a LOUD shape-error (the pre-S38 mobile pass swept only 6 views — MOBILE_VIEWS — and the omission-means-clean recording could not distinguish "clean because measured" from "clean because never rendered") |
@@ -3056,3 +3056,39 @@ Hover-parity probing must run in Playwright, not a touch-emulating browser — v
    the removed lines against the added lines character by character —
    and keep tsc between every edit batch so the blast radius is one
    batch, not the whole cycle.
+
+
+## Session 166 (Batch DP — the notes family) — lessons
+
+1. **Measure the reference BEFORE adjudicating a superset surface —
+   the "quirk" may be a deliberate super set and the fix direction
+   depends on which side owns the behavior.** The notes search
+   matched the raw HTML source while its own preview rendered the
+   stripped text — the obvious read was "parity divergence to fix."
+   The residue-zero reference probe (a probe note created via the
+   reference's own API, searched, deleted — the account had ZERO
+   notes, so the semantics were measurable no other way) returned
+   the opposite: the reference's search is TITLE-ONLY (content words
+   never matched; "p" matched only through the title). The clone's
+   title+content search is a SUPERSET to keep — and DP3 therefore
+   fixed the superset's INTERNAL consistency (match what the preview
+   shows) instead of converging to the reference. Lesson: when a
+   clone feature diverges from the reference, first determine WHICH
+   side owns the divergence — a superset's bugs get fixed as
+   superset-consistency, never as convergence, and the probe that
+   answers it must clean up after itself on the reference too.
+
+2. **A view-level behavior with no unit seam still gets a REAL red —
+   pin it through the API door instead of skipping the proof.** The
+   DP3 search fix lives in a useMemo with no extractable seam, and
+   the seeded notes are PLAIN TEXT (the quirk is unreachable on
+   them), so a unit RED was impossible and a seeded-surface e2e RED
+   would have been vacuous. The honest shape: plant the
+   discriminating fixture through the real API inside the e2e leg
+   (`page.request.post` with a <strong>-formatted body — the CO1
+   allowlist admits it), assert the tag-name query NEVER matches
+   (RED pre-fix: it matched), and delete the row in the finally
+   (zero residue). Lesson: "no seam" means "find the next door," not
+   "write a green-on-arrival test and call it TDD" — the API door
+   deterministically reaches states the seed cannot, and the
+   planted-then-deleted row keeps the shared demo user clean.

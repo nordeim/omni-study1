@@ -821,3 +821,118 @@ describe("S165/DN1: the timetable mutation CB8 split (B-H1 — committed write +
     await expect(mutations.createTimetableClass(classInput as never)).rejects.toThrow("offline");
   });
 });
+
+// S166/DP1 (the s166 audit B/H-1): the notes family mutation CB8 split —
+// the DK1/DL1/DM1/DN1 pair set ported to the FIFTH family of the recorded
+// family-wide port ("the family-wide CB8 port's REMAINING families
+// (notes/flashcards/tasks …) — each family gets its own rotation-axis
+// audit + pin set; the events/exams/assignments/timetable pin sets are
+// the templates"). The pre-DP1 notes-family mutations were `await
+// apiSend(...)` then an UNCAUGHT `await fetchAndSet(...)` (data.ts:727-787
+// — seven mutations: the notebooks trio, the notes trio, and the
+// setNoteTags chain's refresh leg), and fetchAndSet REJECTS when its GET
+// fails (the CD2 20 s deadline): a write that COMMITTED server-side
+// followed by a flaky refresh rejected the WHOLE mutation — every failure
+// surface in the view then LIED on a committed row (the submit catch
+// showed "Something went wrong." in the still-open dialog with the form
+// armed — the RETRY re-POSTed and duplicated the note/notebook, the CB8
+// letter; the autosave/tag/delete surfaces claimed failures on saved
+// rows). The fix contains the refresh rejection AT THE SEAM (the
+// DK1/DL1/DM1/DN1 .catch doctrine, ported verbatim — the deleteNotebook
+// double refresh catches BOTH legs; the setNoteTags chain's refresh is
+// caught while its `await chained` still surfaces the WRITE leg's
+// rejection to the caller): the stale slice self-heals on the next load
+// (the S16 view-switch pre-warm + the next mutation's own refresh — the
+// DJ5 doctrine). These legs pin the behavioral contract with the CZ1 mock
+// shape: apiSend resolves (the committed write) + apiGet rejects (the
+// flaky refresh) → the mutation RESOLVES; and apiSend itself rejecting
+// still rejects (the honest save-failure contract the view's catches
+// depend on).
+describe("S166/DP1: the notes family mutation CB8 split (B-H1 — committed write + failed refresh)", () => {
+  const noteInput = {
+    title: "DP1 probe",
+    content: "",
+    tags: "[]",
+    notebookId: "",
+    subjectId: "",
+  } as const;
+  const notebookInput = { name: "DP1 notebook probe" } as const;
+
+  beforeEach(() => {
+    apiGetMock.mockReset();
+    apiSendMock.mockReset();
+    apiGetMock.mockResolvedValue([]);
+    apiSendMock.mockResolvedValue(undefined);
+    useDataStore.setState({
+      notebooks: [],
+      notes: [
+        {
+          id: "n1",
+          userId: "u1",
+          title: "Chain base",
+          content: "",
+          tags: "[]",
+          notebookId: null,
+          subjectId: null,
+          createdAt: "2026-01-01T00:00:00.000Z",
+          updatedAt: "2026-01-01T00:00:00.000Z",
+        },
+      ],
+    });
+  });
+
+  it("createNotebook: a committed write + a failed refresh RESOLVES (never the false save-failure)", async () => {
+    apiSendMock.mockResolvedValueOnce(undefined); // the POST 201s
+    apiGetMock.mockRejectedValueOnce(new Error("offline")); // the refresh GET fails
+    // RED pre-fix: the mutation rejected with "offline" — the caller's
+    // catch claimed a save failure on a row the server committed.
+    await expect(mutations.createNotebook(notebookInput as never)).resolves.toBeUndefined();
+  });
+
+  it("updateNotebook: a committed write + a failed refresh RESOLVES", async () => {
+    apiSendMock.mockResolvedValueOnce(undefined);
+    apiGetMock.mockRejectedValueOnce(new Error("offline"));
+    await expect(mutations.updateNotebook("nb1", { name: "Renamed" })).resolves.toBeUndefined();
+  });
+
+  it("deleteNotebook: a committed write + a failed DOUBLE refresh RESOLVES (both legs caught)", async () => {
+    apiSendMock.mockResolvedValueOnce(undefined);
+    // The delete refreshes TWO collections (notebooks + notes); either
+    // GET failing must not reject the committed delete.
+    apiGetMock.mockRejectedValueOnce(new Error("offline"));
+    await expect(mutations.deleteNotebook("nb1")).resolves.toBeUndefined();
+  });
+
+  it("createNote: a committed write + a failed refresh RESOLVES", async () => {
+    apiSendMock.mockResolvedValueOnce({ id: "created-1" }); // the POST 201s, the row returns
+    apiGetMock.mockRejectedValueOnce(new Error("offline"));
+    await expect(mutations.createNote(noteInput as never)).resolves.toBe("created-1");
+  });
+
+  it("updateNote: a committed write + a failed refresh RESOLVES", async () => {
+    apiSendMock.mockResolvedValueOnce(undefined);
+    apiGetMock.mockRejectedValueOnce(new Error("offline"));
+    await expect(mutations.updateNote("n1", { title: "Renamed" })).resolves.toBeUndefined();
+  });
+
+  it("deleteNote: a committed write + a failed refresh RESOLVES", async () => {
+    apiSendMock.mockResolvedValueOnce(undefined);
+    apiGetMock.mockRejectedValueOnce(new Error("offline"));
+    await expect(mutations.deleteNote("n1")).resolves.toBeUndefined();
+  });
+
+  it("setNoteTags: a committed tags PATCH + a failed refresh RESOLVES (the chain's write leg still rejects honestly)", async () => {
+    apiSendMock.mockResolvedValueOnce(undefined); // the tags PATCH 200s
+    apiGetMock.mockRejectedValueOnce(new Error("offline")); // the chain's refresh GET fails
+    // RED pre-fix: `await chained` surfaced the refresh rejection — the
+    // view's mutateTags catch toasted "Tag not saved" on a SAVED patch.
+    await expect(mutations.setNoteTags("n1", (tags) => [...tags, "probe"])).resolves.toBeUndefined();
+  });
+
+  it("createNote: a FAILED write still rejects (the honest save-failure reaches the caller)", async () => {
+    apiSendMock.mockRejectedValueOnce(new Error("offline"));
+    // The write leg keeps rejecting — the view's dialog stays open with
+    // the honest error, and the retry is legitimate (nothing committed).
+    await expect(mutations.createNote(noteInput as never)).rejects.toThrow("offline");
+  });
+});

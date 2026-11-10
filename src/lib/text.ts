@@ -42,16 +42,30 @@ function decodeEntity(match: string): string {
 }
 
 /**
+ * Reduce an HTML string (note content) to its full rendered text:
+ * tags stripped, block boundaries joined with a space, whitespace
+ * collapsed, entities decoded (named + numeric) — NO length cap.
+ * S166/DP3: the search's content leg matches THIS form (what the row
+ * preview SHOWS is what the query matches — the raw-HTML search
+ * false-matched tag names like "strong" and the single letter "p"
+ * inside every Quill <p> wrapper). Plain-text content (legacy notes)
+ * passes through unchanged.
+ */
+export function htmlToText(html: string): string {
+  const withoutTags = html
+    .replace(/<[^>]+>/g, " ")
+    .replace(NAMED_ENTITY, decodeEntity);
+  return withoutTags.replace(/\s+/g, " ").trim();
+}
+
+/**
  * Reduce an HTML string (note content) to a readable single-line preview:
  * tags stripped, block boundaries joined with a space, whitespace collapsed,
  * entities decoded (named + numeric), length capped by CODE POINT with an
  * ellipsis. Plain-text content (legacy notes) passes through unchanged.
  */
 export function stripHtmlPreview(html: string, max = 60): string {
-  const withoutTags = html
-    .replace(/<[^>]+>/g, " ")
-    .replace(NAMED_ENTITY, decodeEntity);
-  const collapsed = withoutTags.replace(/\s+/g, " ").trim();
+  const collapsed = htmlToText(html);
   // Code-point-aware cap: slice on Array.from so a surrogate pair at the
   // boundary is either kept whole or dropped whole — never split.
   const chars = Array.from(collapsed);

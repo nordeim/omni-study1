@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { stripHtmlPreview } from "@/lib/text";
+import { htmlToText, stripHtmlPreview } from "@/lib/text";
 
 // S77/AD7 (measured on the reference): the note list row renders a plain-
 // text preview of the note's HTML content — tags stripped, whitespace
@@ -125,5 +125,38 @@ describe("stripHtmlPreview — the discriminating surrogate cap (S79/AF4)", () =
     // a real-but-unlisted named entity (&copy;) passes through literally.
     // Pinned so the deviation is a CONTRACT, not an accident.
     expect(stripHtmlPreview("<p>&copy; 2026</p>")).toBe("&copy; 2026");
+  });
+});
+
+// S166/DP3 (the s166 audit B/L-2): the notes search's content leg matches
+// htmlToText — the full rendered-text reduction with NO cap (the search
+// must cover the whole body, not the 60-char preview window), while
+// stripHtmlPreview stays the capped render form (the preview seam above;
+// its delegation to htmlToText is behavior-preserving by construction —
+// these pins plus the fourteen preview pins above are the machine guard).
+describe("htmlToText — the search's rendered-text seam (S166/DP3)", () => {
+  it("reduces a Quill-shaped body to its rendered text (tags stripped, entities decoded)", () => {
+    expect(htmlToText("<p>xylophone <strong>quartz</strong> bridge</p>")).toBe(
+      "xylophone quartz bridge",
+    );
+    // The tag-name false-match class the raw-source search had: "strong"
+    // is NOT in the rendered text even though it is in the source.
+    expect(htmlToText("<p>a <strong>b</strong> c</p>")).not.toContain("strong");
+    expect(htmlToText("<p>a &amp; b</p>")).toBe("a & b");
+  });
+
+  it("returns the FULL text with no cap — the search covers the whole body", () => {
+    const words = Array.from({ length: 80 }, (_, i) => `w${i}`);
+    const body = `<p>${words.join(" ")}</p>`;
+    const out = htmlToText(body);
+    // The 60-char preview would have capped long ago; the search form
+    // must return every word (the last word proves the uncapped tail).
+    expect(out).toContain("w79");
+    expect(out.endsWith("w79")).toBe(true);
+    expect(out).not.toContain("…");
+    // And the capped twin still caps (the delegation is the ONLY
+    // difference between the two exports).
+    expect(stripHtmlPreview(body)).not.toBe(out);
+    expect(stripHtmlPreview(body).endsWith("…")).toBe(true);
   });
 });

@@ -1,4 +1,4 @@
-# StudyFlow (Omni-Study) — Master Project Architecture Document (PAD) v1.3.73
+# StudyFlow (Omni-Study) — Master Project Architecture Document (PAD) v1.3.74
 
 **Classification:** Internal Engineering Reference
 **Status:** DEFINITIVE, PRODUCTION-LOCKED BLUEPRINT
@@ -8,6 +8,11 @@
 **Rule:** Every architectural decision in this document traces to a specific rationale. Nothing is here "because it's popular."
 
 ---
+
+#### Revision Block — v1.3.74 (Session-166 / Batch DP, Cycle 116)
+
+- `[SR]` Current test census anchor (the v1.2.0 convention, re-anchored): **1679/1679 Vitest unit** (51 files — the S166 additions: data-store +8 [the S166/DP1 notes-family mutation CB8 split — a committed write + a failed refresh RESOLVES for the notebooks trio + the notes trio + the setNoteTags chain, RED pre-fix on the seven resolve legs, + the failed-write-still-rejects guard, the DK1/DL1/DM1/DN1 pair-set template ported to the FIFTH family of the recorded family-wide port; the deleteNotebook double refresh catches BOTH legs; the chain's write leg still rejects through `await chained`]; text +2 [the S166/DP3 htmlToText seam pins — the search's rendered-text form, tags stripped + entities decoded + NO cap, the capped stripHtmlPreview delegating unchanged]). The e2e census moves **627 → 629** (the 5-chunk cold map 155+196+94+95+89 — chunk 2 +2 [the S166/DP1 notes CB8 leg in parity-session9: the POST continues, the refresh GET aborts, a committed create answers the CLOSED dialog, never the false "Something went wrong." that armed the duplicate-creating retry + the S166/DP3 notes-search rendered-text leg in parity-session7: a tag-name query ("strong") never matches a formatted note, the visible word always does — the API-planted probe note, zero residue]) — census 2308 green.
+- `[AR]` The notes family (§ the views catalog): the SEVEN mutations' post-write refresh is now a CONTAINED failure domain (the CB8 doctrine — the fifth family ported after events/exams/assignments/timetable; the setNoteTags chain's refresh caught while its write leg still surfaces the honest rejection to the caller); both loading gates carry `role="status"` with differentiated labels ("Loading notes" list pane / "Loading note editor" main pane — the calendar two-gate precedent, both gates simultaneously renderable during the initial in-flight window); the notes search's content leg matches the RENDERED text (`htmlToText` — the preview contract: what the row shows is what the query matches; the reference's own search measured TITLE-ONLY this cycle via the residue-zero probe, so the clone's title+content form is the kept SUPERSET with its internal consistency fixed — plain-text notes pass through byte-identically, zero parity risk).
 
 #### Revision Block — v1.3.73 (Session-165 / Batch DN, Cycle 115)
 

@@ -4,9 +4,17 @@
 # SIGKILL escalation → rm db/e2e.db → run the chunk), one chunk per
 # invocation so each foreground run fits the tool timeout.
 # Usage: bash /home/z/my-project/omni-study1/scripts/run-cert-chunk.sh <1-5>
-# Expected (S165/DN re-tag): 155 + 194 + 94 + 95 + 89 = 627 — the same
+# Expected (S166/DP re-tag): 155 + 196 + 94 + 95 + 89 = 629 — the same
 # census as scripts/e2e-chunked-cert.sh (machine-enforced by
 # tests/script-conventions.test.ts, including the identical-CHUNKS pin).
+# (S166/DP net +2: chunk 2 +2 [the S166/DP1 notes-family CB8
+# failure-domain split pin in parity-session9 — the POST continues, the
+# refresh GET aborts: a committed create answers the CLOSED dialog, never
+# the false "Something went wrong." (the DK1/DL1/DM1/DN1 ports to the
+# FIFTH family) + the S166/DP3 notes-search rendered-text pin in
+# parity-session7 — a tag-name query never matches a formatted note, the
+# visible word always does]. The full DP map:
+# docs/remediation-plan-session166.md.)
 # (S165/DN net +1: chunk 2 +1 [the S165/DN1 timetable CB8
 # failure-domain split pin in parity-session9 — the POST continues, the
 # refresh GET aborts: a committed create answers the success toast + the

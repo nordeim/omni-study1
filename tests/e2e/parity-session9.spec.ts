@@ -832,6 +832,69 @@ test.describe("S165/DN1 · the timetable save succeeds through a failed refresh 
   });
 });
 
+// S166/DP1 — the notes family CB8 failure-domain split (the s166 audit
+// B/H-1): the write and the post-write refresh are SEPARATE failure
+// domains (the DK1/DL1/DM1/DN1 doctrine ported to the FIFTH family of
+// the recorded family-wide port — the notebooks trio, the notes trio,
+// and the setNoteTags chain all rode the uncaught refresh). Pre-DP1 the
+// create mutation was `await apiSend(POST)` then `await
+// fetchAndSet("notes")`, and the flaky refresh rejected the WHOLE
+// mutation — the dialog stayed open with "Something went wrong." on a
+// row the server COMMITTED (and the armed retry re-POSTed → the
+// duplicate-creating loop). The pin drives the real condition: the
+// collection GET (the refresh) ABORTS, the POST (the write) CONTINUES —
+// a committed create answers the CLOSED dialog, never the false
+// save-failure. RED pre-fix: the dialog stayed open with the alert.
+// The notes create carries NO success toast by design (the S125/BZ14
+// create-only dialog selects the new note and closes) — the
+// closed-dialog + never-the-alert pair IS the success marker.
+// Route-glob note (the S164/DM4 lesson, re-derived): the pattern
+// `**/api/notes` ends at the COLLECTION URL — per-id PATCH/DELETE URLs
+// do not match (Playwright's full-URL glob), so the interception is
+// collection-only by construction and the finally DELETE (the
+// zero-residue cleanup) passes through unrouted.
+test.describe("S166/DP1 · the notes save succeeds through a failed refresh (CB8 split)", () => {
+  test("a committed create + an aborted refresh answers the closed dialog, never the false save-failure", async ({ page }) => {
+    await page.goto("/Notes");
+    await hydrated(page);
+    // The settled proof: a seeded row renders (the slice has loaded
+    // before the interception installs).
+    await expect(page.getByRole("button", { name: /Dot product intuition/ }).first()).toBeVisible();
+    // Abort the collection GET (the refresh leg) — the POST (the write
+    // leg) continues through the same URL, discriminated by method.
+    await page.route("**/api/notes", (route) => {
+      if (route.request().method() === "GET") route.abort("failed");
+      else route.continue();
+    });
+    let createdId: string | null = null;
+    try {
+      await page.getByRole("button", { name: "New note menu" }).click();
+      await page.getByRole("menuitem", { name: "New Note", exact: true }).click();
+      const dlg = page.getByRole("dialog");
+      await expect(dlg).toBeVisible();
+      await dlg.getByLabel("Name").fill("S166-DP1 committed-write probe");
+      const saved = page.waitForResponse(
+        (r) => r.request().method() === "POST" && r.url().includes("/api/notes"),
+      );
+      await dlg.getByRole("button", { name: "Save", exact: true }).click();
+      const res = await saved;
+      // The write itself COMMITTED server-side.
+      expect(res.ok()).toBe(true);
+      createdId = ((await res.json()) as { id: string }).id;
+      // The dialog CLOSES — the mutation resolved, the form is not
+      // armed for the duplicate-creating retry.
+      await expect(dlg).toHaveCount(0);
+      // The FALSE save-failure never renders (the contained refresh
+      // rejection must not claim a save failure on the committed row).
+      await expect(page.getByText("Something went wrong.")).toHaveCount(0);
+    } finally {
+      await page.unroute("**/api/notes");
+      // Zero residue on the shared demo user (the CC4/AR3 convention).
+      if (createdId) await page.request.delete(`/api/notes/${createdId}`);
+    }
+  });
+});
+
 // S140/CO1 — the legacy-row RENDER gate (A-L3 closed): the global setup
 // plants one PRE-FIX hostile note on the demo user (scripts/e2e-
 // plant-legacy-note.ts — a remote tracking pixel + iframe + handler bait,
