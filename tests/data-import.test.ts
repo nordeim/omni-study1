@@ -1129,6 +1129,7 @@ describe("S130/CE7 · the import length caps", () => {
       "notes.title",
       "practiceTests.questions",
       "practiceTests.title",
+      "studyGroups.description",
       "studyGroups.name",
       "subjects.name",
       "taskLists.name",
@@ -1202,6 +1203,32 @@ describe("S133/CH1 · the registry keys ride the manifest collection names", () 
       offenders,
       `registry keys whose collection prefix is not a manifest collection (the CH1 class — the key can never match at the call site): ${offenders.join(", ")}`,
     ).toEqual([]);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// S171/DU2b — the studygroups description import cap (the CH1 idiom on the
+// new family field): the reference's StudyGroup model carries a description
+// (measured live at the s171 gated write-path probe — the create dialog's
+// "What's this group about?" textarea + the POST round-trip), and the clone
+// ports it bounded at 500 (the bounded-everything posture; the deck
+// family's 1_000-char description is the precedent). The registry key rides
+// the MANIFEST collection name ("studyGroups"), and the parity-contract
+// census above maps it to its validation.ts source atom.
+// ---------------------------------------------------------------------------
+describe("S171/DU2b · the studygroups description import cap", () => {
+  it("the cap is keyed by the manifest name and set to the schema's 500", async () => {
+    const { IMPORT_FIELD_LENGTHS } = await import("../src/lib/data-import");
+    expect(IMPORT_FIELD_LENGTHS["studyGroups.description"]).toBe(500);
+  });
+
+  it("a description beyond the 500-char atom is rejected; at the atom it passes", () => {
+    expect(() =>
+      sanitizeImportRow("studyGroups", { id: "sg1", description: "d".repeat(501) }, 0),
+    ).toThrow(ImportRowError);
+    expect(() =>
+      sanitizeImportRow("studyGroups", { id: "sg1", description: "d".repeat(500) }, 0),
+    ).not.toThrow();
   });
 });
 
@@ -2037,6 +2064,7 @@ describe("S159/DH2 · the length-cap VALUE parity census (the mirror made self-g
     "practiceTests.title": ["practiceTestSchema", "title"],
     "practiceTests.questions": ["practiceTestSchema", "questions"],
     "studyGroups.name": ["studyGroupSchema", "name"],
+    "studyGroups.description": ["studyGroupSchema", "description"],
     "grades.title": ["gradeSchema", "title"],
     "holidays.name": ["holidaySchema", "name"],
     "calcHistory.expression": ["calculatorHistorySchema", "expression"],

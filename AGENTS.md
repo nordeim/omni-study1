@@ -9,9 +9,9 @@ High-signal instructions for coding agents working in this repo. Everything here
 | `bun install` | Install deps (Bun ≥ 1.3) |
 | `bun run dev` | Dev server on :3000 (Turbopack), logs tee'd to `dev.log` |
 | `bun run lint` / `bun run typecheck` | ESLint / `tsc --noEmit` — both must be clean |
-| `bun run test` | Vitest unit layer (1701 tests; `*.test.ts` only — never picks up e2e specs) |
+| `bun run test` | Vitest unit layer (1709 tests; `*.test.ts` only — never picks up e2e specs) |
 | `bun run build` | Production build → `.next/standalone` (**required before e2e**) |
-| `bun run test:e2e` | Playwright vs the standalone build on :3100 with `db/e2e.db` (634 tests across the 5-chunk cold map — 158+197+95+95+89, 30 spec files; a single-process full run trips the register rate-limiter budget by design, the chunked map re-boots the server per chunk). NOTE (S45, the day-boundary lesson): the global setup re-seeds every run, but the seed's IDEMPOTENT UPSERTS do NOT refresh day-relative dates on existing rows — a scratch `db/e2e.db` that ages across a UTC midnight keeps its original day-relative dates (today's tasks, the +1-day exam badge, the due-in pills, the import round-trip dates each read one day stale → 4 deterministic failures in parity-session6/parity-session9/s23-import). Delete `db/e2e.db` when a run crosses a day boundary — the global setup re-creates it fresh with current dates. NOTE (S46, TWO more aged-scratch-db classes + a build-input one): (1) ALWAYS run e2e COLD — S131/CF5 chained `scripts/e2e-cold-reset.sh` into `bun run test:e2e` (port-guard + `rm -f db/e2e.db` BEFORE playwright boots anything — global-setup is TOO LATE: Playwright starts the webServer before globalSetup), so the default runner self-colds; any DIRECT `playwright test` invocation still needs the manual `rm -f db/e2e.db` before every full run: the s23-import round-trip posts a FIXED-id envelope, so a second consecutive run against the aged db reads `created: 0, updated: 1` instead of `created: 1, updated: 0` and fails — not just across midnights, across ANY re-run; (2) the s22 negative-spawn spec reads the BUNDLED `.env` — Next's standalone output COPIES the repo-root `.env` into `.next/standalone/.env` at build time, so a REAL AUTH_SECRET in the dev `.env` leaks into the bundle and the guard CORRECTLY boots (the spec times out waiting for the exit) — keep the repo-root `.env`'s AUTH_SECRET EMPTY (the `.env.example` dev posture: `AUTH_SECRET=""` — dev falls back to the local constant with the boot warning) when building for e2e |
+| `bun run test:e2e` | Playwright vs the standalone build on :3100 with `db/e2e.db` (637 tests across the 5-chunk cold map — 158+199+96+95+89, 30 spec files; a single-process full run trips the register rate-limiter budget by design, the chunked map re-boots the server per chunk). NOTE (S45, the day-boundary lesson): the global setup re-seeds every run, but the seed's IDEMPOTENT UPSERTS do NOT refresh day-relative dates on existing rows — a scratch `db/e2e.db` that ages across a UTC midnight keeps its original day-relative dates (today's tasks, the +1-day exam badge, the due-in pills, the import round-trip dates each read one day stale → 4 deterministic failures in parity-session6/parity-session9/s23-import). Delete `db/e2e.db` when a run crosses a day boundary — the global setup re-creates it fresh with current dates. NOTE (S46, TWO more aged-scratch-db classes + a build-input one): (1) ALWAYS run e2e COLD — S131/CF5 chained `scripts/e2e-cold-reset.sh` into `bun run test:e2e` (port-guard + `rm -f db/e2e.db` BEFORE playwright boots anything — global-setup is TOO LATE: Playwright starts the webServer before globalSetup), so the default runner self-colds; any DIRECT `playwright test` invocation still needs the manual `rm -f db/e2e.db` before every full run: the s23-import round-trip posts a FIXED-id envelope, so a second consecutive run against the aged db reads `created: 0, updated: 1` instead of `created: 1, updated: 0` and fails — not just across midnights, across ANY re-run; (2) the s22 negative-spawn spec reads the BUNDLED `.env` — Next's standalone output COPIES the repo-root `.env` into `.next/standalone/.env` at build time, so a REAL AUTH_SECRET in the dev `.env` leaks into the bundle and the guard CORRECTLY boots (the spec times out waiting for the exit) — keep the repo-root `.env`'s AUTH_SECRET EMPTY (the `.env.example` dev posture: `AUTH_SECRET=""` — dev falls back to the local constant with the boot warning) when building for e2e |
 | `node scripts/capture-studyflow.mjs` | Refresh all 31 `docs/screenshots/` captures from the dev server (24 light + 7 dark) |
 | `node scripts/dark-sweep.mjs` | Dark-mode contrast audit over all 20 views (flashbulb/unreadable detector). S27: sets dark mode through the settings API (the real lifecycle) and SELF-VERIFIES the precondition — fails loudly (exit 1, no findings) if the dark class is not applied; the applied mode rides the JSON envelope. Never force the class directly (the session-10 approach silently rotted after S11) |
 | `node scripts/accent-dark-sweep.mjs` | Accent × dark-mode audit (S38-extended): all 7 accents × 20 desktop views × 20 MOBILE views at 390×844 + the drawer per accent (FAIL <2.2, WARN <3.2 for accent text; the mobile records also carry scrollWidth — >390 is a finding). The S38 shape is unit-pinned anti-phantom: every view recorded EXPLICITLY on both surfaces (clean views carry empty detector arrays), the per-accent `applied` self-verified readings + `mode: "dark"` + `mobileViewport` ride the envelope, and the seam's ALL-ACCENTS + ALL-VIEWS + drawer-present guards make every silently-skipped dimension a LOUD shape-error (the pre-S38 mobile pass swept only 6 views — MOBILE_VIEWS — and the omission-means-clean recording could not distinguish "clean because measured" from "clean because never rendered") |
@@ -3236,3 +3236,45 @@ Hover-parity probing must run in Playwright, not a touch-emulating browser — v
    backdrops to shadows. Lesson: never write a computed-style
    assertion on an alpha-modified color token's SERIALIZATION; assert
    the geometry and the alpha, and let the color ride either form.
+
+## Session 171 (Batch DU — the study groups family + the dialog catch-up) — lessons
+
+1. **A rotation LEDGER can go stale — verify the "next axis" at the
+   source before planning the cycle.** The S170 close's ledger named
+   "deck" as the next CB8 seam, but the deck family has carried the DQ1
+   catches + pair set since S167 (commit 8d25d9a — the sixth family);
+   the true next seam was studyGroups. The s171 audit caught it by
+   reading data.ts directly before writing the plan. Lesson: a
+   hand-maintained "remaining work" list is a hypothesis, not a
+   contract — the codebase is the ledger of record, and each cycle's
+   audit should re-derive the remaining-seams list from the source (the
+   corrected order: practiceTest / grades / focusSessions / holidays,
+   plus the createCalculatorEntry create-only mutation no ledger ever
+   named).
+
+2. **A scaffold-era dialog copy is an UNMEASURED surface — re-probe the
+   family's reference surfaces when the cycle lands on them, and pin
+   what changed.** The clone's studygroups dialog copy ("New Study
+   Group" / "e.g. Calculus cram crew") dated from the initial 7b1e78d
+   implementation and was never re-measured; the live reference's
+   dialog (probed through the gated write-path pattern) reads "Create
+   Study Group" / "e.g., Math Study Squad" + a description textarea
+   the clone lacked entirely. The reference DRIFTS on dialogs the same
+   way it drifts on chrome (the S170 lesson) — and a superset goal
+   cuts both ways: the clone must adopt the reference's real fields
+   (the description port), not just keep its own extras. Lesson: when
+   a rotation axis names a family, re-measure that family's reference
+   SURFACES (dialog copy, field set, footer order), not just the
+   mutation seam — and gate the write-path probe (one throwaway row →
+   capture → DELETE → zero-residue verify) keeps the reference clean.
+
+3. **A locator that must match pre-fix AND post-fix copy rides the
+   case-insensitive default.** The DU1 e2e leg submits through
+   `getByRole("button", { name: "Create Group" })` — Playwright's
+   name matching is case-insensitive substring, so the SAME locator
+   matched the pre-fix "Create group" and the post-fix "Create Group":
+   the RED proof landed on the CB8 BEHAVIOR (the false save-failure),
+   not on a copy mismatch owned by a different fix. Lesson: when two
+   fixes land in one cycle and one owns behavior and the other owns
+   copy, write the behavior pin's locators against the copy-agnostic
+   form so each RED proof fails at its own marker.

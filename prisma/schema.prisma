@@ -400,6 +400,11 @@ model StudyGroup {
   id        String   @id @default(cuid())
   userId    String
   name      String
+  // S171/DU2b: the reference's own field (measured live at the s171
+  // gated write-path probe — the create dialog's "What's this group
+  // about?" textarea + the POST round-trip). Default-empty like the deck
+  // family's description (the in-repo precedent).
+  description String @default("")
   color     String   @default("#8b5cf6")
   subjectId String?
   // JSON string of [{name,email}] — validated as an array at the boundary,

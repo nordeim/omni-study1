@@ -234,6 +234,11 @@ async function main(): Promise<void> {
     data: {
       userId: user.id,
       name: "Calc Crew",
+      // S171/DU2b: the seeded description renders the ported field
+      // populated on fresh databases (the idempotent seed's existing-row
+      // upserts do not refresh it — the documented S45-class posture,
+      // acceptable for a display-only enrichment).
+      description: "We drill problem sets together before every midterm.",
       subjectId: math.id,
       members: JSON.stringify([
         { name: "Ari", email: "ari@example.com" },

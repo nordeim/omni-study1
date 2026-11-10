@@ -1,8 +1,38 @@
 import { defineConfig } from "vitest/config";
 import path from "node:path";
 
-// Unit-test layer for the pure domain seams — 51 files / 1701 tests
-// (re-anchored S170/DT — the task-lists-family hardening cycle: census
+// Unit-test layer for the pure domain seams — 51 files / 1709 tests
+// (re-anchored S171/DU — the studygroups-family hardening cycle: census
+// 1701 → 1709, +8 net [data-store +6: the S171/DU1 studygroups-family
+// mutation CB8 split — a committed write + a failed refresh RESOLVES
+// for the create/update/delete trio + the setStudyGroupMembers chain
+// entry (RED pre-fix ×4: the mutations rejected on the refresh leg —
+// the false save-failure that armed the duplicate-creating retry, the
+// DK1/DL1/DM1/DN1/DP1/DQ1/DR1/DS1/DT1 events/exams/assignments/
+// timetable/notes/flashcards/tasks/subjects/task-lists ports to the
+// TENTH family of the recorded family-wide port, the third of the
+// eight remaining seams once the S170 close's stale "deck" ledger
+// entry is corrected — the decks have carried the DQ1 catches since
+// S167; unlike the task-lists axis this family's mutations ALL have
+// live view consumers, so the pair set pins resolve through the
+// members CHAIN too) + the two failed-write-still-rejects guards
+// (the plain mutation AND the chain entry). data-import +2: the
+// S171/DU2b studygroups description import cap — the registry key +
+// the beyond-the-500-atom rejection leg (the ported field, the
+// deck-description precedent)]. The e2e census moves 634 → 637 [+3:
+// the S171/DU1 studygroups CB8 leg in resilience (the POST continues,
+// the collection GET aborts, a committed create answers the "Study
+// group created" success toast + the CLOSED dialog, never the false
+// "Could not save the study group.") + the two S171/DU2 parity legs
+// in parity-session7 (the reference's post-scaffold dialog
+// re-deployment measured live at the s171 gated write-path probe:
+// the title "Create Study Group" + the name placeholder "e.g., Math
+// Study Squad" + the description textarea "What's this group
+// about?" + the footer's measured [Create Group][Close] order; + the
+// description round-trip — a create through the dialog lands the
+// description in the detail pane)].)
+//
+// (prior re-anchor, S170/DT — the task-lists-family hardening cycle: census
 // 1697 → 1701, +4 net [data-store +4: the S170/DT1 task-lists-family
 // mutation CB8 split — a committed write + a failed refresh RESOLVES
 // for the create/update/delete trio (RED pre-fix ×3: the mutations

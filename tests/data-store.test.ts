@@ -343,6 +343,7 @@ describe("S149/CX2: the study-group members chain (B-M2 — add/remove interleav
     id: "g1",
     userId: "u1",
     name: "Chain pin",
+    description: "", // S171/DU2b: the row type's new field
     color: "#7c3aed",
     subjectId: null,
     members: [{ name: "Ari", email: "ari@example.com" }],
@@ -1225,5 +1226,123 @@ describe("S170/DT1: the task lists family mutation CB8 split (B-H1 — committed
     // The write leg keeps rejecting — the honest failure reaches the
     // caller, and the retry is legitimate (nothing committed).
     await expect(mutations.createTaskList(taskListInput as never)).rejects.toThrow("offline");
+  });
+});
+
+// S171/DU1 — the studygroups family mutation CB8 split (B-H1 — committed
+// write + failed refresh): the write and the post-write refresh are
+// SEPARATE failure domains (the DK1/DL1/DM1/DN1/DP1/DQ1/DR1/DS1/DT1
+// doctrine, the TENTH family of the recorded family-wide port — the
+// third of the eight remaining seams once the S170 close's stale "deck"
+// ledger entry is corrected: the deck family has carried the DQ1 catches
+// + pair set since S167, verified at the source this session). Pre-DU1
+// all FOUR family mutations rode the uncaught refresh —
+// createStudyGroup, updateStudyGroup and deleteStudyGroup the
+// single-collection fetchAndSet("studyGroups"), setStudyGroupMembers the
+// refresh INSIDE the per-group CX2 chain entry (the rejection propagates
+// through `chained` to the caller's `await chained`), so a flaky refresh
+// GET rejected the whole call on a write the server COMMITTED. Unlike
+// the S170 taskLists axis, this family's mutations ALL have live view
+// consumers (the dialog submit catch's "Could not save the study group."
+// with the dialog still open — the retry that duplicates the group; the
+// add/remove member catches' false toasts; the AlertDialogAction delete
+// catch's false claim on a row the server deleted). Pinned here: a
+// committed write + a failed refresh RESOLVES; the failed write still
+// REJECTS (both the plain mutation and the chain entry).
+describe("S171/DU1: the studygroups family mutation CB8 split (B-H1 — committed write + failed refresh)", () => {
+  const groupInput = { name: "DU1 group probe", color: "#8b5cf6" } as const;
+
+  beforeEach(() => {
+    apiGetMock.mockReset();
+    apiSendMock.mockReset();
+    apiGetMock.mockResolvedValue([]);
+    apiSendMock.mockResolvedValue(undefined);
+    useDataStore.setState({ studyGroups: [] });
+  });
+
+  it("createStudyGroup: a committed write + a failed refresh RESOLVES (never the false save-failure)", async () => {
+    apiSendMock.mockResolvedValueOnce(undefined); // the POST 201s
+    apiGetMock.mockRejectedValueOnce(new Error("offline")); // the refresh GET fails
+    // RED pre-fix: the mutation rejected with "offline" — the
+    // StudyGroupDialog's catch toasted "Could not save the study group."
+    // with the dialog still open and the form armed on a row the server
+    // committed (the retry duplicates the group).
+    await expect(mutations.createStudyGroup(groupInput as never)).resolves.toBeUndefined();
+  });
+
+  it("updateStudyGroup: a committed write + a failed refresh RESOLVES", async () => {
+    apiSendMock.mockResolvedValueOnce(undefined);
+    apiGetMock.mockRejectedValueOnce(new Error("offline"));
+    await expect(mutations.updateStudyGroup("sg-du1", { name: "Renamed" })).resolves.toBeUndefined();
+  });
+
+  it("deleteStudyGroup: a committed write + a failed refresh RESOLVES", async () => {
+    apiSendMock.mockResolvedValueOnce(undefined); // the DELETE 200s
+    apiGetMock.mockRejectedValueOnce(new Error("offline")); // the refresh GET fails
+    // RED pre-fix: the AlertDialogAction's catch toasted "Could not
+    // delete the study group." on a row the server already deleted.
+    await expect(mutations.deleteStudyGroup("sg-du1")).resolves.toBeUndefined();
+  });
+
+  it("setStudyGroupMembers: a committed PATCH + a failed refresh RESOLVES (the chain entry's refresh is contained)", async () => {
+    // The chain reads its group from the store — seed the slice (a
+    // UNIQUE id so no cross-test chain-map residue can interleave).
+    useDataStore.setState({
+      studyGroups: [
+        {
+          id: "sg-du1-chain",
+          userId: "u1",
+          name: "DU1 chain probe",
+          description: "",
+          color: "#8b5cf6",
+          subjectId: null,
+          members: [{ name: "Ari", email: "ari@example.com" }],
+          createdAt: "",
+          updatedAt: "",
+        },
+      ],
+    });
+    apiSendMock.mockResolvedValueOnce(undefined); // the members PATCH 200s
+    apiGetMock.mockRejectedValueOnce(new Error("offline")); // the chain entry's refresh GET fails
+    // RED pre-fix: the refresh rejection propagated through `chained` to
+    // the caller — the addMember catch's false "Could not add the
+    // member." toast on a member the server committed.
+    await expect(
+      mutations.setStudyGroupMembers("sg-du1-chain", (members) => [
+        ...members,
+        { name: "Sam", email: "sam@example.com" },
+      ]),
+    ).resolves.toBeUndefined();
+  });
+
+  it("createStudyGroup: a FAILED write still rejects (the honest save-failure reaches the caller)", async () => {
+    apiSendMock.mockRejectedValueOnce(new Error("offline"));
+    // The write leg keeps rejecting — the dialog stays open with the
+    // honest error, and the retry is legitimate (nothing committed).
+    await expect(mutations.createStudyGroup(groupInput as never)).rejects.toThrow("offline");
+  });
+
+  it("setStudyGroupMembers: a FAILED write still rejects (the honest failure reaches the caller, the chain stays unpoisoned)", async () => {
+    useDataStore.setState({
+      studyGroups: [
+        {
+          id: "sg-du1-guard",
+          userId: "u1",
+          name: "DU1 guard probe",
+          description: "",
+          color: "#8b5cf6",
+          subjectId: null,
+          members: [],
+          createdAt: "",
+          updatedAt: "",
+        },
+      ],
+    });
+    apiSendMock.mockRejectedValueOnce(new Error("offline"));
+    // The chain entry's WRITE leg keeps rejecting to the caller — the
+    // addMember catch's honest error (the member did NOT land).
+    await expect(
+      mutations.setStudyGroupMembers("sg-du1-guard", (members) => members),
+    ).rejects.toThrow("offline");
   });
 });

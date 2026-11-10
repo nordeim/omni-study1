@@ -201,7 +201,15 @@ describe("the chunked cert runner's truth contract (S128/CC2)", () => {
     // as computed-style ground truth; the DT1 task-lists CB8 port
     // carries NO e2e leg — the family has no view consumer, the unit
     // pair set pins the contract) — 632 → 634.
-    expect(certSource).toContain("Expected: 158 + 197 + 95 + 95 + 89 = 634");
+    // S171/DU: chunk 2 197 → 199 (the S171/DU2 studygroups dialog
+    // parity pair in parity-session7 — the measured title/placeholders/
+    // footer pin + the description round-trip leg, the ported field);
+    // chunk 3 95 → 96 (the S171/DU1 studygroups-family CB8 pin in
+    // resilience — the committed create + aborted refresh answers the
+    // success toast + the closed dialog; the TENTH family, the
+    // ledger-corrected third of the eight remaining seams) —
+    // 634 → 637.
+    expect(certSource).toContain("Expected: 158 + 199 + 96 + 95 + 89 = 637");
   });
 
   it("propagates a failing chunk's exit code (never a green cert on a red run)", () => {

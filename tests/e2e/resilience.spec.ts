@@ -1827,3 +1827,75 @@ test.describe("S161/DJ5 · the slider rollback resync surfaces no unhandled reje
     }
   });
 });
+
+// ---------------------------------------------------------------------------
+// S171/DU1 — the studygroups family CB8 failure-domain split (the s171
+// audit B/H-1): the write and the post-write refresh are SEPARATE failure
+// domains (the DK1/DL1/DM1/DN1/DP1/DQ1/DR1/DS1/DT1 doctrine ported to the
+// TENTH family of the recorded family-wide port — the third of the eight
+// remaining seams once the S170 close's stale "deck" ledger entry is
+// corrected: the decks have carried the DQ1 catches since S167, verified
+// at the source). Pre-DU1 the create mutation was `await apiSend(POST)`
+// then `await fetchAndSet("studyGroups")`, and the flaky refresh
+// rejected the WHOLE mutation — the StudyGroupDialog's catch toasted
+// "Could not save the study group." with the dialog STILL OPEN and the
+// form armed on a row the server COMMITTED (and the armed retry
+// re-POSTed → the duplicate group). The pin drives the real condition:
+// the collection GET (the refresh) ABORTS, the POST (the write)
+// CONTINUES — a committed create answers the "Study group created"
+// success toast + the CLOSED dialog, never the false save-failure.
+// RED pre-fix: the dialog stays open, the error toast fires, the success
+// toast never lands. The submit locator rides the case-INSENSITIVE
+// "Create Group" match — it matches the pre-fix "Create group" and the
+// post-fix "Create Group" alike, so the RED lands on the CB8 behavior
+// (the DU2 legs in parity-session7 own the copy catch-up).
+// Route-glob note (the S164/DM4 lesson, re-derived): the pattern
+// `**/api/study-groups` ends at the COLLECTION URL — per-id PATCH/DELETE
+// URLs do not match (Playwright's full-URL glob), so the interception is
+// collection-only by construction and the finally DELETE (the
+// zero-residue cleanup) passes through unrouted.
+// ---------------------------------------------------------------------------
+test.describe("S171/DU1 · the studygroups save succeeds through a failed refresh (CB8 split)", () => {
+  test("a committed create + an aborted refresh answers the success toast + closed dialog, never the false save-failure", async ({ page }) => {
+    const stamp = `s171-du1-${Date.now()}`;
+    await page.goto("/StudyGroups");
+    await page.waitForFunction(() => document.documentElement.dataset.appHydrated === "true");
+    // The settled proof: a seeded group row renders (the slice has
+    // loaded before the interception installs — "Calc Crew" is the
+    // first seeded study group).
+    await expect(page.getByText("Calc Crew")).toBeVisible();
+    // Abort the collection GET (the refresh leg) — the POST (the write
+    // leg) continues through the same URL, discriminated by method.
+    await page.route("**/api/study-groups", (route) => {
+      if (route.request().method() === "GET") route.abort("failed");
+      else route.continue();
+    });
+    let createdId: string | null = null;
+    try {
+      await page.getByRole("button", { name: "Create study group" }).click();
+      const dlg = page.getByRole("dialog");
+      await expect(dlg).toBeVisible();
+      await dlg.getByLabel("Name").fill(`S171-DU1 committed-write probe ${stamp}`);
+      const saved = page.waitForResponse(
+        (r) => r.request().method() === "POST" && r.url().includes("/api/study-groups"),
+      );
+      await dlg.getByRole("button", { name: "Create Group" }).click();
+      const res = await saved;
+      // The write itself COMMITTED server-side.
+      expect(res.ok()).toBe(true);
+      createdId = ((await res.json()) as { id: string }).id;
+      // The success toast lands through the aria-live stack…
+      await expect(page.getByText("Study group created")).toBeVisible({ timeout: 10_000 });
+      // …the dialog CLOSES — the mutation resolved, the form is not
+      // armed for the duplicate-creating retry.
+      await expect(dlg).toBeHidden();
+      // The FALSE save-failure never renders (the contained refresh
+      // rejection must not claim a save failure on the committed row).
+      await expect(page.getByText("Could not save the study group.")).toHaveCount(0);
+    } finally {
+      await page.unroute("**/api/study-groups");
+      // Zero residue on the shared demo user (the CC4/AR3 convention).
+      if (createdId) await page.request.delete(`/api/study-groups/${createdId}`);
+    }
+  });
+});

@@ -309,7 +309,27 @@
 # reference's own task dialog carries no list picker), so the unit
 # pair set alone pins the mutation contract]. The full DT map:
 # docs/remediation-plan-session170.md.)
-# Expected: 158 + 197 + 95 + 95 + 89 = 634 (each chunk's count includes its
+# (S171/DU re-tag — census 634 → 637, net +3: chunk 2 +2 [the
+# S171/DU2 studygroups create-dialog parity catch-up pair in
+# parity-session7 — the reference's post-scaffold dialog re-deployment,
+# measured live at the s171 gated write-path probe: the title "Create
+# Study Group" + the name placeholder "e.g., Math Study Squad" + the
+# description textarea "What's this group about?" (the ported field,
+# bounded at 500 — the deck-description precedent) + the footer's
+# measured [Create Group][Close] order; + the description round-trip leg
+# — a create through the dialog lands the description in the detail
+# pane] ; chunk 3 +1 [the S171/DU1 studygroups-family CB8
+# failure-domain split pin in resilience — the POST continues, the
+# refresh GET aborts: a committed create answers the "Study group
+# created" success toast + the CLOSED dialog, never the false "Could
+# not save the study group." that armed the duplicate-creating retry
+# (the DK1/DL1/DM1/DN1/DP1/DQ1/DR1/DS1/DT1 ports to the TENTH family
+# of the recorded family-wide port, the third of the eight remaining
+# seams once the S170 close's stale "deck" ledger entry is corrected —
+# the decks have carried the DQ1 catches since S167); network-mocked,
+# no server writes]. The full DU map:
+# docs/remediation-plan-session171.md.)
+# Expected: 158 + 199 + 96 + 95 + 89 = 637 (each chunk's count includes its
 # auth setup — the current census; the historical re-tag blocks beneath.)
 # (S131/CF re-tag — census 567 → 570, net +3: chunk 1 +1 [the CF9
 # drawer focus-restore leg in mobile-navigation — crossing the lg

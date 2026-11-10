@@ -218,6 +218,9 @@ export type StudyGroupRow = {
   id: string;
   userId: string;
   name: string;
+  // S171/DU2b: the reference's own field, ported bounded (validation.ts
+  // caps it at 500). Default-empty at the column — legacy rows read "".
+  description: string;
   color: string;
   subjectId: string | null;
   // The API boundary ships members as an ARRAY (entities.ts membersFromRow
@@ -939,14 +942,43 @@ export const mutations = {
     await fetchAndSet("practiceTests");
   },
 
-  // ---- study groups ------------------------------------------------------------------
+  // ---- study groups (S171/DU1: the CB8 failure-domain split) ------------------
+  // The write and the post-write refresh are SEPARATE failure domains
+  // (the S127/CB8 doctrine, the DK1 events + DL1 exams + DM1 assignments
+  // + DN1 timetable + DP1 notes + DQ1 flashcards + DR1 tasks + DS1
+  // subjects + DT1 task lists ports — the recorded family-wide port,
+  // this the TENTH family, the third of the eight remaining seams once
+  // the S170 close's stale "deck" ledger entry is corrected: the deck
+  // family has carried the DQ1 catches + pair set since S167, verified
+  // at the source in the s171 audit): a refresh GET that fails after a
+  // COMMITTED write must not reject the mutation — the caller's catch
+  // would claim a save failure on a saved row (the StudyGroupDialog
+  // submit catch's "Could not save the study group." toast with the
+  // dialog still open and the form armed — the retry that DUPLICATES
+  // the group; the AlertDialogAction delete catch's false "Could not
+  // delete the study group." toast after the delete already committed).
+  // setStudyGroupMembers' chain entry rides the same contained catch on
+  // its OWN refresh — the rejection must not propagate through `chained`
+  // to the caller's `await chained` either (the addMember/removeMember
+  // catches' false "Could not add/remove the member." toasts on members
+  // the server committed); the chain entry's WRITE leg keeps rejecting
+  // honestly to the caller. The refresh rejection is contained here; the
+  // stale slices self-heal on the next successful load (the S16
+  // view-switch pre-warm + the next mutation's own refresh — the DJ5
+  // doctrine: the write's own success surfacing is the toast/dialog-
+  // close; a second toast for the same offline window is noise). The
+  // WRITE legs keep rejecting honestly. Pinned by
+  // tests/data-store.test.ts (the DU1 pair set) + the DU1 e2e leg in
+  // tests/e2e/resilience.spec.ts (the create-through-failed-refresh
+  // journey — this family's mutations ALL have live view consumers,
+  // unlike the S170 taskLists axis).
   createStudyGroup: async (input: StudyGroupInput): Promise<void> => {
     await apiSend("POST", PATHS.studyGroups, input);
-    await fetchAndSet("studyGroups");
+    await fetchAndSet("studyGroups").catch(() => undefined);
   },
   updateStudyGroup: async (id: string, patch: Partial<StudyGroupInput>): Promise<void> => {
     await apiSend("PATCH", `${PATHS.studyGroups}/${id}`, patch);
-    await fetchAndSet("studyGroups");
+    await fetchAndSet("studyGroups").catch(() => undefined);
   },
   // S149/CX2 (audit B-M2): the per-group members chain — the S123/BX10 fix
   // moved the members base from the render snapshot to a CALL-TIME store
@@ -971,7 +1003,10 @@ export const mutations = {
       // API boundary; this tolerates any legacy/row shape).
       const members = update(normalizeMembers(group.members));
       await apiSend("PATCH", `${PATHS.studyGroups}/${groupId}`, { members });
-      await fetchAndSet("studyGroups");
+      // S171/DU1: the chain entry's refresh leg — contained (the
+      // committed-PATCH + flaky-refresh call must resolve to the caller;
+      // the failed PATCH above still rejects through `chained`).
+      await fetchAndSet("studyGroups").catch(() => undefined);
     });
     const stored = chained.catch(() => undefined);
     groupMemberChains.set(groupId, stored);
@@ -982,7 +1017,7 @@ export const mutations = {
   },
   deleteStudyGroup: async (id: string): Promise<void> => {
     await apiSend("DELETE", `${PATHS.studyGroups}/${id}`);
-    await fetchAndSet("studyGroups");
+    await fetchAndSet("studyGroups").catch(() => undefined);
   },
 
   // ---- grades -----------------------------------------------------------------------

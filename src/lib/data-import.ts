@@ -751,6 +751,11 @@ export const IMPORT_FIELD_LENGTHS: Record<string, number> = {
   "practiceTests.title": 200,
   "practiceTests.questions": 100_000,
   "studyGroups.name": 200,
+  // S171/DU2b: the ported description field (the reference's own —
+  // measured live at the s171 gated write-path probe), bounded at 500 in
+  // validation.ts's studyGroupSchema (the deck family's 1_000-char
+  // description the precedent family).
+  "studyGroups.description": 500,
   "grades.title": 200,
   // S133/CH2: the four atoms the parity contract was missing.
   "holidays.name": 200,

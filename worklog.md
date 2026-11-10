@@ -7598,3 +7598,110 @@ settings-CRUD (edit/delete journeys + holidays) and
 AlertDialog-confirm e2e gaps; a periodic re-probe of the reference's
 chrome (the live deployment this cycle caught proves the reference
 drifts — the standing probes are the tripwire).
+
+## Session 182 — the S171 cycle (Batch DU: the studygroups-family hardening + the dialog catch-up set)
+
+The workspace was COLD (a fresh `git clone` at `c40ac6c` on `main` —
+the S170/Batch DT fix `b982ea8` pushed + remote-verified, the plan-tick
+`5ecd477`, the operator's session_213 transcript `c40ac6c`). The
+environment rebuilt from the documented quickstart; the doc chain
+re-read and validated against the codebase (the DT1 catches + the
+DT2a/DT2b chrome at their source anchors; the census chain
+machine-consistent at 1701 + 634 = 2335).
+
+Cold baseline: lint ✓ · tsc ✓ · unit **1701/1701** (51 files — the
+documented S170 final state exactly) · preflight GREEN · **the drawer
+check GREEN (the 102nd consecutive** no-Tailwind-v4-mobile-nav-bug
+confirmation) · **the desktop parity probe MATCH** (all four checks).
+The mobile nav ADDITIONALLY re-verified through a fresh agent-browser
+pass at 390×844 (the operator's standing ask): the drawer opens with
+all 20 links, a drawer-link navigation auto-closes, Escape closes (the
+superset), the backdrop click at an exposed point closes, the app-bar
+computes z-40 + border-b + fixed (the DT2b chrome live). The `skills/`
+exclusion posture re-verified on every axis; the `.env` ≡
+`.env.example` contract re-verified at the documented dev posture
+(`DATABASE_URL="file:../db/custom.db"`, the repo-root `db/`).
+
+**The ledger correction (the cycle's first finding, verified at the
+source):** the S170 close's "deck is next" is STALE — the deck family
+has carried the DQ1 catches + pair set since S167 (`8d25d9a`). The
+true remaining seams: studyGroups (this cycle), practiceTests, grades,
+focusSessions, holidays (+ the createCalculatorEntry create-only
+mutation, never ledgered — recorded).
+
+The audits (Mode-C): **A** — the recent-changes axis (docs-only):
+clean. **B** — the studygroups family: **0C/1H/0M/1L/2I** — the FOUR
+mutations (the trio + the members chain entry) rejected on the refresh
+leg after a COMMITTED write, ALL with live view consumers (unlike the
+taskLists axis); the create dialog's copy scaffold-era + the reference
+re-deployed its dialog; the reference's model carries a DESCRIPTION
+field the clone lacked. **C** — the standing gates clean + the
+reference's StudyGroups surface measured live through the GATED
+WRITE-PATH probe (one throwaway row → captured → DELETEd → zero
+residue): the measured dialog (title "Create Study Group", the name
+placeholder "e.g., Math Study Squad", the description textarea
+"What's this group about?", the six swatches — GROUP_COLORS match
+EXACTLY — the footer's [Create Group][Close] DOM order) + **the
+reference's own create→list flow measured BROKEN** (the POST commits,
+the list GET returns `[]` — the clone's working CRUD stays the
+documented superset).
+
+Fixed TDD-first (every RED on its designed marker): **DU1** the
+studygroups-family CB8 split — the four contained catches (the trio +
+the chain entry's own refresh; the failed PATCH still rejects honestly)
++ the unit pair set (RED `4 failed | 2 passed`) + the e2e leg in
+resilience (the case-INSENSITIVE "Create Group" locator kept the RED
+on the CB8 behavior while DU2 owned the copy); **DU2a** the
+create-dialog copy catch-up (the measured title + placeholder + the
+[Create Group][Close] footer order; the edit leg keeps its
+measured-era shape) + the copy pin (RED at the title assertion; the
+form-scoped "Close" locator — the shadcn X's sr-only name collides
+otherwise); **DU2b** the description port (the deck-description
+precedent: the column, the 500-bound schema field, the row type, the
+dialog textarea with the measured placeholder + the visible-Label
+superset, the reference's measured field-order prefix with the
+superset Subject select moved after the swatches, the detail-pane
+render, the seed's Calc Crew enrichment, the import cap + census
+updates) + the round-trip e2e leg + the unit import-cap legs (RED ×2).
+
+**Gates**: lint ✓ · tsc ✓ · unit **1709/1709** (+8: data-store +6,
+data-import +2 — the plan's +7 arithmetic corrected in the log per the
+S170 precedent) · build ✓ · the touched spec files green in full-file
+cold runs (resilience 45/45 — one first-pass AJ1 failure triaged per
+the P1008 protocol: the isolate reproduction PASSED on a fresh boot
++ the cold re-run 45/45, the documented files-PATCH-under-load
+intermittent class, no files-surface code touched; parity-session7
+62/62) · the 5-chunk cold cert (the plan's §8 close records the
+tally) · the drawer check GREEN on the remediated tree (**the 103rd
+consecutive**) · the desktop parity probe **MATCH** · the tripwire
+136/136 after the doc-chain lockstep.
+
+**Evidence**: `docs/screenshots/171-clone-desktop.png` ·
+`171-clone-mobile-drawer.png` (the 103th companion) ·
+`171-clone-studygroups.png` (the cycle's surface — the create dialog
+open with the measured copy + the ported description field), captured
+by `scripts/capture-s171-evidence.mjs` self-verifying (ok: true, md5s
+distinct).
+
+**Docs lockstep**: README badge/census (2335 → 2346) + the prose
+sites + the Session-171 row; AGENTS census + the S171 lessons block
+(three lessons: a rotation ledger can go stale — the codebase is the
+ledger of record; a scaffold-era dialog copy is an unmeasured surface
+— re-probe the family's reference surfaces when the cycle lands on
+them, and the superset goal cuts both ways; a pre-fix AND post-fix
+locator rides the case-insensitive default so each RED fails at its
+own marker); CLAUDE counts; PAD v1.3.79; the SKILL census (all four
+sites, the chromium-spec figure 629 → 632); the vitest header
+(+8); the cert runner re-tag (158 + 199 + 96 + 95 + 89 = 637,
+tripwire-pinned 136/136); `docs/session_214.md`; the worklog
+Session-182 entry; the plan §8 as-executed close; the `.env.example`
+contract re-verified (no env changes).
+
+Next cycle. The rotation continues with the LEDGER-CORRECTED order:
+the remaining five CB8 seams (practiceTest / grades / focusSessions /
+holidays + the calculatorHistory observation); the other recorded
+deferrals (the task-lists e2e leg; the unannounced loading-gate
+families; the F-8 toast copy; the S160 ledger; the
+gradetracker/settings-CRUD + AlertDialog-confirm e2e gaps; a periodic
+re-probe of the reference's chrome AND dialog surfaces — this cycle
+proves the reference drifts beyond chrome).

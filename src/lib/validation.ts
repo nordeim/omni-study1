@@ -466,6 +466,11 @@ export const practiceTestSchema = z.object({
 
 export const studyGroupSchema = z.object({
   name: boundedTitle,
+  // S171/DU2b: the reference's own field (the create dialog's "What's
+  // this group about?" textarea, measured live at the s171 gated
+  // write-path probe). Bounded at 500 — the bounded-everything posture;
+  // the deck family's 1_000-char description is the precedent family.
+  description: z.string().max(500).optional().default(""),
   color: hexColor.optional().default("#8b5cf6"),
   subjectId: nullableId,
   members: z

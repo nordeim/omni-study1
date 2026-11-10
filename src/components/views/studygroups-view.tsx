@@ -74,6 +74,11 @@ function GroupDialog({
   const subjects = useDataStore((s) => s.subjects);
   // State initializes from props per open session (parent key-remount).
   const [name, setName] = React.useState(group?.name ?? "");
+  // S171/DU2b: the reference's own field (the create dialog's "What's
+  // this group about?" textarea, measured live at the s171 gated
+  // write-path probe) — the description state rides the same
+  // per-open-session init as the name.
+  const [description, setDescription] = React.useState(group?.description ?? "");
   const [color, setColor] = React.useState(group?.color ?? GROUP_COLORS[0]);
   const [subjectId, setSubjectId] = React.useState(group?.subjectId ?? "none");
   const [saving, setSaving] = React.useState(false);
@@ -93,6 +98,7 @@ function GroupDialog({
       const members = group ? parseMembers(fresh?.members ?? group.members) : [];
       const payload = {
         name: name.trim(),
+        description: description.trim(),
         color,
         subjectId: subjectId === "none" ? "" : subjectId,
         members,
@@ -116,7 +122,14 @@ function GroupDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>{group ? "Edit Study Group" : "New Study Group"}</DialogTitle>
+          {/* S171/DU2a (measured live at the s171 gated write-path probe):
+              the reference's create-dialog title reads "Create Study
+              Group" — the scaffold-era "New Study Group" was never
+              re-measured after the reference's dialog re-deployment. The
+              edit title stays the measured-era clone shape (the
+              reference's own edit dialog is unmeasurable — its list flow
+              is broken, the POST commits but the list GET returns []). */}
+          <DialogTitle>{group ? "Edit Study Group" : "Create Study Group"}</DialogTitle>
         </DialogHeader>
         <form className="flex flex-col gap-4" onSubmit={(e) => void submit(e)}>
           <div className="flex flex-col gap-1.5">
@@ -125,27 +138,32 @@ function GroupDialog({
               id="group-name"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="e.g. Calculus cram crew"
+              placeholder="e.g., Math Study Squad"
               required
               autoFocus
             />
           </div>
+          {/* S171/DU2b: the reference's description textarea (the measured
+              placeholder) — the clone's visible-Label superset over the
+              reference's placeholder-only input, the established a11y
+              posture (the deck dialog's "Description (optional)" idiom). */}
           <div className="flex flex-col gap-1.5">
-            <Label htmlFor="group-subject">Subject</Label>
-            <Select value={subjectId} onValueChange={setSubjectId}>
-              <SelectTrigger id="group-subject" aria-label="Subject">
-                <SelectValue placeholder="None" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="none">No subject</SelectItem>
-                {subjects.map((s) => (
-                  <SelectItem key={s.id} value={s.id}>
-                    {s.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <Label htmlFor="group-description">Description (optional)</Label>
+            <textarea
+              id="group-description"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="What's this group about?"
+              rows={3}
+              className="flex min-h-[60px] w-full rounded-md border border-slate-200 bg-transparent px-3 py-2 text-sm shadow-sm outline-none placeholder:text-slate-400 focus-visible:ring-2 focus-visible:ring-sf-primary/40 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-800 dark:placeholder:text-slate-500"
+            />
           </div>
+          {/* S171/DU2a: the field order follows the reference's measured
+              dialog (name → description → color swatches); the Subject
+              select — the clone's documented superset, the reference's
+              dialog carries no subject picker (the tasks-dialog
+              precedent) — moves AFTER the swatches so the reference's
+              measured prefix stays contiguous. */}
           <div className="flex flex-col gap-1.5">
             <Label>Color</Label>
             <div role="group" className="flex gap-2" aria-label="Group color swatches">
@@ -165,14 +183,48 @@ function GroupDialog({
               ))}
             </div>
           </div>
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="group-subject">Subject</Label>
+            <Select value={subjectId} onValueChange={setSubjectId}>
+              <SelectTrigger id="group-subject" aria-label="Subject">
+                <SelectValue placeholder="None" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">No subject</SelectItem>
+                {subjects.map((s) => (
+                  <SelectItem key={s.id} value={s.id}>
+                    {s.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          {/* S171/DU2a (measured): the reference's create footer reads
+              "Create Group" then "Close" — submit FIRST in the DOM. The
+              edit leg keeps the clone's measured-era [Cancel][Save
+              changes] (the reference's edit dialog is unmeasurable). */}
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              Cancel
-            </Button>
-            <Button type="submit" variant="gradient" disabled={saving}>
-              {saving ? <Spinner className="size-4" /> : null}
-              {group ? "Save changes" : "Create group"}
-            </Button>
+            {group ? (
+              <>
+                <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+                  Cancel
+                </Button>
+                <Button type="submit" variant="gradient" disabled={saving}>
+                  {saving ? <Spinner className="size-4" /> : null}
+                  Save changes
+                </Button>
+              </>
+            ) : (
+              <>
+                <Button type="submit" variant="gradient" disabled={saving}>
+                  {saving ? <Spinner className="size-4" /> : null}
+                  Create Group
+                </Button>
+                <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+                  Close
+                </Button>
+              </>
+            )}
           </DialogFooter>
         </form>
       </DialogContent>
@@ -417,6 +469,14 @@ export function StudyGroupsView() {
                 </Button>
               </div>
             </div>
+
+            {/* S171/DU2b: the description renders between the header row
+                and the Members card — the clone's own surface (the
+                reference's detail display is unmeasurable: its list flow
+                is broken), the internal-consistency standard. */}
+            {selected.description ? (
+              <p className="text-sm text-slate-600 dark:text-slate-300">{selected.description}</p>
+            ) : null}
 
             <div className="sf-card flex-1 overflow-y-auto p-6">
               <h3 className="text-sm font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Members</h3>

@@ -2175,3 +2175,94 @@ test.describe("S166/DP3 · the notes search matches the rendered text, not the H
     }
   });
 });
+
+// ---------------------------------------------------------------------------
+// S171/DU2 — the studygroups create-dialog parity catch-up + the
+// description port (the s171 audit B/L-1 + I-1). Measured live at the
+// s171 gated write-path probe (one throwaway row created, captured,
+// DELETEd — zero residue verified): the reference's create dialog reads
+// title "Create Study Group", a name INPUT (placeholder "e.g., Math
+// Study Squad"), a description TEXTAREA (placeholder "What's this group
+// about?"), the six swatches (the clone's GROUP_COLORS already match
+// exactly), and the footer's DOM order submit-then-secondary ("Create
+// Group" then "Close"). The clone's copy was scaffold-era (git -S
+// provenance: the "New Study Group" title + "e.g. Calculus cram crew"
+// placeholder date from the initial 7b1e78d implementation and were
+// never re-measured) and the family carried NO description field
+// end-to-end. The description ports bounded at 500 (the deck family's
+// 1_000-char description the precedent; the bounded-everything posture)
+// with the clone's visible-Label superset over the reference's
+// placeholder-only inputs. The reference's own create→list flow is
+// BROKEN (the POST commits, the list GET returns [] — measured), so the
+// round-trip leg pins the CLONE's working surface (the documented
+// superset posture).
+// ---------------------------------------------------------------------------
+test.describe("S171/DU2 · the studygroups create-dialog parity catch-up + the description round-trip", () => {
+  test("the create dialog carries the reference's measured title, placeholders, and footer", async ({ page }) => {
+    await page.goto("/StudyGroups");
+    await hydrated(page);
+    await page.getByRole("button", { name: "Create study group" }).click();
+    const dlg = page.getByRole("dialog");
+    await expect(dlg).toBeVisible();
+    // The measured title (RED pre-fix: the scaffold-era "New Study
+    // Group").
+    await expect(dlg.getByRole("heading", { name: "Create Study Group" })).toBeVisible();
+    // The measured name placeholder.
+    await expect(dlg.getByLabel("Name")).toHaveAttribute("placeholder", "e.g., Math Study Squad");
+    // The measured description textarea (the clone's visible-Label
+    // superset over the reference's placeholder-only input).
+    const description = dlg.getByLabel("Description (optional)");
+    await expect(description).toHaveAttribute("placeholder", "What's this group about?");
+    await expect(description).toBeVisible();
+    // The measured footer: submit "Create Group" + secondary "Close".
+    // The secondary is scoped to the FORM — the clone's shared shadcn
+    // dialog chrome adds a top-right X whose sr-only name is also
+    // "Close" (the documented superset; the reference carries no X —
+    // its measured dialog has ONE Close, the footer text button).
+    const submit = dlg.getByRole("button", { name: "Create Group", exact: true });
+    const close = dlg.locator("form").getByRole("button", { name: "Close", exact: true });
+    await expect(submit).toBeVisible();
+    await expect(close).toBeVisible();
+    // The measured DOM ORDER: the submit renders BEFORE the secondary
+    // (both scoped to the form's footer).
+    const order = await dlg
+      .locator("form")
+      .getByRole("button")
+      .evaluateAll((els) =>
+        els
+          .map((el, i) => ({ i, text: (el.textContent ?? "").trim() }))
+          .filter((b) => b.text === "Create Group" || b.text === "Close"),
+      );
+    expect(order.map((b) => b.text)).toEqual(["Create Group", "Close"]);
+  });
+
+  test("a description entered in the create dialog survives the round-trip into the detail pane", async ({ page }) => {
+    const stamp = `s171-du2-${Date.now()}`;
+    await page.goto("/StudyGroups");
+    await hydrated(page);
+    await page.getByRole("button", { name: "Create study group" }).click();
+    const dlg = page.getByRole("dialog");
+    await expect(dlg).toBeVisible();
+    await dlg.getByLabel("Name").fill(`S171-DU2 description probe ${stamp}`);
+    await dlg.getByLabel("Description (optional)").fill("We drill problem sets every Tuesday before the bus leaves.");
+    const saved = page.waitForResponse(
+      (r) => r.request().method() === "POST" && r.url().includes("/api/study-groups"),
+    );
+    await dlg.getByRole("button", { name: "Create Group", exact: true }).click();
+    const res = await saved;
+    expect(res.ok()).toBe(true);
+    const createdId = ((await res.json()) as { id: string }).id;
+    try {
+      // The success toast + the closed dialog (the create resolved).
+      await expect(page.getByText("Study group created")).toBeVisible({ timeout: 10_000 });
+      await expect(dlg).toBeHidden();
+      // Select the new group — the detail pane renders the description.
+      await page.getByRole("button", { name: new RegExp(`S171-DU2 description probe ${stamp}`) }).first().click();
+      const detail = page.locator('[aria-label="Study group detail pane"]');
+      await expect(detail.getByText("We drill problem sets every Tuesday before the bus leaves.")).toBeVisible();
+    } finally {
+      // Zero residue on the shared demo user (the CC4/AR3 convention).
+      await page.request.delete(`/api/study-groups/${createdId}`);
+    }
+  });
+});
