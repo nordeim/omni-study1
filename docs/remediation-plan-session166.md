@@ -443,4 +443,4 @@ the plan was written):
 - [x] The drawer check (93rd) + the desktop parity probe re-run (MATCH)
 - [x] Evidence frames (docs/screenshots/166-clone-* — 45.93% / 34.50% / 77.40% non-white)
 - [x] Docs lockstep: README badge/census (2296 → 2308) + prose + the Session-166 row; AGENTS census + e2e map + the S166 lessons block; CLAUDE counts; PAD v1.3.74; the SKILL census; the vitest header (+10); the cert runner re-tag (both scripts + the script-conventions tripwire); docs/session_205.md; the worklog Session-177 entry; this §9; the `.env.example` contract re-verified
-- [ ] Commit to main + push via the SSH wrapper + remote verify
+- [x] Commit to main + push via the SSH wrapper + remote verify (5daa566 pushed + remote-verified: refs/heads/main @ 5daa566 == local HEAD; the wrapper's default remote overridden with --remote git@github.com:nordeim/omni-study1.git — the wrapper's built-in default points at the skill doc's original task-management repo, caught by the dry-run gate)
