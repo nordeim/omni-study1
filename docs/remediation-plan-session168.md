@@ -384,4 +384,4 @@ the plan was written):
 - [x] The drawer check (97th) + the desktop parity probe re-run (MATCH)
 - [x] Evidence frames (docs/screenshots/168-clone-* — the standing desktop + mobile drawer + the cycle's Tasks surface, the DR1/DR2 surfaces)
 - [x] Docs lockstep: README badge/census (2316 → 2324) + prose + the Session-168 row; AGENTS census + e2e map + the S168 lessons block; CLAUDE counts; PAD v1.3.76; the SKILL census; the vitest header (+7); the cert runner re-tag (both scripts + the script-conventions tripwire); docs/session_208.md; the worklog Session-179 entry; this §8; the `.env.example` contract re-verified
-- [ ] Commit to main + push via the SSH wrapper + remote verify (the wrapper's default remote overridden with --remote git@github.com:nordeim/omni-study1.git — the S166 catch, re-checked at the dry-run gate)
+- [x] Commit to main + push via the SSH wrapper + remote verify (071a084 pushed + remote-verified: refs/heads/main @ 071a084 == local HEAD; the wrapper's default remote overridden with --remote git@github.com:nordeim/omni-study1.git — the S166 catch, re-checked at the dry-run gate)
