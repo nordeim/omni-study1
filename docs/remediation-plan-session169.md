@@ -388,4 +388,4 @@ before the plan was written):
 - [x] The drawer check (99th) + the desktop parity probe re-run (MATCH)
 - [x] Evidence frames (docs/screenshots/169-clone-* — the standing desktop + mobile drawer + the cycle's Settings-Subjects surface, the DS1/DS2 surfaces)
 - [x] Docs lockstep: README badge/census (2324 → 2329) + prose + the Session-169 row; AGENTS census + e2e map + the S169 lessons block; CLAUDE counts; PAD v1.3.77; the SKILL census; the vitest header (+4); the cert runner re-tag (both scripts + the script-conventions tripwire); docs/session_210.md; the worklog Session-180 entry; this §8; the `.env.example` contract re-verified
-- [ ] Commit to main + push via the SSH wrapper + remote verify
+- [x] Commit to main + push via the SSH wrapper + remote verify (2ed1512 pushed + remote-verified: refs/heads/main @ 2ed1512 == local HEAD; the wrapper's default remote overridden with --remote git@github.com:nordeim/omni-study1.git — the S166 catch, re-checked at the dry-run gate)
