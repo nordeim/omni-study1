@@ -448,7 +448,9 @@ self-anchoring pins re-derive from the vitest header + the cert map).
       sites / the vitest header +6 / the cert runner re-tag [Expected
       158 + 201 + 98 + 95 + 89 = 641] / the tripwire 136/136 after the
       re-anchor / session_218 / worklog Session-184)
-- [ ] committed + pushed via the SSH wrapper + remote-verified
+- [x] committed + pushed via the SSH wrapper + remote-verified
+      (commit `c6578a7` — `refs/heads/main @ c6578a7 == local HEAD`, the
+      tracking ref synced; the operator key shredded after the push)
 
 ## §9 The final checklist (the operator's asks, mapped)
 
@@ -470,4 +472,4 @@ self-anchoring pins re-derive from the vitest header + the cert map).
       cycle)
 - [x] The doc chain updated for alignment
 - [x] The worklog updated + committed
-- [ ] Pushed to main via the SSH wrapper, remote-verified
+- [x] Pushed to main via the SSH wrapper, remote-verified
