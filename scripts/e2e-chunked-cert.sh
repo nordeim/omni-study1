@@ -1,4 +1,27 @@
 #!/usr/bin/env bash
+# (S175/DY re-tag — census 645 → 650, net +5: chunk 2 +5 [the
+# S175/DY1 subject create-dialog parity catch-up + teacher/room
+# field-port pin in parity-session7 — the reference's dialog
+# re-deployment, measured live at the s175 gated write-path probe
+# (the write path WORKS this time — create → row render → delete
+# exercised live, zero residue, so both the FIELD SET and the ROW
+# RENDER are measured authorities): the asterisked "Subject Name *"
+# label + the "e.g., Mathematics" placeholder + the SEVENTEEN-swatch
+# 32px/rounded-lg palette (the violet #8b5cf6 pristine default at
+# index 12 — the white-ring + scale(1.1) selection state) + the
+# "Teacher (optional)" + "Room (optional)" fields + the footer's
+# measured [Cancel][Add Subject] order; the clone's aria-pressed
+# + aria-labeled swatches + the Custom color input stay — the
+# documented a11y superset, the S172/DV2 adjudication-7 precedent
+# applied at the swatch level] + the four S175/DY4
+# gradetracker/settings-CRUD + AlertDialog-confirm legs in
+# parity-session7 (DY4a the grade edit round-trip + DY4b the grade
+# delete AlertDialog + DY4c the subject create-with-fields → row
+# metadata → edit round-trip — the DY1 port's own live-journey proof
+# + DY4d the subject delete AlertDialog with the SetNull-consequences
+# copy; green-on-arrival coverage legs — the gap was the missing spec,
+# the behavior worked]. The full DY map:
+# docs/remediation-plan-session175.md.)
 # (S174/DX re-tag — census 641 → 645, net +4: chunk 2 +1 [the
 # S174/DX4 holidays create-dialog parity catch-up + start/end/type
 # field-port pin in parity-session7 — the reference's range-model
@@ -372,7 +395,7 @@
 # deterministic defaults so the leg fills only the title + score +
 # max; network-mocked, no server writes beyond the zero-residue
 # create]. The full DW map: docs/remediation-plan-session173.md.)
-# Expected: 158 + 202 + 101 + 95 + 89 = 645 (each chunk's count includes its
+# Expected: 158 + 207 + 101 + 95 + 89 = 650 (each chunk's count includes its
 # auth setup — the current census; the historical re-tag blocks beneath.)
 # (S171/DU re-tag — census 634 → 637, net +3: chunk 2 +2 [the
 # S171/DU2 studygroups create-dialog parity catch-up pair in

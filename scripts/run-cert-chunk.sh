@@ -4,9 +4,14 @@
 # SIGKILL escalation → rm db/e2e.db → run the chunk), one chunk per
 # invocation so each foreground run fits the tool timeout.
 # Usage: bash /home/z/my-project/omni-study1/scripts/run-cert-chunk.sh <1-5>
-# Expected (S166/DP re-tag): 155 + 196 + 94 + 95 + 89 = 629 — the same
+# Expected (S175/DY re-tag): 158 + 207 + 101 + 95 + 89 = 650 — the same
 # census as scripts/e2e-chunked-cert.sh (machine-enforced by
 # tests/script-conventions.test.ts, including the identical-CHUNKS pin).
+# (S175/DY honest catch-up: this helper's header had gone stale since
+# the S166/DP re-tag — every cycle from S167 to S174 re-tagged the main
+# cert runner but not this mirror line, so the "same census" claim above
+# had drifted false. Re-anchored here to the current map; the recount
+# history beneath records the S166-era entries it superseded.)
 # (S166/DP net +2: chunk 2 +2 [the S166/DP1 notes-family CB8
 # failure-domain split pin in parity-session9 — the POST continues, the
 # refresh GET aborts: a committed create answers the CLOSED dialog, never

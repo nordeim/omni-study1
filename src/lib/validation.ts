@@ -260,6 +260,13 @@ export const preferencesSchema = z.object({
 export const subjectSchema = z.object({
   name: boundedTitle,
   color: hexColor.optional().default("#8b5cf6"),
+  // S175/DY1 (the s175 reference probe — the measured "Teacher
+  // (optional)" + "Room (optional)" fields): bounded optional strings
+  // with the empty-string default. PATCH-safe by the sentKeysPatch
+  // doctrine — a PATCH that omits them never overwrites with the
+  // default (the DX4 endDate precedent).
+  teacher: z.string().max(100).optional().default(""),
+  room: z.string().max(100).optional().default(""),
 });
 
 export const taskListSchema = z.object({

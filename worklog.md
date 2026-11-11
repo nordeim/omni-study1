@@ -8062,3 +8062,108 @@ toast copy; the S160 ledger; the gradetracker/settings-CRUD +
 AlertDialog-confirm e2e gaps; a periodic re-probe of the reference's
 chrome AND dialog surfaces — five consecutive families now show
 reference dialog drift; the standing probes are the tripwire).
+
+## Session 186 — the S175 cycle (Batch DY: the subjects-family field port — the subject-dialog catch-up + the loading-gate completion + the CLAUDE cross-read pin + the CRUD e2e coverage)
+
+The workspace was WARM through TWO session-level tool-infra
+interruptions (every call failing with connection errors; all work on
+disk, zero loss — the DY tree's 17 modified files + the untracked
+plan/scripts). This session resumed at the full-file cold runs + the
+5-chunk cert, and closed the cycle — including the unplanned fifth
+leg the cert forced.
+
+**The resume's own finding**: the reaper-proof cert had COMPLETED
+through the interruption (158 ✓ + 207 ✓ + chunk 3 100/101 + 95 ✓ +
+89 ✓ = DONE) — the S175 map 650, one flake to resolve. The resume
+also diagnosed the EADDRINUSE leftover: the interrupted session's
+stale dev server still held :3000 with a Prisma connection pointing
+at a db inode the interruption-era reseed had swapped out — reads
+fine, writes "readonly database", the Settings tab wedged on the
+loading gate (the evidence capture's first failure); the cure is the
+precise-PID kill + a fresh boot.
+
+**The cert chunk-3 saga (five flakes, one mechanism, traced to
+ROOT)**: the first flake was AJ1 (the S174 precedent — green in
+isolation, load-induced class). The re-proofs then failed four MORE
+times — each a DIFFERENT folder-family test (AK1c, AK1d, AK1b,
+AK1a), each green in isolation, including two strictly-isolated
+runs. That pattern (a family-level ~1-per-run failure that survives
+"isolation") triggered the deep trace: the Playwright trace.zip
+network timeline showed THREE concurrent writes (two /api/rum
+telemetry upserts + the folder PATCH's cycle-guard `$transaction`)
+stalling EXACTLY the connector's socket-timeout value — 5.04s at the
+default, 30.06s after the posture change — and P1008-ing together,
+then everything fast again (5.9ms). The reads never stalled; the
+machine measured healthy (0.2ms fsync commits, 3.5GB free). ROOT
+CAUSE: **the sandbox FREEZES background processes ~5-30s at
+TOOL-CALL boundary crossings** — the reaper-proof double-fork (the
+S110 lesson) escapes the KILL, not the FREEZE, and every reaper-
+proof launch still crossed boundaries through its polling calls.
+Two cures landed: (1) the e2e `socket_timeout=30` posture on
+playwright.config's E2E_DATABASE_URL (the documented SQLite
+busy_timeout knob — SECONDS, verified against the Prisma 6.19.3 CLI
++ the quaint source; rides genuine lock contention out, the
+dev/prod URLs stay bare; the db-path resolver verified to preserve
+the query param through the standalone's schema-anchored
+resolution); (2) the zero-boundary execution — the chunk run
+DIRECTLY, a synchronous child of ONE long tool call with no
+boundaries to cross mid-run: **101/101 GREEN, rc=0**. The cert
+census: **650 GREEN** (chunks 1/2/4/5 first-pass clean, chunk 3
+re-proven through the diagnosed class).
+
+**The cycle's ports (all RED-proven at designed markers across the
+interrupted + resumed sessions)**: DY1 the teacher/room field port
+end-to-end (schema → validation [max 100, the optional-default
+atom] → the SubjectRow type → the dialog's measured "Teacher
+(optional)"/"Room (optional)" labels → the row render's metadata pair
+[teacher 14px/400 slate-500 + room 12px/400 slate-400, only when
+non-empty] → the seed's six enriched defs → the import seam → the
+mutations' type surface) + the SEVENTEEN-swatch 32px/rounded-lg
+palette catch-up (the violet #8b5cf6 default; the clone's
+aria-pressed + aria-labeled swatches + the Custom input stay — the
+a11y superset, the DV2 adjudication-7 precedent at swatch level) —
+the reference's dialog had re-drifted (the SIXTH consecutive
+family; the write path WORKS this cycle — create → row render →
+delete live, zero residue — so both the field set and the row
+render are measured authorities); DY2 the THIRTEEN loading-gate
+aria contracts across NINE views (the DM2/DL2/DK4 family-wide port
+COMPLETE) + the hue-tokens register's two by-design re-anchors;
+DY3 the CLAUDE.md census re-anchor (the stale "641" — the one doc
+with no pin is the one that rotted) + the self-anchoring cross-read
+pin pair (the CQ6 family extended to the LAST unpinned doc); DY4
+the four gradetracker/settings-CRUD + AlertDialog-confirm legs
+(green-on-arrival coverage, honestly recorded).
+
+Gates: lint ✓ · tsc ✓ · unit **1733/1733** (51 files, +2 the DY3
+pair — the plan's "designed 1732" corrected: census pins land as
+pairs) · build ✓ · parity-session7 **70/70** cold · the cert census
+**650 GREEN** · the drawer check **111th consecutive** · the desktop
+parity probe MATCH (all five checks) · the fresh agent-browser
+mobile-nav pass at 390×844 · the tripwire **138/138** after the
+doc-chain lockstep. Evidence: `docs/screenshots/175-clone-desktop.png`
+· `175-clone-mobile-drawer.png` · `175-clone-settings-subjects.png`
+(the cycle's surface — the Add Subject dialog open with the
+Teacher/Room fields + the 17-swatch palette over the seeded rows'
+metadata; self-verifying, md5s distinct).
+
+Docs lockstep: README badge/census (2376 → 2383) + the prose sites
++ the Session-175 row; AGENTS census + the S175 lessons block (FIVE
+lessons — the fifth: the boundary-freeze class; "a flake class
+that survives three 'isolated' re-proofs is a boundary artifact,
+not load — the N-requests-stalling-the-SAME-constant trace
+signature; the fix is measured, not retried"); CLAUDE counts; PAD
+**v1.3.83**; the SKILL census; the vitest header (+2); the cert
+runner re-tags (e2e-chunked-cert.sh's map 645 → 650 +
+run-cert-chunk.sh's honest header catch-up — the "same census"
+prose claim had been false since S167); `docs/session_222.md`;
+this entry; the plan §10 as-executed close (with the DY5 record)
++ the §11 checklist ticks; the `.env.example` contract re-verified
+(no env changes — the socket_timeout posture is a playwright-config
+env, not a .env change).
+
+Next cycle. The loading-gate family is COMPLETE and the CQ6 pin
+family is closed — the rotation's ledger turns to the remaining
+recorded deferrals (the task-lists e2e leg; the F-8 toast copy; the
+S160 ledger; a periodic re-probe of the reference's chrome AND
+dialog surfaces — SIX consecutive families now show reference
+dialog drift; the standing probes are the tripwire).

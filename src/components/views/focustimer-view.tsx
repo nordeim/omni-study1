@@ -376,8 +376,12 @@ export function FocusTimerView() {
       <div className="mx-auto flex w-full max-w-md flex-col items-center gap-6">
         {/* ---- stats (S136/CK4: the CE3 gate — an in-flight load renders
             the loading branch, never the false 0/0/0 row) ---- */}
+        {/* S175/DY2: the in-flight window is announced — the Spinner is
+            aria-hidden, so an unlabeled gate is silent to assistive tech
+            (the DM2/DL2/DK4 precedent, the family-wide port COMPLETED
+            this cycle). */}
         {loading && focusSessions.length === 0 ? (
-          <div className="flex w-full justify-center py-10 text-sf-primary">
+          <div role="status" aria-label="Loading sessions" className="flex w-full justify-center py-10 text-sf-primary">
             <Spinner className="size-6" />
           </div>
         ) : (

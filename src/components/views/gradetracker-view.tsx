@@ -405,8 +405,10 @@ export function GradeTrackerView() {
           OR-form: EITHER primary source empty while loading means the row
           is untrustworthy (the pin's held-route set holds only /api/grades
           — subjects landing must not un-gate the grades row). */}
+      {/* S175/DY2: the in-flight window is announced (the DM2/DL2
+          precedent, the family-wide port COMPLETED this cycle). */}
       {loading && (grades.length === 0 || subjects.length === 0) ? (
-        <div className="flex justify-center py-16">
+        <div role="status" aria-label="Loading grades" className="flex justify-center py-16">
           <Spinner className="size-6 text-sf-primary" />
         </div>
       ) : (
@@ -475,8 +477,9 @@ export function GradeTrackerView() {
 
       {/* ---- grades list (the documented superset extension: the ref
           renders NO per-grade rows — these carry edit/delete) ---- */}
+      {/* S175/DY2: the twin gate (the list leg). */}
       {loading && grades.length === 0 ? (
-        <div className="flex justify-center py-16">
+        <div role="status" aria-label="Loading grades" className="flex justify-center py-16">
           <Spinner className="size-6 text-sf-primary" />
         </div>
       ) : grades.length === 0 ? (

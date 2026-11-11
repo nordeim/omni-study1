@@ -353,8 +353,10 @@ export function StudyGroupsView() {
         </div>
 
         <div className="sf-scroll mt-4 flex-1 space-y-2 overflow-y-auto">
+          {/* S175/DY2: the in-flight window is announced (the DM2/DL2/DK4
+              precedent, the family-wide port COMPLETED this cycle). */}
           {loading && groups.length === 0 ? (
-            <div className="flex justify-center py-8">
+            <div role="status" aria-label="Loading study groups" className="flex justify-center py-8">
               <Spinner className="size-5 text-sf-primary" />
             </div>
           ) : filtered.length === 0 ? (

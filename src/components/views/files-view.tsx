@@ -497,8 +497,11 @@ export function FilesView() {
         ))}
       </div>
 
+      {/* S175/DY2: the in-flight window is announced (the DM2/DL2/DK4
+          precedent, the family-wide port COMPLETED this cycle — the
+          files family's local-state gate). */}
       {loading ? (
-        <div className="flex justify-center py-16">
+        <div role="status" aria-label="Loading files" className="flex justify-center py-16">
           <Spinner className="size-6 text-sf-primary" />
         </div>
       ) : loadFailed ? (

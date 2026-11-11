@@ -413,6 +413,8 @@ export function AnalyticsView() {
           primary source empty while loading = the row is untrustworthy.
           The settled-zero contract stays a DIFFERENT branch — a completed
           load at zero data renders the zero cards, the S17-D pins.) ---- */}
+      {/* S175/DY2: the in-flight window is announced (the DM2/DL2/DK4
+          precedent, the family-wide port COMPLETED this cycle). */}
       {loading &&
       (tasks.length === 0 ||
         grades.length === 0 ||
@@ -420,7 +422,7 @@ export function AnalyticsView() {
         assignments.length === 0 ||
         exams.length === 0 ||
         focusSessions.length === 0) ? (
-        <div className="flex justify-center py-16 text-sf-primary">
+        <div role="status" aria-label="Loading analytics" className="flex justify-center py-16 text-sf-primary">
           <Spinner className="size-6" />
         </div>
       ) : (

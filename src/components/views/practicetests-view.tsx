@@ -837,8 +837,10 @@ export function PracticeTestsView() {
         }
       />
 
+      {/* S175/DY2: the in-flight window is announced (the DM2/DL2/DK4
+          precedent, the family-wide port COMPLETED this cycle). */}
       {loading && tests.length === 0 ? (
-        <div className="flex justify-center py-16">
+        <div role="status" aria-label="Loading practice tests" className="flex justify-center py-16">
           <Spinner className="size-6 text-sf-primary" />
         </div>
       ) : tests.length === 0 ? (

@@ -244,7 +244,19 @@ describe("the chunked cert runner's truth contract (S128/CC2)", () => {
     // dispatch — the retrying toHaveCount(0) passed vacuously through
     // the 5s auto-dismiss, the s174 pin-correction lesson) —
     // 641 → 645.
-    expect(certSource).toContain("Expected: 158 + 202 + 101 + 95 + 89 = 645");
+    // S175/DY: chunk 2 202 → 207 (the S175/DY1 subject create-dialog
+    // parity pin + teacher/room field port in parity-session7 — the
+    // measured "Subject Name *" label + the "e.g., Mathematics"
+    // placeholder + the SEVENTEEN-swatch 32px/rounded-lg palette with
+    // the violet #8b5cf6 pristine default + the "Teacher (optional)"
+    // + "Room (optional)" fields + the [Cancel][Add Subject] footer
+    // order, the write path verified live with zero residue; + the
+    // four S175/DY4 gradetracker/settings-CRUD + AlertDialog-confirm
+    // legs — the grade edit round-trip, the grade delete confirm, the
+    // subject create-with-fields → row metadata → edit round-trip,
+    // the subject delete SetNull-consequences confirm;
+    // green-on-arrival coverage) — 645 → 650.
+    expect(certSource).toContain("Expected: 158 + 207 + 101 + 95 + 89 = 650");
   });
 
   it("propagates a failing chunk's exit code (never a green cert on a red run)", () => {
@@ -2655,5 +2667,64 @@ describe("the S158/DG source censuses", () => {
     const resets = src.match(/e\.target\.value = ""/g) ?? [];
     expect(resets.length, "both pick branches reset the input value (oversized + success)").toBe(2);
     expect(src).toContain("S158/DG3");
+  });
+});
+
+// ---------------------------------------------------------------------------
+// S175/DY3 (the CLAUDE.md straggler + the tripwire-coverage close): the
+// S174 cycle's doc-chain lockstep updated every machine-pinned site —
+// README, AGENTS, the SKILL, the vitest header, the cert runner — but
+// CLAUDE.md's e2e census line kept the S173 map ("641 —
+// 158+201+98+95+89") because the CQ6 cross-read family reads CLAUDE.md
+// ZERO times. The recurring straggler class the worklog names finally
+// bit: the one doc with no pin is the one that rotted. This pin extends
+// the CQ6 self-anchoring family to the LAST unpinned doc — CLAUDE.md's
+// test-pyramid census pair (the Unit line + the E2E line) now derives
+// its expectations from the same sources every other count site derives
+// from (the vitest header + the cert script's Expected map) — the next
+// count change forces the CLAUDE.md update in the same commit or this
+// leg fails.
+// ---------------------------------------------------------------------------
+describe("S175/DY3: the CLAUDE.md census cross-read pins (the CQ6 family extended to the last unpinned doc)", () => {
+  const CLAUDE = path.resolve(process.cwd(), "CLAUDE.md");
+  const VITEST_CONFIG = path.resolve(process.cwd(), "vitest.config.ts");
+  const CERT_SCRIPT = path.resolve(process.cwd(), "scripts/e2e-chunked-cert.sh");
+
+  function vitestHeaderCounts(): { files: number; tests: number } {
+    const src = readFileSync(VITEST_CONFIG, "utf8");
+    const m = src.match(/(\d+) files \/ (\d+) tests/);
+    expect(m, "the vitest header count line exists").not.toBeNull();
+    return { files: Number(m![1]), tests: Number(m![2]) };
+  }
+
+  function certMap(): { chunks: number[]; total: number } {
+    const src = readFileSync(CERT_SCRIPT, "utf8");
+    const m = src.match(/Expected: (\d+) \+ (\d+) \+ (\d+) \+ (\d+) \+ (\d+) = (\d+)/);
+    expect(m, "the cert script expected map exists").not.toBeNull();
+    const chunks = m!.slice(1, 6).map(Number);
+    return { chunks, total: Number(m![6]) };
+  }
+
+  it("CLAUDE.md's Unit census line agrees with the vitest header (the S174 site that stayed current)", () => {
+    const header = vitestHeaderCounts();
+    const claude = readFileSync(CLAUDE, "utf8");
+    const unit = claude.match(/\*\*Unit \(Vitest, (\d+) tests\)\*\*/);
+    expect(unit, "the CLAUDE.md unit census line exists").not.toBeNull();
+    expect(Number(unit![1]), "the CLAUDE.md unit count agrees with the vitest header").toBe(header.tests);
+  });
+
+  it("CLAUDE.md's E2E census line agrees with the cert script's expected map (total + the per-chunk figures)", () => {
+    const map = certMap();
+    const claude = readFileSync(CLAUDE, "utf8");
+    // The live-tense site (the Test Pyramid's E2E bullet); historical
+    // session-row narratives record their own era and stay out of scope
+    // by design (the DA6 pins' standing scope rule).
+    const e2e = claude.match(
+      /\*\*E2E \(Playwright, (\d+) tests across the 5-chunk cold map — (\d+)\+(\d+)\+(\d+)\+(\d+)\+(\d+)\)\*\*/,
+    );
+    expect(e2e, "the CLAUDE.md e2e census line exists").not.toBeNull();
+    expect(Number(e2e![1]), "the CLAUDE.md e2e total agrees with the cert map").toBe(map.total);
+    const chunks = e2e!.slice(2, 7).map(Number);
+    expect(chunks, "the CLAUDE.md per-chunk map agrees with the cert script").toEqual(map.chunks);
   });
 });

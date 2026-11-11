@@ -2470,3 +2470,209 @@ test.describe("S174/DX4 · the holidays create-dialog parity catch-up + the star
     expect(order.map((b) => b.text)).toEqual(["Cancel", "Add Holiday"]);
   });
 });
+
+// S175/DY1 — the subject-dialog parity catch-up + the teacher/room field
+// port (the s175 audit B/M-1). Measured live at the s175 reference probe
+// (the reference's Add Subject dialog opened on the seeded account: the
+// asterisked "Subject Name *" label + the "e.g., Mathematics" placeholder;
+// the "Color" field over a SEVENTEEN-swatch palette at 32px/rounded-lg —
+// the Tailwind v3 500-ramp order red #ef4444 → … → rose #f43f5e, the
+// violet #8b5cf6 pristine default at index 12 carrying the white-ring +
+// scale(1.1) selection state; the "Teacher (optional)" field + the
+// "e.g., Mr. Smith" placeholder; the "Room (optional)" field + the
+// "e.g., Room 101" placeholder; the footer [Cancel][Add Subject]). The
+// clone's dialog was s169-era (label "Name" + placeholder "e.g. Biology" +
+// 8-color scaffold palette at 28px rounded-full + no teacher/room). The
+// port: the `teacher`/`room` columns (schema + validation + row + the
+// row's teacher/room metadata render + seed — the S174/DX4 field-port
+// precedent). The reference's write path WORKS this time (the probe
+// exercised create → row render → delete live, zero residue — the H3
+// name 16px/600 + teacher 14px slate-500 + room 12px slate-400), so both
+// the FIELD SET and the ROW RENDER are measured authorities. The clone's
+// aria-pressed swatches + aria-labels + the Custom color input + the
+// labeled-controls a11y surface STAY (the documented superset — the
+// S172/DV2 adjudication-7 precedent); the swatch GEOMETRY ports (the
+// fresh s175 measurement supersedes the s169-era guess — the DX2
+// icon-drift precedent).
+// ---------------------------------------------------------------------------
+test.describe("S175/DY1 · the subject create-dialog parity catch-up + the teacher/room field port", () => {
+  test("the create dialog carries the reference's measured labels, 17-swatch palette, teacher/room fields, and footer", async ({ page }) => {
+    await page.goto("/Settings");
+    await hydrated(page);
+    await page.getByRole("tab", { name: "Subjects" }).click();
+    await expect(page.getByRole("heading", { name: "Subjects" })).toBeVisible();
+    await page.getByRole("button", { name: "Add Subject" }).first().click();
+    const dlg = page.getByRole("dialog");
+    await expect(dlg).toBeVisible();
+    // The measured label copy (RED pre-fix: the s169-era "Name" without
+    // the asterisk).
+    await expect(dlg.getByText("Subject Name *", { exact: true })).toBeVisible();
+    await expect(dlg.locator("#subject-name")).toHaveAttribute("placeholder", "e.g., Mathematics");
+    // The measured TEACHER + ROOM fields — both optional, both absent
+    // pre-fix (RED at the label assertions).
+    await expect(dlg.getByText("Teacher (optional)", { exact: true })).toBeVisible();
+    await expect(dlg.locator("#subject-teacher")).toHaveAttribute("placeholder", "e.g., Mr. Smith");
+    await expect(dlg.getByText("Room (optional)", { exact: true })).toBeVisible();
+    await expect(dlg.locator("#subject-room")).toHaveAttribute("placeholder", "e.g., Room 101");
+    // The measured palette: SEVENTEEN swatches (RED pre-fix: the
+    // 8-color scaffold set renders).
+    const swatches = dlg.locator("button[aria-label^='Color #']");
+    await expect(swatches).toHaveCount(17);
+    // The measured pristine default: violet #8b5cf6 pressed (the s175
+    // probe measured the index-12 swatch selected on a fresh open).
+    const pressed = dlg.locator("button[aria-label^='Color #'][aria-pressed='true']");
+    await expect(pressed).toHaveCount(1);
+    await expect(pressed.first()).toHaveAttribute("aria-label", "Color #8b5cf6");
+    // The measured swatch geometry: 32px rounded-lg (the s175 probe's
+    // computed width/radius — the s169-era 28px rounded-full was the
+    // scaffold guess).
+    const box = await swatches.first().boundingBox();
+    expect(box?.width).toBe(32);
+    await expect(swatches.first()).toHaveCSS("border-radius", "8px");
+    // The measured footer: [Cancel][Add Subject] — the secondary renders
+    // BEFORE the submit (both scoped to the form's footer).
+    const submit = dlg.getByRole("button", { name: "Add Subject", exact: true });
+    const cancel = dlg.locator("form").getByRole("button", { name: "Cancel", exact: true });
+    await expect(submit).toBeVisible();
+    await expect(cancel).toBeVisible();
+    const order = await dlg
+      .locator("form")
+      .getByRole("button")
+      .evaluateAll((els) =>
+        els
+          .map((el) => ({ text: (el.textContent ?? "").trim() }))
+          .filter((b) => b.text === "Add Subject" || b.text === "Cancel"),
+      );
+    expect(order.map((b) => b.text)).toEqual(["Cancel", "Add Subject"]);
+  });
+});
+
+// S175/DY4 — the gradetracker/settings-CRUD + AlertDialog-confirm e2e legs
+// (the recorded coverage gap since the S168-era ledger). Four legs, each
+// owning its data (the unique-stamp doctrine) and leaving zero residue
+// (the delete-through-the-UI cleanup). DY4a/DY4b (the grade edit + delete
+// journeys) and DY4d (the subject delete + the SetNull-consequences
+// confirm) are green-on-arrival coverage — the behavior works, the gap is
+// the missing spec; DY4c additionally exercises the DY1 port's round-trip
+// (create-with-fields → row metadata → edit → update) — the same
+// round-trip the reference probe exercised live, now pinned on the clone.
+// ---------------------------------------------------------------------------
+const dyStamp = () => `DY Probe ${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+
+test.describe("S175/DY4 · the gradetracker/settings-CRUD + AlertDialog-confirm journeys", () => {
+  test("DY4a: a created grade edits through the dialog and the updated row + toast render", async ({ page }) => {
+    await page.goto("/GradeTracker");
+    await hydrated(page);
+    await expect(page.getByRole("heading", { name: "Grade Tracker" })).toBeVisible();
+    // Create the owned row (the unique stamp — the spec owns its data).
+    const title = dyStamp();
+    await page.getByRole("button", { name: "Add Grade" }).first().click();
+    const dlg = page.getByRole("dialog");
+    await dlg.locator("#grade-title").fill(title);
+    await dlg.locator("#grade-score").fill("80");
+    await dlg.locator("#grade-max").fill("100");
+    await dlg.getByRole("button", { name: "Add Grade", exact: true }).click();
+    await expect(dlg).toHaveCount(0);
+    const row = page.locator("div.group", { hasText: title });
+    await expect(row).toBeVisible();
+    // The edit journey: the hover-revealed Edit button opens the dialog
+    // seeded with the row's values; a score change lands the toast + the
+    // updated badge.
+    await row.getByRole("button", { name: `Edit ${title}` }).click();
+    await expect(dlg.getByRole("heading", { name: "Edit Grade" })).toBeVisible();
+    await expect(dlg.locator("#grade-title")).toHaveValue(title);
+    await dlg.locator("#grade-score").fill("95");
+    await dlg.getByRole("button", { name: "Save changes" }).click();
+    await expect(dlg).toHaveCount(0);
+    await expect(page.getByText("Grade updated")).toBeVisible();
+    await expect(page.locator("div.group", { hasText: title }).first()).toContainText("95/100");
+    // Zero residue: the edit leg's row is DY4b's input; deleted there.
+  });
+
+  test("DY4b: the grade delete journey confirms through the AlertDialog and the row is gone", async ({ page }) => {
+    await page.goto("/GradeTracker");
+    await hydrated(page);
+    await expect(page.getByRole("heading", { name: "Grade Tracker" })).toBeVisible();
+    const title = dyStamp();
+    await page.getByRole("button", { name: "Add Grade" }).first().click();
+    const dlg = page.getByRole("dialog");
+    await dlg.locator("#grade-title").fill(title);
+    await dlg.locator("#grade-score").fill("50");
+    await dlg.locator("#grade-max").fill("100");
+    await dlg.getByRole("button", { name: "Add Grade", exact: true }).click();
+    await expect(dlg).toHaveCount(0);
+    const row = page.locator("div.group", { hasText: title });
+    await expect(row).toBeVisible();
+    // The delete journey: the AlertDialog confirms with the measured
+    // copy ("Delete this grade?" + the will-be-removed sentence).
+    await row.getByRole("button", { name: `Delete ${title}` }).click();
+    const confirm = page.getByRole("alertdialog");
+    await expect(confirm.getByRole("heading", { name: "Delete this grade?" })).toBeVisible();
+    await expect(confirm.getByText(`${title} will be removed from your tracker. This cannot be undone.`)).toBeVisible();
+    await confirm.getByRole("button", { name: "Delete", exact: true }).click();
+    await expect(confirm).toHaveCount(0);
+    // Zero residue: the row is gone (the delete has no success toast —
+    // the honest silence the S145 posture documents).
+    await expect(page.locator("div.group", { hasText: title })).toHaveCount(0);
+  });
+
+  test("DY4c: a created subject carries the ported teacher/room fields through the row and the edit round-trip", async ({ page }) => {
+    await page.goto("/Settings");
+    await hydrated(page);
+    await page.getByRole("tab", { name: "Subjects" }).click();
+    await expect(page.getByRole("heading", { name: "Subjects" })).toBeVisible();
+    // The DY1 port's round-trip: create with the measured fields.
+    const name = dyStamp();
+    await page.getByRole("button", { name: "Add Subject" }).first().click();
+    const dlg = page.getByRole("dialog");
+    await dlg.locator("#subject-name").fill(name);
+    await dlg.locator("#subject-teacher").fill("Mr. Probe");
+    await dlg.locator("#subject-room").fill("Room 101");
+    await dlg.getByRole("button", { name: "Add Subject", exact: true }).click();
+    await expect(dlg).toHaveCount(0);
+    await expect(page.getByText("Subject created")).toBeVisible();
+    // The row renders the ported metadata (the measured typography
+    // shape: the teacher + the room under the name).
+    const row = page.locator("li", { hasText: name });
+    await expect(row).toBeVisible();
+    await expect(row).toContainText("Mr. Probe");
+    await expect(row).toContainText("Room 101");
+    // The edit round-trip: the dialog seeds the ported fields; a
+    // teacher change lands the toast + the updated row.
+    await row.getByRole("button", { name: `Edit ${name}` }).click();
+    await expect(dlg.getByRole("heading", { name: "Edit Subject" })).toBeVisible();
+    await expect(dlg.locator("#subject-teacher")).toHaveValue("Mr. Probe");
+    await dlg.locator("#subject-teacher").fill("Ms. Probe");
+    await dlg.getByRole("button", { name: "Save changes" }).click();
+    await expect(dlg).toHaveCount(0);
+    await expect(page.getByText("Subject updated")).toBeVisible();
+    await expect(page.locator("li", { hasText: name })).toContainText("Ms. Probe");
+    // Zero residue: the row is DY4d's input; deleted there.
+  });
+
+  test("DY4d: the subject delete journey confirms through the AlertDialog's SetNull-consequences copy and the row is gone", async ({ page }) => {
+    await page.goto("/Settings");
+    await hydrated(page);
+    await page.getByRole("tab", { name: "Subjects" }).click();
+    await expect(page.getByRole("heading", { name: "Subjects" })).toBeVisible();
+    const name = dyStamp();
+    await page.getByRole("button", { name: "Add Subject" }).first().click();
+    const dlg = page.getByRole("dialog");
+    await dlg.locator("#subject-name").fill(name);
+    await dlg.getByRole("button", { name: "Add Subject", exact: true }).click();
+    await expect(dlg).toHaveCount(0);
+    const row = page.locator("li", { hasText: name });
+    await expect(row).toBeVisible();
+    // The delete journey: the AlertDialog's SetNull-consequences copy
+    // ("every task, exam, and note in it becomes unassigned").
+    await row.getByRole("button", { name: `Delete ${name}` }).click();
+    const confirm = page.getByRole("alertdialog");
+    await expect(confirm.getByRole("heading", { name: "Delete this subject?" })).toBeVisible();
+    await expect(confirm.getByText(`${name} will be removed and every task, exam, and note in it becomes unassigned. This cannot be undone.`)).toBeVisible();
+    await confirm.getByRole("button", { name: "Delete", exact: true }).click();
+    await expect(confirm).toHaveCount(0);
+    // Zero residue: the row is gone (the seeded subjects stay — the
+    // spec owned only its stamped row).
+    await expect(page.locator("li", { hasText: name })).toHaveCount(0);
+  });
+});

@@ -20,7 +20,19 @@ import { defineConfig, devices } from "@playwright/test";
 
 const PORT = Number(process.env.E2E_PORT ?? 3100);
 const BASE_URL = `http://localhost:${PORT}`;
-const E2E_DATABASE_URL = "file:../db/e2e.db";
+// S175/DY5 (the s175 cert's chunk-3 flake class, trace-diagnosed): the
+// ambient P1008 socket-timeout bursts — the app's own /api/rum telemetry
+// writes colliding with an interactive route transaction's shared-lock
+// window (the folder PATCH's cycle-guard chain walk is the widest), on a
+// contended sandbox whose IO intermittently freezes ~5s. The trace
+// timeline: three concurrent writes each stalling EXACTLY ~5.04s (the
+// connector default) and P1008-ing together, then everything fast again.
+// socket_timeout is the documented SQLite busy_timeout knob (quaint:
+// SECONDS — verified against the Prisma 6.19.3 CLI) — 30s rides the
+// burst out; NO assertion changes, the dev/prod URLs stay bare. The
+// class pre-existed as logged noise (S153's RumEvent class, S174's AJ1
+// flake, the S216 AK1d class); the s175 sandbox made it cert-blocking.
+const E2E_DATABASE_URL = "file:../db/e2e.db?socket_timeout=30";
 const AUTH_STATE = "tests/e2e/.auth/user.json";
 
 export default defineConfig({

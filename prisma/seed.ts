@@ -68,12 +68,15 @@ async function main(): Promise<void> {
 
   const subjects = await Promise.all(
     [
-      { name: "Mathematics", color: "#8b5cf6" },
-      { name: "Physics", color: "#3b82f6" },
-      { name: "Chemistry", color: "#10b981" },
-      { name: "History", color: "#f59e0b" },
-      { name: "English", color: "#ec4899" },
-      { name: "Biology", color: "#ef4444" },
+      // S175/DY1: the teacher/room demo values follow the reference
+      // dialog's measured placeholder register ("e.g., Mr. Smith" /
+      // "e.g., Room 101").
+      { name: "Mathematics", color: "#8b5cf6", teacher: "Mr. Smith", room: "Room 101" },
+      { name: "Physics", color: "#3b82f6", teacher: "Dr. Chen", room: "Room 204" },
+      { name: "Chemistry", color: "#10b981", teacher: "Ms. Garcia", room: "Lab 3" },
+      { name: "History", color: "#f59e0b", teacher: "Mr. Okafor", room: "Room 118" },
+      { name: "English", color: "#ec4899", teacher: "Mrs. Whitfield", room: "Room 112" },
+      { name: "Biology", color: "#ef4444", teacher: "Ms. Tran", room: "Lab 1" },
     ].map((s) => db.subject.create({ data: { ...s, userId: user.id } })),
   );
   const [math, physics, chemistry, history, english, biology] = subjects;

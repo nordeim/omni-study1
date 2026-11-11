@@ -193,8 +193,10 @@ export function MyDayView() {
           "My Day" followed directly by H3 "Good X!" — the reference itself
           ships the level-skip; the parity doctrine overrides the generic
           axe rule, the S9-B/Q parity pin the guard). ---- */}
+      {/* S175/DY2: the in-flight window is announced (the DM2/DL2/DK4
+          precedent, the family-wide port COMPLETED this cycle). */}
       {loading && tasks.length === 0 ? (
-        <div className="flex justify-center py-12 text-sf-primary">
+        <div role="status" aria-label="Loading tasks" className="flex justify-center py-12 text-sf-primary">
           <Spinner className="size-6" />
         </div>
       ) : !loading && tasks.length === 0 ? (

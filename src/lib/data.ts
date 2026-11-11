@@ -68,6 +68,10 @@ export type SubjectRow = {
   userId: string;
   name: string;
   color: string;
+  // S175/DY1: the ported subject metadata (the s175 reference probe —
+  // the measured Teacher/Room fields; the row renders both when set).
+  teacher: string;
+  room: string;
   createdAt: string;
   updatedAt: string;
 };

@@ -73,16 +73,35 @@ import { cn } from "@/lib/utils";
 // S174/DX4: HOLIDAY_TYPES the same (the measured Holiday/Break/No School
 // vocabulary — the enum-single-source census's eighth site).
 
+// S175/DY1 (the s175 reference probe — the measured 17-swatch palette):
+// the reference's Color field renders the Tailwind v3 500-ramp order
+// (red → rose), the violet #8b5cf6 the pristine default at index 12.
+// The s169-era 8-color scaffold list is superseded (the DX2 fresh-
+// measurement-precedent). The clone's aria-pressed + aria-labeled
+// swatches + the Custom color input stay (the documented a11y superset).
 const SUBJECT_COLORS = [
-  "#8b5cf6",
-  "#3b82f6",
-  "#10b981",
-  "#f59e0b",
-  "#ec4899",
-  "#ef4444",
-  "#14b8a6",
-  "#6366f1",
+  "#ef4444", // red-500
+  "#f97316", // orange-500
+  "#f59e0b", // amber-500
+  "#eab308", // yellow-500
+  "#84cc20", // lime-500
+  "#22c55e", // green-500
+  "#10b981", // emerald-500
+  "#14b8a6", // teal-500
+  "#06b6d4", // cyan-500
+  "#0ea5e9", // sky-500
+  "#3b82f6", // blue-500
+  "#6366f1", // indigo-500
+  "#8b5cf6", // violet-500 — the measured pristine default (index 12)
+  "#a855f7", // purple-500
+  "#d946ef", // fuchsia-500
+  "#ec4899", // pink-500
+  "#f43f5e", // rose-500
 ];
+
+// The measured pristine default (the s175 probe: the violet swatch
+// selected on a fresh dialog open — SUBJECT_COLORS[12]).
+const DEFAULT_SUBJECT_COLOR = SUBJECT_COLORS[12];
 
 function errorMessage(err: unknown, fallback: string): string {
   return err instanceof Error && err.message ? err.message : fallback;
@@ -705,7 +724,12 @@ function SubjectDialog({
   const { toast } = useToast();
   // State initializes from props per open session (parent key-remount).
   const [name, setName] = React.useState(subject?.name ?? "");
-  const [color, setColor] = React.useState(subject?.color ?? SUBJECT_COLORS[0]);
+  const [color, setColor] = React.useState(subject?.color ?? DEFAULT_SUBJECT_COLOR);
+  // S175/DY1: the ported optional metadata fields (the s175 reference
+  // probe — the measured "Teacher (optional)" + "Room (optional)"
+  // inputs; the write path exercised live on the reference).
+  const [teacher, setTeacher] = React.useState(subject?.teacher ?? "");
+  const [room, setRoom] = React.useState(subject?.room ?? "");
   const [saving, setSaving] = React.useState(false);
 
   const submit = async (event: React.FormEvent) => {
@@ -714,10 +738,20 @@ function SubjectDialog({
     setSaving(true);
     try {
       if (subject) {
-        await mutations.updateSubject(subject.id, { name: name.trim(), color });
+        await mutations.updateSubject(subject.id, {
+          name: name.trim(),
+          color,
+          teacher: teacher.trim(),
+          room: room.trim(),
+        });
         toast.success("Subject updated");
       } else {
-        await mutations.createSubject({ name: name.trim(), color });
+        await mutations.createSubject({
+          name: name.trim(),
+          color,
+          teacher: teacher.trim(),
+          room: room.trim(),
+        });
         toast.success("Subject created");
       }
       onOpenChange(false);
@@ -736,12 +770,15 @@ function SubjectDialog({
         </DialogHeader>
         <form className="flex flex-col gap-4" onSubmit={(e) => void submit(e)}>
           <div className="flex flex-col gap-1.5">
-            <Label htmlFor="subject-name">Name</Label>
+            {/* S175/DY1 (measured): the asterisked "Subject Name *" label
+                + the "e.g., Mathematics" placeholder — the s169-era
+                "Name"/"e.g. Biology" pair superseded. */}
+            <Label htmlFor="subject-name">Subject Name *</Label>
             <Input
               id="subject-name"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="e.g. Biology"
+              placeholder="e.g., Mathematics"
               required
               autoFocus
             />
@@ -757,7 +794,7 @@ function SubjectDialog({
                   aria-pressed={color === hex}
                   onClick={() => setColor(hex)}
                   className={cn(
-                    "size-7 rounded-full",
+                    "size-8 rounded-lg",
                     color === hex ? "ring-2 ring-sf-primary ring-offset-2 ring-offset-background" : "",
                   )}
                   style={{ backgroundColor: hex }}
@@ -774,6 +811,27 @@ function SubjectDialog({
                 />
               </label>
             </div>
+          </div>
+          {/* S175/DY1 (measured): the "Teacher (optional)" + "Room
+              (optional)" fields — the s175 probe's new inputs, both
+              optional (the labels' own "(optional)" register). */}
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="subject-teacher">Teacher (optional)</Label>
+            <Input
+              id="subject-teacher"
+              value={teacher}
+              onChange={(e) => setTeacher(e.target.value)}
+              placeholder="e.g., Mr. Smith"
+            />
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="subject-room">Room (optional)</Label>
+            <Input
+              id="subject-room"
+              value={room}
+              onChange={(e) => setRoom(e.target.value)}
+              placeholder="e.g., Room 101"
+            />
           </div>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
@@ -841,7 +899,26 @@ function SubjectsTab() {
               className="flex items-center gap-3 rounded-xl border border-slate-100 p-3 dark:border-slate-800"
             >
               <span aria-hidden className="size-3 rounded-full" style={{ backgroundColor: subject.color }} />
-              <span className="flex-1 font-medium text-slate-700 dark:text-slate-200">{subject.name}</span>
+              <span className="min-w-0 flex-1">
+                <span className="block font-medium text-slate-700 dark:text-slate-200">
+                  {subject.name}
+                </span>
+                {/* S175/DY1 (measured): the reference's row renders the
+                    subject metadata under the name — the teacher at
+                    text-sm slate-500 + the room at text-xs slate-400
+                    (the s175 probe's computed typography). Empty values
+                    render nothing (the additive-column posture). */}
+                {subject.teacher ? (
+                  <span className="block text-sm text-slate-500 dark:text-slate-400">
+                    {subject.teacher}
+                  </span>
+                ) : null}
+                {subject.room ? (
+                  <span className="block text-xs text-slate-400 dark:text-slate-500">
+                    {subject.room}
+                  </span>
+                ) : null}
+              </span>
               <div className="flex items-center gap-1">
                 <button
                   type="button"
@@ -1074,8 +1151,11 @@ function HolidaysTab() {
           <Plus className="size-4" strokeWidth={2} /> Add Holiday
         </Button>
       </div>
+      {/* S175/DY2: the in-flight window is announced (the DM2/DL2/DK4
+          precedent, the family-wide port COMPLETED this cycle — the
+          HolidaysTab twin, the SubjectsTab gate's sibling). */}
       {loading && sorted.length === 0 ? (
-        <div className="flex justify-center py-8 text-sf-primary">
+        <div role="status" aria-label="Loading holidays" className="flex justify-center py-8 text-sf-primary">
           <Spinner className="size-6" />
         </div>
       ) : sorted.length === 0 ? (

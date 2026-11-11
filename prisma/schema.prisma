@@ -96,6 +96,14 @@ model Subject {
   userId    String
   name      String
   color     String   @default("#8b5cf6")
+  // S175/DY1 (the s175 reference probe): the reference's Add Subject
+  // dialog records a Teacher + a Room beside every subject (both
+  // optional; the measured row renders name + teacher + room). Additive
+  // columns — `db push` backfills the empty-string default; legacy rows
+  // and partial API writes render no row metadata (the DX4 endDate
+  // additive-column precedent).
+  teacher   String   @default("")
+  room      String   @default("")
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)

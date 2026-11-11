@@ -245,8 +245,10 @@ export function DashboardView() {
           (tasks alone) rendered a false "0h" Focus Time whenever tasks had
           landed but focusSessions was still in flight (a boot at any route
           whose pre-warm excludes focusSessions, then navigating here). */}
+      {/* S175/DY2: the in-flight window is announced (the DM2/DL2/DK4
+            precedent, the family-wide port COMPLETED this cycle). */}
       {loading && (tasks.length === 0 || focusSessions.length === 0) ? (
-        <div className="flex justify-center py-16 text-sf-primary">
+        <div role="status" aria-label="Loading dashboard" className="flex justify-center py-16 text-sf-primary">
           <Spinner className="size-6" />
         </div>
       ) : (
@@ -306,8 +308,9 @@ export function DashboardView() {
           {/* S136/CK4: the CE3 gate — an in-flight tasks load renders the
               loading branch, never the false "No tasks for today" (the
               KPI-row idiom extended to the section cards). */}
+          {/* S175/DY2: the card gate (the tasks leg). */}
           {loading && tasks.length === 0 ? (
-            <div className="flex justify-center py-10 text-sf-primary">
+            <div role="status" aria-label="Loading tasks" className="flex justify-center py-10 text-sf-primary">
               <Spinner className="size-6" />
             </div>
           ) : todayScope.length === 0 ? (
@@ -372,8 +375,9 @@ export function DashboardView() {
         >
           {/* S136/CK4: the CE3 gate (the e2e pin holds BOTH this card and
               the assignments card — never the false "No upcoming exams"). */}
+          {/* S175/DY2: the card gate (the exams leg). */}
           {loading && exams.length === 0 ? (
-            <div className="flex justify-center py-10 text-sf-primary">
+            <div role="status" aria-label="Loading exams" className="flex justify-center py-10 text-sf-primary">
               <Spinner className="size-6" />
             </div>
           ) : upcomingExams.length === 0 ? (
@@ -434,8 +438,9 @@ export function DashboardView() {
       >
         {/* S136/CK4: the CE3 gate — never the false "No upcoming
             assignments" during an in-flight load. */}
+        {/* S175/DY2: the card gate (the assignments leg). */}
         {loading && assignments.length === 0 ? (
-          <div className="flex justify-center py-10 text-sf-primary">
+          <div role="status" aria-label="Loading assignments" className="flex justify-center py-10 text-sf-primary">
             <Spinner className="size-6" />
           </div>
         ) : activeAssignments.length === 0 ? (

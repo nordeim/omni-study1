@@ -499,7 +499,7 @@ const EDGE_DARK_CONSUMERS: ReadonlyArray<{ file: string; line: number; pattern: 
   { file: "src/components/views/tasks-view.tsx", line: 115, pattern: /dark:hover:border-sf-primary-edge-dark/, why: "the row-card hover border's dark half (violet-800 → the edge-dark token; byte-identical at violet)" },
   { file: "src/components/views/flashcards-view.tsx", line: 437, pattern: /dark:border-sf-primary-edge-dark/, why: "the study-card face border's dark half (violet-800 → the edge-dark token)" },
   { file: "src/components/views/notes-view.tsx", line: 784, pattern: /dark:border-sf-primary-edge-dark/, why: "the selected-note row border's dark half (violet-900 → the family value — the S92 divergent-variant collapse; anchor 736 → 761 re-anchored S161/DJ1, the mutateTags block added lines above the site — tripped as designed; 761 → 784 re-anchored S166/DP2+DP3, the loading-gate aria contracts + the rendered-text search comment added lines above the site — tripped as designed)" },
-  { file: "src/components/views/analytics-view.tsx", line: 430, pattern: /dark:bg-sf-primary-edge-dark\/50/, why: "the Tasks-Completed chip's dark half (violet-900/50 → the edge-dark token at /50 — both serialize through the v4 color-mix family)" },
+  { file: "src/components/views/analytics-view.tsx", line: 432, pattern: /dark:bg-sf-primary-edge-dark\/50/, why: "the Tasks-Completed chip's dark half (violet-900/50 → the edge-dark token at /50 — both serialize through the v4 color-mix family; anchor 430 → 432 re-anchored S175/DY2, the loading-gate aria contract comment added lines above the site — tripped as designed)" },
 ];
 
 // The S135/CJ3 treated-light-half census: the five migrations, pinned to
@@ -510,7 +510,7 @@ const EDGE_CONSUMERS: ReadonlyArray<{ file: string; line: number; pattern: RegEx
   { file: "src/components/views/flashcards-view.tsx", line: 437, pattern: /border-sf-primary-edge/, why: "the study-card face border" },
   { file: "src/components/views/notes-view.tsx", line: 784, pattern: /border-sf-primary-edge/, why: "the selected-note row border (anchor 736 → 761 re-anchored S161/DJ1 — the mutateTags block added lines above the site; tripped as designed; 761 → 784 re-anchored S166/DP2+DP3)" },
   { file: "src/components/views/notes-view.tsx", line: 784, pattern: /bg-sf-primary-softest/, why: "the selected-note row tint (re-anchored with its border sibling, S161/DJ1; 761 → 784 re-anchored S166/DP2+DP3)" },
-  { file: "src/components/views/analytics-view.tsx", line: 430, pattern: /bg-sf-primary-empty/, why: "the Tasks-Completed chip" },
+  { file: "src/components/views/analytics-view.tsx", line: 432, pattern: /bg-sf-primary-empty/, why: "the Tasks-Completed chip (anchor 430 → 432 re-anchored S175/DY2 — tripped as designed)" },
 ];
 
 describe("the accent-semantic violet register (S134/CI8 → S135/CJ3, the dark half)", () => {

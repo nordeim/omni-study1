@@ -1,7 +1,25 @@
 import { defineConfig } from "vitest/config";
 import path from "node:path";
 
-// Unit-test layer for the pure domain seams — 51 files / 1731 tests
+// Unit-test layer for the pure domain seams — 51 files / 1733 tests
+// (re-anchored S175/DY — the subjects-family field-port cycle: census
+// 1731 → 1733, +2 net [script-conventions +2: the S175/DY3 CLAUDE.md
+// census cross-read PAIR — the unit line + the e2e line, the CQ6
+// family extended to the last unpinned doc; the stale 641 the audit
+// found is the pin's own RED proof]. The e2e census moves 645 → 650
+// [+5: the S175/DY1 subject create-dialog parity pin + teacher/room
+// field port in parity-session7 — the reference's dialog re-deployment
+// measured live at the s175 gated write-path probe (the write path
+// WORKS this time — create → row render → delete exercised live,
+// zero residue): the "Subject Name *" label + the "e.g., Mathematics"
+// placeholder + the SEVENTEEN-swatch 32px/rounded-lg palette (the
+// violet #8b5cf6 pristine default) + the "Teacher (optional)" +
+// "Room (optional)" fields + the [Cancel][Add Subject] footer] + the
+// four S175/DY4 gradetracker/settings-CRUD + AlertDialog-confirm
+// legs — the grade edit round-trip, the grade delete confirm, the
+// subject create-with-fields → row metadata → edit round-trip, the
+// subject delete SetNull-consequences confirm; green-on-arrival
+// coverage].)
 // (re-anchored S174/DX — the CB8 COMPLETION cycle: the focusSessions +
 // holidays + calculatorHistory families close the recorded family-wide
 // port; census 1719 → 1731, +12 net [data-store +10: the S174/DX1
