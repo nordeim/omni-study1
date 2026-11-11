@@ -256,7 +256,10 @@ describe("the chunked cert runner's truth contract (S128/CC2)", () => {
     // subject create-with-fields → row metadata → edit round-trip,
     // the subject delete SetNull-consequences confirm;
     // green-on-arrival coverage) — 645 → 650.
-    expect(certSource).toContain("Expected: 158 + 207 + 101 + 95 + 89 = 650");
+    // S176/DZ re-tag: 650 → 654, chunk 2 +4 (the S176/DZ events/
+    // studygroups/tasks dialog catch-up pins in parity-session7 — see
+    // docs/remediation-plan-session176.md).
+    expect(certSource).toContain("Expected: 158 + 211 + 101 + 95 + 89 = 654");
   });
 
   it("propagates a failing chunk's exit code (never a green cert on a red run)", () => {
@@ -579,10 +582,12 @@ describe("the e2e posture + always-cold censuses (S131/CF4+CF5)", () => {
     const coldReset = path.resolve(process.cwd(), "scripts/e2e-cold-reset.sh");
     const script = readFileSync(coldReset, "utf8");
     // The cert-script port-guard procedure (kill by port, health-verify,
-    // SIGKILL escalation) + the cold deletion.
+    // SIGKILL escalation) + the cold deletion. S176/DZ5: the scratch db
+    // moved to /dev/shm (tmpfs — the IO-freeze cure; see playwright.config
+    // .ts's S176/DZ5 comment) — the deletion globs the tmpfs scratch file.
     expect(script).toMatch(/api\/health/);
     expect(script).toMatch(/kill -9/);
-    expect(script).toMatch(/rm -f db\/e2e\.db/);
+    expect(script).toMatch(/rm -f .*e2e\.db\*/);
 
     // package.json chains it BEFORE playwright test.
     const pkg = JSON.parse(readFileSync(path.resolve(process.cwd(), "package.json"), "utf8"));

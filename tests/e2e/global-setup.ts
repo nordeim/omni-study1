@@ -1,16 +1,20 @@
 import { execSync } from "node:child_process";
+import { mkdirSync } from "node:fs";
 import path from "node:path";
 
 /**
  * Playwright global setup: guarantee the isolated e2e database exists and
  * carries the demo seed, so every spec run starts from the same state.
  *
- * The database lives at <repo>/db/e2e.db (gitignored like every db/*.db).
- * DATABASE_URL is SHELL-provided here, and the Prisma CLI anchors
- * shell-provided relative `file:` URLs against prisma/schema.prisma — so
- * `file:../db/e2e.db` targets <repo>/db/e2e.db (empirically verified; see
- * prisma/schema.prisma's DATABASE PATH CONTRACT note). The seed resolves
- * the same env var at runtime through src/lib/db-path.ts.
+ * S176/DZ5: the database lives at /dev/shm/omni-study1-e2e/e2e.db — a
+ * THROWAWAY tmpfs (RAM) scratch file (the IO-freeze cure; see
+ * playwright.config.ts's S176/DZ5 comment for the full trace-timeline
+ * diagnosis). DATABASE_URL is SHELL-provided here; the ABSOLUTE `file:`
+ * URL needs no anchor (the db-path seam passes absolute URLs through
+ * untouched). The seed resolves the same env var at runtime through
+ * src/lib/db-path.ts. The /dev/shm volume evaporates on sandbox recycle —
+ * harmless: the cold reset deletes the scratch db before every run
+ * anyway (the S46 always-cold doctrine).
  *
  * S131/CF5 (the design correction): the COLD reset (port-guard + rm of the
  * scratch db) does NOT live here — Playwright boots the webServer BEFORE
@@ -26,9 +30,13 @@ import path from "node:path";
 export default function globalSetup(): void {
   const repo = path.resolve(__dirname, "..", "..");
 
+  // The tmpfs scratch dir must exist before ANY consumer opens the db —
+  // SQLite creates a missing FILE, never a missing DIRECTORY.
+  mkdirSync("/dev/shm/omni-study1-e2e", { recursive: true });
+
   const env = {
     ...process.env,
-    DATABASE_URL: "file:../db/e2e.db",
+    DATABASE_URL: "file:/dev/shm/omni-study1-e2e/e2e.db",
     // S131/CF4: the demo account is auth.setup's login — an operator's
     // exported SEED_DEMO=0 must not skip it (the config pins the server
     // posture; the seed leg pins its own).

@@ -51,6 +51,13 @@ export function expandOccurrences(
       case "monthly":
         if (d.getDate() === start.getDate()) hits.push(day);
         break;
+      // S176/DZ1: the same month+day across years — the monthly seam's
+      // calendar-truth posture (no synthetic shifting: a Feb-29 start
+      // hits only leap-year Feb 29s, the Jan-31-skips-February
+      // precedent).
+      case "yearly":
+        if (d.getMonth() === start.getMonth() && d.getDate() === start.getDate()) hits.push(day);
+        break;
       default:
         if (diffDays === 0) hits.push(day);
     }

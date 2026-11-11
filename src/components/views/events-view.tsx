@@ -51,11 +51,28 @@ import { Spinner } from "@/components/views/shared";
 import { mutations, useDataStore, type EventInput, type EventRow } from "@/lib/data";
 import { addDays, daysUntil, formatWeekdayMonthDay, referenceWeekNumber, startOfDay } from "@/lib/date";
 import { expandOccurrences } from "@/lib/events";
+import {
+  minutesToRows,
+  rowsToMinutes,
+  type ReminderRow,
+} from "@/lib/reminder-rows";
 import { REPEATS } from "@/lib/validation";
 import { ApiError } from "@/lib/api";
 import { fromDatetimeLocalInput, toDatetimeLocalValue } from "@/lib/date";
 import { cn } from "@/lib/utils";
 
+// S176/DZ1 (the s176 reference probe — the measured six-swatch
+// palette): the reference's event dialog carries SIX color swatches —
+// #8b5cf6/#3b82f6/#10b981/#f59e0b/#ef4444/#ec4899 — the prior eight
+// carried two scaffold-era extras (#14b8a6 teal, #64748b slate). The
+// schema's hexColor validation stays OPEN (existing teal/slate rows
+// keep rendering — the functional superset lives at the schema; the
+// visual parity at the dialog). The swatch geometry: w-8 h-8 (32px)
+// rounded-full with the measured selection state — the white 2px +
+// slate 4px double ring + scale(1.1) — shipped as the inline-style
+// boxShadow below (two rings cannot stack in Tailwind's ring
+// utilities; the plain declaration is the byte-exact route, the
+// SKILL §12 cascade-law posture).
 const EVENT_COLORS = [
   "#8b5cf6",
   "#3b82f6",
@@ -63,11 +80,17 @@ const EVENT_COLORS = [
   "#f59e0b",
   "#ef4444",
   "#ec4899",
-  "#14b8a6",
-  "#64748b",
 ];
 
-const REMINDER_CHOICES = [15, 30, 60];
+// S176/DZ1 (the s176 reference probe — the measured repeating-rows
+// shape): the reference's reminders control is a row list — a number
+// input (min=1) + a unit select (minutes/hours/days) per row — with an
+// "Add" button appending a new row (the measured 30-minutes default).
+// The event MODEL is untouched (the wire stays the minutes JSON array);
+// src/lib/reminder-rows.ts owns the conversion, unit-pinned.
+const DEFAULT_NEW_ROW: ReminderRow = { value: 30, unit: "minutes" };
+
+const REMINDER_UNITS = ["minutes", "hours", "days"] as const;
 
 type DialogState =
   | { open: false }
@@ -100,7 +123,10 @@ export function EventsView() {
     repeat: "none",
     description: "",
   });
-  const [reminders, setReminders] = React.useState<number[]>([]);
+  // S176/DZ1: the rows are the dialog's editing surface; rowsToMinutes
+  // (the seam's guarded write surface) converts on submit — the wire's
+  // reminders JSON stays the minutes array the API/import seams own.
+  const [reminderRows, setReminderRows] = React.useState<ReminderRow[]>([]);
   const [busy, setBusy] = React.useState(false);
   const [error, setError] = React.useState("");
   // S152/DA1 (the S151 audit's B-L5): the delete double-fire latch — a
@@ -131,7 +157,7 @@ export function EventsView() {
       repeat: "none",
       description: "",
     });
-    setReminders([]);
+    setReminderRows([{ ...DEFAULT_NEW_ROW }]);
     setError("");
     setDialog({ open: true, editing: null });
   };
@@ -151,9 +177,15 @@ export function EventsView() {
     });
     try {
       const parsed: unknown = JSON.parse(event.reminders);
-      setReminders(Array.isArray(parsed) ? parsed.filter((n): n is number => typeof n === "number") : []);
+      // S176/DZ1: the stored minutes array renders as rows (the seam's
+      // largest-clean-unit derivation — 1440 → "1 day", 120 → "2 hours").
+      setReminderRows(
+        Array.isArray(parsed)
+          ? minutesToRows(parsed.filter((n): n is number => typeof n === "number"))
+          : [],
+      );
     } catch {
-      setReminders([]);
+      setReminderRows([]);
     }
     setError("");
     setDialog({ open: true, editing: event });
@@ -185,7 +217,7 @@ export function EventsView() {
       color: form.color,
       location: form.location,
       repeat: form.repeat as EventInput["repeat"],
-      reminders: JSON.stringify(reminders),
+      reminders: JSON.stringify(rowsToMinutes(reminderRows)),
       description: form.description,
     };
     try {
@@ -221,12 +253,22 @@ export function EventsView() {
     }
   };
 
-  const toggleReminder = (minutes: number) =>
-    setReminders((prev) =>
-      prev.includes(minutes)
-        ? prev.filter((m) => m !== minutes)
-        : [...prev, minutes].sort((a, b) => a - b),
+  // S176/DZ1 (the measured repeating-rows handlers): update / append /
+  // remove — every row's input is min=1 and aria-labeled (the clone's
+  // a11y superset over the reference's unlabeled rows), the Add button
+  // appends the measured 30-minutes default, and the remove button
+  // keeps at least the dialog's no-empty-row shape (removing the last
+  // row clears the reminders entirely — the measured Add flow).
+  const updateRow = (index: number, patch: Partial<ReminderRow>) =>
+    setReminderRows((prev) =>
+      prev.map((row, i) => (i === index ? { ...row, ...patch } : row)),
     );
+
+  const addRow = () =>
+    setReminderRows((prev) => [...prev, { ...DEFAULT_NEW_ROW }]);
+
+  const removeRow = (index: number) =>
+    setReminderRows((prev) => prev.filter((_, i) => i !== index));
 
   // The measured rule (Batch U probe): relative labels belong to the REAL
   // today/tomorrow — an index-based rule mislabels the re-anchored list
@@ -442,7 +484,7 @@ export function EventsView() {
                 id="event-title"
                 value={form.title}
                 onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
-                placeholder="Study group — calculus"
+                placeholder="Event title"
                 required
               />
             </div>
@@ -486,10 +528,24 @@ export function EventsView() {
                     aria-pressed={form.color === hex}
                     onClick={() => setForm((f) => ({ ...f, color: hex }))}
                     className={cn(
-                      "size-7 rounded-full outline-none focus-visible:ring-2 focus-visible:ring-sf-primary/40",
-                      form.color === hex && "ring-2 ring-slate-900 ring-offset-2 dark:ring-white",
+                      // S176/DZ1: the measured selection state — white 2px +
+                      // slate 4px double ring + scale(1.1), shipped as INLINE
+                      // styles (two rings cannot stack in Tailwind's ring
+                      // utilities, and v4's scale-110 writes the `scale`
+                      // property — the reference's computed transform reads
+                      // matrix(1.1); the inline transform matches it
+                      // byte-exactly).
+                      "size-8 rounded-full outline-none focus-visible:ring-2 focus-visible:ring-sf-primary/40",
                     )}
-                    style={{ backgroundColor: hex }}
+                    style={{
+                      backgroundColor: hex,
+                      ...(form.color === hex
+                        ? {
+                            boxShadow: "0 0 0 2px #fff, 0 0 0 4px #94a3b8",
+                            transform: "scale(1.1)",
+                          }
+                        : null),
+                    }}
                   />
                 ))}
               </div>
@@ -500,7 +556,7 @@ export function EventsView() {
                 id="event-location"
                 value={form.location}
                 onChange={(e) => setForm((f) => ({ ...f, location: e.target.value }))}
-                placeholder="Room 210 or https://…"
+                placeholder="Room or meeting URL"
               />
             </div>
             <div className="flex flex-col gap-1.5">
@@ -510,6 +566,7 @@ export function EventsView() {
                 value={form.description}
                 onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
                 rows={3}
+                placeholder="Event details..."
               />
             </div>
             <div className="flex flex-col gap-1.5">
@@ -536,23 +593,63 @@ export function EventsView() {
             </div>
             <div className="flex flex-col gap-1.5">
               <Label>Reminders</Label>
-              <div className="flex gap-2">
-                {REMINDER_CHOICES.map((m) => (
-                  <button
-                    key={m}
-                    type="button"
-                    aria-pressed={reminders.includes(m)}
-                    onClick={() => toggleReminder(m)}
-                    className={cn(
-                      "rounded-full border px-3 py-1 text-xs font-medium outline-none focus-visible:ring-2 focus-visible:ring-sf-primary/40",
-                      reminders.includes(m)
-                        ? "border-sf-primary bg-sf-primary-soft text-sf-primary-strong dark:text-sf-primary-strong-dark"
-                        : "border-gray-200 text-slate-600 dark:border-slate-700 dark:text-slate-300",
-                    )}
-                  >
-                    {m} min
-                  </button>
+              {/* S176/DZ1 (the s176 reference probe — the measured
+                  repeating-rows shape): a number input + a unit select per
+                  row + the "Add" button. The stored model stays the minutes
+                  JSON array (rowsToMinutes converts on submit); every row's
+                  controls carry aria-labels — the clone's a11y superset
+                  over the reference's unlabeled rows. */}
+              <div className="flex flex-col gap-2">
+                {reminderRows.map((row, i) => (
+                  <div key={i} className="flex items-center gap-2">
+                    <Input
+                      type="number"
+                      min={1}
+                      value={Number.isFinite(row.value) ? row.value : ""}
+                      aria-label={`Reminder value ${i + 1}`}
+                      onChange={(e) =>
+                        updateRow(i, { value: e.target.valueAsNumber })
+                      }
+                      className="w-20"
+                    />
+                    <Select
+                      value={row.unit}
+                      onValueChange={(v) =>
+                        updateRow(i, { unit: v as ReminderRow["unit"] })
+                      }
+                    >
+                      <SelectTrigger aria-label={`Reminder unit ${i + 1}`} className="h-9 w-28">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {REMINDER_UNITS.map((u) => (
+                          <SelectItem key={u} value={u}>
+                            {u}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      aria-label={`Remove reminder ${i + 1}`}
+                      onClick={() => removeRow(i)}
+                      className="px-2 text-slate-500 hover:text-destructive dark:text-slate-400"
+                    >
+                      ×
+                    </Button>
+                  </div>
                 ))}
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={addRow}
+                  className="w-fit"
+                >
+                  Add
+                </Button>
               </div>
             </div>
 
@@ -571,7 +668,7 @@ export function EventsView() {
                 className="sf-gradient-shadow"
                 disabled={busy}
               >
-                {dialog.open && dialog.editing ? "Save changes" : "Create event"}
+                {dialog.open && dialog.editing ? "Save changes" : "Create Event"}
               </Button>
             </DialogFooter>
           </form>

@@ -133,7 +133,11 @@ function GroupDialog({
         </DialogHeader>
         <form className="flex flex-col gap-4" onSubmit={(e) => void submit(e)}>
           <div className="flex flex-col gap-1.5">
-            <Label htmlFor="group-name">Name</Label>
+            {/* S176/DZ2 (the s176 reference probe): the measured label
+                reads "Group Name \*" — the scaffold-era "Name" was a
+                never-measured shortening (the S171 port measured the
+                placeholders + the field order, not the label copy). */}
+            <Label htmlFor="group-name">Group Name *</Label>
             <Input
               id="group-name"
               value={name}
@@ -143,12 +147,10 @@ function GroupDialog({
               autoFocus
             />
           </div>
-          {/* S171/DU2b: the reference's description textarea (the measured
-              placeholder) — the clone's visible-Label superset over the
-              reference's placeholder-only input, the established a11y
-              posture (the deck dialog's "Description (optional)" idiom). */}
+          {/* S176/DZ2 (the s176 reference probe): the measured label reads
+              "Description" — no "(optional)" suffix. */}
           <div className="flex flex-col gap-1.5">
-            <Label htmlFor="group-description">Description (optional)</Label>
+            <Label htmlFor="group-description">Description</Label>
             <textarea
               id="group-description"
               value={description}
@@ -175,10 +177,24 @@ function GroupDialog({
                   aria-pressed={color === hex}
                   onClick={() => setColor(hex)}
                   className={cn(
-                    "size-7 rounded-full outline-none focus-visible:ring-2 focus-visible:ring-sf-primary/40",
-                    color === hex && "ring-2 ring-slate-900 ring-offset-2 dark:ring-white",
+                    // S176/DZ2 (the s176 reference probe): the measured
+                    // geometry — w-8 h-8 (32px) rounded-full, the selected
+                    // state the white 2px + slate 4px double ring +
+                    // scale(1.1) — INLINE (two rings cannot stack in
+                    // Tailwind's ring utilities; v4's scale-110 writes the
+                    // `scale` property while the reference's computed
+                    // transform reads matrix(1.1)).
+                    "size-8 rounded-full outline-none focus-visible:ring-2 focus-visible:ring-sf-primary/40",
                   )}
-                  style={{ backgroundColor: hex }}
+                  style={{
+                    backgroundColor: hex,
+                    ...(color === hex
+                      ? {
+                          boxShadow: "0 0 0 2px #fff, 0 0 0 4px #94a3b8",
+                          transform: "scale(1.1)",
+                        }
+                      : null),
+                  }}
                 />
               ))}
             </div>

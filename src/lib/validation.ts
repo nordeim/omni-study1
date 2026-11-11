@@ -99,7 +99,10 @@ export function normalizeHhmmForInput(value: string): string {
 
 export const TASK_PRIORITIES = ["none", "low", "medium", "high"] as const;
 export const ASSIGNMENT_PRIORITIES = ["low", "medium", "high", "urgent"] as const;
-export const REPEATS = ["none", "daily", "weekly", "monthly"] as const;
+// S176/DZ1: "yearly" joins the vocabulary (the s176 reference probe —
+// the reference's event-dialog repeat select carries FIVE options;
+// the yearly case rides expandOccurrences' calendar-truth posture).
+export const REPEATS = ["none", "daily", "weekly", "monthly", "yearly"] as const;
 // S126/CA14: the vocabulary single-source — the route schemas AND the
 // import seam's domain caps consume the SAME arrays (the twin-validator
 // hazard the s126 audit closed for the row-id rule, applied to the enums).

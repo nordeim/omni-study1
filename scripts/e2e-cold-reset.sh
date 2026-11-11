@@ -28,9 +28,13 @@ if curl -s -o /dev/null --max-time 2 "http://localhost:${port}/api/health"; then
     exit 1
   fi
 fi
-# S155/DD4a: the glob (not the bare db/e2e.db) — a crash-left -journal
+# S155/DD4a: the glob (not the bare db file) — a crash-left -journal
 # sidecar survives a bare rm and would hot-journal-recover against the
-# freshly pushed db; the -wal/-shm patterns are the same hygiene (nothing
-# else matches this glob).
-rm -f db/e2e.db*
-echo "[e2e-cold-reset] port ${port} clear, db/e2e.db removed — the run starts cold"
+# freshly pushed db; the -wal/-shm patterns are the same hygiene.
+# S176/DZ5: the scratch db lives on /dev/shm (tmpfs — the IO-freeze cure,
+# see playwright.config.ts's S176/DZ5 comment) — the dir is recreated
+# because SQLite creates a missing FILE, never a missing DIRECTORY.
+E2E_SCRATCH_DIR="/dev/shm/omni-study1-e2e"
+mkdir -p "${E2E_SCRATCH_DIR}"
+rm -f ${E2E_SCRATCH_DIR}/e2e.db*
+echo "[e2e-cold-reset] port ${port} clear, the tmpfs scratch db removed — the run starts cold"

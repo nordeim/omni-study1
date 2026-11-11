@@ -1,4 +1,29 @@
 #!/usr/bin/env bash
+# (S176/DZ re-tag — census 650 → 654, net +4: chunk 2 +4 [the
+# S176/DZ events/studygroups/tasks dialog catch-up pins in
+# parity-session7 — the first placeholder-level + geometry-level
+# measurement of the older families' dialogs, the s176 multi-family
+# reference sweep: the events dialog's placeholder trio
+# ("Event title"/"Room or meeting URL"/"Event details...") + the
+# SIX-swatch 32px rounded-full palette with the white-2px +
+# slate-4px double-ring + scale(1.1) selected state (the measured
+# idiom; the two scaffold-era teal/slate extras retired from the
+# dialog — the schema's hexColor stays open, the functional
+# superset) + the repeating-ROWS reminders control (a number
+# input + a minutes/hours/days unit select per row + the Add
+# button appending the measured 30-minutes default — the wire's
+# minutes JSON model untouched, the src/lib/reminder-rows seam
+# owns the conversion, unit-pinned) + the FIVE-option repeat
+# select ("yearly" joins the REPEATS single source — the
+# expandOccurrences yearly case follows the monthly seam's
+# calendar-truth posture, unit-pinned) + the "Create Event"
+# submit case; the studygroups "Group Name *" + "Description"
+# labels + the same swatch idiom (the S171-era "Name"/
+# "Description (optional)" retired); the tasks "Task name..."
+# placeholder; + the DZ1b reminders rows round-trip leg — the
+# create-with-rows → edit re-render journey, the port's own
+# live-journey proof, zero residue]. The full DZ map:
+# docs/remediation-plan-session176.md.)
 # (S175/DY re-tag — census 645 → 650, net +5: chunk 2 +5 [the
 # S175/DY1 subject create-dialog parity catch-up + teacher/room
 # field-port pin in parity-session7 — the reference's dialog
@@ -395,7 +420,7 @@
 # deterministic defaults so the leg fills only the title + score +
 # max; network-mocked, no server writes beyond the zero-residue
 # create]. The full DW map: docs/remediation-plan-session173.md.)
-# Expected: 158 + 207 + 101 + 95 + 89 = 650 (each chunk's count includes its
+# Expected: 158 + 211 + 101 + 95 + 89 = 654 (each chunk's count includes its
 # auth setup — the current census; the historical re-tag blocks beneath.)
 # (S171/DU re-tag — census 634 → 637, net +3: chunk 2 +2 [the
 # S171/DU2 studygroups create-dialog parity catch-up pair in
@@ -689,7 +714,11 @@ for chunk in "${CHUNKS[@]}"; do
       exit 1
     fi
   fi
-  rm -f db/e2e.db
+  # S176/DZ5: the tmpfs scratch-db posture (see playwright.config.ts's
+  # S176/DZ5 comment — the IO-freeze cure; the dir is recreated because
+  # SQLite creates a missing FILE, never a missing DIRECTORY).
+  rm -f /dev/shm/omni-study1-e2e/e2e.db*
+  mkdir -p /dev/shm/omni-study1-e2e
   echo "=== CHUNK $i: $(echo $chunk | wc -w) files ==="
   # S128/CC2: accumulate the chunk pipeline's REAL exit status — the
   # pre-CC2 loop discarded it (a red chunk never failed the script; the

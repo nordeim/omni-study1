@@ -316,7 +316,7 @@ export function TaskDialog({
               id="task-title"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              placeholder="Task name"
+              placeholder="Task name..."
               required
               autoFocus
             />

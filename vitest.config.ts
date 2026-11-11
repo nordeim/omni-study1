@@ -1,7 +1,24 @@
 import { defineConfig } from "vitest/config";
 import path from "node:path";
 
-// Unit-test layer for the pure domain seams — 51 files / 1733 tests
+// Unit-test layer for the pure domain seams — 52 files / 1743 tests
+// (re-anchored S176/DZ — the events/studygroups/tasks dialog catch-up
+// cycle: census 1733 → 1743, +10 net [events +4: the S176/DZ1 Yearly
+// recurrence pins — the same month+day across years, the Feb-29
+// leap-year calendar truth, the start-day contract, the past-start
+// guard at the new enum value; reminder-rows +6 (a NEW seam + spec):
+// the rowToMinutes unit factors, the defensive filter, the
+// minutesToRow largest-clean-unit derivation, the round-trip identity,
+// the write-side dedup]. The e2e census moves 650 → 654 [+4: the
+// S176/DZ events create-dialog parity pin (the placeholder trio +
+// the six-swatch 32px rounded-full palette with the white+slate
+// double-ring + scale(1.1) selected state + the repeating-ROWS
+// reminders control + the five-option repeat select with Yearly +
+// the "Create Event" submit copy) + the DZ1b reminders rows
+// round-trip leg + the DZ2 studygroups label/swatch-idiom pin + the
+// DZ3 tasks "Task name..." placeholder trio — the first
+// placeholder-level + geometry-level measurement of the older
+// families' dialogs, the s176 multi-family reference sweep].)
 // (re-anchored S175/DY — the subjects-family field-port cycle: census
 // 1731 → 1733, +2 net [script-conventions +2: the S175/DY3 CLAUDE.md
 // census cross-read PAIR — the unit line + the e2e line, the CQ6

@@ -136,3 +136,54 @@ describe("expandOccurrences (S162/DK5 — the promoted seam)", () => {
     expect(hits.map((d) => d.getDate())).toEqual([10]);
   });
 });
+
+// ---------------------------------------------------------------------------
+// S176/DZ1 — the Yearly repeat leg (the s176 reference probe: the
+// reference's event-dialog repeat select carries FIVE options —
+// No repeat/Daily/Weekly/Monthly/Yearly — while the clone's REPEATS
+// single source (validation.ts:102) shipped four). The yearly rule
+// follows the monthly seam's calendar-truth posture: the same
+// month+day across years, no synthetic shifting (a Feb-29 start hits
+// only leap-year Feb 29s — the Jan-31-skips-February precedent).
+// The pins ride the same structural param the seam exposes.
+// ---------------------------------------------------------------------------
+describe("expandOccurrences — yearly (S176/DZ1)", () => {
+  it("yearly: hits the same month+day anniversary inside the window", () => {
+    // Start Mar 10 2026; the window spans the 2027 anniversary.
+    const focus = new Date(2027, 2, 8); // Mon Mar 8 → Sun Mar 14 2027
+    const days = windowFrom(focus);
+    const hits = expandOccurrences(event("2026-03-10T10:00", "yearly"), days);
+    expect(hits.map((d) => d.toDateString())).toEqual([
+      new Date(2027, 2, 10).toDateString(),
+    ]);
+  });
+
+  it("yearly: the event's own start day hits AND a mid-window non-anniversary day never does", () => {
+    // Window Nov 8 → 14 2026; the start is Nov 10 2026 (the start day
+    // itself is an occurrence — the none/daily family contract).
+    const focus = new Date(2026, 10, 8);
+    const days = windowFrom(focus);
+    const hits = expandOccurrences(event("2026-11-10T10:00", "yearly"), days);
+    expect(hits.map((d) => d.getDate())).toEqual([10]);
+  });
+
+  it("yearly: a Feb-29 start hits ONLY leap-year Feb 29s (the calendar-truth posture)", () => {
+    // Start Feb 29 2024 (a leap year). 2026 is NOT a leap year — a
+    // window across Feb 25 → Mar 3 2026 has no Feb 29: zero hits.
+    const focus2026 = new Date(2026, 1, 25);
+    expect(expandOccurrences(event("2024-02-29T10:00", "yearly"), windowFrom(focus2026))).toEqual([]);
+    // 2028 IS a leap year — the window Feb 27 → Mar 4 2028 hits Feb 29.
+    const focus2028 = new Date(2028, 1, 27);
+    const hits = expandOccurrences(event("2024-02-29T10:00", "yearly"), windowFrom(focus2028));
+    expect(hits.map((d) => d.toDateString())).toEqual([
+      new Date(2028, 1, 29).toDateString(),
+    ]);
+  });
+
+  it("yearly: days before the start never hit (the past-start guard holds at the new value)", () => {
+    // Window Nov 8 → 14 2026; the start is Nov 12 2027 — the whole
+    // window is BEFORE the start: zero hits.
+    const focus = new Date(2026, 10, 8);
+    expect(expandOccurrences(event("2027-11-12T10:00", "yearly"), windowFrom(focus))).toEqual([]);
+  });
+});

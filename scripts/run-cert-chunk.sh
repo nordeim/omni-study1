@@ -85,7 +85,8 @@ if curl -s -o /dev/null --max-time 2 "http://localhost:${port}/api/health"; then
     exit 1
   fi
 fi
-rm -f db/e2e.db
+rm -f /dev/shm/omni-study1-e2e/e2e.db*
+mkdir -p /dev/shm/omni-study1-e2e
 echo "=== CHUNK $n: $(echo $chunk | wc -w) files ==="
 # S131/CF6: exit on the PLAYWRIGHT status, never the trailing grep's —
 # pipefail made this script's status the last pipeline's, so a grep that

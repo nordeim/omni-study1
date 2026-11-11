@@ -794,10 +794,26 @@ function SubjectDialog({
                   aria-pressed={color === hex}
                   onClick={() => setColor(hex)}
                   className={cn(
-                    "size-8 rounded-lg",
-                    color === hex ? "ring-2 ring-sf-primary ring-offset-2 ring-offset-background" : "",
+                    // S176/DZ2b: the S175-measured selection state finally
+                    // shipped — the white 2px + slate 4px double ring +
+                    // scale(1.1) (the s175 probe recorded exactly this
+                    // state; the S175 port shipped a ring-sf-primary
+                    // simplification, unadjudicated. The geometry — size-8
+                    // rounded-lg — stays the S175-measured shape. INLINE:
+                    // two rings cannot stack in the ring utilities, and
+                    // v4's scale-110 writes `scale`, not the reference's
+                    // computed matrix(1.1) transform).
+                    "size-8 rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-sf-primary/40",
                   )}
-                  style={{ backgroundColor: hex }}
+                  style={{
+                    backgroundColor: hex,
+                    ...(color === hex
+                      ? {
+                          boxShadow: "0 0 0 2px #fff, 0 0 0 4px #94a3b8",
+                          transform: "scale(1.1)",
+                        }
+                      : null),
+                  }}
                 />
               ))}
               <label className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400">

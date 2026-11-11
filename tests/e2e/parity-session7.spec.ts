@@ -2207,11 +2207,12 @@ test.describe("S171/DU2 · the studygroups create-dialog parity catch-up + the d
     // The measured title (RED pre-fix: the scaffold-era "New Study
     // Group").
     await expect(dlg.getByRole("heading", { name: "Create Study Group" })).toBeVisible();
-    // The measured name placeholder.
-    await expect(dlg.getByLabel("Name")).toHaveAttribute("placeholder", "e.g., Math Study Squad");
+    // The measured name placeholder (S176/DZ2 re-measured the label —
+    // "Group Name \*" now, the scaffold-era "Name" retired).
+    await expect(dlg.getByLabel("Group Name *")).toHaveAttribute("placeholder", "e.g., Math Study Squad");
     // The measured description textarea (the clone's visible-Label
     // superset over the reference's placeholder-only input).
-    const description = dlg.getByLabel("Description (optional)");
+    const description = dlg.getByLabel("Description");
     await expect(description).toHaveAttribute("placeholder", "What's this group about?");
     await expect(description).toBeVisible();
     // The measured footer: submit "Create Group" + secondary "Close".
@@ -2243,8 +2244,8 @@ test.describe("S171/DU2 · the studygroups create-dialog parity catch-up + the d
     await page.getByRole("button", { name: "Create study group" }).click();
     const dlg = page.getByRole("dialog");
     await expect(dlg).toBeVisible();
-    await dlg.getByLabel("Name").fill(`S171-DU2 description probe ${stamp}`);
-    await dlg.getByLabel("Description (optional)").fill("We drill problem sets every Tuesday before the bus leaves.");
+    await dlg.getByLabel("Group Name *").fill(`S171-DU2 description probe ${stamp}`);
+    await dlg.getByLabel("Description").fill("We drill problem sets every Tuesday before the bus leaves.");
     const saved = page.waitForResponse(
       (r) => r.request().method() === "POST" && r.url().includes("/api/study-groups"),
     );
@@ -2674,5 +2675,181 @@ test.describe("S175/DY4 · the gradetracker/settings-CRUD + AlertDialog-confirm 
     // Zero residue: the row is gone (the seeded subjects stay — the
     // spec owned only its stamped row).
     await expect(page.locator("li", { hasText: name })).toHaveCount(0);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// S176/DZ — the events/studygroups/tasks dialog catch-up (the s176
+// reference probe: the FIRST placeholder-level + geometry-level
+// measurement of the older families' dialogs — the events dialog's
+// placeholder trio ["Event title"/"Room or meeting URL"/"Event
+// details..."], the SIX-swatch 32px rounded-full palette with the white
+// 2px + slate 4px double-ring + scale(1.1) selected state, the
+// repeating-ROWS reminders control [number + unit select + Add], the
+// FIVE-option repeat select (Yearly present), the "Create Event"
+// submit copy; the studygroups "Group Name *" + "Description" labels +
+// the same swatch idiom; the tasks "Task name..." placeholder). The
+// notes create-flow port (the reference's inline-draft editor) is the
+// recorded deferral — one rotation's worth on its own.
+// ---------------------------------------------------------------------------
+test.describe("S176/DZ1 · the events create-dialog parity catch-up + the reminders-rows port", () => {
+  test("the New Event dialog carries the reference's measured placeholders, palette, reminders rows, repeat options, and submit copy", async ({ page }) => {
+    await page.goto("/Events");
+    await hydrated(page);
+    await page.getByRole("button", { name: "New Event" }).first().click();
+    const dlg = page.getByRole("dialog");
+    await expect(dlg).toBeVisible();
+    // The measured placeholder trio (RED pre-fix: the scaffold-era
+    // "Study group — calculus" / "Room 210 or https://…" / no description
+    // placeholder).
+    await expect(dlg.locator("#event-title")).toHaveAttribute("placeholder", "Event title");
+    await expect(dlg.locator("#event-location")).toHaveAttribute("placeholder", "Room or meeting URL");
+    await expect(dlg.locator("#event-description")).toHaveAttribute("placeholder", "Event details...");
+    // The measured SIX-swatch palette (RED pre-fix: the eight-color
+    // scaffold set with teal/slate extras) at 32px rounded-full. The
+    // geometry assert reads an UNSELECTED swatch — the selected one
+    // scales 1.1 (the reference's own first-swatch reading was 35px for
+    // exactly this reason; the base is 32).
+    const swatches = dlg.locator("button[aria-label^='Choose color #']");
+    await expect(swatches).toHaveCount(6);
+    // A rounded read (the dialog's x lands fractionally — 31.99px
+    // measured in the full-file run; the base is 32).
+    const box = await swatches.nth(1).boundingBox();
+    expect(Math.round(box?.width ?? 0)).toBe(32);
+    const radius = await swatches.nth(1).evaluate((el) => getComputedStyle(el).borderRadius);
+    expect(Number.parseFloat(radius)).toBeGreaterThan(1000); // rounded-full
+    // The measured pristine default: violet #8b5cf6 pressed.
+    const pressed = dlg.locator("button[aria-label^='Choose color #'][aria-pressed='true']");
+    await expect(pressed).toHaveCount(1);
+    await expect(pressed.first()).toHaveAttribute("aria-label", "Choose color #8b5cf6");
+    // The measured selected-swatch state: the white 2px + slate 4px
+    // double ring + the scale(1.1) transform (RED pre-fix: the plain
+    // ring-2 ring-slate-900 with no transform).
+    const sel = await pressed.first().evaluate((el) => {
+      const s = getComputedStyle(el);
+      return { shadow: s.boxShadow, transform: s.transform };
+    });
+    expect(sel.shadow).toContain("rgb(255, 255, 255) 0px 0px 0px 2px");
+    expect(sel.shadow).toContain("148, 163, 184) 0px 0px 0px 4px");
+    expect(sel.transform).toContain("1.1");
+    // The measured reminders ROWS: a number input + a unit select on a
+    // fresh open, with the Add button appending a new row (RED pre-fix:
+    // the [15/30/60] toggle chips).
+    await expect(dlg.getByLabel("Reminder value 1")).toBeVisible();
+    await expect(dlg.getByLabel("Reminder unit 1")).toBeVisible();
+    await dlg.getByRole("button", { name: "Add", exact: true }).click();
+    await expect(dlg.getByLabel("Reminder value 2")).toBeVisible();
+    await expect(dlg.getByLabel("Remove reminder 1")).toBeVisible();
+    // The measured FIVE-option repeat select — Yearly present (RED
+    // pre-fix: the four-option REPEATS vocabulary).
+    await dlg.locator("#event-repeat").click();
+    await expect(page.getByRole("option", { name: "Yearly", exact: true })).toBeVisible();
+    await page.keyboard.press("Escape");
+    await page.waitForTimeout(300);
+    // The measured submit copy: "Create Event" (RED pre-fix: the
+    // lower-case "Create event"). The clone's All-day superset stays.
+    await expect(dlg.getByRole("button", { name: "Create Event", exact: true })).toBeVisible();
+    await expect(dlg.getByText("All day", { exact: true })).toBeVisible();
+    await dlg.getByRole("button", { name: "Close" }).click();
+  });
+
+  test("DZ1b: the reminders rows round-trip — 20 minutes + 2 hours persist and re-render through the edit dialog", async ({ page }) => {
+    await page.goto("/Events");
+    await hydrated(page);
+    const name = `DZ Probe ${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+    await page.getByRole("button", { name: "New Event" }).first().click();
+    const dlg = page.getByRole("dialog");
+    await expect(dlg).toBeVisible();
+    await dlg.locator("#event-title").fill(name);
+    // Today at 16:00 local — inside the day-focus window the list reads.
+    const pad = (n: number) => String(n).padStart(2, "0");
+    const now = new Date();
+    const dt = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}T16:00`;
+    await dlg.locator("#event-start").fill(dt);
+    // Row 1: 20 minutes (the fresh-open default row).
+    await dlg.getByLabel("Reminder value 1").fill("20");
+    // Row 2: 2 hours via the Add button + the unit select (the Radix
+    // select — click the trigger, then the option).
+    await dlg.getByRole("button", { name: "Add", exact: true }).click();
+    await dlg.getByLabel("Reminder value 2").fill("2");
+    await dlg.getByLabel("Reminder unit 2").click();
+    await page.getByRole("option", { name: "hours", exact: true }).click();
+    await dlg.getByRole("button", { name: "Create Event", exact: true }).click();
+    await expect(dlg).toHaveCount(0);
+    // The created row renders in the day list (the day-focus window
+    // includes today).
+    const row = page.locator("article", { hasText: name });
+    await expect(row).toBeVisible();
+    // The edit round-trip: the stored minutes [20, 120] re-render as
+    // the seam's rows (the largest-clean-unit derivation — 120 → "2
+    // hours").
+    await row.getByRole("button", { name: `Edit ${name}` }).click();
+    await expect(dlg).toBeVisible();
+    await expect(dlg.locator("#event-title")).toHaveValue(name);
+    await expect(dlg.getByLabel("Reminder value 1")).toHaveValue("20");
+    await expect(dlg.getByLabel("Reminder unit 1")).toHaveText("minutes");
+    await expect(dlg.getByLabel("Reminder value 2")).toHaveValue("2");
+    await expect(dlg.getByLabel("Reminder unit 2")).toHaveText("hours");
+    // The events dialog carries no Cancel (the measured reference footer
+    // = [Create Event] + the header Close) — close via the Close button.
+    await dlg.getByRole("button", { name: "Close" }).click();
+    await expect(dlg).toHaveCount(0);
+    // Zero residue: the row is this leg's own; deleted through the UI.
+    await row.getByRole("button", { name: `Delete ${name}` }).click();
+    await expect(page.locator("article", { hasText: name })).toHaveCount(0);
+  });
+});
+
+test.describe("S176/DZ2 · the studygroups create-dialog parity catch-up + the swatch idiom port", () => {
+  test("the Create Study Group dialog carries the reference's measured labels, palette geometry, and selected state", async ({ page }) => {
+    await page.goto("/StudyGroups");
+    await hydrated(page);
+    await page.getByRole("button", { name: "Create study group" }).first().click();
+    const dlg = page.getByRole("dialog");
+    await expect(dlg).toBeVisible();
+    // The measured labels (RED pre-fix: the scaffold-era "Name" and
+    // "Description (optional)").
+    await expect(dlg.getByText("Group Name *", { exact: true })).toBeVisible();
+    await expect(dlg.locator("#group-name")).toHaveAttribute("placeholder", "e.g., Math Study Squad");
+    await expect(dlg.getByText("Description", { exact: true })).toBeVisible();
+    await expect(dlg.locator("#group-description")).toHaveAttribute("placeholder", "What's this group about?");
+    // The measured swatch idiom: SIX 32px rounded-full swatches with the
+    // white 2px + slate 4px double-ring + scale(1.1) selected state
+    // (RED pre-fix: the 28px size-7 with the plain slate ring). The
+    // geometry assert reads an UNSELECTED swatch (the selected scales).
+    const swatches = dlg.locator("button[aria-label^='Choose color #']");
+    await expect(swatches).toHaveCount(6);
+    // A rounded read (the dialog's flex layout lands the swatch at a
+    // fractional x — 31.95px measured; the base is 32).
+    const box = await swatches.nth(1).boundingBox();
+    expect(Math.round(box?.width ?? 0)).toBe(32);
+    const sel = await dlg.locator("button[aria-label^='Choose color #'][aria-pressed='true']").first().evaluate((el) => {
+      const s = getComputedStyle(el);
+      return { shadow: s.boxShadow, transform: s.transform };
+    });
+    expect(sel.shadow).toContain("rgb(255, 255, 255) 0px 0px 0px 2px");
+    expect(sel.transform).toContain("1.1");
+    // The S171-measured footer holds: [Create Group] submit. The dialog
+    // carries TWO "Close" buttons (the footer secondary + the header ×) —
+    // scope to the form's footer.
+    await expect(dlg.getByRole("button", { name: "Create Group", exact: true })).toBeVisible();
+    await dlg.locator("form").getByRole("button", { name: "Close" }).click();
+  });
+});
+
+test.describe("S176/DZ3 · the tasks create-dialog placeholder catch-up", () => {
+  test("the Create Task dialog carries the reference's measured placeholder trio", async ({ page }) => {
+    await page.goto("/Tasks");
+    await hydrated(page);
+    await page.getByRole("button", { name: "Add Task" }).first().click();
+    const dlg = page.getByRole("dialog");
+    await expect(dlg).toBeVisible();
+    // The measured placeholder (RED pre-fix: "Task name" without the
+    // ellipsis) + the holding pair re-pinned.
+    await expect(dlg.locator("#task-title")).toHaveAttribute("placeholder", "Task name...");
+    await expect(dlg.getByLabel("Add a subtask")).toHaveAttribute("placeholder", "Add a subtask...");
+    await expect(dlg.locator("textarea")).toHaveAttribute("placeholder", "Add notes...");
+    await dlg.getByRole("button", { name: "Cancel", exact: true }).click();
+    await expect(dlg).toHaveCount(0);
   });
 });

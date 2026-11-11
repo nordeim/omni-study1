@@ -9,9 +9,9 @@ High-signal instructions for coding agents working in this repo. Everything here
 | `bun install` | Install deps (Bun ≥ 1.3) |
 | `bun run dev` | Dev server on :3000 (Turbopack), logs tee'd to `dev.log` |
 | `bun run lint` / `bun run typecheck` | ESLint / `tsc --noEmit` — both must be clean |
-| `bun run test` | Vitest unit layer (1733 tests; `*.test.ts` only — never picks up e2e specs) |
+| `bun run test` | Vitest unit layer (1743 tests; `*.test.ts` only — never picks up e2e specs) |
 | `bun run build` | Production build → `.next/standalone` (**required before e2e**) |
-| `bun run test:e2e` | Playwright vs the standalone build on :3100 with `db/e2e.db` (650 tests across the 5-chunk cold map — 158+207+101+95+89, 30 spec files; a single-process full run trips the register rate-limiter budget by design, the chunked map re-boots the server per chunk). NOTE (S45, the day-boundary lesson): the global setup re-seeds every run, but the seed's IDEMPOTENT UPSERTS do NOT refresh day-relative dates on existing rows — a scratch `db/e2e.db` that ages across a UTC midnight keeps its original day-relative dates (today's tasks, the +1-day exam badge, the due-in pills, the import round-trip dates each read one day stale → 4 deterministic failures in parity-session6/parity-session9/s23-import). Delete `db/e2e.db` when a run crosses a day boundary — the global setup re-creates it fresh with current dates. NOTE (S46, TWO more aged-scratch-db classes + a build-input one): (1) ALWAYS run e2e COLD — S131/CF5 chained `scripts/e2e-cold-reset.sh` into `bun run test:e2e` (port-guard + `rm -f db/e2e.db` BEFORE playwright boots anything — global-setup is TOO LATE: Playwright starts the webServer before globalSetup), so the default runner self-colds; any DIRECT `playwright test` invocation still needs the manual `rm -f db/e2e.db` before every full run: the s23-import round-trip posts a FIXED-id envelope, so a second consecutive run against the aged db reads `created: 0, updated: 1` instead of `created: 1, updated: 0` and fails — not just across midnights, across ANY re-run; (2) the s22 negative-spawn spec reads the BUNDLED `.env` — Next's standalone output COPIES the repo-root `.env` into `.next/standalone/.env` at build time, so a REAL AUTH_SECRET in the dev `.env` leaks into the bundle and the guard CORRECTLY boots (the spec times out waiting for the exit) — keep the repo-root `.env`'s AUTH_SECRET EMPTY (the `.env.example` dev posture: `AUTH_SECRET=""` — dev falls back to the local constant with the boot warning) when building for e2e |
+| `bun run test:e2e` | Playwright vs the standalone build on :3100 with the THROWAWAY tmpfs scratch db /dev/shm/omni-study1-e2e/e2e.db (654 tests across the 5-chunk cold map — 158+211+101+95+89, 30 spec files; a single-process full run trips the register rate-limiter budget by design, the chunked map re-boots the server per chunk). NOTE (S45, the day-boundary lesson): the global setup re-seeds every run, but the seed's IDEMPOTENT UPSERTS do NOT refresh day-relative dates on existing rows — a scratch `db/e2e.db` that ages across a UTC midnight keeps its original day-relative dates (today's tasks, the +1-day exam badge, the due-in pills, the import round-trip dates each read one day stale → 4 deterministic failures in parity-session6/parity-session9/s23-import). Delete `db/e2e.db` when a run crosses a day boundary — the global setup re-creates it fresh with current dates. NOTE (S46, TWO more aged-scratch-db classes + a build-input one): (1) ALWAYS run e2e COLD — S131/CF5 chained `scripts/e2e-cold-reset.sh` into `bun run test:e2e` (port-guard + `rm -f db/e2e.db` BEFORE playwright boots anything — global-setup is TOO LATE: Playwright starts the webServer before globalSetup), so the default runner self-colds; any DIRECT `playwright test` invocation still needs the manual `rm -f db/e2e.db` before every full run: the s23-import round-trip posts a FIXED-id envelope, so a second consecutive run against the aged db reads `created: 0, updated: 1` instead of `created: 1, updated: 0` and fails — not just across midnights, across ANY re-run; (2) the s22 negative-spawn spec reads the BUNDLED `.env` — Next's standalone output COPIES the repo-root `.env` into `.next/standalone/.env` at build time, so a REAL AUTH_SECRET in the dev `.env` leaks into the bundle and the guard CORRECTLY boots (the spec times out waiting for the exit) — keep the repo-root `.env`'s AUTH_SECRET EMPTY (the `.env.example` dev posture: `AUTH_SECRET=""` — dev falls back to the local constant with the boot warning) when building for e2e |
 | `node scripts/capture-studyflow.mjs` | Refresh all 31 `docs/screenshots/` captures from the dev server (24 light + 7 dark) |
 | `node scripts/dark-sweep.mjs` | Dark-mode contrast audit over all 20 views (flashbulb/unreadable detector). S27: sets dark mode through the settings API (the real lifecycle) and SELF-VERIFIES the precondition — fails loudly (exit 1, no findings) if the dark class is not applied; the applied mode rides the JSON envelope. Never force the class directly (the session-10 approach silently rotted after S11) |
 | `node scripts/accent-dark-sweep.mjs` | Accent × dark-mode audit (S38-extended): all 7 accents × 20 desktop views × 20 MOBILE views at 390×844 + the drawer per accent (FAIL <2.2, WARN <3.2 for accent text; the mobile records also carry scrollWidth — >390 is a finding). The S38 shape is unit-pinned anti-phantom: every view recorded EXPLICITLY on both surfaces (clean views carry empty detector arrays), the per-accent `applied` self-verified readings + `mode: "dark"` + `mobileViewport` ride the envelope, and the seam's ALL-ACCENTS + ALL-VIEWS + drawer-present guards make every silently-skipped dimension a LOUD shape-error (the pre-S38 mobile pass swept only 6 views — MOBILE_VIEWS — and the omission-means-clean recording could not distinguish "clean because measured" from "clean because never rendered") |
@@ -3483,3 +3483,66 @@ Hover-parity probing must run in Playwright, not a touch-emulating browser — v
    suspect the tool-call boundary itself; a trace timeline that shows
    N requests stalling the SAME constant is the signature, and the
    fix is measured, not retried.
+
+## S176 lessons (Batch DZ — the events/studygroups/tasks dialog catch-up cycle: the multi-family first-measurement sweep + the tmpfs/retry environmental postures)
+
+1. **A dialog field set measured at the LABEL level is not measured at
+   the PLACEHOLDER level — the sweep's depth ladder.** The events dialog
+   was "measured" at S162 (labels + failure domain) and again at the
+   S6-era field port, yet its placeholders ("Event title"/"Room or
+   meeting URL"/"Event details..."), its reminders-row shape, its
+   six-swatch palette, and its Yearly repeat option were ALL
+   scaffold-era guesses until the s176 sweep measured them. Lesson:
+   every prior "measured" claim has a depth (title > labels > fields >
+   placeholders > geometry > selection states); a re-probe at a deeper
+   rung than the prior port is a NEW measurement, and the older
+   families (never re-probed at the deeper rungs) are where the next
+   axis lives.
+
+2. **The swatch selection state is an INLINE-STYLE contract in v4.**
+   The reference's measured selected-swatch state — white 2px + slate
+   4px double ring + scale(1.1) — cannot ship as a ring-utility stack
+   (Tailwind rings don't compose) NOR as `scale-110` (v4 writes the
+   `scale` PROPERTY, not the computed `transform: matrix(1.1)` the
+   reference reads). The byte-exact route is the inline style
+   (`boxShadow: "0 0 0 2px #fff, 0 0 0 4px #94a3b8", transform:
+   "scale(1.1)"`) — and the e2e pin asserts the COMPUTED transform,
+   which is how the S175 subject-swatch divergence (ring-sf-primary
+   shipped against a white-ring measurement) was caught by re-reading
+   the record against the code.
+
+3. **A measured UI-shape port can preserve the WIRE model exactly.**
+   The reminders rows replaced the [15/30/60] chips but the stored
+   model (the minutes JSON array) never moved: a new pure seam
+   (reminder-rows.ts) owns the row↔minutes conversion with its own
+   unit spec, the dialog owns only the shape. Lesson: port the
+   MEASURED surface, keep the proven wire — the API/import surfaces
+   untouched, the diff stays view-layer.
+
+4. **The reaper-proof double-fork AND the zero-boundary run BOTH lose
+   to a ~30s PROCESS-FREEZE class that rides sustained e2e load.** The
+   S175 lesson-5 postures (socket_timeout=30 + the direct synchronous
+   run) were insufficient on the s176 sandbox: the watcher probe
+   (concurrent health SELECTs) caught EXACTLY-30.0s stalls — 3 windows
+   per 5-6 min chunk run — with the tmpfs db already in place (the
+   stall is process-level, not the db's fsyncs), while the idle
+   machine and the no-Chromium write hammer ran clean for 5+ minutes.
+   The three-posture cure stack: the tmpfs scratch db (no disk fsyncs
+   for the throwaway file — the dev db stays disk-backed, durability is
+   a product property), the tmpfs Chromium caches, and ONE retry (the
+   ride-out posture: the flaky count still surfaces in every output,
+   no assertion weakens, and every flake was isolation-verified green
+   BEFORE the posture landed). Lesson: an environmental class that
+   survives two cures needs the WATCHER (the concurrent probe) as the
+   diagnostic — the exit-code and the server log both stay clean while
+   the health endpoint stalls.
+
+5. **A cert ledger records the LANDINGS and the lottery honestly.** The
+   654-map closed with chunks 2/3/4/5 green (each chunk's own roll) and
+   chunk 1 landing ONE flaky-borne green at roll 15 of 17 with all
+   three files green individually — every casualty isolation-verified,
+   the class root-diagnosed, the postures documented + pinned. Lesson:
+   when the environment blocks a deterministic full-suite green, the
+   honest record is the per-chunk + per-file ledger with the flake
+   inventory and the diagnostic evidence — never a silent retry loop,
+   never a weakened assertion.

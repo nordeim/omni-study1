@@ -85,7 +85,7 @@ export type TaskListRow = {
 };
 
 export type TaskPriority = "none" | "low" | "medium" | "high";
-export type RepeatMode = "none" | "daily" | "weekly" | "monthly";
+export type RepeatMode = "none" | "daily" | "weekly" | "monthly" | "yearly";
 
 export type TaskRow = {
   id: string;
