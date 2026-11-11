@@ -127,6 +127,12 @@ export const EXAM_TYPES = ["test", "quiz", "midterm", "final", "oral", "practica
 // convention (the EXAM_TYPES/ASSIGNMENT_TYPES precedent); the view
 // renders the capitalized form (the exams-view capitalize idiom).
 export const GRADE_TYPES = ["homework", "quiz", "test", "midterm", "final", "project"] as const;
+// S174/DX4 (measured live at the s174 gated probe): the reference's
+// Add Holiday dialog carries a Type selector with exactly these three
+// options (Holiday / Break / No School), defaulting Holiday. Lowercase
+// per the house enum convention (the EXAM_TYPES/GRADE_TYPES precedent);
+// the view renders the capitalized form (the capitalize idiom).
+export const HOLIDAY_TYPES = ["holiday", "break", "no-school"] as const;
 export const WEEK_TYPES = ["ALL", "A", "B"] as const;
 export const FOCUS_SESSION_MODES = ["focus", "short-break", "long-break"] as const;
 export const CALCULATOR_MODES = ["basic", "scientific", "gpa", "unit"] as const;
@@ -538,6 +544,7 @@ export const gradeCreateSchema = gradeSchema.check((ctx) => {
   }
 });
 
+
 export const focusSessionSchema = z.object({
   subjectId: nullableId,
   startedAt: requiredDate,
@@ -569,6 +576,41 @@ export const linkFileSchema = z.object({
 export const holidaySchema = z.object({
   name: boundedTitle,
   date: requiredDate,
+  // S174/DX4: the measured RANGE + type port — the reference's dialog
+  // collects "Start Date" + "End Date" (both required) + a Type
+  // (Holiday/Break/No School). The endDate rides optionalDate (the
+  // ""-tolerant union → null — legacy rows + partial API writes
+  // tolerated; the dialog itself collects both dates); the type rides
+  // the HOLIDAY_TYPES vocabulary with the holiday default. Both legs
+  // PATCH-safe by the S82/AI1 sentKeysPatch doctrine (absent keys are
+  // not writes — the defaults never inject into a partial PATCH).
+  endDate: optionalDate,
+  type: z.enum(HOLIDAY_TYPES).optional().default("holiday"),
+});
+// S174/DX4 — the holiday range guard's named 400 (the BZ6 precedent's
+// message discipline: the route answers ONE stable string, unit-pinned).
+export const HOLIDAY_END_BEFORE_START = "End date can't be before the start date.";
+
+// The create-side check (the gradeCreateSchema pattern): fires only when
+// BOTH legs arrive together — the create dialog always sends both, so a
+// reversed range never commits. The single-leg PATCH leg is owned by
+// checkHolidayRangeMerge in src/lib/server/entities.ts (the BZ6 merge
+// doctrine: the update schema's .partial() injects the type default, so
+// the schema-side compare would read injected legs instead of the
+// stored ones).
+export const holidayCreateSchema = holidaySchema.check((ctx) => {
+  const { date, endDate } = ctx.value;
+  // Date.parse on BOTH legs (the BW7 lesson: never raw-string compares —
+  // the atoms accept both short ("2026-11-11") and full ISO forms, and
+  // the numeric epoch compare is format-agnostic; same-day is LEGAL).
+  if (endDate !== null && endDate !== undefined && Date.parse(endDate) < Date.parse(date)) {
+    ctx.issues.push({
+      code: "custom",
+      input: ctx.value,
+      message: HOLIDAY_END_BEFORE_START,
+      path: ["endDate"],
+    });
+  }
 });
 
 // ---- AI + RUM + calculator ---------------------------------------------------

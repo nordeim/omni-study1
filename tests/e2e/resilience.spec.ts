@@ -2051,3 +2051,199 @@ test.describe("S173/DW1 · the grades save succeeds through a failed refresh (CB
     }
   });
 });
+
+// S174/DX1a — the focusSessions family CB8 failure-domain split (the s174
+// audit B/H-1, the THIRTEENTH family of the recorded port — the completion
+// cycle). Pre-DX1 createFocusSession rode the uncaught
+// fetchAndSet("focusSessions") refresh, so a flaky refresh GET rejected
+// the whole call on a session the server COMMITTED: the focustimer
+// completion catch's "Could not save the focus session." toast fired on a
+// saved session — and the CT1 re-latch restored a fresh duration on a
+// session that DID save (the retry would double-log). The pinned journey:
+// the collection GET aborts while the POST continues; a completed session
+// answers the "Focus session saved — take a break!" success toast, never
+// the false save-failure.
+// ---------------------------------------------------------------------------
+test.describe("S174/DX1a · the focus session save succeeds through a failed refresh (CB8 split)", () => {
+  test("a committed session + an aborted refresh answers the success toast, never the false save-failure", async ({ page }) => {
+    await page.goto("/FocusTimer");
+    await page.waitForFunction(() => document.documentElement.dataset.appHydrated === "true");
+    // The settled proof: the seeded TODAY session renders (the slice has
+    // loaded before the interception installs — the seed's dayOffset-0 row).
+    await expect(page.getByText("1 focus session today")).toBeVisible();
+    // Abort the collection GET (the refresh leg) — the POST (the write
+    // leg) continues through the same URL, discriminated by method.
+    await page.route("**/api/focus-sessions", (route) => {
+      if (route.request().method() === "GET") route.abort("failed");
+      else route.continue();
+    });
+    let createdId: string | null = null;
+    try {
+      // Start the timer, let at least one tick elapse (the completion
+      // gate rejects a Complete press on a fresh untouched duration —
+      // the S14 contract), then complete the session.
+      await page.getByRole("button", { name: "Start timer" }).click();
+      await page.waitForTimeout(1_300);
+      const saved = page.waitForResponse(
+        (r) => r.request().method() === "POST" && r.url().includes("/api/focus-sessions"),
+      );
+      await page.getByRole("button", { name: "Complete session" }).click();
+      const res = await saved;
+      // The write itself COMMITTED server-side.
+      expect(res.ok()).toBe(true);
+      createdId = ((await res.json()) as { id: string }).id;
+      // The success toast lands through the aria-live stack…
+      await expect(page.getByText("Focus session saved — take a break!")).toBeVisible({ timeout: 10_000 });
+      // …and the FALSE save-failure never renders (the contained refresh
+      // rejection must not claim a save failure on the committed session).
+      await expect(page.getByText("Could not save the focus session.")).toHaveCount(0);
+    } finally {
+      await page.unroute("**/api/focus-sessions");
+      // Zero residue on the shared demo user (the CC4/AR3 convention).
+      if (createdId) await page.request.delete(`/api/focus-sessions/${createdId}`);
+    }
+  });
+});
+
+// S174/DX1b — the holidays family CB8 failure-domain split (the s174
+// audit B/H-1, the FOURTEENTH family). Pre-DX1 the holidays trio rode the
+// uncaught fetchAndSet("holidays") refresh: the HolidayDialog catch's
+// "Could not add the holiday." toast fired with the dialog STILL OPEN on
+// a row the server COMMITTED — the retry duplicates the holiday. The
+// pinned journey mirrors DX1a on the Settings → Holidays surface.
+// (The fill set rides the DX4-ported Start/End fields — the RED proof
+// ran against the pre-port dialog's single Date field at its designed
+// toast marker; the field port re-anchored the fill and the GREEN + the
+// cert validate the ported shape.)
+// ---------------------------------------------------------------------------
+test.describe("S174/DX1b · the holiday save succeeds through a failed refresh (CB8 split)", () => {
+  test("a committed create + an aborted refresh answers the success toast + closed dialog, never the false add-failure", async ({ page }) => {
+    const stamp = `s174-dx1b-${Date.now()}`;
+    await page.goto("/Settings");
+    await page.waitForFunction(() => document.documentElement.dataset.appHydrated === "true");
+    await page.getByRole("tab", { name: "Holidays" }).click();
+    await expect(page.getByRole("heading", { name: "Holidays & Breaks" })).toBeVisible();
+    await page.route("**/api/holidays", (route) => {
+      if (route.request().method() === "GET") route.abort("failed");
+      else route.continue();
+    });
+    let createdId: string | null = null;
+    try {
+      await page.getByRole("button", { name: "Add Holiday" }).first().click();
+      const dlg = page.getByRole("dialog");
+      await expect(dlg).toBeVisible();
+      await dlg.locator("#holiday-name").fill(`S174-DX1b committed-write probe ${stamp}`);
+      const today = new Date();
+      const yyyy = today.getFullYear();
+      const mm = String(today.getMonth() + 1).padStart(2, "0");
+      const dd = String(today.getDate()).padStart(2, "0");
+      // The DX4-ported range fields (both required, no defaults — the
+      // measured pristine dialog): start today, end tomorrow.
+      await dlg.locator("#holiday-start").fill(`${yyyy}-${mm}-${dd}`);
+      const tomorrow = new Date(today.getTime() + 86_400_000);
+      const tyyyy = tomorrow.getFullYear();
+      const tmm = String(tomorrow.getMonth() + 1).padStart(2, "0");
+      const tdd = String(tomorrow.getDate()).padStart(2, "0");
+      await dlg.locator("#holiday-end").fill(`${tyyyy}-${tmm}-${tdd}`);
+      const saved = page.waitForResponse(
+        (r) => r.request().method() === "POST" && r.url().includes("/api/holidays"),
+      );
+      await dlg.getByRole("button", { name: "Add Holiday", exact: true }).click();
+      const res = await saved;
+      // The write itself COMMITTED server-side.
+      expect(res.ok()).toBe(true);
+      createdId = ((await res.json()) as { id: string }).id;
+      // The success toast lands…
+      await expect(page.getByText("Holiday added")).toBeVisible({ timeout: 10_000 });
+      // …the dialog CLOSES — the mutation resolved, the form is not
+      // armed for the duplicate-creating retry.
+      await expect(dlg).toBeHidden();
+      // The FALSE add-failure never renders.
+      await expect(page.getByText("Could not add the holiday.")).toHaveCount(0);
+    } finally {
+      await page.unroute("**/api/holidays");
+      if (createdId) await page.request.delete(`/api/holidays/${createdId}`);
+    }
+  });
+});
+
+// S174/DX1c — the calculatorHistory create-only CB8 split (the s174
+// audit B/H-1, the FIFTEENTH and FINAL family of the recorded port).
+// Pre-DX1 createCalculatorEntry rode the uncaught
+// fetchAndSet("calculatorHistory") refresh: the eval catch's "The result
+// is shown, but history could not record it." toast fired on an entry the
+// server COMMITTED (the eval path has NO success toast by design — the
+// display's correct result is the success surface; the false
+// history-failure is the observable). The pinned journey: the basic
+// keypad's 1 + 1 = through an aborted collection GET.
+// ---------------------------------------------------------------------------
+test.describe("S174/DX1c · the calculator history save succeeds through a failed refresh (CB8 split)", () => {
+  test("a committed entry + an aborted refresh keeps the result on display, never the false history-failure", async ({ page }) => {
+    await page.goto("/Calculator");
+    await page.waitForFunction(() => document.documentElement.dataset.appHydrated === "true");
+    await expect(page.getByRole("heading", { name: "Calculator Suite" })).toBeVisible();
+    await page.route("**/api/calculator/history", (route) => {
+      if (route.request().method() === "GET") route.abort("failed");
+      else route.continue();
+    });
+    let createdId: string | null = null;
+    try {
+      // The keypad's accessible names carry the "Insert " prefix (the
+      // keyButton aria-label idiom — "Insert 1", "Insert +").
+      await page.getByRole("button", { name: "Insert 1" }).click();
+      await page.getByRole("button", { name: "Insert +" }).click();
+      await page.getByRole("button", { name: "Insert 1" }).click();
+      const saved = page.waitForResponse(
+        (r) => r.request().method() === "POST" && r.url().includes("/api/calculator/history"),
+      );
+      // The refresh GET dispatch is the deterministic anchor: it fires on
+      // BOTH builds (the fix contains the REJECTION, never the dispatch),
+      // registered before the click so the dispatch can never slip past.
+      const refresh = page.waitForRequest(
+        (r) => r.method() === "GET" && r.url().includes("/api/calculator/history"),
+      );
+      await page.getByRole("button", { name: "Equals" }).click();
+      const res = await saved;
+      // The write itself COMMITTED server-side.
+      expect(res.ok()).toBe(true);
+      createdId = ((await res.json()) as { id: string }).id;
+      // The display keeps the correct result (the success surface — the
+      // eval path has no toast by design).
+      await expect(page.getByTestId("calc-result")).toHaveText("2");
+      // Anchor on the refresh dispatch, then a settle window: the
+      // abort → rejection → catch → toast chain completes within
+      // milliseconds of the dispatch (probe-measured ~12ms; 600ms carries
+      // a 50x margin) while the toast's own 5s auto-dismiss (toast.tsx)
+      // sits 8x ABOVE the settle — inside that window a fired toast is
+      // GUARANTEED still mounted.
+      await refresh;
+      await page.waitForTimeout(600);
+      // The FALSE history-failure never fires (the contained refresh
+      // rejection must not claim a recording failure on the committed
+      // entry). The eval path has NO success toast, so the observable is
+      // the Notifications region itself: ANY toast after the committed
+      // entry is the false failure — the raw abort surfaces as the
+      // OFFLINE_MESSAGE ("You appear to be offline…"), never the fallback
+      // string, so a text pin alone cannot see it (the s174
+      // pin-correction lesson, first half).
+      //
+      // The count is SINGLE-SHOT (a plain expect, never toHaveCount): a
+      // retrying toHaveCount(0) on a self-dismissing toast passes
+      // VACUOUSLY once the 5s auto-dismiss lands inside the 10s expect
+      // timeout — the pre-fix toast fired, lived its 5s, and the retrying
+      // assertion still went green (probe-measured: fired at ~12ms,
+      // assertion passed at 5318ms). The single-shot at +600ms is immune:
+      // pre-fix the toast is alive → count 1 → RED; post-fix no toast
+      // ever mounts → count 0 → GREEN (the s174 pin-correction lesson,
+      // second half).
+      const falseToasts = await page
+        .getByRole("region", { name: "Notifications" })
+        .getByRole("button")
+        .count();
+      expect(falseToasts).toBe(0);
+    } finally {
+      await page.unroute("**/api/calculator/history");
+      if (createdId) await page.request.delete(`/api/calculator/history/${createdId}`);
+    }
+  });
+});

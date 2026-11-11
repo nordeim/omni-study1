@@ -65,6 +65,11 @@ const SITES = [
     enumName: "GRADE_TYPES",
     why: "the S173/DW2 port (the measured reference type select — Homework/Quiz/Test/Midterm/Final/Project — promoted to validation.ts's single source beside EXAM_TYPES; the census guards the new family from its first day)",
   },
+  {
+    view: "src/components/views/settings-view.tsx",
+    enumName: "HOLIDAY_TYPES",
+    why: "the S174/DX4 port (the measured reference type selector — Holiday/Break/No School — promoted to validation.ts's single source beside GRADE_TYPES; the eighth site, guarded from its first day)",
+  },
 ] as const;
 
 function readView(rel: string): string {

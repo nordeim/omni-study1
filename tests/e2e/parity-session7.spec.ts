@@ -2397,3 +2397,76 @@ test.describe("S173/DW2 · the grades create-dialog parity catch-up + the type/d
     expect(order.map((b) => b.text)).toEqual(["Cancel", "Add Grade"]);
   });
 });
+
+// S174/DX4 — the holidays create-dialog parity catch-up + the
+// start/end/type field port (the s174 audit B/L-3). Measured live at the
+// s174 gated probe (the reference's Add Holiday dialog opened on a fresh
+// account: title "Add Holiday" (an H2), "Name *" (placeholder "e.g.,
+// Winter Break"), "Start Date *" + "End Date *" (both native date
+// inputs, required, NO defaults — the pristine dialog measured empty),
+// "Type" (a three-option selector: Holiday / Break / No School; the
+// default reads "Holiday"), and the footer's DOM order
+// Cancel-then-submit ([Cancel][Add Holiday])). The clone's dialog was
+// scaffold-era (label "Name" + placeholder "e.g. Spring break" + a
+// SINGLE "Date" field + no Type selector). The port: the HOLIDAY_TYPES
+// vocabulary + the `endDate`/`type` columns (schema + validation + row +
+// dialog + list render + seed + the import vocabulary — the S173/DW2
+// field-port precedent). The reference's own create flow is BROKEN (the
+// entity POST answers 403 "Permission denied for create operation on
+// Holiday entity" — reproduced through the real dialog AND directly
+// against the entity API with the page's own Bearer token) — the
+// reference's list could not be measured; the dialog's FIELD SET is the
+// port authority and the clone's create flow keeps working (the
+// functional superset). The visible-Label pattern is the clone's a11y
+// superset (the S172/DV2 adjudication-7 precedent) — the label COPY
+// ports ("Name *", "Start Date *", "End Date *", "Type"). The submit
+// stays "Add Holiday" on both hosts — identical pre-fix and post-fix.
+// ---------------------------------------------------------------------------
+test.describe("S174/DX4 · the holidays create-dialog parity catch-up + the start/end/type field port", () => {
+  test("the create dialog carries the reference's measured labels, range fields, type selector, and footer", async ({ page }) => {
+    await page.goto("/Settings");
+    await hydrated(page);
+    await page.getByRole("tab", { name: "Holidays" }).click();
+    await expect(page.getByRole("heading", { name: "Holidays & Breaks" })).toBeVisible();
+    await page.getByRole("button", { name: "Add Holiday" }).first().click();
+    const dlg = page.getByRole("dialog");
+    await expect(dlg).toBeVisible();
+    // The measured label copy (RED pre-fix: the scaffold-era "Name"
+    // without the asterisk + the placeholder "e.g. Spring break").
+    await expect(dlg.getByText("Name *", { exact: true })).toBeVisible();
+    await expect(dlg.locator("#holiday-name")).toHaveAttribute("placeholder", "e.g., Winter Break");
+    // The measured RANGE fields — both native date inputs, required,
+    // with NO defaults (the pristine measurement: both empty).
+    const start = dlg.locator("#holiday-start");
+    const end = dlg.locator("#holiday-end");
+    await expect(start).toHaveAttribute("type", "date");
+    await expect(end).toHaveAttribute("type", "date");
+    await expect(start).toHaveValue("");
+    await expect(end).toHaveValue("");
+    await expect(dlg.getByText("Start Date *", { exact: true })).toBeVisible();
+    await expect(dlg.getByText("End Date *", { exact: true })).toBeVisible();
+    // The measured TYPE selector: three buttons in the measured order
+    // with "Holiday" active by default (the aria-pressed idiom).
+    await expect(dlg.getByText("Type", { exact: true })).toBeVisible();
+    const typeButtons = dlg.getByRole("button", { name: /^(Holiday|Break|No School)$/ });
+    await expect(typeButtons).toHaveCount(3);
+    await expect(typeButtons.nth(0)).toHaveAttribute("aria-pressed", "true");
+    await expect(typeButtons.nth(1)).toHaveAttribute("aria-pressed", "false");
+    await expect(typeButtons.nth(2)).toHaveAttribute("aria-pressed", "false");
+    // The measured footer: [Cancel][Add Holiday] — the secondary renders
+    // BEFORE the submit (both scoped to the form's footer).
+    const submit = dlg.getByRole("button", { name: "Add Holiday", exact: true });
+    const cancel = dlg.locator("form").getByRole("button", { name: "Cancel", exact: true });
+    await expect(submit).toBeVisible();
+    await expect(cancel).toBeVisible();
+    const order = await dlg
+      .locator("form")
+      .getByRole("button")
+      .evaluateAll((els) =>
+        els
+          .map((el, i) => ({ i, text: (el.textContent ?? "").trim() }))
+          .filter((b) => b.text === "Add Holiday" || b.text === "Cancel"),
+      );
+    expect(order.map((b) => b.text)).toEqual(["Cancel", "Add Holiday"]);
+  });
+});

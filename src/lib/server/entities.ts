@@ -17,6 +17,7 @@ import { normalizeMembers, type GroupMember } from "../group-members";
 import { db } from "../db";
 import {
   GRADE_SCORE_ABOVE_MAX,
+  HOLIDAY_END_BEFORE_START,
   assignmentSchema,
   examSchema,
   eventCreateSchema,
@@ -26,6 +27,7 @@ import {
   focusSessionSchema,
   gradeCreateSchema,
   gradeSchema,
+  holidayCreateSchema,
   holidaySchema,
   noteSchema,
   notebookSchema,
@@ -214,6 +216,38 @@ export function checkTimetableOrderingMerge(existing: Row, writes: Row): void {
   if (startMin === null || endMin === null) return; // a malformed legacy leg skips
   if (endMin < startMin) {
     throw new ValidationError("End time must be after the start time");
+  }
+}
+
+/**
+ * S174/DX4 — the holiday single-leg range merge (the BZ6 grade-range
+ * pattern on the date/endDate pair). The UPDATE path owns NO
+ * schema-side .check() (the zod@4 .partial() default-injection lesson —
+ * see checkGradeRangeMerge); a single-leg PATCH (`{"endDate": …}` alone,
+ * or a `date`-only move) is compared against the STORED row's other
+ * leg here. Comparisons use epochMs (the BV1/epochMs helper — the
+ * STORED row arrives from Prisma as a Date, the sent write is a string;
+ * a string-only compare would silently skip on the Date side). A
+ * null/missing leg skips (the legacy-seed defense — endDate is
+ * nullable, the single-day range; same-day is LEGAL, only a reversed
+ * range rejects).
+ */
+export function checkHolidayRangeMerge(existing: Row, writes: Row): void {
+  const startSent = "date" in writes;
+  const endSent = "endDate" in writes;
+  if (!startSent && !endSent) return;
+  // The unified effective-pair compare (the checkGradeRangeMerge doctrine):
+  // the update schema owns NO .check() (the zod@4 .partial()
+  // default-injection lesson), so EVERY combination funnels here —
+  // both-legs-sent, date-only, and endDate-only alike.
+  const startDate = startSent ? writes.date : existing.date;
+  const endDate = endSent ? writes.endDate : existing.endDate;
+  if (startDate == null || endDate == null) return; // a null leg is the single-day range — legal
+  const startMs = epochMs(startDate);
+  const endMs = epochMs(endDate);
+  if (Number.isNaN(startMs) || Number.isNaN(endMs)) return; // a malformed legacy leg skips
+  if (endMs < startMs) {
+    throw new ValidationError(HOLIDAY_END_BEFORE_START);
   }
 }
 
@@ -590,9 +624,16 @@ export const focusSessionDelegate = makeOwnedDelegate({
 
 export const holidayDelegate = makeOwnedDelegate({
   model: db.holiday as unknown as OwnedModel,
-  createSchema: holidaySchema,
+  // S130/CE5: the transactional merge guard's tx delegate name.
+  // S174/DX4: the ordering-checked create shape (the grades delegate's
+  // gradeCreateSchema pattern); beforeWrite owns the PATCH legs (see
+  // checkHolidayRangeMerge — the update schema stays .check()-free by
+  // design: zod@4's .partial() injects the type default).
+  txModelName: "holiday",
+  createSchema: holidayCreateSchema,
   updateSchema: holidaySchema.partial(),
-  dateFields: ["date"],
+  beforeWrite: checkHolidayRangeMerge,
+  dateFields: ["date", "endDate"],
 });
 
 /**

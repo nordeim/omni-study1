@@ -9,9 +9,9 @@ High-signal instructions for coding agents working in this repo. Everything here
 | `bun install` | Install deps (Bun ≥ 1.3) |
 | `bun run dev` | Dev server on :3000 (Turbopack), logs tee'd to `dev.log` |
 | `bun run lint` / `bun run typecheck` | ESLint / `tsc --noEmit` — both must be clean |
-| `bun run test` | Vitest unit layer (1719 tests; `*.test.ts` only — never picks up e2e specs) |
+| `bun run test` | Vitest unit layer (1731 tests; `*.test.ts` only — never picks up e2e specs) |
 | `bun run build` | Production build → `.next/standalone` (**required before e2e**) |
-| `bun run test:e2e` | Playwright vs the standalone build on :3100 with `db/e2e.db` (641 tests across the 5-chunk cold map — 158+201+98+95+89, 30 spec files; a single-process full run trips the register rate-limiter budget by design, the chunked map re-boots the server per chunk). NOTE (S45, the day-boundary lesson): the global setup re-seeds every run, but the seed's IDEMPOTENT UPSERTS do NOT refresh day-relative dates on existing rows — a scratch `db/e2e.db` that ages across a UTC midnight keeps its original day-relative dates (today's tasks, the +1-day exam badge, the due-in pills, the import round-trip dates each read one day stale → 4 deterministic failures in parity-session6/parity-session9/s23-import). Delete `db/e2e.db` when a run crosses a day boundary — the global setup re-creates it fresh with current dates. NOTE (S46, TWO more aged-scratch-db classes + a build-input one): (1) ALWAYS run e2e COLD — S131/CF5 chained `scripts/e2e-cold-reset.sh` into `bun run test:e2e` (port-guard + `rm -f db/e2e.db` BEFORE playwright boots anything — global-setup is TOO LATE: Playwright starts the webServer before globalSetup), so the default runner self-colds; any DIRECT `playwright test` invocation still needs the manual `rm -f db/e2e.db` before every full run: the s23-import round-trip posts a FIXED-id envelope, so a second consecutive run against the aged db reads `created: 0, updated: 1` instead of `created: 1, updated: 0` and fails — not just across midnights, across ANY re-run; (2) the s22 negative-spawn spec reads the BUNDLED `.env` — Next's standalone output COPIES the repo-root `.env` into `.next/standalone/.env` at build time, so a REAL AUTH_SECRET in the dev `.env` leaks into the bundle and the guard CORRECTLY boots (the spec times out waiting for the exit) — keep the repo-root `.env`'s AUTH_SECRET EMPTY (the `.env.example` dev posture: `AUTH_SECRET=""` — dev falls back to the local constant with the boot warning) when building for e2e |
+| `bun run test:e2e` | Playwright vs the standalone build on :3100 with `db/e2e.db` (645 tests across the 5-chunk cold map — 158+202+101+95+89, 30 spec files; a single-process full run trips the register rate-limiter budget by design, the chunked map re-boots the server per chunk). NOTE (S45, the day-boundary lesson): the global setup re-seeds every run, but the seed's IDEMPOTENT UPSERTS do NOT refresh day-relative dates on existing rows — a scratch `db/e2e.db` that ages across a UTC midnight keeps its original day-relative dates (today's tasks, the +1-day exam badge, the due-in pills, the import round-trip dates each read one day stale → 4 deterministic failures in parity-session6/parity-session9/s23-import). Delete `db/e2e.db` when a run crosses a day boundary — the global setup re-creates it fresh with current dates. NOTE (S46, TWO more aged-scratch-db classes + a build-input one): (1) ALWAYS run e2e COLD — S131/CF5 chained `scripts/e2e-cold-reset.sh` into `bun run test:e2e` (port-guard + `rm -f db/e2e.db` BEFORE playwright boots anything — global-setup is TOO LATE: Playwright starts the webServer before globalSetup), so the default runner self-colds; any DIRECT `playwright test` invocation still needs the manual `rm -f db/e2e.db` before every full run: the s23-import round-trip posts a FIXED-id envelope, so a second consecutive run against the aged db reads `created: 0, updated: 1` instead of `created: 1, updated: 0` and fails — not just across midnights, across ANY re-run; (2) the s22 negative-spawn spec reads the BUNDLED `.env` — Next's standalone output COPIES the repo-root `.env` into `.next/standalone/.env` at build time, so a REAL AUTH_SECRET in the dev `.env` leaks into the bundle and the guard CORRECTLY boots (the spec times out waiting for the exit) — keep the repo-root `.env`'s AUTH_SECRET EMPTY (the `.env.example` dev posture: `AUTH_SECRET=""` — dev falls back to the local constant with the boot warning) when building for e2e |
 | `node scripts/capture-studyflow.mjs` | Refresh all 31 `docs/screenshots/` captures from the dev server (24 light + 7 dark) |
 | `node scripts/dark-sweep.mjs` | Dark-mode contrast audit over all 20 views (flashbulb/unreadable detector). S27: sets dark mode through the settings API (the real lifecycle) and SELF-VERIFIES the precondition — fails loudly (exit 1, no findings) if the dark class is not applied; the applied mode rides the JSON envelope. Never force the class directly (the session-10 approach silently rotted after S11) |
 | `node scripts/accent-dark-sweep.mjs` | Accent × dark-mode audit (S38-extended): all 7 accents × 20 desktop views × 20 MOBILE views at 390×844 + the drawer per accent (FAIL <2.2, WARN <3.2 for accent text; the mobile records also carry scrollWidth — >390 is a finding). The S38 shape is unit-pinned anti-phantom: every view recorded EXPLICITLY on both surfaces (clean views carry empty detector arrays), the per-accent `applied` self-verified readings + `mode: "dark"` + `mobileViewport` ride the envelope, and the seam's ALL-ACCENTS + ALL-VIEWS + drawer-present guards make every silently-skipped dimension a LOUD shape-error (the pre-S38 mobile pass swept only 6 views — MOBILE_VIEWS — and the omission-means-clean recording could not distinguish "clean because measured" from "clean because never rendered") |
@@ -3364,3 +3364,63 @@ Hover-parity probing must run in Playwright, not a touch-emulating browser — v
    content must split the assertion (DOM text for the value, class or
    computed style for the transform); asserting the transformed string
    tests the browser's CSS engine, not the app.
+
+## S174 lessons (Batch DX — the CB8 completion cycle: the focusSessions/holidays/calculatorHistory families + the holidays field port + the focustimer catch-up)
+
+1. **A negative retry-assertion on a SELF-DISMISSING element passes
+   vacuously — pin "no toast fired" with a deterministic anchor + a
+   bounded settle + a SINGLE-SHOT count.** The DX1c calculator leg's
+   first observable (`toHaveCount(0)` over the Notifications region)
+   passed on the PRE-FIX build: the false-failure toast fired at ~12ms,
+   lived its 5s auto-dismiss (toast.tsx's hardcoded timer), and the
+   10s retrying assertion simply waited past the dismissal — green on a
+   red tree, undetectable until an honest-RED re-proof. The corrected
+   pin anchors on the refresh GET's DISPATCH (waitForRequest — it fires
+   on both builds; the fix contains the rejection, never the dispatch),
+   settles 600ms (the abort→rejection→catch→render chain measured
+   ~12ms; 50x margin), then takes ONE plain count: pre-fix the toast is
+   guaranteed alive (5s lifetime vs 600ms settle), post-fix nothing
+   mounts. Lesson: `toHaveCount(0)` means "becomes zero within the
+   timeout", never "was never non-zero" — for transient elements the
+   assertion must be a snapshot inside a window where presence is
+   guaranteed, not a retry that outlives the element.
+
+2. **A route-aborted fetch surfaces as the seam's OFFLINE_MESSAGE, not
+   the caller's fallback string — pin the toast REGION, never the
+   fallback text.** The same leg's text pin on "The result is shown,
+   but history could not record it." could never see the pre-fix toast:
+   `doFetch` converts the fetch TypeError into
+   `ApiError(0, OFFLINE_MESSAGE)`, and the toast renders `err.message`
+   when present — the fallback string only renders when the error
+   carries NO message. Lesson: for "a toast must not fire" pins over
+   code that toasts `errorMessage(err, fallback)`, the observable is
+   the Notifications region itself (ANY button inside it is the false
+   failure); the fallback text is a will-o'-the-wisp.
+
+3. **An honest-RED re-proof after a source revert must rebuild AND
+   re-boot — `reuseExistingServer` serves the stale build.** The DX1c
+   re-proof (temporarily reverting one `.catch`) initially read as
+   "no toast fires pre-fix" because the :3100 server still held the
+   FIXED build in memory: Playwright reuses a healthy listener without
+   inspecting what it serves, so the source state was irrelevant. The
+   discriminating probe is the cert's own pattern — kill by port,
+   rebuild, cold db — and the probe script that settles generously
+   (the v2 probe: dispatch anchor + 2.5s dump) turns a suspicious pass
+   into evidence. Lesson: treat any "passes when it should fail" on a
+   reverted tree as a stale-server hypothesis FIRST (one curl to the
+   health endpoint tells you nothing about the BUILD — only the
+   behavior under interception does).
+
+4. **A reference surface whose own write path is broken (the 403) is
+   the FIELD SET's authority, not the flow's — record the break, port
+   the fields, keep the working superset flow.** The reference's
+   Add Holiday dialog measured a range model (Start Date + End Date +
+   the three-value Type selector) but its own CREATE answered 403 (a
+   reference-side backend posture — their dialog cannot save). The
+   port took the dialog as the authority (labels, required-ness,
+   defaults, footer) and left the clone's create flow working — the
+   functional superset — with the 403 recorded in the plan + session
+   log. Lesson: measure the contract at the dialog (what the user is
+   asked), verify the wire only when the reference's own flow can
+   exercise it; a broken reference flow is a finding to record, never a
+   behavior to imitate.

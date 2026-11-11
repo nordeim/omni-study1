@@ -1482,3 +1482,142 @@ describe("S173/DW1: the grades family mutation CB8 split (B-H1 — committed wri
     await expect(mutations.createGrade(gradeInput as never)).rejects.toThrow("offline");
   });
 });
+
+// S174/DX1 — the CB8 COMPLETION: the last three families of the recorded
+// family-wide port (the DK1…DW1 doctrine, the THIRTEENTH–FIFTEENTH and
+// FINAL families — focusSessions / holidays + the createCalculatorEntry
+// create-only observation; after this cycle the port is COMPLETE, no
+// family rides an uncaught refresh leg). Pre-DX1 the focusSessions trio
+// and the holidays trio rode the uncaught single-collection refresh and
+// createCalculatorEntry the same create-only leg, so a flaky refresh GET
+// rejected the whole call on a write the server COMMITTED. The consumer
+// census: the focustimer completion catch's "Could not save the focus
+// session." on a committed session (the false failure also fires the
+// CT1 re-latch on a session that DID save); the HolidayDialog catch's
+// "Could not add the holiday." with the dialog still open (the
+// duplicate-creating retry); the holidays delete catch's false "Could
+// not delete the holiday."; the calculator eval catch's "The result is
+// shown, but history could not record it." on a committed entry (the
+// GPA + unit twins the same shape). Pinned here: a committed write + a
+// failed refresh RESOLVES; the failed write still REJECTS.
+describe("S174/DX1: the focusSessions family mutation CB8 split (B-H1 — committed write + failed refresh)", () => {
+  const focusInput = {
+    subjectId: null,
+    startedAt: new Date().toISOString(),
+    durationSeconds: 25 * 60,
+    mode: "focus",
+    completed: true,
+  } as const;
+
+  beforeEach(() => {
+    apiGetMock.mockReset();
+    apiSendMock.mockReset();
+    apiGetMock.mockResolvedValue([]);
+    apiSendMock.mockResolvedValue(undefined);
+    useDataStore.setState({ focusSessions: [] });
+  });
+
+  it("createFocusSession: a committed write + a failed refresh RESOLVES (never the false save-failure)", async () => {
+    apiSendMock.mockResolvedValueOnce(undefined); // the POST 201s
+    apiGetMock.mockRejectedValueOnce(new Error("offline")); // the refresh GET fails
+    // RED pre-fix: the mutation rejected with "offline" — the focustimer
+    // completion catch toasted "Could not save the focus session." on a
+    // session the server committed (and the CT1 re-latch fired on a
+    // session that DID save).
+    await expect(mutations.createFocusSession(focusInput as never)).resolves.toBeUndefined();
+  });
+
+  it("updateFocusSession: a committed write + a failed refresh RESOLVES", async () => {
+    apiSendMock.mockResolvedValueOnce(undefined);
+    apiGetMock.mockRejectedValueOnce(new Error("offline"));
+    await expect(mutations.updateFocusSession("f-dx1", { durationSeconds: 60 })).resolves.toBeUndefined();
+  });
+
+  it("deleteFocusSession: a committed write + a failed refresh RESOLVES", async () => {
+    apiSendMock.mockResolvedValueOnce(undefined); // the DELETE 200s
+    apiGetMock.mockRejectedValueOnce(new Error("offline")); // the refresh GET fails
+    await expect(mutations.deleteFocusSession("f-dx1")).resolves.toBeUndefined();
+  });
+
+  it("createFocusSession: a FAILED write still rejects (the honest save-failure reaches the caller)", async () => {
+    apiSendMock.mockRejectedValueOnce(new Error("offline"));
+    // The write leg keeps rejecting — the honest error re-latches the
+    // timer (the CT1 guard) and the retry is legitimate (nothing
+    // committed).
+    await expect(mutations.createFocusSession(focusInput as never)).rejects.toThrow("offline");
+  });
+});
+
+describe("S174/DX1: the holidays family mutation CB8 split (B-H1 — committed write + failed refresh)", () => {
+  const holidayInput = {
+    name: "DX1 holiday probe",
+    date: "2026-11-11",
+    endDate: "2026-11-13",
+    type: "break",
+  } as const;
+
+  beforeEach(() => {
+    apiGetMock.mockReset();
+    apiSendMock.mockReset();
+    apiGetMock.mockResolvedValue([]);
+    apiSendMock.mockResolvedValue(undefined);
+    useDataStore.setState({ holidays: [] });
+  });
+
+  it("createHoliday: a committed write + a failed refresh RESOLVES (never the false add-failure)", async () => {
+    apiSendMock.mockResolvedValueOnce(undefined); // the POST 201s
+    apiGetMock.mockRejectedValueOnce(new Error("offline")); // the refresh GET fails
+    // RED pre-fix: the HolidayDialog's catch toasted "Could not add the
+    // holiday." with the dialog still open and the form armed on a row
+    // the server committed (the retry duplicates the holiday).
+    await expect(mutations.createHoliday(holidayInput as never)).resolves.toBeUndefined();
+  });
+
+  it("updateHoliday: a committed write + a failed refresh RESOLVES", async () => {
+    apiSendMock.mockResolvedValueOnce(undefined);
+    apiGetMock.mockRejectedValueOnce(new Error("offline"));
+    await expect(mutations.updateHoliday("h-dx1", { name: "Renamed" })).resolves.toBeUndefined();
+  });
+
+  it("deleteHoliday: a committed write + a failed refresh RESOLVES", async () => {
+    apiSendMock.mockResolvedValueOnce(undefined); // the DELETE 200s
+    apiGetMock.mockRejectedValueOnce(new Error("offline")); // the refresh GET fails
+    // RED pre-fix: the remove() catch toasted "Could not delete the
+    // holiday." on a row the server already deleted.
+    await expect(mutations.deleteHoliday("h-dx1")).resolves.toBeUndefined();
+  });
+
+  it("createHoliday: a FAILED write still rejects (the honest add-failure reaches the caller)", async () => {
+    apiSendMock.mockRejectedValueOnce(new Error("offline"));
+    await expect(mutations.createHoliday(holidayInput as never)).rejects.toThrow("offline");
+  });
+});
+
+describe("S174/DX1: the calculatorHistory create-only CB8 split (B-H1 — committed write + failed refresh)", () => {
+  const calcInput = {
+    expression: "1+1",
+    result: "2",
+    mode: "basic",
+  } as const;
+
+  beforeEach(() => {
+    apiGetMock.mockReset();
+    apiSendMock.mockReset();
+    apiGetMock.mockResolvedValue([]);
+    apiSendMock.mockResolvedValue(undefined);
+    useDataStore.setState({ calculatorHistory: [] });
+  });
+
+  it("createCalculatorEntry: a committed write + a failed refresh RESOLVES (never the false history-failure)", async () => {
+    apiSendMock.mockResolvedValueOnce(undefined); // the POST 201s
+    apiGetMock.mockRejectedValueOnce(new Error("offline")); // the refresh GET fails
+    // RED pre-fix: the eval catch toasted "The result is shown, but
+    // history could not record it." on an entry the server committed.
+    await expect(mutations.createCalculatorEntry(calcInput as never)).resolves.toBeUndefined();
+  });
+
+  it("createCalculatorEntry: a FAILED write still rejects (the honest history-failure reaches the caller)", async () => {
+    apiSendMock.mockRejectedValueOnce(new Error("offline"));
+    await expect(mutations.createCalculatorEntry(calcInput as never)).rejects.toThrow("offline");
+  });
+});

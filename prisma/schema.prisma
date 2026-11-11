@@ -586,13 +586,26 @@ model CalculatorHistoryEntry {
 }
 
 model Holiday {
-  id        String   @id @default(cuid())
+  id        String    @id @default(cuid())
   userId    String
   name      String
   date      DateTime
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  // S174/DX4 (measured live at the s174 gated probe): the reference's
+  // create dialog records a DATE RANGE + a kind — its "Start Date" +
+  // "End Date" (both required, no defaults) and its Type selector
+  // (Holiday/Break/No School). Ported as a nullable endDate (the `date`
+  // column becomes the START date semantically; a null endDate renders
+  // as a single-day holiday — legacy rows + partial API writes
+  // tolerated) + the lowercase type vocabulary (the GRADE_TYPES
+  // convention). The reference's own create flow is BROKEN (its entity
+  // POST answers 403 "Permission denied for create operation on
+  // Holiday entity") — the dialog's FIELD SET is the port authority;
+  // the clone's create flow keeps working (the functional superset).
+  endDate   DateTime?
+  type      String    @default("holiday")
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   // S128/CC10: the composite REPLACES the bare [userId] index — the
   // factory list query (where userId, orderBy [createdAt desc, id desc],

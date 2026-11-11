@@ -265,6 +265,11 @@ export type HolidayRow = {
   userId: string;
   name: string;
   date: string;
+  // S174/DX4: the measured range + type port — `date` is the START date
+  // semantically; a null endDate is a single-day holiday (legacy rows +
+  // partial API writes tolerated — the dialog itself always sends both).
+  endDate: string | null;
+  type: string;
   createdAt: string;
   updatedAt: string;
 };
@@ -1086,37 +1091,65 @@ export const mutations = {
   },
 
   // ---- focus sessions ------------------------------------------------------------------
+  // S174/DX1 — the CB8 COMPLETION (the THIRTEENTH family of the recorded
+  // family-wide port; after this cycle the port is COMPLETE — no family
+  // rides an uncaught refresh leg): a refresh GET that fails after a
+  // COMMITTED write must not reject the mutation — the caller's catch
+  // would claim a save failure on a saved row (the focustimer completion
+  // catch's "Could not save the focus session." toast on a session the
+  // server COMMITTED, with the CT1 re-latch firing on a session that DID
+  // save). The refresh rejection is contained here; the stale slices
+  // self-heal on the next successful load (the S16 view-switch pre-warm
+  // + the next mutation's own refresh — the DJ5 doctrine). The WRITE
+  // legs keep rejecting honestly. Pinned by tests/data-store.test.ts
+  // (the DX1 pair sets) + the DX1a e2e leg in tests/e2e/resilience.spec.ts
+  // (the create-through-failed-refresh journey — the family's create has
+  // a live view consumer, the S171/S172/S173 axes' shape).
   createFocusSession: async (input: FocusSessionInput): Promise<void> => {
     await apiSend("POST", PATHS.focusSessions, input);
-    await fetchAndSet("focusSessions");
+    await fetchAndSet("focusSessions").catch(() => undefined);
   },
   updateFocusSession: async (id: string, patch: Partial<FocusSessionInput>): Promise<void> => {
     await apiSend("PATCH", `${PATHS.focusSessions}/${id}`, patch);
-    await fetchAndSet("focusSessions");
+    await fetchAndSet("focusSessions").catch(() => undefined);
   },
   deleteFocusSession: async (id: string): Promise<void> => {
     await apiSend("DELETE", `${PATHS.focusSessions}/${id}`);
-    await fetchAndSet("focusSessions");
+    await fetchAndSet("focusSessions").catch(() => undefined);
   },
 
   // ---- holidays -----------------------------------------------------------------------
+  // S174/DX1 (the FOURTEENTH family): the HolidayDialog submit catch's
+  // "Could not add the holiday." toast with the dialog still open and
+  // the form armed on a row the server COMMITTED (the retry that
+  // DUPLICATES the holiday); the remove() catch's false "Could not
+  // delete the holiday." on a row the server deleted. Pinned by the
+  // DX1 pair sets + the DX1b e2e leg.
   createHoliday: async (input: HolidayInput): Promise<void> => {
     await apiSend("POST", PATHS.holidays, input);
-    await fetchAndSet("holidays");
+    await fetchAndSet("holidays").catch(() => undefined);
   },
   updateHoliday: async (id: string, patch: Partial<HolidayInput>): Promise<void> => {
     await apiSend("PATCH", `${PATHS.holidays}/${id}`, patch);
-    await fetchAndSet("holidays");
+    await fetchAndSet("holidays").catch(() => undefined);
   },
   deleteHoliday: async (id: string): Promise<void> => {
     await apiSend("DELETE", `${PATHS.holidays}/${id}`);
-    await fetchAndSet("holidays");
+    await fetchAndSet("holidays").catch(() => undefined);
   },
 
   // ---- calculator history ---------------------------------------------------------------
+  // S174/DX1 (the FIFTEENTH + FINAL family, the create-only observation):
+  // the eval catch's "The result is shown, but history could not record
+  // it." toast on an entry the server COMMITTED (the eval path has NO
+  // success toast by design — the display's correct result is the success
+  // surface; the false history-failure is the observable — the GPA + unit
+  // twins carry the same shape). Pinned by the DX1 pair sets + the DX1c
+  // e2e leg. With this family the recorded family-wide CB8 port closes:
+  // every mutation in this store now contains its own refresh rejection.
   createCalculatorEntry: async (input: CalculatorHistoryInput): Promise<void> => {
     await apiSend("POST", PATHS.calculatorHistory, input);
-    await fetchAndSet("calculatorHistory");
+    await fetchAndSet("calculatorHistory").catch(() => undefined);
   },
 
   // ---- AI chat history --------------------------------------------------------------------

@@ -287,8 +287,10 @@ async function main(): Promise<void> {
 
   await db.holiday.createMany({
     data: [
-      { userId: user.id, name: "Fall break", date: at(21, 0) },
-      { userId: user.id, name: "Thanksgiving", date: at(38, 0) },
+      // S174/DX4: the typed/ranged defs — the measured field set (the
+      // reference's dialog records a Start/End range + a Type).
+      { userId: user.id, name: "Fall break", date: at(21, 0), endDate: at(25, 0), type: "break" },
+      { userId: user.id, name: "Thanksgiving", date: at(38, 0), endDate: at(40, 0), type: "holiday" },
     ],
   });
 

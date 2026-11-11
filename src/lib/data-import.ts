@@ -8,6 +8,7 @@ import {
   EXAM_TYPES,
   FOCUS_SESSION_MODES,
   GRADE_TYPES,
+  HOLIDAY_TYPES,
   hhmmMinutes,
   preferencesSchema,
   REPEATS,
@@ -833,6 +834,9 @@ export const ENUM_VOCABULARIES: Record<string, readonly string[]> = {
   // S173/DW2: the ported grade type (the measured reference vocabulary —
   // the CA14 doctrine: the import seam mirrors validation.ts's array).
   "grades.type": GRADE_TYPES,
+  // S174/DX4: the ported holiday type (the measured Holiday/Break/No
+  // School selector — the CA14 doctrine).
+  "holidays.type": HOLIDAY_TYPES,
   "timetableClasses.weekType": WEEK_TYPES,
   "focusSessions.mode": FOCUS_SESSION_MODES,
   "calcHistory.mode": CALCULATOR_MODES,

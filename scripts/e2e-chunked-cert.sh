@@ -1,4 +1,27 @@
 #!/usr/bin/env bash
+# (S174/DX re-tag — census 641 → 645, net +4: chunk 2 +1 [the
+# S174/DX4 holidays create-dialog parity catch-up + start/end/type
+# field-port pin in parity-session7 — the reference's range-model
+# dialog re-deployment, measured live at the s174 gated write-path
+# probe (the reference's own create flow answers 403 — a reference-side
+# data bug, recorded not ported): the "Start Date"/"End Date" native
+# date inputs (both required, no defaults — the pristine measurement)
+# + the three-button Type selector (Holiday / Break / No School, the
+# "holiday" active default) + the "e.g., Winter Break" name
+# placeholder + the footer's measured [Cancel][Add Holiday] order];
+# chunk 3 +3 [the S174/DX1 focusSessions + holidays + calculatorHistory
+# CB8 failure-domain split legs in resilience — the POST continues,
+# the refresh GET aborts: a committed write answers its own success
+# surface (the saved-session toast / the closed dialog / the
+# result-on-display), never the false save-failure that armed the
+# duplicate-creating retry (the DK1…DV1 ports to the THIRTEENTH +
+# FOURTEENTH + FIFTEENTH families — the recorded family-wide port
+# COMPLETE, no family rides an uncaught refresh leg); the DX1c leg's
+# observable is the SINGLE-SHOT toast count at +600ms after the
+# refresh dispatch — a retrying toHaveCount(0) passed VACUOUSLY
+# through the 5s toast auto-dismiss (the s174 pin-correction lesson,
+# recorded at the leg)]. The full DX map:
+# docs/remediation-plan-session174.md.)
 # (S166/DP re-tag — census 627 → 629, net +2: chunk 2 +2 [the
 # S166/DP1 notes-family CB8 failure-domain split pin in parity-session9
 # — the POST continues, the refresh GET aborts: a committed create answers
@@ -349,7 +372,7 @@
 # deterministic defaults so the leg fills only the title + score +
 # max; network-mocked, no server writes beyond the zero-residue
 # create]. The full DW map: docs/remediation-plan-session173.md.)
-# Expected: 158 + 201 + 98 + 95 + 89 = 641 (each chunk's count includes its
+# Expected: 158 + 202 + 101 + 95 + 89 = 645 (each chunk's count includes its
 # auth setup — the current census; the historical re-tag blocks beneath.)
 # (S171/DU re-tag — census 634 → 637, net +3: chunk 2 +2 [the
 # S171/DU2 studygroups create-dialog parity catch-up pair in

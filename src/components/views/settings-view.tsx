@@ -64,12 +64,14 @@ import { ACCENTS, ACCENT_TOKENS, AVATAR_EMOJIS, type Accent, type ThemeMode } fr
 import type { AppUser } from "@/lib/store";
 import { useThemeStore } from "@/lib/store";
 import { Spinner, ViewHeader } from "@/components/views/shared";
-import { GRADE_LEVELS } from "@/lib/validation";
+import { GRADE_LEVELS, HOLIDAY_TYPES } from "@/lib/validation";
 import { cn } from "@/lib/utils";
 
 // S130/CE9: GRADE_LEVELS imports validation.ts's single source (the
 // S127/CB9 ASSIGNMENT_TYPES precedent — a 12-entry twin here silently
 // 400'd a future schema-added level from this dialog).
+// S174/DX4: HOLIDAY_TYPES the same (the measured Holiday/Break/No School
+// vocabulary — the enum-single-source census's eighth site).
 
 const SUBJECT_COLORS = [
   "#8b5cf6",
@@ -906,10 +908,29 @@ function SubjectsTab() {
 
 // ---- HOLIDAYS -------------------------------------------------------------------------
 
+// S174/DX4: the measured selector labels — the reference's buttons read
+// exactly "Holiday" / "Break" / "No School" (the space, not the hyphen —
+// a label MAP, not the capitalize class: CSS capitalize renders
+// "no-school" as "No-school", and the e2e pin asserts the measured
+// string, the S173 lesson 3).
+const HOLIDAY_TYPE_LABELS: Record<(typeof HOLIDAY_TYPES)[number], string> = {
+  holiday: "Holiday",
+  break: "Break",
+  "no-school": "No School",
+};
+
 function HolidayDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (open: boolean) => void }) {
   const { toast } = useToast();
   const [name, setName] = React.useState("");
   const [date, setDate] = React.useState("");
+  // S174/DX4: the measured RANGE + type fields — the reference's dialog
+  // collects "Start Date" + "End Date" (both required, NO defaults — the
+  // pristine measurement) + a Type selector defaulting "Holiday". The
+  // labels carry the measured asterisks ("Name *", "Start Date *",
+  // "End Date *"; "Type" without — the optional-by-measurement posture
+  // with the default).
+  const [endDate, setEndDate] = React.useState("");
+  const [type, setType] = React.useState<(typeof HOLIDAY_TYPES)[number]>("holiday");
   const [saving, setSaving] = React.useState(false);
 
   // Plain initializers — the parent key-remounts per open session, so the
@@ -917,12 +938,24 @@ function HolidayDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (o
 
   const submit = async (event: React.FormEvent) => {
     event.preventDefault();
-    if (!name.trim() || !date || saving) return;
+    if (!name.trim() || !date || !endDate || saving) return;
+    // The client-side mirror of the route's BZ6-style ordering guard —
+    // the named toast BEFORE the POST (the dialog never sends a reversed
+    // range; the route's 400 is the API-level backstop).
+    if (Date.parse(endDate) < Date.parse(date)) {
+      toast.error("End date can't be before the start date.");
+      return;
+    }
     setSaving(true);
     try {
       // S127/CB2: the shared local-noon atom (the inline twin retired —
       // one source for every date-only input).
-      await mutations.createHoliday({ name: name.trim(), date: fromDueDateInput(date) });
+      await mutations.createHoliday({
+        name: name.trim(),
+        date: fromDueDateInput(date),
+        endDate: fromDueDateInput(endDate),
+        type,
+      });
       toast.success("Holiday added");
       onOpenChange(false);
     } catch (err: unknown) {
@@ -940,25 +973,63 @@ function HolidayDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (o
         </DialogHeader>
         <form className="flex flex-col gap-4" onSubmit={(e) => void submit(e)}>
           <div className="flex flex-col gap-1.5">
-            <Label htmlFor="holiday-name">Name</Label>
+            <Label htmlFor="holiday-name">Name *</Label>
             <Input
               id="holiday-name"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="e.g. Spring break"
+              placeholder="e.g., Winter Break"
               required
               autoFocus
             />
           </div>
+          {/* S174/DX4: the measured 2-col range pair (the reference's
+              "Start Date *" + "End Date *", both native + required). */}
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="holiday-start">Start Date *</Label>
+              <Input
+                id="holiday-start"
+                type="date"
+                value={date}
+                onChange={(e) => setDate(e.target.value)}
+                required
+              />
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="holiday-end">End Date *</Label>
+              <Input
+                id="holiday-end"
+                type="date"
+                value={endDate}
+                onChange={(e) => setEndDate(e.target.value)}
+                required
+              />
+            </div>
+          </div>
+          {/* S174/DX4: the measured Type selector — a three-button
+              aria-pressed group (the reference's violet-active button
+              trio on the house tokens; "holiday" active by default). */}
           <div className="flex flex-col gap-1.5">
-            <Label htmlFor="holiday-date">Date</Label>
-            <Input
-              id="holiday-date"
-              type="date"
-              value={date}
-              onChange={(e) => setDate(e.target.value)}
-              required
-            />
+            <Label>Type</Label>
+            <div className="flex flex-wrap gap-2" role="group" aria-label="Holiday type">
+              {HOLIDAY_TYPES.map((t) => (
+                <button
+                  key={t}
+                  type="button"
+                  aria-pressed={type === t}
+                  onClick={() => setType(t)}
+                  className={cn(
+                    "rounded-lg border-2 px-4 py-2 text-sm font-medium transition-colors",
+                    type === t
+                      ? "border-sf-primary bg-sf-primary-soft text-sf-primary-strong"
+                      : "border-transparent bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700",
+                  )}
+                >
+                  {HOLIDAY_TYPE_LABELS[t]}
+                </button>
+              ))}
+            </div>
           </div>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
@@ -1020,16 +1091,33 @@ function HolidaysTab() {
             >
               <div>
                 <p className="font-medium text-slate-700 dark:text-slate-200">{holiday.name}</p>
-                <p className="text-xs text-slate-500 dark:text-slate-400">{formatLongDate(new Date(holiday.date))}</p>
+                {/* S174/DX4: the RANGE render — a null endDate (legacy rows
+                    + partial API writes) falls back to the single-day
+                    form; the type badge rides the measured vocabulary
+                    (the clone's own superset render — the reference's list
+                    could not be measured, its create flow being broken). */}
+                <p className="text-xs text-slate-500 dark:text-slate-400">
+                  {formatLongDate(new Date(holiday.date))}
+                  {holiday.endDate
+                    ? ` – ${formatLongDate(new Date(holiday.endDate))}`
+                    : null}
+                </p>
               </div>
-              <button
-                type="button"
-                aria-label={`Delete ${holiday.name}`}
-                onClick={() => remove(holiday)}
-                className="flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-950"
-              >
-                <Trash2 className="size-4" strokeWidth={2} />
-              </button>
+              <div className="flex items-center gap-2">
+                {holiday.type ? (
+                  <span className="rounded-full bg-sf-primary-soft px-2.5 py-0.5 text-xs font-medium capitalize text-sf-primary-strong">
+                    {holiday.type}
+                  </span>
+                ) : null}
+                <button
+                  type="button"
+                  aria-label={`Delete ${holiday.name}`}
+                  onClick={() => remove(holiday)}
+                  className="flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-950"
+                >
+                  <Trash2 className="size-4" strokeWidth={2} />
+                </button>
+              </div>
             </li>
           ))}
         </ul>

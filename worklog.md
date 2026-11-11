@@ -7949,3 +7949,116 @@ gaps; a periodic re-probe of the reference's chrome AND dialog
 surfaces — four consecutive families now show reference dialog
 drift, this cycle's at the field level; the standing probes are the
 tripwire).
+
+## Session 185 — the S174 cycle (Batch DX: the CB8 completion — focusSessions/holidays/calculatorHistory + the holidays field port + the focustimer catch-up)
+
+The workspace was WARM — the previous session's mid-GREEN tree,
+interrupted during the DX1c honest-RED re-proof (the unit layer at
+1729/1731 with the calculator pair RED as designed; the focustimer +
+holidays ports already in place; `git status` confirming the
+twelve-file DX surface + the untracked plan). This session resumed
+EXACTLY at the pin-correction debugging and closed the cycle.
+
+**The DX1c pin-correction (the cycle's deepest lesson, proven with a
+live probe on the reverted build):** the suspicious pass unpeeled two
+layers. First — the raw route abort surfaces as the seam's
+OFFLINE_MESSAGE ("You appear to be offline. Reconnect and try
+again — your last action was not saved."), never the caller's
+fallback string; `doFetch` converts the fetch TypeError into
+`ApiError(0, OFFLINE_MESSAGE)` and the toast renders `err.message`
+when present, so the text pin on "The result is shown, but history
+could not record it." could never see the pre-fix toast. Second (the
+root cause, probe-measured): the retrying `toHaveCount(0)` over the
+Notifications region passed VACUOUSLY — the false-failure toast
+fired at ~12ms after the refresh dispatch, lived its 5s auto-dismiss
+(toast.tsx's hardcoded timer), and the 10s retrying assertion simply
+waited past the dismissal (the probe's exact numbers: fired at 12ms,
+the assertion green at 5318ms). The corrected observable: the refresh
+GET's DISPATCH anchor (`waitForRequest` — it fires on BOTH builds;
+the fix contains the rejection, never the dispatch) + a 600ms settle
+(the abort→rejection→catch→render chain measured ~12ms; a 50x margin,
+the 5s lifetime 8x above the settle) + a SINGLE-SHOT plain count —
+pre-fix the toast is guaranteed alive at the check, post-fix nothing
+ever mounts. Honest RED re-proven at the designed marker (the count
+read 1), GREEN after the catch re-apply (1.9s, no retry). En route:
+the stale-server hypothesis ruled out then confirmed as the ORIGINAL
+suspicious-pass vector (the `reuseExistingServer` posture serves the
+OLD build after a source revert — the re-proof must rebuild AND
+re-boot), and the aged-`db/e2e.db` P1008 socket-timeout class
+diagnosed (a hard-killed session leaves the scratch db dirty; the
+cold reset is the cure — AK1d green cold, 50/50).
+
+**The cycle's ports (executed TDD-first across the interrupted +
+resumed sessions, every RED on its designed marker):** **DX1** the
+family CB8 COMPLETION — the contained catches for the focusSessions
+trio + the holidays trio + the createCalculatorEntry create-only
+observation (the THIRTEENTH + FOURTEENTH + FIFTEENTH + FINAL
+families; the recorded family-wide port COMPLETE — no mutation in
+the store rides an uncaught refresh leg) + the unit pair set (RED ×7
+/ green-on-arrival ×3) + the three e2e legs (DX1a/DX1b/DX1c);
+**DX2/DX3** the focustimer catch-up — the Timer Settings dialog
+(four sliders: focus/break/long-break durations +
+sessions-before-long-break; the volume toggle with the WebAudio
+chime, default muted; client-state per the measured reload behavior)
++ the CLOCK-LABELS + MODE_ICONS + the Today-duration stat (the
+clone's aria-live count line + the labeled Subject control stay —
+the documented a11y superset); **DX4** the holidays range-model
+field port — HOLIDAY_TYPES (holiday/break/no-school, the exact-label
+map) + the `type`/`endDate` columns through schema.prisma →
+validation.ts (the route-side + client-side end≥start ordering
+guards, the BZ6 precedent) → the HolidayRow type → the dialog (the
+measured "Start Date"/"End Date" native inputs, both required, no
+defaults + the three-button aria-pressed type selector + the
+"e.g., Winter Break" placeholder + the [Cancel][Add Holiday]
+footer) → the list's date-range + type badge render → the seed's
+two typed/ranged defs → the import seam's ENUM_VOCABULARIES mirror +
+the enum single-source census's eighth site. The reference's own
+Holiday create answers 403 — a reference-side data bug RECORDED not
+ported (the dialog is the field-set authority; the clone's flow
+keeps working — the functional superset).
+
+**Gates**: lint ✓ · tsc ✓ · unit **1731/1731** (+12: data-store
++10, enum-single-source +2 — the census site generates the import +
+no-twin pair, the plan's +11 projection corrected in the executed
+close) · build ✓ (the documented toolchain noise pre-existing) · the
+touched spec files green in full-file cold runs (resilience 50/50,
+parity-session7 65/65) · the 5-chunk cold cert **645/645**
+(158 + 202 + 101 + 95 + 89 — chunk 1 158/158, chunk 2 202/202
+first-pass clean) · the drawer check GREEN on the remediated tree
+(**the 109th consecutive** no-Tailwind-v4-mobile-nav-bug
+confirmation) · **the desktop parity probe MATCH** (all five checks)
+· the mobile nav additionally re-verified through a fresh
+agent-browser pass at 390×844 (open, 20 links, navigate+auto-close,
+Escape, the oklab backdrop + 288px panel + z-40 app-bar) · the
+tripwire 136/136 after the doc-chain lockstep.
+
+**Evidence**: `docs/screenshots/174-clone-desktop.png` ·
+`174-clone-mobile-drawer.png` (the 109th companion) ·
+`174-clone-focustimer.png` (the cycle's surface — the remediated
+focustimer with the Timer Settings dialog open, the ported sliders +
+volume toggle), captured by `scripts/capture-s174-evidence.mjs`
+self-verifying (ok: true, md5s distinct + the not-pure-white
+pixel-ratio verification).
+
+**Docs lockstep**: README badge/census (2360 → 2376) + the prose
+sites + the Session-174 row; AGENTS census + the S174 lessons block
+(four lessons: the negative retry-assertion on a self-dismissing
+element passes vacuously — anchor + settle + single-shot; the raw
+abort surfaces as the OFFLINE_MESSAGE, pin the region never the
+fallback text; the honest-RED re-proof must rebuild AND re-boot —
+`reuseExistingServer` serves the stale build; a reference surface
+whose own write path is broken is the field set's authority, not the
+flow's — record the break, port the fields, keep the working
+superset); CLAUDE counts; PAD v1.3.82; the SKILL census; the vitest
+header (+12); the cert runner re-tag (158 + 202 + 101 + 95 + 89 =
+645, tripwire-pinned 136/136); `docs/session_220.md`; this entry;
+the plan §10 as-executed close; the `.env.example` contract
+re-verified (no env changes).
+
+Next cycle. The recorded family-wide CB8 port is COMPLETE — the
+rotation's ledger turns to the other recorded deferrals (the
+task-lists e2e leg; the unannounced loading-gate families; the F-8
+toast copy; the S160 ledger; the gradetracker/settings-CRUD +
+AlertDialog-confirm e2e gaps; a periodic re-probe of the reference's
+chrome AND dialog surfaces — five consecutive families now show
+reference dialog drift; the standing probes are the tripwire).

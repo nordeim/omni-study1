@@ -1,8 +1,45 @@
 import { defineConfig } from "vitest/config";
 import path from "node:path";
 
-// Unit-test layer for the pure domain seams — 51 files / 1719 tests
-// (re-anchored S173/DW — the grades-family hardening cycle: census
+// Unit-test layer for the pure domain seams — 51 files / 1731 tests
+// (re-anchored S174/DX — the CB8 COMPLETION cycle: the focusSessions +
+// holidays + calculatorHistory families close the recorded family-wide
+// port; census 1719 → 1731, +12 net [data-store +10: the S174/DX1
+// family mutation CB8 splits — a committed write + a failed refresh
+// RESOLVES for the focusSessions trio + the holidays trio + the
+// createCalculatorEntry create-only observation (RED pre-fix ×7: the
+// mutations rejected on the refresh leg — the false "Could not save the
+// focus session." on a committed session with the CT1 re-latch armed,
+// the false "Could not add the holiday." with the form armed for the
+// duplicate-creating retry, the false history-failure on a committed
+// calculator entry; the DK1…DW1 ports to the THIRTEENTH + FOURTEENTH +
+// FIFTEENTH + FINAL families — after this cycle the port is COMPLETE,
+// no family rides an uncaught refresh leg) + the three failed-write
+// guards (green-on-arrival — the honest failure reaches the caller);
+// enum-single-source +2: the EIGHTH census site — settings-view imports
+// the S174/DX4-promoted HOLIDAY_TYPES single source (the measured
+// reference type vocabulary — holiday/break/no-school — the import +
+// no-local-twin pair)]. The e2e census moves 641 → 645 [+4: the
+// S174/DX1a/DX1b/DX1c family CB8 legs in resilience (the POST
+// continues, the collection GET aborts, a committed write answers each
+// family's own success surface — the saved-session toast / the closed
+// dialog / the result-on-display — never the false save-failure; the
+// DX1c leg's observable is the SINGLE-SHOT toast count at +600ms after
+// the refresh dispatch: the retrying toHaveCount(0) passed vacuously
+// through the toast's 5s auto-dismiss — the s174 pin-correction
+// lesson, both halves: the raw abort surfaces as the OFFLINE_MESSAGE
+// never the fallback string, AND the negative retry-assertion on a
+// self-dismissing element always passes eventually) + the S174/DX4
+// create-dialog parity pin + start/end/type field port in
+// parity-session7 (the reference's range-model dialog re-deployment,
+// measured live at the s174 gated write-path probe — the reference's
+// own create flow answers 403, a reference-side data bug recorded not
+// ported: the "Start Date"/"End Date" native date inputs (both
+// required, no defaults) + the three-button Type selector + the
+// "e.g., Winter Break" placeholder + the footer's measured
+// [Cancel][Add Holiday] order)].)
+//
+// (prior re-anchor, S173/DW — the grades-family hardening cycle: census
 // 1713 → 1719, +6 net [data-store +4: the S173/DW1 grades-family
 // mutation CB8 split — a committed write + a failed refresh RESOLVES
 // for the create/update/delete trio (RED pre-fix ×3: the mutations

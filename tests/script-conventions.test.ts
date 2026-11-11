@@ -228,7 +228,23 @@ describe("the chunked cert runner's truth contract (S128/CC2)", () => {
     // success toast + the closed dialog; the TWELFTH family, the fifth
     // of the eight remaining seams — after it: focusSessions / holidays
     // + the calculatorHistory observation) — 639 → 641.
-    expect(certSource).toContain("Expected: 158 + 201 + 98 + 95 + 89 = 641");
+    // S174/DX: chunk 2 201 → 202 (the S174/DX4 holidays create-dialog
+    // parity pin + start/end/type field port in parity-session7 — the
+    // measured "Start Date"/"End Date" native inputs + the
+    // Holiday/Break/No School type selector + the "e.g., Winter Break"
+    // placeholder + the [Cancel][Add Holiday] footer order; the
+    // reference's own create flow answers 403, a reference-side data
+    // bug recorded not ported); chunk 3 98 → 101 (the S174/DX1
+    // focusSessions + holidays + calculatorHistory CB8 legs in
+    // resilience — the committed write + aborted refresh answers each
+    // family's own success surface, never the false save-failure; the
+    // THIRTEENTH + FOURTEENTH + FIFTEENTH families, the recorded
+    // family-wide port COMPLETE; the DX1c calculator leg's observable
+    // is the SINGLE-SHOT toast count at +600ms after the refresh
+    // dispatch — the retrying toHaveCount(0) passed vacuously through
+    // the 5s auto-dismiss, the s174 pin-correction lesson) —
+    // 641 → 645.
+    expect(certSource).toContain("Expected: 158 + 202 + 101 + 95 + 89 = 645");
   });
 
   it("propagates a failing chunk's exit code (never a green cert on a red run)", () => {
