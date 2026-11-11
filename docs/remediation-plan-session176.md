@@ -459,9 +459,13 @@ only the Reminders LABEL is pinned) — the port removes no coverage.
       the worklog Session-187 entry
 - [x] the `.env.example` contract re-verified (no env changes this
       cycle)
-- [ ] committed + pushed to `main` via the SSH wrapper + remote-verified
-      + the key shredded (closed at delivery — the plan-tick follow-up
-      commit per the S170-era precedent)
+- [x] committed + pushed to `main` via the SSH wrapper + remote-verified
+      + the key shredded (the cycle commit `10a2081` — 40 files, +2078/−92 —
+      pushed acf8ca2..10a2081, remote verified refs/heads/main @ 10a2081;
+      the operator key shredded; the reconstruction note: the message's
+      key block carried one stray base64 char ('P' at data position 240) —
+      the auth oracle (a live github authentication test per candidate)
+      reconstructed the true key, single-candidate definitive)
 
 ## §11 The final checklist (the operator's asks, mapped)
 - [ ] DZ1 the events-dialog catch-up green (the placeholders + the
@@ -511,5 +515,5 @@ only the Reminders LABEL is pinned) — the port removes no coverage.
 - [x] The evidence frames under `docs/screenshots/`
 - [x] `.env.example` in the commit (re-verified, no changes)
 - [x] The doc chain + worklog updated; the session log written
-- [ ] `git commit` + the SSH-wrapper `git push` to `main` (no new
-      branch) + remote-verified
+- [x] `git commit` + the SSH-wrapper `git push` to `main` (no new
+      branch) + remote-verified (10a2081)
