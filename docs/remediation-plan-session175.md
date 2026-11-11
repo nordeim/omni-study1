@@ -502,9 +502,11 @@ new CLAUDE pin joins the family).
       runner re-tags — e2e-chunked-cert.sh's map + run-cert-chunk.sh's
       honest header catch-up — the tripwire GREEN **138/138**, the new
       pin counted)
-- [ ] committed + pushed via the SSH wrapper + remote-verified (the
-      operator key shredded after the push) — [the final step, closed at
-      delivery]
+- [x] committed + pushed via the SSH wrapper + remote-verified (the
+      operator key shredded after the push) — the push `18c2136..6e612af`
+      landed on `main`, remote-verified (`refs/heads/main @ 6e612af ==
+      local HEAD`); the tick rode the follow-up plan-close commit (the
+      S170-era convention — the S174 fix commit pre-ticked the same box)
 
 ## §11 The final checklist (the operator's asks, mapped)
 
@@ -529,5 +531,8 @@ new CLAUDE pin joins the family).
       this cycle; the e2e socket_timeout posture is a playwright-config
       env, not a .env change)
 - [x] The doc chain updated for alignment
-- [ ] The worklog updated + committed
-- [ ] Pushed to main via the SSH wrapper, remote-verified
+- [x] The worklog updated + committed (the Session-186 entry rides
+      `6e612af`)
+- [x] Pushed to main via the SSH wrapper, remote-verified (the paramiko
+      shim on PATH — no OpenSSH binary in the sandbox; the wrapper's own
+      temp key + the operator's `/tmp` key both shredded after)
