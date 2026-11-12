@@ -11,7 +11,7 @@ High-signal instructions for coding agents working in this repo. Everything here
 | `bun run lint` / `bun run typecheck` | ESLint / `tsc --noEmit` — both must be clean |
 | `bun run test` | Vitest unit layer (1743 tests; `*.test.ts` only — never picks up e2e specs) |
 | `bun run build` | Production build → `.next/standalone` (**required before e2e**) |
-| `bun run test:e2e` | Playwright vs the standalone build on :3100 with the THROWAWAY tmpfs scratch db /dev/shm/omni-study1-e2e/e2e.db (658 tests across the 5-chunk cold map — 158+215+101+95+89, 30 spec files; a single-process full run trips the register rate-limiter budget by design, the chunked map re-boots the server per chunk). NOTE (S45, the day-boundary lesson): the global setup re-seeds every run, but the seed's IDEMPOTENT UPSERTS do NOT refresh day-relative dates on existing rows — a scratch `db/e2e.db` that ages across a UTC midnight keeps its original day-relative dates (today's tasks, the +1-day exam badge, the due-in pills, the import round-trip dates each read one day stale → 4 deterministic failures in parity-session6/parity-session9/s23-import). Delete `db/e2e.db` when a run crosses a day boundary — the global setup re-creates it fresh with current dates. NOTE (S46, TWO more aged-scratch-db classes + a build-input one): (1) ALWAYS run e2e COLD — S131/CF5 chained `scripts/e2e-cold-reset.sh` into `bun run test:e2e` (port-guard + `rm -f db/e2e.db` BEFORE playwright boots anything — global-setup is TOO LATE: Playwright starts the webServer before globalSetup), so the default runner self-colds; any DIRECT `playwright test` invocation still needs the manual `rm -f db/e2e.db` before every full run: the s23-import round-trip posts a FIXED-id envelope, so a second consecutive run against the aged db reads `created: 0, updated: 1` instead of `created: 1, updated: 0` and fails — not just across midnights, across ANY re-run; (2) the s22 negative-spawn spec reads the BUNDLED `.env` — Next's standalone output COPIES the repo-root `.env` into `.next/standalone/.env` at build time, so a REAL AUTH_SECRET in the dev `.env` leaks into the bundle and the guard CORRECTLY boots (the spec times out waiting for the exit) — keep the repo-root `.env`'s AUTH_SECRET EMPTY (the `.env.example` dev posture: `AUTH_SECRET=""` — dev falls back to the local constant with the boot warning) when building for e2e |
+| `bun run test:e2e` | Playwright vs the standalone build on :3100 with the THROWAWAY tmpfs scratch db /dev/shm/omni-study1-e2e/e2e.db (662 tests across the 5-chunk cold map — 158+219+101+95+89, 30 spec files; a single-process full run trips the register rate-limiter budget by design, the chunked map re-boots the server per chunk). NOTE (S45, the day-boundary lesson): the global setup re-seeds every run, but the seed's IDEMPOTENT UPSERTS do NOT refresh day-relative dates on existing rows — a scratch `db/e2e.db` that ages across a UTC midnight keeps its original day-relative dates (today's tasks, the +1-day exam badge, the due-in pills, the import round-trip dates each read one day stale → 4 deterministic failures in parity-session6/parity-session9/s23-import). Delete `db/e2e.db` when a run crosses a day boundary — the global setup re-creates it fresh with current dates. NOTE (S46, TWO more aged-scratch-db classes + a build-input one): (1) ALWAYS run e2e COLD — S131/CF5 chained `scripts/e2e-cold-reset.sh` into `bun run test:e2e` (port-guard + `rm -f db/e2e.db` BEFORE playwright boots anything — global-setup is TOO LATE: Playwright starts the webServer before globalSetup), so the default runner self-colds; any DIRECT `playwright test` invocation still needs the manual `rm -f db/e2e.db` before every full run: the s23-import round-trip posts a FIXED-id envelope, so a second consecutive run against the aged db reads `created: 0, updated: 1` instead of `created: 1, updated: 0` and fails — not just across midnights, across ANY re-run; (2) the s22 negative-spawn spec reads the BUNDLED `.env` — Next's standalone output COPIES the repo-root `.env` into `.next/standalone/.env` at build time, so a REAL AUTH_SECRET in the dev `.env` leaks into the bundle and the guard CORRECTLY boots (the spec times out waiting for the exit) — keep the repo-root `.env`'s AUTH_SECRET EMPTY (the `.env.example` dev posture: `AUTH_SECRET=""` — dev falls back to the local constant with the boot warning) when building for e2e |
 | `node scripts/capture-studyflow.mjs` | Refresh all 31 `docs/screenshots/` captures from the dev server (24 light + 7 dark) |
 | `node scripts/dark-sweep.mjs` | Dark-mode contrast audit over all 20 views (flashbulb/unreadable detector). S27: sets dark mode through the settings API (the real lifecycle) and SELF-VERIFIES the precondition — fails loudly (exit 1, no findings) if the dark class is not applied; the applied mode rides the JSON envelope. Never force the class directly (the session-10 approach silently rotted after S11) |
 | `node scripts/accent-dark-sweep.mjs` | Accent × dark-mode audit (S38-extended): all 7 accents × 20 desktop views × 20 MOBILE views at 390×844 + the drawer per accent (FAIL <2.2, WARN <3.2 for accent text; the mobile records also carry scrollWidth — >390 is a finding). The S38 shape is unit-pinned anti-phantom: every view recorded EXPLICITLY on both surfaces (clean views carry empty detector arrays), the per-accent `applied` self-verified readings + `mode: "dark"` + `mobileViewport` ride the envelope, and the seam's ALL-ACCENTS + ALL-VIEWS + drawer-present guards make every silently-skipped dimension a LOUD shape-error (the pre-S38 mobile pass swept only 6 views — MOBILE_VIEWS — and the omission-means-clean recording could not distinguish "clean because measured" from "clean because never rendered") |
@@ -3620,3 +3620,86 @@ Hover-parity probing must run in Playwright, not a touch-emulating browser — v
    isolation ledger (N isolated greens + the concurrent-load
    context of the one failure) in the plan's close — the flaky
    count stays honest, no assertion weakens.
+
+## S178 lessons (Batch EB — the notes view/edit mode-split cycle: the measured port + the net-probe + the rum-write environmental discovery)
+
+1. **The deepest parity claims survive only a NETWORK probe — the
+   "reference discards unsaved content" record was WRONG for eight
+   cycles.** The S77-era record reasoned the reference's editor
+   discards unsaved edits (so the clone's autosave was a superset);
+   the s178 NET probe (a request listener on the reference's edit
+   legs) measured the truth: the reference's edit typing fires ZERO
+   network calls in 7s (no autosave — correct), but its X-exit ALSO
+   fires ZERO PUTs — the content survives in view mode from LOCAL
+   state only; the Save is the one PUT. The clone's autosave remains
+   the superset (server-persisted), but the record is now MEASURED,
+   not reasoned — and the EB3 pin owns the divergence so the claim
+   can never silently rot again. Lesson: persistence semantics
+   (discard/commit/autosave) are network-level behaviors — pin them
+   with a request listener, never with DOM observation alone.
+
+2. **The rum-write/boot-read contention — a P1008 stall root-caused
+   by ISOLATED VARIABLE REMOVAL, and the honest limit of the method.**
+   The ~30s hydration-gate stall (the first /Exams//Files/
+   /StudyGroups navigations after a fresh server boot) reproduced
+   deterministically; blocking /api/rum in the browser probe made it
+   deterministically CLEAN (all five views ~300ms) — the isolation
+   proof. But WAL mode, connection_limit=4, and wrapping the upserts
+   in one transaction ALL failed to cure it, and the stall reproduces
+   on the PRE-change tree (pre-existing, this sandbox instance — the
+   S176 "process-wide stall windows" class, now with its trigger
+   isolated). The cert posture: the AE9-13 leg documented as the
+   environmental casualty (157/158 — the rotating AL1/BZ4 legs
+   isolation-verified green), the S179 candidate recorded (the
+   beacon's per-metric POST batching + the engine's write/read
+   posture). Lesson: isolate the trigger (one-variable removal),
+   then HONESTLY report what the fixes could not reach — a
+   root-caused-but-unfixed infra defect is a ledger entry, not a
+   silent pass.
+
+3. **The re-anchor sweep's honest RED is the pre-fix inventory — but
+   the SECOND-order failures teach the DOM's hidden coupling.** Two
+   re-anchor failures appeared only in the full-file context (never
+   in isolation): the BW3 caret (the edit toolbar's narrower title
+   row moved the click-to-caret position from END to MID-STRING on the
+   long post-AH8a title — the typed burst split the title and broke
+   every later test's /Dot product intuition/ row locator) and the
+   AD4 color read (React reconciled the view-mode trash's DOM node
+   INTO the edit toolbar's Save slot — the Button's 150ms
+   transition-colors rode the class swap, and the raw computed-style
+   read caught the interpolated red→white blend). Both fixed at the
+   TEST level (the deterministic caret park + the polling toHaveCSS)
+   — the product behavior is correct in both. Lesson: when a port
+   restructures a render tree, the downstream pins inherit DOM-node
+   reuse and geometry shifts the port never touched — run the full
+   file, read the SECOND failure's error context, and fix the test's
+   implicit assumptions, not the product.
+
+4. **A superset posture gets UPGRADED, never silently abandoned.** The
+   S77-era always-editable editor was a documented superset (the
+   reference's view-mode split was the deferred parity debt). The
+   port RESHAPED the superset rather than deleting it: the autosave
+   stays (network-measured superset, the EB3 divergence record), the
+   DA2-style hand-guards stay, the toast-on-Save stays (the AH3b
+   pin), the a11y labels stay (the trash's Delete-note aria-label
+   over the reference's unlabeled icon button) — while the MODE
+   structure itself now matches the reference (view default, Edit
+   switch, X exit, Save→view, trash-direct). Lesson: parity ports
+   are re-shapings, not replacements — every superset that survives
+   gets its pin and its record; every superset that dies says so in
+   the plan's adjudications.
+
+5. **The mobile squeeze class needs a PRE-PORT BASELINE before it
+   gets a bar.** The view-mode mobile posture at 390 measured
+   scrollWidth 511 — only meaningful against the PRE-port
+   always-editable editor's 526 on the same surface (the stash +
+   probe measurement): the port is NARROWER, no regression — the
+   two-pane squeeze is the S78/AE6 record's own family (the w-80
+   list + the ~14px squeezed pane; the reference itself overflows
+   there). The first capture script bar (<=390) was MY OWN invented
+   bar — no repo pin covers the open-note surface at 390 (the AE9-13
+   family pins five OTHER views; the mobile "selects a note" leg
+   asserts the title value, not the scrollWidth). Lesson: before
+   asserting a geometry bar on a newly-ported surface, measure the
+   pre-port baseline on the SAME surface — an unpinned class stays
+   unpinned until a cycle pins it deliberately.

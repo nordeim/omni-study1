@@ -46,6 +46,9 @@ test.describe("AI assistant failure states", () => {
     await expect(page.getByRole("heading", { name: "Notes" })).toBeVisible();
     // select a seeded note (the row button carries the note title)
     await page.getByRole('button', { name: /Dot product intuition/ }).click();
+    // S178/EB: the note opens in VIEW mode — the title is editable in the
+    // edit toolbar now (the re-anchor: the Edit switch first).
+    await page.locator('[aria-label="Note editor pane"]').getByRole("button", { name: "Edit", exact: true }).click();
     const title = page.getByLabel("Note title");
     await expect(title).toBeVisible();
     // Kill the item PATCHes (the collection GET stays live — the abort

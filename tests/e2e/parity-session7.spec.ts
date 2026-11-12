@@ -428,6 +428,9 @@ test.describe("S7-AD · the Notes rich-text editor (Batch AD)", () => {
     await page.goto("/Notes");
     await hydrated(page);
     await page.getByRole("button", { name: /Dot product intuition/ }).first().click();
+    // S178/EB: the note opens in VIEW mode — the editor chrome is the
+    // edit toolbar's now (the re-anchor: the Edit switch first).
+    await page.locator('[aria-label="Note editor pane"]').getByRole("button", { name: "Edit", exact: true }).click();
     const editor = page.locator(".ql-editor");
     await expect(editor).toBeVisible();
     // The card: white, rounded-2xl, 1px slate-200 border (measured w:772).
@@ -463,6 +466,8 @@ test.describe("S7-AD · the Notes rich-text editor (Batch AD)", () => {
     await page.goto("/Notes");
     await hydrated(page);
     await page.getByRole("button", { name: /Dot product intuition/ }).first().click();
+    // S178/EB: the re-anchor — the Edit switch before the editor surface.
+    await page.locator('[aria-label="Note editor pane"]').getByRole("button", { name: "Edit", exact: true }).click();
     const editor = page.locator(".ql-editor");
     await expect(editor).toBeVisible();
     await editor.click();
@@ -492,6 +497,8 @@ test.describe("S7-AD · the Notes rich-text editor (Batch AD)", () => {
     await page.goto("/Notes");
     await hydrated(page);
     await page.getByRole("button", { name: /Dot product intuition/ }).first().click();
+    // S178/EB: the re-anchor — the Font row is the edit toolbar's now.
+    await page.locator('[aria-label="Note editor pane"]').getByRole("button", { name: "Edit", exact: true }).click();
     const label = page.getByText("Font:", { exact: true });
     await expect(label).toBeVisible();
     const labelCs = await label.evaluate((el) => {
@@ -517,6 +524,8 @@ test.describe("S7-AD · the Notes rich-text editor (Batch AD)", () => {
     await page.goto("/Notes");
     await hydrated(page);
     await page.getByRole("button", { name: /Dot product intuition/ }).first().click();
+    // S178/EB: the re-anchor — the tag row is the edit toolbar's now.
+    await page.locator('[aria-label="Note editor pane"]').getByRole("button", { name: "Edit", exact: true }).click();
     // Seeded tag "calculus" → editor pill: neutral-800 bg + neutral-50 text,
     // radius 6px, 12px (measured on the reference).
     const pill = page.locator('[aria-label="Note tags"] span', { hasText: "calculus" });
@@ -543,14 +552,21 @@ test.describe("S7-AD · the Notes rich-text editor (Batch AD)", () => {
     await page.goto("/Notes");
     await hydrated(page);
     await page.getByRole("button", { name: /Dot product intuition/ }).first().click();
+    // S178/EB: the re-anchor — the explicit Save is the edit toolbar's now.
+    await page.locator('[aria-label="Note editor pane"]').getByRole("button", { name: "Edit", exact: true }).click();
     const save = page.getByRole("button", { name: "Save", exact: true });
     await expect(save).toBeVisible();
+    // S178/EB: the view→edit toolbar swap reuses the trash button's DOM
+    // node for the Save slot (React reconciliation) — the Button's
+    // transition-colors (150 ms) rides the class swap, so the COLOR read
+    // must SETTLE (toHaveCSS polls through the transition; a raw evaluate
+    // caught it mid-flight and read the interpolated red→white blend).
     const cs = await save.evaluate((el) => {
       const s = getComputedStyle(el);
-      return { image: s.backgroundImage, color: s.color, radius: s.borderRadius };
+      return { image: s.backgroundImage, radius: s.borderRadius };
     });
     expect(cs.image).toContain("linear-gradient");
-    expect(cs.color).toBe(rgb(255, 255, 255)); // the ref's yellow text is its platform quirk
+    await expect(save).toHaveCSS("color", "rgb(255, 255, 255)"); // the ref's yellow text is its platform quirk
     expect(cs.radius).toBe("6px");
   });
 
@@ -622,6 +638,8 @@ test.describe("S161/DJ1 · the notes tag failure surfaces (Batch DJ)", () => {
     await page.goto("/Notes");
     await hydrated(page);
     await page.getByRole("button", { name: /Dot product intuition/ }).first().click();
+    // S178/EB: the re-anchor — the tag surface is the edit toolbar's now.
+    await page.locator('[aria-label="Note editor pane"]').getByRole("button", { name: "Edit", exact: true }).click();
     // The tag PATCH fails (the flaky-network condition).
     await page.route("**/api/notes/*", (route) =>
       route.fulfill({ status: 503, contentType: "application/json", body: JSON.stringify({ error: "Service unavailable." }) }),
@@ -827,7 +845,11 @@ test.describe("S78 · Batch AE hardening (the s78 audit)", () => {
 
     // Select the populated note, then click Save DURING the load window
     // (before the Quill instance exists — the empty-overwrite scenario).
+    // S178/EB: the note opens in VIEW — the Quill (and its dynamic
+    // import) mounts on the EDIT switch, so the load window rides the
+    // Edit click now; the Save clicks DURING it (the same race).
     await page.getByRole("button", { name: /Dot product intuition/ }).first().click();
+    await page.locator('[aria-label="Note editor pane"]').getByRole("button", { name: "Edit", exact: true }).click();
     await page.getByRole("button", { name: "Save", exact: true }).click();
 
     // The Save PATCH must have fired — carrying the ORIGINAL content (the
@@ -851,6 +873,9 @@ test.describe("S78 · Batch AE hardening (the s78 audit)", () => {
     await page.goto("/Notes");
     await hydrated(page);
     await page.getByRole("button", { name: /Dot product intuition/ }).first().click();
+    // S178/EB: the note opens in VIEW — the autosave surface is the edit
+    // toolbar now (the re-anchor: the Edit switch first).
+    await page.locator('[aria-label="Note editor pane"]').getByRole("button", { name: "Edit", exact: true }).click();
     const editor = page.locator(".ql-editor");
     await expect(editor).toBeVisible();
 
@@ -877,7 +902,9 @@ test.describe("S78 · Batch AE hardening (the s78 audit)", () => {
     // S79/AF3 (the s79 audit, F2): switching notes resets the streak flag
     // — note B's FIRST failure must get its own toast (the pre-fix flag
     // latched across the switch and silently swallowed B's failure).
+    // S178/EB: the switch lands in VIEW — note B's Edit switch rides too.
     await page.getByRole("button", { name: /Kinetics summary/ }).first().click();
+    await page.locator('[aria-label="Note editor pane"]').getByRole("button", { name: "Edit", exact: true }).click();
     const editorB = page.locator(".ql-editor");
     await expect(editorB).toBeVisible();
     await editorB.click();
@@ -982,7 +1009,7 @@ test.describe("S80 · the autosave streak is scoped to the note (AG6)", () => {
     await page.goto("/Notes");
     await hydrated(page);
 
-    // Two fresh notes through the real dialog (no seed-row dependence).
+    // Two fresh notes through the real flow (no seed-row dependence).
     const createNote = async (name: string) => {
       await page.getByRole("button", { name: "New note menu" }).click();
       await page.getByRole("menuitem", { name: "New Note", exact: true }).click();
@@ -992,6 +1019,9 @@ test.describe("S80 · the autosave streak is scoped to the note (AG6)", () => {
       await expect(draftTitle).toBeVisible();
       await draftTitle.fill(name);
       await page.getByRole("button", { name: "Save", exact: true }).click();
+      // S178/EB: the created note opens in VIEW (the measured Save→view
+      // contract) — the typing surfaces need the Edit switch (re-anchor).
+      await page.locator('[aria-label="Note editor pane"]').getByRole("button", { name: "Edit", exact: true }).click();
       const editor = page.locator(".ql-editor");
       await expect(editor).toBeVisible();
     };
@@ -1107,6 +1137,9 @@ test.describe("S81 · the delete flow settles the selection mirror (AH1)", () =>
       await expect(draftTitle).toBeVisible();
       await draftTitle.fill(name);
       await page.getByRole("button", { name: "Save", exact: true }).click();
+      // S178/EB: the created note opens in VIEW (the measured Save→view
+      // contract) — the typing surfaces need the Edit switch (re-anchor).
+      await page.locator('[aria-label="Note editor pane"]').getByRole("button", { name: "Edit", exact: true }).click();
       const editor = page.locator(".ql-editor");
       await expect(editor).toBeVisible();
     };
@@ -1117,10 +1150,12 @@ test.describe("S81 · the delete flow settles the selection mirror (AH1)", () =>
     await page.keyboard.type("doomed content");
 
     // Delete the SELECTED note through the real actions surface.
-    // S142/CQ3: the actions surface is a Popover now — the Delete action
-    // is a real BUTTON (a tab stop), not a role="menuitem" (the mover
-    // Select nested in the menu was keyboard-unreachable, the B-M1 fix).
-    await page.getByRole("button", { name: "Note actions" }).click();
+    // S178/EB: the trash is the VIEW-mode affordance now — X exits edit
+    // first (the pending debounced autosave rides; the editor's unmount
+    // flush fires — the SAME held-and-rejected-late window), then the
+    // view-mode trash deletes directly (the measured no-confirm; the
+    // clone's superset aria-label — the S177 lesson-2 class).
+    await page.getByRole("button", { name: "Exit edit mode" }).click();
     await page.getByRole("button", { name: "Delete note" }).click();
 
     // The benign "Note deleted." success toast may appear; the LIE (an
@@ -1173,6 +1208,9 @@ test.describe("S81 · the departed-Save settlement (AH2)", () => {
       await expect(draftTitle).toBeVisible();
       await draftTitle.fill(name);
       await page.getByRole("button", { name: "Save", exact: true }).click();
+      // S178/EB: the created note opens in VIEW (the measured Save→view
+      // contract) — the typing surfaces need the Edit switch (re-anchor).
+      await page.locator('[aria-label="Note editor pane"]').getByRole("button", { name: "Edit", exact: true }).click();
       const editor = page.locator(".ql-editor");
       await expect(editor).toBeVisible();
     };
@@ -1250,6 +1288,9 @@ test.describe("S81 · the departed-Save settlement (AH2)", () => {
       await expect(draftTitle).toBeVisible();
       await draftTitle.fill(name);
       await page.getByRole("button", { name: "Save", exact: true }).click();
+      // S178/EB: the created note opens in VIEW (the measured Save→view
+      // contract) — the typing surfaces need the Edit switch (re-anchor).
+      await page.locator('[aria-label="Note editor pane"]').getByRole("button", { name: "Edit", exact: true }).click();
       const editor = page.locator(".ql-editor");
       await expect(editor).toBeVisible();
     };
@@ -1358,6 +1399,9 @@ test.describe("S81 · the partial-PATCH keeps what the caller did not send (AH8)
 
     const row = page.getByRole("button", { name: /Dot product intuition/ }).first();
     await row.click();
+    // S178/EB: the note opens in VIEW — the title is editable in the edit
+    // toolbar now (the re-anchor: the Edit switch first).
+    await page.locator('[aria-label="Note editor pane"]').getByRole("button", { name: "Edit", exact: true }).click();
     await expect(page.locator(".ql-editor")).toBeVisible();
 
     // The seeded tag pill rides the TARGET note's list row (data-note-tag —
@@ -1384,6 +1428,9 @@ test.describe("S81 · the partial-PATCH keeps what the caller did not send (AH8)
     await page.reload();
     await hydrated(page);
     await page.getByRole("button", { name: /Dot product intuition/ }).first().click();
+    // S178/EB: the reload lands in VIEW — the re-open needs the Edit switch
+    // for the editor-text read.
+    await page.locator('[aria-label="Note editor pane"]').getByRole("button", { name: "Edit", exact: true }).click();
     const editorText = await page.locator(".ql-editor").innerText();
     expect(editorText).toContain("dot product measures alignment");
     await expect(
@@ -1396,6 +1443,9 @@ test.describe("S81 · the partial-PATCH keeps what the caller did not send (AH8)
     await hydrated(page);
 
     await page.getByRole("button", { name: /Dot product intuition/ }).first().click();
+    // S178/EB: the note opens in VIEW — the autosave surface is the edit
+    // toolbar now (the re-anchor: the Edit switch first).
+    await page.locator('[aria-label="Note editor pane"]').getByRole("button", { name: "Edit", exact: true }).click();
     await expect(page.locator(".ql-editor")).toBeVisible();
     const rowPill = page
       .getByRole("button", { name: /Dot product intuition/ })
@@ -1413,6 +1463,9 @@ test.describe("S81 · the partial-PATCH keeps what the caller did not send (AH8)
     await page.reload();
     await hydrated(page);
     await page.getByRole("button", { name: /Dot product intuition/ }).first().click();
+    // S178/EB: the reload lands in VIEW — the re-open needs the Edit switch
+    // for the editor-text read.
+    await page.locator('[aria-label="Note editor pane"]').getByRole("button", { name: "Edit", exact: true }).click();
     await expect(
       page.getByRole("button", { name: /Dot product intuition/ }).first().locator('[data-note-tag="calculus"]'),
     ).toBeVisible();
@@ -1434,6 +1487,9 @@ test.describe("S81 · the partial-PATCH keeps what the caller did not send (AH8)
 
     const row = page.getByRole("button", { name: /Dot product intuition/ }).first();
     await row.click();
+    // S178/EB: the note opens in VIEW — the debounced title PATCH surface
+    // is the edit toolbar's now (the re-anchor: the Edit switch first).
+    await page.locator('[aria-label="Note editor pane"]').getByRole("button", { name: "Edit", exact: true }).click();
     await expect(page.locator(".ql-editor")).toBeVisible();
 
     const patches: string[] = [];
@@ -1443,6 +1499,13 @@ test.describe("S81 · the partial-PATCH keeps what the caller did not send (AH8)
 
     const titleInput = page.getByLabel("Note title");
     await titleInput.click();
+    // S178/EB: the edit toolbar's title row is narrower than the old
+    // always-editable editor's (the notebook select + Save + X ride the
+    // same row) — a bare click's caret lands MID-STRING on the long
+    // post-AH8a title and mangles every later test's row locator.
+    // The deterministic form: park the caret at the END (the burst-typing
+    // intent, position-independent).
+    await page.keyboard.press("End");
     // 8 keystrokes at 40 ms ≈ 320 ms of typing — one continuous burst that
     // never crosses the 600 ms debounce window mid-typing.
     await titleInput.pressSequentially(" revised", { delay: 40 });
@@ -2040,20 +2103,25 @@ test.describe("S130/CE2 · the True/False default answer", () => {
 });
 
 test.describe("S142 · the notebook mover is keyboard-reachable (CQ3)", () => {
-  test("the actions Popover focuses the mover Select on open and moves the note by keyboard alone", async ({ page }) => {
-    // The B-M1 defect: the mover Select lived inside role="menu"
+  test("the inline mover select is a named keyboard-operated combobox that moves the note", async ({ page }) => {
+    // The B-M1 defect (S142): the mover Select lived inside role="menu"
     // (DropdownMenuContent) — Radix roving-focus only reaches
     // DropdownMenuItem-family elements and Tab closes the menu, so a
     // keyboard-only user could NEVER move a note to a notebook (WCAG
     // 2.1.1 Level A on a real affordance). The BZ3-pattern Popover
-    // conversion makes the mover the FIRST TAB STOP inside the surface
-    // (Radix auto-focuses it on open — probed live pre-pin) and the
-    // listbox opens + commits by keyboard.
+    // conversion fixed it then; S178/EB retires the popover entirely —
+    // the mover is now the INLINE w-32 select on the edit toolbar (the
+    // reference's own measured placement), a real tab stop by
+    // construction. The pin re-scopes: the NAMED combobox (S143/CR3,
+    // WCAG 4.1.2) + the keyboard-operated commit + the PATCH landing.
     await page.goto("/Notes");
     await hydrated(page);
 
     // Select a seeded note ("Essay sources" lives in Reading Journal).
     await page.getByText("Essay sources", { exact: true }).first().click();
+    // S178/EB: the note opens in VIEW — the mover is the edit toolbar's
+    // inline select now (the re-anchor: the Edit switch first).
+    await page.locator('[aria-label="Note editor pane"]').getByRole("button", { name: "Edit", exact: true }).click();
     await expect(page.locator(".ql-editor")).toBeVisible();
 
     // Watch the PATCH the mover will fire.
@@ -2065,46 +2133,24 @@ test.describe("S142 · the notebook mover is keyboard-reachable (CQ3)", () => {
       await route.continue();
     });
 
-    // Open the actions surface.
-    await page.getByRole("button", { name: "Note actions" }).click();
-
-    // THE REACHABILITY PIN: the mover's Select trigger holds focus the
-    // moment the popover opens — keyboard-reachable by construction.
-    // Pre-fix the focus sat on the menu content and no arrow/Tab
-    // sequence could ever land here. S143/CR3: the locator is the NAMED
-    // combobox — the assertion fails if the mover's accessible name
-    // regresses (the aria-label the CQ3 surface was missing for screen
-    // readers — WCAG 4.1.2).
+    // THE REACHABILITY PIN: the mover is a NAMED combobox (S143/CR3 —
+    // the accessible name the CQ3 surface was missing for screen
+    // readers, WCAG 4.1.2) sitting INLINE on the toolbar — a real tab
+    // stop by construction (no menu nesting to escape, no popover to
+    // open first; focus lands on it directly).
     const moverCombobox = page.getByRole("combobox", { name: "Move note to notebook" });
-    await expect(moverCombobox).toBeFocused();
-    // Tab order inside the surface: the Delete action is the next stop
-    // after the mover (both are real tab stops now).
-    await page.keyboard.press("Tab");
-    await expect
-      .poll(() =>
-        page.evaluate(
-          () => document.activeElement?.textContent?.trim().slice(0, 20) ?? "",
-        ),
-      )
-      .toBe("Delete note");
+    await expect(moverCombobox).toBeVisible();
 
-    // Return to the mover and operate it by keyboard alone: ArrowDown
-    // opens the listbox (focus rides the options — wait for it to LAND,
-    // Radix moves focus asynchronously), then the target option is
-    // focused directly (the same DOM focus arrow-navigation produces —
-    // Radix's roving arrow order varies with settle timing, probed; the
-    // deterministic form) and committed with Enter. S143/CR8: this
-    // comment now states the path the code actually runs (it previously
-    // described an ArrowUp "No notebook" commit from an earlier
-    // iteration — the audit A-L2 stale-comment class).
-    await page.keyboard.press("Shift+Tab");
+    // Operate it by keyboard alone: focus the trigger, ArrowDown opens
+    // the listbox (the option roles render — focus rides the options
+    // asynchronously), then the target option is focused directly (the
+    // same DOM focus arrow-navigation produces — Radix's roving arrow
+    // order varies with settle timing, probed; the deterministic form)
+    // and committed with Enter. S143/CR8: the full open → focus → commit
+    // path stays keyboard-driven.
+    await moverCombobox.focus();
     await expect(moverCombobox).toBeFocused();
     await page.keyboard.press("ArrowDown");
-    // The listbox opened BY KEYBOARD (the option roles render). Focus the
-    // target option directly (the same DOM focus arrow-navigation
-    // produces — Radix's roving arrow order varies with settle timing,
-    // probed; the deterministic form) and commit with Enter: the full
-    // open → focus → commit path stays keyboard-driven.
     const target = page.getByRole("option", { name: "Lecture Notes" });
     await expect(target).toBeVisible();
     await expect
@@ -2915,19 +2961,22 @@ test.describe("S177/EA1 · the notes inline-draft create flow", () => {
     expect(posts.length).toBe(0);
 
     // Save — exactly ONE create POST, the row lands in the list, and
-    // the editor continues on the saved note (the created-note
-    // selection — the S80/AG6 lineage).
+    // the editor continues on the saved note in VIEW MODE (the measured
+    // Save→view contract — the S80/AG6 lineage + the S178/EB port).
     await page.getByRole("button", { name: "Save", exact: true }).click();
     await page.waitForTimeout(1400);
     expect(posts.length).toBe(1);
     expect(posts[0]).toContain("S177 EA1 probe note");
     const row = page.locator('[aria-label="Notes list pane"] button').filter({ hasText: "S177 EA1 probe note" });
     await expect(row).toBeVisible();
-    await expect(page.locator(".ql-editor")).toBeVisible();
+    const rightPane = page.locator('[aria-label="Note editor pane"]');
+    await expect(rightPane.locator('input[placeholder="Note title..."]')).toBeDisabled();
+    await expect(rightPane.locator(".note-content")).toContainText("draft body content");
+    await expect(rightPane.getByRole("button", { name: "Edit", exact: true })).toBeVisible();
 
-    // Zero-residue cleanup through the UI (the standing doctrine).
-    await page.getByRole("button", { name: "Note actions" }).click();
-    await page.getByRole("button", { name: "Delete note" }).click();
+    // Zero-residue cleanup through the UI (the standing doctrine — the
+    // S178/EB view-mode trash, the same Delete-note locator).
+    await rightPane.getByRole("button", { name: "Delete note" }).click();
     await expect(row).toHaveCount(0);
     await page.unroute(/\/api\/notes/);
   });
@@ -3041,5 +3090,162 @@ test.describe("S177/EA1 · the notes inline-draft create flow", () => {
     await listPane.getByRole("button", { name: "New Note", exact: true }).click();
     await expect(page.locator('input[placeholder="Note title..."]')).toBeVisible();
     await page.unroute(/\/api\/notes$/);
+  });
+});
+
+// S178/EB — the notes view/edit MODE SPLIT (the s178 measured cycle: the
+// reference's existing-note editor opens in VIEW mode — the disabled
+// title + the [Edit][trash] action row + the read-only prose body; "Edit"
+// switches to the edit toolbar — the notebook select + Save + X; the X
+// exits back to view; the trash deletes DIRECTLY — no confirm. The net
+// probe: the reference's edit typing fires ZERO calls in 7s and its X
+// fires ZERO PUTs — a LOCAL-only exit; the clone's autosave stays the
+// network-measured SUPERSET. The measured authority:
+// docs/remediation-plan-session178.md §1 (B-3, probed live 2026-11-12,
+// computed DOM, zero residue).
+test.describe("S178/EB · the notes view/edit mode split", () => {
+  test("EB1: opening a note renders VIEW mode — the disabled title, the [Edit][trash] row, the read-only prose, NO editor chrome", async ({ page }) => {
+    await page.goto("/Notes");
+    await hydrated(page);
+
+    // Open the seeded note (the pre-fix tree opens the always-editable
+    // editor — RED lands at the first view-mode marker below).
+    await page.getByRole("button", { name: /Dot product intuition/ }).first().click();
+    const rightPane = page.locator('[aria-label="Note editor pane"]');
+
+    // THE VIEW PIN: the title input is DISABLED and carries the stored
+    // title (RED pre-fix: the always-editable editor's title is enabled).
+    // The regex form: the upstream AH8a/BW3 tests rename the seeded note
+    // (the file's own order) — the PREFIX is the stable contract.
+    const title = rightPane.locator('input[placeholder="Note title..."]');
+    await expect(title).toBeVisible();
+    await expect(title).toBeDisabled();
+    await expect(title).toHaveValue(/Dot product intuition/);
+
+    // The measured action row: [Edit outline][trash outline-red] (the
+    // pin/palette are the recorded B-4/B-5 deferrals — no dead buttons).
+    await expect(rightPane.getByRole("button", { name: "Edit", exact: true })).toBeVisible();
+    await expect(rightPane.getByRole("button", { name: "Delete note" })).toBeVisible();
+
+    // The measured body: the read-only prose container renders the
+    // stored content (RED pre-fix: no .note-content exists — the Quill
+    // editor mounts instead).
+    const prose = rightPane.locator(".note-content");
+    await expect(prose).toBeVisible();
+    await expect(prose).toContainText("dot product measures alignment");
+
+    // NO editor chrome in view mode (the measured absences — RED
+    // pre-fix: the always-on editor violates every one).
+    await expect(rightPane.locator(".ql-editor")).toHaveCount(0);
+    await expect(rightPane.getByText("Font:", { exact: true })).toHaveCount(0);
+    await expect(rightPane.getByLabel("Add tag")).toHaveCount(0);
+    await expect(rightPane.getByRole("button", { name: "Save", exact: true })).toHaveCount(0);
+  });
+
+  test("EB2: 'Edit' switches to the edit toolbar — the enabled title, the inline notebook mover, Save + X, the Quill with the stored content", async ({ page }) => {
+    await page.goto("/Notes");
+    await hydrated(page);
+    await page.getByRole("button", { name: /Dot product intuition/ }).first().click();
+    const rightPane = page.locator('[aria-label="Note editor pane"]');
+
+    // THE SWITCH PIN (RED pre-fix: no Edit button exists — the click
+    // locator times out on the always-editable editor).
+    await rightPane.getByRole("button", { name: "Edit", exact: true }).click();
+
+    // The title is now ENABLED (the measured edit-mode shape — the regex
+    // form tolerates the upstream renames, the file's own order).
+    const title = rightPane.locator('input[placeholder="Note title..."]');
+    await expect(title).toBeVisible();
+    await expect(title).toBeEnabled();
+    await expect(title).toHaveValue(/Dot product intuition/);
+
+    // The measured edit toolbar: the inline notebook select (the CQ3/CR3
+    // named-combobox lineage — the MoreVertical popover's mover, now
+    // inline where the reference measures it) + Save + the X exit.
+    await expect(rightPane.getByRole("combobox", { name: "Move note to notebook" })).toBeVisible();
+    await expect(rightPane.getByRole("button", { name: "Save", exact: true })).toBeVisible();
+    await expect(rightPane.getByRole("button", { name: "Exit edit mode" })).toBeVisible();
+
+    // The Quill mounts with the stored content + the Font row (the
+    // S77/AD5 anatomy — now edit-mode-only).
+    const editor = rightPane.locator(".ql-editor");
+    await expect(editor).toBeVisible();
+    await expect(editor).toContainText("dot product measures alignment");
+    await expect(rightPane.getByText("Font:", { exact: true })).toBeVisible();
+  });
+
+  test("EB3: the X exits edit mode — the view returns, the typed content persists in the prose (the reference's measured observable; the clone's autosave is the pinned superset)", async ({ page }) => {
+    await page.goto("/Notes");
+    await hydrated(page);
+
+    // Create the probe note through the real EA1 draft flow, then enter
+    // edit mode on it (the post-Save state is VIEW — the measured
+    // Save→view contract).
+    await page.getByRole("button", { name: "New note menu" }).click();
+    await page.getByRole("menuitem", { name: "New Note", exact: true }).click();
+    const draftTitle = page.locator('input[placeholder="Note title..."]');
+    await draftTitle.fill("S178 EB3 probe note");
+    await page.locator(".ql-editor").click();
+    await page.keyboard.type("view then edit then exit");
+    await page.getByRole("button", { name: "Save", exact: true }).click();
+    await page.waitForTimeout(1400);
+
+    // The created note is selected in VIEW mode (the measured
+    // post-Save state) — the Edit switch enters edit mode.
+    const rightPane = page.locator('[aria-label="Note editor pane"]');
+    await rightPane.getByRole("button", { name: "Edit", exact: true }).click();
+    await expect(rightPane.locator(".ql-editor")).toBeVisible();
+
+    // Type a marker into the body, then X (RED pre-fix: the exit
+    // affordance does not exist — the aria-label locator times out).
+    await rightPane.locator(".ql-editor").click();
+    await page.keyboard.type(" EB3-MARKED");
+    await rightPane.getByRole("button", { name: "Exit edit mode" }).click();
+
+    // THE EXIT PIN: the view mode returns (the disabled title + the
+    // [Edit][trash] row) and the typed fragment shows in the prose —
+    // the reference's MEASURED observable (its X is a local-only exit
+    // — 0 PUTs on the net probe; the clone's autosave keeps the server
+    // current — the recorded superset, this pin owns the divergence
+    // record).
+    await expect(rightPane.locator('input[placeholder="Note title..."]')).toBeDisabled();
+    await expect(rightPane.getByRole("button", { name: "Edit", exact: true })).toBeVisible();
+    await expect(rightPane.locator(".note-content")).toContainText("EB3-MARKED");
+    await expect(rightPane.locator(".ql-editor")).toHaveCount(0);
+
+    // Zero-residue cleanup through the view-mode trash (the EB4
+    // affordance — the standing doctrine).
+    await rightPane.getByRole("button", { name: "Delete note" }).click();
+    await expect(page.locator('[aria-label="Notes list pane"] button').filter({ hasText: "S178 EB3 probe note" })).toHaveCount(0);
+  });
+
+  test("EB4: the view-mode trash deletes DIRECTLY — no confirm dialog, the row lands gone, the no-selection state returns", async ({ page }) => {
+    await page.goto("/Notes");
+    await hydrated(page);
+
+    // Create the probe note through the real EA1 draft flow (the trash
+    // is the view-mode affordance — the created note's post-Save state).
+    await page.getByRole("button", { name: "New note menu" }).click();
+    await page.getByRole("menuitem", { name: "New Note", exact: true }).click();
+    const draftTitle = page.locator('input[placeholder="Note title..."]');
+    await draftTitle.fill("S178 EB4 trash probe");
+    await page.getByRole("button", { name: "Save", exact: true }).click();
+    await page.waitForTimeout(1400);
+    const rightPane = page.locator('[aria-label="Note editor pane"]');
+    const row = page.locator('[aria-label="Notes list pane"] button').filter({ hasText: "S178 EB4 trash probe" });
+    await expect(row).toBeVisible();
+
+    // THE DIRECT-DELETE PIN (RED pre-fix: the pane-scoped trash locator
+    // times out — the only "Delete note" lives inside the closed
+    // MoreVertical popover). No confirm dialog ever opens (the
+    // reference's measured no-confirm — one click, the row gone).
+    await rightPane.getByRole("button", { name: "Delete note" }).click();
+    await expect(page.getByRole("dialog")).toHaveCount(0);
+    await expect(row).toHaveCount(0);
+
+    // The pane resets to the no-selection state (the seeded account
+    // keeps its rows — the 0-notes empty state is the EA3 pin's own
+    // territory, not this trash leg's).
+    await expect(rightPane.getByRole("heading", { name: "Select a note" })).toBeVisible();
   });
 });

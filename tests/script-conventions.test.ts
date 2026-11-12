@@ -266,7 +266,15 @@ describe("the chunked cert runner's truth contract (S128/CC2)", () => {
     // empty-title hand-guard leg, EA3 the empty-state placement —
     // see docs/remediation-plan-session177.md; the unit census stays
     // 1743 — no new seam, the draft is view state).
-    expect(certSource).toContain("Expected: 158 + 215 + 101 + 95 + 89 = 658");
+    // S178/EB re-tag: 658 → 662, chunk 2 +4 (the S178/EB notes
+    // view/edit mode-split pins in parity-session7 — EB1 the
+    // view-mode shape, EB2 the Edit-switch toolbar, EB3 the X-exit
+    // (the net-probe-measured divergence record: the reference's X
+    // fires ZERO PUTs — the clone's autosave is the network-measured
+    // superset), EB4 the trash-direct — see
+    // docs/remediation-plan-session178.md; the unit census stays
+    // 1743 — no new seam, the mode split is view state).
+    expect(certSource).toContain("Expected: 158 + 219 + 101 + 95 + 89 = 662");
   });
 
   it("propagates a failing chunk's exit code (never a green cert on a red run)", () => {

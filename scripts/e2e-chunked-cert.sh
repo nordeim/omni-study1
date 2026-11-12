@@ -1,4 +1,38 @@
 #!/usr/bin/env bash
+# (S178/EB re-tag — census 658 → 662, net +4: chunk 2 +4 [the
+# S178/EB notes view/edit mode-split pins in parity-session7 — the
+# s178 measured port (probed live 2026-11-12, computed DOM,
+# zero residue; the net-probe record): the reference's
+# existing-note editor opens in VIEW mode — the DISABLED title
+# (showing the stored title, the same placeholder + className)
+# + the [Edit outline][trash outline-red text-red-600] action
+# row + the read-only prose body (div.prose.prose-slate.
+# max-w-none.note-content, 16px/24px — NOT a Quill instance,
+# no Font row, no tag row, no Save); "Edit" switches to the
+# edit toolbar (the title ENABLED + the notebook select w-32
+# + the gradient Save + the X icon-only outline + the Font row
+# + the tag row + the Quill with the stored content); the X
+# exits back to view; the trash deletes DIRECTLY (no confirm
+# dialog — measured); a successful Save returns to VIEW (the
+# measured Save→view). The NET PROBE (the persistence
+# mechanism): the reference's edit typing fires ZERO calls in
+# 7s (no autosave) and its X fires ZERO PUTs (a LOCAL-only
+# exit — the content survives in view from local state); the
+# clone's debounced autosave stays the network-measured
+# SUPERSET (the S77/AD4 record upgraded from reasoned to
+# measured — the EB3 pin owns the divergence). The EB pins:
+# EB1 the view-mode shape (the disabled title + the
+# [Edit][trash] row + the prose + the NO-editor-chrome
+# absences), EB2 the Edit-switch toolbar (the inline notebook
+# mover — the CQ3/CR3 named combobox — + Save + the X exit +
+# the Quill), EB3 the X-exit (the view returns, the typed
+# content persists in the prose — the reference's measured
+# observable), EB4 the trash-direct (no dialog, the row gone,
+# the no-selection state returns). The ~24-block re-anchor
+# sweep rode the port (the AH/AE/BW3/CQ3/DJ1 families). The
+# unit census stays 1743 (no new seam — the mode split is
+# view state, the wire model untouched). The full EB map:
+# docs/remediation-plan-session178.md.)
 # (S177/EA re-tag — census 654 → 658, net +4: chunk 2 +4 [the
 # S177/EA notes create-flow port pins in parity-session7 — the
 # reference's measured INLINE-DRAFT create flow (probed live
@@ -441,7 +475,7 @@
 # deterministic defaults so the leg fills only the title + score +
 # max; network-mocked, no server writes beyond the zero-residue
 # create]. The full DW map: docs/remediation-plan-session173.md.)
-# Expected: 158 + 215 + 101 + 95 + 89 = 658 (each chunk's count includes its
+# Expected: 158 + 219 + 101 + 95 + 89 = 662 (each chunk's count includes its
 # auth setup — the current census; the historical re-tag blocks beneath.)
 # (S171/DU re-tag — census 634 → 637, net +3: chunk 2 +2 [the
 # S171/DU2 studygroups create-dialog parity catch-up pair in

@@ -301,7 +301,10 @@ test.describe("S78/AE3 · the dark-mode Quill placeholder", () => {
     await expect(draftTitle).toBeVisible();
     await draftTitle.fill("S78 dark placeholder probe");
     await page.getByRole("button", { name: "Save", exact: true }).click();
-    // The new note is selected and BLANK — the placeholder renders.
+    // The new note is selected and BLANK in VIEW mode (the S178/EB
+    // Save→view contract) — the Quill placeholder renders in EDIT mode
+    // (the re-anchor: the Edit switch before the placeholder assert).
+    await page.locator('[aria-label="Note editor pane"]').getByRole("button", { name: "Edit", exact: true }).click();
     const editor = page.locator(".ql-editor.ql-blank");
     await expect(editor).toBeVisible();
     const phColor = await editor.evaluate((el) => getComputedStyle(el, "::before").color);
@@ -516,6 +519,9 @@ test.describe("S81 · the dark toast/banner/footer pairs (AH3/AH4)", () => {
   test("AH3b: the success toast's dark text computes the pinned emerald-200 hex", async ({ page }) => {
     await gotoDark(page, "/Notes");
     await page.getByRole("button", { name: /Dot product intuition/ }).first().click();
+    // S178/EB: the note opens in VIEW mode — the explicit Save lives in
+    // the edit toolbar now (the re-anchor: the Edit switch first).
+    await page.locator('[aria-label="Note editor pane"]').getByRole("button", { name: "Edit", exact: true }).click();
     await expect(page.locator(".ql-editor")).toBeVisible();
 
     await page.getByRole("button", { name: "Save", exact: true }).click();
@@ -530,6 +536,9 @@ test.describe("S81 · the dark toast/banner/footer pairs (AH3/AH4)", () => {
   test("AH3c: the error toast's dark text keeps the pinned red-200 hex", async ({ page }) => {
     await gotoDark(page, "/Notes");
     await page.getByRole("button", { name: /Dot product intuition/ }).first().click();
+    // S178/EB: the note opens in VIEW mode — the autosave surface is the
+    // edit toolbar now (the re-anchor: the Edit switch first).
+    await page.locator('[aria-label="Note editor pane"]').getByRole("button", { name: "Edit", exact: true }).click();
     await expect(page.locator(".ql-editor")).toBeVisible();
 
     // Abort every note PATCH — the autosave failure toast fires.

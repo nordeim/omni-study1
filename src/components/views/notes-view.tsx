@@ -24,7 +24,6 @@ import {
   BookOpen,
   FileText,
   Minus,
-  MoreVertical,
   Notebook,
   Pencil,
   Plus,
@@ -76,6 +75,10 @@ import {
 } from "@/lib/data";
 import { ApiError } from "@/lib/api";
 import { htmlToText, stripHtmlPreview } from "@/lib/text";
+// S178/EB1: the view-mode prose gate (the S140/CO1 policy module — the
+// same client-side sanitizeNoteHtmlDom the QuillEditor mount path uses;
+// the legacy-row gate + the plain-text shape probe).
+import { looksLikeHtml, sanitizeNoteHtmlDom } from "@/lib/note-html";
 import { cn } from "@/lib/utils";
 
 // S125/BZ14 + S177/EA1: the NOTE dialog is GONE — the reference's create
@@ -197,6 +200,15 @@ export function NotesView() {
   } | null>(null);
   const [draftSeq, setDraftSeq] = React.useState(0);
   const [draftError, setDraftError] = React.useState("");
+  // S178/EB — the view/edit MODE SPLIT (the s178 measured port: the
+  // reference's existing-note editor opens in VIEW mode — the disabled
+  // title + the [Edit][trash] row + the read-only prose body; "Edit"
+  // switches to the edit toolbar; the X exits back to view; the Save
+  // returns to view). Pure client state — every selection change and
+  // every successful Save re-opens VIEW (the measured per-note default);
+  // the draft never touches it (the draft overlays; X restores the
+  // prior pane state).
+  const [editing, setEditing] = React.useState(false);
   // S152/DA1 (the S151 audit's B-L5): the delete double-fire latch — the
   // per-row in-flight set for BOTH delete handlers (notes + notebooks);
   // the Popover action sites close on click, so the handler latch alone
@@ -445,6 +457,10 @@ export function NotesView() {
       // S80/AG6: …and owns the selection mirror from birth.
       selectedIdRef.current = created ?? null;
       autosaveFailedRef.current = false;
+      // S178/EB: the created note opens in VIEW mode (the measured
+      // post-Save state — the editor continues on the saved note in
+      // its read-only form).
+      setEditing(false);
     } catch (err: unknown) {
       setDraftError(err instanceof ApiError ? err.message : "Something went wrong.");
     } finally {
@@ -522,6 +538,22 @@ export function NotesView() {
   // parseNoteTags is a trivial JSON.parse — no memo (the React Compiler
   // rejects the optional-chained dependency, and the cost is nil).
   const selectedTags = selected ? parseNoteTags(selected.tags) : [];
+
+  // S178/EB1: the view-mode prose body — the stored content through the
+  // S140/CO1 client gate (the same sanitizeNoteHtmlDom the QuillEditor
+  // mount path rides — the legacy-row render gate), then the shape probe:
+  // HTML rows render as the sanitized innerHTML (the reference's
+  // .prose.prose-slate.note-content anatomy), plain-text rows (the seed's
+  // legacy form) render as a React-escaped whitespace-pre-wrap paragraph.
+  // Computed for the VIEW branch only — the edit branch mounts Quill.
+  // NO memo — the React Compiler rejects the derived-selection dependency
+  // (the parseNoteTags precedent two lines up); the S140 walk is O(content)
+  // and runs only on this component's own re-renders.
+  const viewBody = (() => {
+    if (!selected) return { html: "", text: "" };
+    const clean = sanitizeNoteHtmlDom(selected.content);
+    return { html: looksLikeHtml(clean) ? clean : "", text: clean };
+  })();
 
   const addTag = () => {
     // The pane renders only with a selection; the guard satisfies the
@@ -631,6 +663,10 @@ export function NotesView() {
     setSelectedId(id);
     selectedIdRef.current = id;
     autosaveFailedRef.current = false;
+    // S178/EB: every selection change re-opens VIEW (the measured
+    // per-note default — the reference's editor opens each note in
+    // view mode).
+    setEditing(false);
   };
 
   const saveNow = async () => {
@@ -657,6 +693,12 @@ export function NotesView() {
       // failure streak too — the next autosave failure must toast again
       // (pre-fix only an autosave success or a note switch reset it).
       autosaveFailedRef.current = false;
+      // S178/EB2: a successful Save returns to VIEW (the measured
+      // Save→view contract — the reference's editor lands in its
+      // read-only form after the PUT). A FAILURE stays in edit — the
+      // retry affordance (the reference's failure path is unmeasured;
+      // the error toast is the existing pinned superset).
+      setEditing(false);
       toast.success("Note saved.");
     } catch (err: unknown) {
       if (selectedIdRef.current !== noteId) return;
@@ -1103,10 +1145,82 @@ export function NotesView() {
               Select a note from the list.
             </p>
           </div>
-        ) : (
+        ) : !editing ? (
+          /* S178/EB1 — the VIEW mode (the s178 measured port: the
+             reference's existing-note editor opens in VIEW mode — the
+             title input DISABLED showing the stored title + the
+             [Edit outline][trash outline-red] action row + the
+             read-only prose body rendering the stored HTML; NO Font row,
+             NO tag row, NO Save, NO Quill. The pin/palette (the
+             reference's row leads) are the recorded B-4/B-5 deferrals —
+             no dead buttons. The trash deletes DIRECTLY (the measured
+             no-confirm); the clone's superset aria-label rides the
+             S177 lesson-2 unlabeled-control class. */
           <div className="flex min-h-0 flex-1 flex-col">
-            {/* Title row (S77/AD3 measured): 14px/700 title + the black
-                square actions button + the gradient Save. */}
+            {/* Title row: the measured disabled title (14px/700, the same
+                placeholder + the editor title's exact className — the
+                S7-F/AD3/mobile pins hold untouched on it). */}
+            <div className="flex items-center gap-2">
+              <input
+                type="text"
+                disabled
+                readOnly
+                aria-label="Note title"
+                placeholder="Note title..."
+                value={selected.title}
+                className="h-9 min-w-0 flex-1 rounded-md border-0 bg-transparent px-0 text-sm font-bold text-slate-900 outline-none placeholder:font-normal placeholder:text-slate-400 disabled:cursor-default dark:text-slate-100 dark:placeholder:text-slate-500"
+              />
+              <div className="flex shrink-0 items-center gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="h-9 px-4"
+                  onClick={() => setEditing(true)}
+                >
+                  <Pencil className="size-4" strokeWidth={2} />
+                  Edit
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  aria-label="Delete note"
+                  className="h-9 px-4 text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"
+                  disabled={deletingIds.has(selected.id)}
+                  onClick={() => removeNote(selected.id)}
+                >
+                  <Trash2 className="size-4" strokeWidth={2} />
+                </Button>
+              </div>
+            </div>
+            {/* The measured body: the read-only prose container (the
+                reference's class anatomy — the clone's site-local
+                note-content CSS delivers the 16px/24px typography, no
+                typography plugin). The S140/CO1 gate renders the stored
+                HTML (or the React-escaped plain-text fallback for the
+                seed's legacy rows). */}
+            <div className="prose prose-slate max-w-none note-content sf-scroll mt-3 min-h-0 flex-1 overflow-y-auto rounded-2xl border border-slate-200 bg-white px-6 py-4 dark:border-slate-700 dark:bg-slate-900">
+              {viewBody.html ? (
+                <div dangerouslySetInnerHTML={{ __html: viewBody.html }} />
+              ) : viewBody.text ? (
+                <p className="m-0 whitespace-pre-wrap">{viewBody.text}</p>
+              ) : (
+                <p className="m-0 text-slate-400 dark:text-slate-500">Empty note</p>
+              )}
+            </div>
+          </div>
+        ) : (
+          /* S178/EB2 — the EDIT mode (the measured edit toolbar: the
+             title ENABLED + [the notebook select w-32 — the CQ3/CR3
+             named-combobox mover, now INLINE where the reference
+             measures it][the gradient Save — the S77/AD4 explicit
+             save][the X outline — the measured 48×36 exit]). The
+             MoreVertical popover RETIRES: its mover (the inline select)
+             and its Delete (the view-mode trash) both moved home. The
+             Font row + the tag row + the editor card (the S77/AD5/AD6
+             measured anatomy) ride below unchanged. */
+          <div className="flex min-h-0 flex-1 flex-col">
+            {/* Title row (S77/AD3 measured): 14px/700 title + the edit
+                toolbar. */}
             <div className="flex items-center gap-2">
               <NoteTitleInput
                 ref={titleInputRef}
@@ -1116,77 +1230,35 @@ export function NotesView() {
                 onPatch={patchTitle}
               />
               <div className="flex shrink-0 items-center gap-2">
-                {/* S142/CQ3 (audit B-M1): the actions surface is a Popover,
-                    not a DropdownMenu. The S140-era menu nested the
-                    notebook-mover Select inside role="menu" — Radix
-                    roving-focus only reaches DropdownMenuItem-family
-                    elements and Tab closes the menu, so the mover was
-                    keyboard-unreachable (a WCAG 2.1.1 Level A failure on a
-                    real affordance) — the exact S125/BZ3 nested-interactive
-                    class the notebooks-manage sweep caught, missed here.
-                    The Popover keeps the menu's geometry (content classes
-                    mirror DropdownMenuContent's) while the mover and the
-                    Delete action become real tab stops; Escape closes and
-                    restores focus to the trigger. */}
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <button
-                      type="button"
-                      aria-label="Note actions"
-                      className="flex size-9 items-center justify-center rounded-md bg-neutral-950 text-neutral-50 transition-opacity hover:opacity-90 focus-visible:ring-2 focus-visible:ring-sf-primary/40 focus-visible:outline-none dark:bg-neutral-800"
-                    >
-                      <MoreVertical className="size-4" strokeWidth={2} />
-                    </button>
-                  </PopoverTrigger>
-                  <PopoverContent
-                    align="end"
-                    className="flex w-auto min-w-[10rem] flex-col gap-1 overflow-hidden rounded-md border-border p-1 shadow-md data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-in-95"
-                  >
-                    {notebooks.length > 0 && (
-                      <div className="px-2 py-1.5">
-                        <p className="mb-1 text-xs font-medium text-slate-500 dark:text-slate-400">Move to notebook</p>
-                        <Select
-                          value={selected.notebookId ?? "none"}
-                          onValueChange={(v) =>
-                            patchSelected({ notebookId: v === "none" ? "" : v })
-                          }
-                        >
-                          {/* S143/CR3: the mover is the one unlabeled combobox
-                              in the tree (the sibling Selects carry aria-labels
-                              or Label htmlFor pairs) — the exact surface CQ3
-                              made keyboard-reachable gets its accessible name
-                              (WCAG 4.1.2); the CQ3 e2e leg pins it by name. */}
-                          <SelectTrigger
-                            className="h-8 w-44"
-                            aria-label="Move note to notebook"
-                          >
-                            <SelectValue placeholder="No notebook" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="none">No notebook</SelectItem>
-                            {notebooks.map((nb) => (
-                              <SelectItem key={nb.id} value={nb.id}>
-                                {nb.name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    )}
-                    <button
-                      type="button"
-                      onClick={() => removeNote(selected.id)}
-                      className="relative flex cursor-default select-none items-center gap-2 rounded-sm px-2 py-1.5 text-sm text-red-600 outline-none transition-colors hover:bg-accent focus-visible:ring-2 focus-visible:ring-sf-primary/40 focus-visible:outline-none dark:text-red-400"
-                    >
-                      <Trash2 className="size-4 shrink-0" strokeWidth={2} />
-                      Delete note
-                    </button>
-                  </PopoverContent>
-                </Popover>
+                {/* The inline notebook mover (the measured w-32 select —
+                    the draft's own idiom on the existing note; the CQ3
+                    keyboard-reachability is now by construction — an
+                    inline Radix Select is a real tab stop). S143/CR3: the
+                    named combobox keeps its accessible name (WCAG
+                    4.1.2); the CQ3 e2e leg pins it by name. */}
+                <Select
+                  value={selected.notebookId ?? "none"}
+                  onValueChange={(v) =>
+                    patchSelected({ notebookId: v === "none" ? "" : v })
+                  }
+                >
+                  <SelectTrigger className="h-9 w-32" aria-label="Move note to notebook">
+                    <SelectValue placeholder="None" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">None</SelectItem>
+                    {notebooks.map((nb) => (
+                      <SelectItem key={nb.id} value={nb.id}>
+                        {nb.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
                 {/* S77/AD4 (measured): the ref's explicit Save — gradient +
                     floppy icon. Text stays WHITE (the ref's yellow-on-
-                    gradient is its platform quirk); autosave keeps running
-                    (superset — the ref discards unsaved content). */}
+                    gradient is its platform quirk); the toast is the
+                    pinned superset (the reference shows none — the AH3b
+                    record); a successful Save returns to VIEW (EB2). */}
                 <Button
                   type="button"
                   variant="gradient"
@@ -1195,6 +1267,24 @@ export function NotesView() {
                 >
                   <Save className="size-4" strokeWidth={2} />
                   Save
+                </Button>
+                {/* S178/EB2: the X exit (the measured 48×36 icon-only
+                    outline). The reference's X is the measured LOCAL-only
+                    exit (the net probe: 0 PUTs — the edited content
+                    survives in view from local state); the clone's X
+                    rides its autosave — the content is already server-
+                    current (the network-measured SUPERSET — the S77/AD4
+                    record upgraded from reasoned to measured; the EB3 pin
+                    owns the divergence). The unmount-flush fires the
+                    pending title PATCH (the BW3 mechanism). */}
+                <Button
+                  type="button"
+                  variant="outline"
+                  aria-label="Exit edit mode"
+                  className="h-9 px-4"
+                  onClick={() => setEditing(false)}
+                >
+                  <X className="size-4" strokeWidth={2} />
                 </Button>
               </div>
             </div>

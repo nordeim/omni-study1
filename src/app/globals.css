@@ -961,6 +961,96 @@
   overflow: auto;
 }
 
+/* ---- S178/EB1: the view-mode prose body (the reference's .prose.prose-
+ * slate.max-w-none.note-content anatomy — measured 16px/24px body; the
+ * site-local doctrine at globals.css:581 keeps layout, rounding and
+ * typography SITE-LOCAL, so the clone ships the class tokens as inert
+ * anatomy markers + this scoped block delivers the styling — no
+ * typography plugin for one surface). Dark mode is the clone superset
+ * (the reference's own account rendered dark). ---- */
+.note-content {
+  font-size: 16px; /* measured */
+  line-height: 24px; /* measured */
+  color: #334155; /* slate-700 */
+}
+.note-content p,
+.note-content ul,
+.note-content ol,
+.note-content blockquote,
+.note-content pre {
+  margin: 0 0 0.75em;
+}
+.note-content p:last-child,
+.note-content ul:last-child,
+.note-content ol:last-child,
+.note-content blockquote:last-child {
+  margin-bottom: 0;
+}
+.note-content h1,
+.note-content h2,
+.note-content h3 {
+  font-weight: 600;
+  line-height: 1.25;
+  margin: 1.5em 0 0.5em;
+}
+.note-content h1 { font-size: 1.5em; }
+.note-content h2 { font-size: 1.25em; }
+.note-content h3 { font-size: 1.1em; }
+.note-content h1:first-child,
+.note-content h2:first-child,
+.note-content h3:first-child {
+  margin-top: 0;
+}
+.note-content ul,
+.note-content ol {
+  padding-left: 1.5em;
+}
+.note-content ul { list-style: disc; }
+.note-content ol { list-style: decimal; }
+.note-content li { margin: 0.25em 0; }
+.note-content blockquote {
+  border-left: 3px solid #e2e8f0;
+  padding-left: 1em;
+  color: #64748b;
+}
+.note-content pre {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.875em;
+  background-color: #f8fafc;
+  border-radius: 6px;
+  padding: 0.75em 1em;
+  overflow-x: auto;
+}
+.note-content a {
+  color: var(--sf-primary, #7c3aed);
+  text-decoration: underline;
+}
+.note-content hr {
+  border: none;
+  border-top: 1px solid #e2e8f0;
+  margin: 1.5em 0;
+}
+.note-content img {
+  max-width: 100%;
+  height: auto;
+}
+.dark .note-content {
+  color: #e2e8f0; /* slate-200 */
+}
+.dark .note-content blockquote {
+  border-left-color: #334155;
+  color: #94a3b8;
+}
+.dark .note-content pre {
+  background-color: #1e293b;
+}
+.dark .note-content a {
+  color: var(--sf-primary-dark, #a78bfa);
+}
+.dark .note-content hr {
+  border-top-color: #334155;
+}
+
 @utility sf-skip-link {
   position: absolute;
   left: -9999px;

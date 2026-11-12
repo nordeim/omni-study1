@@ -2,6 +2,23 @@ import { defineConfig } from "vitest/config";
 import path from "node:path";
 
 // Unit-test layer for the pure domain seams — 52 files / 1743 tests
+// (re-anchored S178/EB — the notes view/edit mode-split cycle: the unit
+// census UNCHANGED at 1743, no new seam [the mode split is view state;
+// the wire's updateNote PATCH + the NoteInput model untouched; the
+// hue-tokens census anchors re-anchored 871 → 913 (the designed trip,
+// the render-ladder lines)]. The e2e census moves 658 → 662 [+4: the
+// S178/EB pins in parity-session7 — the s178 measured port: the
+// reference's existing-note editor opens in VIEW mode (the disabled
+// title + the [Edit][trash] action row + the read-only prose body —
+// NOT a Quill instance); "Edit" switches to the edit toolbar (the
+// inline notebook mover + the gradient Save + the X exit + the Font
+// row + the tag row + the Quill); the X exits back to view (the NET
+// PROBE: the reference's X fires ZERO PUTs — a local-only exit; the
+// clone's autosave is the network-measured superset, the EB3 pin owns
+// the divergence); the trash deletes DIRECTLY (no confirm, measured);
+// a successful Save returns to VIEW; EB1 the view-mode shape, EB2 the
+// Edit-switch toolbar, EB3 the X-exit, EB4 the trash-direct — the
+// ~24-block re-anchor sweep rode (the AH/AE/BW3/CQ3/DJ1 families)].)
 // (re-anchored S177/EA — the notes create-flow port cycle: the unit
 // census UNCHANGED at 1743, no new seam [the inline draft is view
 // state; the wire's createNote POST + the minutes/tags/JSON models

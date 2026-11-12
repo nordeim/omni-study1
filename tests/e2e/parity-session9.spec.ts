@@ -902,12 +902,14 @@ test.describe("S166/DP1 · the notes save succeeds through a failed refresh (CB8
 // plants one PRE-FIX hostile note on the demo user (scripts/e2e-
 // plant-legacy-note.ts — a remote tracking pixel + iframe + handler bait,
 // simulating a row written before the sanitize seam existed). Opening it
-// in the Notes view exercises the quill-editor mount gate
-// (sanitizeNoteHtmlDom — the DOMParser walk over the same policy the
-// server seam enforces): the hostile markup must die BEFORE the Quill
-// paste, so the attacker origin sees ZERO requests and the editor DOM
-// carries no live remote img. The server doors (API + import) are pinned
-// in tests/note-html.test.ts + s23-import.spec.ts.
+// in the Notes view exercises the render gate (sanitizeNoteHtmlDom — the
+// DOMParser walk over the same policy the server seam enforces). S178/EB:
+// the note opens in VIEW mode — the gate's surface is now the PROSE render
+// (the sanitized innerHTML the view mode dangerouslySetInnerHTML's, the
+// same policy module the QuillEditor mount path rides); the attacker
+// origin must see ZERO requests and the live DOM carries no remote img.
+// The server doors (API + import) are pinned in tests/note-html.test.ts +
+// s23-import.spec.ts.
 test.describe("S140/CO1 · the legacy hostile note render gate", () => {
   test("opening a pre-fix hostile note fires ZERO requests to the attacker origin and leaves no live remote img", async ({
     page,
@@ -940,21 +942,22 @@ test.describe("S140/CO1 · the legacy hostile note render gate", () => {
     await row.click();
 
     // The editor mounts (the title input carries the note's title) and the
-    // legacy render gate has pasted the SANITIZED form.
+    // view-mode render gate has rendered the SANITIZED form (S178/EB: the
+    // prose body — the same policy module's output).
     await expect(page.getByLabel("Note title")).toHaveValue(
       "A-L3 legacy hostile note (render-gate fixture)",
     );
-    // The hostile elements never materialize in the live editor DOM: no
-    // remote img, no iframe (Quill's Video blot), no handler attribute.
+    // The hostile elements never materialize in the live prose DOM: no
+    // remote img, no iframe, no handler attribute.
     // S141/CP1: the WRAPPED payloads (div/section scaffolding around
     // remote imgs) are pinned by name — the src-form assertion catches
     // them, and the explicit origin check documents the corpus.
-    await expect(page.locator(".ql-editor img[src^='http']")).toHaveCount(0);
-    await expect(page.locator(".ql-editor iframe")).toHaveCount(0);
-    await expect(page.locator(".ql-editor img[src*='a-l3-wrapped.example']")).toHaveCount(0);
+    await expect(page.locator(".note-content img[src^='http']")).toHaveCount(0);
+    await expect(page.locator(".note-content iframe")).toHaveCount(0);
+    await expect(page.locator(".note-content img[src*='a-l3-wrapped.example']")).toHaveCount(0);
     // The benign paragraph text survives (the sanitizer is an allowlist,
     // not a scorched earth).
-    await expect(page.locator(".ql-editor")).toContainText(
+    await expect(page.locator(".note-content")).toContainText(
       "Legacy row planted pre-fix",
     );
 
