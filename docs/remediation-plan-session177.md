@@ -500,9 +500,12 @@ plan's §10 close.
       browser POSTs empty fields while the DOM .value reads filled)
 - [x] the `.env.example` contract re-verified (no env changes this
       cycle)
-- [ ] committed + pushed to `main` via the SSH wrapper +
-      remote-verified + the key shredded (the closing tick rides the
-      plan-close commit, the S170-era precedent)
+- [x] committed + pushed to `main` via the SSH wrapper +
+      remote-verified + the key shredded (the cycle commit `07ba497` —
+      30 files, +2197/−90 — pushed 1e5f389..07ba497, remote verified
+      refs/heads/main @ 07ba497 == local HEAD; the operator key
+      shredded — and this session's key block parsed CLEAN on arrival,
+      no reconstruction needed, unlike the s176 paste)
 
 ## §11 The final checklist (the operator's asks, mapped)
 
@@ -531,5 +534,6 @@ plan's §10 close.
 - [x] The evidence frames under `docs/screenshots/`
 - [x] `.env.example` in the commit (re-verified, no changes)
 - [x] The doc chain + worklog updated; the session log written
-- [ ] `git commit` + the SSH-wrapper `git push` to `main` (no new
-      branch) + remote-verified (ticked by the plan-close commit)
+- [x] `git commit` + the SSH-wrapper `git push` to `main` (no new
+      branch) + remote-verified (07ba497; this plan-close tick is the
+      S170-era follow-up commit)
