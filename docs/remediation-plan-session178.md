@@ -525,7 +525,7 @@ lines + the S178 lessons block → PAD **v1.3.86** →
       S178 lessons ×5
 - [x] the `.env.example` contract re-verified (no env changes this
       cycle)
-- [ ] committed + pushed to `main` via the SSH wrapper +
+- [x] committed + pushed to `main` via the SSH wrapper +
       remote-verified + the key shredded
 
 ## §11 The final checklist (the operator's asks, mapped)
@@ -554,5 +554,5 @@ lines + the S178 lessons block → PAD **v1.3.86** →
 - [x] The evidence frames under `docs/screenshots/`
 - [x] `.env.example` in the commit (re-verified, no changes)
 - [x] The doc chain + worklog updated; the session log written
-- [ ] `git commit` + the SSH-wrapper `git push` to `main` (no new
+- [x] `git commit` + the SSH-wrapper `git push` to `main` (no new
       branch) + remote-verified
