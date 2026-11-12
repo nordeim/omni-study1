@@ -4,9 +4,12 @@
 # SIGKILL escalation → rm db/e2e.db → run the chunk), one chunk per
 # invocation so each foreground run fits the tool timeout.
 # Usage: bash /home/z/my-project/omni-study1/scripts/run-cert-chunk.sh <1-5>
-# Expected (S175/DY re-tag): 158 + 207 + 101 + 95 + 89 = 650 — the same
+# Expected (S177/EA re-tag): 158 + 215 + 101 + 95 + 89 = 658 — the same
 # census as scripts/e2e-chunked-cert.sh (machine-enforced by
 # tests/script-conventions.test.ts, including the identical-CHUNKS pin).
+# (S177/EA: chunk 2 +4 — the notes create-flow port pins in
+# parity-session7; see docs/remediation-plan-session177.md. The unit
+# census stays 1743 — no new seam this cycle.)
 # (S175/DY honest catch-up: this helper's header had gone stale since
 # the S166/DP re-tag — every cycle from S167 to S174 re-tagged the main
 # cert runner but not this mirror line, so the "same census" claim above

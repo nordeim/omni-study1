@@ -870,20 +870,23 @@ test.describe("S166/DP1 · the notes save succeeds through a failed refresh (CB8
     try {
       await page.getByRole("button", { name: "New note menu" }).click();
       await page.getByRole("menuitem", { name: "New Note", exact: true }).click();
-      const dlg = page.getByRole("dialog");
-      await expect(dlg).toBeVisible();
-      await dlg.getByLabel("Name").fill("S166-DP1 committed-write probe");
+      // S177/EA1 (re-anchored): the reference's inline DRAFT — no dialog;
+      // the draft title input renders, the Save POSTs (the waitForResponse
+      // leg rides the same commit point).
+      const draftTitle = page.locator('input[placeholder="Note title..."]');
+      await expect(draftTitle).toBeVisible();
+      await draftTitle.fill("S166-DP1 committed-write probe");
       const saved = page.waitForResponse(
         (r) => r.request().method() === "POST" && r.url().includes("/api/notes"),
       );
-      await dlg.getByRole("button", { name: "Save", exact: true }).click();
+      await page.getByRole("button", { name: "Save", exact: true }).click();
       const res = await saved;
       // The write itself COMMITTED server-side.
       expect(res.ok()).toBe(true);
       createdId = ((await res.json()) as { id: string }).id;
-      // The dialog CLOSES — the mutation resolved, the form is not
+      // The draft CLOSES — the mutation resolved, the surface is not
       // armed for the duplicate-creating retry.
-      await expect(dlg).toHaveCount(0);
+      await expect(draftTitle).toHaveCount(0);
       // The FALSE save-failure never renders (the contained refresh
       // rejection must not claim a save failure on the committed row).
       await expect(page.getByText("Something went wrong.")).toHaveCount(0);

@@ -986,8 +986,12 @@ test.describe("S80 · the autosave streak is scoped to the note (AG6)", () => {
     const createNote = async (name: string) => {
       await page.getByRole("button", { name: "New note menu" }).click();
       await page.getByRole("menuitem", { name: "New Note", exact: true }).click();
-      await page.getByLabel("Name").fill(name);
-      await page.getByRole("dialog").getByRole("button", { name: "Save", exact: true }).click();
+      // S177/EA1 (re-anchored): the reference's inline DRAFT — no dialog;
+      // the draft title input renders, the Save POSTs, the editor follows.
+      const draftTitle = page.locator('input[placeholder="Note title..."]');
+      await expect(draftTitle).toBeVisible();
+      await draftTitle.fill(name);
+      await page.getByRole("button", { name: "Save", exact: true }).click();
       const editor = page.locator(".ql-editor");
       await expect(editor).toBeVisible();
     };
@@ -1097,8 +1101,12 @@ test.describe("S81 · the delete flow settles the selection mirror (AH1)", () =>
     const createNote = async (name: string) => {
       await page.getByRole("button", { name: "New note menu" }).click();
       await page.getByRole("menuitem", { name: "New Note", exact: true }).click();
-      await page.getByLabel("Name").fill(name);
-      await page.getByRole("dialog").getByRole("button", { name: "Save", exact: true }).click();
+      // S177/EA1 (re-anchored): the reference's inline DRAFT — no dialog;
+      // the draft title input renders, the Save POSTs, the editor follows.
+      const draftTitle = page.locator('input[placeholder="Note title..."]');
+      await expect(draftTitle).toBeVisible();
+      await draftTitle.fill(name);
+      await page.getByRole("button", { name: "Save", exact: true }).click();
       const editor = page.locator(".ql-editor");
       await expect(editor).toBeVisible();
     };
@@ -1159,8 +1167,12 @@ test.describe("S81 · the departed-Save settlement (AH2)", () => {
     const createNote = async (name: string) => {
       await page.getByRole("button", { name: "New note menu" }).click();
       await page.getByRole("menuitem", { name: "New Note", exact: true }).click();
-      await page.getByLabel("Name").fill(name);
-      await page.getByRole("dialog").getByRole("button", { name: "Save", exact: true }).click();
+      // S177/EA1 (re-anchored): the reference's inline DRAFT — no dialog;
+      // the draft title input renders, the Save POSTs, the editor follows.
+      const draftTitle = page.locator('input[placeholder="Note title..."]');
+      await expect(draftTitle).toBeVisible();
+      await draftTitle.fill(name);
+      await page.getByRole("button", { name: "Save", exact: true }).click();
       const editor = page.locator(".ql-editor");
       await expect(editor).toBeVisible();
     };
@@ -1232,8 +1244,12 @@ test.describe("S81 · the departed-Save settlement (AH2)", () => {
     const createNote = async (name: string) => {
       await page.getByRole("button", { name: "New note menu" }).click();
       await page.getByRole("menuitem", { name: "New Note", exact: true }).click();
-      await page.getByLabel("Name").fill(name);
-      await page.getByRole("dialog").getByRole("button", { name: "Save", exact: true }).click();
+      // S177/EA1 (re-anchored): the reference's inline DRAFT — no dialog;
+      // the draft title input renders, the Save POSTs, the editor follows.
+      const draftTitle = page.locator('input[placeholder="Note title..."]');
+      await expect(draftTitle).toBeVisible();
+      await draftTitle.fill(name);
+      await page.getByRole("button", { name: "Save", exact: true }).click();
       const editor = page.locator(".ql-editor");
       await expect(editor).toBeVisible();
     };
@@ -2851,5 +2867,179 @@ test.describe("S176/DZ3 · the tasks create-dialog placeholder catch-up", () => 
     await expect(dlg.locator("textarea")).toHaveAttribute("placeholder", "Add notes...");
     await dlg.getByRole("button", { name: "Cancel", exact: true }).click();
     await expect(dlg).toHaveCount(0);
+  });
+});
+
+// S177/EA — the notes create-flow port (the s177 measured cycle: the
+// reference's "New Note" opens the INLINE DRAFT editor directly — no
+// dialog, no POST until Save, the X discards; the empty state lives in
+// the LEFT list pane while the right pane carries its own no-selection
+// state). The measured authority: docs/remediation-plan-session177.md §1
+// (B-1/B-2, probed live 2026-11-12, computed DOM, zero residue).
+test.describe("S177/EA1 · the notes inline-draft create flow", () => {
+  test("EA1: 'New Note' opens the inline draft — no dialog, no POST until Save, the row lands after", async ({ page }) => {
+    await page.goto("/Notes");
+    await hydrated(page);
+
+    // The POST spy rides the whole flow (the route-continue doctrine —
+    // the AG6 pattern; the create POST is counted, everything else
+    // passes through untouched).
+    const posts: string[] = [];
+    await page.route(/\/api\/notes/, async (route) => {
+      if (route.request().method() === "POST") posts.push(route.request().postData() ?? "");
+      await route.continue();
+    });
+
+    // Open the draft through the left-pane dropdown affordance.
+    await page.getByRole("button", { name: "New note menu" }).click();
+    // exact: true — "New Note" substring-matches "New Notebook" too.
+    await page.getByRole("menuitem", { name: "New Note", exact: true }).click();
+
+    // THE FLOW PIN: the draft editor renders INLINE — no dialog (RED
+    // pre-fix: the create-only name dialog opens instead, the count
+    // reads 1), the title input carries the measured placeholder, and
+    // the Quill body mounts blank.
+    await expect(page.getByRole("dialog")).toHaveCount(0);
+    const draftTitle = page.locator('input[placeholder="Note title..."]');
+    await expect(draftTitle).toBeVisible();
+    await expect(page.locator(".ql-editor")).toBeVisible();
+
+    // Type the title + a body line, then settle — the draft must NOT
+    // POST during typing (RED pre-fix: the dialog's create POST fired
+    // on submit; the draft's persistence rides the explicit Save only
+    // — the measured no-autosave-during-draft contract).
+    await draftTitle.fill("S177 EA1 probe note");
+    await page.locator(".ql-editor").click();
+    await page.keyboard.type("draft body content");
+    await page.waitForTimeout(1800);
+    expect(posts.length).toBe(0);
+
+    // Save — exactly ONE create POST, the row lands in the list, and
+    // the editor continues on the saved note (the created-note
+    // selection — the S80/AG6 lineage).
+    await page.getByRole("button", { name: "Save", exact: true }).click();
+    await page.waitForTimeout(1400);
+    expect(posts.length).toBe(1);
+    expect(posts[0]).toContain("S177 EA1 probe note");
+    const row = page.locator('[aria-label="Notes list pane"] button').filter({ hasText: "S177 EA1 probe note" });
+    await expect(row).toBeVisible();
+    await expect(page.locator(".ql-editor")).toBeVisible();
+
+    // Zero-residue cleanup through the UI (the standing doctrine).
+    await page.getByRole("button", { name: "Note actions" }).click();
+    await page.getByRole("button", { name: "Delete note" }).click();
+    await expect(row).toHaveCount(0);
+    await page.unroute(/\/api\/notes/);
+  });
+
+  test("EA1b: the draft's X discards — no POST, no row, the no-selection state returns", async ({ page }) => {
+    await page.goto("/Notes");
+    await hydrated(page);
+    const posts: string[] = [];
+    await page.route(/\/api\/notes/, async (route) => {
+      if (route.request().method() === "POST") posts.push(route.request().postData() ?? "");
+      await route.continue();
+    });
+
+    await page.getByRole("button", { name: "New note menu" }).click();
+    await page.getByRole("menuitem", { name: "New Note", exact: true }).click();
+    const draftTitle = page.locator('input[placeholder="Note title..."]');
+    await expect(draftTitle).toBeVisible();
+
+    // Type into BOTH surfaces, then discard (RED pre-fix: the discard
+    // affordance does not exist — the aria-label locator times out).
+    await draftTitle.fill("S177 EA1b discarded draft");
+    await page.locator(".ql-editor").click();
+    await page.keyboard.type("typed then thrown away");
+    await page.getByRole("button", { name: "Discard new note" }).click();
+
+    // No POST ever fired, no row landed, and the pane state returned.
+    await page.waitForTimeout(1200);
+    expect(posts.length).toBe(0);
+    await expect(
+      page.locator('[aria-label="Notes list pane"] button').filter({ hasText: "S177 EA1b discarded draft" }),
+    ).toHaveCount(0);
+    await expect(
+      page.locator('[aria-label="Note editor pane"]').getByRole("heading", { name: "Select a note" }),
+    ).toBeVisible();
+    await page.unroute(/\/api\/notes/);
+  });
+
+  test("EA1c: Save on an empty draft trips the hand guard — no POST, the draft stays open", async ({ page }) => {
+    await page.goto("/Notes");
+    await hydrated(page);
+    const posts: string[] = [];
+    await page.route(/\/api\/notes/, async (route) => {
+      if (route.request().method() === "POST") posts.push(route.request().postData() ?? "");
+      await route.continue();
+    });
+
+    await page.getByRole("button", { name: "New note menu" }).click();
+    await page.getByRole("menuitem", { name: "New Note", exact: true }).click();
+    const draftTitle = page.locator('input[placeholder="Note title..."]');
+    await expect(draftTitle).toBeVisible();
+
+    // Save with an EMPTY title (RED pre-fix: the guard copy rendered
+    // inside the create dialog — the pane-scoped locator times out).
+    await page.getByRole("button", { name: "Save", exact: true }).click();
+    await expect(page.locator('[aria-label="Note editor pane"]').getByText("Please enter a name.")).toBeVisible();
+
+    // The reference's measured behavior here is a SILENT no-op; the
+    // clone's DA2 hand-guard is the recorded superset — the guard must
+    // still never POST and never close the draft.
+    await page.waitForTimeout(800);
+    expect(posts.length).toBe(0);
+    await expect(draftTitle).toBeVisible();
+    await page.unroute(/\/api\/notes/);
+  });
+
+  test("EA3: the empty state lives in the LEFT list pane; the right pane carries the no-selection state", async ({ page }) => {
+    await page.goto("/Notes");
+    await hydrated(page);
+
+    // Zero-data form: the collection GET routes to an empty list (the
+    // S17 fresh-user pattern's lighter twin — the store lands 0 notes,
+    // the empty state surfaces). Only the GET is intercepted; every
+    // other method passes through.
+    await page.route(/\/api\/notes$/, async (route) => {
+      if (route.request().method() === "GET") {
+        await route.fulfill({ status: 200, contentType: "application/json", body: "[]" });
+      } else {
+        await route.continue();
+      }
+    });
+    await page.reload();
+    await hydrated(page);
+    await page.waitForTimeout(800);
+
+    // THE PLACEMENT PIN: the measured empty state renders INSIDE the
+    // list pane (RED pre-fix: it rendered in the right pane's sf-card
+    // — the left-pane-scoped locator times out) with the measured copy
+    // — the hint carries NO "to start capturing ideas." tail and the
+    // CTA reads "New Note" (the case).
+    const listPane = page.locator('[aria-label="Notes list pane"]');
+    await expect(listPane.getByText("No notes yet", { exact: true })).toBeVisible();
+    await expect(listPane.getByText("Create your first note", { exact: true })).toBeVisible();
+    await expect(listPane.getByRole("button", { name: "New Note", exact: true })).toBeVisible();
+
+    // The right pane: the measured no-selection state (icon tile +
+    // "Select a note" + "Choose a note from the sidebar or create a
+    // new one" — RED pre-fix: the copy read "Select a note from the
+    // list."), rendered BARE (no sf-card wrapper — the measured bare
+    // pane; the S8 pin's bg/border contract). The heading-scoped
+    // locator: the md:hidden mobile-squeeze fallback (the EA3b
+    // no-overflow guard) carries the old compact copy and would
+    // double-match a plain getByText substring.
+    const rightPane = page.locator('[aria-label="Note editor pane"]');
+    await expect(rightPane.getByRole("heading", { name: "Select a note" })).toBeVisible();
+    await expect(rightPane.getByText("Choose a note from the sidebar or create a new one")).toBeVisible();
+    const cardCount = await rightPane.locator(".sf-card").count();
+    expect(cardCount).toBe(0);
+
+    // The CTA opens the draft (the placement is functional, not just
+    // visual — the EA1 flow reachable from the empty state).
+    await listPane.getByRole("button", { name: "New Note", exact: true }).click();
+    await expect(page.locator('input[placeholder="Note title..."]')).toBeVisible();
+    await page.unroute(/\/api\/notes$/);
   });
 });

@@ -2,6 +2,20 @@ import { defineConfig } from "vitest/config";
 import path from "node:path";
 
 // Unit-test layer for the pure domain seams — 52 files / 1743 tests
+// (re-anchored S177/EA — the notes create-flow port cycle: the unit
+// census UNCHANGED at 1743, no new seam [the inline draft is view
+// state; the wire's createNote POST + the minutes/tags/JSON models
+// untouched]. The e2e census moves 654 → 658 [+4: the S177/EA pins in
+// parity-session7 — the reference's measured inline-draft create flow:
+// EA1 the no-dialog/no-POST-until-Save shape with the row landing
+// after the explicit Save, EA1b the X-discard leg (no POST, no row,
+// the pane state restored), EA1c the empty-title hand-guard leg (the
+// DA2 human copy inline, no POST, the draft stays open — the
+// reference's measured SILENT no-op recorded as the superset), EA3
+// the empty-state placement (the reference's empty state lives in
+// the LEFT list pane with the "New Note" CTA; the right pane carries
+// its own no-selection state — "Select a note" + "Choose a note from
+// the sidebar or create a new one" — rendered bare)].)
 // (re-anchored S176/DZ — the events/studygroups/tasks dialog catch-up
 // cycle: census 1733 → 1743, +10 net [events +4: the S176/DZ1 Yearly
 // recurrence pins — the same month+day across years, the Feb-29

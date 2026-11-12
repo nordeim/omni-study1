@@ -11,7 +11,7 @@ High-signal instructions for coding agents working in this repo. Everything here
 | `bun run lint` / `bun run typecheck` | ESLint / `tsc --noEmit` — both must be clean |
 | `bun run test` | Vitest unit layer (1743 tests; `*.test.ts` only — never picks up e2e specs) |
 | `bun run build` | Production build → `.next/standalone` (**required before e2e**) |
-| `bun run test:e2e` | Playwright vs the standalone build on :3100 with the THROWAWAY tmpfs scratch db /dev/shm/omni-study1-e2e/e2e.db (654 tests across the 5-chunk cold map — 158+211+101+95+89, 30 spec files; a single-process full run trips the register rate-limiter budget by design, the chunked map re-boots the server per chunk). NOTE (S45, the day-boundary lesson): the global setup re-seeds every run, but the seed's IDEMPOTENT UPSERTS do NOT refresh day-relative dates on existing rows — a scratch `db/e2e.db` that ages across a UTC midnight keeps its original day-relative dates (today's tasks, the +1-day exam badge, the due-in pills, the import round-trip dates each read one day stale → 4 deterministic failures in parity-session6/parity-session9/s23-import). Delete `db/e2e.db` when a run crosses a day boundary — the global setup re-creates it fresh with current dates. NOTE (S46, TWO more aged-scratch-db classes + a build-input one): (1) ALWAYS run e2e COLD — S131/CF5 chained `scripts/e2e-cold-reset.sh` into `bun run test:e2e` (port-guard + `rm -f db/e2e.db` BEFORE playwright boots anything — global-setup is TOO LATE: Playwright starts the webServer before globalSetup), so the default runner self-colds; any DIRECT `playwright test` invocation still needs the manual `rm -f db/e2e.db` before every full run: the s23-import round-trip posts a FIXED-id envelope, so a second consecutive run against the aged db reads `created: 0, updated: 1` instead of `created: 1, updated: 0` and fails — not just across midnights, across ANY re-run; (2) the s22 negative-spawn spec reads the BUNDLED `.env` — Next's standalone output COPIES the repo-root `.env` into `.next/standalone/.env` at build time, so a REAL AUTH_SECRET in the dev `.env` leaks into the bundle and the guard CORRECTLY boots (the spec times out waiting for the exit) — keep the repo-root `.env`'s AUTH_SECRET EMPTY (the `.env.example` dev posture: `AUTH_SECRET=""` — dev falls back to the local constant with the boot warning) when building for e2e |
+| `bun run test:e2e` | Playwright vs the standalone build on :3100 with the THROWAWAY tmpfs scratch db /dev/shm/omni-study1-e2e/e2e.db (658 tests across the 5-chunk cold map — 158+215+101+95+89, 30 spec files; a single-process full run trips the register rate-limiter budget by design, the chunked map re-boots the server per chunk). NOTE (S45, the day-boundary lesson): the global setup re-seeds every run, but the seed's IDEMPOTENT UPSERTS do NOT refresh day-relative dates on existing rows — a scratch `db/e2e.db` that ages across a UTC midnight keeps its original day-relative dates (today's tasks, the +1-day exam badge, the due-in pills, the import round-trip dates each read one day stale → 4 deterministic failures in parity-session6/parity-session9/s23-import). Delete `db/e2e.db` when a run crosses a day boundary — the global setup re-creates it fresh with current dates. NOTE (S46, TWO more aged-scratch-db classes + a build-input one): (1) ALWAYS run e2e COLD — S131/CF5 chained `scripts/e2e-cold-reset.sh` into `bun run test:e2e` (port-guard + `rm -f db/e2e.db` BEFORE playwright boots anything — global-setup is TOO LATE: Playwright starts the webServer before globalSetup), so the default runner self-colds; any DIRECT `playwright test` invocation still needs the manual `rm -f db/e2e.db` before every full run: the s23-import round-trip posts a FIXED-id envelope, so a second consecutive run against the aged db reads `created: 0, updated: 1` instead of `created: 1, updated: 0` and fails — not just across midnights, across ANY re-run; (2) the s22 negative-spawn spec reads the BUNDLED `.env` — Next's standalone output COPIES the repo-root `.env` into `.next/standalone/.env` at build time, so a REAL AUTH_SECRET in the dev `.env` leaks into the bundle and the guard CORRECTLY boots (the spec times out waiting for the exit) — keep the repo-root `.env`'s AUTH_SECRET EMPTY (the `.env.example` dev posture: `AUTH_SECRET=""` — dev falls back to the local constant with the boot warning) when building for e2e |
 | `node scripts/capture-studyflow.mjs` | Refresh all 31 `docs/screenshots/` captures from the dev server (24 light + 7 dark) |
 | `node scripts/dark-sweep.mjs` | Dark-mode contrast audit over all 20 views (flashbulb/unreadable detector). S27: sets dark mode through the settings API (the real lifecycle) and SELF-VERIFIES the precondition — fails loudly (exit 1, no findings) if the dark class is not applied; the applied mode rides the JSON envelope. Never force the class directly (the session-10 approach silently rotted after S11) |
 | `node scripts/accent-dark-sweep.mjs` | Accent × dark-mode audit (S38-extended): all 7 accents × 20 desktop views × 20 MOBILE views at 390×844 + the drawer per accent (FAIL <2.2, WARN <3.2 for accent text; the mobile records also carry scrollWidth — >390 is a finding). The S38 shape is unit-pinned anti-phantom: every view recorded EXPLICITLY on both surfaces (clean views carry empty detector arrays), the per-accent `applied` self-verified readings + `mode: "dark"` + `mobileViewport` ride the envelope, and the seam's ALL-ACCENTS + ALL-VIEWS + drawer-present guards make every silently-skipped dimension a LOUD shape-error (the pre-S38 mobile pass swept only 6 views — MOBILE_VIEWS — and the omission-means-clean recording could not distinguish "clean because measured" from "clean because never rendered") |
@@ -3546,3 +3546,77 @@ Hover-parity probing must run in Playwright, not a touch-emulating browser — v
    honest record is the per-chunk + per-file ledger with the flake
    inventory and the diagnostic evidence — never a silent retry loop,
    never a weakened assertion.
+
+## S177 lessons (Batch EA — the notes create-flow port cycle: the inline-draft create flow + the empty-state placement + the S178+ feature ledger)
+
+1. **A "measured" UX flow is only measured at the DEPTH it was probed —
+   the B-5 deferral closed by re-probing the whole family end-to-end.**
+   The S77-era record measured the notes EDITOR's chrome (title row,
+   Font row, tag row, the Quill card) and S166 measured the search
+   semantics — but the CREATE flow itself (what "New Note" actually
+   does), the empty-state PLACEMENT, the no-selection state, and the
+   whole feature inventory (pin/palette/attach/coding notes/the
+   view-edit split) were never measured. The s177 sweep probed the
+   family live: no dialog, NO POST until the explicit Save, the X
+   discards, the empty state in the LEFT pane, the right pane's own
+   no-selection affordance. Lesson: the depth-ladder (S176 lesson 1)
+   applies to FLOWS and PLACEMENTS, not just dialog field sets — an
+   action's full lifecycle (affordance → intermediate state →
+   persistence point → post-state) is one measurement unit.
+
+2. **The residue note taught the discipline twice: probe artifacts on
+   the reference must be cleaned through the reference's own UI before
+   the audit closes.** The s177 probe 2's cleanup leg failed to find
+   the delete affordance (the reference's trash button carries NO
+   aria-label and NO text — icon-only), leaving a "S177 probe note B"
+   residue that then broke EVERY later probe's click expectations
+   (the empty-state CTA disappears when a note exists — the "New Note"
+   button locator timed out with zero diagnostics). The recovery:
+   agent-browser's accessibility snapshot named the button by ROLE
+   (the icon-only button still snapshots as `button [ref]`), the
+   reference's own trash deleted the note, and the end state was
+   re-verified (0 notes). Lesson: write-path probes need a cleanup
+   that works even when affordances are icon-only — snapshot-driven
+   navigation beats text-driven clicking on unlabeled controls, and
+   the residue check is part of the audit's close, not an
+   afterthought.
+
+3. **The reference's dark-mode account state is a measurement
+   variable, not noise — record it, port the class anatomy, never the
+   computed color.** The probe account rendered in dark mode
+   (html class="dark", body #0a0a0a), so every computed color this
+   session (title text white, buttons #0a0a0a, the "black" Divider)
+   reads the DARK theme's values. The ports shipped the
+   class-structural anatomy (theme-adaptive Tailwind classes) with
+   the clone's own light/dark token system — never a fixed dark-mode
+   color. Lesson: before porting any measured color, read the
+   reference's html element's theme class; a dark-mode reading
+   ported literally would ship a permanently-dark control.
+
+4. **A superset guard over a silent reference no-op is a PINNED
+   divergence, not a silent judgment call.** The reference's
+   empty-draft Save is a measured SILENT no-op (no note, no toast,
+   the draft stays open). The clone's DA2 hand-guard ("Please enter a
+   name." inline, no POST) is the a11y-superior posture kept — and
+   the EA1c pin owns the divergence record: the guard's copy, the
+   no-POST contract, and the draft-stays-open state are all
+   machine-pinned so the deviation is documented, deliberate, and
+   survives future cycles. Lesson: every deliberate superset over a
+   measured reference behavior gets its own pin — an unpinned
+   superset is indistinguishable from drift at the next audit.
+
+5. **The load-borne flake signature (::before reads "") appeared
+   under concurrent-browser load and vanished in isolation — the
+   S176 class rides again, and the isolation ledger is the honest
+   record.** The dark-mode S78/AE3 placeholder pin failed once with
+   `getComputedStyle(el, "::before").color === ""` during a run with
+   a concurrent agent-browser session + dev server hammering the
+   machine, then passed 7 consecutive isolation runs and 2 full-spec
+   runs (29/29 ×2). The earlier parity-session8 first-roll failures
+   (AL1b/AL1c/BZ4 with the server log's P1008 socket-timeout
+   signature) rode the same class — all green on the re-run. Lesson
+   (the S176 lesson-4 continuation): close every concurrent
+   browser/dev-server before a cert-class run, and record the
+   isolation ledger (N isolated greens + the concurrent-load
+   context of the one failure) in the plan's close — the flaky
+   count stays honest, no assertion weakens.

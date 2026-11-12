@@ -292,12 +292,15 @@ test.describe("regression guard · light mode is byte-identical", () => {
 test.describe("S78/AE3 · the dark-mode Quill placeholder", () => {
   test("a blank note's placeholder reads slate-400 in dark mode", async ({ page }) => {
     await gotoDark(page, "/Notes");
-    // Create a blank note through the real flow (the New note menu → dialog).
+    // Create a blank note through the real flow (the New note menu → the
+    // S177/EA1 inline draft — re-anchored from the create-dialog flow).
     await page.getByRole("button", { name: "New note menu" }).click();
     // exact: true — "New note" substring-matches "New Notebook" too.
     await page.getByRole("menuitem", { name: "New Note", exact: true }).click();
-    await page.getByLabel("Name").fill("S78 dark placeholder probe");
-    await page.getByRole("dialog").getByRole("button", { name: "Save", exact: true }).click();
+    const draftTitle = page.locator('input[placeholder="Note title..."]');
+    await expect(draftTitle).toBeVisible();
+    await draftTitle.fill("S78 dark placeholder probe");
+    await page.getByRole("button", { name: "Save", exact: true }).click();
     // The new note is selected and BLANK — the placeholder renders.
     const editor = page.locator(".ql-editor.ql-blank");
     await expect(editor).toBeVisible();

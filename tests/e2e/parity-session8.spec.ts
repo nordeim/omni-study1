@@ -486,7 +486,12 @@ test.describe("S8-G · Notes two-pane", () => {
     });
     expect(cs.bg).toBe("rgba(0, 0, 0, 0)");
     expect(cs.border).toBe("0px");
-    await expect(right.getByText("Select a note")).toBeVisible();
+    // S177/EA3 (re-scoped): the no-selection state's measured copy now
+    // rides an h2 heading + hint; the md:hidden mobile-squeeze fallback
+    // (the EA3b no-overflow guard) carries the old compact copy and would
+    // double-match a plain getByText substring — the heading role is the
+    // unique carrier.
+    await expect(right.getByRole("heading", { name: "Select a note" })).toBeVisible();
   });
 
   test("notebook/tag filters are Radix combobox triggers", async ({ page }) => {

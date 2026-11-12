@@ -78,15 +78,14 @@ import { ApiError } from "@/lib/api";
 import { htmlToText, stripHtmlPreview } from "@/lib/text";
 import { cn } from "@/lib/utils";
 
-// S125/BZ14: the note leg carries no `editing` — the dead "Rename note"
-// variant. All three setDialog sites were enumerated before narrowing:
-// only {kind:"note", editing:null} (new note), {kind:"notebook",
-// editing:null} (new notebook) and {kind:"notebook", editing:row} (rename
-// notebook) ever fired; note titles edit through the debounced inline
-// input (S122/BW3), so the unreachable updateNote branch is gone.
+// S125/BZ14 + S177/EA1: the NOTE dialog is GONE — the reference's create
+// flow (measured 2026-11-12, computed DOM) opens the INLINE DRAFT editor
+// directly: no dialog, no POST until the explicit Save, the X discards.
+// The dialog survives for the NOTEBOOK family only (create + rename,
+// their own measured lineage). Note titles edit through the debounced
+// inline input (S122/BW3).
 type DialogState =
   | { open: false }
-  | { open: true; kind: "note" }
   | { open: true; kind: "notebook"; editing: NotebookRow | null };
 
 // (parseNoteTags moved to src/lib/data.ts at S151/CZ1 — the single source
@@ -184,6 +183,20 @@ export function NotesView() {
   const [name, setName] = React.useState("");
   const [busy, setBusy] = React.useState(false);
   const [error, setError] = React.useState("");
+  // S177/EA1 — the inline-draft create state (the reference's measured
+  // flow: "New Note" renders the draft editor INLINE — no dialog, no POST
+  // until the explicit Save, the X discards, no row until the Save lands).
+  // Pure client state; the wire's createNote POST rides the Save only.
+  // draftSeq keys the Quill remount so a discarded-then-reopened draft
+  // starts from a BLANK editor, not the prior draft's leftover instance.
+  const [draft, setDraft] = React.useState<{
+    title: string;
+    content: string;
+    tags: string[];
+    notebookId: string;
+  } | null>(null);
+  const [draftSeq, setDraftSeq] = React.useState(0);
+  const [draftError, setDraftError] = React.useState("");
   // S152/DA1 (the S151 audit's B-L5): the delete double-fire latch — the
   // per-row in-flight set for BOTH delete handlers (notes + notebooks);
   // the Popover action sites close on click, so the handler latch alone
@@ -194,6 +207,10 @@ export function NotesView() {
   const [font, setFont] = React.useState<EditorFont>("sans");
   const [tagDraft, setTagDraft] = React.useState("");
   const editorRef = React.useRef<QuillEditorHandle | null>(null);
+  // S177/EA1: the DRAFT's own editor handle (the Divider button's
+  // insert-divider source — the draft's Quill instance, kept separate
+  // from the selected note's editorRef).
+  const draftEditorRef = React.useRef<QuillEditorHandle | null>(null);
   // S78/AE2: one failure toast per autosave failure STREAK — the flag
   // resets on the first successful PATCH, so a sustained-offline typing
   // session toasts once instead of once per debounced burst.
@@ -341,10 +358,19 @@ export function NotesView() {
     selectedIdRef.current = effectiveNoteId;
   }, [effectiveNoteId]);
 
-  const openNewNote = () => {
-    setName("");
-    setError("");
-    setDialog({ open: true, kind: "note" });
+  // S177/EA1: the reference's create affordance — the INLINE DRAFT (the
+  // measured no-dialog flow). The notebook defaulting the dialog carried
+  // rides: the active notebook filter pre-selects the draft's notebook
+  // (the reference's "None" select — the empty-filter equivalent).
+  const openDraft = () => {
+    setDraft({
+      title: "",
+      content: "",
+      tags: [],
+      notebookId: notebookFilter === "all" ? "" : notebookFilter,
+    });
+    setDraftSeq((n) => n + 1);
+    setDraftError("");
   };
 
   const openNewNotebook = () => {
@@ -365,9 +391,8 @@ export function NotesView() {
     // S152/DA2 (the S151 audit's B-L6): the hand-guard — the noValidate
     // form's empty required field answers HERE with human copy (the
     // S127/CB17 files-view pattern), never the server's raw Zod issue
-    // text. Both dialog kinds ride the same required name field (the
-    // note title / the notebook name). Before setBusy: an early return
-    // must not strand the busy latch.
+    // text. The notebook dialog rides the required name field. Before
+    // setBusy: an early return must not strand the busy latch.
     if (!name.trim()) {
       setError("Please enter a name.");
       return;
@@ -375,24 +400,15 @@ export function NotesView() {
     setBusy(true);
     setError("");
     try {
-      if (dialog.kind === "note") {
-        // S125/BZ14: the note dialog is CREATE-only (titles rename via the
-        // debounced inline input — the dead updateNote branch removed).
-        const created = await createNote({ title: name, content: "", notebookId: notebookFilter === "all" ? "" : notebookFilter });
-        setSelectedId(created ?? null);
-        // S79/AF3: a freshly created note starts with a clean streak.
-        // S80/AG6: …and owns the selection mirror from birth.
-        selectedIdRef.current = created ?? null;
-        autosaveFailedRef.current = false;
+      // S177/EA1: the note branch is GONE (the draft owns note creation
+      // now); the notebook family keeps the dialog — create + rename.
+      if (dialog.editing) {
+        // S130/CE9: the rename rides the mutation seam
+        // (mutations.updateNotebook — the BW8 single-source doctrine;
+        // the inline twin duplicated it while the seam sat dead).
+        await updateNotebook(dialog.editing.id, { name });
       } else {
-        if (dialog.editing) {
-          // S130/CE9: the rename rides the mutation seam
-          // (mutations.updateNotebook — the BW8 single-source doctrine;
-          // the inline twin duplicated it while the seam sat dead).
-          await updateNotebook(dialog.editing.id, { name });
-        } else {
-          await createNotebook({ name });
-        }
+        await createNotebook({ name });
       }
       setDialog({ open: false });
     } catch (err: unknown) {
@@ -400,6 +416,57 @@ export function NotesView() {
     } finally {
       setBusy(false);
     }
+  };
+
+  // S177/EA1 — the draft's Save: the ONLY persistence point of the create
+  // flow (the measured no-autosave-during-draft contract: no POST fires
+  // until this handler runs).
+  const saveDraft = async () => {
+    if (busy || !draft) return;
+    // S152/DA2 lineage (the EA1c pin owns the record): the empty-title
+    // Save answers HERE with the human copy — the reference's measured
+    // behavior is a SILENT no-op (the adjudicated superset, never a POST).
+    if (!draft.title.trim()) {
+      setDraftError("Please enter a name.");
+      return;
+    }
+    setBusy(true);
+    setDraftError("");
+    try {
+      const created = await createNote({
+        title: draft.title,
+        content: draft.content,
+        tags: JSON.stringify(draft.tags),
+        notebookId: draft.notebookId,
+      });
+      setDraft(null);
+      setSelectedId(created ?? null);
+      // S79/AF3: a freshly created note starts with a clean streak.
+      // S80/AG6: …and owns the selection mirror from birth.
+      selectedIdRef.current = created ?? null;
+      autosaveFailedRef.current = false;
+    } catch (err: unknown) {
+      setDraftError(err instanceof ApiError ? err.message : "Something went wrong.");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  // S177/EA1 — the draft's tag row (the measured "Add tag..." idiom; the
+  // tags land in the create POST — the wire's JSON string, the PATCH
+  // path's own format).
+  const addDraftTag = () => {
+    const t = tagDraft.trim().replace(/^#/, "");
+    if (!t || !draft || draft.tags.includes(t)) {
+      setTagDraft("");
+      return;
+    }
+    setDraft((d) => (d ? { ...d, tags: [...d.tags, t] } : d));
+    setTagDraft("");
+  };
+
+  const removeDraftTag = (tag: string) => {
+    setDraft((d) => (d ? { ...d, tags: d.tags.filter((x) => x !== tag) } : d));
   };
 
   const removeNote = async (id: string) => {
@@ -620,7 +687,7 @@ export function NotesView() {
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuItem onSelect={openNewNote}>
+              <DropdownMenuItem onSelect={openDraft}>
                 <FileText className="size-4" strokeWidth={2} />
                 New Note
               </DropdownMenuItem>
@@ -766,9 +833,29 @@ export function NotesView() {
             >
               <Spinner className="size-6" />
             </div>
+          ) : notes.length === 0 ? (
+            /* S177/EA3 — the measured placement: the reference's empty
+               state lives in the LIST pane (the 80×80 gradient tile +
+               "No notes yet" + the measured SHORT hint + the "New Note"
+               gradient CTA); the right pane carries its own no-selection
+               state. The shared EmptyState idiom renders it — the h2
+               over the reference's h3 is the recorded heading-laxity
+               deviation (the S77/AD7 precedent class), the geometry and
+               copy are the measured values. */
+            <EmptyState
+              icon={BookOpen}
+              title="No notes yet"
+              hint="Create your first note"
+              cta={
+                <Button type="button" variant="gradient" className="sf-gradient-shadow-lg" onClick={openDraft}>
+                  <Plus className="size-4" strokeWidth={2} />
+                  New Note
+                </Button>
+              }
+            />
           ) : filtered.length === 0 ? (
             <p className="py-8 text-center text-sm text-slate-500 dark:text-slate-400">
-              {notes.length === 0 ? "No notes yet." : "No notes match."}
+              No notes match.
             </p>
           ) : (
             filtered.map((note) => {
@@ -838,23 +925,183 @@ export function NotesView() {
           >
             <Spinner className="size-6" />
           </div>
-        ) : notes.length === 0 ? (
-          <div className="sf-card flex flex-1 flex-col justify-center">
-            <EmptyState
-              icon={BookOpen}
-              title="No notes yet"
-              hint="Create your first note to start capturing ideas."
-              cta={
-                <Button type="button" variant="gradient" className="sf-gradient-shadow-lg" onClick={openNewNote}>
-                  <Plus className="size-4" strokeWidth={2} />
-                  New note
+        ) : draft ? (
+          /* S177/EA1 — the INLINE DRAFT (the reference's measured create
+             flow: no dialog, no POST until the explicit Save, the X
+             discards). The draft overlays the selection state — X
+             restores whatever was underneath (the measured discard
+             returns the pane to its prior state). */
+          <div className="flex min-h-0 flex-1 flex-col">
+            {/* Title row (S177/EA1 measured): the draft title input + the
+                [notebook select][Save][X discard] action row. */}
+            <div className="flex items-center gap-2">
+              <input
+                type="text"
+                aria-label="Note title"
+                placeholder="Note title..."
+                value={draft.title}
+                onChange={(e) =>
+                  setDraft((d) => (d ? { ...d, title: e.target.value } : d))
+                }
+                className="h-9 min-w-0 flex-1 rounded-md border-0 bg-transparent px-0 text-sm font-bold text-slate-900 outline-none placeholder:font-normal placeholder:text-slate-400 focus-visible:outline-none dark:text-slate-100 dark:placeholder:text-slate-500"
+              />
+              <div className="flex shrink-0 items-center gap-2">
+                {/* The measured notebook select (w-32, "None" default) —
+                    the draft's notebook assignment; the a11y label is the
+                    clone's superset over the reference's unlabeled
+                    combobox (the CQ3/CR3 precedent class). */}
+                <Select
+                  value={draft.notebookId || "none"}
+                  onValueChange={(v) =>
+                    setDraft((d) => (d ? { ...d, notebookId: v === "none" ? "" : v } : d))
+                  }
+                >
+                  <SelectTrigger className="h-9 w-32" aria-label="New note notebook">
+                    <SelectValue placeholder="None" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">None</SelectItem>
+                    {notebooks.map((nb) => (
+                      <SelectItem key={nb.id} value={nb.id}>
+                        {nb.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Button
+                  type="button"
+                  variant="gradient"
+                  className="sf-gradient-shadow h-9 px-4"
+                  disabled={busy}
+                  onClick={saveDraft}
+                >
+                  <Save className="size-4" strokeWidth={2} />
+                  {busy ? "Saving…" : "Save"}
                 </Button>
-              }
-            />
+                <button
+                  type="button"
+                  aria-label="Discard new note"
+                  onClick={() => setDraft(null)}
+                  className="flex h-9 items-center justify-center rounded-md border border-input bg-background px-4 text-slate-500 transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:ring-2 focus-visible:ring-sf-primary/40 focus-visible:outline-none dark:text-slate-400"
+                >
+                  <X className="size-4" strokeWidth={2} />
+                </button>
+              </div>
+            </div>
+            {draftError && (
+              <div role="alert" className="sf-alert-red mt-2 rounded-lg px-3 py-2 text-sm">
+                {draftError}
+              </div>
+            )}
+            {/* Font row (the shared typeface state — the existing editor's
+                own row, the S77/AD5 lineage). */}
+            <div className="mt-2 flex flex-wrap items-center gap-2">
+              <span className="text-xs font-medium text-slate-500 dark:text-slate-400">Font:</span>
+              <Select value={font} onValueChange={(v) => setFont(v as EditorFont)}>
+                <SelectTrigger className="h-7 w-28 text-xs" aria-label="Editor font">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="sans">Sans</SelectItem>
+                  <SelectItem value="serif">Serif</SelectItem>
+                  <SelectItem value="mono">Mono</SelectItem>
+                </SelectContent>
+              </Select>
+              <button
+                type="button"
+                onClick={() => draftEditorRef.current?.insertDivider()}
+                className="flex h-8 items-center gap-1 rounded-md bg-neutral-950 px-3 text-xs font-medium text-neutral-50 transition-opacity hover:opacity-90 focus-visible:ring-2 focus-visible:ring-sf-primary/40 focus-visible:outline-none dark:bg-neutral-800"
+              >
+                <Minus className="size-3" strokeWidth={2} />
+                Divider
+              </button>
+            </div>
+            {/* Tag row (the measured "Add tag..." idiom; the draft's own
+                pills — they land in the create POST). */}
+            <div role="group" className="mt-2 flex flex-wrap items-center gap-2" aria-label="New note tags">
+              {draft.tags.map((tag) => (
+                <span
+                  key={tag}
+                  className="inline-flex h-6 items-center gap-1 rounded-md bg-neutral-800 px-2 text-xs text-neutral-50 dark:bg-neutral-700"
+                >
+                  {tag}
+                  <button
+                    type="button"
+                    aria-label={`Remove tag ${tag}`}
+                    onClick={() => removeDraftTag(tag)}
+                    className="rounded-sm p-0.5 text-neutral-400 hover:text-neutral-50 focus-visible:ring-2 focus-visible:ring-sf-primary/40 focus-visible:outline-none"
+                  >
+                    <X className="size-3" strokeWidth={2} />
+                  </button>
+                </span>
+              ))}
+              <input
+                aria-label="Add tag"
+                placeholder="Add tag..."
+                value={tagDraft}
+                onChange={(e) => setTagDraft(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    addDraftTag();
+                  }
+                }}
+                className="h-7 w-32 rounded-md border border-neutral-800 bg-transparent px-2 text-sm text-slate-700 outline-none placeholder:text-slate-400 focus-visible:ring-2 focus-visible:ring-sf-primary/40 dark:border-neutral-700 dark:text-slate-200"
+              />
+            </div>
+            {/* The editor card (the measured white rounded-2xl card wrapping
+                the Quill body) — key by the draft sequence so every draft
+                session starts BLANK. onChange writes the draft content
+                (the Save's POST source — the measured no-autosave contract:
+                no POST fires while typing). */}
+            <div className="sf-note-editor mt-3 flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900">
+              <QuillEditor
+                key={`draft-${draftSeq}`}
+                ref={draftEditorRef}
+                value=""
+                onChange={(html) => setDraft((d) => (d ? { ...d, content: html } : d))}
+                font={font}
+                className="min-h-0 flex-1"
+              />
+            </div>
           </div>
         ) : !selected ? (
-          <div className="flex flex-1 items-center justify-center">
-            <p className="text-sm text-slate-500 dark:text-slate-400">Select a note from the list.</p>
+          /* S177/EA3 — the measured no-selection state: the reference's
+             right pane carries its OWN affordance (the same 80×80 tile +
+             "Select a note" + "Choose a note from the sidebar or create a
+             new one"), rendered BARE (no sf-card — the measured pane; the
+             S8 pin's bg/border contract). The old 0-notes branch retired
+             with the empty state's move to the list pane.
+             S177/EA3b — the mobile-squeeze guard: at 390 the two-pane
+             contract squeezes this pane to ~14px (the S78/AE6 measured
+             w-80 list + squeezed right pane) and the tile's fixed 80px
+             min-content pushed documentElement.scrollWidth to 431 — the
+             reference itself overflows to 416 there (its own bug); the
+             clone's no-overflow posture is the pinned superset (the
+             S78/AE9-13 family). Below md the compact text-only form
+             renders (the pre-S77 shape, measured-fit); md+ carries the
+             full measured affordance. */
+          <div className="flex min-w-0 flex-1 items-center justify-center">
+            <div className="hidden min-w-0 flex-col items-center justify-center px-6 py-16 text-center md:flex">
+              <div
+                className="flex size-20 items-center justify-center rounded-2xl"
+                style={{
+                  backgroundImage:
+                    "linear-gradient(to bottom right, rgb(var(--sf-primary-empty-from)), rgb(var(--sf-primary-empty-to)))",
+                }}
+              >
+                <BookOpen className="size-10 text-sf-primary" strokeWidth={2} />
+              </div>
+              <h2 className="mt-4 text-xl font-semibold text-slate-800 dark:text-slate-100">
+                Select a note
+              </h2>
+              <p className="mt-1 max-w-sm text-base text-slate-500 dark:text-slate-400">
+                Choose a note from the sidebar or create a new one
+              </p>
+            </div>
+            <p className="text-sm text-slate-500 dark:text-slate-400 md:hidden">
+              Select a note from the list.
+            </p>
           </div>
         ) : (
           <div className="flex min-h-0 flex-1 flex-col">
@@ -1039,7 +1286,7 @@ export function NotesView() {
         variant="gradient"
         className="sf-gradient-shadow fixed bottom-20 right-4 z-30 size-14 rounded-full md:hidden"
         aria-label="New note"
-        onClick={openNewNote}
+        onClick={openDraft}
       >
         <Plus className="size-5" strokeWidth={2} />
       </Button>
@@ -1047,14 +1294,10 @@ export function NotesView() {
       <Dialog open={dialog.open} onOpenChange={(open) => !open && setDialog({ open: false })}>
         <DialogContent className="max-w-md rounded-lg">
           <DialogHeader>
+            {/* S177/EA1: the note branch is gone (the draft owns note
+                creation) — the dialog is the notebook family's surface. */}
             <DialogTitle>
-              {!dialog.open
-                ? "New note"
-                : dialog.kind === "note"
-                  ? "New note"
-                  : dialog.editing
-                    ? "Rename notebook"
-                    : "New notebook"}
+              {dialog.open && dialog.editing ? "Rename notebook" : "New notebook"}
             </DialogTitle>
           </DialogHeader>
           <form onSubmit={submit} className="flex flex-col gap-4" noValidate>
@@ -1064,7 +1307,7 @@ export function NotesView() {
                 id="note-name"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder={dialog.open && dialog.kind === "notebook" ? "Lecture Notes" : "Integration techniques"}
+                placeholder="Lecture Notes"
                 required
                 autoFocus
               />

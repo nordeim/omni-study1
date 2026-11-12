@@ -1,4 +1,25 @@
 #!/usr/bin/env bash
+# (S177/EA re-tag — census 654 → 658, net +4: chunk 2 +4 [the
+# S177/EA notes create-flow port pins in parity-session7 — the
+# reference's measured INLINE-DRAFT create flow (probed live
+# 2026-11-12, computed DOM, zero residue): "New Note" opens the
+# draft editor directly — NO dialog, NO POST until the explicit
+# Save (the measured no-autosave-during-draft contract), the X
+# discards (no row, no residue, the pane state restored); the
+# EA1 pin (the no-dialog shape + the no-POST-during-typing +
+# the row-lands-after-Save + the zero-residue cleanup), the
+# EA1b discard leg (no POST + no row + the no-selection state
+# returns), the EA1c guard leg (the empty-title Save trips the
+# DA2 hand-guard inline — no POST, the draft stays open; the
+# reference's measured SILENT no-op is the recorded superset),
+# and the EA3 placement pin (the empty state lives in the LEFT
+# list pane — the 80×80 tile + "No notes yet" + the measured
+# short hint + the "New Note" CTA; the right pane carries its
+# own no-selection state — "Select a note" + "Choose a note
+# from the sidebar or create a new one" — rendered bare)]. The
+# unit census stays 1743 (no new seam — the draft is view
+# state, the wire model untouched). The full EA map:
+# docs/remediation-plan-session177.md.)
 # (S176/DZ re-tag — census 650 → 654, net +4: chunk 2 +4 [the
 # S176/DZ events/studygroups/tasks dialog catch-up pins in
 # parity-session7 — the first placeholder-level + geometry-level
@@ -420,7 +441,7 @@
 # deterministic defaults so the leg fills only the title + score +
 # max; network-mocked, no server writes beyond the zero-residue
 # create]. The full DW map: docs/remediation-plan-session173.md.)
-# Expected: 158 + 211 + 101 + 95 + 89 = 654 (each chunk's count includes its
+# Expected: 158 + 215 + 101 + 95 + 89 = 658 (each chunk's count includes its
 # auth setup — the current census; the historical re-tag blocks beneath.)
 # (S171/DU re-tag — census 634 → 637, net +3: chunk 2 +2 [the
 # S171/DU2 studygroups create-dialog parity catch-up pair in

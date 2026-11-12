@@ -259,7 +259,14 @@ describe("the chunked cert runner's truth contract (S128/CC2)", () => {
     // S176/DZ re-tag: 650 → 654, chunk 2 +4 (the S176/DZ events/
     // studygroups/tasks dialog catch-up pins in parity-session7 — see
     // docs/remediation-plan-session176.md).
-    expect(certSource).toContain("Expected: 158 + 211 + 101 + 95 + 89 = 654");
+    // S177/EA re-tag: 654 → 658, chunk 2 +4 (the S177/EA notes
+    // create-flow port pins in parity-session7 — the reference's
+    // measured inline-draft create flow: EA1 the no-dialog/
+    // no-POST-until-Save shape, EA1b the X-discard leg, EA1c the
+    // empty-title hand-guard leg, EA3 the empty-state placement —
+    // see docs/remediation-plan-session177.md; the unit census stays
+    // 1743 — no new seam, the draft is view state).
+    expect(certSource).toContain("Expected: 158 + 215 + 101 + 95 + 89 = 658");
   });
 
   it("propagates a failing chunk's exit code (never a green cert on a red run)", () => {

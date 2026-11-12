@@ -1,13 +1,18 @@
-# StudyFlow (Omni-Study) — Master Project Architecture Document (PAD) v1.3.84
+# StudyFlow (Omni-Study) — Master Project Architecture Document (PAD) v1.3.85
 
 **Classification:** Internal Engineering Reference
 **Status:** DEFINITIVE, PRODUCTION-LOCKED BLUEPRINT
 **Companion Documents:** `README.md` (user-facing), `AGENTS.md` (agent quick-reference), `CLAUDE.md` (agent operating conventions), `docs/Tailwind-V4-Validation-Report.md` (parity trap log)
-**Last Updated:** 2026-11-11
+**Last Updated:** 2026-11-12
 **Audience:** Senior Engineers, Tech Leads, DevOps, Onboarding Engineers, and AI Coding Agents
 **Rule:** Every architectural decision in this document traces to a specific rationale. Nothing is here "because it's popular."
 
 ---
+
+#### Revision Block — v1.3.85 (Session-177 / Batch EA, Cycle 127)
+
+- `[SR]` Current test census anchor (the v1.2.0 convention, re-anchored): **1743/1743 Vitest unit** (52 files — UNCHANGED this cycle: no new seam, the inline draft is view state and the wire's createNote POST/NoteInput model is untouched; the hue-tokens consumer census anchors re-anchored 784 → 871 as the port added lines above the sites — tripped as designed). The e2e census moves **654 → 658** (the 5-chunk cold map 158+215+101+95+89 — chunk 2 +4 [the S177/EA notes create-flow port pins in parity-session7: EA1 the inline-draft shape pin — NO dialog, NO POST until the explicit Save, exactly ONE POST on Save, the row lands, the editor continues, zero-residue cleanup; EA1b the X-discard leg — no POST, no row, the pane state restored; EA1c the empty-title hand-guard leg — the DA2 human copy inline, no POST, the draft stays open (the reference's measured SILENT no-op recorded as the clone's superset); EA3 the empty-state placement pin — the routed-empty-GET form, the empty state scoped to the LIST pane with the "New Note" CTA, the right pane's own no-selection state, rendered bare]) — census 2401 green.
+- `[AR]` The notes create-flow port (§ the views catalog): the reference's measured INLINE-DRAFT create flow shipped — "New Note" opens the draft editor directly (no dialog, no POST until the explicit Save — the measured no-autosave-during-draft contract: no network save after 7s of title+body typing), the draft anatomy ports (the title input "Note title..." + the notebook select w-32 with the "None" default + the gradient Save h-9 + the X discard + the Font row + the tag row with the tags landing in the create POST + the white rounded-2xl Quill card keyed by the draft sequence), the X discards (no POST, no row, the pane state restored), and the EMPTY-STATE PLACEMENT (the reference's empty state lives in the LEFT list pane — the 80×80 tile + "No notes yet" + the measured SHORT hint "Create your first note" + the "New Note" gradient CTA; the right pane carries its own no-selection state — "Select a note" + "Choose a note from the sidebar or create a new one" — rendered bare). The create-only name dialog RETIRES for notes (the notebook family keeps its own create/rename dialog); the six dialog-flow create-helper pin sites re-anchored to the draft flow (the port-follows-the-measurement doctrine). **The never-measured surfaces recorded as the S178+ ledger** (each a schema feature, one rotation's worth apiece, the full measured inventory in the S177 plan §1): the view/edit MODE split (the reference's editor opens in VIEW mode — the disabled title + the [pin][palette][Edit][trash] row + the read-only prose body; the trash deletes DIRECTLY with no confirm), the PIN feature, the note COLOR palette (SEVEN 32px swatches — the white default + six pastels, tinting the body card), the "Attach File" row, and the CODING notes (the dropdown's third item — a language badge + a 14-option language select + a TEXTAREA body "Write your code notes here..." instead of Quill).
 
 #### Revision Block — v1.3.84 (Session-176 / Batch DZ, Cycle 126)
 
