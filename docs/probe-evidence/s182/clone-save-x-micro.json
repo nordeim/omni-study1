@@ -1,0 +1,39 @@
+{
+  "cloneMicro": {
+    "saveBtn": {
+      "cls": "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 sf-gradient sf-gradient-shadow text-sf-primary-foreground py-2 sf-gradient-shadow h-9 px-4",
+      "w": 90,
+      "h": 36,
+      "px": "16px",
+      "py": "8px",
+      "gap": "8px",
+      "fontSize": "14px",
+      "border": "0px solid rgb(229, 231, 235)",
+      "letterSpacing": "normal",
+      "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto,"
+    },
+    "saveKids": [
+      {
+        "svg": true,
+        "w": 16
+      },
+      {
+        "text": "Save",
+        "w": 0
+      }
+    ],
+    "saveTextW": 58,
+    "xBtn": {
+      "cls": "flex h-9 items-center justify-center rounded-md border border-input bg-background px-4 text-slate-500 transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:ring-2 focus-visible:ring-sf-primary/40 focus-visible:outline-none dark:text-slate-400",
+      "w": 50,
+      "h": 36,
+      "px": "16px",
+      "py": "0px",
+      "gap": "normal",
+      "fontSize": "16px",
+      "border": "1px solid rgb(229, 231, 235)",
+      "letterSpacing": "normal",
+      "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto,"
+    }
+  }
+}

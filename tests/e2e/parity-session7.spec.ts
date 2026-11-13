@@ -3926,4 +3926,182 @@ test.describe("S181/EE · the notes tag-row family port", () => {
     const restore = await page.request.patch("/api/settings/preferences", { data: { themeMode: "light" } });
     expect(restore.ok()).toBe(true);
   });
+
+  // ---- The S182/EF block: the header-row family port -----------------------
+  // The reference's measured anatomy (2026-11-13, probes s182-rows{,2,3,4}):
+  // the title row and the notebook row are ONE header row —
+  // `flex items-center justify-between mb-4` — with the title input LEFT
+  // (flex-1) and [notebook select][palette][Save][X] RIGHT (shrink-0). The
+  // row's mb-4 IS the 16px gap to the Font row. The Save icon carries its
+  // own mr-2 ON TOP of the Button base's gap-2 (98 = 32px + 16 + 8 + 8 +
+  // 34); the X is the GHOST anatomy (borderless, 48×36, 14px/500). The
+  // title input is the platform's shared Input base with py-1 + the
+  // override tail (border-0 px-0 text-xl font-bold md:text-sm — 20px bold
+  // below md); computed px 0.
+
+  const HEADER_WALK = `(() => {
+    const pane = document.querySelector('[aria-label="Note editor pane"]') ?? document.body;
+    const titleInput = [...pane.querySelectorAll("input")].find((i) => (i.placeholder || "").toLowerCase().includes("title")) ?? null;
+    // The header row: the title input's ancestor row carrying justify-between
+    // (the S182 walk-up fix — the s181 probes' flex-wrap walk found nothing:
+    // the header row does not carry flex-wrap).
+    let headerRow = titleInput ? titleInput.parentElement : null;
+    while (headerRow && !(headerRow.className && String(headerRow.className).includes("justify-between"))) headerRow = headerRow.parentElement;
+    const fontRow = [...pane.querySelectorAll("div")].find((d) => (d.textContent ?? "").trim().startsWith("Font:")) ?? null;
+    const saveBtn = [...pane.querySelectorAll("button")].find((b) => (b.textContent ?? "").trim() === "Save") ?? null;
+    const saveIcon = saveBtn ? saveBtn.querySelector("svg") : null;
+    const xBtn = [...pane.querySelectorAll("button")].find((b) => b.querySelector("svg.lucide-x")) ?? null;
+    const gap = headerRow && fontRow ? Math.round(fontRow.getBoundingClientRect().y - (headerRow.getBoundingClientRect().y + headerRow.getBoundingClientRect().height)) : null;
+    return {
+      headerRowCls: headerRow ? String(headerRow.className) : null,
+      headerRowMb: headerRow ? getComputedStyle(headerRow).marginBottom : null,
+      headerToFontGap: gap,
+      titleInput: titleInput ? {
+        px: getComputedStyle(titleInput).paddingLeft,
+        py: getComputedStyle(titleInput).paddingTop,
+        fontSize: getComputedStyle(titleInput).fontSize,
+        weight: getComputedStyle(titleInput).fontWeight,
+        w: Math.round(titleInput.getBoundingClientRect().width),
+        h: Math.round(titleInput.getBoundingClientRect().height),
+        // 500 chars: tailwind-merge appends the per-usage overrides at the
+        // tail of the merged class string — the S182 pin bug (the 200-char
+        // slice hid the override tail; the merged string runs ~438 chars:
+        // text-xl/md:text-sm live past 400).
+        cls: String(titleInput.className).slice(0, 500),
+      } : null,
+      saveBtn: saveBtn ? {
+        w: Math.round(saveBtn.getBoundingClientRect().width),
+        h: Math.round(saveBtn.getBoundingClientRect().height),
+        px: getComputedStyle(saveBtn).paddingLeft,
+        border: getComputedStyle(saveBtn).borderTopWidth,
+        iconCls: saveIcon ? String(saveIcon.className.baseVal) : null,
+      } : null,
+      xBtn: xBtn ? {
+        w: Math.round(xBtn.getBoundingClientRect().width),
+        h: Math.round(xBtn.getBoundingClientRect().height),
+        border: getComputedStyle(xBtn).borderTopWidth,
+        fontSize: getComputedStyle(xBtn).fontSize,
+      } : null,
+    };
+  })()`;
+
+  test("EF1: the draft header row — justify-between + mb-4, the 16px gap to the Font row", async ({ page }) => {
+    await openDraft(page);
+    const header = (await page.evaluate(HEADER_WALK)) as {
+      headerRowCls: string | null; headerRowMb: string | null; headerToFontGap: number | null;
+    };
+    // Class level: the reference's row verbatim.
+    expect(header.headerRowCls).toContain("justify-between");
+    expect(header.headerRowCls).toContain("mb-4");
+    // Computed level: the margin axis + the gap (the pre-fix row renders the
+    // Font row FLUSH — gap 0).
+    expect(header.headerRowMb).toBe("16px");
+    expect(header.headerToFontGap).toBeGreaterThanOrEqual(15);
+    expect(header.headerToFontGap).toBeLessThanOrEqual(17);
+  });
+
+  test("EF2: the draft title input — the shared-Input anatomy (py-1, px-0, 20px bold below md)", async ({ page }) => {
+    await openDraft(page);
+    const header = (await page.evaluate(HEADER_WALK)) as {
+      titleInput: { px: string; py: string; fontSize: string; weight: string; w: number; h: number; cls: string } | null;
+    };
+    const input = header.titleInput;
+    expect(input).not.toBeNull();
+    // The measured reference: px 0 (no horizontal padding), py 4 (the base's
+    // py-1), 14px/700 at desktop, the shared-Input class (the bespoke slate
+    // tokens drop).
+    expect(input!.px).toBe("0px");
+    expect(input!.py).toBe("4px");
+    expect(input!.fontSize).toBe("14px");
+    expect(input!.weight).toBe("700");
+    expect(input!.h).toBe(36); // h-9
+    expect(input!.cls).toContain("text-foreground"); // the shared Input base
+    expect(input!.cls).toContain("text-xl"); // the mobile 20px source
+    expect(input!.cls).toContain("md:text-sm");
+    // The mobile leg: below md the reference renders the title at 20px
+    // (text-xl <md — measured class list; the clone's old static text-sm
+    // rendered 14px on mobile — the S16 mobile-only-gap lesson).
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.waitForTimeout(400);
+    const mobileSize = await page.evaluate(() => {
+      const pane = document.querySelector('[aria-label="Note editor pane"]') ?? document.body;
+      const titleInput = [...pane.querySelectorAll("input")].find((i) => (i.placeholder || "").toLowerCase().includes("title"));
+      return titleInput ? getComputedStyle(titleInput).fontSize : null;
+    });
+    expect(mobileSize).toBe("20px");
+  });
+
+  test("EF3: the Save button — the icon's own mr-2 lands the measured 98px", async ({ page }) => {
+    await openDraft(page);
+    const header = (await page.evaluate(HEADER_WALK)) as {
+      saveBtn: { w: number; h: number; px: string; border: string; iconCls: string | null } | null;
+    };
+    const save = header.saveBtn;
+    expect(save).not.toBeNull();
+    // The measured reference: 98 = px-4 (16×2) + icon 16 + the icon's OWN
+    // mr-2 (8) + the base gap-2 (8) + the "Save" text 34. The pre-fix clone
+    // computed 90 (no mr-2).
+    expect(save!.w).toBeGreaterThanOrEqual(96);
+    expect(save!.w).toBeLessThanOrEqual(100);
+    expect(save!.h).toBe(36);
+    expect(save!.px).toBe("16px");
+    expect(save!.border).toBe("0px");
+    expect(save!.iconCls).toContain("mr-2");
+  });
+
+  test("EF4: the draft X — the ghost anatomy (borderless, 48×36, 14px)", async ({ page }) => {
+    await openDraft(page);
+    const header = (await page.evaluate(HEADER_WALK)) as {
+      xBtn: { w: number; h: number; border: string; fontSize: string } | null;
+    };
+    const x = header.xBtn;
+    expect(x).not.toBeNull();
+    // The measured reference: the GHOST shape — no border (the pre-fix
+    // bespoke button carried border border-input → 50px), px-4 py-2, 14px.
+    expect(x!.border).toBe("0px");
+    expect(x!.w).toBeGreaterThanOrEqual(47);
+    expect(x!.w).toBeLessThanOrEqual(49);
+    expect(x!.h).toBe(36);
+    expect(x!.fontSize).toBe("14px");
+    // The a11y superset stays (the reference's own X is unlabeled).
+    await expect(page.getByRole("button", { name: "Discard new note" })).toBeVisible();
+  });
+
+  test("EF5: the edit surface's header — the same row contract + the input's px-0 + Save 98 + X ghost", async ({ page }) => {
+    await openEditSurface(page);
+    const header = (await page.evaluate(HEADER_WALK)) as {
+      headerRowCls: string | null; headerRowMb: string | null; headerToFontGap: number | null;
+      titleInput: { px: string; py: string; fontSize: string; weight: string } | null;
+      saveBtn: { w: number; px: string; border: string; iconCls: string | null } | null;
+      xBtn: { w: number; border: string } | null;
+    };
+    // The row contract (the pre-fix edit row renders the Font row FLUSH).
+    expect(header.headerRowCls).toContain("justify-between");
+    expect(header.headerRowCls).toContain("mb-4");
+    expect(header.headerRowMb).toBe("16px");
+    expect(header.headerToFontGap).toBeGreaterThanOrEqual(15);
+    expect(header.headerToFontGap).toBeLessThanOrEqual(17);
+    // The input: the reference's px-0 (the pre-fix NoteTitleInput kept the
+    // base's px-3 — a 12px text-position drift), py-1, 14px/700 desktop.
+    expect(header.titleInput!.px).toBe("0px");
+    expect(header.titleInput!.py).toBe("4px");
+    expect(header.titleInput!.fontSize).toBe("14px");
+    expect(header.titleInput!.weight).toBe("700");
+    // The Save + X (the pre-fix edit X carried the outline border).
+    expect(header.saveBtn!.w).toBeGreaterThanOrEqual(96);
+    expect(header.saveBtn!.w).toBeLessThanOrEqual(100);
+    expect(header.saveBtn!.iconCls).toContain("mr-2");
+    expect(header.xBtn!.border).toBe("0px");
+    expect(header.xBtn!.w).toBeLessThanOrEqual(49);
+  });
+
+  test("EF6: the Files header subtitle reads the reference's measured copy", async ({ page }) => {
+    await page.goto("/Files");
+    await hydrated(page);
+    // The reference's live copy (measured 2026-11-13, probe s182-rows5): the
+    // old "Your study materials" was the S131-era record; the reference's
+    // copy has since drifted (its 44+ recorded cycles).
+    await expect(page.getByText("Store and organize your documents", { exact: true })).toBeVisible();
+    await expect(page.getByText("Your study materials")).toHaveCount(0);
+  });
 });

@@ -1,0 +1,59 @@
+{
+  "editSurface": {
+    "headerRow": {
+      "cls": "flex items-center gap-2",
+      "w": 772,
+      "h": 36,
+      "y": 32,
+      "px": "0px",
+      "py": "0px",
+      "mt": "0px",
+      "mb": "0px",
+      "border": "0px",
+      "fontSize": "16px",
+      "weight": "400"
+    },
+    "titleInput": {
+      "cls": "flex w-full rounded-md border border-input px-3 py-1 text-foreground transition-colors placeholder:text-muted-foreground focus-visible:outline-none fo",
+      "w": 436,
+      "h": 36,
+      "y": 32,
+      "px": "12px",
+      "py": "4px",
+      "mt": "0px",
+      "mb": "0px",
+      "border": "0px",
+      "fontSize": "14px",
+      "weight": "700",
+      "fullCls": "flex w-full rounded-md border border-input px-3 py-1 text-foreground transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:cursor-not-allowed disabled:opacity-50 file:border-0 file:bg-transparent file:text-sm file:font-medium h-9 flex-1 border-none bg-transparent text-sm font-bold shadow-none focus-visible:ring-0 dark:bg-transparent"
+    },
+    "saveBtn": {
+      "cls": "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visi",
+      "w": 90,
+      "h": 36,
+      "y": 32,
+      "px": "16px",
+      "py": "8px",
+      "mt": "0px",
+      "mb": "0px",
+      "border": "0px",
+      "fontSize": "14px",
+      "weight": "500"
+    },
+    "xBtn": {
+      "cls": "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visi",
+      "w": 50,
+      "h": 36,
+      "y": 32,
+      "px": "16px",
+      "py": "8px",
+      "mt": "0px",
+      "mb": "0px",
+      "border": "1px",
+      "fontSize": "14px",
+      "weight": "500"
+    },
+    "fontRowY": 68,
+    "headerToFontGap": 0
+  }
+}

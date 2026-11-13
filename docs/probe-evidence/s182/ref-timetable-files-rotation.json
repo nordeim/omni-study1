@@ -1,0 +1,107 @@
+{
+  "timetable": {
+    "headings": [
+      {
+        "text": "Timetable",
+        "cls": "text-2xl font-bold text-slate-800 flex items-center gap-2"
+      },
+      {
+        "text": "November 2026",
+        "cls": "font-semibold text-slate-700"
+      },
+      {
+        "text": "My Classes",
+        "cls": "text-lg font-bold text-slate-800"
+      }
+    ],
+    "buttons": [
+      {
+        "text": "All Weeks",
+        "cls": "flex h-9 items-center justify-between whitespace-nowrap rounded-md border border-input bg-transparen",
+        "ariaLabel": null
+      },
+      {
+        "text": "Grid Builder",
+        "cls": "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium trans",
+        "ariaLabel": null
+      },
+      {
+        "text": "Add Class",
+        "cls": "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium trans",
+        "ariaLabel": null
+      },
+      {
+        "text": "Sun8Sunday0 classes",
+        "cls": "w-full flex items-center justify-between p-4 transition-colors hover:bg-slate-50",
+        "ariaLabel": null
+      },
+      {
+        "text": "Mon9Monday0 classes",
+        "cls": "w-full flex items-center justify-between p-4 transition-colors hover:bg-slate-50",
+        "ariaLabel": null
+      },
+      {
+        "text": "Tue10Tuesday0 classes",
+        "cls": "w-full flex items-center justify-between p-4 transition-colors hover:bg-slate-50",
+        "ariaLabel": null
+      },
+      {
+        "text": "Wed11Wednesday0 classes",
+        "cls": "w-full flex items-center justify-between p-4 transition-colors hover:bg-slate-50",
+        "ariaLabel": null
+      },
+      {
+        "text": "Thu12Thursday0 classes",
+        "cls": "w-full flex items-center justify-between p-4 transition-colors hover:bg-slate-50",
+        "ariaLabel": null
+      },
+      {
+        "text": "Fri13Friday0 classes",
+        "cls": "w-full flex items-center justify-between p-4 transition-colors bg-violet-50",
+        "ariaLabel": null
+      },
+      {
+        "text": "Sat14Saturday0 classes",
+        "cls": "w-full flex items-center justify-between p-4 transition-colors hover:bg-slate-50",
+        "ariaLabel": null
+      }
+    ],
+    "emptyState": null,
+    "bodySnippet": "TimetableManage your class scheduleAll WeeksGrid Builder Add ClassNovember 2026Nov 8 - Nov 14Sun8Sunday0 classesMon9Monday0 classesTue10Tuesday0 classesWed11Wednesday0 classesThu12Thursday0 classesFri13Friday0 classesSat14Saturday0 classesTimeSunday8Monday9Tuesday10Wednesday11Thursday12Friday13Satur"
+  },
+  "files": {
+    "headings": [
+      {
+        "text": "Files",
+        "cls": "text-2xl font-bold text-slate-800 flex items-center gap-2"
+      },
+      {
+        "text": "No files yet",
+        "cls": "text-xl font-semibold text-slate-800 mb-2"
+      }
+    ],
+    "buttons": [
+      {
+        "text": "New Folder",
+        "cls": "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium trans",
+        "ariaLabel": null
+      },
+      {
+        "text": "All Files",
+        "cls": "flex items-center gap-1 hover:text-violet-600 transition-colors text-slate-800 font-medium",
+        "ariaLabel": null
+      },
+      {
+        "text": "All Types",
+        "cls": "flex h-9 items-center justify-between whitespace-nowrap rounded-md border border-input bg-transparen",
+        "ariaLabel": null
+      }
+    ],
+    "emptyState": {
+      "cls": "flex flex-col items-center justify-center py-16 px-4 text-center",
+      "text": "No files yetUpload your first file to get started",
+      "svgCls": "lucide lucide-folder-open w-10 h-10 text-violet-500"
+    },
+    "bodySnippet": "FilesStore and organize your documents New FolderUploadAll FilesAll TypesFilesNo files yetUpload your first file to get started"
+  }
+}

@@ -172,7 +172,11 @@ const NoteTitleInput = React.forwardRef<NoteTitleInputHandle, {
           flush();
         }, TITLE_DEBOUNCE_MS);
       }}
-      className="h-9 flex-1 border-none bg-transparent text-sm font-bold shadow-none focus-visible:ring-0 dark:bg-transparent"
+      // S182/EF2 (measured): px-0 kills the base's px-3 (the reference's
+      // computed px 0 — the old 12px text-position drift) + text-xl
+      // md:text-sm gives the reference's mobile 20px bold title (the
+      // measured override tail).
+      className="h-9 min-w-0 flex-1 border-none bg-transparent px-0 text-xl font-bold shadow-none focus-visible:ring-0 md:text-sm dark:bg-transparent"
     />
   );
 });
@@ -1395,10 +1399,25 @@ export function NotesView() {
              restores whatever was underneath (the measured discard
              returns the pane to its prior state). */
           <div className="flex min-h-0 flex-1 flex-col">
-            {/* Title row (S177/EA1 measured): the draft title input + the
-                [notebook select][Save][X discard] action row. */}
-            <div className="flex items-center gap-2">
-              <input
+            {/* Header row (S182/EF1 measured): the reference's ONE row —
+                `flex items-center justify-between mb-4` — the title input
+                LEFT (flex-1), [notebook select][palette][Save][X] RIGHT
+                (shrink-0); the row's mb-4 IS the 16px gap to the Font row
+                (the s181 probes' titleRow leg walked up looking for
+                flex-wrap and found nothing — the header row never carried
+                it; the S182 probe family records the full ancestor chain). */}
+            <div className="flex items-center justify-between mb-4">
+              {/* S182/EF2 (measured): the reference's title input is its
+                  platform's shared Input base (py-1, text-foreground,
+                  placeholder:text-muted-foreground) with the override tail
+                  `text-xl font-bold border-0 px-0 focus-visible:ring-0
+                  flex-1 min-w-0 md:text-sm` — px 0 (no horizontal padding),
+                  14px/700 at ≥md, 20px/700 below md (text-xl). The bespoke
+                  slate tokens + placeholder:font-normal drop (the reference
+                  renders the bold placeholder; its colors are the base
+                  tokens — the dark-mode computed rgb(250,250,250)
+                  verified identical). */}
+              <Input
                 type="text"
                 aria-label="Note title"
                 placeholder="Note title..."
@@ -1406,7 +1425,7 @@ export function NotesView() {
                 onChange={(e) =>
                   setDraft((d) => (d ? { ...d, title: e.target.value } : d))
                 }
-                className="h-9 min-w-0 flex-1 rounded-md border-0 bg-transparent px-0 text-sm font-bold text-slate-900 outline-none placeholder:font-normal placeholder:text-slate-400 focus-visible:outline-none dark:text-slate-100 dark:placeholder:text-slate-500"
+                className="min-w-0 flex-1 border-0 px-0 text-xl font-bold focus-visible:ring-0 md:text-sm"
               />
               <div className="flex shrink-0 items-center gap-2">
                 {/* S179/EC1 (measured A-2): the CODING draft's Language
@@ -1469,17 +1488,28 @@ export function NotesView() {
                   disabled={busy}
                   onClick={saveDraft}
                 >
-                  <Save className="size-4" strokeWidth={2} />
+                  {/* S182/EF3 (measured): the reference's Save icon carries
+                      its OWN mr-2 on top of the Button base's gap-2 —
+                      98 = px-4 (16×2) + icon 16 + mr-2 8 + gap-2 8 +
+                      "Save" 34. The pre-port clone computed 90. */}
+                  <Save className="mr-2 size-4" strokeWidth={2} />
                   {busy ? "Saving…" : "Save"}
                 </Button>
-                <button
+                {/* S182/EF4 (measured): the X is the reference's GHOST
+                    anatomy — borderless (the S178-era "icon-only outline"
+                    record is superseded by the 2026-11-13 live measurement:
+                    border 0px, px-4 py-2, 14px/500, 48×36), no background.
+                    The aria-label stays (the clone's a11y superset over the
+                    reference's unlabeled icon button). */}
+                <Button
                   type="button"
+                  variant="ghost"
+                  className="h-9 px-4"
                   aria-label="Discard new note"
                   onClick={() => setDraft(null)}
-                  className="flex h-9 items-center justify-center rounded-md border border-input bg-background px-4 text-slate-500 transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:ring-2 focus-visible:ring-sf-primary/40 focus-visible:outline-none dark:text-slate-400"
                 >
                   <X className="size-4" strokeWidth={2} />
-                </button>
+                </Button>
               </div>
             </div>
             {draftError && (
@@ -1813,9 +1843,11 @@ export function NotesView() {
              Font row + the tag row + the editor card (the S77/AD5/AD6
              measured anatomy) ride below unchanged. */
           <div className="flex min-h-0 flex-1 flex-col">
-            {/* Title row (S77/AD3 measured): 14px/700 title + the edit
-                toolbar. */}
-            <div className="flex items-center gap-2">
+            {/* Header row (S182/EF5 measured): the reference's ONE row —
+                `flex items-center justify-between mb-4` — the row's mb-4
+                IS the 16px gap to the Font row (the s181 probes' walk-up
+                fix, applied to both surfaces). */}
+            <div className="flex items-center justify-between mb-4">
               <NoteTitleInput
                 ref={titleInputRef}
                 key={selected.id}
@@ -1893,21 +1925,26 @@ export function NotesView() {
                   className="sf-gradient-shadow h-9 px-4"
                   onClick={saveNow}
                 >
-                  <Save className="size-4" strokeWidth={2} />
+                  {/* S182/EF3 (measured): the icon's OWN mr-2 on top of the
+                      base gap-2 — the measured 98px (the pre-port 90). */}
+                  <Save className="mr-2 size-4" strokeWidth={2} />
                   Save
                 </Button>
-                {/* S178/EB2: the X exit (the measured 48×36 icon-only
-                    outline). The reference's X is the measured LOCAL-only
-                    exit (the net probe: 0 PUTs — the edited content
-                    survives in view from local state); the clone's X
+                {/* S178/EB2: the X exit. The reference's X is the measured
+                    LOCAL-only exit (the net probe: 0 PUTs — the edited
+                    content survives in view from local state); the clone's X
                     rides its autosave — the content is already server-
                     current (the network-measured SUPERSET — the S77/AD4
                     record upgraded from reasoned to measured; the EB3 pin
                     owns the divergence). The unmount-flush fires the
-                    pending title PATCH (the BW3 mechanism). */}
+                    pending title PATCH (the BW3 mechanism). S182/EF4
+                    (measured): the outline variant ports to the reference's
+                    current GHOST anatomy (borderless, 48×36, 14px/500 —
+                    the S178 "icon-only outline" record superseded by the
+                    2026-11-13 live measurement). */}
                 <Button
                   type="button"
-                  variant="outline"
+                  variant="ghost"
                   aria-label="Exit edit mode"
                   className="h-9 px-4"
                   onClick={() => setEditing(false)}

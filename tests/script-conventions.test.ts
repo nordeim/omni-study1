@@ -305,7 +305,21 @@ describe("the chunked cert runner's truth contract (S128/CC2)", () => {
     // stays neutral-800 (the dark:bg-neutral-700 drift closes) — see
     // docs/remediation-plan-session181.md; the unit census holds
     // 1779 [54 files] — a view-layer port, no new seam.
-    expect(certSource).toContain("Expected: 158 + 235 + 101 + 95 + 89 = 678");
+    // S182/EF re-tag: 678 → 684, chunk 2 +6 (the S182/EF header-row
+    // family pins in parity-session7 — EF1 the header row's
+    // justify-between + mb-4 (the ONE row carrying the title input +
+    // [notebook][palette][Save][X], the row's mb-4 IS the 16px gap to
+    // the Font row, both surfaces), EF2 the draft title input's
+    // shared-Input anatomy (py-1, px-0, the 20px-bold-below-md mobile
+    // leg — text-xl md:text-sm), EF3 the Save icon's own mr-2 on top
+    // of the base gap-2 (the measured 98px), EF4 the draft X's ghost
+    // anatomy (borderless 48×36 — the S178 outline record superseded
+    // by the live measurement), EF5 the edit surface's same contract
+    // (the input's px-0 closing the 12px text-position drift), EF6 the
+    // Files subtitle copy port — see docs/remediation-plan-session182.md;
+    // the unit census holds 1779 [54 files] — a view-layer port, no new
+    // seam; two hue-tokens register anchors re-anchored 408 → 412).
+    expect(certSource).toContain("Expected: 158 + 241 + 101 + 95 + 89 = 684");
   });
 
   it("propagates a failing chunk's exit code (never a green cert on a red run)", () => {

@@ -385,7 +385,10 @@ export function FilesView() {
     <div className="flex flex-col gap-6">
       <ViewHeader
         title="Files"
-        subtitle="Your study materials"
+        // S182/EF6 (measured 2026-11-13, probe s182-rows5): the reference's
+        // live subtitle copy — the S131-era "Your study materials" record
+        // superseded (the reference's 44+ recorded copy drift cycles).
+        subtitle="Store and organize your documents"
         icon={FolderOpen}
         actions={
           // flex-wrap (S78/AE10): the view-mode + New Folder + Upload row

@@ -1,0 +1,64 @@
+{
+  "refBtnKids": {
+    "saveBtn": {
+      "w": 98,
+      "px": "16px",
+      "gap": "8px",
+      "fontSize": "14px",
+      "weight": "500",
+      "letterSpacing": "normal",
+      "fontFamily": "ui-sans-serif, system-ui, sans-serif, \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Se",
+      "kids": [
+        {
+          "svg": true,
+          "cls": "lucide lucide-save w-4 h-4 mr-2",
+          "w": 16,
+          "h": 16
+        },
+        {
+          "text": " Save"
+        }
+      ],
+      "rangeW": 66
+    },
+    "xBtn": {
+      "w": 48,
+      "px": "16px",
+      "gap": "8px",
+      "fontSize": "14px",
+      "weight": "500",
+      "letterSpacing": "normal",
+      "fontFamily": "ui-sans-serif, system-ui, sans-serif, \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Se",
+      "kids": [
+        {
+          "svg": true,
+          "cls": "lucide lucide-x w-4 h-4",
+          "w": 16,
+          "h": 16
+        }
+      ],
+      "rangeW": 16
+    },
+    "paletteBtn": {
+      "w": 36,
+      "px": "0px",
+      "gap": "8px",
+      "fontSize": "14px",
+      "weight": "500",
+      "letterSpacing": "normal",
+      "fontFamily": "ui-sans-serif, system-ui, sans-serif, \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Se",
+      "kids": [
+        {
+          "svg": true,
+          "cls": "lucide lucide-palette w-4 h-4",
+          "w": 16,
+          "h": 16
+        }
+      ],
+      "rangeW": 16
+    }
+  },
+  "residue": {
+    "noNotesYet": true
+  }
+}

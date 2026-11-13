@@ -1,0 +1,167 @@
+{
+  "timetable": {
+    "headings": [
+      {
+        "text": "Timetable",
+        "cls": "text-2xl font-bold text-slate-800 dark:text-slate-100"
+      },
+      {
+        "text": "November 2026",
+        "cls": "font-semibold text-slate-700 dark:text-slate-200"
+      },
+      {
+        "text": "My Classes",
+        "cls": "text-lg font-bold text-slate-800 dark:text-slate-100"
+      },
+      {
+        "text": "Calculus II",
+        "cls": "font-semibold text-slate-800 dark:text-slate-100"
+      },
+      {
+        "text": "Physics",
+        "cls": "font-semibold text-slate-800 dark:text-slate-100"
+      },
+      {
+        "text": "World History",
+        "cls": "font-semibold text-slate-800 dark:text-slate-100"
+      },
+      {
+        "text": "English Literature",
+        "cls": "font-semibold text-slate-800 dark:text-slate-100"
+      },
+      {
+        "text": "Chemistry Lab",
+        "cls": "font-semibold text-slate-800 dark:text-slate-100"
+      }
+    ],
+    "buttons": [
+      {
+        "text": "All Weeks",
+        "cls": "flex items-center justify-between gap-2 whitespace-nowrap rounded-md border border-input bg-transpar",
+        "ariaLabel": "Week filter"
+      },
+      {
+        "text": "Grid Builder",
+        "cls": "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium trans",
+        "ariaLabel": null
+      },
+      {
+        "text": "Add Class",
+        "cls": "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium trans",
+        "ariaLabel": null
+      },
+      {
+        "text": "",
+        "cls": "inline-flex items-center justify-center gap-2 whitespace-nowrap text-sm font-medium transition-color",
+        "ariaLabel": "Previous week"
+      },
+      {
+        "text": "",
+        "cls": "inline-flex items-center justify-center gap-2 whitespace-nowrap text-sm font-medium transition-color",
+        "ariaLabel": "Next week"
+      },
+      {
+        "text": "Calculus II09:00–10:30 · M201E",
+        "cls": "group absolute inset-x-1 rounded-lg border-l-4 p-2 text-left text-xs outline-none focus-visible:ring",
+        "ariaLabel": null
+      },
+      {
+        "text": "World History09:00–10:30 · H14",
+        "cls": "group absolute inset-x-1 rounded-lg border-l-4 p-2 text-left text-xs outline-none focus-visible:ring",
+        "ariaLabel": null
+      },
+      {
+        "text": "Physics11:00–12:30 · P105Edit ",
+        "cls": "group absolute inset-x-1 rounded-lg border-l-4 p-2 text-left text-xs outline-none focus-visible:ring",
+        "ariaLabel": null
+      },
+      {
+        "text": "English Literature13:00–14:30 ",
+        "cls": "group absolute inset-x-1 rounded-lg border-l-4 p-2 text-left text-xs outline-none focus-visible:ring",
+        "ariaLabel": null
+      },
+      {
+        "text": "Chemistry Lab14:00–16:00 · Sci",
+        "cls": "group absolute inset-x-1 rounded-lg border-l-4 p-2 text-left text-xs outline-none focus-visible:ring",
+        "ariaLabel": null
+      },
+      {
+        "text": "8Sunday0 classes",
+        "cls": "flex w-full items-center gap-3 rounded-xl p-3 text-left",
+        "ariaLabel": null
+      },
+      {
+        "text": "9Monday1 class",
+        "cls": "flex w-full items-center gap-3 rounded-xl p-3 text-left",
+        "ariaLabel": null
+      },
+      {
+        "text": "10Tuesday1 class",
+        "cls": "flex w-full items-center gap-3 rounded-xl p-3 text-left",
+        "ariaLabel": null
+      },
+      {
+        "text": "11Wednesday1 class",
+        "cls": "flex w-full items-center gap-3 rounded-xl p-3 text-left",
+        "ariaLabel": null
+      }
+    ],
+    "emptyState": null,
+    "bodySnippet": "TimetableManage your class scheduleAll WeeksGrid BuilderAdd ClassNovember 2026Nov 8 - Nov 14Sunday8Monday9Tuesday10Wednesday11Thursday12Friday13Saturday147 AM8 AM9 AMCalculus II09:00–10:30 · M201Edit classWorld History09:00–10:30 · H14Edit class10 AM11 AMPhysics11:00–12:30 · P105Edit class12 PM1 PME"
+  },
+  "files": {
+    "headings": [
+      {
+        "text": "Files",
+        "cls": "flex items-center gap-2 font-bold text-slate-800 dark:text-slate-100 text-2xl"
+      },
+      {
+        "text": "No files yet",
+        "cls": "mt-4 text-xl font-semibold text-slate-800 dark:text-slate-100"
+      }
+    ],
+    "buttons": [
+      {
+        "text": "",
+        "cls": "flex size-8 items-center justify-center rounded-md outline-none focus-visible:ring-2 focus-visible:r",
+        "ariaLabel": "Grid view"
+      },
+      {
+        "text": "",
+        "cls": "flex size-8 items-center justify-center rounded-md outline-none focus-visible:ring-2 focus-visible:r",
+        "ariaLabel": "List view"
+      },
+      {
+        "text": "",
+        "cls": "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium trans",
+        "ariaLabel": "Add link"
+      },
+      {
+        "text": "New Folder",
+        "cls": "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium trans",
+        "ariaLabel": null
+      },
+      {
+        "text": "Upload",
+        "cls": "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium trans",
+        "ariaLabel": null
+      },
+      {
+        "text": "All Files",
+        "cls": "flex items-center gap-1 text-sm font-medium transition-colors text-sf-primary-strong",
+        "ariaLabel": null
+      },
+      {
+        "text": "Upload a file",
+        "cls": "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium trans",
+        "ariaLabel": null
+      }
+    ],
+    "emptyState": {
+      "cls": "flex flex-col items-center justify-center px-6 py-16 text-center",
+      "text": "No files yetUpload your first file to get started Upload a file",
+      "svgCls": "lucide lucide-folder-open size-10 text-sf-primary"
+    },
+    "bodySnippet": "FilesYour study materials New FolderUploadAll FilesNo files yetUpload your first file to get started Upload a file"
+  }
+}

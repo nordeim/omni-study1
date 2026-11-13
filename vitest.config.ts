@@ -2,6 +2,18 @@ import { defineConfig } from "vitest/config";
 import path from "node:path";
 
 // Unit-test layer for the pure domain seams — 54 files / 1779 tests
+// (re-anchored S182/EF — the notes header-row family port: the unit census
+// UNCHANGED at 1779 [a view-layer port, no new seam]; two hue-tokens
+// register anchors re-anchored 408 → 412 (the draft header-row comment
+// block added lines above the NoteListRow's selected-note row — tripped as
+// designed, the documented re-anchor class); the e2e census moves
+// 678 → 684: +6 the S182/EF pins in parity-session7 — EF1 the header row's
+// justify-between + mb-4 (the 16px gap to the Font row, both surfaces),
+// EF2 the draft title input's shared-Input anatomy (py-1, px-0, 20px bold
+// below md — the mobile leg), EF3 the Save icon's own mr-2 (the measured
+// 98px), EF4 the draft X's ghost anatomy (borderless 48×36), EF5 the edit
+// surface's header contract (the input's px-0 closing the 12px
+// text-position drift), EF6 the Files subtitle copy port.)
 // (re-anchored S181/EE — the notes tag-row family port: the unit census
 // UNCHANGED at 1779 [a view-layer port, no new seam — the tags ride the
 // S177-era noteSchema/POST/PATCH wire untouched; the e2e census moves

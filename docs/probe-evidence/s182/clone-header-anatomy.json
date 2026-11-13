@@ -1,0 +1,172 @@
+{
+  "cloneDraftAnatomy": {
+    "titleInput": {
+      "ph": "Note title...",
+      "cls": "h-9 min-w-0 flex-1 rounded-md border-0 bg-transparent px-0 text-sm font-bold text-slate-900 outline-none placeholder:font-normal placeholder:text-slate-400 focus-visible:outline-none dark:text-slate-1",
+      "geo": {
+        "y": 32,
+        "x": 636,
+        "w": 436,
+        "h": 36,
+        "mt": "0px",
+        "mb": "0px"
+      },
+      "fontSize": "14px",
+      "weight": "700",
+      "color": "rgb(15, 23, 42)",
+      "bg": "rgba(0, 0, 0, 0)",
+      "border": "0px solid rgb(229, 231, 235)",
+      "h": 36
+    },
+    "titleChain": [
+      {
+        "tag": "INPUT",
+        "cls": "h-9 min-w-0 flex-1 rounded-md border-0 bg-transparent px-0 text-sm font-bold text-slate-900 outline-none placeholder:font-normal placeholder:text-slate-400 focu",
+        "y": 32,
+        "x": 636,
+        "w": 436,
+        "h": 36,
+        "mt": "0px",
+        "mb": "0px",
+        "display": "block"
+      },
+      {
+        "tag": "DIV",
+        "cls": "flex items-center gap-2",
+        "y": 32,
+        "x": 636,
+        "w": 772,
+        "h": 36,
+        "mt": "0px",
+        "mb": "0px",
+        "display": "flex"
+      },
+      {
+        "tag": "DIV",
+        "cls": "flex min-h-0 flex-1 flex-col",
+        "y": 32,
+        "x": 636,
+        "w": 772,
+        "h": 772,
+        "mt": "0px",
+        "mb": "0px",
+        "display": "flex"
+      },
+      {
+        "tag": "DIV",
+        "cls": "flex min-w-0 flex-1 flex-col",
+        "y": 32,
+        "x": 636,
+        "w": 772,
+        "h": 772,
+        "mt": "0px",
+        "mb": "0px",
+        "display": "flex"
+      }
+    ],
+    "notebookTrigger": {
+      "text": "None",
+      "geo": {
+        "y": 32,
+        "x": 1080,
+        "w": 128,
+        "h": 36,
+        "mt": "0px",
+        "mb": "0px"
+      },
+      "cls": "flex items-center justify-between gap-2 whitespace-nowrap rounded-md border border-input bg-transparent px-3 py-2 text-sm text-foreground shadow-sm transition-colors placeholder:text-muted-foreground ",
+      "role": "combobox",
+      "ariaLabel": "New note notebook"
+    },
+    "notebookChain": [
+      {
+        "tag": "BUTTON",
+        "cls": "flex items-center justify-between gap-2 whitespace-nowrap rounded-md border border-input bg-transparent px-3 py-2 text-sm text-foreground shadow-sm transition-c",
+        "y": 32,
+        "x": 1080,
+        "w": 128,
+        "h": 36,
+        "mt": "0px",
+        "mb": "0px",
+        "display": "flex"
+      },
+      {
+        "tag": "DIV",
+        "cls": "flex shrink-0 items-center gap-2",
+        "y": 32,
+        "x": 1080,
+        "w": 328,
+        "h": 36,
+        "mt": "0px",
+        "mb": "0px",
+        "display": "flex"
+      },
+      {
+        "tag": "DIV",
+        "cls": "flex items-center gap-2",
+        "y": 32,
+        "x": 636,
+        "w": 772,
+        "h": 36,
+        "mt": "0px",
+        "mb": "0px",
+        "display": "flex"
+      },
+      {
+        "tag": "DIV",
+        "cls": "flex min-h-0 flex-1 flex-col",
+        "y": 32,
+        "x": 636,
+        "w": 772,
+        "h": 772,
+        "mt": "0px",
+        "mb": "0px",
+        "display": "flex"
+      }
+    ],
+    "paletteBtn": {
+      "geo": {
+        "y": 32,
+        "x": 1216,
+        "w": 36,
+        "h": 36,
+        "mt": "0px",
+        "mb": "0px"
+      },
+      "cls": "flex size-9 items-center justify-center rounded-md text-slate-500 outline-none transition-colors hover:bg-slate-100 hove"
+    },
+    "saveBtn": {
+      "geo": {
+        "y": 32,
+        "x": 1260,
+        "w": 90,
+        "h": 36,
+        "mt": "0px",
+        "mb": "0px"
+      },
+      "cls": "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2"
+    },
+    "xBtn": {
+      "geo": {
+        "y": 32,
+        "x": 1358,
+        "w": 50,
+        "h": 36,
+        "mt": "0px",
+        "mb": "0px"
+      },
+      "cls": "flex h-9 items-center justify-center rounded-md border border-input bg-background px-4 text-slate-500 transition-colors "
+    },
+    "fontRow": {
+      "geo": {
+        "y": 68,
+        "x": 636,
+        "w": 772,
+        "h": 56,
+        "mt": "0px",
+        "mb": "16px"
+      },
+      "cls": "flex items-center gap-3 mb-4 p-3 bg-slate-50 rounded-lg flex-wrap dark:bg-slate-800/50"
+    }
+  }
+}
