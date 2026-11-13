@@ -493,6 +493,7 @@ on the resumed tree). The deltas from §6's order:
       re-tags · `docs/session_230.md` · this §10/§11 · the worklog
       Session-190 entry.
 - [x] `worklog.md` updated + included in the final commit (§8).
-- [ ] The commit + the SSH-wrapper push to
-      `git@github.com:nordeim/omni-study1.git` on `main` (§6.8) —
-      ticked at the push-verified close (the e5d098d doctrine).
+- [x] The commit + the SSH-wrapper push to
+      `git@github.com:nordeim/omni-study1.git` on `main` (§6.8) — the
+      push verified (`737bbe4..79ee1a1` on `main`, the remote ref
+      re-queried equal to local HEAD, the tracking ref synced).
