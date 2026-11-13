@@ -1,4 +1,107 @@
-The workspace was reset — the S179 work from the previous session (uncommitted) is lost. The repo is at commit `737bbe4` (S178 close). I need to re-execute the S179 cycle: docs re-anchor → environment setup → re-create the remediation plan → re-implement (TDD) → verify → commit + push. Let me set up the task list.
+I'll start by internalizing the operating instructions and setting up the workspace. Let me create a task plan first, then execute it methodically.
+Fresh workspace. Cloning the repo now.
+Repo cloned successfully on `main`. Now reviewing the core documentation.
+Repo structure is large. Now reading the core documentation files.
+The docs are very large. Let me extract their structure via headers first, then read strategically.
+This is a mature project with 178+ sessions of history. Let me read the key actionable sections of AGENTS.md.
+The docs have extremely long lines causing output persistence. Let me wrap them for readability.
+Excellent context. Session 228 = completed S178 cycle; session_229 is the cycle transcript. Now reading the S178 remediation plan and worklog tail.
+Now let me read the key AGENTS.md sections (architecture, Tailwind v4 traps, testing quirks, conventions) and the S178 plan.
+The nested persistence is inefficient. Let me read specific smaller sections directly.
+Now let me set up the environment (the slowest part) while continuing doc review. First check bun availability.
+Bun install done (510 packages). Now setting up the DB and chromium in parallel.
+DB ready at `db/custom.db`. Now reading PAD §11 known issues and launching cold baseline gates.
+Docs digested. Now running the cold baseline gates (lint + typecheck + unit tests).
+Cold baseline reproduced exactly: lint ✓ · tsc ✓ · unit 1743/1743 (52 files). Now booting the dev server (reaper-proof recipe).
+Dev server healthy. Running the standing mobile drawer check (the operator's key mobile-nav watch).
+Drawer check GREEN — the 117th consecutive, no Tailwind v4 mobile-nav bug. Now validating codebase understanding on key files.
+Test infra verified (vitest 1743 ✓). Launching the production build in the background (needed for e2e), then probing the reference site.
+agent-browser CLI available. Logging into the reference site now.
+Reference dashboard captured. Now investigating the Notes editor surface (the S179 candidate axis — pin/palette features).
+Reference Notes is empty. Creating a note through the reference's own UI to measure the view-mode toolbar (pin/palette — the B-4/B-5 deferrals).
+Draft editor open. Filling the note and saving to measure the view-mode toolbar.
+View mode confirmed. Now measuring the pin/palette buttons (B-4/B-5) — the deferred feature axis.
+The view action row measured: [pin 36×36 lucide-pin][palette 36×36 lucide-palette][Edit 93×36][trash 50×36]. Now probing what pin/palette DO (the B-4/B-5 features).
+Palette popover: 7 swatches (white default + yellow/red/pink/violet/blue/emerald-100). Selecting yellow to see the note-color effect.
+Color feature confirmed (note row bg becomes yellow-100). Now testing the pin behavior.
+Pin toggles violet-500 fill. Creating a second note to verify pin sorting behavior.
+PINNED label confirmed in the list. The New Note button is now behind the [ref=e51] dropdown. Opening it.
+Major discovery: the Notes header dropdown has [New Note / **New Coding Note** / New Notebook] — the B-7 feature. Measuring the coding note flow.
+That's the normal note draft. Closing it and opening "New Coding Note" (the B-7 feature).
+The Coding Note editor measured: [Language select "JavaScript"][notebook][icon][Save][X][tags][Attach File][textarea "Write your code notes here..."] — no Font row, no Quill. Enumerating language options.
+Language badge measured: bordered badge with lucide-code + "JavaScript". Checking the regular note row icon for contrast.
+Regular note row: no icon; pinned shows violet-filled lucide-pin on the right. Capturing reference screenshots + mobile nav check.
+Reference drawer byte-matches the clone (rgba(0,0,0,0.2)+blur(4px), 288px panel, 20 links). Now measuring the coding note's EDIT mode.
+Coding note edit mode measured: [Language 128][notebook 128][icon 36][Save 98][X 48] + textarea, no Font row. Cleaning up probe notes (zero-residue doctrine).
+Zero residue confirmed. Now examining the clone's Notes surface for the gap comparison.
+Key gap confirmed: clone's Notes dropdown lacks "New Coding Note" (B-7), and the view row lacks pin/palette (B-4/B-5). Checking the clone's Note schema and rum beacon.
+构建完成。现在正在根据 Web 应用技能规则审核关键文件（rum 争用源 + S178 笔记端口）。
+The beacon fires one POST per metric (up to 5 concurrent) — the S179 candidate confirmed. Reading the rum route.
+The route loops sequential upserts; the beacon fires 5 concurrent POSTs. Reading the tdd + clone-app-pat-pro skills before planning.
+Before writing the plan, measuring the reference's edit-mode 36px icon (pin vs palette — the B-8 record) and the palette popover geometry.
+The edit-mode 36px icon is the PALETTE (in both modes; pin is view-mode only). Re-measuring the colored-row states precisely (selected vs not).
+Note A created. Coloring it yellow via the palette, then creating note B.
+Radix 需要真实的指针事件。直接使用 agent-browser 的原生点击。
+Odd state — probe B vanished. Refreshing to check the true state.
+State is muddled — probe B vanished, A shows yellow. Verifying A's actual stored color via its palette.
+A's stored color = yellow (palette confirms selection). The B quirk was probe-side; the feature semantics are fully measured. Cleaning up probe note A (zero residue).
+Reference account clean (0 notes). Now examining the clone's notes-view implementation to scope the diff precisely.
+Full picture acquired. Now checking the client data layer seams for the port.
+All seams understood. Now writing the S179 remediation plan (plan-first doctrine).
+Plan written. Now validating it against the codebase (constants, store, export/import seams, seed).
+Plan validated against codebase. Now writing the e2e pins RED-first. Checking the EB pin idiom first.
+Now checking for existing pins that my changes might trip (menuitem counts, toolbar geometry assertions).
+All menuitem locators are exact-by-name — safe. Writing the EC e2e pins now (RED-first).
+Fixing the EC2a swatch-loop assertion (hasText doesn't match aria-labels).
+Now checking the export/import seam shape before writing unit pins.
+Export spreads full rows — new columns flow automatically. Checking the import's notes-sanitize call (code notes must not be HTML-sanitized).
+Writing unit pins first (RED). Checking validation.test.ts noteSchema pin structure.
+RED confirmed on validation pins (4 failed as designed). Now checking the s18-rum e2e spec's beacon expectations before writing the batcher.
+s18 spec tolerates a 3.5s+ trail — the 1.5s batch window is safe. Writing the rum-batch unit pin (RED) then the module.
+RED confirmed. Now implementing. Starting with the pure batcher module.
+The pin's expectation was wrong — the seam honestly propagates send errors (the beacon owns silence). Fixing the pin.
+Batcher GREEN (6/6). Now implementing the validation constants + noteSchema fields.
+Removing the accidental no-op refine — the language field rides independently (UI-scoped, no cross-field guard needed).
+The pin wrongly assumed a cross-field default — the UI owns the JavaScript initial (the reference's select default). Fixing the pin.
+Validation GREEN (113/113). Now the Prisma schema + db push.
+Schema landed (pinned/color/kind/language columns live). Now updating the NoteRow type.
+Now wiring the rum-beacon to the batcher.
+Now the main view work. Reading notes-view.tsx imports and state areas.
+Now checking the API route/delegate factory for how noteSchema fields flow to Prisma.
+Now scoping the import route's sanitize pass the same way.
+The import door needs enum normalization for the new fields (the BT1b third-entry-point doctrine). Adding it to the data-import seam.
+Adding the new enum vocabularies to the import guard registry.
+Now the main view implementation. Reading saveDraft + the draft render flow.
+Now making the notes-view edits. Edit 1: imports.
+Edit 2: draft state + openDraft/openCodingDraft + togglePin helpers.
+Edit 3: saveDraft carries kind/language; the pinned-first sort; pin/color helper callbacks.
+Edit 4: header menu + list sections + row rendering.
+Simplifying the convoluted label logic into one clean branch.
+Now I need the NoteListRow + NoteColorButton components. Checking available sf-* utilities first.
+v4 auto-generates fill-sf-primary from the color token. Adding the NoteListRow + NoteColorButton components at the file's component section.
+Now the view-mode toolbar: pin + palette buttons + language badge + code body.
+Now the edit-mode toolbar: adding the palette + the coding-note edit branch.
+Now refactoring NoteColorButton to work on a color value (view/edit/draft), then rewiring the edit mode + draft.
+Now the draft state + draft render (palette + coding branch) + saveNow + edit mode.
+Now the codeEdit state + saveNow changes.
+Clean. Now the draft render: adding the palette + coding-note branches.
+Now the edit-mode toolbar: Language select + palette + the coding body.
+All view edits applied. Running lint + typecheck.
+Two enum-typing errors. Fixing the draft/codeEdit field types.
+The codeEdit block references `selected` before declaration. Moving it after the selection derivation.
+Fixing the swatch typing + openDraft language default, then the hue-tokens census trip.
+The selected-row site moved 913 → 262 (the NoteListRow extraction). Re-anchoring the census entries.
+Now fixing the swatch enum typing + openDraft default.
+Radix onValueChange gives `string` — casting to the enum types. Plus re-anchoring the census to the exact line.
+ALL GATES GREEN: lint ✓ · tsc ✓ · unit **1754/1754** (53 files, +11 new pins). Now the e2e RED sweep — the existing standalone build is still the PRE-CHANGE tree (built before my edits).
+The scratch dir doesn't exist yet — direct playwright runs need the cold-reset first (the webServer boots before globalSetup). Running it.
+RED sweep: 4 failed at designed markers. Checking which 5th test matched the grep and passed.
+RED sweep verified: all 4 designed REDs (the 5th was the setup project). Now building the GREEN tree.
+Mixed results — 7 failed, 3 passed. Getting failure details.
+EC1a failed at the PRE-pin assertion — a PINNED label already exists. Checking the error context for the list state.
+Residue from failed runs compounded. Cold reset + isolated EC1a run to see the TRUE failure.
+EC1a attempt 1 truly fails at the row pin icon (0 found) though the PINNED label rendered. Verifying the actual lucide class in the DOM.
+
 The repo is at the S178-close state — `.env` is missing, `db/` folder doesn't exist yet. The `.env.example` already documents the `DATABASE_URL="file:../db/custom.db"` convention. Let me kick off the environment setup (slowest) while re-anchoring on docs.
 Dependencies installed (510 packages). Now DB setup + chromium, while I re-anchor on the docs.
 DB ready. Now checking playwright chromium and reading the key docs in parallel.
