@@ -18,6 +18,7 @@ import {
   linkFileSchema,
   loginSchema,
   mathSolveSchema,
+  NOTE_ATTACHMENT_CAP,
   noteSchema,
   practiceTestSchema,
   preferencesSchema,
@@ -502,6 +503,73 @@ describe("noteSchema S179 · the pin/palette/coding-note columns", () => {
     expect(noteSchema.parse({ title: "T", language: null }).language).toBeNull();
     expect(noteSchema.safeParse({ title: "T", color: null }).success).toBe(false);
     expect(noteSchema.safeParse({ title: "T", kind: null }).success).toBe(false);
+  });
+});
+
+// S180/ED (measured live 2026-11-13, the reference's Attach-File probe — the
+// plan §3.1): the attachments atom — the wire shape the reference's Save POST
+// carries (attachments: [{name, url}] — the pick uploads immediately and the
+// Save binds the list). The atom is OPTIONAL and NEVER DEFAULTED: Zod 4's
+// .partial() fires defaults, so a .default([]) atom would turn every
+// field-scoped PATCH (title/content/tags) into an attachments wipe (the
+// run-2 caught bug); absent stays absent, and a SENT array is the
+// authoritative desired list.
+describe("noteSchema S180 · the attachments atom", () => {
+  it("parses a sent list (the wire shape: a trimmed name + a download-route-prefixed url)", () => {
+    const parsed = noteSchema.parse({
+      title: "Lecture 1",
+      attachments: [{ name: "  notes.txt  ", url: "/api/notes/attachments/ckv123" }],
+    });
+    expect(parsed.attachments).toEqual([
+      { name: "notes.txt", url: "/api/notes/attachments/ckv123" },
+    ]);
+  });
+
+  it("ABSENT stays absent on BOTH shapes (the optionality pin — the field-scoped PATCH never wipes)", () => {
+    expect(noteSchema.parse({ title: "T" }).attachments).toBeUndefined();
+    expect(noteSchema.partial().parse({ title: "T" }).attachments).toBeUndefined();
+    expect(noteSchema.partial().parse({ tags: "[]" }).attachments).toBeUndefined();
+  });
+
+  it("rejects a list over the cap (NOTE_ATTACHMENT_CAP), a foreign-prefix url, and a blank name", () => {
+    const ok = { name: "a.txt", url: "/api/notes/attachments/x" };
+    expect(
+      noteSchema.safeParse({
+        title: "T",
+        attachments: Array.from({ length: NOTE_ATTACHMENT_CAP + 1 }, () => ok),
+      }).success,
+    ).toBe(false);
+    expect(
+      noteSchema.safeParse({
+        title: "T",
+        attachments: [{ name: "a", url: "https://evil.example/x" }],
+      }).success,
+    ).toBe(false);
+    expect(
+      noteSchema.safeParse({
+        title: "T",
+        attachments: [{ name: "   ", url: "/api/notes/attachments/x" }],
+      }).success,
+    ).toBe(false);
+    // the boundary: exactly-cap passes; the prefix + a 200-char name pass.
+    expect(
+      noteSchema.safeParse({
+        title: "T",
+        attachments: Array.from({ length: NOTE_ATTACHMENT_CAP }, () => ok),
+      }).success,
+    ).toBe(true);
+    expect(
+      noteSchema.safeParse({
+        title: "T",
+        attachments: [{ name: "a".repeat(200), url: "/api/notes/attachments/x" }],
+      }).success,
+    ).toBe(true);
+    expect(
+      noteSchema.safeParse({
+        title: "T",
+        attachments: [{ name: "a".repeat(201), url: "/api/notes/attachments/x" }],
+      }).success,
+    ).toBe(false);
   });
 });
 

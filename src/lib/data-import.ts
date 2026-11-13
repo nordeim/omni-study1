@@ -123,6 +123,7 @@ export const IMPORT_ORDER = [
   "events",
   "timetableClasses",
   "notes",
+  "noteAttachments",
   "cards",
   "practiceTests",
   "studyGroups",
@@ -150,6 +151,11 @@ export const IMPORT_FK_MAP: Record<ExportCollection, ImportFkSpec[]> = {
     { field: "notebookId", target: "notebooks" },
     { field: "subjectId", target: "subjects" },
   ],
+  // S180/ED: the attachment's note is REQUIRED at the third entry point —
+  // the export never carries staged rows (noteId null), so a null noteId
+  // in a hand-edited backup is corrupt content, rejected exactly like a
+  // dangling cards.deckId.
+  noteAttachments: [{ field: "noteId", target: "notes", required: true }],
   decks: [{ field: "subjectId", target: "subjects" }],
   cards: [{ field: "deckId", target: "decks", required: true }],
   practiceTests: [{ field: "subjectId", target: "subjects" }],
@@ -774,6 +780,10 @@ export const IMPORT_FIELD_LENGTHS: Record<string, number> = {
   // rides FILE_METADATA into EVERY files list GET (the CE7 bloat class:
   // a 900-K-char field bloats every list read of the family).
   "files.mime": 100,
+  // S180/ED: the noteAttachments twins (the files family's own atoms at
+  // the third entry point — the BT1b doctrine).
+  "noteAttachments.name": 200,
+  "noteAttachments.mime": 100,
 };
 
 const IMPORT_FILE_URL_MAX_CHARS = 2000;
@@ -1553,6 +1563,78 @@ export function sanitizeImportRow(
     // must keep importing; a legit mime is never non-ASCII per the
     // type/subtype grammar). The downloadHeaders clamp is the
     // belt-and-suspenders for pre-fix stored rows.
+    if (
+      mime !== undefined &&
+      mime !== null &&
+      typeof mime === "string" &&
+      !/^[\x20-\x7E]*$/.test(mime)
+    ) {
+      throw new ImportRowError(
+        collection,
+        index,
+        'field "mime" must be printable ASCII (a browser-provided type like "text/plain") — control characters and non-ASCII text cannot be stored as a file type.',
+      );
+    }
+    const size = row.size;
+    if (
+      size !== undefined &&
+      size !== null &&
+      (typeof size !== "number" ||
+        !Number.isInteger(size) ||
+        size < 0 ||
+        size > IMPORT_FILE_SIZE_MAX_BYTES)
+    ) {
+      throw new ImportRowError(
+        collection,
+        index,
+        `field "size" must be a whole number of bytes between 0 and ${IMPORT_FILE_SIZE_MAX_BYTES.toLocaleString("en-US")} (the 2 MiB upload ceiling).`,
+      );
+    }
+  }
+
+  // S180/ED — the noteAttachments twin (the files family's own rules, the
+  // BT1b third-entry-point doctrine): a hand-edited backup must not
+  // persist attachment rows the interactive routes would 400 — the
+  // non-empty ≤200 name, the printability-bounded mime, the ≤ 2 MiB size,
+  // the base64 data ceiling. NO url leg (the download url is DERIVED
+  // from the id at the read boundary — never a stored column).
+  if (collection === "noteAttachments") {
+    const name = row.name;
+    if (
+      typeof name !== "string" ||
+      name.trim().length < 1 ||
+      name.length > IMPORT_FILE_NAME_MAX_CHARS
+    ) {
+      throw new ImportRowError(
+        collection,
+        index,
+        `field "name" must be a non-empty string of at most ${IMPORT_FILE_NAME_MAX_CHARS} characters.`,
+      );
+    }
+    const data = row.data;
+    if (
+      data !== undefined &&
+      data !== null &&
+      (typeof data !== "string" || data.length > IMPORT_FILE_DATA_MAX_CHARS)
+    ) {
+      throw new ImportRowError(
+        collection,
+        index,
+        `field "data" must be base64 text of at most ${IMPORT_FILE_DATA_MAX_CHARS.toLocaleString("en-US")} characters (the 2 MiB upload ceiling).`,
+      );
+    }
+    const mime = row.mime;
+    if (
+      mime !== undefined &&
+      mime !== null &&
+      (typeof mime !== "string" || mime.length > 100)
+    ) {
+      throw new ImportRowError(
+        collection,
+        index,
+        'field "mime" must be a string of at most 100 characters (the browser-provided type the upload stores).',
+      );
+    }
     if (
       mime !== undefined &&
       mime !== null &&

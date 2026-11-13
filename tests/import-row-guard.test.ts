@@ -164,3 +164,46 @@ describe("sanitizeImportRow (S119/BT1b — the per-row guard at the import's thi
     }
   });
 });
+
+// ---------------------------------------------------------------------------
+// S180/ED — the noteAttachments twin block (the files family's own rules at
+// the third entry point): a hand-edited backup must not persist attachment
+// rows the interactive routes would 400 — the non-empty ≤200 name, the
+// printability-bounded mime, the ≤ 2 MiB size, and the base64 data ceiling.
+// ---------------------------------------------------------------------------
+describe("sanitizeImportRow · the noteAttachments block (S180/ED — the files twin)", () => {
+  const good = {
+    id: "na1",
+    noteId: "n1",
+    name: "notes.txt",
+    mime: "text/plain",
+    size: 1024,
+    data: "QUJD",
+  };
+
+  it("accepts the export shape (the bound row — staged rows never export)", () => {
+    expect(() => sanitizeImportRow("noteAttachments", { ...good }, 0)).not.toThrow();
+  });
+
+  it("rejects a whitespace-only name and a >200-char name (the upload route's own contract)", () => {
+    expect(() => sanitizeImportRow("noteAttachments", { ...good, name: "   " }, 0)).toThrow();
+    expect(() =>
+      sanitizeImportRow("noteAttachments", { ...good, name: "a".repeat(201) }, 0),
+    ).toThrow();
+  });
+
+  it("rejects a poisoned mime (the CE7 bloat class — the files.mime twin cap)", () => {
+    expect(() =>
+      sanitizeImportRow("noteAttachments", { ...good, mime: "a".repeat(101) }, 0),
+    ).toThrow();
+  });
+
+  it("rejects a size over the 2 MiB upload ceiling and a base64 data over the ceiling's inflation", () => {
+    expect(() =>
+      sanitizeImportRow("noteAttachments", { ...good, size: 2 * 1024 * 1024 + 1 }, 0),
+    ).toThrow();
+    expect(() =>
+      sanitizeImportRow("noteAttachments", { ...good, data: "A".repeat(2_800_001) }, 0),
+    ).toThrow();
+  });
+});

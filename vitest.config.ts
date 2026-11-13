@@ -1,41 +1,46 @@
 import { defineConfig } from "vitest/config";
 import path from "node:path";
 
-// Unit-test layer for the pure domain seams — 53 files / 1761 tests
-// (re-anchored S179/EC — the notes feature-columns cycle: the unit
-// census moves 1743 → 1761 [+18, 52 → 53 files: the NEW
-// tests/rum-batch.test.ts seam — 6 pins on the pure
-// createRumBatcher(window/push/flush) contract: the window coalesces
-// multiple pushes into ONE send, the timer resets per flush, an empty
-// buffer never sends, the send rejection propagates to the CALLER (the
-// beacon owns the silence — the seam does NOT swallow), flushNow
-// drains pending events, two windows send two batches; +4 pins in
-// validation.test.ts's noteSchema S179 describe — the defaults parse
-// (pinned false / color white / kind text / language undefined), the
-// coding round-trip (kind coding + language Python), the enum
-// rejections (color purple / kind rich / language Perl), the
-// language-null clear leg; +3 pins in data-import.test.ts's census
-// legs (the notes.color/kind/language ENUM_VOCABULARIES + the
-// notes.language IMPORT_FIELD_LENGTHS — the BT1b third-entry-point
-// doctrine: a hand-edited backup must not persist rows the
-// interactive routes would 400); +5 pins in enum-single-source.test.ts
-// (the three new vocabularies' single-source census) + the data-store
-// test fixtures ride the four Note columns. The e2e census moves
-// 662 → 666 [+4: the S179/EC pins in parity-session7 — EC1 the pin
-// (the "Pinned"/"All Notes" sectioned list + the violet-filled row
-// pin + the pinned-first sort + the toolbar's filled toggle), EC2 the
-// palette (the 7-swatch popover — the selected border-violet-500 +
-// scale-110, the picked yellow's inline rgb(254,243,199) tint on BOTH
-// the row and the body card), EC3 the coding note (the New Coding
-// Note menuitem + the 14-option Language select defaulting JavaScript
-// + the textarea draft with NO Quill/NO Font row + the saved view's
-// language badge + the pre.font-mono body + the row's code-icon
-// lead), EC4 the rum batching (the boot's metric reports coalesce —
-// the first /api/rum POST carries an events array of length ≥ 2, the
-// beacon's former one-POST-per-metric fired five). The rum beacon's
-// five onReport handlers now push into the batcher (the 1.5s window)
-// — the S178 lesson-2 rum-write/boot-read contention candidate,
-// closed client-side; the route's sequential upsert loop unchanged.])
+// Unit-test layer for the pure domain seams — 54 files / 1779 tests
+// (re-anchored S180/ED — the notes Attach-File wire cycle: the unit
+// census moves 1761 → 1779 [+18, 53 → 54 files: the NEW
+// tests/note-attachments.test.ts seam — 12 pins on the pure
+// src/lib/server/note-attachments.ts contract: the derived-url
+// round-trip + the attachmentIdFromUrl rejection family (the bad
+// prefix / the empty id / the over-64 id), the NOTE_ATTACHMENT_METADATA
+// select (the AH13 doctrine — the base64 data column never rides a
+// JSON body), the bind transaction's four legs (the staged bind +
+// the removal deleteMany with notIn, the EMPTY authoritative list
+// deleting every row, the foreign-row 400, the other-note 400 — the
+// CN10 owned-FK re-point posture, the idempotent re-list), the
+// include reads (the newest-500 window + the reversed presentation +
+// the derived urls, the ownership 404); +3 pins in validation.test.ts's
+// noteSchema S180 describe (the sent-list parse with the trimmed
+// name + the prefixed url, the ABSENT-stays-absent optionality — the
+// Zod-4 .partial() default-fires lesson: a .default([]) atom would
+// wipe attachments on every field-scoped PATCH, the cap/prefix/name
+// rejection family); +2 re-anchored required-FK pins + the
+// FIELD_LENGTHS census + the S159/DH2 parity sources in
+// data-import.test.ts (noteAttachments.name/mime — the OTHER_SOURCE
+// map: the staged upload route's own 200 guard + the shared
+// UPLOAD_MIME_MAX_CHARS); +4 pins in import-row-guard.test.ts's
+// noteAttachments twin block (the export shape, the blank/200-char
+// name, the poisoned mime, the size/data ceilings — the BT1b
+// third-entry-point doctrine); the export manifest census 20 → 21
+// + the findMany 20 → 21 in script-conventions; the data-store
+// fixtures ride the NoteRow.attachments column. The e2e census moves
+// 666 → 672 [+6: the S180/ED pins in parity-session7 — ED1 the
+// attach-row anatomy (the outline affordance + the hidden single-file
+// input), ED2 the staged-upload wire (the pick POSTs immediately;
+// the Save POST carries attachments:[{name,url}]), ED3 the view
+// pills + the flat download route's S13/S14 contract, ED4 the edit
+// seed + the LOCAL X-remove (zero PATCH — the measured posture) +
+// the Save's authoritative array, ED5 the coding draft row + the
+// coding view's section below the pre body, ED6 the B-8 Font-row
+// port (the bg-slate-50 strip + the w-32 h-8 select + the h-6 w-px
+// separator + the OUTLINE Divider + the 5-option vocabulary); the
+// AD5 Divider pin re-anchors count-neutral to the outline variant
+// — the S77 "black" record was the dark-mode computed artifact.])
 // (re-anchored S178/EB — the notes view/edit mode-split cycle: the unit
 // census UNCHANGED at 1743, no new seam [the mode split is view state;
 // the wire's updateNote PATCH + the NoteInput model untouched; the

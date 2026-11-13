@@ -53,6 +53,7 @@ model User {
   timetableClasses    TimetableClass[]
   notebooks           Notebook[]
   notes               Note[]
+  noteAttachments     NoteAttachment[]
   flashcardDecks      FlashcardDeck[]
   practiceTests       PracticeTest[]
   studyGroups         StudyGroup[]
@@ -333,6 +334,9 @@ model Note {
   user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   notebook   Notebook? @relation(fields: [notebookId], references: [id], onDelete: SetNull)
   subject    Subject?  @relation(fields: [subjectId], references: [id], onDelete: SetNull)
+  // S180/ED: the Attach-File relation — the note's bound attachment rows
+  // (noteId null = staged; the DELETE Cascade clears the note's rows).
+  attachments NoteAttachment[]
 
   // S128/CC10: the composite REPLACES the bare [userId] index — the
   // factory list query (where userId, orderBy [createdAt desc, id desc],
@@ -344,6 +348,34 @@ model Note {
   @@index([userId, createdAt, id])
   @@index([notebookId])
   @@index([subjectId])
+}
+
+// S180/ED (measured live 2026-11-13, the reference's Attach-File probe — the
+// plan §3.1): the notes Attach-File wire feature. noteId NULL = STAGED —
+// the draft's upload scratch (the reference's measured posture: the pick
+// uploads immediately, the Save's attachments array binds the list; a
+// picked-but-never-saved row stays staged, invisible to every surface
+// except the flat download route). The base64 `data` column is the
+// files-table posture (≤ 2 MiB); the download url is DERIVED from the id
+// (never stored — no drift hazard). NEVER factory-listed (no standalone
+// collection route); both composites leftmost-satisfy the S133/CH3 FK
+// census — noteId for the note-DELETE Cascade scan, userId for the
+// ownership sweep + the export reader.
+model NoteAttachment {
+  id        String   @id @default(cuid())
+  userId    String
+  noteId    String? // null = staged (the draft's upload scratch)
+  name      String
+  mime      String
+  size      Int
+  data      String? // base64 ≤ 2 MiB; the download route serves it
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  note      Note?    @relation(fields: [noteId], references: [id], onDelete: Cascade)
+
+  @@index([noteId, createdAt, id])
+  @@index([userId, createdAt, id])
 }
 
 model FlashcardDeck {

@@ -123,6 +123,11 @@ const READERS: Record<
   timetableClasses: (userId, after) => pageAfter(after, (extra) => db.timetableClass.findMany({ where: { userId }, orderBy: [...EXPORT_ORDER], ...extra })),
   notebooks: (userId, after) => pageAfter(after, (extra) => db.notebook.findMany({ where: { userId }, orderBy: [...EXPORT_ORDER], ...extra })),
   notes: (userId, after) => pageAfter(after, (extra) => db.note.findMany({ where: { userId }, orderBy: [...EXPORT_ORDER], ...extra })),
+  // S180/ED: the note Attach-File rows — BOUND rows only (noteId not null;
+  // the STAGED scratch is transient upload state, never the user's
+  // persisted data — the run-2 caught bug: a staged orphan rode the export
+  // and the import's REQUIRED-FK guard 400'd the user's own backup).
+  noteAttachments: (userId, after) => pageAfter(after, (extra) => db.noteAttachment.findMany({ where: { userId, noteId: { not: null } }, orderBy: [...EXPORT_ORDER], ...extra })),
   decks: (userId, after) => pageAfter(after, (extra) => db.flashcardDeck.findMany({ where: { userId }, orderBy: [...EXPORT_ORDER], ...extra })),
   cards: (userId, after) => pageAfter(after, (extra) => db.flashcard.findMany({ where: { deck: { userId } }, orderBy: [...EXPORT_ORDER], ...extra })),
   practiceTests: (userId, after) => pageAfter(after, (extra) => db.practiceTest.findMany({ where: { userId }, orderBy: [...EXPORT_ORDER], ...extra })),

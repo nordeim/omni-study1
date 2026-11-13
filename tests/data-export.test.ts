@@ -23,7 +23,10 @@ import {
 const WHEN = new Date("2026-10-09T08:00:00.000Z");
 
 describe("EXPORT_COLLECTIONS (the manifest contract)", () => {
-  it("declares the 20 content collections in the stable export order", () => {
+  it("declares the 21 content collections in the stable export order", () => {
+    // S180/ED re-anchor: 20 → 21 — noteAttachments joined after notes
+    // (the referent) in both this manifest and IMPORT_ORDER; the export
+    // reader carries BOUND rows only (the staged scratch never exports).
     expect(EXPORT_COLLECTIONS).toEqual([
       "subjects",
       "taskLists",
@@ -34,6 +37,7 @@ describe("EXPORT_COLLECTIONS (the manifest contract)", () => {
       "timetableClasses",
       "notebooks",
       "notes",
+      "noteAttachments",
       "decks",
       "cards",
       "practiceTests",

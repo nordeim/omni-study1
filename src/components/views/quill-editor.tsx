@@ -32,10 +32,20 @@ const TOOLBAR: unknown[] = [
   ["blockquote", "code-block", "link", "image", "clean"],
 ];
 
+// S180/ED (B-8 measured live 2026-11-13 — the reference's Font select): the
+// five-option typeface vocabulary, labels + order measured — Default /
+// Serif / Sans-serif / Monospace / Cursive. "default" carries NO stack
+// (the empty stack REMOVES the property — the editor's inherited
+// font-family, the run-2 lesson: an empty setProperty leaves the old
+// value). The cursive VALUE is the clone's own stack (the functional-lite
+// superset posture — the reference's applied stack is its platform CSS,
+// unmeasured and non-portable).
 export const EDITOR_FONTS = {
+  default: "",
+  serif: "Georgia, Cambria, 'Times New Roman', serif",
   sans: "ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif",
-  serif: "Georgia, Cambria, Times New Roman, serif",
   mono: "ui-monospace, SFMono-Regular, Menlo, Consolas, monospace",
+  cursive: "'Segoe Script', 'Brush Script MT', cursive",
 } as const;
 
 export type EditorFont = keyof typeof EDITOR_FONTS;
@@ -298,11 +308,18 @@ export const QuillEditor = React.forwardRef<QuillEditorHandle, QuillEditorProps>
     }, []);
 
     React.useEffect(() => {
+      const stack = EDITOR_FONTS[font];
+      const apply = (el: HTMLElement | null) => {
+        if (!el) return;
+        // S180/ED: the "default" typeface REMOVES the property (the
+        // inherited editor font) — an empty setProperty would leave the
+        // previously-picked family latched on the element.
+        if (stack === "") el.style.removeProperty("font-family");
+        else el.style.setProperty("font-family", stack);
+      };
       const root = quillRef.current?.root;
-      if (root) root.style.setProperty("font-family", EDITOR_FONTS[font]);
-      else if (containerRef.current) {
-        containerRef.current.style.setProperty("font-family", EDITOR_FONTS[font]);
-      }
+      if (root) apply(root as HTMLElement);
+      else apply(containerRef.current);
     }, [font]);
 
     return <div role="group" ref={containerRef} className={className} aria-label="Rich text note editor" />;

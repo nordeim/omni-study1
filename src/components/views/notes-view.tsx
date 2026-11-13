@@ -27,6 +27,7 @@ import {
   Minus,
   Notebook,
   Palette,
+  Paperclip,
   Pencil,
   Pin,
   Plus,
@@ -74,6 +75,7 @@ import {
   mutations,
   parseNoteTags,
   useDataStore,
+  type NoteAttachmentRow,
   type NoteInput,
   type NoteRow,
   type NotebookRow,
@@ -305,6 +307,80 @@ function NoteColorButton({
   );
 }
 
+// S180/ED (measured live 2026-11-13, the reference's Attach-File probe — the
+// plan §3.3): the shared Attach row — ONE component riding the draft and
+// the edit surface (the reference renders the identical anatomy on each).
+// The measured shape: a `flex items-center gap-2 mb-4 flex-wrap` row whose
+// FIRST child is a label-wrapped outline affordance (the paperclip icon +
+// "Attach File", the hidden single-file input — NO `multiple`, NO
+// `accept`), followed by the picked chips: the badge-family div
+// (`inline-flex items-center rounded-md border px-2.5 py-0.5 text-xs
+// font-semibold text-foreground gap-1`) carrying `a.hover:underline`
+// (target=_blank to the derived download url) and the X-remove. The
+// reference's X is a BARE cursor-pointer svg (its own a11y laxity); the
+// clone ships the aria-label BUTTON superset (the S178 lesson-4 posture).
+function NoteAttachRow({
+  attachments,
+  onPick,
+  onRemove,
+  disabled,
+}: {
+  attachments: NoteAttachmentRow[];
+  onPick: (file: File) => void;
+  onRemove: (id: string) => void;
+  disabled?: boolean;
+}) {
+  return (
+    <div className="flex items-center gap-2 mb-4 flex-wrap">
+      <label className="cursor-pointer">
+        <span
+          className="inline-flex items-center justify-center gap-2 whitespace-nowrap font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sf-primary/40 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background shadow-sm hover:bg-accent hover:text-accent-foreground h-8 rounded-md px-3 text-xs text-foreground"
+          aria-label="Attach file"
+        >
+          <Paperclip className="w-4 h-4 mr-2" strokeWidth={2} />
+          Attach File
+        </span>
+        {/* The measured hidden single-file input: no `multiple`, no `accept`. */}
+        <input
+          type="file"
+          className="hidden"
+          disabled={disabled}
+          onChange={(e) => {
+            const file = e.target.files?.[0];
+            if (file) onPick(file);
+            // Reset so re-picking the SAME file re-fires the change.
+            e.target.value = "";
+          }}
+        />
+      </label>
+      {attachments.map((att) => (
+        <div
+          key={att.id}
+          data-note-attachment={att.name}
+          className="inline-flex items-center rounded-md border px-2.5 py-0.5 text-xs font-semibold transition-colors text-foreground gap-1"
+        >
+          <a
+            href={att.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hover:underline"
+          >
+            {att.name}
+          </a>
+          <button
+            type="button"
+            aria-label={`Remove attachment ${att.name}`}
+            onClick={() => onRemove(att.id)}
+            className="rounded-sm p-0.5 text-slate-400 outline-none hover:text-slate-600 focus-visible:ring-2 focus-visible:ring-sf-primary/40 dark:text-slate-500 dark:hover:text-slate-300"
+          >
+            <X className="w-3 h-3 cursor-pointer" strokeWidth={2} />
+          </button>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 // S179/EC1: the list row — extracted so the sectioned list (the Pinned /
 // All Notes sections) renders ONE row component per note (the measured
 // anatomy: the coding row's lucide-code lead, the pinned row's
@@ -383,6 +459,9 @@ export function NotesView() {
   // empty state). The tasks-view idiom (the 8 gated views' pattern).
   const loading = useDataStore((s) => s.loading);
   const createNote = mutations.createNote;
+  // S180/ED: the staged upload mutation (the pick's immediate POST — the
+  // reference's own measured posture).
+  const uploadNoteAttachment = mutations.uploadNoteAttachment;
   const updateNote = mutations.updateNote;
   const deleteNote = mutations.deleteNote;
   const createNotebook = mutations.createNotebook;
@@ -416,6 +495,11 @@ export function NotesView() {
     kind: NoteKind;
     language: (typeof NOTE_LANGUAGES)[number];
     color: NoteColor;
+    // S180/ED: the draft's STAGED attachments — the pick uploads
+    // immediately (the staged row + its derived url); the Save POST
+    // binds the list; the X removes LOCALLY (the measured zero-network
+    // posture — the removal persists through the Save's array).
+    attachments: NoteAttachmentRow[];
   } | null>(null);
   const [draftSeq, setDraftSeq] = React.useState(0);
   const [draftError, setDraftError] = React.useState("");
@@ -428,6 +512,13 @@ export function NotesView() {
   // the draft never touches it (the draft overlays; X restores the
   // prior pane state).
   const [editing, setEditing] = React.useState(false);
+  // S180/ED: the EDIT surface's working attachment list — seeded from the
+  // note's bound rows on the Edit click; the pick stages NEW rows; the X
+  // removes LOCALLY (the measured zero-network posture); the Save PATCH
+  // binds the whole list (the removal leg rides the authoritative array).
+  // Null = not editing (the working list exists only inside the edit
+  // session; the next Edit re-seeds from the fresh store row).
+  const [editStaged, setEditStaged] = React.useState<NoteAttachmentRow[] | null>(null);
   // S152/DA1 (the S151 audit's B-L5): the delete double-fire latch — the
   // per-row in-flight set for BOTH delete handlers (notes + notebooks);
   // the Popover action sites close on click, so the handler latch alone
@@ -435,7 +526,7 @@ export function NotesView() {
   const [deletingIds, setDeletingIds] = React.useState<ReadonlySet<string>>(new Set());
   // S77/AD: the editor's measured chrome state — the Font row typeface and
   // the tag-row draft.
-  const [font, setFont] = React.useState<EditorFont>("sans");
+  const [font, setFont] = React.useState<EditorFont>("default");
   const [tagDraft, setTagDraft] = React.useState("");
   const editorRef = React.useRef<QuillEditorHandle | null>(null);
   // S177/EA1: the DRAFT's own editor handle (the Divider button's
@@ -611,6 +702,8 @@ export function NotesView() {
       kind,
       language: "JavaScript",
       color: "white",
+      // S180/ED: every draft session starts with NO staged rows.
+      attachments: [],
     });
     setDraftSeq((n) => n + 1);
     setDraftError("");
@@ -691,6 +784,9 @@ export function NotesView() {
       // language (the coding draft's select state) + color (the draft
       // toolbar's palette pick; white is the schema default anyway — the
       // explicit ride keeps the draft's picked tint truthful).
+      // S180/ED: the staged attachments ride the SAME POST — the measured
+      // wire carries attachments: [{name, url}] on the Save (the bind
+      // sets the noteId on the staged rows).
       const created = await createNote({
         title: draft.title,
         content: draft.content,
@@ -699,6 +795,7 @@ export function NotesView() {
         kind: draft.kind,
         ...(draft.kind === "coding" ? { language: draft.language } : {}),
         ...(draft.color !== "white" ? { color: draft.color } : {}),
+        attachments: draft.attachments.map(({ name, url }) => ({ name, url })),
       });
       setDraft(null);
       setSelectedId(created ?? null);
@@ -732,6 +829,46 @@ export function NotesView() {
 
   const removeDraftTag = (tag: string) => {
     setDraft((d) => (d ? { ...d, tags: d.tags.filter((x) => x !== tag) } : d));
+  };
+
+  // ---- S180/ED: the Attach-File handlers --------------------------------
+  //
+  // The pick uploads IMMEDIATELY (the measured wire: the reference POSTs
+  // on the pick; the staged row answers {id, name, url}) and appends to
+  // the target list. One toast per failure (the upload rejection names
+  // the file's failure, not the note's — the draft's list and the edit's
+  // working list are the two targets, the same handler serving each).
+  const pickNoteAttachment = async (
+    target: "draft" | "edit",
+    file: File,
+  ) => {
+    try {
+      const staged = await uploadNoteAttachment(file);
+      if (target === "draft") {
+        setDraft((d) =>
+          d ? { ...d, attachments: [...d.attachments, staged] } : d);
+      } else {
+        setEditStaged((list) => [...(list ?? []), staged]);
+      }
+    } catch (err: unknown) {
+      toast.error(
+        err instanceof ApiError
+          ? err.message
+          : "Upload failed — check your connection and try again.",
+      );
+    }
+  };
+
+  // The X-remove is LOCAL (the measured zero-network posture — the S178
+  // local-state family): the removal persists through the Save's
+  // authoritative array, never on the click.
+  const removeDraftAttachment = (id: string) => {
+    setDraft((d) =>
+      d ? { ...d, attachments: d.attachments.filter((a) => a.id !== id) } : d);
+  };
+
+  const removeEditAttachment = (id: string) => {
+    setEditStaged((list) => (list ?? []).filter((a) => a.id !== id));
   };
 
   const removeNote = async (id: string) => {
@@ -947,6 +1084,18 @@ export function NotesView() {
         // import).
         const html = editorRef.current?.getContent() ?? selected.content;
         await updateNote(noteId, { content: html });
+      }
+      // S180/ED: the working attachment list rides the Save (BOTH kinds —
+      // a SEPARATE leg after the content, because the coding flush owns
+      // the content PATCH): the authoritative array binds — new staged
+      // rows join, locally-removed rows leave (the measured X-remove
+      // posture persists HERE, never on the click). Null (the not-editing
+      // guard) never reaches here — saveNow only runs from the edit
+      // surface.
+      if (editStaged !== null) {
+        await updateNote(noteId, {
+          attachments: editStaged.map(({ name, url }) => ({ name, url })),
+        });
       }
       if (selectedIdRef.current !== noteId) return;
       // S80/AG6 (the s80 audit, L2): a successful explicit Save breaks the
@@ -1338,31 +1487,42 @@ export function NotesView() {
                 {draftError}
               </div>
             )}
-            {/* Font row (the shared typeface state — the existing editor's
-                own row, the S77/AD5 lineage). S179/EC1 (measured A-2): the
-                CODING draft carries NO Font row, NO Divider — the
-                reference's coding editor is the textarea surface only. */}
+            {/* Font row (S77/AD5 lineage, B-8 re-measured 2026-11-13 —
+                the reference's strip anatomy): the bg-slate-50 rounded-lg
+                strip with gap-3, the "Font:" label + the w-32 h-8 select
+                inside a gap-2 wrapper, the h-6 w-px bg-slate-200 separator,
+                and the shadcn OUTLINE Divider (the S77 "black" record was
+                the dark-mode computed artifact — corrected by the
+                light-mode measurement). S179/EC1 (measured A-2): the CODING
+                draft carries NO Font row, NO Divider — the reference's
+                coding editor is the textarea surface only. */}
             {draft.kind === "text" && (
-              <div className="mt-2 flex flex-wrap items-center gap-2">
-                <span className="text-xs font-medium text-slate-500 dark:text-slate-400">Font:</span>
-                <Select value={font} onValueChange={(v) => setFont(v as EditorFont)}>
-                  <SelectTrigger className="h-7 w-28 text-xs" aria-label="Editor font">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="sans">Sans</SelectItem>
-                    <SelectItem value="serif">Serif</SelectItem>
-                    <SelectItem value="mono">Mono</SelectItem>
-                  </SelectContent>
-                </Select>
-                <button
+              <div className="flex items-center gap-3 mb-4 p-3 bg-slate-50 rounded-lg flex-wrap dark:bg-slate-800/50">
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-slate-500 font-medium dark:text-slate-400">Font:</span>
+                  <Select value={font} onValueChange={(v) => setFont(v as EditorFont)}>
+                    <SelectTrigger className="h-8 w-32" aria-label="Editor font">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="default">Default</SelectItem>
+                      <SelectItem value="serif">Serif</SelectItem>
+                      <SelectItem value="sans">Sans-serif</SelectItem>
+                      <SelectItem value="mono">Monospace</SelectItem>
+                      <SelectItem value="cursive">Cursive</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="h-6 w-px bg-slate-200 dark:bg-slate-600" aria-hidden />
+                <Button
                   type="button"
+                  variant="outline"
+                  className="h-8 rounded-md px-3 text-xs gap-1"
                   onClick={() => draftEditorRef.current?.insertDivider()}
-                  className="flex h-8 items-center gap-1 rounded-md bg-neutral-950 px-3 text-xs font-medium text-neutral-50 transition-opacity hover:opacity-90 focus-visible:ring-2 focus-visible:ring-sf-primary/40 focus-visible:outline-none dark:bg-neutral-800"
                 >
-                  <Minus className="size-3" strokeWidth={2} />
+                  <Minus className="size-4" strokeWidth={2} />
                   Divider
-                </button>
+                </Button>
               </div>
             )}
             {/* Tag row (the measured "Add tag..." idiom; the draft's own
@@ -1398,6 +1558,15 @@ export function NotesView() {
                 className="h-7 w-32 rounded-md border border-neutral-800 bg-transparent px-2 text-sm text-slate-700 outline-none placeholder:text-slate-400 focus-visible:ring-2 focus-visible:ring-sf-primary/40 dark:border-neutral-700 dark:text-slate-200"
               />
             </div>
+            {/* S180/ED (measured draft row order): the Attach row AFTER the
+                tag row, BEFORE the editor card — the label-wrapped outline
+                affordance + the staged chips; the pick POSTs immediately;
+                the Save's create POST binds the list. */}
+            <NoteAttachRow
+              attachments={draft.attachments}
+              onPick={(file) => void pickNoteAttachment("draft", file)}
+              onRemove={removeDraftAttachment}
+            />
             {/* The editor card (the measured white rounded-2xl card wrapping
                 the body) — keyed by the draft sequence so every draft
                 session starts BLANK. onChange writes the draft content
@@ -1533,7 +1702,13 @@ export function NotesView() {
                   type="button"
                   variant="outline"
                   className="h-9 px-4"
-                  onClick={() => setEditing(true)}
+                  onClick={() => {
+                    // S180/ED: the Edit click SEEDS the working attachment
+                    // list from the note's bound rows (the fresh store row;
+                    // every edit session starts from the persisted truth).
+                    setEditStaged(selected.attachments ?? []);
+                    setEditing(true);
+                  }}
                 >
                   <Pencil className="size-4" strokeWidth={2} />
                   Edit
@@ -1575,6 +1750,31 @@ export function NotesView() {
                 <p className="m-0 text-slate-400 dark:text-slate-500">Empty note</p>
               )}
             </div>
+            {/* S180/ED (measured, BOTH kinds — the coding view's section
+                sibling is the pre.font-mono body): the Attachments section
+                BELOW the body — the border-t strip + the slate-500 heading
+                + the bg-slate-100 paperclip pills (target=_blank to the
+                derived download url). Renders ONLY at ≥ 1 attachment
+                (zero-attachment notes carry no section — measured). */}
+            {(selected.attachments?.length ?? 0) > 0 && (
+              <div className="mt-6 pt-4 border-t border-slate-200 dark:border-slate-700">
+                <p className="text-sm font-medium text-slate-500 mb-2 dark:text-slate-400">
+                  Attachments
+                </p>
+                {selected.attachments.map((att) => (
+                  <a
+                    key={att.id}
+                    href={att.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-2 px-3 py-2 bg-slate-100 rounded-lg hover:bg-slate-200 transition-colors dark:bg-slate-800 dark:hover:bg-slate-700"
+                  >
+                    <Paperclip className="w-4 h-4 text-slate-400" strokeWidth={2} />
+                    <span className="text-sm text-slate-700 dark:text-slate-200">{att.name}</span>
+                  </a>
+                ))}
+              </div>
+            )}
           </div>
         ) : (
           /* S178/EB2 — the EDIT mode (the measured edit toolbar: the
@@ -1691,31 +1891,41 @@ export function NotesView() {
               </div>
             </div>
 
-            {/* Font row (S77/AD5 measured): "Font:" 12px/500 slate-500 +
-                typeface select + the black Divider button (h-8, 6px radius).
-                S179/EC1 (measured A-9): the CODING edit mode carries NO
-                Font row, NO Divider — the textarea surface only. */}
+            {/* Font row (S77/AD5 lineage, B-8 re-measured 2026-11-13 —
+                the reference's strip anatomy, the draft's twin):
+                the bg-slate-50 rounded-lg strip with gap-3, the "Font:"
+                label + the w-32 h-8 select inside a gap-2 wrapper, the
+                h-6 w-px bg-slate-200 separator, and the shadcn OUTLINE
+                Divider. S179/EC1 (measured A-9): the CODING edit mode
+                carries NO Font row, NO Divider — the textarea surface
+                only. */}
             {selected.kind === "text" && (
-              <div className="mt-2 flex flex-wrap items-center gap-2">
-                <span className="text-xs font-medium text-slate-500 dark:text-slate-400">Font:</span>
-                <Select value={font} onValueChange={(v) => setFont(v as EditorFont)}>
-                  <SelectTrigger className="h-7 w-28 text-xs" aria-label="Editor font">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="sans">Sans</SelectItem>
-                    <SelectItem value="serif">Serif</SelectItem>
-                    <SelectItem value="mono">Mono</SelectItem>
-                  </SelectContent>
-                </Select>
-                <button
+              <div className="flex items-center gap-3 mb-4 p-3 bg-slate-50 rounded-lg flex-wrap dark:bg-slate-800/50">
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-slate-500 font-medium dark:text-slate-400">Font:</span>
+                  <Select value={font} onValueChange={(v) => setFont(v as EditorFont)}>
+                    <SelectTrigger className="h-8 w-32" aria-label="Editor font">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="default">Default</SelectItem>
+                      <SelectItem value="serif">Serif</SelectItem>
+                      <SelectItem value="sans">Sans-serif</SelectItem>
+                      <SelectItem value="mono">Monospace</SelectItem>
+                      <SelectItem value="cursive">Cursive</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="h-6 w-px bg-slate-200 dark:bg-slate-600" aria-hidden />
+                <Button
                   type="button"
+                  variant="outline"
+                  className="h-8 rounded-md px-3 text-xs gap-1"
                   onClick={() => editorRef.current?.insertDivider()}
-                  className="flex h-8 items-center gap-1 rounded-md bg-neutral-950 px-3 text-xs font-medium text-neutral-50 transition-opacity hover:opacity-90 focus-visible:ring-2 focus-visible:ring-sf-primary/40 focus-visible:outline-none dark:bg-neutral-800"
                 >
-                  <Minus className="size-3" strokeWidth={2} />
+                  <Minus className="size-4" strokeWidth={2} />
                   Divider
-                </button>
+                </Button>
               </div>
             )}
 
@@ -1753,6 +1963,17 @@ export function NotesView() {
                 className="h-7 w-32 rounded-md border border-neutral-800 bg-transparent px-2 text-sm text-slate-700 outline-none placeholder:text-slate-400 focus-visible:ring-2 focus-visible:ring-sf-primary/40 dark:border-neutral-700 dark:text-slate-200"
               />
             </div>
+
+            {/* S180/ED (measured edit row order): the Attach row AFTER the
+                tag row, BEFORE the editor card — the working list seeded
+                from the note's bound rows on the Edit click; the pick
+                stages NEW rows; the X removes locally; the Save PATCHes
+                the authoritative array. */}
+            <NoteAttachRow
+              attachments={editStaged ?? []}
+              onPick={(file) => void pickNoteAttachment("edit", file)}
+              onRemove={removeEditAttachment}
+            />
 
             {/* The editor card (S77/AD2 measured): white rounded-2xl + 1px
                 slate-200 — wraps the Quill toolbar strip + editor body. The

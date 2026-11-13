@@ -493,7 +493,7 @@ test.describe("S7-AD · the Notes rich-text editor (Batch AD)", () => {
     expect(cs.size).toBe("14px");
   });
 
-  test("AD5: the Font row — 'Font:' label 12px/500 slate-500 + the black Divider button", async ({ page }) => {
+  test("AD5: the Font row — 'Font:' label 12px/500 slate-500 + the OUTLINE Divider button (the B-8 re-anchor)", async ({ page }) => {
     await page.goto("/Notes");
     await hydrated(page);
     await page.getByRole("button", { name: /Dot product intuition/ }).first().click();
@@ -514,8 +514,12 @@ test.describe("S7-AD · the Notes rich-text editor (Batch AD)", () => {
       const s = getComputedStyle(el);
       return { bg: s.backgroundColor, color: s.color, radius: s.borderRadius, size: s.fontSize };
     });
-    expect(dCs.bg).toBe(rgb(10, 10, 10)); // neutral-950 black button
-    expect(dCs.color).toBe(rgb(250, 250, 250)); // neutral-50 text
+    // S180/ED (B-8, measured 2026-11-13): the Divider is the shadcn OUTLINE
+    // variant — the S77 "black" record was the reference's DARK-MODE
+    // computed artifact; the light-mode measurement (the e2e seed's theme)
+    // shows bg-card white + the outline variant's own #0a0a0a text.
+    expect(dCs.bg).toBe(rgb(255, 255, 255)); // bg-card (the outline variant)
+    expect(dCs.color).toBe(rgb(10, 10, 10)); // the outline variant's text-[#0a0a0a]
     expect(dCs.radius).toBe("6px");
     expect(dCs.size).toBe("12px");
   });
@@ -3460,5 +3464,271 @@ test.describe("S179/EC · the notes pin/palette/coding-note port", () => {
         expect(["TTFB", "FCP", "LCP", "CLS", "INP"]).toContain(event.metric);
       }
     }
+  });
+});
+
+// ---------------------------------------------------------------------------
+// S180/ED · the notes Attach-File wire feature (B-6) + the B-8 toolbar
+// drift port — the s180 measured record (probed live 2026-11-13, computed
+// DOM + the net probe, zero residue; docs/remediation-plan-session180.md
+// §2): the pick uploads IMMEDIATELY (the staged POST answers {id, name,
+// url} — the url is the clone's own flat download route); the Save POST
+// carries attachments: [{name, url}] (the authoritative desired list —
+// the bind joins the staged rows, the removal leg deletes the
+// unlisted); the chip X-remove is LOCAL (zero network); the view pills
+// render the Attachments section below the body on BOTH kinds; the
+// Font row is the bg-slate-50 strip (gap-3, the w-32 h-8 select, the
+// h-6 w-px separator, the OUTLINE Divider) with the 5-option
+// vocabulary.
+// ---------------------------------------------------------------------------
+test.describe("S180/ED · the notes Attach-File wire + the B-8 Font-row port", () => {
+  const ATTACH_BODY = "S180 ED attach payload";
+  const pickFixture = (page: Page) =>
+    page.locator("input[type=\"file\"].hidden").first()
+      .setInputFiles({
+        name: "s180-ed-probe.txt",
+        mimeType: "text/plain",
+        buffer: Buffer.from(ATTACH_BODY, "utf8"),
+      });
+  // Every pin is SELF-CONTAINED (open the draft → pick → title → Save →
+  // the view state) + zero-residue (the view-mode trash at the end).
+  const createAttachedNote = async (page: Page, title: string) => {
+    await page.getByRole("button", { name: "New note menu" }).click();
+    await page.getByRole("menuitem", { name: "New Note", exact: true }).click();
+    await page.waitForFunction(() => !document.querySelector('[role="menuitem"]'), null, { timeout: 10_000 });
+    await pickFixture(page);
+    const rightPane = page.locator('[aria-label="Note editor pane"]');
+    await expect(rightPane.getByRole("link", { name: "s180-ed-probe.txt" })).toBeVisible();
+    await rightPane.locator('input[placeholder="Note title..."]').fill(title);
+    await page.getByRole("button", { name: "Save", exact: true }).click();
+    await page.waitForTimeout(1500);
+  };
+
+  test("ED1: the draft Attach row — the outline affordance + the hidden single-file input, below the tag row", async ({ page }) => {
+    await page.goto("/Notes");
+    await hydrated(page);
+    await page.getByRole("button", { name: "New note menu" }).click();
+    await page.getByRole("menuitem", { name: "New Note", exact: true }).click();
+    await page.waitForFunction(() => !document.querySelector('[role="menuitem"]'), null, { timeout: 10_000 });
+
+    const rightPane = page.locator('[aria-label="Note editor pane"]');
+    const fileInput = rightPane.locator('input[type="file"].hidden');
+    await expect(fileInput).toHaveCount(1);
+    // The measured single-file contract: NO multiple, NO accept.
+    const attrs = await fileInput.evaluate((el) => ({
+      multiple: (el as HTMLInputElement).multiple,
+      accept: el.getAttribute("accept"),
+    }));
+    expect(attrs.multiple).toBe(false);
+    expect(attrs.accept).toBeNull();
+
+    // The outline affordance: the label-wrapped span with the paperclip.
+    const affordance = rightPane.getByText("Attach File", { exact: true });
+    await expect(affordance).toBeVisible();
+    const cs = await affordance.evaluate((el) => {
+      const s = getComputedStyle(el);
+      return {
+        h: Math.round(el.getBoundingClientRect().height),
+        bg: s.backgroundColor,
+        border: s.borderStyle,
+        radius: s.borderRadius,
+      };
+    });
+    expect(cs.h).toBe(32); // h-8
+    expect(cs.bg).toBe(rgb(255, 255, 255)); // bg-background (outline)
+    expect(cs.border).toBe("solid");
+    expect(cs.radius).toBe("6px");
+    const icon = affordance.locator("svg");
+    await expect(icon).toHaveClass(/lucide-paperclip/);
+  });
+
+  test("ED2: the wire — the pick POSTs immediately, the chip renders, the Save POST carries the attachments array", async ({ page }) => {
+    let uploadPosts = 0;
+    await page.route(/\/api\/notes\/attachments/, async (route) => {
+      if (route.request().method() === "POST") uploadPosts += 1;
+      await route.continue();
+    });
+    const notePosts: string[] = [];
+    await page.route(/\/api\/notes(\?|$)/, async (route) => {
+      if (route.request().method() === "POST") notePosts.push(route.request().postData() ?? "");
+      await route.continue();
+    });
+
+    await page.goto("/Notes");
+    await hydrated(page);
+    await page.getByRole("button", { name: "New note menu" }).click();
+    await page.getByRole("menuitem", { name: "New Note", exact: true }).click();
+    await page.waitForFunction(() => !document.querySelector('[role="menuitem"]'), null, { timeout: 10_000 });
+    const rightPane = page.locator('[aria-label="Note editor pane"]');
+
+    await pickFixture(page);
+    await expect(uploadPosts, "the pick POSTs the staged upload immediately").toBe(1);
+    // THE CHIP PIN: the staged row renders with its derived download url.
+    const chip = rightPane.getByRole("link", { name: "s180-ed-probe.txt" });
+    await expect(chip).toBeVisible();
+    const href = await chip.getAttribute("href");
+    expect(href).toMatch(/\/api\/notes\/attachments\/.+/);
+    await expect(chip).toHaveClass(/hover:underline/);
+
+    // Fill + Save — the create POST carries the measured wire shape.
+    await rightPane.locator('input[placeholder="Note title..."]').fill("S180 ED2 wire probe");
+    await page.getByRole("button", { name: "Save", exact: true }).click();
+    await page.waitForTimeout(1500);
+    const body = JSON.parse(notePosts[0] ?? "{}") as { attachments?: Array<{ name: string; url: string }> };
+    expect(body.attachments).toEqual([
+      { name: "s180-ed-probe.txt", url: expect.stringMatching(/\/api\/notes\/attachments\/.+/) },
+    ]);
+
+    // Zero-residue cleanup through the view-mode trash.
+    await rightPane.getByRole("button", { name: "Delete note" }).click();
+    await expect(
+      page.locator('[aria-label="Notes list pane"]').locator("button").filter({ hasText: "S180 ED2 wire probe" }),
+    ).toHaveCount(0);
+  });
+
+  test("ED3: the view pills — the Attachments section below the body + the download route serves the bytes", async ({ page }) => {
+    await page.goto("/Notes");
+    await hydrated(page);
+    await createAttachedNote(page, "S180 ED3 view probe");
+    const rightPane = page.locator('[aria-label="Note editor pane"]');
+    // THE SECTION PIN: the saved note's view carries the Attachments
+    // section below the body (the measured strip + heading + pill).
+    const section = rightPane.getByText("Attachments", { exact: true }).locator("..");
+    await expect(section).toBeVisible();
+    await expect(section).toHaveClass(/mt-6 pt-4 border-t border-slate-200/);
+    const pill = section.getByRole("link", { name: "s180-ed-probe.txt" });
+    await expect(pill).toBeVisible();
+    await expect(pill).toHaveClass(/bg-slate-100/);
+    await expect(pill.locator("svg")).toHaveClass(/lucide-paperclip/);
+
+    // THE DOWNLOAD PIN: the derived url serves the bytes with the
+    // S13/S14 download contract (attachment + nosniff + no-store).
+    const href = (await pill.getAttribute("href")) ?? "";
+    const res = await page.request.get(href);
+    expect(res.status()).toBe(200);
+    const headers = res.headers();
+    expect(headers["content-disposition"]).toContain("attachment");
+    expect(headers["x-content-type-options"]).toBe("nosniff");
+    expect((await res.body()).toString("utf8")).toBe(ATTACH_BODY);
+    // A bogus id answers the ownership-scoped 404.
+    const missing = await page.request.get("/api/notes/attachments/nonexistent-id-404");
+    expect(missing.status()).toBe(404);
+
+    // Zero-residue cleanup.
+    await rightPane.getByRole("button", { name: "Delete note" }).click();
+    await expect(
+      page.locator('[aria-label="Notes list pane"]').locator("button").filter({ hasText: "S180 ED3 view probe" }),
+    ).toHaveCount(0);
+  });
+
+  test("ED4: the edit surface — the chip seeds from the note, the X removes LOCALLY, the Save persists the removal", async ({ page }) => {
+    await page.goto("/Notes");
+    await hydrated(page);
+    await createAttachedNote(page, "S180 ED4 edit probe");
+    const listPane = page.locator('[aria-label="Notes list pane"]');
+    const rightPane = page.locator('[aria-label="Note editor pane"]');
+
+    let patches = 0;
+    await page.route(/\/api\/notes\/[a-z0-9]+(\?|$)/i, async (route) => {
+      if (route.request().method() === "PATCH") patches += 1;
+      await route.continue();
+    });
+
+    // THE SEED PIN: the Edit click seeds the working list from the note.
+    await rightPane.getByRole("button", { name: "Edit", exact: true }).click();
+    await expect(rightPane.getByRole("link", { name: "s180-ed-probe.txt" })).toBeVisible();
+
+    // THE LOCAL-X PIN: the remove fires ZERO network (the measured
+    // posture — the removal persists through the Save's array).
+    await rightPane.getByRole("button", { name: "Remove attachment s180-ed-probe.txt" }).click();
+    await page.waitForTimeout(900);
+    await expect(rightPane.getByRole("link", { name: "s180-ed-probe.txt" })).toHaveCount(0);
+    expect(patches, "the chip X is local-only — zero PATCHes on the click").toBe(0);
+
+    // THE SAVE PIN: the Save PATCHes the authoritative (now-empty) array.
+    await page.getByRole("button", { name: "Save", exact: true }).click();
+    await page.waitForTimeout(1200);
+    expect(patches).toBeGreaterThanOrEqual(1);
+    // Back in VIEW mode: zero attachments → NO Attachments section.
+    await expect(rightPane.getByText("Attachments", { exact: true })).toHaveCount(0);
+
+    // Zero-residue cleanup through the view-mode trash.
+    await rightPane.getByRole("button", { name: "Delete note" }).click();
+    await expect(listPane.locator("button").filter({ hasText: "S180 ED4 edit probe" })).toHaveCount(0);
+  });
+
+  test("ED5: the coding draft carries the Attach row (no Font row); the coding view's section sits below the pre body", async ({ page }) => {
+    await page.goto("/Notes");
+    await hydrated(page);
+    await page.getByRole("button", { name: "New note menu" }).click();
+    await page.getByRole("menuitem", { name: "New Coding Note", exact: true }).click();
+    await page.waitForFunction(() => !document.querySelector('[role="menuitem"]'), null, { timeout: 10_000 });
+    const rightPane = page.locator('[aria-label="Note editor pane"]');
+    await expect(rightPane.getByText("Attach File", { exact: true })).toBeVisible();
+    await expect(rightPane.getByText("Font:", { exact: true })).toHaveCount(0);
+
+    await pickFixture(page);
+    await rightPane.locator("textarea").fill("const probe = 's180-ed5';");
+    await rightPane.locator('input[placeholder="Note title..."]').fill("S180 ED5 coding probe");
+    await page.getByRole("button", { name: "Save", exact: true }).click();
+    await page.waitForTimeout(1500);
+    // THE VIEW PIN: the coding note's section renders below the pre body.
+    const listPane = page.locator('[aria-label="Notes list pane"]');
+    await listPane.locator("button").filter({ hasText: "S180 ED5 coding probe" }).click();
+    await expect(rightPane.locator("pre.font-mono")).toBeVisible();
+    const section = rightPane.getByText("Attachments", { exact: true }).locator("..");
+    await expect(section).toBeVisible();
+    await expect(rightPane.getByRole("link", { name: "s180-ed-probe.txt" })).toBeVisible();
+
+    // Zero-residue cleanup.
+    await rightPane.getByRole("button", { name: "Delete note" }).click();
+    await expect(listPane.locator("button").filter({ hasText: "S180 ED5 coding probe" })).toHaveCount(0);
+  });
+
+  test("ED6: the B-8 Font-row port — the bg-slate-50 strip, the w-32 h-8 select, the separator, the 5 options", async ({ page }) => {
+    await page.goto("/Notes");
+    await hydrated(page);
+    await page.getByRole("button", { name: /Dot product intuition/ }).first().click();
+    await page.locator('[aria-label="Note editor pane"]').getByRole("button", { name: "Edit", exact: true }).click();
+
+    // THE STRIP: bg-slate-50 + rounded-lg (8px) + the measured order.
+    const strip = page.getByText("Font:", { exact: true }).locator("..").locator("..");
+    const stripCs = await strip.evaluate((el) => {
+      const s = getComputedStyle(el);
+      return { bg: s.backgroundColor, radius: s.borderRadius };
+    });
+    expect(stripCs.bg).toBe(rgb(248, 250, 252)); // slate-50
+    expect(stripCs.radius).toBe("8px"); // rounded-lg
+
+    // THE SELECT: w-32 (128px) × h-8 (32px), the default text-sm size.
+    const select = page.getByRole("combobox", { name: "Editor font" });
+    const selectBox = await select.boundingBox();
+    expect(Math.round(selectBox?.height ?? 0)).toBe(32);
+    expect(Math.round(selectBox?.width ?? 0)).toBe(128);
+    const selectCs = await select.evaluate((el) => getComputedStyle(el).fontSize);
+    expect(selectCs).toBe("14px");
+
+    // THE SEPARATOR: h-6 w-px bg-slate-200 between the select and the Divider.
+    const separator = page.getByText("Font:", { exact: true }).locator("..").locator("..").locator("div[aria-hidden]");
+    const sepCs = await separator.evaluate((el) => {
+      const s = getComputedStyle(el);
+      const r = el.getBoundingClientRect();
+      return { bg: s.backgroundColor, w: Math.round(r.width), h: Math.round(r.height) };
+    });
+    expect(sepCs.bg).toBe(rgb(226, 232, 240)); // slate-200
+    expect(sepCs.w).toBe(1);
+    expect(sepCs.h).toBe(24);
+
+    // THE 5-OPTION VOCABULARY (measured labels + order) — textContent()
+    // is exact by nature (the run-2 lesson: it takes no `exact` option).
+    await select.click();
+    const options = page.getByRole("option");
+    await expect(options).toHaveCount(5);
+    expect(await options.nth(0).textContent()).toBe("Default");
+    expect(await options.nth(1).textContent()).toBe("Serif");
+    expect(await options.nth(2).textContent()).toBe("Sans-serif");
+    expect(await options.nth(3).textContent()).toBe("Monospace");
+    expect(await options.nth(4).textContent()).toBe("Cursive");
+    await page.keyboard.press("Escape");
   });
 });

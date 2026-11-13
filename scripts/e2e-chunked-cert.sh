@@ -513,7 +513,7 @@
 # deterministic defaults so the leg fills only the title + score +
 # max; network-mocked, no server writes beyond the zero-residue
 # create]. The full DW map: docs/remediation-plan-session173.md.)
-# Expected: 158 + 223 + 101 + 95 + 89 = 666 (each chunk's count includes its
+# Expected: 158 + 229 + 101 + 95 + 89 = 672 (each chunk's count includes its
 # auth setup — the current census; the historical re-tag blocks beneath.)
 # (S171/DU re-tag — census 634 → 637, net +3: chunk 2 +2 [the
 # S171/DU2 studygroups create-dialog parity catch-up pair in

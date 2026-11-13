@@ -403,13 +403,17 @@ describe("IMPORT_FK_MAP (the completeness pin — the INITIAL_COLLECTIONS patter
     expect(Object.keys(IMPORT_FK_MAP).sort()).toEqual([...EXPORT_COLLECTIONS].sort());
   });
 
-  it("declares cards.deckId as the only REQUIRED FK", () => {
+  it("declares cards.deckId + noteAttachments.noteId as the REQUIRED FKs", () => {
+    // S180/ED re-anchor: noteAttachments.noteId joins the required family —
+    // an attachment row is never legitimate backup content without its note
+    // (the export NEVER carries staged rows — noteId null is the draft's
+    // transient scratch, rejected exactly like a dangling cards.deckId).
     const required = Object.entries(IMPORT_FK_MAP).flatMap(([collection, specs]) =>
       (specs as { field: string; required?: boolean }[])
         .filter((s) => s.required)
         .map((s) => `${collection}.${s.field}`),
-    );
-    expect(required).toEqual(["cards.deckId"]);
+    ).sort();
+    expect(required).toEqual(["cards.deckId", "noteAttachments.noteId"]);
   });
 
   it("declares every FK target as a manifest collection (no dangling map entries)", () => {
@@ -482,8 +486,11 @@ describe("the derived route FK maps (S122/BW8 — the drift-hazard close)", () =
   // completeness pin while shipping with no route-side pre-emption).
   // BW8 moves the operative maps INTO the seam (derived from
   // IMPORT_FK_MAP, single source) — these pins hold the derivation.
-  it("derives REQUIRED exactly: cards.deckId → decks", () => {
-    expect(IMPORT_REQUIRED_FKS).toEqual({ cards: { deckId: "decks" } });
+  it("derives REQUIRED exactly: cards.deckId → decks + noteAttachments.noteId → notes (the S180/ED twin)", () => {
+    expect(IMPORT_REQUIRED_FKS).toEqual({
+      cards: { deckId: "decks" },
+      noteAttachments: { noteId: "notes" },
+    });
   });
 
   it("derives OPTIONAL with the self-target for folders.parentId and no required leakage", () => {
@@ -1102,6 +1109,8 @@ describe("S130/CE7 · the import length caps", () => {
     // chatMessages.content).
     // S139/CN1 re-anchor: files.mime joined (the CE7 bloat class — the
     // mime rode the 1 M generic default into every files list GET).
+    // S180/ED re-anchor: the noteAttachments twins join (the files family's
+    // own caps — name 200, mime 100 — the BT1b third-entry-point doctrine).
     expect(keys).toEqual([
       "assignments.description",
       "assignments.title",
@@ -1123,6 +1132,8 @@ describe("S130/CE7 · the import length caps", () => {
       "folders.name",
       "grades.title",
       "holidays.name",
+      "noteAttachments.mime",
+      "noteAttachments.name",
       "notebooks.name",
       "notes.content",
       "notes.tags",
@@ -2108,10 +2119,15 @@ describe("S159/DH2 · the length-cap VALUE parity census (the mirror made self-g
 
   // The 3 atoms whose interactive twin lives OUTSIDE validation.ts (a
   // route-local schema, a server-side persist cap, an upload-door cap).
+  // S180/ED: the noteAttachments twins join — the name cap lives in the
+  // staged upload route's own guard (the files POST family's inline
+  // twin); the mime cap rides the SAME http.ts constant as files.mime.
   const OTHER_SOURCE_MAP: Array<{ key: string; file: string; re: RegExp }> = [
     { key: "folders.name", file: "src/app/api/files/folders/route.ts", re: /name:\s*z\.string\(\)\.trim\(\)\.min\(1\)\.max\((\d[\d_]*)\)/ },
     { key: "chatMessages.content", file: "src/lib/server/ai.ts", re: /PERSISTED_CONTENT_MAX = (\d[\d_]*)/ },
     { key: "files.mime", file: "src/lib/server/http.ts", re: /UPLOAD_MIME_MAX_CHARS = (\d[\d_]*)/ },
+    { key: "noteAttachments.name", file: "src/app/api/notes/attachments/route.ts", re: /File names are limited to (\d[\d_]*) characters/ },
+    { key: "noteAttachments.mime", file: "src/lib/server/http.ts", re: /UPLOAD_MIME_MAX_CHARS = (\d[\d_]*)/ },
   ];
 
   it("the census maps cover the registry EXACTLY — a new registry key without a parity source fails loudly, and a map entry without its registry key fails too", async () => {
@@ -2136,7 +2152,7 @@ describe("S159/DH2 · the length-cap VALUE parity census (the mirror made self-g
     }
   });
 
-  it("the three non-validation.ts atoms equal their own sources (the folders route atom, the persist cap, the upload mime cap)", async () => {
+  it("the non-validation.ts atoms equal their own sources (the folders route atom, the persist cap, the upload mime cap, the S180/ED noteAttachments twins)", async () => {
     const { IMPORT_FIELD_LENGTHS } = await import("../src/lib/data-import");
     for (const { key, file, re } of OTHER_SOURCE_MAP) {
       const src = readFileSync(path.resolve(process.cwd(), file), "utf8");

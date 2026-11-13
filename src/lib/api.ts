@@ -109,8 +109,18 @@ export async function apiSend<T = unknown>(
 ): Promise<T> {
   const init: RequestInit = { method };
   if (body !== undefined) {
-    init.headers = { "Content-Type": "application/json" };
-    init.body = JSON.stringify(body);
+    if (body instanceof FormData) {
+      // S180/ED: the multipart branch — the BROWSER owns the boundary
+      // (Content-Type carries the random delimiter; a hand-set
+      // application/json header would break the multipart envelope, and
+      // setting multipart/form-data manually without the boundary breaks
+      // it too). No header override at all: fetch derives it from the
+      // FormData object.
+      init.body = body;
+    } else {
+      init.headers = { "Content-Type": "application/json" };
+      init.body = JSON.stringify(body);
+    }
   }
   // S130/CE1: the default WRITE deadline — every mutation call site that
   // passes no options inherits the 30 s bound (a stalled write rejects

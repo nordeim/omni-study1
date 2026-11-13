@@ -565,7 +565,15 @@ export const noteDelegate = makeOwnedDelegate({
   // client (the import route bypasses this hook by design) and applies
   // the same sanitizer in its own loop; the quill-editor mount gate
   // covers pre-fix legacy rows with the DOM walk from the same policy.
-  writeTransform: sanitizeNoteContent,
+  //
+  // S180/ED: the writeTransform also STRIPS the attachments wire atom —
+  // the S180 noteSchema carries the {name, url} list for VALIDATION (the
+  // cap + the prefix + the sent-key semantics live in the schema), but
+  // the column family never persists it: the noteAttachment rows own the
+  // bind through src/lib/server/note-attachments.ts (the custom note
+  // routes' bind leg). The strip composes FIRST so the sanitizer sees
+  // only real columns.
+  writeTransform: (data: Row) => sanitizeNoteContent(stripNoteAttachmentRefs(data)),
 });
 
 /** S140/CO1: strip note HTML to Quill's authoring vocabulary (the
@@ -575,6 +583,20 @@ function sanitizeNoteContent(data: Row): Row {
   const content = data.content;
   if (typeof content !== "string" || content === "") return data;
   return { ...data, content: sanitizeNoteHtml(content) };
+}
+
+/** S180/ED: delete the attachments wire atom from a write payload — the
+ *  schema VALIDATES the {name, url} list (the cap + the prefix + the
+ *  sent-key semantics); the bind leg (the custom note routes, through
+ *  src/lib/server/note-attachments.ts) owns the noteAttachment rows, so
+ *  the delegate's Prisma write never sees the key. (The CR1 own-keys
+ *  membership test — `in` walks the prototype chain.) */
+function stripNoteAttachmentRefs(data: Row): Row {
+  if (!Object.prototype.hasOwnProperty.call(data, "attachments")) return data;
+  const { attachments: _attachments, ...rest } = data as Row & {
+    attachments?: unknown;
+  };
+  return rest;
 }
 
 export const flashcardDeckDelegate = makeOwnedDelegate({

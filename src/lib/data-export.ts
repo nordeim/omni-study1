@@ -39,6 +39,13 @@ export const EXPORT_COLLECTIONS = [
   "timetableClasses",
   "notebooks",
   "notes",
+  // S180/ED: the note Attach-File rows — AFTER notes (the referent) in
+  // both the export manifest and IMPORT_ORDER; the export reader excludes
+  // STAGED rows (noteId null is the draft's transient scratch, never the
+  // user's persisted data — the run-2 caught bug: a staged orphan rode
+  // the export and the import's REQUIRED-FK guard 400'd the user's own
+  // backup).
+  "noteAttachments",
   "decks",
   "cards",
   "practiceTests",

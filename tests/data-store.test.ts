@@ -452,6 +452,9 @@ describe("S151/CZ1: the notes tags chain (B-M1 — add/remove interleave)", () =
     color: "white",
     kind: "text",
     language: null,
+    // S180/ED: the include read's bound rows (the empty list — no
+    // attachments on the fixture).
+    attachments: [],
     createdAt: "2026-01-01T00:00:00.000Z",
     updatedAt: "2026-01-01T00:00:00.000Z",
   };
@@ -886,6 +889,7 @@ describe("S166/DP1: the notes family mutation CB8 split (B-H1 — committed writ
           color: "white",
           kind: "text",
           language: null,
+          attachments: [],
           createdAt: "2026-01-01T00:00:00.000Z",
           updatedAt: "2026-01-01T00:00:00.000Z",
         },

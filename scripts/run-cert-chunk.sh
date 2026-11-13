@@ -4,9 +4,18 @@
 # SIGKILL escalation → rm db/e2e.db → run the chunk), one chunk per
 # invocation so each foreground run fits the tool timeout.
 # Usage: bash /home/z/my-project/omni-study1/scripts/run-cert-chunk.sh <1-5>
-# Expected (S179/EC re-tag): 158 + 223 + 101 + 95 + 89 = 666 — the same
+# Expected (S180/ED re-tag): 158 + 229 + 101 + 95 + 89 = 672 — the same
 # census as scripts/e2e-chunked-cert.sh (machine-enforced by
 # tests/script-conventions.test.ts, including the identical-CHUNKS pin).
+# (S180/ED: chunk 2 +6 — the notes Attach-File wire pins in parity-session7
+# [ED1 the attach-row anatomy, ED2 the staged-upload wire, ED3 the view
+# pills + the download route, ED4 the edit seed + the local X + the Save
+# removal, ED5 the coding draft + the coding view's section, ED6 the B-8
+# Font-row port (the strip/select/separator/outline Divider/5 options)];
+# the AD5 Divider pin re-anchors count-neutral to the outline variant.
+# The unit census moves 1761 → 1779 [54 files] — the note-attachments
+# seam spec + the noteSchema atom pins + the registry re-anchors. See
+# docs/remediation-plan-session180.md.)
 # (S179/EC: chunk 2 +4 — the notes feature pins in parity-session7
 # [EC1 pin, EC2 palette, EC3 coding note, EC4 rum batching]; see
 # docs/remediation-plan-session179.md. The unit census moves

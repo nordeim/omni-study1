@@ -174,6 +174,15 @@ export const NOTE_LANGUAGES = [
   "Kotlin",
   "TypeScript",
 ] as const;
+// S180/ED (measured live 2026-11-13, the reference's Attach-File probe — the
+// plan §3.1): the Attach-File wire constants. The upload fires IMMEDIATELY
+// on pick (the reference's own posture) and the Save POST carries
+// attachments: [{name, url}] — the url is the clone's own flat download
+// route (the prefix below), so the bind leg can recover the row id from
+// the url it minted. Client-safe single source: the server seam
+// (src/lib/server/note-attachments.ts) imports BOTH from here.
+export const NOTE_ATTACHMENT_URL_PREFIX = "/api/notes/attachments/";
+export const NOTE_ATTACHMENT_CAP = 10;
 
 // ---- auth ------------------------------------------------------------------
 
@@ -476,6 +485,24 @@ export const noteSchema = z.object({
   color: z.enum(NOTE_COLORS).optional().default("white"),
   kind: z.enum(NOTE_KINDS).optional().default("text"),
   language: z.enum(NOTE_LANGUAGES).optional().nullable(),
+  // S180/ED: the Attach-File wire atom (the plan §3.1) — the Save POST/
+  // PATCH carries the authoritative desired list [{name, url}]. The atom
+  // is OPTIONAL and NEVER DEFAULTED: Zod 4's .partial() fires defaults, so
+  // a .default([]) atom would turn every field-scoped PATCH (title/
+  // content/tags) into an attachments WIPE — absent stays absent
+  // (untouched), a SENT array binds (staged rows join, rows no longer
+  // listed leave). The atom is the WIRE contract only — the delegate's
+  // writeTransform strips it before Prisma; the bind leg owns the
+  // noteAttachment rows.
+  attachments: z
+    .array(
+      z.object({
+        name: z.string().trim().min(1).max(200),
+        url: z.string().startsWith(NOTE_ATTACHMENT_URL_PREFIX).max(200),
+      }),
+    )
+    .max(NOTE_ATTACHMENT_CAP)
+    .optional(),
 });
 
 export const flashcardDeckSchema = z.object({

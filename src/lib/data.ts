@@ -188,8 +188,23 @@ export type NoteRow = {
   color: string; // NOTE_COLORS name — "white" is the default
   kind: string; // NOTE_KINDS name — "text" | "coding"
   language: string | null; // NOTE_LANGUAGES name — null on text notes
+  // S180/ED: the note's bound attachment rows (the GET's include read —
+  // the url is DERIVED at the server's read boundary from the id, never
+  // stored; the pills/chips render the {name, url} shape the reference's
+  // own wire carries).
+  attachments: NoteAttachmentRow[];
   createdAt: string;
   updatedAt: string;
+};
+
+/** S180/ED: the attachment row's client shape (the staged upload's 201
+ * body and the note include read — the id rides for the remove leg's key,
+ * the url for the chip/pill href, the name for the label). */
+export type NoteAttachmentRow = {
+  id: string;
+  name: string;
+  url: string;
+  createdAt?: string;
 };
 
 export type FlashcardDeckRow = {
@@ -846,6 +861,17 @@ export const mutations = {
       fetchAndSet("notebooks").catch(() => undefined),
       fetchAndSet("notes").catch(() => undefined),
     ]);
+  },
+
+  // S180/ED — the staged upload (the reference's measured posture: the
+  // pick POSTs IMMEDIATELY; the Save binds). The staged row (noteId null)
+  // answers {id, name, url} — the draft's chip renders the derived
+  // download url LIVE before the Save binds it. No refresh: staged rows
+  // are invisible to every collection until the bind.
+  uploadNoteAttachment: async (file: File): Promise<NoteAttachmentRow> => {
+    const form = new FormData();
+    form.append("file", file);
+    return apiSend<NoteAttachmentRow>("POST", `${PATHS.notes}/attachments`, form);
   },
 
   // Returns the created row's id — the notes view auto-selects the new note

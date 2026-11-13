@@ -148,6 +148,10 @@ const MODEL: Record<Collection, keyof PrismaClient> = {
   events: "event",
   timetableClasses: "timetableClass",
   notes: "note",
+  // S180/ED: the note Attach-File rows (bound rows only ever arrive — the
+  // export excludes the staged scratch; the REQUIRED-FK guard rejects a
+  // hand-edited null noteId before the transaction).
+  noteAttachments: "noteAttachment",
   cards: "flashcard",
   practiceTests: "practiceTest",
   studyGroups: "studyGroup",

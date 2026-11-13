@@ -288,7 +288,23 @@ describe("the chunked cert runner's truth contract (S128/CC2)", () => {
     // docs/remediation-plan-session179.md; the unit census moves
     // 1743 → 1761 [53 files] — the rum-batch seam + the noteSchema
     // atoms + the import census legs).
-    expect(certSource).toContain("Expected: 158 + 223 + 101 + 95 + 89 = 666");
+    // S180/ED re-tag: 666 → 672, chunk 2 +6 (the S180/ED notes
+    // Attach-File wire + B-8 pins in parity-session7 — ED1 the
+    // attach-row anatomy (the outline affordance + the hidden
+    // single-file input), ED2 the staged-upload wire (the pick POSTs
+    // immediately; the Save POST carries attachments:[{name,url}]),
+    // ED3 the view pills + the flat download route's contract, ED4
+    // the edit seed + the LOCAL X-remove + the Save's authoritative
+    // array, ED5 the coding draft row + the coding view's section
+    // below the pre body, ED6 the B-8 Font-row port (the bg-slate-50
+    // strip + the w-32 h-8 select + the h-6 w-px separator + the
+    // OUTLINE Divider + the 5-option vocabulary); the AD5 Divider
+    // pin re-anchors count-neutral to the outline variant (the S77
+    // "black" record was the dark-mode computed artifact) — see
+    // docs/remediation-plan-session180.md; the unit census moves
+    // 1761 → 1779 [54 files] — the note-attachments seam spec + the
+    // noteSchema atom pins + the registry re-anchors.
+    expect(certSource).toContain("Expected: 158 + 229 + 101 + 95 + 89 = 672");
   });
 
   it("propagates a failing chunk's exit code (never a green cert on a red run)", () => {
@@ -939,10 +955,12 @@ describe("the S135/CJ2 route-side collection censuses", () => {
   const EXPORT_BUILD = path.resolve(process.cwd(), "src/lib/server/export-build.ts");
   const IMPORT_ROUTE = path.resolve(process.cwd(), "src/app/api/import/data/route.ts");
 
-  it("the export assembly reads EXACTLY 20 collections (the findMany count — a deleted read fails)", () => {
+  it("the export assembly reads EXACTLY 21 collections (the findMany count — a deleted read fails)", () => {
     const src = readFileSync(EXPORT_BUILD, "utf8");
     const reads = src.match(/\.findMany\(/g) ?? [];
-    expect(reads.length, "the export seam must carry exactly 20 findMany reads (the manifest census)").toBe(20);
+    // S180/ED re-anchor: 20 → 21 (noteAttachments joined the manifest — the
+    // bound rows only; the staged scratch NEVER exports).
+    expect(reads.length, "the export seam must carry exactly 21 findMany reads (the manifest census)").toBe(21);
   });
 
   it("the export assembly hands every manifest collection to a READERS entry (an omitted reader fails)", async () => {
