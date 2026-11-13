@@ -434,7 +434,7 @@ function NoteListRow({
         {stripHtmlPreview(note.content) || "Empty note"}
       </p>
       {tags.length > 0 && (
-        <p className="mt-1.5 flex flex-wrap gap-1">
+        <p className="flex flex-wrap gap-1 mt-2">
           {tags.map((tag) => (
             <span
               key={tag}
@@ -1525,13 +1525,19 @@ export function NotesView() {
                 </Button>
               </div>
             )}
-            {/* Tag row (the measured "Add tag..." idiom; the draft's own
-                pills — they land in the create POST). */}
-            <div role="group" className="mt-2 flex flex-wrap items-center gap-2" aria-label="New note tags">
+            {/* Tag row (S181/EE — the B-8-family port, measured
+                2026-11-13): the reference's wrapper `flex flex-wrap
+                items-center gap-2 mb-4` (the mb-4 axis — the editor pane is
+                a flex column so margins ADD; the old mt-2 axis computed the
+                24px font→tag gap and the 0px tag→attach flush) + the
+                Badge-secondary pill anatomy + the shadcn Input (w-24 h-7,
+                border-input) + the ghost add button (the measured
+                functional gap — the click path alongside Enter). */}
+            <div role="group" className="flex flex-wrap items-center gap-2 mb-4" aria-label="New note tags">
               {draft.tags.map((tag) => (
                 <span
                   key={tag}
-                  className="inline-flex h-6 items-center gap-1 rounded-md bg-neutral-800 px-2 text-xs text-neutral-50 dark:bg-neutral-700"
+                  className="inline-flex items-center rounded-md border border-transparent gap-1 bg-neutral-800 px-2.5 py-0.5 text-xs font-semibold text-neutral-50"
                 >
                   {tag}
                   <button
@@ -1544,19 +1550,39 @@ export function NotesView() {
                   </button>
                 </span>
               ))}
-              <input
-                aria-label="Add tag"
-                placeholder="Add tag..."
-                value={tagDraft}
-                onChange={(e) => setTagDraft(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    e.preventDefault();
-                    addDraftTag();
-                  }
-                }}
-                className="h-7 w-32 rounded-md border border-neutral-800 bg-transparent px-2 text-sm text-slate-700 outline-none placeholder:text-slate-400 focus-visible:ring-2 focus-visible:ring-sf-primary/40 dark:border-neutral-700 dark:text-slate-200"
-              />
+              {/* S181/EE (measured): the input-group `flex items-center
+                  gap-1` — the shadcn Input (w-24 h-7, border-input — the
+                  S5 form-control palette) + the ghost add button (h-7,
+                  Plus size-4 — the reference's own [&_svg]:size-4 override
+                  wins its w-3 class, so the icon renders 16px and the
+                  button computes 40px). The Enter path stays; the button
+                  ADDS the click path. */}
+              <div className="flex items-center gap-1">
+                <Input
+                  aria-label="Add tag"
+                  placeholder="Add tag..."
+                  value={tagDraft}
+                  onChange={(e) => setTagDraft(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      addDraftTag();
+                    }
+                  }}
+                  className="w-24 h-7"
+                />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="h-7"
+                  aria-label="Add tag button"
+                  disabled={!tagDraft.trim()}
+                  onClick={addDraftTag}
+                >
+                  <Plus className="size-4" strokeWidth={2} />
+                </Button>
+              </div>
             </div>
             {/* S180/ED (measured draft row order): the Attach row AFTER the
                 tag row, BEFORE the editor card — the label-wrapped outline
@@ -1576,7 +1602,7 @@ export function NotesView() {
                 toolbar strip); a picked palette color tints the card inline
                 (white — the default — renders no tint, measured). */}
             <div
-              className="sf-note-editor mt-3 flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900"
+              className="sf-note-editor flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900"
               style={draft.color !== "white" ? { backgroundColor: NOTE_COLOR_HEX[draft.color] } : undefined}
             >
               {draft.kind === "coding" ? (
@@ -1929,14 +1955,17 @@ export function NotesView() {
               </div>
             )}
 
-            {/* Tag row (S77/AD6 measured): dark pills (neutral-800 +
-                neutral-50, 6px radius, 12px) + the "Add tag..." input. */}
-            <div role="group" className="mt-2 flex flex-wrap items-center gap-2" aria-label="Note tags">
+            {/* Tag row (S181/EE — the B-8-family port, measured
+                2026-11-13): the draft's twin — the reference's wrapper
+                `flex flex-wrap items-center gap-2 mb-4` + the
+                Badge-secondary pills + the shadcn Input (w-24 h-7) + the
+                ghost add button (the S181/EE3 click path). */}
+            <div role="group" className="flex flex-wrap items-center gap-2 mb-4" aria-label="Note tags">
               {selectedTags.map((tag) => (
                 <span
                   key={tag}
                   data-note-tag={tag}
-                  className="inline-flex h-6 items-center gap-1 rounded-md bg-neutral-800 px-2 text-xs text-neutral-50 dark:bg-neutral-700"
+                  className="inline-flex items-center rounded-md border border-transparent gap-1 bg-neutral-800 px-2.5 py-0.5 text-xs font-semibold text-neutral-50"
                 >
                   {tag}
                   <button
@@ -1949,19 +1978,35 @@ export function NotesView() {
                   </button>
                 </span>
               ))}
-              <input
-                aria-label="Add tag"
-                placeholder="Add tag..."
-                value={tagDraft}
-                onChange={(e) => setTagDraft(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    e.preventDefault();
-                    addTag();
-                  }
-                }}
-                className="h-7 w-32 rounded-md border border-neutral-800 bg-transparent px-2 text-sm text-slate-700 outline-none placeholder:text-slate-400 focus-visible:ring-2 focus-visible:ring-sf-primary/40 dark:border-neutral-700 dark:text-slate-200"
-              />
+              {/* S181/EE (measured): the edit surface's twin of the draft's
+                  input-group — the shadcn Input (w-24 h-7) + the ghost add
+                  button (the click path alongside Enter). */}
+              <div className="flex items-center gap-1">
+                <Input
+                  aria-label="Add tag"
+                  placeholder="Add tag..."
+                  value={tagDraft}
+                  onChange={(e) => setTagDraft(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      addTag();
+                    }
+                  }}
+                  className="w-24 h-7"
+                />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="h-7"
+                  aria-label="Add tag button"
+                  disabled={!tagDraft.trim()}
+                  onClick={addTag}
+                >
+                  <Plus className="size-4" strokeWidth={2} />
+                </Button>
+              </div>
             </div>
 
             {/* S180/ED (measured edit row order): the Attach row AFTER the
@@ -1985,7 +2030,7 @@ export function NotesView() {
                 picked color tints the card inline (white — the default —
                 renders no tint). */}
             <div
-              className="sf-note-editor mt-3 flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900"
+              className="sf-note-editor flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900"
               style={selected.color !== "white" ? { backgroundColor: NOTE_COLOR_HEX[selected.color as NoteColor] } : undefined}
             >
               {selected.kind === "coding" ? (

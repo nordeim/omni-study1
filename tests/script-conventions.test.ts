@@ -289,22 +289,23 @@ describe("the chunked cert runner's truth contract (S128/CC2)", () => {
     // 1743 → 1761 [53 files] — the rum-batch seam + the noteSchema
     // atoms + the import census legs).
     // S180/ED re-tag: 666 → 672, chunk 2 +6 (the S180/ED notes
-    // Attach-File wire + B-8 pins in parity-session7 — ED1 the
-    // attach-row anatomy (the outline affordance + the hidden
-    // single-file input), ED2 the staged-upload wire (the pick POSTs
-    // immediately; the Save POST carries attachments:[{name,url}]),
-    // ED3 the view pills + the flat download route's contract, ED4
-    // the edit seed + the LOCAL X-remove + the Save's authoritative
-    // array, ED5 the coding draft row + the coding view's section
-    // below the pre body, ED6 the B-8 Font-row port (the bg-slate-50
-    // strip + the w-32 h-8 select + the h-6 w-px separator + the
-    // OUTLINE Divider + the 5-option vocabulary); the AD5 Divider
-    // pin re-anchors count-neutral to the outline variant (the S77
-    // "black" record was the dark-mode computed artifact) — see
+    // Attach-File wire + B-8 pins in parity-session7 — see
     // docs/remediation-plan-session180.md; the unit census moves
     // 1761 → 1779 [54 files] — the note-attachments seam spec + the
     // noteSchema atom pins + the registry re-anchors.
-    expect(certSource).toContain("Expected: 158 + 229 + 101 + 95 + 89 = 672");
+    // S181/EE re-tag: 672 → 678, chunk 2 +6 (the S181/EE tag-row
+    // family pins in parity-session7 — EE1 the wrapper mb-4 axis +
+    // the 16/16/16 gap matrix (the flex-column margins ADD — the
+    // pre-change stack computed 24/0/28), EE2 the Badge-secondary
+    // pill anatomy (content-sized, 600, px-2.5, neutral-800 BOTH
+    // modes), EE3 the input-group (the w-24 h-7 form control + the
+    // ghost add button — the measured functional gap, the click
+    // path alongside Enter), EE4 the editor card's no-top-margin,
+    // EE5 the list-tile tags container mt-2, EE6 the dark-mode pill
+    // stays neutral-800 (the dark:bg-neutral-700 drift closes) — see
+    // docs/remediation-plan-session181.md; the unit census holds
+    // 1779 [54 files] — a view-layer port, no new seam.
+    expect(certSource).toContain("Expected: 158 + 235 + 101 + 95 + 89 = 678");
   });
 
   it("propagates a failing chunk's exit code (never a green cert on a red run)", () => {

@@ -2,6 +2,18 @@ import { defineConfig } from "vitest/config";
 import path from "node:path";
 
 // Unit-test layer for the pure domain seams — 54 files / 1779 tests
+// (re-anchored S181/EE — the notes tag-row family port: the unit census
+// UNCHANGED at 1779 [a view-layer port, no new seam — the tags ride the
+// S177-era noteSchema/POST/PATCH wire untouched; the e2e census moves
+// 672 → 678: +6 the S181/EE pins in parity-session7 — EE1 the wrapper's
+// mb-4 axis + the 16/16/16 gap matrix (the flex-column margins ADD —
+// the pre-change stack computed 24/0/28), EE2 the Badge-secondary pill
+// anatomy (content-sized, 600, px-2.5, neutral-800 BOTH modes), EE3 the
+// input-group (the w-24 h-7 form control + the ghost add button — the
+// measured functional gap, the click path alongside Enter), EE4 the
+// editor card's no-top-margin, EE5 the list-tile tags container mt-2,
+// EE6 the dark-mode pill stays neutral-800 (the dark:bg-neutral-700
+// drift closes)].)
 // (re-anchored S180/ED — the notes Attach-File wire cycle: the unit
 // census moves 1761 → 1779 [+18, 53 → 54 files: the NEW
 // tests/note-attachments.test.ts seam — 12 pins on the pure

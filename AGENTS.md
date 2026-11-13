@@ -11,7 +11,7 @@ High-signal instructions for coding agents working in this repo. Everything here
 | `bun run lint` / `bun run typecheck` | ESLint / `tsc --noEmit` — both must be clean |
 | `bun run test` | Vitest unit layer (1779 tests; `*.test.ts` only — never picks up e2e specs) |
 | `bun run build` | Production build → `.next/standalone` (**required before e2e**) |
-| `bun run test:e2e` | Playwright vs the standalone build on :3100 with the THROWAWAY tmpfs scratch db /dev/shm/omni-study1-e2e/e2e.db (672 tests across the 5-chunk cold map — 158+229+101+95+89, 30 spec files; a single-process full run trips the register rate-limiter budget by design, the chunked map re-boots the server per chunk). NOTE (S45, the day-boundary lesson): the global setup re-seeds every run, but the seed's IDEMPOTENT UPSERTS do NOT refresh day-relative dates on existing rows — a scratch `db/e2e.db` that ages across a UTC midnight keeps its original day-relative dates (today's tasks, the +1-day exam badge, the due-in pills, the import round-trip dates each read one day stale → 4 deterministic failures in parity-session6/parity-session9/s23-import). Delete `db/e2e.db` when a run crosses a day boundary — the global setup re-creates it fresh with current dates. NOTE (S46, TWO more aged-scratch-db classes + a build-input one): (1) ALWAYS run e2e COLD — S131/CF5 chained `scripts/e2e-cold-reset.sh` into `bun run test:e2e` (port-guard + `rm -f db/e2e.db` BEFORE playwright boots anything — global-setup is TOO LATE: Playwright starts the webServer before globalSetup), so the default runner self-colds; any DIRECT `playwright test` invocation still needs the manual `rm -f db/e2e.db` before every full run: the s23-import round-trip posts a FIXED-id envelope, so a second consecutive run against the aged db reads `created: 0, updated: 1` instead of `created: 1, updated: 0` and fails — not just across midnights, across ANY re-run; (2) the s22 negative-spawn spec reads the BUNDLED `.env` — Next's standalone output COPIES the repo-root `.env` into `.next/standalone/.env` at build time, so a REAL AUTH_SECRET in the dev `.env` leaks into the bundle and the guard CORRECTLY boots (the spec times out waiting for the exit) — keep the repo-root `.env`'s AUTH_SECRET EMPTY (the `.env.example` dev posture: `AUTH_SECRET=""` — dev falls back to the local constant with the boot warning) when building for e2e |
+| `bun run test:e2e` | Playwright vs the standalone build on :3100 with the THROWAWAY tmpfs scratch db /dev/shm/omni-study1-e2e/e2e.db (678 tests across the 5-chunk cold map — 158+235+101+95+89, 30 spec files; a single-process full run trips the register rate-limiter budget by design, the chunked map re-boots the server per chunk). NOTE (S45, the day-boundary lesson): the global setup re-seeds every run, but the seed's IDEMPOTENT UPSERTS do NOT refresh day-relative dates on existing rows — a scratch `db/e2e.db` that ages across a UTC midnight keeps its original day-relative dates (today's tasks, the +1-day exam badge, the due-in pills, the import round-trip dates each read one day stale → 4 deterministic failures in parity-session6/parity-session9/s23-import). Delete `db/e2e.db` when a run crosses a day boundary — the global setup re-creates it fresh with current dates. NOTE (S46, TWO more aged-scratch-db classes + a build-input one): (1) ALWAYS run e2e COLD — S131/CF5 chained `scripts/e2e-cold-reset.sh` into `bun run test:e2e` (port-guard + `rm -f db/e2e.db` BEFORE playwright boots anything — global-setup is TOO LATE: Playwright starts the webServer before globalSetup), so the default runner self-colds; any DIRECT `playwright test` invocation still needs the manual `rm -f db/e2e.db` before every full run: the s23-import round-trip posts a FIXED-id envelope, so a second consecutive run against the aged db reads `created: 0, updated: 1` instead of `created: 1, updated: 0` and fails — not just across midnights, across ANY re-run; (2) the s22 negative-spawn spec reads the BUNDLED `.env` — Next's standalone output COPIES the repo-root `.env` into `.next/standalone/.env` at build time, so a REAL AUTH_SECRET in the dev `.env` leaks into the bundle and the guard CORRECTLY boots (the spec times out waiting for the exit) — keep the repo-root `.env`'s AUTH_SECRET EMPTY (the `.env.example` dev posture: `AUTH_SECRET=""` — dev falls back to the local constant with the boot warning) when building for e2e |
 | `node scripts/capture-studyflow.mjs` | Refresh all 31 `docs/screenshots/` captures from the dev server (24 light + 7 dark) |
 | `node scripts/dark-sweep.mjs` | Dark-mode contrast audit over all 20 views (flashbulb/unreadable detector). S27: sets dark mode through the settings API (the real lifecycle) and SELF-VERIFIES the precondition — fails loudly (exit 1, no findings) if the dark class is not applied; the applied mode rides the JSON envelope. Never force the class directly (the session-10 approach silently rotted after S11) |
 | `node scripts/accent-dark-sweep.mjs` | Accent × dark-mode audit (S38-extended): all 7 accents × 20 desktop views × 20 MOBILE views at 390×844 + the drawer per accent (FAIL <2.2, WARN <3.2 for accent text; the mobile records also carry scrollWidth — >390 is a finding). The S38 shape is unit-pinned anti-phantom: every view recorded EXPLICITLY on both surfaces (clean views carry empty detector arrays), the per-accent `applied` self-verified readings + `mode: "dark"` + `mobileViewport` ride the envelope, and the seam's ALL-ACCENTS + ALL-VIEWS + drawer-present guards make every silently-skipped dimension a LOUD shape-error (the pre-S38 mobile pass swept only 6 views — MOBILE_VIEWS — and the omission-means-clean recording could not distinguish "clean because measured" from "clean because never rendered") |
@@ -3855,3 +3855,43 @@ Hover-parity probing must run in Playwright, not a touch-emulating browser — v
    affordance: the reference wraps the outline span + the hidden
    input in a bare `label.cursor-pointer` — the clone's span carries
    the `aria-label="Attach file"` the label cannot give it.
+
+## S181 lessons (Batch EE — the notes tag-row family port + the flex-column margin-ADD root cause)
+
+1. **FLEX CONTAINERS never collapse margins — the S16 lesson's mirror
+   image.** The S16 lesson ("adjacent-sibling margins COLLAPSE — mb +
+   mt compute as max()") is a BLOCK-layout fact; the notes editor pane
+   is a flex column, where margins ADD. The tag row's `mt-2` (the wrong
+   axis) produced BOTH a 24px gap above (mb-4 16 + mt-2 8) and a 0px
+   gap below (no mb on the tag row, no mt on the attach row — FLUSH).
+   When a row stack's gaps drift, name the layout model FIRST (flex vs
+   block), then the margin axis, then the port.
+2. **The reference's own icon-size overrides ride CSS specificity, not
+   the class list.** The add button's svg carries `w-3 h-3` in its class
+   list but renders 16px — the shadcn Button base's `[&_svg]:size-4`
+   descendant selector (0,1,1) beats the utility class (0,1,0). The
+   measured 40px button width (px-3 24 + icon 16) is the proof; the
+   class list alone would have predicted 36px. Port the COMPUTED
+   geometry, then derive the class choice from it.
+3. **A probe's "row" locator must walk to the flex-wrap ancestor.** The
+   tag row wrapper is `flex flex-wrap items-center gap-2 mb-4`, but the
+   "Add tag..." input's own group is `flex items-center gap-1` — a naive
+   `closest('.flex')` lands on the input group and every downstream gap
+   measurement reads the wrong element. Walk UP until the className
+   includes `flex-wrap` (the s181 probes' STACK helper).
+4. **The reference account stands in its persisted DARK mode** (the
+   S177 plan's own record; re-verified html.dark this cycle) — the
+   classes are the theme-independent parity contract; record the mode
+   with every computed-token table. The S178-era light-mode --secondary
+   record (neutral-800) plus this cycle's dark-mode measurement
+   establish the pill is neutral-800 in BOTH modes — routing through
+   the clone's own --secondary token would have imported the clone's
+   light-mode secondary (a light gray) and regressed the AD6 pin.
+5. **The honest RED can hit a pin bug before the designed marker — fix
+   the pin, then re-derive the RED evidence from the recorded
+   measurements.** EE1/EE4's first pre-change failure was a JSON.parse
+   misuse (`page.evaluate(string)` already returns the object); the pin
+   was fixed and the designed-marker RED evidence is the clone probe's
+   own pre-change measurement (24/0/28, recorded in the plan §2.1
+   before any source change). A RED at the wrong marker is a pin bug,
+   never a pass.

@@ -3732,3 +3732,198 @@ test.describe("S180/ED · the notes Attach-File wire + the B-8 Font-row port", (
     await page.keyboard.press("Escape");
   });
 });
+
+// S181/EE — the notes tag-row family port (the B-8-family audit's remaining
+// rows, measured 2026-11-13 by the s181 probe set: the reference's tag row
+// wrapper `flex flex-wrap items-center gap-2 mb-4` vs the clone's mt-2 axis
+// error; the editor pane is a FLEX COLUMN so margins ADD — the clone's stack
+// computed 24/0/28 where the reference computes 16/16/16; the pill is the
+// Badge-secondary anatomy (px-2.5 py-0.5 font-semibold, neutral-800 BOTH
+// modes); the input is the shadcn form control (w-24 h-7 border-input); the
+// ghost add button (h-7 px-3, Plus w-3 h-3) is the measured functional gap.
+test.describe("S181/EE · the notes tag-row family port", () => {
+  // The row-stack walk (the s181 probe's STACK, adapted to the clone's
+  // aria-labels): the tag row is the "Add tag..." input's first flex-wrap
+  // ANCESTOR (never the input's own `flex items-center gap-1` group).
+  const STACK_WALK = `(() => {
+    const pane = document.querySelector('[aria-label="Note editor pane"]') ?? document.body;
+    const fontRow = [...pane.querySelectorAll("div")].find((d) => (d.textContent ?? "").trim().startsWith("Font:")) ?? null;
+    const tagInput = [...pane.querySelectorAll("input")].find((i) => (i.placeholder ?? "").startsWith("Add tag")) ?? null;
+    let tagRow = tagInput ? tagInput.parentElement : null;
+    while (tagRow && !(tagRow.className && String(tagRow.className).includes("flex-wrap"))) tagRow = tagRow.parentElement;
+    const attachLabel = [...pane.querySelectorAll("span,label,p")].find((el) => (el.textContent ?? "").trim() === "Attach File");
+    let attachRow = attachLabel ? attachLabel.parentElement : null;
+    while (attachRow && !(attachRow.className && String(attachRow.className).includes("flex-wrap"))) attachRow = attachRow.parentElement;
+    const editorCard = pane.querySelector(".sf-note-editor");
+    const gap = (a, b) => a && b ? Math.round(b.getBoundingClientRect().y - (a.getBoundingClientRect().y + a.getBoundingClientRect().height)) : null;
+    return {
+      tagRowCls: tagRow ? String(tagRow.className) : null,
+      tagRowMb: tagRow ? getComputedStyle(tagRow).marginBottom : null,
+      tagRowMt: tagRow ? getComputedStyle(tagRow).marginTop : null,
+      editorMt: editorCard ? getComputedStyle(editorCard).marginTop : null,
+      gaps: {
+        fontToTag: gap(fontRow, tagRow),
+        tagToAttach: gap(tagRow, attachRow),
+        attachToEditor: gap(attachRow, editorCard),
+      },
+    };
+  })()`;
+  const openDraft = async (page: Page) => {
+    await page.goto("/Notes");
+    await hydrated(page);
+    await page.getByRole("button", { name: "New note menu" }).click();
+    await page.getByRole("menuitem", { name: "New Note", exact: true }).click();
+    await page.waitForFunction(() => !document.querySelector('[role="menuitem"]'), null, { timeout: 10_000 });
+  };
+  const openEditSurface = async (page: Page) => {
+    await page.goto("/Notes");
+    await hydrated(page);
+    await page.getByRole("button", { name: /Dot product intuition/ }).first().click();
+    await page.locator('[aria-label="Note editor pane"]').getByRole("button", { name: "Edit", exact: true }).click();
+  };
+
+  test("EE1: the tag row wrapper — mb-4 on the right axis + the 16/16/16 gap matrix (the flex-column margins ADD)", async ({ page }) => {
+    await openDraft(page);
+    const stack = (await page.evaluate(STACK_WALK)) as { tagRowCls: string | null; tagRowMb: string | null; tagRowMt: string | null; editorMt: string | null; gaps: { fontToTag: number | null; tagToAttach: number | null; attachToEditor: number | null }; };
+    // Class level: the reference's wrapper verbatim — the mb-4 present, the
+    // mt-2 GONE (the S181 root cause: the wrong margin axis).
+    expect(stack.tagRowCls).toContain("mb-4");
+    expect(stack.tagRowCls).not.toContain("mt-2");
+    expect(stack.tagRowCls).toContain("flex-wrap");
+    expect(stack.tagRowCls).toContain("gap-2");
+    // Computed level: the margin axis.
+    expect(stack.tagRowMb).toBe("16px");
+    expect(stack.tagRowMt).toBe("0px");
+    // The editor card: NO top margin of its own (the row above's mb-4 IS
+    // the gap — the 28px double-margin drift closes).
+    expect(stack.editorMt).toBe("0px");
+    // The gap matrix: the reference's 16/16/16 (±1 subpixel).
+    expect(stack.gaps.fontToTag).toBeGreaterThanOrEqual(15);
+    expect(stack.gaps.fontToTag).toBeLessThanOrEqual(17);
+    expect(stack.gaps.tagToAttach).toBeGreaterThanOrEqual(15);
+    expect(stack.gaps.tagToAttach).toBeLessThanOrEqual(17);
+    expect(stack.gaps.attachToEditor).toBeGreaterThanOrEqual(15);
+    expect(stack.gaps.attachToEditor).toBeLessThanOrEqual(17);
+  });
+
+  test("EE2: the tag pill — the Badge-secondary anatomy (content-sized, 600, px-2.5, neutral-800)", async ({ page }) => {
+    await openEditSurface(page);
+    const pill = page.locator('[aria-label="Note tags"] [data-note-tag="calculus"]');
+    await expect(pill).toBeVisible();
+    const cs = await pill.evaluate((el) => {
+      const s = getComputedStyle(el);
+      return {
+        bg: s.backgroundColor, color: s.color, radius: s.borderRadius,
+        size: s.fontSize, weight: s.fontWeight,
+        h: Math.round(el.getBoundingClientRect().height),
+        px: parseFloat(s.paddingLeft), py: parseFloat(s.paddingTop),
+      };
+    });
+    expect(cs.bg).toBe(rgb(38, 38, 38)); // neutral-800 (the reference's --secondary, both modes)
+    expect(cs.color).toBe(rgb(250, 250, 250)); // neutral-50
+    expect(cs.radius).toBe("6px");
+    expect(cs.size).toBe("12px");
+    // The S181 port: weight 600 (font-semibold) + content-sized (py-0.5, NOT
+    // the fixed h-6) + px-2.5 (10px, NOT the old px-2's 8px).
+    expect(cs.weight).toBe("600");
+    expect(cs.px).toBe(10);
+    expect(cs.py).toBeLessThanOrEqual(3); // py-0.5 (2px) — content-sized
+    expect(cs.h).toBeLessThanOrEqual(24); // NOT the fixed h-6=24; content-sized ≈ 22
+    expect(cs.h).toBeGreaterThanOrEqual(20);
+  });
+
+  test("EE3: the input-group — the w-24 h-7 form control + the ghost add button (the click path)", async ({ page }) => {
+    await openEditSurface(page);
+    const rightPane = page.locator('[aria-label="Note editor pane"]');
+    const input = rightPane.locator('input[placeholder="Add tag..."]');
+    await expect(input).toBeVisible();
+    const inputCs = await input.evaluate((el) => {
+      const s = getComputedStyle(el);
+      return {
+        w: Math.round(el.getBoundingClientRect().width),
+        h: Math.round(el.getBoundingClientRect().height),
+        size: s.fontSize, border: s.borderTopColor, px: parseFloat(s.paddingLeft),
+      };
+    });
+    // The measured reference: w-24 (96px) × h-7 (28), the shadcn form control
+    // (border-input gray-200 in light, px-3, text-sm).
+    expect(inputCs.w).toBe(96);
+    expect(inputCs.h).toBe(28);
+    expect(inputCs.size).toBe("14px");
+    expect(inputCs.border).toBe(rgb(229, 231, 235)); // gray-200 = border-input
+    expect(inputCs.px).toBe(12); // px-3
+    // The ADD BUTTON (the S181 functional port): ghost, 40×28, Plus w-3 h-3.
+    const addBtn = rightPane.locator('button[aria-label="Add tag button"]');
+    await expect(addBtn).toBeVisible();
+    const btnCs = await addBtn.evaluate((el) => {
+      const s = getComputedStyle(el);
+      return {
+        w: Math.round(el.getBoundingClientRect().width),
+        h: Math.round(el.getBoundingClientRect().height),
+        bg: s.backgroundColor, border: s.borderTopWidth, radius: s.borderRadius,
+        size: s.fontSize,
+      };
+    });
+    expect(btnCs.w).toBe(40);
+    expect(btnCs.h).toBe(28);
+    expect(btnCs.bg).toBe("rgba(0, 0, 0, 0)"); // ghost: transparent
+    expect(btnCs.border).toBe("0px");
+    expect(btnCs.radius).toBe("6px");
+    expect(btnCs.size).toBe("12px");
+    await expect(addBtn.locator("svg")).toHaveClass(/lucide-plus/);
+    // THE CLICK PATH (the measured functional gap): type, click, the pill
+    // lands; remove it via its X (the local-state family).
+    await input.fill("ee3tag");
+    await addBtn.click();
+    const pill = rightPane.locator('[data-note-tag="ee3tag"]');
+    await expect(pill).toBeVisible();
+    await rightPane.getByRole("button", { name: "Remove tag ee3tag" }).click();
+    await expect(pill).toHaveCount(0);
+  });
+
+  test("EE4: the editor card carries no top margin (the attach row's mb-4 IS the gap) — the edit surface too", async ({ page }) => {
+    await openEditSurface(page);
+    const stack = (await page.evaluate(STACK_WALK)) as { tagRowCls: string | null; tagRowMb: string | null; tagRowMt: string | null; editorMt: string | null; gaps: { fontToTag: number | null; tagToAttach: number | null; attachToEditor: number | null }; };
+    expect(stack.editorMt).toBe("0px");
+    expect(stack.tagRowMb).toBe("16px");
+    expect(stack.gaps.tagToAttach).toBeGreaterThanOrEqual(15);
+    expect(stack.gaps.tagToAttach).toBeLessThanOrEqual(17);
+    expect(stack.gaps.attachToEditor).toBeGreaterThanOrEqual(15);
+    expect(stack.gaps.attachToEditor).toBeLessThanOrEqual(17);
+  });
+
+  test("EE5: the list-tile tags container — mt-2 (8px) below the preview", async ({ page }) => {
+    await page.goto("/Notes");
+    await hydrated(page);
+    const row = page.getByRole("button", { name: /Dot product intuition/ }).first();
+    const container = row.locator('[data-note-tag="calculus"]').locator("..");
+    const cs = await container.evaluate((el) => ({
+      mt: getComputedStyle(el).marginTop,
+      cls: el.className,
+    }));
+    expect(cs.mt).toBe("8px"); // mt-2 (the reference's measured container)
+    expect(cs.cls).toContain("flex-wrap");
+    expect(cs.cls).toContain("gap-1");
+  });
+
+  test("EE6: the dark-mode pill stays neutral-800 (the dark:bg-neutral-700 drift closes)", async ({ page }) => {
+    // The S10 pattern: toggle the theme through the API, reload, measure,
+    // then RESTORE (the shared-user-record doctrine).
+    await openEditSurface(page);
+    await page.request.patch("/api/settings/preferences", { data: { themeMode: "dark" } });
+    await page.reload();
+    await hydrated(page);
+    await page.getByRole("button", { name: /Dot product intuition/ }).first().click();
+    await page.locator('[aria-label="Note editor pane"]').getByRole("button", { name: "Edit", exact: true }).click();
+    const pill = page.locator('[aria-label="Note tags"] [data-note-tag="calculus"]');
+    await expect(pill).toBeVisible();
+    const bg = await pill.evaluate((el) => getComputedStyle(el).backgroundColor);
+    // The reference's dark-mode pill is STILL neutral-800 (measured
+    // 2026-11-13 on the dark-mode account): the clone's old
+    // dark:bg-neutral-700 (rgb(64,64,64)) is the drift this closes.
+    expect(bg).toBe(rgb(38, 38, 38));
+    // RESTORE the light theme (the record's own posture).
+    const restore = await page.request.patch("/api/settings/preferences", { data: { themeMode: "light" } });
+    expect(restore.ok()).toBe(true);
+  });
+});
