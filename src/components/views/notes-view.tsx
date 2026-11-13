@@ -22,10 +22,13 @@
 import * as React from "react";
 import {
   BookOpen,
+  Code,
   FileText,
   Minus,
   Notebook,
+  Palette,
   Pencil,
+  Pin,
   Plus,
   Save,
   Search,
@@ -60,6 +63,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useToast } from "@/components/ui/toast";
+import { Textarea } from "@/components/ui/textarea";
 import { EmptyState, Spinner } from "@/components/views/shared";
 import {
   QuillEditor,
@@ -71,9 +75,18 @@ import {
   parseNoteTags,
   useDataStore,
   type NoteInput,
+  type NoteRow,
   type NotebookRow,
 } from "@/lib/data";
 import { ApiError } from "@/lib/api";
+// S179/EC1: the note feature vocabularies ride validation.ts's single
+// source (the enum-single-source census guards the import — the CA14/
+// DI3 doctrine; the measured palette/kind/language values).
+import {
+  NOTE_COLORS,
+  NOTE_KINDS,
+  NOTE_LANGUAGES,
+} from "@/lib/validation";
 import { htmlToText, stripHtmlPreview } from "@/lib/text";
 // S178/EB1: the view-mode prose gate (the S140/CO1 policy module — the
 // same client-side sanitizeNoteHtmlDom the QuillEditor mount path uses;
@@ -162,6 +175,205 @@ const NoteTitleInput = React.forwardRef<NoteTitleInputHandle, {
   );
 });
 
+// S179/EC1 — the CODING-note edit body: the measured textarea surface
+// ("Write your code notes here...", no Quill, no Font row). Owned as a
+// KEY-REMOUNTED child (by note id — the NoteTitleInput pattern) so the
+// body resets naturally on note switch with NO set-state-in-effect; the
+// pending debounced content PATCH flushes on unmount and on an explicit
+// Save (the imperative flush() — the BW3 symmetry). The clone's autosave
+// superset rides (the EB3 record: the reference's X exits LOCAL-only;
+// the clone's content is already server-current).
+interface CodeBodyHandle {
+  /** Fire the pending content PATCH immediately (the Save path). */
+  flush(): void;
+}
+
+const CodeBodyTextarea = React.forwardRef<CodeBodyHandle, {
+  noteId: string;
+  initialContent: string;
+  onPatch: (noteId: string, content: string) => void;
+}>(function CodeBodyTextarea({ noteId, initialContent, onPatch }, forwarded) {
+  const [body, setBody] = React.useState(initialContent);
+  const timerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
+  const pendingRef = React.useRef<{ id: string; content: string } | null>(null);
+  const onPatchRef = React.useRef(onPatch);
+  React.useEffect(() => {
+    onPatchRef.current = onPatch;
+  }, [onPatch]);
+
+  const flush = React.useCallback(() => {
+    if (timerRef.current) {
+      clearTimeout(timerRef.current);
+      timerRef.current = null;
+    }
+    const pending = pendingRef.current;
+    pendingRef.current = null;
+    if (pending) onPatchRef.current(pending.id, pending.content);
+  }, []);
+
+  React.useImperativeHandle(forwarded, () => ({ flush }), [flush]);
+
+  React.useEffect(() => () => flush(), [flush]);
+
+  return (
+    <Textarea
+      aria-label="Code note body"
+      placeholder="Write your code notes here..."
+      value={body}
+      onChange={(e) => {
+        const value = e.target.value;
+        setBody(value);
+        if (timerRef.current) clearTimeout(timerRef.current);
+        pendingRef.current = { id: noteId, content: value };
+        timerRef.current = setTimeout(() => {
+          timerRef.current = null;
+          flush();
+        }, TITLE_DEBOUNCE_MS);
+      }}
+      className="min-h-0 flex-1 resize-none border-0 bg-transparent p-6 font-mono text-sm shadow-none outline-none focus-visible:ring-0 dark:bg-transparent"
+    />
+  );
+});
+
+// S179/EC1 — the note feature vocabulary types (validation.ts's const
+// arrays are the single source; the local aliases keep the prop types
+// readable without re-declaring the values).
+type NoteColor = (typeof NOTE_COLORS)[number];
+type NoteKind = (typeof NOTE_KINDS)[number];
+
+// S179/EC2 (measured live 2026-11-13, computed DOM): the palette swatch
+// hexes — the reference's 7-swatch popover (32×32 rounded-full buttons,
+// inline background-color styles). The white default swatch carries
+// #FFFFFF; the six tints are the measured hexes. The LIST ROW and the
+// BODY CARD render the tint as the same inline style (the white default
+// renders NO inline style — the class bg shows, measured).
+const NOTE_COLOR_HEX: Record<NoteColor, string> = {
+  white: "#FFFFFF",
+  yellow: "#FEF3C7",
+  red: "#FECACA",
+  pink: "#FBCFE8",
+  violet: "#DDD6FE",
+  blue: "#BFDBFE",
+  emerald: "#A7F3D0",
+};
+
+// S179/EC2: the shared palette trigger + popover — ONE component riding
+// all three surfaces (the view toolbar, the edit toolbar, the draft
+// toolbar — the reference carries the same 36px lucide-palette trigger
+// and the same 7-swatch popover on each). The measured selection state:
+// the CURRENT color's swatch carries border-violet-500 + scale-110 (the
+// reference's own utility classes — unlike the S176 events-dialog
+// inline-style measurement); the rest border-slate-200.
+function NoteColorButton({
+  value,
+  onPick,
+  label,
+}: {
+  value: string;
+  onPick: (color: NoteColor) => void;
+  label: string;
+}) {
+  return (
+    <Popover>
+      <PopoverTrigger asChild>
+        <button
+          type="button"
+          aria-label={label}
+          className="flex size-9 items-center justify-center rounded-md text-slate-500 outline-none transition-colors hover:bg-slate-100 hover:text-slate-600 focus-visible:ring-2 focus-visible:ring-sf-primary/40 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-300"
+        >
+          <Palette className="size-4" strokeWidth={2} />
+        </button>
+      </PopoverTrigger>
+      <PopoverContent align="end" className="w-auto p-2">
+        <div role="group" aria-label="Note colors" className="flex items-center gap-2">
+          {NOTE_COLORS.map((color) => (
+            <button
+              key={color}
+              type="button"
+              aria-label={`${color} note color`}
+              onClick={() => onPick(color)}
+              style={{ backgroundColor: NOTE_COLOR_HEX[color] }}
+              className={cn(
+                "size-8 rounded-full border-2 outline-none transition-transform focus-visible:ring-2 focus-visible:ring-sf-primary/40",
+                value === color ? "border-violet-500 scale-110" : "border-slate-200",
+              )}
+            />
+          ))}
+        </div>
+      </PopoverContent>
+    </Popover>
+  );
+}
+
+// S179/EC1: the list row — extracted so the sectioned list (the Pinned /
+// All Notes sections) renders ONE row component per note (the measured
+// anatomy: the coding row's lucide-code lead, the pinned row's
+// violet-filled lucide-pin on the right, the inline color tint, and the
+// S77/AD7 certified title/preview/tags body).
+function NoteListRow({
+  note,
+  selected,
+  onSelect,
+}: {
+  note: NoteRow;
+  selected: boolean;
+  onSelect: (id: string) => void;
+}) {
+  const tags = parseNoteTags(note.tags);
+  const tint = note.color !== "white" ? { backgroundColor: NOTE_COLOR_HEX[note.color as NoteColor] } : undefined;
+  return (
+    <button
+      type="button"
+      onClick={() => onSelect(note.id)}
+      style={tint}
+      className={cn(
+        "block w-full rounded-xl border-2 p-3 text-left outline-none transition-colors focus-visible:ring-2 focus-visible:ring-sf-primary/40",
+        selected
+          ? "border-sf-primary-edge bg-sf-primary-softest dark:border-sf-primary-edge-dark dark:bg-slate-800"
+          : "border-transparent bg-slate-50 hover:border-slate-200 dark:bg-slate-800/50 dark:hover:border-slate-700",
+      )}
+    >
+      {/* S77/AD7 (measured): 16px/600 slate-800 title — the ref
+          renders H3 here (its own heading-order laxity; axe flags
+          h1→h3), so the clone ships the a11y-clean H2 with the
+          identical computed styling. 12px slate-500 preview via
+          stripHtmlPreview; tag pill after the preview; NO
+          notebook/date line. S179/EC1: the coding row leads with the
+          lucide-code icon (w-3 h-3 text-slate-400 — measured) and the
+          pinned row carries the violet-filled pin on the right. */}
+      <div className="flex items-start justify-between">
+        <div className="flex min-w-0 items-center gap-2">
+          {note.kind === "coding" && (
+            <Code className="size-3 shrink-0 text-slate-400" strokeWidth={2} />
+          )}
+          <h2 className="truncate text-base font-semibold text-slate-800 dark:text-slate-100">
+            {note.title}
+          </h2>
+        </div>
+        {note.pinned && (
+          <Pin className="size-4 shrink-0 fill-violet-500 text-violet-500" strokeWidth={2} />
+        )}
+      </div>
+      <p className="mt-1 truncate text-xs text-slate-500 dark:text-slate-400">
+        {stripHtmlPreview(note.content) || "Empty note"}
+      </p>
+      {tags.length > 0 && (
+        <p className="mt-1.5 flex flex-wrap gap-1">
+          {tags.map((tag) => (
+            <span
+              key={tag}
+              data-note-tag={tag}
+              className="rounded bg-slate-100 px-1.5 py-0.5 text-xs text-slate-600 dark:bg-slate-700 dark:text-slate-300"
+            >
+              {tag}
+            </span>
+          ))}
+        </p>
+      )}
+    </button>
+  );
+}
+
 export function NotesView() {
   const notes = useDataStore((s) => s.notes);
   const notebooks = useDataStore((s) => s.notebooks);
@@ -192,11 +404,18 @@ export function NotesView() {
   // Pure client state; the wire's createNote POST rides the Save only.
   // draftSeq keys the Quill remount so a discarded-then-reopened draft
   // starts from a BLANK editor, not the prior draft's leftover instance.
+  // S179/EC1: the draft carries the feature columns — kind (text/coding),
+  // language (the coding draft's own JavaScript initial — the UI owns the
+  // default, the reference's select default), and color (the draft
+  // toolbar's palette pick; white renders no tint).
   const [draft, setDraft] = React.useState<{
     title: string;
     content: string;
     tags: string[];
     notebookId: string;
+    kind: NoteKind;
+    language: (typeof NOTE_LANGUAGES)[number];
+    color: NoteColor;
   } | null>(null);
   const [draftSeq, setDraftSeq] = React.useState(0);
   const [draftError, setDraftError] = React.useState("");
@@ -245,6 +464,10 @@ export function NotesView() {
   // PATCH on unmount (the note-switch path, the QuillEditor's symmetry)
   // and exposes flush() for the explicit Save. See NoteTitleInput below.
   const titleInputRef = React.useRef<NoteTitleInputHandle | null>(null);
+  // S179/EC1: the coding note's debounced textarea handle (the BW3
+  // symmetry — saveNow flushes the pending content PATCH on the explicit
+  // Save; the unmount flush covers the note-switch path).
+  const codeBodyRef = React.useRef<CodeBodyHandle | null>(null);
 
   // The BT11 failed-rename streak contract (the settle branches keep the
   // AG6 selection-mirror gates — a departed note's rejection is ignored
@@ -374,15 +597,34 @@ export function NotesView() {
   // measured no-dialog flow). The notebook defaulting the dialog carried
   // rides: the active notebook filter pre-selects the draft's notebook
   // (the reference's "None" select — the empty-filter equivalent).
-  const openDraft = () => {
+  // S179/EC1: the draft carries the feature columns — the kind rides the
+  // entry point (the header dropdown's New Note / New Coding Note items,
+  // the reference's measured A-1 order); the coding draft's language
+  // starts at the reference's own select default (JavaScript — the UI
+  // owns the initial); color starts at the white default (no tint).
+  const openDraft = (kind: NoteKind = "text") => {
     setDraft({
       title: "",
       content: "",
       tags: [],
       notebookId: notebookFilter === "all" ? "" : notebookFilter,
+      kind,
+      language: "JavaScript",
+      color: "white",
     });
     setDraftSeq((n) => n + 1);
     setDraftError("");
+  };
+
+  // S179/EC1: the view-toolbar pin toggle (the measured instant toggle —
+  // the reference fires the PATCH on the click; the refetch re-renders
+  // the sections). The superset aria-label pair rides the unlabeled
+  // icon-only reference (the S178 lesson-4 posture).
+  const togglePin = (note: NoteRow) => {
+    void updateNote(note.id, { pinned: !note.pinned }).catch((err: unknown) => {
+      if (selectedIdRef.current !== note.id) return;
+      toast.error(err instanceof ApiError ? err.message : "Pin not saved — check your connection.");
+    });
   };
 
   const openNewNotebook = () => {
@@ -445,11 +687,18 @@ export function NotesView() {
     setBusy(true);
     setDraftError("");
     try {
+      // S179/EC1: the feature columns ride the create POST — kind +
+      // language (the coding draft's select state) + color (the draft
+      // toolbar's palette pick; white is the schema default anyway — the
+      // explicit ride keeps the draft's picked tint truthful).
       const created = await createNote({
         title: draft.title,
         content: draft.content,
         tags: JSON.stringify(draft.tags),
         notebookId: draft.notebookId,
+        kind: draft.kind,
+        ...(draft.kind === "coding" ? { language: draft.language } : {}),
+        ...(draft.color !== "white" ? { color: draft.color } : {}),
       });
       setDraft(null);
       setSelectedId(created ?? null);
@@ -675,10 +924,6 @@ export function NotesView() {
     // reference's Save persists the whole note, and a pending debounced
     // title must not be lost to a same-click content PATCH racing it.
     titleInputRef.current?.flush();
-    // getContent() is null during the Quill load window — the ?? fallback
-    // then carries the STORED content (S78/AE1: never PATCH "" over a
-    // populated note from a Save raced against the dynamic import).
-    const html = editorRef.current?.getContent() ?? selected.content;
     // S81/AH2 (the s81 audit, the departed-Save family): capture the note
     // this Save belongs to — BOTH settle branches are gated on the
     // selection mirror (a Save whose note the user already left must
@@ -687,7 +932,22 @@ export function NotesView() {
     // surface lie, and its flag reset re-armed the departed swallow).
     const noteId = selected.id;
     try {
-      await updateNote(noteId, { content: html });
+      if (selected.kind === "coding") {
+        // S179/EC1: the coding note's debounced textarea flush carries
+        // the latest content (the BW3 symmetry); the coding Save rides
+        // the flush's PATCH — its own content PATCH would race the flush
+        // with a STALE store read (the refetch lands after the flush).
+        // With nothing pending the flush is a no-op and the content is
+        // already server-current (the autosave superset, the EB3 record).
+        codeBodyRef.current?.flush();
+      } else {
+        // getContent() is null during the Quill load window — the ??
+        // fallback then carries the STORED content (S78/AE1: never PATCH
+        // "" over a populated note from a Save raced against the dynamic
+        // import).
+        const html = editorRef.current?.getContent() ?? selected.content;
+        await updateNote(noteId, { content: html });
+      }
       if (selectedIdRef.current !== noteId) return;
       // S80/AG6 (the s80 audit, L2): a successful explicit Save breaks the
       // failure streak too — the next autosave failure must toast again
@@ -729,9 +989,16 @@ export function NotesView() {
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuItem onSelect={openDraft}>
+              <DropdownMenuItem onSelect={() => openDraft("text")}>
                 <FileText className="size-4" strokeWidth={2} />
                 New Note
+              </DropdownMenuItem>
+              {/* S179/EC1 (measured A-1): the dropdown's MIDDLE item —
+                  the coding-note entry (the 14-option Language select +
+                  the textarea body + the code badge). */}
+              <DropdownMenuItem onSelect={() => openDraft("coding")}>
+                <Code className="size-4" strokeWidth={2} />
+                New Coding Note
               </DropdownMenuItem>
               <DropdownMenuItem onSelect={openNewNotebook}>
                 <Notebook className="size-4" strokeWidth={2} />
@@ -854,7 +1121,12 @@ export function NotesView() {
           </Select>
         </div>
 
-        <div className="sf-scroll mt-3 flex-1 space-y-2 overflow-y-auto">
+        {/* S179/EC1 (measured A-5): the SECTIONED list — the reference's
+            scroll container renders a "Pinned" section (only when pinned
+            notes exist) above the "All Notes" section; each section header
+            is the 12px/600 slate-500 UPPERCASE label and each section body
+            is its own space-y-2. */}
+        <div className="sf-scroll mt-3 flex-1 space-y-4 overflow-y-auto">
           {/* S130/CE3: the in-flight window renders the spinner, never the
               false "No notes yet." (a stale empty list is NOT an empty
               account). */}
@@ -889,7 +1161,7 @@ export function NotesView() {
               title="No notes yet"
               hint="Create your first note"
               cta={
-                <Button type="button" variant="gradient" className="sf-gradient-shadow-lg" onClick={openDraft}>
+                <Button type="button" variant="gradient" className="sf-gradient-shadow-lg" onClick={() => openDraft("text")}>
                   <Plus className="size-4" strokeWidth={2} />
                   New Note
                 </Button>
@@ -900,48 +1172,48 @@ export function NotesView() {
               No notes match.
             </p>
           ) : (
-            filtered.map((note) => {
-              const tags = parseNoteTags(note.tags);
-              return (
-                <button
-                  key={note.id}
-                  type="button"
-                  onClick={() => selectNote(note.id)}
-                  className={cn(
-                    "block w-full rounded-xl border-2 p-3 text-left outline-none transition-colors focus-visible:ring-2 focus-visible:ring-sf-primary/40",
-                    effectiveNoteId === note.id
-                      ? "border-sf-primary-edge bg-sf-primary-softest dark:border-sf-primary-edge-dark dark:bg-slate-800"
-                      : "border-transparent bg-slate-50 hover:border-slate-200 dark:bg-slate-800/50 dark:hover:border-slate-700",
-                  )}
-                >
-                  {/* S77/AD7 (measured): 16px/600 slate-800 title — the ref
-                      renders H3 here (its own heading-order laxity; axe flags
-                      h1→h3), so the clone ships the a11y-clean H2 with the
-                      identical computed styling. 12px slate-500 preview via
-                      stripHtmlPreview; tag pill after the preview; NO
-                      notebook/date line. */}
-                  <h2 className="truncate text-base font-semibold text-slate-800 dark:text-slate-100">
-                    {note.title}
-                  </h2>
-                  <p className="mt-1 truncate text-xs text-slate-500 dark:text-slate-400">
-                    {stripHtmlPreview(note.content) || "Empty note"}
+            <React.Fragment>
+              {/* S179/EC1 (measured A-5): pinned-first — the pinned rows
+                  render in their own section ABOVE the rest (each section
+                  keeps the updatedAt-desc order the filtered memo sorts);
+                  the "Pinned" section disappears when no note is pinned. */}
+              {filtered.some((n) => n.pinned) && (
+                <div>
+                  <p className="mb-2 text-xs font-semibold uppercase text-slate-500 dark:text-slate-400">
+                    Pinned
                   </p>
-                  {tags.length > 0 && (
-                    <p className="mt-1.5 flex flex-wrap gap-1">
-                      {tags.map((tag) => (
-                        <span
-                          key={tag}
-                          data-note-tag={tag}
-                          className="rounded bg-slate-100 px-1.5 py-0.5 text-xs text-slate-600 dark:bg-slate-700 dark:text-slate-300"
-                        >
-                          {tag}
-                        </span>
+                  <div className="space-y-2">
+                    {filtered
+                      .filter((n) => n.pinned)
+                      .map((note) => (
+                        <NoteListRow
+                          key={note.id}
+                          note={note}
+                          selected={effectiveNoteId === note.id}
+                          onSelect={selectNote}
+                        />
                       ))}
-                    </p>
-                  )}
-                </button>
-              );
-            })
+                  </div>
+                </div>
+              )}
+              <div>
+                <p className="mb-2 text-xs font-semibold uppercase text-slate-500 dark:text-slate-400">
+                  All Notes
+                </p>
+                <div className="space-y-2">
+                  {filtered
+                    .filter((n) => !n.pinned)
+                    .map((note) => (
+                      <NoteListRow
+                        key={note.id}
+                        note={note}
+                        selected={effectiveNoteId === note.id}
+                        onSelect={selectNote}
+                      />
+                    ))}
+                </div>
+              </div>
+            </React.Fragment>
           )}
         </div>
       </aside>
@@ -988,6 +1260,29 @@ export function NotesView() {
                 className="h-9 min-w-0 flex-1 rounded-md border-0 bg-transparent px-0 text-sm font-bold text-slate-900 outline-none placeholder:font-normal placeholder:text-slate-400 focus-visible:outline-none dark:text-slate-100 dark:placeholder:text-slate-500"
               />
               <div className="flex shrink-0 items-center gap-2">
+                {/* S179/EC1 (measured A-2): the CODING draft's Language
+                    select (w-32, the 14-option vocabulary, JavaScript
+                    initial — the UI owns the default) — FIRST in the
+                    toolbar, before the notebook select. */}
+                {draft.kind === "coding" && (
+                  <Select
+                    value={draft.language}
+                    onValueChange={(v) =>
+                      setDraft((d) => (d ? { ...d, language: v as (typeof NOTE_LANGUAGES)[number] } : d))
+                    }
+                  >
+                    <SelectTrigger className="h-9 w-32" aria-label="New coding note language">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {NOTE_LANGUAGES.map((lang) => (
+                        <SelectItem key={lang} value={lang}>
+                          {lang}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
                 {/* The measured notebook select (w-32, "None" default) —
                     the draft's notebook assignment; the a11y label is the
                     clone's superset over the reference's unlabeled
@@ -1010,6 +1305,14 @@ export function NotesView() {
                     ))}
                   </SelectContent>
                 </Select>
+                {/* S179/EC2 (measured A-3): the draft toolbar's palette —
+                    the shared 36px trigger + the 7-swatch popover (the
+                    pick rides the draft's own color; the Save POSTs it). */}
+                <NoteColorButton
+                  value={draft.color}
+                  onPick={(color) => setDraft((d) => (d ? { ...d, color } : d))}
+                  label="New note color"
+                />
                 <Button
                   type="button"
                   variant="gradient"
@@ -1036,28 +1339,32 @@ export function NotesView() {
               </div>
             )}
             {/* Font row (the shared typeface state — the existing editor's
-                own row, the S77/AD5 lineage). */}
-            <div className="mt-2 flex flex-wrap items-center gap-2">
-              <span className="text-xs font-medium text-slate-500 dark:text-slate-400">Font:</span>
-              <Select value={font} onValueChange={(v) => setFont(v as EditorFont)}>
-                <SelectTrigger className="h-7 w-28 text-xs" aria-label="Editor font">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="sans">Sans</SelectItem>
-                  <SelectItem value="serif">Serif</SelectItem>
-                  <SelectItem value="mono">Mono</SelectItem>
-                </SelectContent>
-              </Select>
-              <button
-                type="button"
-                onClick={() => draftEditorRef.current?.insertDivider()}
-                className="flex h-8 items-center gap-1 rounded-md bg-neutral-950 px-3 text-xs font-medium text-neutral-50 transition-opacity hover:opacity-90 focus-visible:ring-2 focus-visible:ring-sf-primary/40 focus-visible:outline-none dark:bg-neutral-800"
-              >
-                <Minus className="size-3" strokeWidth={2} />
-                Divider
-              </button>
-            </div>
+                own row, the S77/AD5 lineage). S179/EC1 (measured A-2): the
+                CODING draft carries NO Font row, NO Divider — the
+                reference's coding editor is the textarea surface only. */}
+            {draft.kind === "text" && (
+              <div className="mt-2 flex flex-wrap items-center gap-2">
+                <span className="text-xs font-medium text-slate-500 dark:text-slate-400">Font:</span>
+                <Select value={font} onValueChange={(v) => setFont(v as EditorFont)}>
+                  <SelectTrigger className="h-7 w-28 text-xs" aria-label="Editor font">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="sans">Sans</SelectItem>
+                    <SelectItem value="serif">Serif</SelectItem>
+                    <SelectItem value="mono">Mono</SelectItem>
+                  </SelectContent>
+                </Select>
+                <button
+                  type="button"
+                  onClick={() => draftEditorRef.current?.insertDivider()}
+                  className="flex h-8 items-center gap-1 rounded-md bg-neutral-950 px-3 text-xs font-medium text-neutral-50 transition-opacity hover:opacity-90 focus-visible:ring-2 focus-visible:ring-sf-primary/40 focus-visible:outline-none dark:bg-neutral-800"
+                >
+                  <Minus className="size-3" strokeWidth={2} />
+                  Divider
+                </button>
+              </div>
+            )}
             {/* Tag row (the measured "Add tag..." idiom; the draft's own
                 pills — they land in the create POST). */}
             <div role="group" className="mt-2 flex flex-wrap items-center gap-2" aria-label="New note tags">
@@ -1092,19 +1399,37 @@ export function NotesView() {
               />
             </div>
             {/* The editor card (the measured white rounded-2xl card wrapping
-                the Quill body) — key by the draft sequence so every draft
+                the body) — keyed by the draft sequence so every draft
                 session starts BLANK. onChange writes the draft content
                 (the Save's POST source — the measured no-autosave contract:
-                no POST fires while typing). */}
-            <div className="sf-note-editor mt-3 flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900">
-              <QuillEditor
-                key={`draft-${draftSeq}`}
-                ref={draftEditorRef}
-                value=""
-                onChange={(html) => setDraft((d) => (d ? { ...d, content: html } : d))}
-                font={font}
-                className="min-h-0 flex-1"
-              />
+                no POST fires while typing). S179/EC1/EC2 (measured A-2/A-7):
+                the CODING draft's body is the plain textarea (no Quill, no
+                toolbar strip); a picked palette color tints the card inline
+                (white — the default — renders no tint, measured). */}
+            <div
+              className="sf-note-editor mt-3 flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900"
+              style={draft.color !== "white" ? { backgroundColor: NOTE_COLOR_HEX[draft.color] } : undefined}
+            >
+              {draft.kind === "coding" ? (
+                <Textarea
+                  aria-label="Code note body"
+                  placeholder="Write your code notes here..."
+                  value={draft.content}
+                  onChange={(e) =>
+                    setDraft((d) => (d ? { ...d, content: e.target.value } : d))
+                  }
+                  className="min-h-0 flex-1 resize-none border-0 bg-transparent p-6 font-mono text-sm shadow-none outline-none focus-visible:ring-0 dark:bg-transparent"
+                />
+              ) : (
+                <QuillEditor
+                  key={`draft-${draftSeq}`}
+                  ref={draftEditorRef}
+                  value=""
+                  onChange={(html) => setDraft((d) => (d ? { ...d, content: html } : d))}
+                  font={font}
+                  className="min-h-0 flex-1"
+                />
+              )}
             </div>
           </div>
         ) : !selected ? (
@@ -1151,16 +1476,26 @@ export function NotesView() {
              title input DISABLED showing the stored title + the
              [Edit outline][trash outline-red] action row + the
              read-only prose body rendering the stored HTML; NO Font row,
-             NO tag row, NO Save, NO Quill. The pin/palette (the
-             reference's row leads) are the recorded B-4/B-5 deferrals —
-             no dead buttons. The trash deletes DIRECTLY (the measured
-             no-confirm); the clone's superset aria-label rides the
-             S177 lesson-2 unlabeled-control class. */
+             NO tag row, NO Save, NO Quill. The trash deletes DIRECTLY (the
+             measured no-confirm); the clone's superset aria-label rides
+             the S177 lesson-2 unlabeled-control class.
+             S179/EC1/EC2 (measured A-4): the action row leads with the
+             [pin 36px][palette 36px] pair (the pin is VIEW-MODE ONLY —
+             measured in both modes) and the CODING note renders the
+             language badge BEFORE the disabled title. */
           <div className="flex min-h-0 flex-1 flex-col">
             {/* Title row: the measured disabled title (14px/700, the same
                 placeholder + the editor title's exact className — the
-                S7-F/AD3/mobile pins hold untouched on it). */}
+                S7-F/AD3/mobile pins hold untouched on it). S179/EC1: the
+                coding note's language badge (the measured shadcn-badge
+                anatomy + the lucide-code icon) sits before the title. */}
             <div className="flex items-center gap-2">
+              {selected.kind === "coding" && (
+                <div className="inline-flex shrink-0 items-center gap-1 rounded-md border px-2.5 py-0.5 text-xs font-semibold text-foreground">
+                  <Code className="size-3" strokeWidth={2} aria-hidden />
+                  {selected.language ?? "JavaScript"}
+                </div>
+              )}
               <input
                 type="text"
                 disabled
@@ -1171,6 +1506,29 @@ export function NotesView() {
                 className="h-9 min-w-0 flex-1 rounded-md border-0 bg-transparent px-0 text-sm font-bold text-slate-900 outline-none placeholder:font-normal placeholder:text-slate-400 disabled:cursor-default dark:text-slate-100 dark:placeholder:text-slate-500"
               />
               <div className="flex shrink-0 items-center gap-2">
+                {/* S179/EC1 (measured A-4/A-5): the pin toggle — 36px
+                    icon-only, the violet-50 fill in the toolbar's pinned
+                    state (the list row's pin carries the stronger
+                    violet-500 tint — both measured); the superset
+                    aria-label pair rides the unlabeled reference. */}
+                <button
+                  type="button"
+                  aria-label={selected.pinned ? "Unpin note" : "Pin note"}
+                  onClick={() => togglePin(selected)}
+                  className={cn(
+                    "flex size-9 items-center justify-center rounded-md text-slate-500 outline-none transition-colors hover:bg-slate-100 hover:text-slate-600 focus-visible:ring-2 focus-visible:ring-sf-primary/40 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-300",
+                    selected.pinned && "fill-violet-50 text-violet-600 dark:text-violet-400",
+                  )}
+                >
+                  <Pin className="size-4" strokeWidth={2} />
+                </button>
+                {/* S179/EC2 (measured A-6): the palette — the shared
+                    trigger + popover; the pick PATCHes the note. */}
+                <NoteColorButton
+                  value={selected.color}
+                  onPick={(color) => void patchSelected({ color })}
+                  label="Note color"
+                />
                 <Button
                   type="button"
                   variant="outline"
@@ -1197,9 +1555,19 @@ export function NotesView() {
                 note-content CSS delivers the 16px/24px typography, no
                 typography plugin). The S140/CO1 gate renders the stored
                 HTML (or the React-escaped plain-text fallback for the
-                seed's legacy rows). */}
-            <div className="prose prose-slate max-w-none note-content sf-scroll mt-3 min-h-0 flex-1 overflow-y-auto rounded-2xl border border-slate-200 bg-white px-6 py-4 dark:border-slate-700 dark:bg-slate-900">
-              {viewBody.html ? (
+                seed's legacy rows). S179/EC1/EC2 (measured A-7/A-8): the
+                CODING note's body is the pre.font-mono surface (the
+                stored code, React-escaped) and a picked color tints the
+                card inline (white — the default — renders no tint). */}
+            <div
+              className="prose prose-slate max-w-none note-content sf-scroll mt-3 min-h-0 flex-1 overflow-y-auto rounded-2xl border border-slate-200 bg-white px-6 py-4 dark:border-slate-700 dark:bg-slate-900"
+              style={selected.color !== "white" ? { backgroundColor: NOTE_COLOR_HEX[selected.color as NoteColor] } : undefined}
+            >
+              {selected.kind === "coding" ? (
+                <pre className="m-0 whitespace-pre-wrap font-mono text-sm">
+                  {selected.content || "Empty note"}
+                </pre>
+              ) : viewBody.html ? (
                 <div dangerouslySetInnerHTML={{ __html: viewBody.html }} />
               ) : viewBody.text ? (
                 <p className="m-0 whitespace-pre-wrap">{viewBody.text}</p>
@@ -1230,6 +1598,31 @@ export function NotesView() {
                 onPatch={patchTitle}
               />
               <div className="flex shrink-0 items-center gap-2">
+                {/* S179/EC1 (measured A-9): the CODING note's Language
+                    select (w-32) — FIRST in the edit toolbar, before the
+                    notebook mover; a legacy null-language coding note
+                    shows the JavaScript initial (the pick PATCHes). */}
+                {selected.kind === "coding" && (
+                  <Select
+                    value={
+                      selected.language && (NOTE_LANGUAGES as readonly string[]).includes(selected.language)
+                        ? (selected.language as (typeof NOTE_LANGUAGES)[number])
+                        : "JavaScript"
+                    }
+                    onValueChange={(v) => void patchSelected({ language: v as (typeof NOTE_LANGUAGES)[number] })}
+                  >
+                    <SelectTrigger className="h-9 w-32" aria-label="Code note language">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {NOTE_LANGUAGES.map((lang) => (
+                        <SelectItem key={lang} value={lang}>
+                          {lang}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
                 {/* The inline notebook mover (the measured w-32 select —
                     the draft's own idiom on the existing note; the CQ3
                     keyboard-reachability is now by construction — an
@@ -1254,6 +1647,15 @@ export function NotesView() {
                     ))}
                   </SelectContent>
                 </Select>
+                {/* S179/EC2 (measured A-9): the edit toolbar's palette —
+                    the shared trigger + popover; the pick PATCHes the
+                    note (the measured edit-mode 36px icon is the
+                    palette; the pin is view-mode only). */}
+                <NoteColorButton
+                  value={selected.color}
+                  onPick={(color) => void patchSelected({ color })}
+                  label="Note color"
+                />
                 {/* S77/AD4 (measured): the ref's explicit Save — gradient +
                     floppy icon. Text stays WHITE (the ref's yellow-on-
                     gradient is its platform quirk); the toast is the
@@ -1290,28 +1692,32 @@ export function NotesView() {
             </div>
 
             {/* Font row (S77/AD5 measured): "Font:" 12px/500 slate-500 +
-                typeface select + the black Divider button (h-8, 6px radius). */}
-            <div className="mt-2 flex flex-wrap items-center gap-2">
-              <span className="text-xs font-medium text-slate-500 dark:text-slate-400">Font:</span>
-              <Select value={font} onValueChange={(v) => setFont(v as EditorFont)}>
-                <SelectTrigger className="h-7 w-28 text-xs" aria-label="Editor font">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="sans">Sans</SelectItem>
-                  <SelectItem value="serif">Serif</SelectItem>
-                  <SelectItem value="mono">Mono</SelectItem>
-                </SelectContent>
-              </Select>
-              <button
-                type="button"
-                onClick={() => editorRef.current?.insertDivider()}
-                className="flex h-8 items-center gap-1 rounded-md bg-neutral-950 px-3 text-xs font-medium text-neutral-50 transition-opacity hover:opacity-90 focus-visible:ring-2 focus-visible:ring-sf-primary/40 focus-visible:outline-none dark:bg-neutral-800"
-              >
-                <Minus className="size-3" strokeWidth={2} />
-                Divider
-              </button>
-            </div>
+                typeface select + the black Divider button (h-8, 6px radius).
+                S179/EC1 (measured A-9): the CODING edit mode carries NO
+                Font row, NO Divider — the textarea surface only. */}
+            {selected.kind === "text" && (
+              <div className="mt-2 flex flex-wrap items-center gap-2">
+                <span className="text-xs font-medium text-slate-500 dark:text-slate-400">Font:</span>
+                <Select value={font} onValueChange={(v) => setFont(v as EditorFont)}>
+                  <SelectTrigger className="h-7 w-28 text-xs" aria-label="Editor font">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="sans">Sans</SelectItem>
+                    <SelectItem value="serif">Serif</SelectItem>
+                    <SelectItem value="mono">Mono</SelectItem>
+                  </SelectContent>
+                </Select>
+                <button
+                  type="button"
+                  onClick={() => editorRef.current?.insertDivider()}
+                  className="flex h-8 items-center gap-1 rounded-md bg-neutral-950 px-3 text-xs font-medium text-neutral-50 transition-opacity hover:opacity-90 focus-visible:ring-2 focus-visible:ring-sf-primary/40 focus-visible:outline-none dark:bg-neutral-800"
+                >
+                  <Minus className="size-3" strokeWidth={2} />
+                  Divider
+                </button>
+              </div>
+            )}
 
             {/* Tag row (S77/AD6 measured): dark pills (neutral-800 +
                 neutral-50, 6px radius, 12px) + the "Add tag..." input. */}
@@ -1351,16 +1757,52 @@ export function NotesView() {
             {/* The editor card (S77/AD2 measured): white rounded-2xl + 1px
                 slate-200 — wraps the Quill toolbar strip + editor body. The
                 sf-note-editor class scopes the measured Quill surface CSS
-                (wins the cascade over Quill's own snow stylesheet). */}
-            <div className="sf-note-editor mt-3 flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900">
-              <QuillEditor
-                key={selected.id}
-                ref={editorRef}
-                value={selected.content}
-                onChange={onContentChange}
-                font={font}
-                className="min-h-0 flex-1"
-              />
+                (wins the cascade over Quill's own snow stylesheet).
+                S179/EC1/EC2 (measured A-7/A-9): the CODING edit body is
+                the debounced textarea (the NoteTitleInput pattern — the
+                pending content PATCH flushes on unmount + on Save); a
+                picked color tints the card inline (white — the default —
+                renders no tint). */}
+            <div
+              className="sf-note-editor mt-3 flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900"
+              style={selected.color !== "white" ? { backgroundColor: NOTE_COLOR_HEX[selected.color as NoteColor] } : undefined}
+            >
+              {selected.kind === "coding" ? (
+                <CodeBodyTextarea
+                  key={selected.id}
+                  ref={codeBodyRef}
+                  noteId={selected.id}
+                  initialContent={selected.content}
+                  onPatch={(noteId, content) => {
+                    updateNote(noteId, { content })
+                      .then(() => {
+                        if (selectedIdRef.current === noteId) {
+                          autosaveFailedRef.current = false;
+                        }
+                      })
+                      .catch((err: unknown) => {
+                        if (selectedIdRef.current !== noteId) return;
+                        if (!autosaveFailedRef.current) {
+                          autosaveFailedRef.current = true;
+                          toast.error(
+                            err instanceof ApiError
+                              ? err.message
+                              : "Autosave failed — the note is still open; use Save to retry.",
+                          );
+                        }
+                      });
+                  }}
+                />
+              ) : (
+                <QuillEditor
+                  key={selected.id}
+                  ref={editorRef}
+                  value={selected.content}
+                  onChange={onContentChange}
+                  font={font}
+                  className="min-h-0 flex-1"
+                />
+              )}
             </div>
           </div>
         )}
@@ -1376,7 +1818,7 @@ export function NotesView() {
         variant="gradient"
         className="sf-gradient-shadow fixed bottom-20 right-4 z-30 size-14 rounded-full md:hidden"
         aria-label="New note"
-        onClick={openDraft}
+        onClick={() => openDraft("text")}
       >
         <Plus className="size-5" strokeWidth={2} />
       </Button>

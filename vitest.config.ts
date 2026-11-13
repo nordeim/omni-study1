@@ -1,7 +1,41 @@
 import { defineConfig } from "vitest/config";
 import path from "node:path";
 
-// Unit-test layer for the pure domain seams — 52 files / 1743 tests
+// Unit-test layer for the pure domain seams — 53 files / 1761 tests
+// (re-anchored S179/EC — the notes feature-columns cycle: the unit
+// census moves 1743 → 1761 [+18, 52 → 53 files: the NEW
+// tests/rum-batch.test.ts seam — 6 pins on the pure
+// createRumBatcher(window/push/flush) contract: the window coalesces
+// multiple pushes into ONE send, the timer resets per flush, an empty
+// buffer never sends, the send rejection propagates to the CALLER (the
+// beacon owns the silence — the seam does NOT swallow), flushNow
+// drains pending events, two windows send two batches; +4 pins in
+// validation.test.ts's noteSchema S179 describe — the defaults parse
+// (pinned false / color white / kind text / language undefined), the
+// coding round-trip (kind coding + language Python), the enum
+// rejections (color purple / kind rich / language Perl), the
+// language-null clear leg; +3 pins in data-import.test.ts's census
+// legs (the notes.color/kind/language ENUM_VOCABULARIES + the
+// notes.language IMPORT_FIELD_LENGTHS — the BT1b third-entry-point
+// doctrine: a hand-edited backup must not persist rows the
+// interactive routes would 400); +5 pins in enum-single-source.test.ts
+// (the three new vocabularies' single-source census) + the data-store
+// test fixtures ride the four Note columns. The e2e census moves
+// 662 → 666 [+4: the S179/EC pins in parity-session7 — EC1 the pin
+// (the "Pinned"/"All Notes" sectioned list + the violet-filled row
+// pin + the pinned-first sort + the toolbar's filled toggle), EC2 the
+// palette (the 7-swatch popover — the selected border-violet-500 +
+// scale-110, the picked yellow's inline rgb(254,243,199) tint on BOTH
+// the row and the body card), EC3 the coding note (the New Coding
+// Note menuitem + the 14-option Language select defaulting JavaScript
+// + the textarea draft with NO Quill/NO Font row + the saved view's
+// language badge + the pre.font-mono body + the row's code-icon
+// lead), EC4 the rum batching (the boot's metric reports coalesce —
+// the first /api/rum POST carries an events array of length ≥ 2, the
+// beacon's former one-POST-per-metric fired five). The rum beacon's
+// five onReport handlers now push into the batcher (the 1.5s window)
+// — the S178 lesson-2 rum-write/boot-read contention candidate,
+// closed client-side; the route's sequential upsert loop unchanged.])
 // (re-anchored S178/EB — the notes view/edit mode-split cycle: the unit
 // census UNCHANGED at 1743, no new seam [the mode split is view state;
 // the wire's updateNote PATCH + the NoteInput model untouched; the

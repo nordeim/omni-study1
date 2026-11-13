@@ -1287,6 +1287,41 @@ describe("S133/CH2 · the import parity contract completed", () => {
     ).not.toThrow();
   });
 
+  // S179/EC1: the note feature vocabularies join the enum parity contract
+  // (the plan §2 — the BT1b third-entry-point doctrine: a hand-edited
+  // backup must not persist a row the interactive routes would 400 — an
+  // out-of-vocabulary color/kind/language breaks the palette map, the
+  // kind-split surfaces, and the language badge exactly like an
+  // out-of-vocabulary priority breaks the badge meta maps).
+  it("rejects an out-of-vocabulary notes.color / notes.kind / notes.language (the S179 vocabulary legs)", () => {
+    expect(() =>
+      sanitizeImportRow("notes", { id: "n1", title: "T", color: "purple" }, 0),
+    ).toThrow(ImportRowError);
+    expect(() =>
+      sanitizeImportRow("notes", { id: "n1", title: "T", kind: "rich" }, 0),
+    ).toThrow(ImportRowError);
+    expect(() =>
+      sanitizeImportRow("notes", { id: "n1", title: "T", language: "Perl" }, 0),
+    ).toThrow(ImportRowError);
+  });
+
+  it("accepts the legal S179 vocabulary members and the absent-field legacy rows (the boundary legs)", () => {
+    // The legal members (the measured 7-swatch palette + the kind split +
+    // the 14-option language vocabulary).
+    expect(() =>
+      sanitizeImportRow("notes", { id: "n1", title: "T", color: "emerald", kind: "coding", language: "HTML/CSS" }, 0),
+    ).not.toThrow();
+    // A pre-S179 backup (no feature fields) imports untouched — the enum
+    // check skips absent fields and the column defaults apply.
+    expect(() =>
+      sanitizeImportRow("notes", { id: "n2", title: "Legacy" }, 0),
+    ).not.toThrow();
+    // A null language is legal (the clear leg — text notes carry null).
+    expect(() =>
+      sanitizeImportRow("notes", { id: "n3", title: "T", language: null }, 0),
+    ).not.toThrow();
+  });
+
   it("rejects a subjects.color that is not a 6-digit hex string", () => {
     expect(() =>
       sanitizeImportRow("subjects", { id: "s1", name: "Math", color: "violet" }, 0),

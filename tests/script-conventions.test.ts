@@ -274,7 +274,21 @@ describe("the chunked cert runner's truth contract (S128/CC2)", () => {
     // superset), EB4 the trash-direct — see
     // docs/remediation-plan-session178.md; the unit census stays
     // 1743 — no new seam, the mode split is view state).
-    expect(certSource).toContain("Expected: 158 + 219 + 101 + 95 + 89 = 662");
+    // S179/EC re-tag: 662 → 666, chunk 2 +4 (the S179/EC notes
+    // feature pins in parity-session7 — EC1 the pin (the sectioned
+    // "Pinned"/"All Notes" list + the violet-filled row pin + the
+    // pinned-first sort + the toolbar's filled toggle), EC2 the
+    // palette (the 7-swatch popover + the selected border-violet-500
+    // scale-110 + the picked inline tint on row + card), EC3 the
+    // coding note (the "New Coding Note" item + the 14-option
+    // Language select + the textarea draft + the badge + the
+    // pre.font-mono body), EC4 the rum batching (the beacon's
+    // per-metric POSTs coalesce into one /api/rum POST through the
+    // new src/lib/rum-batch.ts seam) — see
+    // docs/remediation-plan-session179.md; the unit census moves
+    // 1743 → 1761 [53 files] — the rum-batch seam + the noteSchema
+    // atoms + the import census legs).
+    expect(certSource).toContain("Expected: 158 + 223 + 101 + 95 + 89 = 666");
   });
 
   it("propagates a failing chunk's exit code (never a green cert on a red run)", () => {

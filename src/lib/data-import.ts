@@ -10,6 +10,9 @@ import {
   GRADE_TYPES,
   HOLIDAY_TYPES,
   hhmmMinutes,
+  NOTE_COLORS,
+  NOTE_KINDS,
+  NOTE_LANGUAGES,
   preferencesSchema,
   REPEATS,
   TASK_PRIORITIES,
@@ -837,6 +840,19 @@ export const ENUM_VOCABULARIES: Record<string, readonly string[]> = {
   // S174/DX4: the ported holiday type (the measured Holiday/Break/No
   // School selector — the CA14 doctrine).
   "holidays.type": HOLIDAY_TYPES,
+  // S179/EC1: the note feature vocabularies (the CA14 doctrine — the
+  // measured 7-swatch palette names, the text/coding kind split, and
+  // the 14-option coding-note Language select). An out-of-vocabulary
+  // color/kind/language in a hand-edited backup rejects exactly like
+  // the interactive routes would 400 (the BT1b third-entry-point
+  // doctrine); ABSENT fields pass (the enum check skips undefined/null
+  // — a pre-S179 backup imports with the column defaults). The enum
+  // vocabulary IS the language bound (no IMPORT_FIELD_LENGTHS entry —
+  // the tasks.priority precedent: enum fields carry vocabulary entries,
+  // never length atoms).
+  "notes.color": NOTE_COLORS,
+  "notes.kind": NOTE_KINDS,
+  "notes.language": NOTE_LANGUAGES,
   "timetableClasses.weekType": WEEK_TYPES,
   "focusSessions.mode": FOCUS_SESSION_MODES,
   "calcHistory.mode": CALCULATOR_MODES,

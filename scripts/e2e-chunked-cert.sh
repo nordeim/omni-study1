@@ -1,4 +1,42 @@
 #!/usr/bin/env bash
+# (S179/EC re-tag — census 662 → 666, net +4: chunk 2 +4 [the
+# S179/EC notes feature pins in parity-session7 — the reference's
+# four-item feature head measured live (computed DOM, zero
+# residue): EC1 the pin — the header-toolbar pin toggle (36px,
+# fill-violet-50 when pinned — VIEW-MODE ONLY, the B-8 record)
+# + the SECTIONED list (a "Pinned" text-xs/600/uppercase/slate-500
+# header above "All Notes", no Pinned section at zero pinned)
+# + the pinned row's violet-filled lucide-pin at the title-line
+# right + the pinned-first sort (pinned rows in their own
+# updatedAt-desc section); EC2 the palette — the shared 36px
+# NoteColorButton on view/edit/draft (the 7-swatch popover: 32px
+# round swatches, inline hex backgrounds — white #FFFFFF default /
+# yellow #FEF3C7 / red #FECACA / pink #FBCFE8 / violet #DDD6FE /
+# blue #BFDBFE / emerald #A7F3D0 — the CURRENT color's swatch
+# border-violet-500 + scale-110, the rest border-slate-200; the
+# popover STAYS OPEN after a pick — the measured reference
+# behavior) + the picked color's INLINE style tint on BOTH the
+# list row and the body card (white renders NO inline style);
+# EC3 the coding note — the header dropdown's MIDDLE item "New
+# Coding Note" + the 14-option Language select (w-32, JavaScript
+# default — the UI owns the initial) + the textarea draft body
+# ("Write your code notes here...", NO Quill, NO Font row, NO
+# Divider) + the saved view's language badge (border + lucide-code
+# + the language name BEFORE the disabled title) + the
+# pre.font-mono.whitespace-pre-wrap body + the row's lucide-code
+# lead + the edit toolbar's Language select FIRST; EC4 the rum
+# batching — the beacon's five per-metric POSTs coalesce through
+# the NEW src/lib/rum-batch.ts pure batcher (the 1.5s window —
+# the S178 lesson-2 rum-write/boot-read contention candidate
+# closed client-side): the boot's metric reports land in ONE
+# /api/rum POST carrying an events array of length >= 2. The
+# Note model gains pinned/color/kind/language (the import enum
+# registries ride the BT1b third entry point). The unit census
+# moves 1743 → 1761 (53 files: rum-batch +6, validation +4,
+# data-import +3, enum-single-source +5). The EB3 flake fix rode
+# the re-anchor sweep (the Radix exit-animation keyboard race —
+# the deterministic menu-unmount wait on EA1/EA1b/EB3). The full
+# EC map: docs/remediation-plan-session179.md.)
 # (S178/EB re-tag — census 658 → 662, net +4: chunk 2 +4 [the
 # S178/EB notes view/edit mode-split pins in parity-session7 — the
 # s178 measured port (probed live 2026-11-12, computed DOM,
@@ -475,7 +513,7 @@
 # deterministic defaults so the leg fills only the title + score +
 # max; network-mocked, no server writes beyond the zero-residue
 # create]. The full DW map: docs/remediation-plan-session173.md.)
-# Expected: 158 + 219 + 101 + 95 + 89 = 662 (each chunk's count includes its
+# Expected: 158 + 223 + 101 + 95 + 89 = 666 (each chunk's count includes its
 # auth setup — the current census; the historical re-tag blocks beneath.)
 # (S171/DU re-tag — census 634 → 637, net +3: chunk 2 +2 [the
 # S171/DU2 studygroups create-dialog parity catch-up pair in

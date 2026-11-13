@@ -9,9 +9,9 @@ High-signal instructions for coding agents working in this repo. Everything here
 | `bun install` | Install deps (Bun ≥ 1.3) |
 | `bun run dev` | Dev server on :3000 (Turbopack), logs tee'd to `dev.log` |
 | `bun run lint` / `bun run typecheck` | ESLint / `tsc --noEmit` — both must be clean |
-| `bun run test` | Vitest unit layer (1743 tests; `*.test.ts` only — never picks up e2e specs) |
+| `bun run test` | Vitest unit layer (1761 tests; `*.test.ts` only — never picks up e2e specs) |
 | `bun run build` | Production build → `.next/standalone` (**required before e2e**) |
-| `bun run test:e2e` | Playwright vs the standalone build on :3100 with the THROWAWAY tmpfs scratch db /dev/shm/omni-study1-e2e/e2e.db (662 tests across the 5-chunk cold map — 158+219+101+95+89, 30 spec files; a single-process full run trips the register rate-limiter budget by design, the chunked map re-boots the server per chunk). NOTE (S45, the day-boundary lesson): the global setup re-seeds every run, but the seed's IDEMPOTENT UPSERTS do NOT refresh day-relative dates on existing rows — a scratch `db/e2e.db` that ages across a UTC midnight keeps its original day-relative dates (today's tasks, the +1-day exam badge, the due-in pills, the import round-trip dates each read one day stale → 4 deterministic failures in parity-session6/parity-session9/s23-import). Delete `db/e2e.db` when a run crosses a day boundary — the global setup re-creates it fresh with current dates. NOTE (S46, TWO more aged-scratch-db classes + a build-input one): (1) ALWAYS run e2e COLD — S131/CF5 chained `scripts/e2e-cold-reset.sh` into `bun run test:e2e` (port-guard + `rm -f db/e2e.db` BEFORE playwright boots anything — global-setup is TOO LATE: Playwright starts the webServer before globalSetup), so the default runner self-colds; any DIRECT `playwright test` invocation still needs the manual `rm -f db/e2e.db` before every full run: the s23-import round-trip posts a FIXED-id envelope, so a second consecutive run against the aged db reads `created: 0, updated: 1` instead of `created: 1, updated: 0` and fails — not just across midnights, across ANY re-run; (2) the s22 negative-spawn spec reads the BUNDLED `.env` — Next's standalone output COPIES the repo-root `.env` into `.next/standalone/.env` at build time, so a REAL AUTH_SECRET in the dev `.env` leaks into the bundle and the guard CORRECTLY boots (the spec times out waiting for the exit) — keep the repo-root `.env`'s AUTH_SECRET EMPTY (the `.env.example` dev posture: `AUTH_SECRET=""` — dev falls back to the local constant with the boot warning) when building for e2e |
+| `bun run test:e2e` | Playwright vs the standalone build on :3100 with the THROWAWAY tmpfs scratch db /dev/shm/omni-study1-e2e/e2e.db (666 tests across the 5-chunk cold map — 158+223+101+95+89, 30 spec files; a single-process full run trips the register rate-limiter budget by design, the chunked map re-boots the server per chunk). NOTE (S45, the day-boundary lesson): the global setup re-seeds every run, but the seed's IDEMPOTENT UPSERTS do NOT refresh day-relative dates on existing rows — a scratch `db/e2e.db` that ages across a UTC midnight keeps its original day-relative dates (today's tasks, the +1-day exam badge, the due-in pills, the import round-trip dates each read one day stale → 4 deterministic failures in parity-session6/parity-session9/s23-import). Delete `db/e2e.db` when a run crosses a day boundary — the global setup re-creates it fresh with current dates. NOTE (S46, TWO more aged-scratch-db classes + a build-input one): (1) ALWAYS run e2e COLD — S131/CF5 chained `scripts/e2e-cold-reset.sh` into `bun run test:e2e` (port-guard + `rm -f db/e2e.db` BEFORE playwright boots anything — global-setup is TOO LATE: Playwright starts the webServer before globalSetup), so the default runner self-colds; any DIRECT `playwright test` invocation still needs the manual `rm -f db/e2e.db` before every full run: the s23-import round-trip posts a FIXED-id envelope, so a second consecutive run against the aged db reads `created: 0, updated: 1` instead of `created: 1, updated: 0` and fails — not just across midnights, across ANY re-run; (2) the s22 negative-spawn spec reads the BUNDLED `.env` — Next's standalone output COPIES the repo-root `.env` into `.next/standalone/.env` at build time, so a REAL AUTH_SECRET in the dev `.env` leaks into the bundle and the guard CORRECTLY boots (the spec times out waiting for the exit) — keep the repo-root `.env`'s AUTH_SECRET EMPTY (the `.env.example` dev posture: `AUTH_SECRET=""` — dev falls back to the local constant with the boot warning) when building for e2e |
 | `node scripts/capture-studyflow.mjs` | Refresh all 31 `docs/screenshots/` captures from the dev server (24 light + 7 dark) |
 | `node scripts/dark-sweep.mjs` | Dark-mode contrast audit over all 20 views (flashbulb/unreadable detector). S27: sets dark mode through the settings API (the real lifecycle) and SELF-VERIFIES the precondition — fails loudly (exit 1, no findings) if the dark class is not applied; the applied mode rides the JSON envelope. Never force the class directly (the session-10 approach silently rotted after S11) |
 | `node scripts/accent-dark-sweep.mjs` | Accent × dark-mode audit (S38-extended): all 7 accents × 20 desktop views × 20 MOBILE views at 390×844 + the drawer per accent (FAIL <2.2, WARN <3.2 for accent text; the mobile records also carry scrollWidth — >390 is a finding). The S38 shape is unit-pinned anti-phantom: every view recorded EXPLICITLY on both surfaces (clean views carry empty detector arrays), the per-accent `applied` self-verified readings + `mode: "dark"` + `mobileViewport` ride the envelope, and the seam's ALL-ACCENTS + ALL-VIEWS + drawer-present guards make every silently-skipped dimension a LOUD shape-error (the pre-S38 mobile pass swept only 6 views — MOBILE_VIEWS — and the omission-means-clean recording could not distinguish "clean because measured" from "clean because never rendered") |
@@ -3703,3 +3703,88 @@ Hover-parity probing must run in Playwright, not a touch-emulating browser — v
    asserting a geometry bar on a newly-ported surface, measure the
    pre-port baseline on the SAME surface — an unpinned class stays
    unpinned until a cycle pins it deliberately.
+
+## S179 lessons (Batch EC — the notes feature-columns cycle: the pin/palette/coding-note ports + the rum-batch beacon)
+
+1. **The Radix exit-animation window re-activates "closed" menus on
+   SPACE — the order-dependent EB3 flake, root-caused at the event
+   level.** The failure: after the header dropdown's "New Note" click,
+   the typed title EMPTIED right before Save — only in the full-file
+   run order, never in isolation, and only on the three
+   keyboard.type-after-menuitem flows (EA1/EA1b/EB3). The trace: a
+   modal layer (scroll-lock + aria-hidden) stayed mounted between the
+   typing and the Save; the exit-animated menuitem was STILL the
+   focused element when keyboard.type's SPACE landed, so the " "
+   RE-ACTIVATED the mounted "New Note" item — openDraft fired a
+   SECOND time and reset the draft to the empty template. The fix
+   belongs at the TEST level (the reference carries the IDENTICAL
+   exit-animation classes — its own Radix behavior): the
+   deterministic menu-unmount wait (poll `[role="menuitem"]` gone)
+   before any keyboard interaction that follows a menu pick. Lesson:
+   a "closed" Radix menu is UNMOUNTING, not closed — keyboard events
+   still reach the exit-animated items; never sleep between a menu
+   pick and a typed fill, wait for the unmount.
+
+2. **Radix popovers portal to the DOM root — and the parity
+   authority is the REFERENCE, never the pin's assumption.** Two EC2
+   failures, both test-side: (a) the swatch locators scoped to the
+   editor pane found NOTHING because PopoverContent portals to
+   document.body — portaled content must be located at the page
+   level; (b) the pin assumed the popover CLOSES after a pick (the
+   common Radix pattern) while the shipped surface kept it OPEN — a
+   live re-probe of the reference measured ITS popover staying open
+   after a pick, so the clone's behavior was already correct and the
+   pin's "reopen" step was wrong. Lesson: when a pin disagrees with
+   the shipped surface, re-probe the reference before "fixing" the
+   product — and locate portal-born content by role/name at the root,
+   never by pane ancestry.
+
+3. **An honest RED is PROVEN, not assumed — stash the implementation
+   and run the pins against the pre-change tree.** This cycle's wire
+   layer (schema columns + validation atoms + import registries)
+   landed in the working tree BEFORE the unit pins ran, so a "RED"
+   run would have been green-on-arrival — proving nothing. The
+   discipline: `git stash` the src changes (keeping the pins), run
+   the pins RED at the designed markers, restore, then GREEN. The
+   same doctrine covered the e2e RED sweep — but the standalone
+   build carries the GENERATED PRISMA CLIENT, so the pre-change tree
+   needed the client regenerated against the stashed schema first
+   (the scratch-db boot fails on the client/schema mismatch).
+   Lesson: the Prisma client is a BUILD INPUT of the standalone
+   bundle — a stashed schema without a regenerated client is not a
+   pre-change tree; and a RED you did not watch fail is a claim, not
+   a proof.
+
+4. **Defaults have ONE owner each — the schema owns storage
+   defaults, the UI owns surface initials.** Two pin iterations
+   failed on this: the batcher pin expected the seam to swallow send
+   errors (the seam PROPAGATES — the beacon owns the silence, the
+   seam returns its failure), and the validation pin expected a
+   cross-field default (language defaulting to "JavaScript" when
+   kind=coding — the reference's SELECT default is a UI initial; the
+   schema's language stays absent for text notes and the UI ships
+   the JavaScript initial on the coding draft only). The enum-family
+   corollary: an enum field carries an ENUM_VOCABULARIES entry at
+   the import seam, never a length atom (the tasks.priority
+   precedent — "HTML/CSS" at 8 chars needs no 20-char cap line in
+   IMPORT_FIELD_LENGTHS). Lesson: pin the owner you measured — a
+   default re-derived in two places is a divergence waiting to
+   happen.
+
+5. **The plan doc is the crash-recovery artifact — every measurement
+   written BEFORE the implementation makes the re-execution
+   mechanical.** The prior session's ENTIRE in-flight S179
+   implementation (RED + GREEN sweeps verified) was lost to the
+   sandbox recycle before any commit; the re-execution this cycle
+   took one session because the plan already carried every measured
+   fact (the 7 swatch hexes, the 14-language vocabulary, the section
+   anatomy, the B-7/B-8 toolbar orders, the pinned-first sort
+   semantics, the popover-stays-open behavior, the adjudications)
+   and every recovered decision (the utility-class swatch selection,
+   the client-side sort, the no-cross-field-guard). Zero facts had
+   to be re-measured against the reference beyond the re-anchoring
+   probes. Lesson: write the plan to the depth that a cold-start
+   stranger could re-execute it — the sandbox WILL eventually eat an
+   uncommitted cycle, and the plan is the only artifact that
+   survives by doctrine (it is committed at cycle end; the
+   implementation only ever rides the working tree).

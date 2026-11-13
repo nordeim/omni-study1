@@ -2955,6 +2955,11 @@ test.describe("S177/EA1 · the notes inline-draft create flow", () => {
     // on submit; the draft's persistence rides the explicit Save only
     // — the measured no-autosave-during-draft contract).
     await draftTitle.fill("S177 EA1 probe note");
+    // S179: the menu-unmount wait — the Radix exit-animation window
+    // keeps the closed menu's items focused; a keyboard.type inside it
+    // re-activates the item (the EB3 race, root-caused live — see the
+    // EB3 comment for the full mechanism).
+    await expect(page.getByRole("menu")).toHaveCount(0);
     await page.locator(".ql-editor").click();
     await page.keyboard.type("draft body content");
     await page.waitForTimeout(1800);
@@ -2998,6 +3003,8 @@ test.describe("S177/EA1 · the notes inline-draft create flow", () => {
     // Type into BOTH surfaces, then discard (RED pre-fix: the discard
     // affordance does not exist — the aria-label locator times out).
     await draftTitle.fill("S177 EA1b discarded draft");
+    // S179: the menu-unmount wait (the EB3 race — see the EB3 comment).
+    await expect(page.getByRole("menu")).toHaveCount(0);
     await page.locator(".ql-editor").click();
     await page.keyboard.type("typed then thrown away");
     await page.getByRole("button", { name: "Discard new note" }).click();
@@ -3185,6 +3192,17 @@ test.describe("S178/EB · the notes view/edit mode split", () => {
     await page.getByRole("menuitem", { name: "New Note", exact: true }).click();
     const draftTitle = page.locator('input[placeholder="Note title..."]');
     await draftTitle.fill("S178 EB3 probe note");
+    // S179 (the timing race, root-caused live): the Radix DropdownMenu's
+    // EXIT ANIMATION keeps the closed menu's items mounted + focused for
+    // ~150ms+ after the menuitem click — a keyboard.type landing inside
+    // that window routes to the still-focused menu ITEM, and the SPACE in
+    // the typed text ACTIVATES it ("New Note" → openDraft fires a SECOND
+    // time → the draft silently resets: title blanked, Quill remounted).
+    // The reference carries the identical Radix anatomy (measured: its
+    // menu content ships the same data-[state=closed]:animate-out classes)
+    // — the S178 lesson-3 doctrine: fix the TEST's implicit assumption,
+    // not the product. The menu-unmount wait collapses the window.
+    await expect(page.getByRole("menu")).toHaveCount(0);
     await page.locator(".ql-editor").click();
     await page.keyboard.type("view then edit then exit");
     await page.getByRole("button", { name: "Save", exact: true }).click();
@@ -3247,5 +3265,200 @@ test.describe("S178/EB · the notes view/edit mode split", () => {
     // keeps its rows — the 0-notes empty state is the EA3 pin's own
     // territory, not this trash leg's).
     await expect(rightPane.getByRole("heading", { name: "Select a note" })).toBeVisible();
+  });
+});
+
+// S179/EC — the notes pin/palette/coding-note port (the s179 measured
+// cycle: the reference's Notes feature columns — the view-toolbar pin +
+// the pinned-first sectioned list, the 7-swatch palette on all three
+// toolbars, and the coding-note editor: the 14-option Language select +
+// the textarea body + the code badge + the code-icon row lead). The
+// measured authority: docs/remediation-plan-session179.md §1 (A-1..A-9,
+// probed live 2026-11-13, computed DOM, zero residue).
+test.describe("S179/EC · the notes pin/palette/coding-note port", () => {
+  test("EC1: the pin toggle sections the list — Pinned first, the violet row pin, the filled toolbar pin", async ({ page }) => {
+    await page.goto("/Notes");
+    await hydrated(page);
+
+    // Two probe notes through the real EA1 draft flow — A first, B second
+    // (B is the NEWER row; the pinned A must sort ABOVE it — the measured
+    // pinned-first contract).
+    for (const title of ["S179 EC1 note A", "S179 EC1 note B"]) {
+      await page.getByRole("button", { name: "New note menu" }).click();
+      await page.getByRole("menuitem", { name: "New Note", exact: true }).click();
+      const draftTitle = page.locator('input[placeholder="Note title..."]');
+      await draftTitle.fill(title);
+      await page.getByRole("button", { name: "Save", exact: true }).click();
+      await page.waitForTimeout(1400);
+    }
+    const listPane = page.locator('[aria-label="Notes list pane"]');
+    const rightPane = page.locator('[aria-label="Note editor pane"]');
+    const rowA = listPane.locator("button").filter({ hasText: "S179 EC1 note A" });
+    const rowB = listPane.locator("button").filter({ hasText: "S179 EC1 note B" });
+
+    // Select A (the older note — B lands above it in the updatedAt-desc
+    // order pre-pin), then pin it through the view toolbar.
+    // RED pre-fix: the "Pin note" button does not exist on the toolbar.
+    await rowA.click();
+    await rightPane.getByRole("button", { name: "Pin note" }).click();
+    await page.waitForTimeout(900);
+
+    // THE SECTION PIN: the "Pinned" section header renders above "All
+    // Notes" (RED pre-fix: no section headers exist), A's row carries the
+    // violet-filled pin icon, and A sorts ABOVE the newer B.
+    await expect(listPane.getByText("Pinned", { exact: true })).toBeVisible();
+    await expect(listPane.getByText("All Notes", { exact: true })).toBeVisible();
+    await expect(rowA.locator("svg.lucide-pin")).toHaveClass(/fill-violet-500/);
+    const aTop = await rowA.boundingBox();
+    const bTop = await rowB.boundingBox();
+    expect(aTop && bTop && aTop.y < bTop.y).toBe(true);
+
+    // The toolbar pin shows the filled state; the aria-label flips.
+    await expect(rightPane.getByRole("button", { name: "Unpin note" })).toBeVisible();
+
+    // Unpin: the Pinned section disappears (the measured zero-pinned
+    // state — only "All Notes" remains).
+    await rightPane.getByRole("button", { name: "Unpin note" }).click();
+    await page.waitForTimeout(900);
+    await expect(listPane.getByText("Pinned", { exact: true })).toHaveCount(0);
+    await expect(listPane.getByText("All Notes", { exact: true })).toBeVisible();
+
+    // Zero-residue cleanup through the view-mode trash.
+    await rowA.click();
+    await rightPane.getByRole("button", { name: "Delete note" }).click();
+    await rowB.click();
+    await rightPane.getByRole("button", { name: "Delete note" }).click();
+    await expect(listPane.locator("button").filter({ hasText: "S179 EC1" })).toHaveCount(0);
+  });
+
+  test("EC2: the palette pick tints the row + the body card — the 7-swatch popover, the selected swatch state", async ({ page }) => {
+    await page.goto("/Notes");
+    await hydrated(page);
+
+    // The probe note through the real EA1 draft flow.
+    await page.getByRole("button", { name: "New note menu" }).click();
+    await page.getByRole("menuitem", { name: "New Note", exact: true }).click();
+    const draftTitle = page.locator('input[placeholder="Note title..."]');
+    await draftTitle.fill("S179 EC2 palette probe");
+    await page.getByRole("button", { name: "Save", exact: true }).click();
+    await page.waitForTimeout(1400);
+    const listPane = page.locator('[aria-label="Notes list pane"]');
+    const rightPane = page.locator('[aria-label="Note editor pane"]');
+    const row = listPane.locator("button").filter({ hasText: "S179 EC2 palette probe" });
+
+    // Open the view toolbar's palette (RED pre-fix: the "Note color"
+    // button does not exist — the locator times out).
+    await rightPane.getByRole("button", { name: "Note color" }).click();
+
+    // THE SWATCH PIN: the 7 measured swatches render (white default +
+    // yellow/red/pink/violet/blue/emerald) with the white default
+    // selected (the violet border + the scale state). The popover
+    // portals to the body level (the Radix contract) — the swatches
+    // are page-scoped, never pane-scoped.
+    const swatches = page.getByRole("button", { name: / note color$/ });
+    await expect(swatches).toHaveCount(7);
+    await expect(page.getByRole("button", { name: "white note color" })).toHaveClass(/border-violet-500/);
+
+    // Pick yellow — the row + the body card carry the measured inline
+    // tint (rgb(254, 243, 199) = #FEF3C7). The popover STAYS OPEN after
+    // the pick (the reference's measured behavior — probed live).
+    await page.getByRole("button", { name: "yellow note color" }).click();
+    await page.waitForTimeout(900);
+    await expect(row).toHaveCSS("background-color", "rgb(254, 243, 199)");
+    await expect(rightPane.locator(".note-content")).toHaveCSS("background-color", "rgb(254, 243, 199)");
+
+    // The yellow swatch now carries the selected state on the STILL-OPEN
+    // popover (the CURRENT color's marker moved — the measured selection
+    // contract; no reopen — the pick never closed it).
+    await expect(page.getByRole("button", { name: "yellow note color" })).toHaveClass(/border-violet-500/);
+
+    // Zero-residue cleanup through the view-mode trash.
+    await page.keyboard.press("Escape");
+    await rightPane.getByRole("button", { name: "Delete note" }).click();
+    await expect(listPane.locator("button").filter({ hasText: "S179 EC2" })).toHaveCount(0);
+  });
+
+  test("EC3: the coding note — the draft's Language select + textarea, the saved badge + pre body, the edit select", async ({ page }) => {
+    await page.goto("/Notes");
+    await hydrated(page);
+
+    // THE ENTRY PIN: the header dropdown carries the middle "New Coding
+    // Note" item (RED pre-fix: the menuitem does not exist).
+    await page.getByRole("button", { name: "New note menu" }).click();
+    await page.getByRole("menuitem", { name: "New Coding Note", exact: true }).click();
+
+    // THE DRAFT PIN: the Language select defaults "JavaScript" (the
+    // 14-option vocabulary), the body is the plain TEXTAREA (no Quill
+    // toolbar, no Font row, no Divider).
+    const rightPane = page.locator('[aria-label="Note editor pane"]');
+    const draftTitle = page.locator('input[placeholder="Note title..."]');
+    await expect(draftTitle).toBeVisible();
+    await expect(rightPane.getByRole("combobox", { name: "New coding note language" })).toHaveText("JavaScript");
+    await expect(rightPane.locator("textarea")).toBeVisible();
+    await expect(rightPane.locator(".ql-editor")).toHaveCount(0);
+    await expect(rightPane.getByText("Font:", { exact: true })).toHaveCount(0);
+
+    // Fill + save; the create POST carries the kind + language.
+    const posts: string[] = [];
+    await page.route(/\/api\/notes/, async (route) => {
+      if (route.request().method() === "POST") posts.push(route.request().postData() ?? "");
+      await route.continue();
+    });
+    await draftTitle.fill("S179 EC3 coding probe");
+    await rightPane.locator("textarea").fill('const sorted = (xs) => [...xs].sort();');
+    await page.getByRole("button", { name: "Save", exact: true }).click();
+    await page.waitForTimeout(1400);
+    expect(posts[0]).toContain('"kind":"coding"');
+    expect(posts[0]).toContain('"language":"JavaScript"');
+
+    // THE VIEW PIN: the row leads with the lucide-code icon, the view
+    // carries the language badge + the pre.font-mono body (no prose, no
+    // Quill).
+    const listPane = page.locator('[aria-label="Notes list pane"]');
+    const row = listPane.locator("button").filter({ hasText: "S179 EC3 coding probe" });
+    await expect(row.locator("svg.lucide-code")).toHaveCount(1);
+    await expect(rightPane.getByText("JavaScript", { exact: true })).toBeVisible();
+    await expect(rightPane.locator("pre.font-mono")).toContainText("sorted");
+    await expect(rightPane.locator(".ql-editor")).toHaveCount(0);
+
+    // THE EDIT PIN: the Language select rides FIRST in the edit toolbar.
+    await rightPane.getByRole("button", { name: "Edit", exact: true }).click();
+    await expect(rightPane.getByRole("combobox", { name: "Code note language" })).toHaveText("JavaScript");
+    await expect(rightPane.locator("textarea")).toBeVisible();
+    await rightPane.getByRole("button", { name: "Exit edit mode" }).click();
+
+    // Zero-residue cleanup through the view-mode trash.
+    await rightPane.getByRole("button", { name: "Delete note" }).click();
+    await expect(listPane.locator("button").filter({ hasText: "S179 EC3" })).toHaveCount(0);
+  });
+
+  test("EC4: the rum beacon batches the boot's metric reports — one POST carries multiple events", async ({ page }) => {
+    // The S178 rum-write/boot-read contention fix (the plan §4): the
+    // pre-fix beacon fired ONE POST PER METRIC (up to 5 concurrent on
+    // boot); the batcher coalesces the burst into ONE POST per 1.5s
+    // window. RED pre-fix: every POST carries exactly one event.
+    const rumPosts: string[] = [];
+    await page.route(/\/api\/rum/, async (route) => {
+      if (route.request().method() === "POST") rumPosts.push(route.request().postData() ?? "");
+      await route.continue();
+    });
+
+    await page.goto("/");
+    // Ride past the batch window (1.5s) + the vitals dynamic import —
+    // the s18 spec's own trail tolerance (3.5s+) is the budget here.
+    await page.waitForTimeout(4200);
+
+    expect(rumPosts.length).toBeGreaterThanOrEqual(1);
+    // THE BATCH PIN: the FIRST POST carries ≥ 2 events (TTFB + FCP
+    // coalesced — the boot's own burst shape, measured by the metric
+    // names on the events array).
+    const first = JSON.parse(rumPosts[0]) as { events: Array<{ metric: string }> };
+    expect(first.events.length).toBeGreaterThanOrEqual(2);
+    for (const post of rumPosts) {
+      const body = JSON.parse(post) as { events: Array<{ metric: string }> };
+      for (const event of body.events) {
+        expect(["TTFB", "FCP", "LCP", "CLS", "INP"]).toContain(event.metric);
+      }
+    }
   });
 });

@@ -463,6 +463,48 @@ describe("flashcardDeckSchema", () => {
   });
 });
 
+// S179/EC1 (measured live 2026-11-13, the reference's Notes probe — the plan
+// §2/§5): the reference's Notes feature columns — the pin (the view-toolbar
+// toggle + the pinned-first list sections), the 7-swatch palette (white
+// default + yellow/red/pink/violet/blue/emerald), the text/coding kind
+// split, and the 14-option coding-note Language select.
+describe("noteSchema S179 · the pin/palette/coding-note columns", () => {
+  it("defaults the feature columns (pinned false, color white, kind text, language absent)", () => {
+    const parsed = noteSchema.parse({ title: "Lecture 1" });
+    expect(parsed.pinned).toBe(false);
+    expect(parsed.color).toBe("white");
+    expect(parsed.kind).toBe("text");
+    // language carries NO default — a text note never persists one.
+    expect(parsed.language).toBeUndefined();
+  });
+
+  it("round-trips the coding-note shape (kind coding + a language from the 14-option vocabulary)", () => {
+    const parsed = noteSchema.parse({
+      title: "Sort algorithms",
+      kind: "coding",
+      language: "Python",
+      pinned: true,
+      color: "emerald",
+    });
+    expect(parsed.kind).toBe("coding");
+    expect(parsed.language).toBe("Python");
+    expect(parsed.pinned).toBe(true);
+    expect(parsed.color).toBe("emerald");
+  });
+
+  it("rejects an out-of-vocabulary color / kind / language (the enum guards)", () => {
+    expect(noteSchema.safeParse({ title: "T", color: "purple" }).success).toBe(false);
+    expect(noteSchema.safeParse({ title: "T", kind: "rich" }).success).toBe(false);
+    expect(noteSchema.safeParse({ title: "T", language: "Perl" }).success).toBe(false);
+  });
+
+  it("accepts an explicit null language (the clear leg) but not a null color/kind", () => {
+    expect(noteSchema.parse({ title: "T", language: null }).language).toBeNull();
+    expect(noteSchema.safeParse({ title: "T", color: null }).success).toBe(false);
+    expect(noteSchema.safeParse({ title: "T", kind: null }).success).toBe(false);
+  });
+});
+
 describe("flashcardSchema", () => {
   it("carries the S7-A reference card field: difficulty", () => {
     // The reference's populated card grid renders a difficulty badge

@@ -139,6 +139,41 @@ export const HOLIDAY_TYPES = ["holiday", "break", "no-school"] as const;
 export const WEEK_TYPES = ["ALL", "A", "B"] as const;
 export const FOCUS_SESSION_MODES = ["focus", "short-break", "long-break"] as const;
 export const CALCULATOR_MODES = ["basic", "scientific", "gpa", "unit"] as const;
+// S179/EC1 (measured live 2026-11-13, the reference's Notes probe): the
+// note feature vocabularies. NOTE_COLORS mirrors the 7-swatch palette
+// (white default + yellow/red/pink/violet/blue/emerald — the swatch hexes
+// live in the view's color map, keyed by THESE names); NOTE_KINDS is the
+// text/coding editor split; NOTE_LANGUAGES is the coding draft's Language
+// select — exactly 14 options in the measured order, JavaScript first (the
+// UI's own initial). Same single-source contract as the families above
+// (the CA14 doctrine — the import seam's ENUM_VOCABULARIES mirrors these
+// arrays).
+export const NOTE_COLORS = [
+  "white",
+  "yellow",
+  "red",
+  "pink",
+  "violet",
+  "blue",
+  "emerald",
+] as const;
+export const NOTE_KINDS = ["text", "coding"] as const;
+export const NOTE_LANGUAGES = [
+  "JavaScript",
+  "Python",
+  "Java",
+  "C++",
+  "C#",
+  "HTML/CSS",
+  "SQL",
+  "Ruby",
+  "Go",
+  "Rust",
+  "PHP",
+  "Swift",
+  "Kotlin",
+  "TypeScript",
+] as const;
 
 // ---- auth ------------------------------------------------------------------
 
@@ -431,6 +466,16 @@ export const noteSchema = z.object({
   tags: z.string().max(2000).optional().default("[]"),
   notebookId: nullableId,
   subjectId: nullableId,
+  // S179/EC1: the reference's Notes feature columns (the plan §2) — the
+  // four atoms ride the existing factory contracts untouched (the
+  // sentKeysPatch own-keys filter + the AI1/AI5 semantics). language
+  // carries NO default: absent stays absent (a text note never persists a
+  // language), and an explicit null CLEARS it (the nullableId-free clear
+  // leg — the enum vocabulary itself is the guard).
+  pinned: z.boolean().optional().default(false),
+  color: z.enum(NOTE_COLORS).optional().default("white"),
+  kind: z.enum(NOTE_KINDS).optional().default("text"),
+  language: z.enum(NOTE_LANGUAGES).optional().nullable(),
 });
 
 export const flashcardDeckSchema = z.object({

@@ -70,6 +70,21 @@ const SITES = [
     enumName: "HOLIDAY_TYPES",
     why: "the S174/DX4 port (the measured reference type selector — Holiday/Break/No School — promoted to validation.ts's single source beside GRADE_TYPES; the eighth site, guarded from its first day)",
   },
+  {
+    view: "src/components/views/notes-view.tsx",
+    enumName: "NOTE_COLORS",
+    why: "the S179/EC1 port (the measured 7-swatch palette — white default + yellow/red/pink/violet/blue/emerald — promoted to validation.ts's single source; a forked twin would drop palette names the schema accepts)",
+  },
+  {
+    view: "src/components/views/notes-view.tsx",
+    enumName: "NOTE_KINDS",
+    why: "the S179/EC1 port (the text/coding editor split — the same single-source doctrine on the new family, guarded from its first day)",
+  },
+  {
+    view: "src/components/views/notes-view.tsx",
+    enumName: "NOTE_LANGUAGES",
+    why: "the S179/EC1 port (the measured 14-option coding-note Language select — a forked twin would blank the select on schema-legal languages, the CB9 class)",
+  },
 ] as const;
 
 function readView(rel: string): string {

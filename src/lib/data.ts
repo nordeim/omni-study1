@@ -181,6 +181,13 @@ export type NoteRow = {
   tags: string; // JSON tag array
   notebookId: string | null;
   subjectId: string | null;
+  // S179/EC1: the reference's Notes feature columns (the plan §2) — the
+  // pin/palette/coding-note vocabulary rides NOTE_COLORS/NOTE_KINDS/
+  // NOTE_LANGUAGES (validation.ts's single source).
+  pinned: boolean;
+  color: string; // NOTE_COLORS name — "white" is the default
+  kind: string; // NOTE_KINDS name — "text" | "coding"
+  language: string | null; // NOTE_LANGUAGES name — null on text notes
   createdAt: string;
   updatedAt: string;
 };

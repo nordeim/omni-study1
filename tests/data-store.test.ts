@@ -446,6 +446,12 @@ describe("S151/CZ1: the notes tags chain (B-M1 — add/remove interleave)", () =
     tags: JSON.stringify(["zulu"]),
     notebookId: null,
     subjectId: null,
+    // S179/EC1: the NoteRow feature columns (the type widened — the
+    // fixture carries the schema defaults).
+    pinned: false,
+    color: "white",
+    kind: "text",
+    language: null,
     createdAt: "2026-01-01T00:00:00.000Z",
     updatedAt: "2026-01-01T00:00:00.000Z",
   };
@@ -875,6 +881,11 @@ describe("S166/DP1: the notes family mutation CB8 split (B-H1 — committed writ
           tags: "[]",
           notebookId: null,
           subjectId: null,
+          // S179/EC1: the NoteRow feature columns (the schema defaults).
+          pinned: false,
+          color: "white",
+          kind: "text",
+          language: null,
           createdAt: "2026-01-01T00:00:00.000Z",
           updatedAt: "2026-01-01T00:00:00.000Z",
         },
