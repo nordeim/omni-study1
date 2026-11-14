@@ -665,7 +665,19 @@ export function TasksView() {
             </div>
           </div>
           <div className="flex flex-wrap items-center gap-3">
-          <div className="relative">
+          {/* S187/EK-T: the measured search family — wrapper
+              `max-md:flex-1 md:w-64` (256px at desktop; the flex-1
+              collapse at mobile — the toolbar then fits ONE line, the
+              reference's own behavior, probed 2026-11-15). The max-md
+              scoping is load-bearing under this toolbar's flex-wrap: a
+              bare flex-1 (basis 0) makes the wrap container's intrinsic
+              sizing read the input's CONTENT width (~239) instead of the
+              definite md:w-64 — the reference's own nowrap toolbar never
+              hits that path; the input rides pl-10 + text-base
+              md:text-sm. The toolbar keeps its wrap (the S78 no-overflow
+              superset — it simply never fires at mobile any more: the
+              search cedes the line). */}
+          <div className="relative max-md:flex-1 md:w-64">
             <Search
               className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400"
               strokeWidth={2}
@@ -676,7 +688,7 @@ export function TasksView() {
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search tasks..."
               aria-label="Search tasks"
-              className="w-48 pl-9"
+              className="pl-10 text-base md:text-sm"
             />
           </div>
           <DropdownMenu>

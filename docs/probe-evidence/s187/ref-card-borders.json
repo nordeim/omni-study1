@@ -1,0 +1,187 @@
+{
+  "mode": {
+    "htmlClass": "dark",
+    "bodyBg": "rgb(10, 10, 10)"
+  },
+  "cards": {
+    "Dashboard": [
+      {
+        "cls": "relative overflow-hidden bg-white rounded-2xl p-6 shadow-sm border border-slate-100 hover:shadow-md transition-shadow",
+        "w": 267,
+        "h": 134,
+        "radius": "16px",
+        "bg": "rgb(255, 255, 255)",
+        "borderColor": "rgb(241, 245, 249)",
+        "borderWidth": "1px",
+        "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0",
+        "text": "Today's Progress0/0tasks completed"
+      },
+      {
+        "cls": "relative overflow-hidden bg-white rounded-2xl p-6 shadow-sm border border-slate-100 hover:shadow-md transition-shadow",
+        "w": 267,
+        "h": 134,
+        "radius": "16px",
+        "bg": "rgb(255, 255, 255)",
+        "borderColor": "rgb(241, 245, 249)",
+        "borderWidth": "1px",
+        "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0",
+        "text": "Pending Tasks0to be done"
+      },
+      {
+        "cls": "relative overflow-hidden bg-white rounded-2xl p-6 shadow-sm border border-slate-100 hover:shadow-md transition-shadow",
+        "w": 267,
+        "h": 134,
+        "radius": "16px",
+        "bg": "rgb(255, 255, 255)",
+        "borderColor": "rgb(241, 245, 249)",
+        "borderWidth": "1px",
+        "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0",
+        "text": "Due Soon0assignments"
+      },
+      {
+        "cls": "relative overflow-hidden bg-white rounded-2xl p-6 shadow-sm border border-slate-100 hover:shadow-md transition-shadow",
+        "w": 267,
+        "h": 134,
+        "radius": "16px",
+        "bg": "rgb(255, 255, 255)",
+        "borderColor": "rgb(241, 245, 249)",
+        "borderWidth": "1px",
+        "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0",
+        "text": "Focus Time0hthis month"
+      },
+      {
+        "cls": "lg:col-span-2 bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden",
+        "w": 736,
+        "h": 231,
+        "radius": "16px",
+        "bg": "rgb(255, 255, 255)",
+        "borderColor": "rgb(241, 245, 249)",
+        "borderWidth": "1px",
+        "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0",
+        "text": "Today's TasksView All No tasks for today. Add some"
+      },
+      {
+        "cls": "bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden",
+        "w": 356,
+        "h": 231,
+        "radius": "16px",
+        "bg": "rgb(255, 255, 255)",
+        "borderColor": "rgb(241, 245, 249)",
+        "borderWidth": "1px",
+        "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0",
+        "text": "Upcoming ExamsAll No upcoming exams"
+      }
+    ],
+    "Tasks": [],
+    "Assignments": [],
+    "Exams": [],
+    "Notes": [],
+    "StudyGroups": [],
+    "Analytics": [],
+    "Settings": [],
+    "Timetable": [
+      {
+        "cls": "flex items-center justify-between bg-white rounded-xl p-4 shadow-sm border border-slate-100",
+        "w": 1116,
+        "h": 78,
+        "radius": "12px",
+        "bg": "rgb(255, 255, 255)",
+        "borderColor": "rgb(241, 245, 249)",
+        "borderWidth": "1px",
+        "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0",
+        "text": "November 2026Nov 8 - Nov 14"
+      },
+      {
+        "cls": "bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden",
+        "w": 1116,
+        "h": 915,
+        "radius": "16px",
+        "bg": "rgb(255, 255, 255)",
+        "borderColor": "rgb(241, 245, 249)",
+        "borderWidth": "1px",
+        "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0",
+        "text": "Sun8Sunday0 classesMon9Monday0 classesTue10Tuesday"
+      },
+      {
+        "cls": "bg-white rounded-2xl shadow-sm border border-slate-100 p-6",
+        "w": 1116,
+        "h": 182,
+        "radius": "16px",
+        "bg": "rgb(255, 255, 255)",
+        "borderColor": "rgb(241, 245, 249)",
+        "borderWidth": "1px",
+        "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0",
+        "text": "My ClassesSaturday, November 14No subjects added y"
+      }
+    ]
+  },
+  "triggers": {
+    "Dashboard": [],
+    "Tasks": [],
+    "Assignments": [
+      {
+        "text": "Active",
+        "cls": "flex h-9 items-center justify-between whitespace-nowrap rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm ",
+        "h": 36,
+        "w": 160,
+        "borderColor": "rgb(38, 38, 38)",
+        "bg": "rgba(0, 0, 0, 0)",
+        "radius": "6px"
+      },
+      {
+        "text": "All Subjects",
+        "cls": "flex h-9 items-center justify-between whitespace-nowrap rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm ",
+        "h": 36,
+        "w": 160,
+        "borderColor": "rgb(38, 38, 38)",
+        "bg": "rgba(0, 0, 0, 0)",
+        "radius": "6px"
+      }
+    ],
+    "Exams": [
+      {
+        "text": "Upcoming",
+        "cls": "flex h-9 items-center justify-between whitespace-nowrap rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm ",
+        "h": 36,
+        "w": 160,
+        "borderColor": "rgb(38, 38, 38)",
+        "bg": "rgba(0, 0, 0, 0)",
+        "radius": "6px"
+      }
+    ],
+    "Notes": [
+      {
+        "text": "All Notebooks",
+        "cls": "flex h-9 w-full items-center justify-between whitespace-nowrap rounded-md border border-input bg-transparent px-3 py-2 text-sm sha",
+        "h": 36,
+        "w": 162,
+        "borderColor": "rgb(38, 38, 38)",
+        "bg": "rgba(0, 0, 0, 0)",
+        "radius": "6px"
+      },
+      {
+        "text": "All Tags",
+        "cls": "flex h-9 w-full items-center justify-between whitespace-nowrap rounded-md border border-input bg-transparent px-3 py-2 text-sm sha",
+        "h": 36,
+        "w": 125,
+        "borderColor": "rgb(38, 38, 38)",
+        "bg": "rgba(0, 0, 0, 0)",
+        "radius": "6px"
+      }
+    ],
+    "StudyGroups": [],
+    "Analytics": [],
+    "Settings": [],
+    "Timetable": [
+      {
+        "text": "All Weeks",
+        "cls": "flex h-9 items-center justify-between whitespace-nowrap rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm ",
+        "h": 36,
+        "w": 160,
+        "borderColor": "rgb(38, 38, 38)",
+        "bg": "rgba(0, 0, 0, 0)",
+        "radius": "6px"
+      }
+    ]
+  }
+}

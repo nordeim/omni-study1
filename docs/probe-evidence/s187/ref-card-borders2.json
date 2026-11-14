@@ -1,0 +1,86 @@
+{
+  "mode": "dark",
+  "cards": {
+    "Calendar": [
+      {
+        "tag": "DIV",
+        "cls": "lg:col-span-2 bg-white rounded-2xl border border-slate-200 p-6",
+        "w": 736,
+        "radius": "16px",
+        "bg": "rgb(255, 255, 255)",
+        "borderColor": "rgb(226, 232, 240)",
+        "text": "November 2026SunMonTueWedThuFriSat123456"
+      },
+      {
+        "tag": "DIV",
+        "cls": "bg-white rounded-2xl border border-slate-200 p-6",
+        "w": 356,
+        "radius": "16px",
+        "bg": "rgb(255, 255, 255)",
+        "borderColor": "rgb(226, 232, 240)",
+        "text": "Saturday, November 14No events for this "
+      }
+    ],
+    "GradeTracker": [
+      {
+        "tag": "DIV",
+        "cls": "bg-white rounded-2xl p-6 border border-slate-200",
+        "w": 361,
+        "radius": "16px",
+        "bg": "rgb(255, 255, 255)",
+        "borderColor": "rgb(226, 232, 240)",
+        "text": "Total Grades0"
+      },
+      {
+        "tag": "DIV",
+        "cls": "bg-white rounded-2xl p-6 border border-slate-200",
+        "w": 361,
+        "radius": "16px",
+        "bg": "rgb(255, 255, 255)",
+        "borderColor": "rgb(226, 232, 240)",
+        "text": "Subjects Tracked0"
+      }
+    ],
+    "MyDay": [],
+    "Analytics": [],
+    "Flashcards": [],
+    "FocusTimer": [
+      {
+        "tag": "DIV",
+        "cls": "bg-white rounded-xl p-4 text-center border border-slate-100",
+        "w": 213,
+        "radius": "12px",
+        "bg": "rgb(255, 255, 255)",
+        "borderColor": "rgb(241, 245, 249)",
+        "text": "0Pomodoros"
+      },
+      {
+        "tag": "DIV",
+        "cls": "bg-white rounded-xl p-4 text-center border border-slate-100",
+        "w": 213,
+        "radius": "12px",
+        "bg": "rgb(255, 255, 255)",
+        "borderColor": "rgb(241, 245, 249)",
+        "text": "0h 0mToday"
+      },
+      {
+        "tag": "DIV",
+        "cls": "bg-white rounded-xl p-4 text-center border border-slate-100",
+        "w": 213,
+        "radius": "12px",
+        "bg": "rgb(255, 255, 255)",
+        "borderColor": "rgb(241, 245, 249)",
+        "text": "0Sessions"
+      },
+      {
+        "tag": "DIV",
+        "cls": "bg-white rounded-3xl p-8 shadow-xl border border-slate-100",
+        "w": 672,
+        "radius": "24px",
+        "bg": "rgb(255, 255, 255)",
+        "borderColor": "rgb(241, 245, 249)",
+        "text": "FocusShort BreakLong Break25:00Focus Tim"
+      }
+    ]
+  }
+}

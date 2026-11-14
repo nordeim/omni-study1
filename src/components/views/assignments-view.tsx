@@ -265,8 +265,12 @@ export function AssignmentsView() {
         </Button>
       </div>
 
-      {/* Row 2 (measured Batch U): search flex-1 | status | subject. */}
-      <div className="flex flex-col gap-4 md:flex-row">
+      {/* Row 2 (measured Batch U): search flex-1 | status | subject.
+          S187/EK-F: the selects stay w-40 at BOTH viewports (the measured
+          160px — never full-width at mobile; probed 2026-11-15); the search
+          rides the measured pl-10 + text-base md:text-sm family (the S183
+          Files convention, now measured on this view). */}
+      <div className="flex flex-col md:flex-row gap-4">
         <div className="relative flex-1">
           <Search
             aria-hidden
@@ -276,7 +280,7 @@ export function AssignmentsView() {
           <Input
             aria-label="Search assignments"
             placeholder="Search assignments..."
-            className="h-9 pl-9"
+            className="pl-10 text-base md:text-sm"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
@@ -286,7 +290,7 @@ export function AssignmentsView() {
             aria-label={`Filter assignments by status: ${
               status === "active" ? "Active" : status === "completed" ? "Completed" : "All"
             }`}
-            className="h-9 w-full md:w-40"
+            className="h-9 w-40"
           >
             <SelectValue />
           </SelectTrigger>
@@ -298,7 +302,7 @@ export function AssignmentsView() {
           </SelectContent>
         </Select>
         <Select value={subjectId} onValueChange={setSubjectId}>
-          <SelectTrigger aria-label="Subject filter" className="h-9 w-full md:w-40">
+          <SelectTrigger aria-label="Subject filter" className="h-9 w-40">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>

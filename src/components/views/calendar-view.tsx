@@ -222,7 +222,7 @@ export function CalendarView() {
 
       <div className="grid gap-6 lg:grid-cols-3">
         {mode === "timeline" ? (
-        <section aria-label="Timeline" className="sf-card p-6 lg:col-span-2">
+        <section aria-label="Timeline" className="rounded-2xl border border-slate-200 bg-white p-6 dark:border-slate-700 dark:bg-card lg:col-span-2">
           <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100">
             {monthLabel}
           </h2>
@@ -283,7 +283,7 @@ export function CalendarView() {
           )}
         </section>
         ) : (
-        <section className="sf-card sf-print-exact p-6 lg:col-span-2" aria-label="Calendar month">
+        <section className="sf-print-exact rounded-2xl border border-slate-200 bg-white p-6 dark:border-slate-700 dark:bg-card lg:col-span-2" aria-label="Calendar month">
           <div className="flex items-center justify-between">
             <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100">
               {monthLabel}
@@ -411,7 +411,7 @@ export function CalendarView() {
           </span>
         </div>
 
-        <section className="sf-card p-6" aria-label="Day detail">
+        <section className="rounded-2xl border border-slate-200 bg-white p-6 dark:border-slate-700 dark:bg-card" aria-label="Day detail">
           <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100">
             {formatLongDateWithWeekday(selected)}
           </h3>

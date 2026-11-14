@@ -1,0 +1,23 @@
+import { chromium } from "playwright";
+const CLONE = "http://localhost:3000";
+const PROBE = `(() => {
+  const main = document.querySelector("main");
+  const input = [...main.querySelectorAll("input")].find(i => (i.placeholder||"").toLowerCase().includes("search"));
+  let tb = input.closest("div.flex");
+  const kids = [...tb.children].map(k => ({ cls: (k.className||"").toString().slice(0,60), w: Math.round(k.getBoundingClientRect().width), text: (k.textContent||"").trim().slice(0,20) }));
+  return JSON.stringify({ tbW: Math.round(tb.getBoundingClientRect().width), tbH: Math.round(tb.getBoundingClientRect().height), kids });
+})()`;
+const browser = await chromium.launch();
+const ctx = await browser.newContext({ viewport: { width: 390, height: 844 } });
+const page = await ctx.newPage();
+await page.goto(`${CLONE}/login`);
+await page.fill("input[type=email]", "demo@studyflow.app");
+await page.fill("input[type=password]", "Demo1234!");
+await page.waitForFunction(() => { const b = document.querySelector("button[type=submit]"); return b && !b.disabled; }, null, { timeout: 15000 });
+await page.click("button[type=submit]");
+await page.waitForFunction(() => document.documentElement.dataset.appHydrated === "true", null, { timeout: 30000 });
+await page.waitForTimeout(1500);
+await page.goto(`${CLONE}/Tasks`);
+await page.waitForTimeout(1500);
+console.log(await page.evaluate(PROBE));
+await ctx.close(); await browser.close();

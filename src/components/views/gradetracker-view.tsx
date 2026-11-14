@@ -317,7 +317,7 @@ function GtSummaryCard({
   value: string | number;
 }) {
   return (
-    <div className="sf-card rounded-2xl p-6">
+    <div className="rounded-2xl border border-slate-200 bg-white p-6 dark:border-slate-700 dark:bg-card">
       <Icon className={cn("mb-3 h-8 w-8", iconClass)} strokeWidth={2} aria-hidden />
       <p className="text-sm text-slate-500 dark:text-slate-400">{label}</p>
       <p className="mt-2 text-4xl font-bold text-slate-800 dark:text-slate-100">{value}</p>
@@ -436,7 +436,7 @@ export function GradeTrackerView() {
             <div
               key={subject.id}
               data-testid="gt-subject-card"
-              className="sf-card flex flex-col gap-4 rounded-2xl p-6"
+              className="flex flex-col gap-4 rounded-2xl border border-slate-200 bg-white p-6 dark:border-slate-700 dark:bg-card"
             >
               <div className="flex items-center justify-between gap-3">
                 <SubjectChip name={subject.name} color={subject.color} />

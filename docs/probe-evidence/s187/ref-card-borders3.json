@@ -1,0 +1,91 @@
+{
+  "mode": "dark",
+  "cards": {
+    "Calendar": [
+      {
+        "tag": "DIV",
+        "cls": "lg:col-span-2 bg-white rounded-2xl border border-slate-200 p-6",
+        "w": 736,
+        "bc": "rgb(226, 232, 240)",
+        "bw": "1px",
+        "radius": "16px",
+        "bg": "rgb(255, 255, 255)",
+        "shadow": "none"
+      },
+      {
+        "tag": "DIV",
+        "cls": "bg-white rounded-2xl border border-slate-200 p-6",
+        "w": 356,
+        "bc": "rgb(226, 232, 240)",
+        "bw": "1px",
+        "radius": "16px",
+        "bg": "rgb(255, 255, 255)",
+        "shadow": "none"
+      }
+    ],
+    "GradeTracker": [
+      {
+        "tag": "DIV",
+        "cls": "bg-white rounded-2xl p-6 border border-slate-200",
+        "w": 361,
+        "bc": "rgb(226, 232, 240)",
+        "bw": "1px",
+        "radius": "16px",
+        "bg": "rgb(255, 255, 255)",
+        "shadow": "none"
+      },
+      {
+        "tag": "DIV",
+        "cls": "bg-white rounded-2xl p-6 border border-slate-200",
+        "w": 361,
+        "bc": "rgb(226, 232, 240)",
+        "bw": "1px",
+        "radius": "16px",
+        "bg": "rgb(255, 255, 255)",
+        "shadow": "none"
+      }
+    ],
+    "Dashboard": [
+      {
+        "tag": "DIV",
+        "cls": "relative overflow-hidden bg-white rounded-2xl p-6 shadow-sm border border-slate-100 hover:shadow-md transition-shadow",
+        "w": 267,
+        "bc": "rgb(241, 245, 249)",
+        "bw": "1px",
+        "radius": "16px",
+        "bg": "rgb(255, 255, 255)",
+        "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0.05) 0p"
+      },
+      {
+        "tag": "DIV",
+        "cls": "relative overflow-hidden bg-white rounded-2xl p-6 shadow-sm border border-slate-100 hover:shadow-md transition-shadow",
+        "w": 267,
+        "bc": "rgb(241, 245, 249)",
+        "bw": "1px",
+        "radius": "16px",
+        "bg": "rgb(255, 255, 255)",
+        "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0.05) 0p"
+      },
+      {
+        "tag": "DIV",
+        "cls": "relative overflow-hidden bg-white rounded-2xl p-6 shadow-sm border border-slate-100 hover:shadow-md transition-shadow",
+        "w": 267,
+        "bc": "rgb(241, 245, 249)",
+        "bw": "1px",
+        "radius": "16px",
+        "bg": "rgb(255, 255, 255)",
+        "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0.05) 0p"
+      },
+      {
+        "tag": "DIV",
+        "cls": "relative overflow-hidden bg-white rounded-2xl p-6 shadow-sm border border-slate-100 hover:shadow-md transition-shadow",
+        "w": 267,
+        "bc": "rgb(241, 245, 249)",
+        "bw": "1px",
+        "radius": "16px",
+        "bg": "rgb(255, 255, 255)",
+        "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0.05) 0p"
+      }
+    ]
+  }
+}

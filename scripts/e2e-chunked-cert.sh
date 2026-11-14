@@ -513,8 +513,26 @@
 # deterministic defaults so the leg fills only the title + score +
 # max; network-mocked, no server writes beyond the zero-residue
 # create]. The full DW map: docs/remediation-plan-session173.md.)
-# Expected: 158 + 268 + 101 + 95 + 92 = 714 (each chunk's count includes its
+# Expected: 158 + 275 + 101 + 95 + 92 = 721 (each chunk's count includes its
 # auth setup — the current census; the historical re-tag blocks beneath.)
+# (S187/EK re-tag — census 714 → 721, net +7: chunk 2 +7 [the S187/EK
+# filter-row + sf-card-border + Tasks-search pins in parity-session7 —
+# the reference's Assignments/Exams filter chrome measured live
+# 2026-11-15 (three probes, zero residue — every popover Escape-closed):
+# EK1 the Exams header's 2-kid census (the h1 block + the Add Exam ONLY
+# — the search/select live OUTSIDE), EK2 the filter row below the header
+# (flex flex-col md:flex-row gap-4 — column at 390, row at 1280), EK3
+# the Exams select w-40 (160px at BOTH viewports, never full-width),
+# EK4 the Assignments selects w-40 at mobile (the w-full drift), EK5
+# the search inputs' pl-10 + text-base md:text-sm family (40px + 16/14
+# — the S183 Files convention, now measured on all three views), EK6
+# the sf-card border token (border-slate-100 rgb(241,245,249) — the
+# measured card family; the component-class slate-200 surfaces keep
+# their own classes), EK7 the Tasks search `max-md:flex-1 md:w-64`
+# (256px at desktop, the flex-1 collapse at mobile — the toolbar fits
+# ONE line, was 84px wrapped); see
+# docs/remediation-plan-session187.md; the unit census holds
+# 1795 [55 files] — a view-layer port, no new seam].
 # (S186/EJ re-tag — census 705 → 714, net +9: chunk 2 +6 [the S186/EJ
 # view-header row family pins in parity-session7 — the reference's
 # toolbar-carrying headers measured live 2026-11-15 (all 20 views

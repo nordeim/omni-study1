@@ -413,7 +413,13 @@
 
 @utility sf-card {
   background-color: hsl(var(--card));
-  border: 1px solid #e2e8f0;
+  /* S187/EK-C: border-slate-100 — the measured card family (the
+     reference's every card surface, probed 2026-11-15: the stat cards,
+     the Timetable trio — rgb(241,245,249)). The slate-200 #e2e8f0 was
+     the pre-S187 assumption. The component-class surfaces measured
+     slate-200 (the notes editor, the file grids, the task rows, the
+     deck cards) keep their own classes. */
+  border: 1px solid #f1f5f9;
   border-radius: 1rem;
   box-shadow: var(--shadow-sm);
   .dark & {

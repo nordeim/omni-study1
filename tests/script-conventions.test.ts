@@ -355,7 +355,13 @@ describe("the chunked cert runner's truth contract (S128/CC2)", () => {
     // docs/remediation-plan-session186.md; the unit census holds
     // 1795 [55 files] — the hue-tokens dashboard register anchor
     // re-anchored 210 → 212).
-    expect(certSource).toContain("Expected: 158 + 268 + 101 + 95 + 92 = 714");
+    // S187/EK re-tag: 714 → 721, chunk 2 +7 (the S187/EK filter-row
+    // separation + the sf-card border token + the Tasks search width —
+    // the reference's Assignments/Exams filter chrome, the card-border
+    // family, and the search-input family measured live 2026-11-15;
+    // see docs/remediation-plan-session187.md; the unit census holds
+    // 1795 [55 files] — a view-layer port, no new seam).
+    expect(certSource).toContain("Expected: 158 + 275 + 101 + 95 + 92 = 721");
   });
 
   it("propagates a failing chunk's exit code (never a green cert on a red run)", () => {

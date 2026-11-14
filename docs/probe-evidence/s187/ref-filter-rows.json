@@ -1,0 +1,296 @@
+{
+  "mode": {
+    "htmlClass": "dark",
+    "bodyBg": "rgb(10, 10, 10)"
+  },
+  "desktop": {
+    "Assignments": {
+      "headerCls": "flex flex-col md:flex-row md:items-center justify-between gap-4",
+      "headerDir": "row",
+      "siblings": [
+        {
+          "tag": "DIV",
+          "cls": "flex flex-col md:flex-row gap-4",
+          "display": "flex",
+          "dir": "row",
+          "wrap": "nowrap",
+          "gap": "16px",
+          "items": "normal",
+          "h": 36,
+          "mt": "24px",
+          "controlCount": 3,
+          "kids": [
+            {
+              "tag": "DIV",
+              "cls": "relative flex-1",
+              "w": 764,
+              "text": ""
+            },
+            {
+              "tag": "BUTTON",
+              "cls": "flex h-9 items-center justify-between whitespace-nowrap rounded-md border border-input bg-",
+              "w": 160,
+              "text": "Active"
+            },
+            {
+              "tag": "BUTTON",
+              "cls": "flex h-9 items-center justify-between whitespace-nowrap rounded-md border border-input bg-",
+              "w": 160,
+              "text": "All Subjects"
+            }
+          ]
+        },
+        {
+          "tag": "DIV",
+          "cls": "space-y-3",
+          "display": "block",
+          "dir": "row",
+          "wrap": "nowrap",
+          "gap": "normal",
+          "items": "normal",
+          "h": 352,
+          "mt": "24px",
+          "controlCount": 1,
+          "kids": [
+            {
+              "tag": "DIV",
+              "cls": "flex flex-col items-center justify-center py-16 px-4 text-center",
+              "w": 1116,
+              "text": "No assignments yetAdd your first assignm"
+            }
+          ]
+        }
+      ]
+    },
+    "Exams": {
+      "headerCls": "flex flex-col md:flex-row md:items-center justify-between gap-4",
+      "headerDir": "row",
+      "siblings": [
+        {
+          "tag": "DIV",
+          "cls": "flex flex-col md:flex-row gap-4",
+          "display": "flex",
+          "dir": "row",
+          "wrap": "nowrap",
+          "gap": "16px",
+          "items": "normal",
+          "h": 36,
+          "mt": "24px",
+          "controlCount": 2,
+          "kids": [
+            {
+              "tag": "DIV",
+              "cls": "relative flex-1",
+              "w": 940,
+              "text": ""
+            },
+            {
+              "tag": "BUTTON",
+              "cls": "flex h-9 items-center justify-between whitespace-nowrap rounded-md border border-input bg-",
+              "w": 160,
+              "text": "Upcoming"
+            }
+          ]
+        },
+        {
+          "tag": "DIV",
+          "cls": "grid md:grid-cols-2 lg:grid-cols-3 gap-4",
+          "display": "grid",
+          "dir": "row",
+          "wrap": "nowrap",
+          "gap": "16px",
+          "items": "normal",
+          "h": 352,
+          "mt": "24px",
+          "controlCount": 1,
+          "kids": [
+            {
+              "tag": "DIV",
+              "cls": "md:col-span-2 lg:col-span-3",
+              "w": 1116,
+              "text": "No exams foundAdd your exams to start tr"
+            }
+          ]
+        }
+      ]
+    },
+    "Tasks": {
+      "headerCls": "flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6",
+      "headerDir": "row",
+      "siblings": [
+        {
+          "tag": "DIV",
+          "cls": "flex-1 overflow-y-auto space-y-2 pr-2",
+          "display": "block",
+          "dir": "row",
+          "wrap": "nowrap",
+          "gap": "normal",
+          "items": "normal",
+          "h": 692,
+          "mt": "0px",
+          "controlCount": 1,
+          "kids": [
+            {
+              "tag": "DIV",
+              "cls": "flex flex-col items-center justify-center py-16 px-4 text-center",
+              "w": 828,
+              "text": "No tasks yetCreate your first task to ge"
+            }
+          ]
+        }
+      ]
+    },
+    "TasksSearch": {
+      "placeholder": "Search tasks...",
+      "inputW": 256,
+      "inputH": 36,
+      "wrapCls": "relative flex-1 md:w-64",
+      "wrapW": 256
+    }
+  },
+  "mobile": {
+    "Assignments": {
+      "headerCls": "flex flex-col md:flex-row md:items-center justify-between gap-4",
+      "headerDir": "column",
+      "siblings": [
+        {
+          "tag": "DIV",
+          "cls": "flex flex-col md:flex-row gap-4",
+          "display": "flex",
+          "dir": "column",
+          "wrap": "nowrap",
+          "gap": "16px",
+          "items": "normal",
+          "h": 140,
+          "mt": "24px",
+          "controlCount": 3,
+          "kids": [
+            {
+              "tag": "DIV",
+              "cls": "relative flex-1",
+              "w": 358,
+              "text": ""
+            },
+            {
+              "tag": "BUTTON",
+              "cls": "flex h-9 items-center justify-between whitespace-nowrap rounded-md border border-input bg-",
+              "w": 160,
+              "text": "Active"
+            },
+            {
+              "tag": "BUTTON",
+              "cls": "flex h-9 items-center justify-between whitespace-nowrap rounded-md border border-input bg-",
+              "w": 160,
+              "text": "All Subjects"
+            }
+          ]
+        },
+        {
+          "tag": "DIV",
+          "cls": "space-y-3",
+          "display": "block",
+          "dir": "row",
+          "wrap": "nowrap",
+          "gap": "normal",
+          "items": "normal",
+          "h": 376,
+          "mt": "24px",
+          "controlCount": 1,
+          "kids": [
+            {
+              "tag": "DIV",
+              "cls": "flex flex-col items-center justify-center py-16 px-4 text-center",
+              "w": 358,
+              "text": "No assignments yetAdd your first assignm"
+            }
+          ]
+        }
+      ]
+    },
+    "Exams": {
+      "headerCls": "flex flex-col md:flex-row md:items-center justify-between gap-4",
+      "headerDir": "column",
+      "siblings": [
+        {
+          "tag": "DIV",
+          "cls": "flex flex-col md:flex-row gap-4",
+          "display": "flex",
+          "dir": "column",
+          "wrap": "nowrap",
+          "gap": "16px",
+          "items": "normal",
+          "h": 88,
+          "mt": "24px",
+          "controlCount": 2,
+          "kids": [
+            {
+              "tag": "DIV",
+              "cls": "relative flex-1",
+              "w": 358,
+              "text": ""
+            },
+            {
+              "tag": "BUTTON",
+              "cls": "flex h-9 items-center justify-between whitespace-nowrap rounded-md border border-input bg-",
+              "w": 160,
+              "text": "Upcoming"
+            }
+          ]
+        },
+        {
+          "tag": "DIV",
+          "cls": "grid md:grid-cols-2 lg:grid-cols-3 gap-4",
+          "display": "grid",
+          "dir": "row",
+          "wrap": "nowrap",
+          "gap": "16px",
+          "items": "normal",
+          "h": 352,
+          "mt": "24px",
+          "controlCount": 1,
+          "kids": [
+            {
+              "tag": "DIV",
+              "cls": "md:col-span-2 lg:col-span-3",
+              "w": 358,
+              "text": "No exams foundAdd your exams to start tr"
+            }
+          ]
+        }
+      ]
+    },
+    "Tasks": {
+      "headerCls": "flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6",
+      "headerDir": "column",
+      "siblings": [
+        {
+          "tag": "DIV",
+          "cls": "flex-1 overflow-y-auto space-y-2 pr-2",
+          "display": "block",
+          "dir": "row",
+          "wrap": "nowrap",
+          "gap": "normal",
+          "items": "normal",
+          "h": 584,
+          "mt": "0px",
+          "controlCount": 1,
+          "kids": [
+            {
+              "tag": "DIV",
+              "cls": "flex flex-col items-center justify-center py-16 px-4 text-center",
+              "w": 350,
+              "text": "No tasks yetCreate your first task to ge"
+            }
+          ]
+        }
+      ]
+    },
+    "TasksSearch": {
+      "placeholder": "Search tasks...",
+      "inputW": 107,
+      "inputH": 36,
+      "wrapCls": "relative flex-1 md:w-64",
+      "wrapW": 107
+    }
+  }
+}

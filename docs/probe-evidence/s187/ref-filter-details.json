@@ -1,0 +1,204 @@
+{
+  "mode": "dark",
+  "desktop": {
+    "Assignments": [
+      {
+        "placeholder": "Search assignments...",
+        "cls": "flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-sm transition-colors file:border-0 file:b",
+        "h": 36,
+        "w": 764,
+        "pl": "40px",
+        "fs": "14px",
+        "borderColor": "rgb(38, 38, 38)",
+        "bg": "rgba(0, 0, 0, 0)",
+        "radius": "6px",
+        "wrapCls": "relative flex-1",
+        "iconCls": "lucide lucide-search absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400",
+        "iconPos": "{\"pos\":\"absolute\",\"left\":\"12px\",\"size\":16}"
+      }
+    ],
+    "AssignmentsTriggers": [
+      {
+        "text": "Active",
+        "cls": "flex h-9 items-center justify-between whitespace-nowrap rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm ring-offset-background data-[placeholder]:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring disabled:cursor-not-allowed disabled:opacity-50 [&>span]:line-clamp-1 w-40",
+        "w": 160,
+        "h": 36
+      },
+      {
+        "text": "All Subjects",
+        "cls": "flex h-9 items-center justify-between whitespace-nowrap rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm ring-offset-background data-[placeholder]:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring disabled:cursor-not-allowed disabled:opacity-50 [&>span]:line-clamp-1 w-40",
+        "w": 160,
+        "h": 36
+      }
+    ],
+    "Exams": [
+      {
+        "placeholder": "Search exams...",
+        "cls": "flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-sm transition-colors file:border-0 file:b",
+        "h": 36,
+        "w": 940,
+        "pl": "40px",
+        "fs": "14px",
+        "borderColor": "rgb(38, 38, 38)",
+        "bg": "rgba(0, 0, 0, 0)",
+        "radius": "6px",
+        "wrapCls": "relative flex-1",
+        "iconCls": "lucide lucide-search absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400",
+        "iconPos": "{\"pos\":\"absolute\",\"left\":\"12px\",\"size\":16}"
+      }
+    ],
+    "ExamsTriggers": [
+      {
+        "text": "Upcoming",
+        "cls": "flex h-9 items-center justify-between whitespace-nowrap rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm ring-offset-background data-[placeholder]:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring disabled:cursor-not-allowed disabled:opacity-50 [&>span]:line-clamp-1 w-40",
+        "w": 160,
+        "h": 36
+      }
+    ],
+    "TasksInputs": [
+      {
+        "placeholder": "Search tasks...",
+        "cls": "flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-sm transition-colors file:border-0 file:b",
+        "h": 36,
+        "w": 256,
+        "pl": "40px",
+        "fs": "14px",
+        "borderColor": "rgb(38, 38, 38)",
+        "bg": "rgba(0, 0, 0, 0)",
+        "radius": "6px",
+        "wrapCls": "relative flex-1 md:w-64",
+        "iconCls": "lucide lucide-search absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400",
+        "iconPos": "{\"pos\":\"absolute\",\"left\":\"12px\",\"size\":16}"
+      }
+    ]
+  },
+  "mobile": {
+    "Assignments": [
+      {
+        "placeholder": "Search assignments...",
+        "cls": "flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-sm transition-colors file:border-0 file:b",
+        "h": 36,
+        "w": 358,
+        "pl": "40px",
+        "fs": "16px",
+        "borderColor": "rgb(38, 38, 38)",
+        "bg": "rgba(0, 0, 0, 0)",
+        "radius": "6px",
+        "wrapCls": "relative flex-1",
+        "iconCls": "lucide lucide-search absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400",
+        "iconPos": "{\"pos\":\"absolute\",\"left\":\"12px\",\"size\":16}"
+      }
+    ],
+    "AssignmentsTriggers": [
+      {
+        "text": "Active",
+        "cls": "flex h-9 items-center justify-between whitespace-nowrap rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm ring-offset-background data-[placeholder]:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring disabled:cursor-not-allowed disabled:opacity-50 [&>span]:line-clamp-1 w-40",
+        "w": 160,
+        "h": 36
+      },
+      {
+        "text": "All Subjects",
+        "cls": "flex h-9 items-center justify-between whitespace-nowrap rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm ring-offset-background data-[placeholder]:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring disabled:cursor-not-allowed disabled:opacity-50 [&>span]:line-clamp-1 w-40",
+        "w": 160,
+        "h": 36
+      }
+    ],
+    "Exams": [
+      {
+        "placeholder": "Search exams...",
+        "cls": "flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-sm transition-colors file:border-0 file:b",
+        "h": 36,
+        "w": 358,
+        "pl": "40px",
+        "fs": "16px",
+        "borderColor": "rgb(38, 38, 38)",
+        "bg": "rgba(0, 0, 0, 0)",
+        "radius": "6px",
+        "wrapCls": "relative flex-1",
+        "iconCls": "lucide lucide-search absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400",
+        "iconPos": "{\"pos\":\"absolute\",\"left\":\"12px\",\"size\":16}"
+      }
+    ],
+    "ExamsTriggers": [
+      {
+        "text": "Upcoming",
+        "cls": "flex h-9 items-center justify-between whitespace-nowrap rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm ring-offset-background data-[placeholder]:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring disabled:cursor-not-allowed disabled:opacity-50 [&>span]:line-clamp-1 w-40",
+        "w": 160,
+        "h": 36
+      }
+    ],
+    "Tasks": [
+      {
+        "placeholder": "Search tasks...",
+        "cls": "flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-sm transition-colors file:border-0 file:b",
+        "h": 36,
+        "w": 107,
+        "pl": "40px",
+        "fs": "16px",
+        "borderColor": "rgb(38, 38, 38)",
+        "bg": "rgba(0, 0, 0, 0)",
+        "radius": "6px",
+        "wrapCls": "relative flex-1 md:w-64",
+        "iconCls": "lucide lucide-search absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400",
+        "iconPos": "{\"pos\":\"absolute\",\"left\":\"12px\",\"size\":16}"
+      }
+    ],
+    "TasksTriggers": []
+  },
+  "options": {
+    "Assignments": [
+      {
+        "popCls": "relative z-50 max-h-96 min-w-[8rem] overflow-hidden rounded-md border bg-popover text-popover-foreground shado",
+        "items": [
+          {
+            "text": "All",
+            "state": "unchecked",
+            "cls": "relative flex w-full cursor-default select-none items-center rounded-sm py-1.5 pl-2 pr-8 t"
+          },
+          {
+            "text": "Active",
+            "state": "checked",
+            "cls": "relative flex w-full cursor-default select-none items-center rounded-sm py-1.5 pl-2 pr-8 t"
+          },
+          {
+            "text": "Completed",
+            "state": "unchecked",
+            "cls": "relative flex w-full cursor-default select-none items-center rounded-sm py-1.5 pl-2 pr-8 t"
+          }
+        ]
+      },
+      {
+        "popCls": "relative z-50 max-h-96 min-w-[8rem] overflow-hidden rounded-md border bg-popover text-popover-foreground shado",
+        "items": [
+          {
+            "text": "All Subjects",
+            "state": "checked",
+            "cls": "relative flex w-full cursor-default select-none items-center rounded-sm py-1.5 pl-2 pr-8 t"
+          }
+        ]
+      }
+    ],
+    "Exams": [
+      {
+        "popCls": "relative z-50 max-h-96 min-w-[8rem] overflow-hidden rounded-md border bg-popover text-popover-foreground shado",
+        "items": [
+          {
+            "text": "All Exams",
+            "state": "unchecked",
+            "cls": "relative flex w-full cursor-default select-none items-center rounded-sm py-1.5 pl-2 pr-8 t"
+          },
+          {
+            "text": "Upcoming",
+            "state": "checked",
+            "cls": "relative flex w-full cursor-default select-none items-center rounded-sm py-1.5 pl-2 pr-8 t"
+          },
+          {
+            "text": "Past",
+            "state": "unchecked",
+            "cls": "relative flex w-full cursor-default select-none items-center rounded-sm py-1.5 pl-2 pr-8 t"
+          }
+        ]
+      }
+    ]
+  }
+}

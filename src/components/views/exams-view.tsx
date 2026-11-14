@@ -248,8 +248,11 @@ export function ExamsView() {
   return (
     <div className="flex flex-col gap-6">
       {/* S186/EJ-C: the measured stacking family — the reference's Exams
-          header carries the h1 block + the add button (probed 2026-11-15);
-          the clone's toolbar keeps its wrap (S78/AE9). */}
+          header carries the h1 block + the add button (probed 2026-11-15).
+          S187/EK-F: the reference's filter chrome (the search + the status
+          select) renders in a SEPARATE row BELOW the header, never bundled
+          in the toolbar — the measured `flex flex-col md:flex-row gap-4`
+          family (probed 2026-11-15, docs/probe-evidence/s187/). */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-slate-800 dark:text-slate-100">Exams</h1>
@@ -259,42 +262,45 @@ export function ExamsView() {
             {counts.upcoming} upcoming · {counts.week} this week
           </p>
         </div>
-        {/* flex-wrap (S78/AE9): the search + filter + Add Exam row exceeds
-            390px unwrapped (measured 584) — at ≥sm it fits one line, so the
-            wrap never fires there. */}
-        <div className="flex flex-wrap items-center gap-2">
-          <div className="relative">
-            <Search
-              aria-hidden
-              className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400"
-              strokeWidth={2}
-            />
-            <Input
-              aria-label="Search exams"
-              placeholder="Search exams..."
-              className="h-9 w-48 pl-9"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-            />
-          </div>
-          <Select
-            value={statusFilter}
-            onValueChange={(v) => setStatusFilter(v as "all" | "upcoming" | "past")}
-          >
-            <SelectTrigger aria-label="Exam filter" className="h-9 w-[130px]">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Exams</SelectItem>
-              <SelectItem value="upcoming">Upcoming</SelectItem>
-              <SelectItem value="past">Past</SelectItem>
-            </SelectContent>
-          </Select>
-          <Button type="button" variant="gradient" className="sf-gradient-shadow" onClick={openCreate}>
-            <Plus className="size-4" strokeWidth={2} />
-            Add Exam
-          </Button>
+        <Button type="button" variant="gradient" className="sf-gradient-shadow" onClick={openCreate}>
+          <Plus className="size-4" strokeWidth={2} />
+          Add Exam
+        </Button>
+      </div>
+
+      {/* S187/EK-F: the measured filter row — `flex flex-col md:flex-row
+          gap-4` (row + 16px gap at desktop, column at mobile; the selects
+          stay w-40 at BOTH viewports, never full-width). The search rides
+          the measured `relative flex-1` + pl-10 text-base md:text-sm family
+          (the S183 Files convention). */}
+      <div className="flex flex-col md:flex-row gap-4">
+        <div className="relative flex-1">
+          <Search
+            aria-hidden
+            className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400"
+            strokeWidth={2}
+          />
+          <Input
+            aria-label="Search exams"
+            placeholder="Search exams..."
+            className="pl-10 text-base md:text-sm"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
         </div>
+        <Select
+          value={statusFilter}
+          onValueChange={(v) => setStatusFilter(v as "all" | "upcoming" | "past")}
+        >
+          <SelectTrigger aria-label="Exam filter" className="h-9 w-40">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Exams</SelectItem>
+            <SelectItem value="upcoming">Upcoming</SelectItem>
+            <SelectItem value="past">Past</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
 
       {loading && exams.length === 0 ? (

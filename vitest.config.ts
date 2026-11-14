@@ -2,6 +2,16 @@ import { defineConfig } from "vitest/config";
 import path from "node:path";
 
 // Unit-test layer for the pure domain seams — 55 files / 1795 tests
+// (re-anchored S187/EK — the filter-row separation + the sf-card border
+// token + the Tasks search width port: the unit census UNCHANGED at
+// 1795 [55 files — a view-layer port, no new seam]; the e2e census
+// moves 714 → 721: +7 — chunk 2 +7 the S187/EK pins in
+// parity-session7 at ZERO write units [EK1 the Exams header 2-kid
+// census, EK2 the filter row below the header, EK3 the Exams select
+// w-40, EK4 the Assignments selects at mobile, EK5 the search inputs'
+// pl-10 + text-base md:text-sm family, EK6 the sf-card border
+// slate-100, EK7 the Tasks search collapse + one-line toolbar]; see
+// docs/remediation-plan-session187.md).
 // (re-anchored S186/EJ — the auth-button family + the view-header row
 // family port: the unit census UNCHANGED at 1795 [55 files — a
 // view-layer port, no new seam]; the e2e census moves 705 → 714: +9 —
