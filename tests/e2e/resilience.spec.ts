@@ -536,7 +536,18 @@ test.describe("files upload edge cases", () => {
 
       // Open Rename on ALPHA (the FIRST created) — the dialog must show
       // ALPHA's name, not BETA's (the most recent session's state).
-      await page.getByRole("button", { name: `Rename ${stamp}-alpha` }).click();
+      // S183/EG re-anchor: the Rename affordance moved from the hover
+      // pencil button into the folder card's ellipsis menu (the reference's
+      // card anatomy port; Rename rides the menu as the clone's documented
+      // superset over the reference's Delete-only menu). The pin's
+      // CONTRACT — the dialog prefills the TARGET's name — is unchanged;
+      // only the access path follows the ported anatomy.
+      const alphaCard = page
+        .locator("main div.group")
+        .filter({ hasText: `${stamp}-alpha` })
+        .first();
+      await alphaCard.locator('button[aria-haspopup="menu"]').click();
+      await page.getByRole("menuitem", { name: "Rename", exact: true }).click();
       const dlg = page.getByRole("dialog");
       await expect(dlg).toBeVisible();
       await expect(dlg.getByRole("heading", { name: "Rename Folder" })).toBeVisible();

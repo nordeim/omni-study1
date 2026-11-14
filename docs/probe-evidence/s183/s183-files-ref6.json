@@ -1,0 +1,13 @@
+{
+  "folderMenu": {
+    "items": [
+      "Delete"
+    ],
+    "folderCardCls": "flex items-center gap-3 p-4 bg-white rounded-xl border border-slate-200 hover:shadow-md transition-all text-left group"
+  },
+  "cleanupResults": [
+    "DELETED s183-probe-folder",
+    "MISSING SubFolder"
+  ],
+  "finalBody": "FilesStore and organize your documents New FolderUploadAll FilesAll TypesFilesNo files yetUpload your first file to get started"
+}

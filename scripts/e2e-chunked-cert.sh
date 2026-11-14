@@ -513,8 +513,32 @@
 # deterministic defaults so the leg fills only the title + score +
 # max; network-mocked, no server writes beyond the zero-residue
 # create]. The full DW map: docs/remediation-plan-session173.md.)
-# Expected: 158 + 241 + 101 + 95 + 89 = 684 (each chunk's count includes its
+# Expected: 158 + 248 + 101 + 95 + 89 = 691 (each chunk's count includes its
 # auth setup — the current census; the historical re-tag blocks beneath.)
+# (S183/EG re-tag — census 684 → 691, net +7: chunk 2 +7 [the S183/EG
+# Files toolbar/cards/filter/move/view family pins in parity-session7 —
+# SEVEN consolidated pins at ELEVEN upload-budget units: the s183 lesson
+# — the first design's 17 units exhausted the demo user's shared
+# files+folders+link+attachment 20/15-min POST budget mid-chunk and the
+# s14 upload pins 429'd; 11 units + the chunk's existing ~8 consumers
+# fit under 20 with margin. EG1 the zero-row toolbar (the search + the
+# All Types select at w-40 + the h-9 w-9 toggle strip + the crumb row +
+# the Files section label + the empty state), EG2 the sectioned grid
+# (the Folders/Files p.text-xs uppercase labels + the grid-cols-2/4/6
+# gap-3 + both card anatomies + the two ellipsis menus), EG3 the
+# measured filter/search semantics (a .txt is OTHER — the naive
+# text/*→Documents guess measured WRONG live; folders immune to both;
+# the no-match empty state; the local-state reset on reload), EG4 the
+# in-folder navigation + the click-moves dialog (the crumb pair — the
+# home goes slate-500 in-folder — + the chevron separator + the General
+# (Root) destination list + the never-singularized "N files" count),
+# EG5 the list-mode branch (the row anatomy + the General • size •
+# MMM d, yyyy meta line + the eye/download-ANCHOR/move/trash controls),
+# EG6 the View preview dialog (the ?inline=1 img decode + the two
+# anchor controls), EG7 the non-image tile + the link file. The unit
+# census moves 1779 → 1795 [55 files] — the file-types seam spec +
+# formatFileDate + moveFileSchema + previewHeaders. See
+# docs/remediation-plan-session183.md.)
 # (S171/DU re-tag — census 634 → 637, net +3: chunk 2 +2 [the
 # S171/DU2 studygroups create-dialog parity catch-up pair in
 # parity-session7 — the reference's post-scaffold dialog re-deployment,

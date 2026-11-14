@@ -305,6 +305,22 @@ describe("the chunked cert runner's truth contract (S128/CC2)", () => {
     // stays neutral-800 (the dark:bg-neutral-700 drift closes) — see
     // docs/remediation-plan-session181.md; the unit census holds
     // 1779 [54 files] — a view-layer port, no new seam.
+    // S183/EG re-tag: 684 → 691, chunk 2 +7 (the S183/EG Files
+    // toolbar/cards/filter/move/view family pins in parity-session7 —
+    // SEVEN consolidated pins at ELEVEN upload-budget units: the s183
+    // lesson — the first design's 17 units exhausted the demo user's
+    // shared 20/15-min POST budget mid-chunk and the s14 upload pins
+    // 429'd. EG1 the zero-row toolbar, EG2 the sectioned grid + both
+    // ellipsis menus, EG3 the measured filter/search semantics (a .txt
+    // is OTHER — measured live, not guessed), EG4 the crumb pair + the
+    // click-moves dialog + the never-singularized count, EG5 the
+    // list-mode branch (the General • size • date meta line), EG6 the
+    // ?inline=1 preview dialog, EG7 the non-image tile + the link —
+    // see docs/remediation-plan-session183.md; the unit census moves
+    // 1779 → 1795 [55 files] — the file-types seam spec +
+    // formatFileDate + moveFileSchema + previewHeaders; the hue-tokens
+    // register's S93/AT1.2 amber-tile entry re-anchored to the
+    // sf-primary-soft tile with the port).
     // S182/EF re-tag: 678 → 684, chunk 2 +6 (the S182/EF header-row
     // family pins in parity-session7 — EF1 the header row's
     // justify-between + mb-4 (the ONE row carrying the title input +
@@ -319,7 +335,7 @@ describe("the chunked cert runner's truth contract (S128/CC2)", () => {
     // Files subtitle copy port — see docs/remediation-plan-session182.md;
     // the unit census holds 1779 [54 files] — a view-layer port, no new
     // seam; two hue-tokens register anchors re-anchored 408 → 412).
-    expect(certSource).toContain("Expected: 158 + 241 + 101 + 95 + 89 = 684");
+    expect(certSource).toContain("Expected: 158 + 248 + 101 + 95 + 89 = 691");
   });
 
   it("propagates a failing chunk's exit code (never a green cert on a red run)", () => {

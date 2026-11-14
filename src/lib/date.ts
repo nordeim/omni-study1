@@ -148,6 +148,19 @@ export function formatShortDate(date: Date): string {
   return SHORT_DATE.format(date);
 }
 
+/** "Nov 14, 2026" — the Files list-row meta's third segment (S183/EG:
+ * the reference's measured MMM d, yyyy form, probe s183-files-ref5 —
+ * the folder • size • DATE meta line). */
+const FILE_DATE = new Intl.DateTimeFormat("en-US", {
+  month: "short",
+  day: "numeric",
+  year: "numeric",
+});
+
+export function formatFileDate(date: Date): string {
+  return FILE_DATE.format(date);
+}
+
 // ---------------------------------------------------------------------------
 // S126/CA13 — the shared chrome clock hook (the s126 shell audit's A-L2).
 // Sidebar + MobileChrome each ran a byte-identical useNow ticking every

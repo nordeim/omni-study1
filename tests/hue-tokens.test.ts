@@ -351,17 +351,28 @@ describe("the raw-family negative sweep (S93/AT1 leg 4)", () => {
 });
 
 // S93/AT1.2 (the s93 audit's L2): the files-view folder tile's dark half.
-// The tile is the myday 56px sun-block's sibling (bg-amber-100 +
-// dark:bg-amber-900/40 + the amber-300 icon) — a latent flashbulb class
+// The tile is the myday 56px sun-block's sibling — a latent flashbulb class
 // on a swept view the seed never rendered (no seeded folders), found by
 // the s93 audit's census. RED-first: the tile shipped light-only before
-// this cycle.
-describe("the files-view folder tile's dark half (S93/AT1.2)", () => {
-  it("carries the myday sibling pattern's dark branch on the tile and the amber-300 icon", () => {
+// that cycle.
+// S183/EG re-anchor: the amber tile RETIRED with the reference's card
+// anatomy port — the folder tile now rides the accent utilities (the
+// reference's violet-500@12.5% measured live; the clone's accent-aware
+// superset is the pinned sf tokens — bg-sf-primary-soft over the raw
+// amber, an improvement on the register's own doctrine). The entry pins
+// the NEW tile's light + dark halves.
+describe("the files-view folder tile's accent halves (S93/AT1.2, re-anchored S183/EG)", () => {
+  it("carries the sf-primary-soft tile with the sf-primary icon and the dark half", () => {
     const src = readConsumer("src/components/views/files-view.tsx");
-    // The tile span: bg-amber-100 + the dark half…
-    expect(src).toMatch(/["']rounded-lg bg-amber-100 p-2 text-amber-600 dark:bg-amber-900\/40 dark:text-amber-300["']/);
-    // …the sibling pattern byte-matched at myday-view's sun block.
+    // The tile span: the accent-soft background + the sf-primary icon ink…
+    expect(src).toMatch(
+      /["']flex size-10 shrink-0 items-center justify-center rounded-lg bg-sf-primary-soft text-sf-primary dark:bg-sf-primary-soft-dark\/40 dark:text-sf-primary-strong-dark["']/,
+    );
+    // …the retired amber tile is gone (the register's own tripwire: a
+    // re-anchored entry must not still pin the retired form).
+    expect(src).not.toMatch(/bg-amber-100 p-2 text-amber-600/);
+    // …the sibling pattern still byte-matches at myday-view's sun block
+    // (the dark-half family witness, unchanged).
     const myday = readConsumer("src/components/views/myday-view.tsx");
     expect(myday).toMatch(/bg-amber-100 dark:bg-amber-900\/40/);
     expect(myday).toMatch(/text-amber-600 dark:text-amber-300/);

@@ -4,7 +4,9 @@
 # SIGKILL escalation → rm db/e2e.db → run the chunk), one chunk per
 # invocation so each foreground run fits the tool timeout.
 # Usage: bash /home/z/my-project/omni-study1/scripts/run-cert-chunk.sh <1-5>
-# Expected (S182/EF re-tag): 158 + 241 + 101 + 95 + 89 = 684 — the same
+# Expected (S183/EG re-tag): 158 + 248 + 101 + 95 + 89 = 691 — the same
+# census as scripts/e2e-chunked-cert.sh (the S183/EG re-tag block lives
+# there; machine-enforced by tests/script-conventions.test.ts).
 # census as scripts/e2e-chunked-cert.sh (machine-enforced by
 # tests/script-conventions.test.ts, including the identical-CHUNKS pin).
 # (S180/ED: chunk 2 +6 — the notes Attach-File wire pins in parity-session7

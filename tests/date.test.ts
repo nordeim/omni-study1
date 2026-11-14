@@ -10,6 +10,7 @@ import {
   daysUntil,
   formatHHMMRange,
   formatLongDate,
+  formatFileDate,
   formatMinutes,
   formatDueDateShort,
   formatFocusHours,
@@ -326,5 +327,21 @@ describe("S127/CB2 · the date-only input twins (the local-noon round-trip)", ()
   it("toDateInputValue maps null/invalid to the empty string", () => {
     expect(toDateInputValue(null)).toBe("");
     expect(toDateInputValue("garbage")).toBe("");
+  });
+});
+
+// S183/EG — the Files list-row meta date: the reference's measured
+// "Nov 14, 2026" form (MMM d, yyyy — the live list row's third meta
+// segment, probe s183-files-ref5).
+describe("formatFileDate", () => {
+  it("renders the reference's MMM d, yyyy form", () => {
+    expect(formatFileDate(new Date(2026, 10, 14))).toBe("Nov 14, 2026");
+    expect(formatFileDate(new Date(2026, 0, 5))).toBe("Jan 5, 2026");
+  });
+
+  it("is stable across the day (no time component leaks)", () => {
+    expect(formatFileDate(new Date(2026, 10, 14, 0, 0, 0))).toBe(
+      formatFileDate(new Date(2026, 10, 14, 23, 59, 59)),
+    );
   });
 });

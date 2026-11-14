@@ -525,3 +525,26 @@ export function downloadHeaders(filename: string, contentType: string): HeadersI
     "Cache-Control": "private, no-store",
   };
 }
+
+/** S183/EG — the guarded INLINE preview contract: the Files preview tile
+ *  and the "View" dialog render stored bytes through <img>, which will not
+ *  decode a response carrying Content-Disposition: attachment. This
+ *  builder flips the disposition to inline — for IMAGE mimes ONLY: an
+ *  inline HTML/SVG byte stream is an XSS class, so every non-image keeps
+ *  the attachment contract whatever the caller asks (the guard is the
+ *  server's, never the caller's). The same nosniff/private-no-store
+ *  posture and the same CS4 Content-Type clamp as the download set. */
+export function previewHeaders(filename: string, contentType: string): HeadersInit {
+  const safeContentType =
+    contentType.replace(/[^\x20-\x7E]/g, "") || "application/octet-stream";
+  // The raster set ONLY — image/svg+xml is an XML execution vehicle, not
+  // a safe inline image (the guard's own boundary).
+  const raster = /^image\/(png|jpe?g|gif|webp|bmp|avif)$/i.test(safeContentType);
+  const safe = filename.trim().replace(/[^\x20-\x7E]/g, "_").replace(/["\\]/g, "_") || "download";
+  return {
+    "Content-Type": safeContentType,
+    "Content-Disposition": `${raster ? "inline" : "attachment"}; filename="${safe}"`,
+    "X-Content-Type-Options": "nosniff",
+    "Cache-Control": "private, no-store",
+  };
+}

@@ -1,7 +1,24 @@
 import { defineConfig } from "vitest/config";
 import path from "node:path";
 
-// Unit-test layer for the pure domain seams — 54 files / 1779 tests
+// Unit-test layer for the pure domain seams — 55 files / 1795 tests
+// (re-anchored S183/EG — the Files type-filter/view-mode/move port: the
+// unit census moves 1779 → 1795 [+16, 54 → 55 files: the NEW
+// tests/file-types.test.ts seam spec — the five option labels + the
+// MEASURED classification semantics (a .txt lands under Other, never
+// Documents — the naive text/* guess measured WRONG live; the office
+// word-processor set is the document family; the octet-stream
+// extension fallback rides the CU1 posture)], + formatFileDate pins in
+// date.test.ts (the reference's MMM d, yyyy list-meta form), +
+// moveFileSchema pins in validation.test.ts (the required-nullable
+// folderId — the move always names a destination), + previewHeaders
+// pins in files.test.ts (the guarded inline disposition: image mimes
+// only — an inline HTML/SVG byte stream is an XSS class, the guard is
+// the server's; the CS4 Content-Type clamp posture); the e2e census
+// moves 684 → 691: +7 the S183/EG consolidated pins at ELEVEN
+// upload-budget units in parity-session7 — the s183 lesson: the first
+// design's 17 units exhausted the demo user's shared 20/15-min POST
+// budget mid-chunk and the s14 upload pins 429'd.)
 // (re-anchored S182/EF — the notes header-row family port: the unit census
 // UNCHANGED at 1779 [a view-layer port, no new seam]; two hue-tokens
 // register anchors re-anchored 408 → 412 (the draft header-row comment

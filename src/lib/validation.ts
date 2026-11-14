@@ -655,6 +655,17 @@ export const linkFileSchema = z.object({
   folderId: nullableId,
 });
 
+// S183/EG — the file move wire shape: the KEY is required (a move always
+// names a destination — an absent key is a client bug, rejected loudly),
+// but the VALUE is nullable (the S123/BX5 nullableId semantics: "" and
+// null both clear to root). The nullableId atom alone is nullish-OPTIONAL,
+// so the move carries the required-key form of the same convention.
+export const moveFileSchema = z.object({
+  folderId: z
+    .union([idField, z.literal(""), z.null()])
+    .transform((v) => (v === "" ? null : v)),
+});
+
 export const holidaySchema = z.object({
   name: boundedTitle,
   date: requiredDate,

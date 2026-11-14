@@ -4,6 +4,7 @@ import {
   buildContentDisposition,
   downloadHeaders,
   isPrintableAsciiMime,
+  previewHeaders,
 } from "@/lib/server/http";
 
 // S13-C3: the file-download Content-Disposition must speak BOTH filename
@@ -121,5 +122,40 @@ describe("isPrintableAsciiMime — the multipart mime admission set (S146/CU1)",
     expect(isPrintableAsciiMime("text/plain\x1b")).toBe(false);
     expect(isPrintableAsciiMime("text/plain\x7f")).toBe(false);
     expect(isPrintableAsciiMime("text/\x00plain")).toBe(false);
+  });
+});
+
+// S183/EG — the guarded inline preview mode: the Files preview tile and the
+// "View" dialog render stored bytes through <img>, which will NOT decode a
+// response carrying Content-Disposition: attachment. The GET's ?inline=1
+// mode flips the disposition for IMAGE mimes only — an inline HTML/SVG
+// byte stream is an XSS class, so every non-image keeps the attachment
+// contract whatever the caller asks (the guard is the server's, never the
+// caller's).
+describe("previewHeaders — the guarded inline disposition (S183/EG)", () => {
+  it("serves image mimes inline with the same nosniff/private-no-store posture", () => {
+    const headers = previewHeaders("photo.png", "image/png") as Record<string, string>;
+    expect(headers["Content-Disposition"]).toContain("inline");
+    expect(headers["Content-Disposition"]).not.toContain("attachment");
+    expect(headers["Content-Disposition"]).toContain('filename="photo.png"');
+    expect(headers["Content-Type"]).toBe("image/png");
+    expect(headers["X-Content-Type-Options"]).toBe("nosniff");
+    expect(headers["Cache-Control"]).toBe("private, no-store");
+  });
+
+  it("keeps the ATTACHMENT disposition for every non-image mime — the XSS guard", () => {
+    const pdf = previewHeaders("paper.pdf", "application/pdf") as Record<string, string>;
+    expect(pdf["Content-Disposition"]).toContain("attachment");
+    const txt = previewHeaders("notes.txt", "text/plain") as Record<string, string>;
+    expect(txt["Content-Disposition"]).toContain("attachment");
+    // An SVG is image/* on paper but an HTML execution vehicle in the
+    // browser's XML parser — the strict raster set only.
+    const svg = previewHeaders("vector.svg", "image/svg+xml") as Record<string, string>;
+    expect(svg["Content-Disposition"]).toContain("attachment");
+  });
+
+  it("clamps a hostile Content-Type the same way downloadHeaders does (the CS4 posture)", () => {
+    const headers = previewHeaders("x.png", "image/png\r\nX-Inject: 1") as Record<string, string>;
+    expect(headers["Content-Type"]).toBe("image/png\r\nX-Inject: 1".replace(/[^\x20-\x7E]/g, ""));
   });
 });

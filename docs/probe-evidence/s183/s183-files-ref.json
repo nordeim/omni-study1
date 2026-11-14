@@ -1,0 +1,259 @@
+{
+  "zeroRows": {
+    "inputs": [
+      {
+        "type": "file",
+        "placeholder": "",
+        "cls": "hidden"
+      },
+      {
+        "type": "text",
+        "placeholder": "Search files...",
+        "cls": "flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm fil"
+      }
+    ],
+    "all": [
+      {
+        "tag": "h1",
+        "role": null,
+        "text": "Files",
+        "cls": "text-2xl font-bold text-slate-800 flex items-center gap-2",
+        "ariaLabel": null
+      },
+      {
+        "tag": "button",
+        "role": null,
+        "text": "New Folder",
+        "cls": "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1",
+        "ariaLabel": null
+      },
+      {
+        "tag": "input",
+        "role": null,
+        "text": "",
+        "cls": "hidden",
+        "ariaLabel": null
+      },
+      {
+        "tag": "button",
+        "role": null,
+        "text": "All Files",
+        "cls": "flex items-center gap-1 hover:text-violet-600 transition-colors text-slate-800 font-medium",
+        "ariaLabel": null
+      },
+      {
+        "tag": "input",
+        "role": null,
+        "text": "",
+        "cls": "flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm fil",
+        "ariaLabel": null
+      },
+      {
+        "tag": "button",
+        "role": "combobox",
+        "text": "All Types",
+        "cls": "flex h-9 items-center justify-between whitespace-nowrap rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm ring-offset-background data-[p",
+        "ariaLabel": null
+      },
+      {
+        "tag": "button",
+        "role": null,
+        "text": "",
+        "cls": "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1",
+        "ariaLabel": null
+      },
+      {
+        "tag": "button",
+        "role": null,
+        "text": "",
+        "cls": "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1",
+        "ariaLabel": null
+      },
+      {
+        "tag": "button",
+        "role": null,
+        "text": "",
+        "cls": "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1",
+        "ariaLabel": null
+      },
+      {
+        "tag": "button",
+        "role": null,
+        "text": "",
+        "cls": "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1",
+        "ariaLabel": null
+      },
+      {
+        "tag": "button",
+        "role": null,
+        "text": "",
+        "cls": "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1",
+        "ariaLabel": null
+      }
+    ],
+    "sectionLabels": [
+      {
+        "tag": "p",
+        "text": "Files",
+        "cls": "text-xs font-semibold text-slate-500 uppercase mb-3"
+      }
+    ],
+    "body": "FilesStore and organize your documents New FolderUploadAll FilesAll TypesFiless183-1794626393213.txt15 Bs183-1794626393213.pdf208 Bs183-1794626393213.png81 B"
+  },
+  "populated": {
+    "sectionLabels": [
+      {
+        "tag": "p",
+        "text": "Files",
+        "cls": "text-xs font-semibold text-slate-500 uppercase mb-3"
+      }
+    ],
+    "search": {
+      "placeholder": "Search files...",
+      "cls": "flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground place",
+      "wrapCls": "relative flex-1",
+      "iconCls": "[object SVGAnimatedString]",
+      "iconIsSvg": true,
+      "svgCls": "[object SVGAnimatedString]"
+    },
+    "combobox": {
+      "text": "All Types",
+      "cls": "flex h-9 items-center justify-between whitespace-nowrap rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm ring-offset-background data-[placeholder]:text-muted-foreground focus:",
+      "ariaExpanded": "false"
+    },
+    "crumbHome": {
+      "text": "All Files",
+      "cls": "flex items-center gap-1 hover:text-violet-600 transition-colors text-slate-800 font-medium",
+      "svgCls": "[object SVGAnimatedString]",
+      "parentCls": "flex items-center gap-2 text-sm"
+    },
+    "fileCard": {
+      "cls": "p-4 lg:p-8",
+      "html": "<div class=\"p-4 lg:p-8\"><div class=\"space-y-6\"><div class=\"flex flex-col md:flex-row md:items-center justify-between gap-4\" style=\"opacity: 1; transform: none;\"><div><h1 class=\"text-2xl font-bold text-slate-800 flex items-center gap-2\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"lucide lucide-folder-open w-6 h-6 text-violet-500\"><path d=\"m6 14 1.5-2.9A2 2 0 0 1 9.24 10H20a2 2 0 0 1 1.94 2.5l-1.54 6a2 2 0 0 1-1.95 1.5H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h3.9a2 2 0 0 1 1.69.9l.81 1.2a2 2 0 0 0 1.67.9H18a2 2 0 0 1 2 2v2\"></path></svg>Files</h1><p class=\"text-slate-500\">Store and organize your documents</p></div><div class=\"flex gap-3\"><button class=\"inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg]:size-4 [&amp;_svg]:shrink-0 border border-input bg-background shadow-sm hover:bg-accent hover:text-accent-foreground h-9 px-4 py-2\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"lucide l"
+    },
+    "folderCard": null,
+    "counts": []
+  },
+  "filterOptions": [
+    {
+      "text": "All Types",
+      "state": "true",
+      "cls": "relative flex w-full cursor-default select-none items-center rounded-sm py-1.5 pl-2 pr-8 text-sm outline-none focus:bg-accent focus:text-acc"
+    },
+    {
+      "text": "Images",
+      "state": "false",
+      "cls": "relative flex w-full cursor-default select-none items-center rounded-sm py-1.5 pl-2 pr-8 text-sm outline-none focus:bg-accent focus:text-acc"
+    },
+    {
+      "text": "PDFs",
+      "state": "false",
+      "cls": "relative flex w-full cursor-default select-none items-center rounded-sm py-1.5 pl-2 pr-8 text-sm outline-none focus:bg-accent focus:text-acc"
+    },
+    {
+      "text": "Documents",
+      "state": "false",
+      "cls": "relative flex w-full cursor-default select-none items-center rounded-sm py-1.5 pl-2 pr-8 text-sm outline-none focus:bg-accent focus:text-acc"
+    },
+    {
+      "text": "Other",
+      "state": "false",
+      "cls": "relative flex w-full cursor-default select-none items-center rounded-sm py-1.5 pl-2 pr-8 text-sm outline-none focus:bg-accent focus:text-acc"
+    }
+  ],
+  "imagesFilter": {
+    "pngVisible": true,
+    "pdfVisible": false,
+    "txtVisible": false,
+    "folderVisible": false
+  },
+  "pdfsFilter": {
+    "pngVisible": false,
+    "pdfVisible": true,
+    "txtVisible": false,
+    "folderVisible": false
+  },
+  "documentsFilter": {
+    "pngVisible": false,
+    "pdfVisible": false,
+    "txtVisible": false,
+    "folderVisible": false
+  },
+  "search": {
+    "pngVisible": true,
+    "folderVisible": false
+  },
+  "searchEmpty": {
+    "body": "FilesStore and organize your documents New FolderUploadAll FilesAll TypesFilesNo files yetUpload your first file to get started"
+  },
+  "fileMenu": [],
+  "inFolder": {
+    "body": "FilesStore and organize your documents New FolderUploadAll FilesAll TypesFiless183-1794626452684.pdf208 Bs183-1794626452684.png81 Bs183-1794626393213.txt15 Bs183-1794626393213.pdf208 Bs183-1794626393213.png81 B",
+    "crumbs": [
+      {
+        "tag": "button",
+        "text": "New Folder",
+        "cls": "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1"
+      },
+      {
+        "tag": "span",
+        "text": "Upload",
+        "cls": "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1"
+      },
+      {
+        "tag": "button",
+        "text": "All Files",
+        "cls": "flex items-center gap-1 hover:text-violet-600 transition-colors text-slate-800 font-medium"
+      },
+      {
+        "tag": "button",
+        "text": "All Types",
+        "cls": "flex h-9 items-center justify-between whitespace-nowrap rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm ring-offset-background data-[p"
+      },
+      {
+        "tag": "span",
+        "text": "All Types",
+        "cls": ""
+      },
+      {
+        "tag": "button",
+        "text": "",
+        "cls": "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1"
+      },
+      {
+        "tag": "button",
+        "text": "",
+        "cls": "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1"
+      },
+      {
+        "tag": "button",
+        "text": "",
+        "cls": "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1"
+      },
+      {
+        "tag": "button",
+        "text": "",
+        "cls": "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1"
+      },
+      {
+        "tag": "button",
+        "text": "",
+        "cls": "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1"
+      },
+      {
+        "tag": "button",
+        "text": "",
+        "cls": "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1"
+      },
+      {
+        "tag": "button",
+        "text": "",
+        "cls": "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1"
+      }
+    ],
+    "pngVisible": true,
+    "hasFoldersLabel": false
+  },
+  "listToggle": [],
+  "folderMenu": []
+}

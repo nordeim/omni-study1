@@ -1,0 +1,10 @@
+{
+  "clonePre": {
+    "body": "FilesStore and organize your documents New FolderUploadAll FilesNo files yetUpload your first file to get started Upload a file",
+    "hasSearch": false,
+    "hasCombobox": false,
+    "hasSectionLabels": false,
+    "crumbHomeCls": "flex items-center gap-1 text-sm font-medium transition-colors text-sf-primary-strong",
+    "toggleCls": "flex items-center rounded-lg border border-slate-200 p-0.5 dark:border-slate-700"
+  }
+}

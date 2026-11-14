@@ -18,6 +18,7 @@ import {
   linkFileSchema,
   loginSchema,
   mathSolveSchema,
+  moveFileSchema,
   NOTE_ATTACHMENT_CAP,
   noteSchema,
   practiceTestSchema,
@@ -37,6 +38,24 @@ import {
   timetableClassSchema,
   verifyEmailSchema,
 } from "@/lib/validation";
+
+describe("moveFileSchema (S183/EG — the file move wire shape)", () => {
+  it("accepts a folder id and the null clear-to-root, rejecting garbage", () => {
+    expect(moveFileSchema.safeParse({ folderId: "fld_123" }).success).toBe(true);
+    // The S123/BX5 nullableId atom: "" clears to root at the wire — the
+    // same clear-to-root convention every entity FK honors.
+    expect(moveFileSchema.safeParse({ folderId: "" }).success).toBe(true);
+    expect(moveFileSchema.safeParse({ folderId: null }).success).toBe(true);
+    expect(moveFileSchema.safeParse({}).success).toBe(false);
+    expect(moveFileSchema.safeParse({ folderId: 42 }).success).toBe(false);
+  });
+
+  it("normalizes the empty string to null (the clear-to-root transform)", () => {
+    const out = moveFileSchema.safeParse({ folderId: "" });
+    expect(out.success).toBe(true);
+    if (out.success) expect(out.data.folderId).toBeNull();
+  });
+});
 
 describe("loginSchema", () => {
   it("accepts a valid login and rejects short passwords / bad emails", () => {

@@ -8,18 +8,23 @@
 
 import * as React from "react";
 import {
+  ChevronRight,
   Download,
+  Eye,
   File as FileIcon,
   FileText,
   Folder,
   FolderOpen,
-  Home,
   Grid3x3,
+  Home,
   Image as ImageIcon,
   Link2,
   List,
+  MoreHorizontal,
+  MoveRight,
   Pencil,
   Plus,
+  Search,
   Trash2,
   Upload,
 } from "lucide-react";
@@ -42,11 +47,26 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useToast } from "@/components/ui/toast";
 import { apiGet, apiSend } from "@/lib/api";
+import { FILE_TYPE_OPTIONS, classifyFileType, type FileTypeFilter } from "@/lib/file-types";
 import { buildBreadcrumbChain } from "@/lib/folder-tree";
+import { formatFileDate } from "@/lib/date";
 import { EmptyState, Spinner, ViewHeader } from "@/components/views/shared";
 import { cn } from "@/lib/utils";
 
@@ -196,6 +216,15 @@ export function FilesView() {
   const [renamingFolder, setRenamingFolder] = React.useState<FileFolderRow | null>(null);
   const [deletingFolder, setDeletingFolder] = React.useState<FileFolderRow | null>(null);
   const [deletingFile, setDeletingFile] = React.useState<FileItemRow | null>(null);
+  // S183/EG (the measured reference toolbar): the type filter + the name
+  // search — both FILE-scoped (folders are immune to both, measured live)
+  // and both LOCAL state (a reload resets them, measured).
+  const [typeFilter, setTypeFilter] = React.useState<FileTypeFilter>("all");
+  const [searchQuery, setSearchQuery] = React.useState("");
+  // S183/EG: the move dialog + the preview ("View") dialog — both measured
+  // reference surfaces the clone lacked entirely.
+  const [movingFile, setMovingFile] = React.useState<FileItemRow | null>(null);
+  const [viewingFile, setViewingFile] = React.useState<FileItemRow | null>(null);
 
   const fileInputRef = React.useRef<HTMLInputElement>(null);
 
@@ -297,6 +326,16 @@ export function FilesView() {
   const visibleFolders = folders.filter((f) => (f.parentId ?? null) === currentFolderId);
   const visibleFiles = files.filter((f) => (f.folderId ?? null) === currentFolderId);
 
+  // S183/EG: the filter + the search apply to FILES ONLY (the folders stay
+  // visible under both — measured live on the reference). The search is a
+  // case-insensitive name substring (measured).
+  const filteredFiles = visibleFiles.filter((file) => {
+    if (typeFilter !== "all" && classifyFileType(file.mime, file.name) !== typeFilter) return false;
+    const q = searchQuery.trim().toLowerCase();
+    if (q && !file.name.toLowerCase().includes(q)) return false;
+    return true;
+  });
+
   const onPickFile = () => fileInputRef.current?.click();
 
   const onFileSelected = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -381,6 +420,28 @@ export function FilesView() {
   // distinction is decided by url alone.
   const isLinkFile = (file: FileItemRow): boolean => file.url !== null;
 
+  // S183/EG: the move — the reference's click-moves dialog (the destination
+  // click IS the move; no confirm step — measured). PATCH /api/files/{id}
+  // with the nullable folderId (null = the root).
+  const moveFile = async (file: FileItemRow, folderId: string | null) => {
+    try {
+      await apiSend("PATCH", `/api/files/${file.id}`, { folderId });
+      toast.success(`${file.name} moved`);
+      setMovingFile(null);
+      await refresh();
+    } catch (err: unknown) {
+      toast.error(errorMessage(err, "Could not move the file."));
+    }
+  };
+
+  // S183/EG: the list row's meta line names the CONTAINING folder — the
+  // reference's root pseudo-folder is named "General" (the move dialog's
+  // "General (Root)" is the same name — measured).
+  const folderNameFor = (file: FileItemRow): string => {
+    if (!file.folderId) return "General";
+    return folders.find((f) => f.id === file.folderId)?.name ?? "General";
+  };
+
   return (
     <div className="flex flex-col gap-6">
       <ViewHeader
@@ -391,43 +452,12 @@ export function FilesView() {
         subtitle="Store and organize your documents"
         icon={FolderOpen}
         actions={
-          // flex-wrap (S78/AE10): the view-mode + New Folder + Upload row
-          // exceeds 390px unwrapped (measured 499). At ≥sm it fits.
+          // S183/EG: the reference's action group is [New Folder][Upload]
+          // — the view-mode toggle MOVED OUT to the toolbar row (measured:
+          // the toggle lives beside the search + the type filter, not in
+          // the header). flex-wrap (S78/AE10) stays. The Add Link icon
+          // button is the clone's superset (S5-K pins its place).
           <div className="flex flex-wrap items-center gap-2">
-            <div
-              role="group"
-              aria-label="View mode"
-              className="flex items-center rounded-lg border border-slate-200 p-0.5 dark:border-slate-700"
-            >
-              <button
-                type="button"
-                aria-label="Grid view"
-                aria-pressed={viewMode === "grid"}
-                onClick={() => setViewMode("grid")}
-                className={cn(
-                  "flex size-8 items-center justify-center rounded-md outline-none focus-visible:ring-2 focus-visible:ring-sf-primary/40",
-                  viewMode === "grid"
-                    ? "bg-sf-primary-soft text-sf-primary-strong"
-                    : "text-slate-500 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800",
-                )}
-              >
-                <Grid3x3 className="size-4" strokeWidth={2} aria-hidden />
-              </button>
-              <button
-                type="button"
-                aria-label="List view"
-                aria-pressed={viewMode === "list"}
-                onClick={() => setViewMode("list")}
-                className={cn(
-                  "flex size-8 items-center justify-center rounded-md outline-none focus-visible:ring-2 focus-visible:ring-sf-primary/40",
-                  viewMode === "list"
-                    ? "bg-sf-primary-soft text-sf-primary-strong"
-                    : "text-slate-500 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800",
-                )}
-              >
-                <List className="size-4" strokeWidth={2} aria-hidden />
-              </button>
-            </div>
             <Button
               type="button"
               variant="outline"
@@ -466,38 +496,114 @@ export function FilesView() {
         }
       />
 
-      {/* ---- breadcrumb ---- */}
-      <div className="flex flex-wrap items-center gap-1.5 text-sm">
+      {/* ---- breadcrumb (S183/EG: the reference's crumb row — the violet is
+          the HOVER accent only, the active crumb reads slate-800, the
+          separator is the chevron, and the folder crumbs are PLAIN text
+          buttons — the pills and the "/" separators are retired) ---- */}
+      <div className="flex flex-wrap items-center gap-2 text-sm">
         <button
           type="button"
           onClick={() => setCurrentFolderId(null)}
           className={cn(
-            "flex items-center gap-1 text-sm font-medium transition-colors",
+            "flex items-center gap-1 transition-colors hover:text-violet-600 dark:hover:text-violet-400",
             currentFolderId === null
-              ? "text-sf-primary-strong"
-              : "text-slate-600 hover:text-sf-primary dark:text-slate-300",
+              ? "font-medium text-slate-800 dark:text-slate-100"
+              : "text-slate-500 dark:text-slate-400",
           )}
         >
-          <Home className="size-3.5" strokeWidth={2} aria-hidden />
+          <Home className="size-4" strokeWidth={2} aria-hidden />
           All Files
         </button>
         {breadcrumb.map((folder) => (
           <React.Fragment key={folder.id}>
-            <span aria-hidden className="text-slate-300">/</span>
+            <ChevronRight className="size-4 text-slate-400 dark:text-slate-500" strokeWidth={2} aria-hidden />
             <button
               type="button"
               onClick={() => setCurrentFolderId(folder.id)}
               className={cn(
-                "rounded-full px-3 py-1 text-sm font-medium transition-colors",
+                "flex items-center gap-1 transition-colors hover:text-violet-600 dark:hover:text-violet-400",
                 folder.id === currentFolderId
-                  ? "bg-sf-primary-soft text-sf-primary-strong"
-                  : "bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300",
+                  ? "font-medium text-slate-800 dark:text-slate-100"
+                  : "text-slate-500 dark:text-slate-400",
               )}
             >
               {folder.name}
             </button>
           </React.Fragment>
         ))}
+      </div>
+
+      {/* ---- the toolbar row (S183/EG: the reference's flex-col md:flex-row
+          row — the search + the type filter + the view-mode toggle, between
+          the breadcrumb and the content) ---- */}
+      <div className="flex flex-col gap-4 md:flex-row">
+        <div className="relative flex-1">
+          <Search
+            className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400 dark:text-slate-500"
+            strokeWidth={2}
+            aria-hidden
+          />
+          <Input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search files..."
+            className="pl-10 text-base md:text-sm"
+          />
+        </div>
+        <Select value={typeFilter} onValueChange={(value) => setTypeFilter(value as FileTypeFilter)}>
+          {/* S183/EG: the explicit label — the codebase's convention for
+              always-rendered toolbar selects (the Timetable's "Week
+              filter" / the notes-view's "Filter by notebook"): the a11y
+              sweep's axe button-name rule fails the Radix trigger without
+              one, whatever the visible SelectValue text (the S183 cert
+              finding — the dialog selects pass unlabelled only because
+              they unmount with the closed dialog). */}
+          <SelectTrigger className="w-40" aria-label="Filter files by type">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {FILE_TYPE_OPTIONS.map((option) => (
+              <SelectItem key={option.value} value={option.value}>
+                {option.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <div
+          role="group"
+          aria-label="View mode"
+          className="flex overflow-hidden rounded-lg border border-slate-200 dark:border-slate-700"
+        >
+          <button
+            type="button"
+            aria-label="Grid view"
+            aria-pressed={viewMode === "grid"}
+            onClick={() => setViewMode("grid")}
+            className={cn(
+              "flex h-9 w-9 items-center justify-center outline-none transition-colors focus-visible:ring-2 focus-visible:ring-sf-primary/40",
+              viewMode === "grid"
+                ? "bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-200"
+                : "text-slate-500 hover:bg-slate-50 dark:text-slate-400 dark:hover:bg-slate-800",
+            )}
+          >
+            <Grid3x3 className="size-4" strokeWidth={2} aria-hidden />
+          </button>
+          <button
+            type="button"
+            aria-label="List view"
+            aria-pressed={viewMode === "list"}
+            onClick={() => setViewMode("list")}
+            className={cn(
+              "flex h-9 w-9 items-center justify-center outline-none transition-colors focus-visible:ring-2 focus-visible:ring-sf-primary/40",
+              viewMode === "list"
+                ? "bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-200"
+                : "text-slate-500 hover:bg-slate-50 dark:text-slate-400 dark:hover:bg-slate-800",
+            )}
+          >
+            <List className="size-4" strokeWidth={2} aria-hidden />
+          </button>
+        </div>
       </div>
 
       {/* S175/DY2: the in-flight window is announced (the DM2/DL2/DK4
@@ -528,83 +634,262 @@ export function FilesView() {
             </Button>
           </div>
         </div>
-      ) : visibleFolders.length === 0 && visibleFiles.length === 0 ? (
-        <div className="sf-card">
-          <EmptyState
-            icon={FolderOpen}
-            title="No files yet"
-            hint="Upload your first file to get started"
-            cta={
-              <Button variant="gradient" className="sf-gradient-shadow-lg" onClick={onPickFile}>
-                <Upload className="size-4" strokeWidth={2} /> Upload a file
-              </Button>
-            }
-          />
-        </div>
       ) : (
-        <div className="flex flex-col gap-4">
+        // S183/EG: the reference's SECTIONED layout — the Folders block
+        // (label + grid, only when folders exist; folders are immune to
+        // the filter/search) above the Files block (the label ALWAYS
+        // renders; the grid at rows, the shared EmptyState at none —
+        // unwrapped, the reference's bare form). The empty-state CTA
+        // drops with the port (the reference's empty state carries icon
+        // + title + hint only — measured).
+        <>
           {visibleFolders.length > 0 && (
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {visibleFolders.map((folder) => {
-                const itemCount =
-                  folders.filter((f) => f.parentId === folder.id).length +
-                  files.filter((f) => f.folderId === folder.id).length;
-                return (
-                  <div key={folder.id} className="group sf-card flex items-center gap-3 p-4">
-                    <button
-                      type="button"
-                      onClick={() => setCurrentFolderId(folder.id)}
-                      className="flex min-w-0 flex-1 items-center gap-3 text-left"
-                      aria-label={`Open folder ${folder.name}`}
+            <div>
+              <p className="mb-3 text-xs font-semibold uppercase text-slate-500 dark:text-slate-400">Folders</p>
+              <div className="grid grid-cols-2 gap-3 md:grid-cols-4 lg:grid-cols-6">
+                {visibleFolders.map((folder) => {
+                  // The reference's count label says FILES — the direct
+                  // file children only, never singularized ("0 files",
+                  // "1 files" — both measured).
+                  const fileCount = files.filter((f) => f.folderId === folder.id).length;
+                  return (
+                    // The reference's folder card is a <button> wrapping
+                    // the ellipsis <button> — its own nested-button bug
+                    // (invalid HTML), NOT ported: the clone keeps the
+                    // div shell + the open button (byte-equivalent
+                    // visuals, valid HTML — the same posture as the
+                    // reference's own file card).
+                    <div
+                      key={folder.id}
+                      className="group flex items-center gap-3 rounded-xl border border-slate-200 bg-white p-4 text-left transition-all hover:shadow-md dark:border-slate-700 dark:bg-card"
                     >
-                      <span className="rounded-lg bg-amber-100 p-2 text-amber-600 dark:bg-amber-900/40 dark:text-amber-300">
-                        <Folder className="size-5" strokeWidth={2} aria-hidden />
-                      </span>
-                      <span className="min-w-0">
-                        <span className="block truncate font-medium text-slate-800 dark:text-slate-100">
-                          {folder.name}
+                      <button
+                        type="button"
+                        onClick={() => setCurrentFolderId(folder.id)}
+                        className="flex min-w-0 flex-1 items-center gap-3 text-left"
+                        aria-label={`Open folder ${folder.name}`}
+                      >
+                        <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-sf-primary-soft text-sf-primary dark:bg-sf-primary-soft-dark/40 dark:text-sf-primary-strong-dark">
+                          <Folder className="size-5" strokeWidth={2} aria-hidden />
                         </span>
-                        <span className="block text-xs text-slate-500 dark:text-slate-400">{itemCount} items</span>
-                      </span>
-                    </button>
-                    <div className="flex shrink-0 items-center gap-1 opacity-0 transition-opacity focus-within:opacity-100 group-hover:opacity-100">
-                      <button
-                        type="button"
-                        aria-label={`Rename ${folder.name}`}
-                        onClick={() => {
-                          setRenamingFolder(folder);
-                          setFolderDialogOpen(true);
-                        }}
-                        className="flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 hover:bg-slate-100 hover:text-sf-primary dark:hover:bg-slate-800"
-                      >
-                        <Pencil className="size-4" strokeWidth={2} />
+                        <span className="min-w-0">
+                          <span className="block truncate font-medium text-slate-800 dark:text-slate-100">
+                            {folder.name}
+                          </span>
+                          <span className="block text-xs text-slate-400 dark:text-slate-500">{fileCount} files</span>
+                        </span>
                       </button>
-                      <button
-                        type="button"
-                        aria-label={`Delete ${folder.name}`}
-                        onClick={() => setDeletingFolder(folder)}
-                        className="flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-950"
-                      >
-                        <Trash2 className="size-4" strokeWidth={2} />
-                      </button>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            className="h-8 w-8 shrink-0 opacity-0 group-hover:opacity-100"
+                            aria-label={`Folder options for ${folder.name}`}
+                          >
+                            <MoreHorizontal className="size-4" strokeWidth={2} aria-hidden />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          {/* The reference's folder menu is Delete-only;
+                              Rename is the clone's superset (the BU1
+                              rename-prefill contract keeps its home). */}
+                          <DropdownMenuItem
+                            onClick={() => {
+                              setRenamingFolder(folder);
+                              setFolderDialogOpen(true);
+                            }}
+                          >
+                            <Pencil className="size-4" strokeWidth={2} aria-hidden /> Rename
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            className="text-red-600 focus:text-red-600 dark:text-red-400 dark:focus:text-red-400"
+                            onClick={() => setDeletingFolder(folder)}
+                          >
+                            <Trash2 className="size-4" strokeWidth={2} aria-hidden /> Delete
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </div>
-                  </div>
-                );
-              })}
+                  );
+                })}
+              </div>
             </div>
           )}
 
-          {visibleFiles.length > 0 && (
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {visibleFiles.map((file) => {
-                const link = isLinkFile(file);
-                const Icon = link ? Link2 : mimeIconClass(file.mime);
-                return (
-                  <div key={file.id} className="group sf-card flex items-center gap-3 p-4">
-                    <span className="flex shrink-0 rounded-lg bg-sf-primary-soft p-2 text-sf-primary-strong dark:bg-sf-primary-soft-dark/40 dark:text-sf-primary-strong-dark">
-                      <Icon className="size-5" strokeWidth={2} aria-hidden />
-                    </span>
-                    <div className="min-w-0 flex-1">
+          <div>
+            <p className="mb-3 text-xs font-semibold uppercase text-slate-500 dark:text-slate-400">Files</p>
+            {filteredFiles.length === 0 ? (
+              <EmptyState
+                icon={FolderOpen}
+                title="No files yet"
+                hint="Upload your first file to get started"
+              />
+            ) : viewMode === "list" ? (
+              // S183/EG: the LIST branch — the viewMode state finally
+              // branches (it was a visual no-op before this port). The
+              // reference's row: the icon tile, the name, the folder •
+              // size • date meta line, and the four hover controls (the
+              // eye, the download ANCHOR, the move, the red trash).
+              <div className="flex flex-col gap-3">
+                {filteredFiles.map((file) => {
+                  const link = isLinkFile(file);
+                  const Icon = link ? Link2 : mimeIconClass(file.mime);
+                  return (
+                    <div
+                      key={file.id}
+                      className="group flex items-center gap-4 rounded-xl border border-slate-200 bg-white p-4 transition-shadow hover:shadow-md dark:border-slate-700 dark:bg-card"
+                    >
+                      <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-slate-100 dark:bg-slate-800">
+                        <Icon className="size-5 text-slate-500 dark:text-slate-400" strokeWidth={2} aria-hidden />
+                      </span>
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate font-medium text-slate-800 dark:text-slate-100">
+                          {link ? (
+                            <a
+                              href={file.url ?? "#"}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="hover:text-sf-primary hover:underline"
+                            >
+                              {file.name}
+                            </a>
+                          ) : (
+                            file.name
+                          )}
+                        </p>
+                        <p className="text-xs text-slate-400 dark:text-slate-500">
+                          {folderNameFor(file)} • {formatSize(file.size)} • {formatFileDate(new Date(file.createdAt))}
+                        </p>
+                      </div>
+                      <div className="flex shrink-0 gap-2 opacity-0 transition-opacity focus-within:opacity-100 group-hover:opacity-100">
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          className="h-9 w-9"
+                          aria-label={`View ${file.name}`}
+                          onClick={() => setViewingFile(file)}
+                        >
+                          <Eye className="size-4" strokeWidth={2} aria-hidden />
+                        </Button>
+                        {!link && (
+                          <Button type="button" variant="ghost" className="h-9 w-9" asChild>
+                            <a
+                              href={`/api/files/${file.id}`}
+                              download={file.name}
+                              target="_blank"
+                              rel="noreferrer"
+                              aria-label={`Download ${file.name}`}
+                            >
+                              <Download className="size-4" strokeWidth={2} aria-hidden />
+                            </a>
+                          </Button>
+                        )}
+                        {!link && (
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            className="h-9 w-9"
+                            aria-label={`Move ${file.name} to a folder`}
+                            onClick={() => setMovingFile(file)}
+                          >
+                            <MoveRight className="size-4" strokeWidth={2} aria-hidden />
+                          </Button>
+                        )}
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          className="h-9 w-9 text-red-500 hover:text-red-600 dark:text-red-400 dark:hover:text-red-300"
+                          aria-label={`Delete ${file.name}`}
+                          onClick={() => setDeletingFile(file)}
+                        >
+                          <Trash2 className="size-4" strokeWidth={2} aria-hidden />
+                        </Button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              // The GRID branch — the reference's card: the ellipsis row
+              // above the aspect-square preview tile, then the name + size.
+              <div className="grid grid-cols-2 gap-3 md:grid-cols-4 lg:grid-cols-6">
+                {filteredFiles.map((file) => {
+                  const link = isLinkFile(file);
+                  const Icon = link ? Link2 : mimeIconClass(file.mime);
+                  const isImage = !link && file.mime.startsWith("image/");
+                  return (
+                    <div
+                      key={file.id}
+                      className="group flex flex-col rounded-xl border border-slate-200 bg-white p-4 transition-shadow hover:shadow-md dark:border-slate-700 dark:bg-card"
+                    >
+                      <div className="mb-2 flex justify-end">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              className="h-7 w-7 opacity-0 group-hover:opacity-100"
+                              aria-label={`File options for ${file.name}`}
+                            >
+                              <MoreHorizontal className="size-4" strokeWidth={2} aria-hidden />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => setViewingFile(file)}>
+                              <Eye className="size-4" strokeWidth={2} aria-hidden /> View
+                            </DropdownMenuItem>
+                            {!link && (
+                              <DropdownMenuItem asChild>
+                                <a href={`/api/files/${file.id}`} download={file.name}>
+                                  <Download className="size-4" strokeWidth={2} aria-hidden /> Download
+                                </a>
+                              </DropdownMenuItem>
+                            )}
+                            {!link && (
+                              <DropdownMenuItem onClick={() => setMovingFile(file)}>
+                                <FolderOpen className="size-4" strokeWidth={2} aria-hidden /> Move to Folder
+                              </DropdownMenuItem>
+                            )}
+                            <DropdownMenuItem
+                              className="text-red-600 focus:text-red-600 dark:text-red-400 dark:focus:text-red-400"
+                              onClick={() => setDeletingFile(file)}
+                            >
+                              <Trash2 className="size-4" strokeWidth={2} aria-hidden /> Delete
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setViewingFile(file)}
+                        aria-label={`Preview ${file.name}`}
+                        className={cn(
+                          "group/file relative mb-3 flex aspect-square cursor-pointer items-center justify-center overflow-hidden rounded-lg",
+                          isImage
+                            ? "bg-slate-100 dark:bg-slate-800"
+                            : "bg-slate-50 dark:bg-slate-800/60",
+                        )}
+                      >
+                        {isImage ? (
+                          <>
+                            {/* S183/EG: the ?inline=1 guarded mode — the
+                                attachment disposition would 0 the
+                                decode (the previewHeaders seam). */}
+                            <img
+                              src={`/api/files/${file.id}?inline=1`}
+                              alt={file.name}
+                              className="h-full w-full object-cover"
+                              loading="lazy"
+                            />
+                            <span className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 transition-opacity group-hover/file:opacity-100">
+                              <Eye className="size-6 text-white" strokeWidth={2} aria-hidden />
+                            </span>
+                          </>
+                        ) : (
+                          <Icon className="size-12 text-slate-400 dark:text-slate-500" strokeWidth={2} aria-hidden />
+                        )}
+                      </button>
                       <p className="truncate text-sm font-medium text-slate-800 dark:text-slate-100">
                         {link ? (
                           <a
@@ -619,34 +904,14 @@ export function FilesView() {
                           file.name
                         )}
                       </p>
-                      <p className="text-xs text-slate-500 dark:text-slate-400">{formatSize(file.size)}</p>
+                      <p className="text-xs text-slate-400 dark:text-slate-500">{formatSize(file.size)}</p>
                     </div>
-                    <div className="flex shrink-0 items-center gap-1 opacity-0 transition-opacity focus-within:opacity-100 group-hover:opacity-100">
-                      {!link && (
-                        <a
-                          href={`/api/files/${file.id}`}
-                          download={file.name}
-                          aria-label={`Download ${file.name}`}
-                          className="flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 hover:bg-slate-100 hover:text-sf-primary dark:hover:bg-slate-800"
-                        >
-                          <Download className="size-4" strokeWidth={2} />
-                        </a>
-                      )}
-                      <button
-                        type="button"
-                        aria-label={`Delete ${file.name}`}
-                        onClick={() => setDeletingFile(file)}
-                        className="flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-950"
-                      >
-                        <Trash2 className="size-4" strokeWidth={2} />
-                      </button>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        </>
       )}
 
       <Dialog open={linkDialogOpen} onOpenChange={setLinkDialogOpen}>
@@ -676,6 +941,87 @@ export function FilesView() {
               Save Link
             </Button>
           </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* ---- the preview dialog (S183/EG: the reference's "View" — the name,
+          the inline image (or the mime icon), the Open in New Tab + Download
+          anchors, the built-in Close X) ---- */}
+      <Dialog open={viewingFile !== null} onOpenChange={(open) => !open && setViewingFile(null)}>
+        <DialogContent className="max-w-3xl">
+          <DialogHeader>
+            <DialogTitle className="truncate pr-8">{viewingFile?.name}</DialogTitle>
+          </DialogHeader>
+          {viewingFile && !isLinkFile(viewingFile) ? (
+            <div className="flex h-72 w-full items-center justify-center p-4 md:h-96">
+              {viewingFile.mime.startsWith("image/") ? (
+                // The ?inline=1 bytes — the attachment disposition would
+                // block the decode (the previewHeaders seam).
+                <img
+                  src={`/api/files/${viewingFile.id}?inline=1`}
+                  alt={viewingFile.name}
+                  className="max-h-full max-w-full rounded-lg object-contain shadow-lg"
+                />
+              ) : (() => {
+                const Icon = mimeIconClass(viewingFile.mime);
+                return <Icon className="size-12 text-slate-400 dark:text-slate-500" strokeWidth={2} aria-hidden />;
+              })()}
+            </div>
+          ) : null}
+          <div className="flex flex-wrap items-center justify-center gap-2">
+            {viewingFile && isLinkFile(viewingFile) ? (
+              <Button type="button" variant="outline" asChild>
+                <a href={viewingFile.url ?? "#"} target="_blank" rel="noreferrer">
+                  Open Link
+                </a>
+              </Button>
+            ) : viewingFile ? (
+              <>
+                <Button type="button" variant="outline" asChild>
+                  <a href={`/api/files/${viewingFile.id}?inline=1`} target="_blank" rel="noreferrer">
+                    Open in New Tab
+                  </a>
+                </Button>
+                <Button type="button" variant="outline" asChild>
+                  <a href={`/api/files/${viewingFile.id}`} download={viewingFile.name}>
+                    Download
+                  </a>
+                </Button>
+              </>
+            ) : null}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* ---- the move dialog (S183/EG: the reference's click-moves list —
+          General (Root) first, then every folder; the destination click IS
+          the move, no confirm step — measured) ---- */}
+      <Dialog open={movingFile !== null} onOpenChange={(open) => !open && setMovingFile(null)}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Move to Folder</DialogTitle>
+          </DialogHeader>
+          <div className="mt-4 space-y-2">
+            <button
+              type="button"
+              onClick={() => movingFile && void moveFile(movingFile, null)}
+              className="flex w-full items-center gap-3 rounded-lg border border-slate-200 p-3 text-left transition-colors hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-800"
+            >
+              <Home className="size-5 text-slate-400 dark:text-slate-500" strokeWidth={2} aria-hidden />
+              <span>General (Root)</span>
+            </button>
+            {folders.map((folder) => (
+              <button
+                key={folder.id}
+                type="button"
+                onClick={() => movingFile && void moveFile(movingFile, folder.id)}
+                className="flex w-full items-center gap-3 rounded-lg border border-slate-200 p-3 text-left transition-colors hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-800"
+              >
+                <Folder className="size-5 text-sf-primary" strokeWidth={2} aria-hidden />
+                <span className="truncate">{folder.name}</span>
+              </button>
+            ))}
+          </div>
         </DialogContent>
       </Dialog>
 
