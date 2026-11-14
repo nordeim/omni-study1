@@ -347,7 +347,15 @@ describe("the chunked cert runner's truth contract (S128/CC2)", () => {
     // near-black Add Class button + the today-day dialog default — see
     // docs/remediation-plan-session185.md; the unit census holds
     // 1795 [55 files] — a view-layer port, no new seam.
-    expect(certSource).toContain("Expected: 158 + 262 + 101 + 95 + 89 = 705");
+    // S186/EJ re-tag: 705 → 714, chunk 2 +6 + chunk 5 +3 (the S186/EJ
+    // auth primary-CTA family [solid slate-900 — never color-measured;
+    // the Button's new `solid` variant + the h-10 sm:h-11 sub-CTA pair]
+    // + the view-header row family [the stacking form on the 8 toolbar
+    // views + the Calculator row family] — see
+    // docs/remediation-plan-session186.md; the unit census holds
+    // 1795 [55 files] — the hue-tokens dashboard register anchor
+    // re-anchored 210 → 212).
+    expect(certSource).toContain("Expected: 158 + 268 + 101 + 95 + 92 = 714");
   });
 
   it("propagates a failing chunk's exit code (never a green cert on a red run)", () => {

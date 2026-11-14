@@ -513,8 +513,30 @@
 # deterministic defaults so the leg fills only the title + score +
 # max; network-mocked, no server writes beyond the zero-residue
 # create]. The full DW map: docs/remediation-plan-session173.md.)
-# Expected: 158 + 262 + 101 + 95 + 89 = 705 (each chunk's count includes its
+# Expected: 158 + 268 + 101 + 95 + 92 = 714 (each chunk's count includes its
 # auth setup — the current census; the historical re-tag blocks beneath.)
+# (S186/EJ re-tag — census 705 → 714, net +9: chunk 2 +6 [the S186/EJ
+# view-header row family pins in parity-session7 — the reference's
+# toolbar-carrying headers measured live 2026-11-15 (all 20 views
+# censused at 1440x900 + 390x844, zero residue): the stacking family
+# `flex flex-col md:flex-row md:items-center justify-between gap-4`
+# (EJ4 the Tasks 2-kid restructure + mb-6, EJ5 the Timetable + the
+# toolbar's re-measured 12px gap, EJ6 the Files ViewHeader stack, EJ7
+# the Dashboard + md:justify-between, EJ8 the Exams) + EJ9 the
+# Calculator ROW family (row-always, items-center — the wrap retired);
+# see docs/remediation-plan-session186.md] + chunk 5 +3 [the S186/EJ
+# auth primary-CTA family pins in auth.spec.ts — the reference's ENTIRE
+# auth button family measured solid slate-900 rgb(15,23,42) + white
+# text + rounded-xl + font-medium + shadow-sm + hover:bg-slate-800,
+# NEVER color-measured before (the S15 probe captured only the first
+# six class tokens; the clone's gradient was the app-wide CTA
+# assumption): EJ1 the Sign in solid family, EJ2 the Create account
+# h-10 sm:h-11 pair (40/44 measured at 390/1440 — the clone's h-9 was
+# the S15 assumption), EJ3 the Send reset link family; the Button gains
+# the `solid` variant with the dark:bg-slate-800 coherence lift; the
+# unit census holds 1795 [55 files] — a view-layer port, no new seam
+# (the hue-tokens dashboard register anchor re-anchored 210 → 212, the
+# stacking-header comment pair shifted it)].
 # (S185/EI re-tag — census 697 → 705, net +8: chunk 2 +8 [the S185/EI
 # Timetable week-strip rows pins in parity-session7 — EIGHT zero-write
 # pins (every dialog Escape-closed before any submit, no uploads): EI1

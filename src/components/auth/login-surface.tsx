@@ -404,8 +404,8 @@ export function LoginSurface() {
               {status && !error && <InlineStatus message={status} />}
               <Button
                 type="submit"
-                variant="gradient"
-                className="sf-gradient-shadow h-11 w-full rounded-xl sm:h-12"
+                variant="solid"
+                className="h-11 w-full rounded-xl sm:h-12"
                 disabled={busy}
               >
                 {busy ? (
@@ -500,8 +500,8 @@ export function LoginSurface() {
               {error && <InlineError message={error} />}
               <Button
                 type="submit"
-                variant="gradient"
-                className="sf-gradient-shadow h-9 w-full"
+                variant="solid"
+                className="h-10 w-full rounded-xl sm:h-11"
                 disabled={busy}
               >
                 {busy ? (
@@ -578,8 +578,8 @@ export function LoginSurface() {
 
               <Button
                 type="submit"
-                variant="gradient"
-                className="sf-gradient-shadow h-9 w-full"
+                variant="solid"
+                className="h-10 w-full rounded-xl sm:h-11"
                 disabled={busy}
               >
                 {busy ? (
@@ -662,8 +662,8 @@ export function LoginSurface() {
                 {error && <InlineError message={error} />}
                 <Button
                   type="submit"
-                  variant="gradient"
-                  className="sf-gradient-shadow h-9 w-full"
+                  variant="solid"
+                  className="h-10 w-full rounded-xl sm:h-11"
                   disabled={busy}
                 >
                   {busy ? (
@@ -728,8 +728,8 @@ export function LoginSurface() {
               {status && !error && <InlineStatus message={status} />}
               <Button
                 type="submit"
-                variant="gradient"
-                className="sf-gradient-shadow h-9 w-full"
+                variant="solid"
+                className="h-10 w-full rounded-xl sm:h-11"
                 disabled={busy || !params.get("token")}
               >
                 {busy ? (

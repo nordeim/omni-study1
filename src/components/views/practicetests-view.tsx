@@ -819,6 +819,7 @@ export function PracticeTestsView() {
   return (
     <div className="flex flex-col gap-6">
       <ViewHeader
+        stack
         title="Practice Tests"
         subtitle="Test yourself with practice exams"
         // S3-M (measured s69): the reference's header icon is file-question.

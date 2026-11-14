@@ -644,8 +644,17 @@ export function TasksView() {
             header row instead of ellipsizing — the ref's own wrap shape
             (the h1's truncate can never engage at sm+ under a wrapping
             flex row; kept as harmless dead styling). */}
-        <div role="group" aria-label="Tasks header" className="flex flex-wrap items-center gap-3 pb-4">
-          <div className="w-full sm:w-auto sm:flex-1">
+        {/* S186/EJ-C: the measured 2-kid header family — `flex flex-col
+            md:flex-row md:items-center justify-between gap-4 mb-6` (the
+            reference's Tasks header, probed 2026-11-15): at mobile the
+            toolbar STACKS below the h1 block (column, 16px); at desktop a
+            centered row. The h1 block rides the column for its mobile
+            full-width (the old w-full sm:w-auto wrapper retired); the
+            md-band floor comment below still applies to the toolbar's own
+            flex-wrap. The toolbar keeps its wrap (the no-overflow superset
+            over the reference's own 395px-at-390 overflow — S78/AE10). */}
+        <div role="group" aria-label="Tasks header" className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+          <div>
             <div className="flex items-baseline gap-2">
               <h1 className="truncate text-2xl font-bold text-slate-800 dark:text-slate-100">
                 {activeLabel}
@@ -655,6 +664,7 @@ export function TasksView() {
               </span>
             </div>
           </div>
+          <div className="flex flex-wrap items-center gap-3">
           <div className="relative">
             <Search
               className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400"
@@ -699,6 +709,7 @@ export function TasksView() {
             <Plus className="size-4" strokeWidth={2} />
             Add Task
           </Button>
+          </div>
         </div>
 
         <div role="group" aria-label="Task rows" className="sf-scroll flex-1 space-y-3 overflow-y-auto pr-1">

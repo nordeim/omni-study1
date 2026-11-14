@@ -1,0 +1,916 @@
+{
+  "desktop": {
+    "Dashboard": {
+      "heading": "Good evening, sepnetflix2023 \ud83d",
+      "rowCls": "flex flex-col md:flex-row md:items-center md:justify-between gap-4",
+      "display": "flex",
+      "dir": "row",
+      "wrap": "nowrap",
+      "gap": "16px",
+      "items": "center",
+      "justify": "space-between",
+      "rowH": 64,
+      "kids": [
+        {
+          "tag": "DIV",
+          "cls": "",
+          "w": 553
+        },
+        {
+          "tag": "DIV",
+          "cls": "flex gap-3",
+          "w": 155
+        }
+      ]
+    },
+    "MyDay": {
+      "heading": "My Day",
+      "rowCls": "p-4 lg:p-8",
+      "display": "block",
+      "dir": "row",
+      "wrap": "nowrap",
+      "gap": "normal",
+      "items": "normal",
+      "justify": "normal",
+      "rowH": 572,
+      "kids": [
+        {
+          "tag": "DIV",
+          "cls": "max-w-3xl mx-auto",
+          "w": 768
+        }
+      ]
+    },
+    "Tasks": {
+      "heading": "All Tasks",
+      "rowCls": "flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6",
+      "display": "flex",
+      "dir": "row",
+      "wrap": "nowrap",
+      "gap": "16px",
+      "items": "center",
+      "justify": "space-between",
+      "rowH": 56,
+      "kids": [
+        {
+          "tag": "DIV",
+          "cls": "",
+          "w": 117
+        },
+        {
+          "tag": "DIV",
+          "cls": "flex items-center gap-3",
+          "w": 507
+        }
+      ]
+    },
+    "Calendar": {
+      "heading": "Calendar",
+      "rowCls": "flex flex-col md:flex-row md:items-center justify-between gap-4",
+      "display": "flex",
+      "dir": "row",
+      "wrap": "nowrap",
+      "gap": "16px",
+      "items": "center",
+      "justify": "space-between",
+      "rowH": 56,
+      "kids": [
+        {
+          "tag": "DIV",
+          "cls": "",
+          "w": 360
+        },
+        {
+          "tag": "DIV",
+          "cls": "flex items-center gap-2 bg-white rounded-lg border border-sl",
+          "w": 235
+        }
+      ]
+    },
+    "Events": {
+      "heading": "Events & Reminders",
+      "rowCls": "",
+      "display": "block",
+      "dir": "row",
+      "wrap": "nowrap",
+      "gap": "normal",
+      "items": "normal",
+      "justify": "normal",
+      "rowH": 64,
+      "kids": [
+        {
+          "tag": "H1",
+          "cls": "text-2xl font-bold text-slate-800 flex items-center gap-2 mb",
+          "w": 1116
+        },
+        {
+          "tag": "P",
+          "cls": "text-slate-500",
+          "w": 1116
+        }
+      ]
+    },
+    "Timetable": {
+      "heading": "Timetable",
+      "rowCls": "flex flex-col md:flex-row md:items-center justify-between gap-4",
+      "display": "flex",
+      "dir": "row",
+      "wrap": "nowrap",
+      "gap": "16px",
+      "items": "center",
+      "justify": "space-between",
+      "rowH": 56,
+      "kids": [
+        {
+          "tag": "DIV",
+          "cls": "",
+          "w": 226
+        },
+        {
+          "tag": "DIV",
+          "cls": "flex items-center gap-3",
+          "w": 430
+        }
+      ]
+    },
+    "Assignments": {
+      "heading": "Assignments",
+      "rowCls": "flex flex-col md:flex-row md:items-center justify-between gap-4",
+      "display": "flex",
+      "dir": "row",
+      "wrap": "nowrap",
+      "gap": "16px",
+      "items": "center",
+      "justify": "space-between",
+      "rowH": 56,
+      "kids": [
+        {
+          "tag": "DIV",
+          "cls": "",
+          "w": 276
+        },
+        {
+          "tag": "BUTTON",
+          "cls": "inline-flex items-center justify-center gap-2 whitespace-now",
+          "w": 178
+        }
+      ]
+    },
+    "Exams": {
+      "heading": "Exams",
+      "rowCls": "flex flex-col md:flex-row md:items-center justify-between gap-4",
+      "display": "flex",
+      "dir": "row",
+      "wrap": "nowrap",
+      "gap": "16px",
+      "items": "center",
+      "justify": "space-between",
+      "rowH": 56,
+      "kids": [
+        {
+          "tag": "DIV",
+          "cls": "",
+          "w": 201
+        },
+        {
+          "tag": "BUTTON",
+          "cls": "inline-flex items-center justify-center gap-2 whitespace-now",
+          "w": 135
+        }
+      ]
+    },
+    "Notes": {
+      "heading": "Notes",
+      "rowCls": "flex items-center justify-between mb-4",
+      "display": "flex",
+      "dir": "row",
+      "wrap": "nowrap",
+      "gap": "normal",
+      "items": "center",
+      "justify": "space-between",
+      "rowH": 36,
+      "kids": [
+        {
+          "tag": "H1",
+          "cls": "text-2xl font-bold text-slate-800 flex items-center gap-2",
+          "w": 111
+        },
+        {
+          "tag": "BUTTON",
+          "cls": "inline-flex items-center justify-center gap-2 whitespace-now",
+          "w": 36
+        }
+      ]
+    },
+    "Flashcards": {
+      "heading": "Flashcards",
+      "rowCls": "flex items-center justify-between mb-4",
+      "display": "flex",
+      "dir": "row",
+      "wrap": "nowrap",
+      "gap": "normal",
+      "items": "center",
+      "justify": "space-between",
+      "rowH": 36,
+      "kids": [
+        {
+          "tag": "H1",
+          "cls": "text-2xl font-bold text-slate-800 flex items-center gap-2",
+          "w": 178
+        },
+        {
+          "tag": "BUTTON",
+          "cls": "inline-flex items-center justify-center gap-2 whitespace-now",
+          "w": 36
+        }
+      ]
+    },
+    "PracticeTests": {
+      "heading": "Practice Tests",
+      "rowCls": "flex flex-col md:flex-row md:items-center justify-between gap-4",
+      "display": "flex",
+      "dir": "row",
+      "wrap": "nowrap",
+      "gap": "16px",
+      "items": "center",
+      "justify": "space-between",
+      "rowH": 56,
+      "kids": [
+        {
+          "tag": "DIV",
+          "cls": "",
+          "w": 267
+        },
+        {
+          "tag": "BUTTON",
+          "cls": "inline-flex items-center justify-center gap-2 whitespace-now",
+          "w": 143
+        }
+      ]
+    },
+    "StudyGroups": {
+      "heading": "Study Groups",
+      "rowCls": "flex items-center justify-between mb-4",
+      "display": "flex",
+      "dir": "row",
+      "wrap": "nowrap",
+      "gap": "normal",
+      "items": "center",
+      "justify": "space-between",
+      "rowH": 36,
+      "kids": [
+        {
+          "tag": "H1",
+          "cls": "text-2xl font-bold text-slate-800 flex items-center gap-2",
+          "w": 216
+        },
+        {
+          "tag": "BUTTON",
+          "cls": "inline-flex items-center justify-center gap-2 whitespace-now",
+          "w": 36
+        }
+      ]
+    },
+    "GradeTracker": {
+      "heading": "Grade Tracker",
+      "rowCls": "flex items-center justify-between",
+      "display": "flex",
+      "dir": "row",
+      "wrap": "nowrap",
+      "gap": "normal",
+      "items": "center",
+      "justify": "space-between",
+      "rowH": 56,
+      "kids": [
+        {
+          "tag": "DIV",
+          "cls": "",
+          "w": 292
+        },
+        {
+          "tag": "BUTTON",
+          "cls": "inline-flex items-center justify-center gap-2 whitespace-now",
+          "w": 138
+        }
+      ]
+    },
+    "Analytics": {
+      "heading": "Analytics",
+      "rowCls": "",
+      "display": "block",
+      "dir": "row",
+      "wrap": "nowrap",
+      "gap": "normal",
+      "items": "normal",
+      "justify": "normal",
+      "rowH": 56,
+      "kids": [
+        {
+          "tag": "H1",
+          "cls": "text-2xl font-bold text-slate-800 flex items-center gap-2",
+          "w": 1116
+        },
+        {
+          "tag": "P",
+          "cls": "text-slate-500",
+          "w": 1116
+        }
+      ]
+    },
+    "Files": {
+      "heading": "Files",
+      "rowCls": "flex flex-col md:flex-row md:items-center justify-between gap-4",
+      "display": "flex",
+      "dir": "row",
+      "wrap": "nowrap",
+      "gap": "16px",
+      "items": "center",
+      "justify": "space-between",
+      "rowH": 56,
+      "kids": [
+        {
+          "tag": "DIV",
+          "cls": "",
+          "w": 287
+        },
+        {
+          "tag": "DIV",
+          "cls": "flex gap-3",
+          "w": 269
+        }
+      ]
+    },
+    "Calculator": {
+      "heading": "Calculator Suite",
+      "rowCls": "flex items-center justify-between",
+      "display": "flex",
+      "dir": "row",
+      "wrap": "nowrap",
+      "gap": "normal",
+      "items": "center",
+      "justify": "space-between",
+      "rowH": 56,
+      "kids": [
+        {
+          "tag": "DIV",
+          "cls": "",
+          "w": 309
+        },
+        {
+          "tag": "BUTTON",
+          "cls": "inline-flex items-center justify-center whitespace-nowrap ro",
+          "w": 108
+        }
+      ]
+    },
+    "MathSolver": {
+      "heading": "Math Solver",
+      "rowCls": "",
+      "display": "block",
+      "dir": "row",
+      "wrap": "nowrap",
+      "gap": "normal",
+      "items": "normal",
+      "justify": "normal",
+      "rowH": 56,
+      "kids": [
+        {
+          "tag": "H1",
+          "cls": "text-2xl font-bold text-slate-800 flex items-center gap-2",
+          "w": 896
+        },
+        {
+          "tag": "P",
+          "cls": "text-slate-500",
+          "w": 896
+        }
+      ]
+    },
+    "AIAssistant": {
+      "heading": "AI Study Assistant",
+      "rowCls": "",
+      "display": "block",
+      "dir": "row",
+      "wrap": "nowrap",
+      "gap": "normal",
+      "items": "normal",
+      "justify": "normal",
+      "rowH": 56,
+      "kids": [
+        {
+          "tag": "H1",
+          "cls": "text-2xl font-bold text-slate-800 flex items-center gap-2",
+          "w": 1024
+        },
+        {
+          "tag": "P",
+          "cls": "text-slate-500",
+          "w": 1024
+        }
+      ]
+    },
+    "FocusTimer": {
+      "heading": "Focus Timer",
+      "rowCls": "text-center",
+      "display": "block",
+      "dir": "row",
+      "wrap": "nowrap",
+      "gap": "normal",
+      "items": "normal",
+      "justify": "normal",
+      "rowH": 68,
+      "kids": [
+        {
+          "tag": "H1",
+          "cls": "text-3xl font-bold text-slate-800 flex items-center justify-",
+          "w": 672
+        },
+        {
+          "tag": "P",
+          "cls": "text-slate-500 mt-2",
+          "w": 672
+        }
+      ]
+    },
+    "Settings": {
+      "heading": "Settings",
+      "rowCls": "",
+      "display": "block",
+      "dir": "row",
+      "wrap": "nowrap",
+      "gap": "normal",
+      "items": "normal",
+      "justify": "normal",
+      "rowH": 56,
+      "kids": [
+        {
+          "tag": "H1",
+          "cls": "text-2xl font-bold text-slate-800 flex items-center gap-2",
+          "w": 896
+        },
+        {
+          "tag": "P",
+          "cls": "text-slate-500",
+          "w": 896
+        }
+      ]
+    }
+  },
+  "mobile": {
+    "Dashboard": {
+      "heading": "Good evening, sepnetflix2023 \ud83d",
+      "rowCls": "flex flex-col md:flex-row md:items-center md:justify-between gap-4",
+      "display": "flex",
+      "dir": "column",
+      "wrap": "nowrap",
+      "gap": "16px",
+      "items": "normal",
+      "justify": "normal",
+      "rowH": 152,
+      "kids": [
+        {
+          "tag": "DIV",
+          "cls": "",
+          "w": 358
+        },
+        {
+          "tag": "DIV",
+          "cls": "flex gap-3",
+          "w": 358
+        }
+      ]
+    },
+    "MyDay": {
+      "heading": "My Day",
+      "rowCls": "p-4 lg:p-8",
+      "display": "block",
+      "dir": "row",
+      "wrap": "nowrap",
+      "gap": "normal",
+      "items": "normal",
+      "justify": "normal",
+      "rowH": 540,
+      "kids": [
+        {
+          "tag": "DIV",
+          "cls": "max-w-3xl mx-auto",
+          "w": 358
+        }
+      ]
+    },
+    "Tasks": {
+      "heading": "All Tasks",
+      "rowCls": "flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6",
+      "display": "flex",
+      "dir": "column",
+      "wrap": "nowrap",
+      "gap": "16px",
+      "items": "normal",
+      "justify": "space-between",
+      "rowH": 108,
+      "kids": [
+        {
+          "tag": "DIV",
+          "cls": "",
+          "w": 358
+        },
+        {
+          "tag": "DIV",
+          "cls": "flex items-center gap-3",
+          "w": 358
+        }
+      ]
+    },
+    "Calendar": {
+      "heading": "Calendar",
+      "rowCls": "flex flex-col md:flex-row md:items-center justify-between gap-4",
+      "display": "flex",
+      "dir": "column",
+      "wrap": "nowrap",
+      "gap": "16px",
+      "items": "normal",
+      "justify": "space-between",
+      "rowH": 138,
+      "kids": [
+        {
+          "tag": "DIV",
+          "cls": "",
+          "w": 358
+        },
+        {
+          "tag": "DIV",
+          "cls": "flex items-center gap-2 bg-white rounded-lg border border-sl",
+          "w": 358
+        }
+      ]
+    },
+    "Events": {
+      "heading": "Events & Reminders",
+      "rowCls": "",
+      "display": "block",
+      "dir": "row",
+      "wrap": "nowrap",
+      "gap": "normal",
+      "items": "normal",
+      "justify": "normal",
+      "rowH": 64,
+      "kids": [
+        {
+          "tag": "H1",
+          "cls": "text-2xl font-bold text-slate-800 flex items-center gap-2 mb",
+          "w": 358
+        },
+        {
+          "tag": "P",
+          "cls": "text-slate-500",
+          "w": 358
+        }
+      ]
+    },
+    "Timetable": {
+      "heading": "Timetable",
+      "rowCls": "flex flex-col md:flex-row md:items-center justify-between gap-4",
+      "display": "flex",
+      "dir": "column",
+      "wrap": "nowrap",
+      "gap": "16px",
+      "items": "normal",
+      "justify": "space-between",
+      "rowH": 108,
+      "kids": [
+        {
+          "tag": "DIV",
+          "cls": "",
+          "w": 358
+        },
+        {
+          "tag": "DIV",
+          "cls": "flex items-center gap-3",
+          "w": 358
+        }
+      ]
+    },
+    "Assignments": {
+      "heading": "Assignments",
+      "rowCls": "flex flex-col md:flex-row md:items-center justify-between gap-4",
+      "display": "flex",
+      "dir": "column",
+      "wrap": "nowrap",
+      "gap": "16px",
+      "items": "normal",
+      "justify": "space-between",
+      "rowH": 108,
+      "kids": [
+        {
+          "tag": "DIV",
+          "cls": "",
+          "w": 358
+        },
+        {
+          "tag": "BUTTON",
+          "cls": "inline-flex items-center justify-center gap-2 whitespace-now",
+          "w": 358
+        }
+      ]
+    },
+    "Exams": {
+      "heading": "Exams",
+      "rowCls": "flex flex-col md:flex-row md:items-center justify-between gap-4",
+      "display": "flex",
+      "dir": "column",
+      "wrap": "nowrap",
+      "gap": "16px",
+      "items": "normal",
+      "justify": "space-between",
+      "rowH": 108,
+      "kids": [
+        {
+          "tag": "DIV",
+          "cls": "",
+          "w": 358
+        },
+        {
+          "tag": "BUTTON",
+          "cls": "inline-flex items-center justify-center gap-2 whitespace-now",
+          "w": 358
+        }
+      ]
+    },
+    "Notes": {
+      "heading": "Notes",
+      "rowCls": "flex items-center justify-between mb-4",
+      "display": "flex",
+      "dir": "row",
+      "wrap": "nowrap",
+      "gap": "normal",
+      "items": "center",
+      "justify": "space-between",
+      "rowH": 36,
+      "kids": [
+        {
+          "tag": "H1",
+          "cls": "text-2xl font-bold text-slate-800 flex items-center gap-2",
+          "w": 111
+        },
+        {
+          "tag": "BUTTON",
+          "cls": "inline-flex items-center justify-center gap-2 whitespace-now",
+          "w": 36
+        }
+      ]
+    },
+    "Flashcards": {
+      "heading": "Flashcards",
+      "rowCls": "flex items-center justify-between mb-4",
+      "display": "flex",
+      "dir": "row",
+      "wrap": "nowrap",
+      "gap": "normal",
+      "items": "center",
+      "justify": "space-between",
+      "rowH": 36,
+      "kids": [
+        {
+          "tag": "H1",
+          "cls": "text-2xl font-bold text-slate-800 flex items-center gap-2",
+          "w": 178
+        },
+        {
+          "tag": "BUTTON",
+          "cls": "inline-flex items-center justify-center gap-2 whitespace-now",
+          "w": 36
+        }
+      ]
+    },
+    "PracticeTests": {
+      "heading": "Practice Tests",
+      "rowCls": "flex flex-col md:flex-row md:items-center justify-between gap-4",
+      "display": "flex",
+      "dir": "column",
+      "wrap": "nowrap",
+      "gap": "16px",
+      "items": "normal",
+      "justify": "space-between",
+      "rowH": 108,
+      "kids": [
+        {
+          "tag": "DIV",
+          "cls": "",
+          "w": 358
+        },
+        {
+          "tag": "BUTTON",
+          "cls": "inline-flex items-center justify-center gap-2 whitespace-now",
+          "w": 358
+        }
+      ]
+    },
+    "StudyGroups": {
+      "heading": "Study Groups",
+      "rowCls": "flex items-center justify-between mb-4",
+      "display": "flex",
+      "dir": "row",
+      "wrap": "nowrap",
+      "gap": "normal",
+      "items": "center",
+      "justify": "space-between",
+      "rowH": 64,
+      "kids": [
+        {
+          "tag": "H1",
+          "cls": "text-2xl font-bold text-slate-800 flex items-center gap-2",
+          "w": 169
+        },
+        {
+          "tag": "BUTTON",
+          "cls": "inline-flex items-center justify-center gap-2 whitespace-now",
+          "w": 28
+        }
+      ]
+    },
+    "GradeTracker": {
+      "heading": "Grade Tracker",
+      "rowCls": "flex items-center justify-between",
+      "display": "flex",
+      "dir": "row",
+      "wrap": "nowrap",
+      "gap": "normal",
+      "items": "center",
+      "justify": "space-between",
+      "rowH": 112,
+      "kids": [
+        {
+          "tag": "DIV",
+          "cls": "",
+          "w": 220
+        },
+        {
+          "tag": "BUTTON",
+          "cls": "inline-flex items-center justify-center gap-2 whitespace-now",
+          "w": 138
+        }
+      ]
+    },
+    "Analytics": {
+      "heading": "Analytics",
+      "rowCls": "",
+      "display": "block",
+      "dir": "row",
+      "wrap": "nowrap",
+      "gap": "normal",
+      "items": "normal",
+      "justify": "normal",
+      "rowH": 56,
+      "kids": [
+        {
+          "tag": "H1",
+          "cls": "text-2xl font-bold text-slate-800 flex items-center gap-2",
+          "w": 358
+        },
+        {
+          "tag": "P",
+          "cls": "text-slate-500",
+          "w": 358
+        }
+      ]
+    },
+    "Files": {
+      "heading": "Files",
+      "rowCls": "flex flex-col md:flex-row md:items-center justify-between gap-4",
+      "display": "flex",
+      "dir": "column",
+      "wrap": "nowrap",
+      "gap": "16px",
+      "items": "normal",
+      "justify": "space-between",
+      "rowH": 108,
+      "kids": [
+        {
+          "tag": "DIV",
+          "cls": "",
+          "w": 358
+        },
+        {
+          "tag": "DIV",
+          "cls": "flex gap-3",
+          "w": 358
+        }
+      ]
+    },
+    "Calculator": {
+      "heading": "Calculator Suite",
+      "rowCls": "flex items-center justify-between",
+      "display": "flex",
+      "dir": "row",
+      "wrap": "nowrap",
+      "gap": "normal",
+      "items": "center",
+      "justify": "space-between",
+      "rowH": 80,
+      "kids": [
+        {
+          "tag": "DIV",
+          "cls": "",
+          "w": 250
+        },
+        {
+          "tag": "BUTTON",
+          "cls": "inline-flex items-center justify-center whitespace-nowrap ro",
+          "w": 108
+        }
+      ]
+    },
+    "MathSolver": {
+      "heading": "Math Solver",
+      "rowCls": "",
+      "display": "block",
+      "dir": "row",
+      "wrap": "nowrap",
+      "gap": "normal",
+      "items": "normal",
+      "justify": "normal",
+      "rowH": 80,
+      "kids": [
+        {
+          "tag": "H1",
+          "cls": "text-2xl font-bold text-slate-800 flex items-center gap-2",
+          "w": 358
+        },
+        {
+          "tag": "P",
+          "cls": "text-slate-500",
+          "w": 358
+        }
+      ]
+    },
+    "AIAssistant": {
+      "heading": "AI Study Assistant",
+      "rowCls": "",
+      "display": "block",
+      "dir": "row",
+      "wrap": "nowrap",
+      "gap": "normal",
+      "items": "normal",
+      "justify": "normal",
+      "rowH": 56,
+      "kids": [
+        {
+          "tag": "H1",
+          "cls": "text-2xl font-bold text-slate-800 flex items-center gap-2",
+          "w": 358
+        },
+        {
+          "tag": "P",
+          "cls": "text-slate-500",
+          "w": 358
+        }
+      ]
+    },
+    "FocusTimer": {
+      "heading": "Focus Timer",
+      "rowCls": "text-center",
+      "display": "block",
+      "dir": "row",
+      "wrap": "nowrap",
+      "gap": "normal",
+      "items": "normal",
+      "justify": "normal",
+      "rowH": 68,
+      "kids": [
+        {
+          "tag": "H1",
+          "cls": "text-3xl font-bold text-slate-800 flex items-center justify-",
+          "w": 358
+        },
+        {
+          "tag": "P",
+          "cls": "text-slate-500 mt-2",
+          "w": 358
+        }
+      ]
+    },
+    "Settings": {
+      "heading": "Settings",
+      "rowCls": "",
+      "display": "block",
+      "dir": "row",
+      "wrap": "nowrap",
+      "gap": "normal",
+      "items": "normal",
+      "justify": "normal",
+      "rowH": 56,
+      "kids": [
+        {
+          "tag": "H1",
+          "cls": "text-2xl font-bold text-slate-800 flex items-center gap-2",
+          "w": 358
+        },
+        {
+          "tag": "P",
+          "cls": "text-slate-500",
+          "w": 358
+        }
+      ]
+    }
+  }
+}

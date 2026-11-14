@@ -278,7 +278,10 @@ export function TimetableView() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex flex-wrap items-center justify-between gap-4">
+      {/* S186/EJ-C: the measured stacking family — flex flex-col
+          md:flex-row md:items-center justify-between gap-4 (the
+          reference's Timetable header, probed 2026-11-15). */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-slate-800 dark:text-slate-100">
             Timetable
@@ -287,10 +290,12 @@ export function TimetableView() {
             Manage your class schedule
           </p>
         </div>
-        {/* flex-wrap (S78/AE12): the All Weeks + Grid Builder + Add Class row
-            exceeds 390px unwrapped (measured 402; the ref itself reads 395 —
-            its own bug family). At ≥sm the row fits one line. */}
-        <div className="flex flex-wrap items-center gap-2">
+        {/* flex-wrap (S78/AE12, the toolbar-level wrap kept — the
+            no-overflow superset over the reference's own 395px-at-390
+            overflow): the All Weeks + Grid Builder + Add Class row exceeds
+            390px unwrapped (measured 402). S186/EJ: the gap re-measured
+            12px (gap-3) on the live reference. At ≥sm the row fits. */}
+        <div className="flex flex-wrap items-center gap-3">
           <Select
             value={weekType}
             onValueChange={(v) => setWeekType(v as WeekType)}

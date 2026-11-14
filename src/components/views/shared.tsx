@@ -20,14 +20,23 @@ type ViewHeaderProps = {
   /** size="lg" → the 30px MyDay/FocusTimer titles. */
   size?: "default" | "lg";
   actions?: React.ReactNode;
+  /**
+   * stack → the S186/EJ measured toolbar-carrying family: `flex flex-col
+   * md:flex-row md:items-center justify-between gap-4` (the reference's
+   * Files/PracticeTests headers — at mobile the actions stack BELOW the
+   * h1 block, 16px gap; at desktop a centered row). The default is the
+   * row family (`flex items-center justify-between gap-4` — Calculator/
+   * GradeTracker, measured row-always, items-center).
+   */
+  stack?: boolean;
 };
 
 /** h1 text-2xl font-bold text-slate-800 + optional 24px accent icon + 16px
  *  subtitle with the reference's exact per-view wording. Tasks/MyDay/Calendar
  *  pass no icon (reference-measured). */
-export function ViewHeader({ title, subtitle, icon: Icon, size = "default", actions }: ViewHeaderProps) {
+export function ViewHeader({ title, subtitle, icon: Icon, size = "default", actions, stack = false }: ViewHeaderProps) {
   return (
-    <div className="flex items-start justify-between gap-4">
+    <div className={stack ? "flex flex-col md:flex-row md:items-center justify-between gap-4" : "flex items-center justify-between gap-4"}>
       <div>
         <h1
           className={cn(

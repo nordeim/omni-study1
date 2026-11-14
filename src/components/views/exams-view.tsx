@@ -247,7 +247,10 @@ export function ExamsView() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex items-center justify-between gap-4">
+      {/* S186/EJ-C: the measured stacking family — the reference's Exams
+          header carries the h1 block + the add button (probed 2026-11-15);
+          the clone's toolbar keeps its wrap (S78/AE9). */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-slate-800 dark:text-slate-100">Exams</h1>
           <p className="mt-1 text-base text-slate-500 dark:text-slate-400">

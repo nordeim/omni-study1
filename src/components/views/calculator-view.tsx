@@ -299,7 +299,10 @@ export function CalculatorView() {
       {/* Batch AB header: subtitle under the h1; the History toggle lives
           top-right (the ref's black pill) — aria-controls only while the
           panel exists, so aria-valid-attr-value stays clean at zero. */}
-      <div className="flex flex-wrap items-start justify-between gap-4">
+      {/* S186/EJ-C: the measured ROW family — Calculator never stacks
+          (`flex items-center justify-between`, probed 2026-11-15: row at
+          mobile AND desktop, items-center, no wrap). */}
+      <div className="flex items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-slate-800 dark:text-slate-100">Calculator Suite</h1>
           <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">

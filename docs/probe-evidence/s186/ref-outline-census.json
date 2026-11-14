@@ -1,0 +1,2292 @@
+{
+  "census": {
+    "Dashboard": [
+      {
+        "text": "Start My Day",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(255, 255, 255)",
+        "border": "0px rgb(38, 38, 38)",
+        "radius": "6px",
+        "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px",
+        "h": 36,
+        "fs": "14px",
+        "fw": "500",
+        "cls": "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-v"
+      },
+      {
+        "text": "View All",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(124, 58, 237)",
+        "border": "0px rgb(38, 38, 38)",
+        "radius": "6px",
+        "shadow": "none",
+        "h": 32,
+        "fs": "12px",
+        "fw": "500",
+        "cls": "inline-flex items-center justify-center gap-2 whitespace-nowrap font-medium transition-colors focus-visible:outline-none"
+      },
+      {
+        "text": "All",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(124, 58, 237)",
+        "border": "0px rgb(38, 38, 38)",
+        "radius": "6px",
+        "shadow": "none",
+        "h": 32,
+        "fs": "12px",
+        "fw": "500",
+        "cls": "inline-flex items-center justify-center gap-2 whitespace-nowrap font-medium transition-colors focus-visible:outline-none"
+      },
+      {
+        "text": "View All",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(124, 58, 237)",
+        "border": "0px rgb(38, 38, 38)",
+        "radius": "6px",
+        "shadow": "none",
+        "h": 32,
+        "fs": "12px",
+        "fw": "500",
+        "cls": "inline-flex items-center justify-center gap-2 whitespace-nowrap font-medium transition-colors focus-visible:outline-none"
+      }
+    ],
+    "Tasks": [
+      {
+        "text": "All Tasks0",
+        "bg": "rgb(245, 243, 255)",
+        "color": "rgb(109, 40, 217)",
+        "border": "0px rgb(38, 38, 38)",
+        "radius": "12px",
+        "shadow": "none",
+        "h": 48,
+        "fs": "16px",
+        "fw": "400",
+        "cls": "w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-left bg-violet-50 text-violet-700"
+      },
+      {
+        "text": "Important0",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(71, 85, 105)",
+        "border": "0px rgb(38, 38, 38)",
+        "radius": "12px",
+        "shadow": "none",
+        "h": 48,
+        "fs": "16px",
+        "fw": "400",
+        "cls": "w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-left text-slate-600 hover:bg-slate-50"
+      },
+      {
+        "text": "",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(250, 250, 250)",
+        "border": "0px rgb(38, 38, 38)",
+        "radius": "6px",
+        "shadow": "none",
+        "h": 28,
+        "fs": "14px",
+        "fw": "500",
+        "cls": "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-v"
+      },
+      {
+        "text": "Active",
+        "bg": "rgb(10, 10, 10)",
+        "color": "rgb(250, 250, 250)",
+        "border": "1px rgb(38, 38, 38)",
+        "radius": "6px",
+        "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px",
+        "h": 36,
+        "fs": "14px",
+        "fw": "500",
+        "cls": "inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible"
+      },
+      {
+        "text": "Add Task",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(255, 255, 0)",
+        "border": "0px rgb(38, 38, 38)",
+        "radius": "6px",
+        "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px",
+        "h": 36,
+        "fs": "14px",
+        "fw": "500",
+        "cls": "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-v"
+      },
+      {
+        "text": "Create Task",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(255, 255, 255)",
+        "border": "0px rgb(38, 38, 38)",
+        "radius": "6px",
+        "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px",
+        "h": 36,
+        "fs": "14px",
+        "fw": "500",
+        "cls": "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-v"
+      }
+    ],
+    "Calendar": [
+      {
+        "text": "Calendar",
+        "bg": "rgb(139, 92, 246)",
+        "color": "rgb(255, 255, 0)",
+        "border": "0px rgb(38, 38, 38)",
+        "radius": "6px",
+        "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px",
+        "h": 32,
+        "fs": "12px",
+        "fw": "500",
+        "cls": "inline-flex items-center justify-center gap-2 whitespace-nowrap font-medium transition-colors focus-visible:outline-none"
+      },
+      {
+        "text": "Timeline",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(250, 250, 250)",
+        "border": "0px rgb(38, 38, 38)",
+        "radius": "6px",
+        "shadow": "none",
+        "h": 32,
+        "fs": "12px",
+        "fw": "500",
+        "cls": "inline-flex items-center justify-center gap-2 whitespace-nowrap font-medium transition-colors focus-visible:outline-none"
+      },
+      {
+        "text": "",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(250, 250, 250)",
+        "border": "0px rgb(38, 38, 38)",
+        "radius": "6px",
+        "shadow": "none",
+        "h": 36,
+        "fs": "14px",
+        "fw": "500",
+        "cls": "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-v"
+      },
+      {
+        "text": "",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(250, 250, 250)",
+        "border": "0px rgb(38, 38, 38)",
+        "radius": "6px",
+        "shadow": "none",
+        "h": 36,
+        "fs": "14px",
+        "fw": "500",
+        "cls": "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-v"
+      },
+      {
+        "text": "1",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(250, 250, 250)",
+        "border": "0px rgb(38, 38, 38)",
+        "radius": "12px",
+        "shadow": "none",
+        "h": 95,
+        "fs": "16px",
+        "fw": "400",
+        "cls": "relative aspect-square p-2 rounded-xl transition-all flex flex-col items-center justify-center hover:bg-slate-100"
+      },
+      {
+        "text": "2",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(250, 250, 250)",
+        "border": "0px rgb(38, 38, 38)",
+        "radius": "12px",
+        "shadow": "none",
+        "h": 95,
+        "fs": "16px",
+        "fw": "400",
+        "cls": "relative aspect-square p-2 rounded-xl transition-all flex flex-col items-center justify-center hover:bg-slate-100"
+      },
+      {
+        "text": "3",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(250, 250, 250)",
+        "border": "0px rgb(38, 38, 38)",
+        "radius": "12px",
+        "shadow": "none",
+        "h": 95,
+        "fs": "16px",
+        "fw": "400",
+        "cls": "relative aspect-square p-2 rounded-xl transition-all flex flex-col items-center justify-center hover:bg-slate-100"
+      },
+      {
+        "text": "4",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(250, 250, 250)",
+        "border": "0px rgb(38, 38, 38)",
+        "radius": "12px",
+        "shadow": "none",
+        "h": 95,
+        "fs": "16px",
+        "fw": "400",
+        "cls": "relative aspect-square p-2 rounded-xl transition-all flex flex-col items-center justify-center hover:bg-slate-100"
+      },
+      {
+        "text": "5",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(250, 250, 250)",
+        "border": "0px rgb(38, 38, 38)",
+        "radius": "12px",
+        "shadow": "none",
+        "h": 95,
+        "fs": "16px",
+        "fw": "400",
+        "cls": "relative aspect-square p-2 rounded-xl transition-all flex flex-col items-center justify-center hover:bg-slate-100"
+      },
+      {
+        "text": "6",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(250, 250, 250)",
+        "border": "0px rgb(38, 38, 38)",
+        "radius": "12px",
+        "shadow": "none",
+        "h": 95,
+        "fs": "16px",
+        "fw": "400",
+        "cls": "relative aspect-square p-2 rounded-xl transition-all flex flex-col items-center justify-center hover:bg-slate-100"
+      },
+      {
+        "text": "7",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(250, 250, 250)",
+        "border": "0px rgb(38, 38, 38)",
+        "radius": "12px",
+        "shadow": "none",
+        "h": 95,
+        "fs": "16px",
+        "fw": "400",
+        "cls": "relative aspect-square p-2 rounded-xl transition-all flex flex-col items-center justify-center hover:bg-slate-100"
+      },
+      {
+        "text": "8",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(250, 250, 250)",
+        "border": "0px rgb(38, 38, 38)",
+        "radius": "12px",
+        "shadow": "none",
+        "h": 95,
+        "fs": "16px",
+        "fw": "400",
+        "cls": "relative aspect-square p-2 rounded-xl transition-all flex flex-col items-center justify-center hover:bg-slate-100"
+      },
+      {
+        "text": "9",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(250, 250, 250)",
+        "border": "0px rgb(38, 38, 38)",
+        "radius": "12px",
+        "shadow": "none",
+        "h": 95,
+        "fs": "16px",
+        "fw": "400",
+        "cls": "relative aspect-square p-2 rounded-xl transition-all flex flex-col items-center justify-center hover:bg-slate-100"
+      },
+      {
+        "text": "10",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(250, 250, 250)",
+        "border": "0px rgb(38, 38, 38)",
+        "radius": "12px",
+        "shadow": "none",
+        "h": 95,
+        "fs": "16px",
+        "fw": "400",
+        "cls": "relative aspect-square p-2 rounded-xl transition-all flex flex-col items-center justify-center hover:bg-slate-100"
+      },
+      {
+        "text": "11",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(250, 250, 250)",
+        "border": "0px rgb(38, 38, 38)",
+        "radius": "12px",
+        "shadow": "none",
+        "h": 95,
+        "fs": "16px",
+        "fw": "400",
+        "cls": "relative aspect-square p-2 rounded-xl transition-all flex flex-col items-center justify-center hover:bg-slate-100"
+      },
+      {
+        "text": "12",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(250, 250, 250)",
+        "border": "0px rgb(38, 38, 38)",
+        "radius": "12px",
+        "shadow": "none",
+        "h": 95,
+        "fs": "16px",
+        "fw": "400",
+        "cls": "relative aspect-square p-2 rounded-xl transition-all flex flex-col items-center justify-center hover:bg-slate-100"
+      },
+      {
+        "text": "13",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(250, 250, 250)",
+        "border": "0px rgb(38, 38, 38)",
+        "radius": "12px",
+        "shadow": "none",
+        "h": 95,
+        "fs": "16px",
+        "fw": "400",
+        "cls": "relative aspect-square p-2 rounded-xl transition-all flex flex-col items-center justify-center hover:bg-slate-100"
+      },
+      {
+        "text": "14",
+        "bg": "rgb(139, 92, 246)",
+        "color": "rgb(255, 255, 255)",
+        "border": "0px rgb(38, 38, 38)",
+        "radius": "12px",
+        "shadow": "none",
+        "h": 95,
+        "fs": "16px",
+        "fw": "400",
+        "cls": "relative aspect-square p-2 rounded-xl transition-all flex flex-col items-center justify-center bg-violet-500 text-white"
+      },
+      {
+        "text": "15",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(250, 250, 250)",
+        "border": "0px rgb(38, 38, 38)",
+        "radius": "12px",
+        "shadow": "none",
+        "h": 95,
+        "fs": "16px",
+        "fw": "400",
+        "cls": "relative aspect-square p-2 rounded-xl transition-all flex flex-col items-center justify-center hover:bg-slate-100"
+      },
+      {
+        "text": "16",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(250, 250, 250)",
+        "border": "0px rgb(38, 38, 38)",
+        "radius": "12px",
+        "shadow": "none",
+        "h": 95,
+        "fs": "16px",
+        "fw": "400",
+        "cls": "relative aspect-square p-2 rounded-xl transition-all flex flex-col items-center justify-center hover:bg-slate-100"
+      },
+      {
+        "text": "17",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(250, 250, 250)",
+        "border": "0px rgb(38, 38, 38)",
+        "radius": "12px",
+        "shadow": "none",
+        "h": 95,
+        "fs": "16px",
+        "fw": "400",
+        "cls": "relative aspect-square p-2 rounded-xl transition-all flex flex-col items-center justify-center hover:bg-slate-100"
+      },
+      {
+        "text": "18",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(250, 250, 250)",
+        "border": "0px rgb(38, 38, 38)",
+        "radius": "12px",
+        "shadow": "none",
+        "h": 95,
+        "fs": "16px",
+        "fw": "400",
+        "cls": "relative aspect-square p-2 rounded-xl transition-all flex flex-col items-center justify-center hover:bg-slate-100"
+      },
+      {
+        "text": "19",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(250, 250, 250)",
+        "border": "0px rgb(38, 38, 38)",
+        "radius": "12px",
+        "shadow": "none",
+        "h": 95,
+        "fs": "16px",
+        "fw": "400",
+        "cls": "relative aspect-square p-2 rounded-xl transition-all flex flex-col items-center justify-center hover:bg-slate-100"
+      },
+      {
+        "text": "20",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(250, 250, 250)",
+        "border": "0px rgb(38, 38, 38)",
+        "radius": "12px",
+        "shadow": "none",
+        "h": 95,
+        "fs": "16px",
+        "fw": "400",
+        "cls": "relative aspect-square p-2 rounded-xl transition-all flex flex-col items-center justify-center hover:bg-slate-100"
+      },
+      {
+        "text": "21",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(250, 250, 250)",
+        "border": "0px rgb(38, 38, 38)",
+        "radius": "12px",
+        "shadow": "none",
+        "h": 95,
+        "fs": "16px",
+        "fw": "400",
+        "cls": "relative aspect-square p-2 rounded-xl transition-all flex flex-col items-center justify-center hover:bg-slate-100"
+      },
+      {
+        "text": "22",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(250, 250, 250)",
+        "border": "0px rgb(38, 38, 38)",
+        "radius": "12px",
+        "shadow": "none",
+        "h": 95,
+        "fs": "16px",
+        "fw": "400",
+        "cls": "relative aspect-square p-2 rounded-xl transition-all flex flex-col items-center justify-center hover:bg-slate-100"
+      },
+      {
+        "text": "23",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(250, 250, 250)",
+        "border": "0px rgb(38, 38, 38)",
+        "radius": "12px",
+        "shadow": "none",
+        "h": 95,
+        "fs": "16px",
+        "fw": "400",
+        "cls": "relative aspect-square p-2 rounded-xl transition-all flex flex-col items-center justify-center hover:bg-slate-100"
+      },
+      {
+        "text": "24",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(250, 250, 250)",
+        "border": "0px rgb(38, 38, 38)",
+        "radius": "12px",
+        "shadow": "none",
+        "h": 95,
+        "fs": "16px",
+        "fw": "400",
+        "cls": "relative aspect-square p-2 rounded-xl transition-all flex flex-col items-center justify-center hover:bg-slate-100"
+      },
+      {
+        "text": "25",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(250, 250, 250)",
+        "border": "0px rgb(38, 38, 38)",
+        "radius": "12px",
+        "shadow": "none",
+        "h": 95,
+        "fs": "16px",
+        "fw": "400",
+        "cls": "relative aspect-square p-2 rounded-xl transition-all flex flex-col items-center justify-center hover:bg-slate-100"
+      },
+      {
+        "text": "26",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(250, 250, 250)",
+        "border": "0px rgb(38, 38, 38)",
+        "radius": "12px",
+        "shadow": "none",
+        "h": 95,
+        "fs": "16px",
+        "fw": "400",
+        "cls": "relative aspect-square p-2 rounded-xl transition-all flex flex-col items-center justify-center hover:bg-slate-100"
+      },
+      {
+        "text": "27",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(250, 250, 250)",
+        "border": "0px rgb(38, 38, 38)",
+        "radius": "12px",
+        "shadow": "none",
+        "h": 95,
+        "fs": "16px",
+        "fw": "400",
+        "cls": "relative aspect-square p-2 rounded-xl transition-all flex flex-col items-center justify-center hover:bg-slate-100"
+      },
+      {
+        "text": "28",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(250, 250, 250)",
+        "border": "0px rgb(38, 38, 38)",
+        "radius": "12px",
+        "shadow": "none",
+        "h": 95,
+        "fs": "16px",
+        "fw": "400",
+        "cls": "relative aspect-square p-2 rounded-xl transition-all flex flex-col items-center justify-center hover:bg-slate-100"
+      },
+      {
+        "text": "29",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(250, 250, 250)",
+        "border": "0px rgb(38, 38, 38)",
+        "radius": "12px",
+        "shadow": "none",
+        "h": 95,
+        "fs": "16px",
+        "fw": "400",
+        "cls": "relative aspect-square p-2 rounded-xl transition-all flex flex-col items-center justify-center hover:bg-slate-100"
+      },
+      {
+        "text": "30",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(250, 250, 250)",
+        "border": "0px rgb(38, 38, 38)",
+        "radius": "12px",
+        "shadow": "none",
+        "h": 95,
+        "fs": "16px",
+        "fw": "400",
+        "cls": "relative aspect-square p-2 rounded-xl transition-all flex flex-col items-center justify-center hover:bg-slate-100"
+      },
+      {
+        "text": "1",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(203, 213, 225)",
+        "border": "0px rgb(38, 38, 38)",
+        "radius": "12px",
+        "shadow": "none",
+        "h": 95,
+        "fs": "16px",
+        "fw": "400",
+        "cls": "relative aspect-square p-2 rounded-xl transition-all flex flex-col items-center justify-center text-slate-300"
+      },
+      {
+        "text": "2",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(203, 213, 225)",
+        "border": "0px rgb(38, 38, 38)",
+        "radius": "12px",
+        "shadow": "none",
+        "h": 95,
+        "fs": "16px",
+        "fw": "400",
+        "cls": "relative aspect-square p-2 rounded-xl transition-all flex flex-col items-center justify-center text-slate-300"
+      },
+      {
+        "text": "3",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(203, 213, 225)",
+        "border": "0px rgb(38, 38, 38)",
+        "radius": "12px",
+        "shadow": "none",
+        "h": 95,
+        "fs": "16px",
+        "fw": "400",
+        "cls": "relative aspect-square p-2 rounded-xl transition-all flex flex-col items-center justify-center text-slate-300"
+      },
+      {
+        "text": "4",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(203, 213, 225)",
+        "border": "0px rgb(38, 38, 38)",
+        "radius": "12px",
+        "shadow": "none",
+        "h": 95,
+        "fs": "16px",
+        "fw": "400",
+        "cls": "relative aspect-square p-2 rounded-xl transition-all flex flex-col items-center justify-center text-slate-300"
+      },
+      {
+        "text": "5",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(203, 213, 225)",
+        "border": "0px rgb(38, 38, 38)",
+        "radius": "12px",
+        "shadow": "none",
+        "h": 95,
+        "fs": "16px",
+        "fw": "400",
+        "cls": "relative aspect-square p-2 rounded-xl transition-all flex flex-col items-center justify-center text-slate-300"
+      }
+    ],
+    "Events": [
+      {
+        "text": "",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(148, 163, 184)",
+        "border": "0px rgb(38, 38, 38)",
+        "radius": "6px",
+        "shadow": "none",
+        "h": 24,
+        "fs": "14px",
+        "fw": "500",
+        "cls": "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-v"
+      },
+      {
+        "text": "",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(148, 163, 184)",
+        "border": "0px rgb(38, 38, 38)",
+        "radius": "6px",
+        "shadow": "none",
+        "h": 24,
+        "fs": "14px",
+        "fw": "500",
+        "cls": "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-v"
+      },
+      {
+        "text": "",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(148, 163, 184)",
+        "border": "0px rgb(38, 38, 38)",
+        "radius": "6px",
+        "shadow": "none",
+        "h": 24,
+        "fs": "14px",
+        "fw": "500",
+        "cls": "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-v"
+      },
+      {
+        "text": "",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(148, 163, 184)",
+        "border": "0px rgb(38, 38, 38)",
+        "radius": "6px",
+        "shadow": "none",
+        "h": 24,
+        "fs": "14px",
+        "fw": "500",
+        "cls": "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-v"
+      },
+      {
+        "text": "New Event",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(34, 211, 238)",
+        "border": "0px rgb(38, 38, 38)",
+        "radius": "6px",
+        "shadow": "none",
+        "h": 36,
+        "fs": "14px",
+        "fw": "500",
+        "cls": "inline-flex items-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-"
+      }
+    ],
+    "Timetable": [
+      {
+        "text": "All Weeks",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(250, 250, 250)",
+        "border": "1px rgb(38, 38, 38)",
+        "radius": "6px",
+        "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px",
+        "h": 36,
+        "fs": "14px",
+        "fw": "400",
+        "cls": "flex h-9 items-center justify-between whitespace-nowrap rounded-md border border-input bg-transparent px-3 py-2 text-sm "
+      },
+      {
+        "text": "Grid Builder",
+        "bg": "rgb(10, 10, 10)",
+        "color": "rgb(250, 250, 250)",
+        "border": "1px rgb(38, 38, 38)",
+        "radius": "6px",
+        "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px",
+        "h": 36,
+        "fs": "14px",
+        "fw": "500",
+        "cls": "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-v"
+      },
+      {
+        "text": "Add Class",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(255, 255, 0)",
+        "border": "0px rgb(38, 38, 38)",
+        "radius": "6px",
+        "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px",
+        "h": 36,
+        "fs": "14px",
+        "fw": "500",
+        "cls": "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-v"
+      },
+      {
+        "text": "",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(250, 250, 250)",
+        "border": "0px rgb(38, 38, 38)",
+        "radius": "6px",
+        "shadow": "none",
+        "h": 36,
+        "fs": "14px",
+        "fw": "500",
+        "cls": "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-v"
+      },
+      {
+        "text": "",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(250, 250, 250)",
+        "border": "0px rgb(38, 38, 38)",
+        "radius": "6px",
+        "shadow": "none",
+        "h": 36,
+        "fs": "14px",
+        "fw": "500",
+        "cls": "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-v"
+      }
+    ],
+    "Assignments": [
+      {
+        "text": "Add Assignment",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(255, 255, 0)",
+        "border": "0px rgb(38, 38, 38)",
+        "radius": "6px",
+        "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px",
+        "h": 36,
+        "fs": "14px",
+        "fw": "500",
+        "cls": "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-v"
+      },
+      {
+        "text": "Active",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(250, 250, 250)",
+        "border": "1px rgb(38, 38, 38)",
+        "radius": "6px",
+        "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px",
+        "h": 36,
+        "fs": "14px",
+        "fw": "400",
+        "cls": "flex h-9 items-center justify-between whitespace-nowrap rounded-md border border-input bg-transparent px-3 py-2 text-sm "
+      },
+      {
+        "text": "All Subjects",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(250, 250, 250)",
+        "border": "1px rgb(38, 38, 38)",
+        "radius": "6px",
+        "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px",
+        "h": 36,
+        "fs": "14px",
+        "fw": "400",
+        "cls": "flex h-9 items-center justify-between whitespace-nowrap rounded-md border border-input bg-transparent px-3 py-2 text-sm "
+      },
+      {
+        "text": "Add Assignment",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(255, 255, 255)",
+        "border": "0px rgb(38, 38, 38)",
+        "radius": "6px",
+        "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px",
+        "h": 36,
+        "fs": "14px",
+        "fw": "500",
+        "cls": "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-v"
+      }
+    ],
+    "Notes": [
+      {
+        "text": "",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(255, 255, 0)",
+        "border": "0px rgb(38, 38, 38)",
+        "radius": "6px",
+        "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px",
+        "h": 36,
+        "fs": "14px",
+        "fw": "500",
+        "cls": "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-v"
+      },
+      {
+        "text": "All Notebooks",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(250, 250, 250)",
+        "border": "1px rgb(38, 38, 38)",
+        "radius": "6px",
+        "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px",
+        "h": 36,
+        "fs": "14px",
+        "fw": "400",
+        "cls": "flex h-9 w-full items-center justify-between whitespace-nowrap rounded-md border border-input bg-transparent px-3 py-2 t"
+      },
+      {
+        "text": "All Tags",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(250, 250, 250)",
+        "border": "1px rgb(38, 38, 38)",
+        "radius": "6px",
+        "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px",
+        "h": 36,
+        "fs": "14px",
+        "fw": "400",
+        "cls": "flex h-9 w-full items-center justify-between whitespace-nowrap rounded-md border border-input bg-transparent px-3 py-2 t"
+      },
+      {
+        "text": "New Note",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(255, 255, 255)",
+        "border": "0px rgb(38, 38, 38)",
+        "radius": "6px",
+        "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px",
+        "h": 36,
+        "fs": "14px",
+        "fw": "500",
+        "cls": "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-v"
+      }
+    ],
+    "Flashcards": [
+      {
+        "text": "",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(255, 255, 0)",
+        "border": "0px rgb(38, 38, 38)",
+        "radius": "6px",
+        "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px",
+        "h": 36,
+        "fs": "14px",
+        "fw": "500",
+        "cls": "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-v"
+      },
+      {
+        "text": "Create Deck",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(255, 255, 255)",
+        "border": "0px rgb(38, 38, 38)",
+        "radius": "6px",
+        "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px",
+        "h": 36,
+        "fs": "14px",
+        "fw": "500",
+        "cls": "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-v"
+      }
+    ],
+    "Files": [
+      {
+        "text": "New Folder",
+        "bg": "rgb(10, 10, 10)",
+        "color": "rgb(250, 250, 250)",
+        "border": "1px rgb(38, 38, 38)",
+        "radius": "6px",
+        "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px",
+        "h": 36,
+        "fs": "14px",
+        "fw": "500",
+        "cls": "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-v"
+      },
+      {
+        "text": "All Files",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(30, 41, 59)",
+        "border": "0px rgb(38, 38, 38)",
+        "radius": "0px",
+        "shadow": "none",
+        "h": 20,
+        "fs": "14px",
+        "fw": "500",
+        "cls": "flex items-center gap-1 hover:text-violet-600 transition-colors text-slate-800 font-medium"
+      },
+      {
+        "text": "All Types",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(250, 250, 250)",
+        "border": "1px rgb(38, 38, 38)",
+        "radius": "6px",
+        "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px",
+        "h": 36,
+        "fs": "14px",
+        "fw": "400",
+        "cls": "flex h-9 items-center justify-between whitespace-nowrap rounded-md border border-input bg-transparent px-3 py-2 text-sm "
+      },
+      {
+        "text": "",
+        "bg": "rgb(241, 245, 249)",
+        "color": "rgb(250, 250, 250)",
+        "border": "0px rgb(38, 38, 38)",
+        "radius": "6px",
+        "shadow": "none",
+        "h": 36,
+        "fs": "14px",
+        "fw": "500",
+        "cls": "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-v"
+      },
+      {
+        "text": "",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(250, 250, 250)",
+        "border": "0px rgb(38, 38, 38)",
+        "radius": "6px",
+        "shadow": "none",
+        "h": 36,
+        "fs": "14px",
+        "fw": "500",
+        "cls": "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-v"
+      }
+    ],
+    "Settings": [
+      {
+        "text": "Appearance",
+        "bg": "rgb(10, 10, 10)",
+        "color": "rgb(250, 250, 250)",
+        "border": "0px rgb(38, 38, 38)",
+        "radius": "6px",
+        "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px",
+        "h": 28,
+        "fs": "14px",
+        "fw": "500",
+        "cls": "inline-flex items-center justify-center whitespace-nowrap rounded-md px-3 py-1 text-sm font-medium ring-offset-backgroun"
+      },
+      {
+        "text": "Profile",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(163, 163, 163)",
+        "border": "0px rgb(38, 38, 38)",
+        "radius": "6px",
+        "shadow": "none",
+        "h": 28,
+        "fs": "14px",
+        "fw": "500",
+        "cls": "inline-flex items-center justify-center whitespace-nowrap rounded-md px-3 py-1 text-sm font-medium ring-offset-backgroun"
+      },
+      {
+        "text": "Subjects",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(163, 163, 163)",
+        "border": "0px rgb(38, 38, 38)",
+        "radius": "6px",
+        "shadow": "none",
+        "h": 28,
+        "fs": "14px",
+        "fw": "500",
+        "cls": "inline-flex items-center justify-center whitespace-nowrap rounded-md px-3 py-1 text-sm font-medium ring-offset-backgroun"
+      },
+      {
+        "text": "Holidays",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(163, 163, 163)",
+        "border": "0px rgb(38, 38, 38)",
+        "radius": "6px",
+        "shadow": "none",
+        "h": 28,
+        "fs": "14px",
+        "fw": "500",
+        "cls": "inline-flex items-center justify-center whitespace-nowrap rounded-md px-3 py-1 text-sm font-medium ring-offset-backgroun"
+      },
+      {
+        "text": "Notifications",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(163, 163, 163)",
+        "border": "0px rgb(38, 38, 38)",
+        "radius": "6px",
+        "shadow": "none",
+        "h": 28,
+        "fs": "14px",
+        "fw": "500",
+        "cls": "inline-flex items-center justify-center whitespace-nowrap rounded-md px-3 py-1 text-sm font-medium ring-offset-backgroun"
+      },
+      {
+        "text": "Light",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(250, 250, 250)",
+        "border": "2px rgb(226, 232, 240)",
+        "radius": "12px",
+        "shadow": "none",
+        "h": 88,
+        "fs": "16px",
+        "fw": "400",
+        "cls": "flex-1 flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all border-slate-200 hover:border-slate-300"
+      },
+      {
+        "text": "Dark",
+        "bg": "rgb(245, 243, 255)",
+        "color": "rgb(250, 250, 250)",
+        "border": "2px rgb(139, 92, 246)",
+        "radius": "12px",
+        "shadow": "none",
+        "h": 88,
+        "fs": "16px",
+        "fw": "400",
+        "cls": "flex-1 flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all border-violet-500 bg-violet-50"
+      },
+      {
+        "text": "System",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(250, 250, 250)",
+        "border": "2px rgb(226, 232, 240)",
+        "radius": "12px",
+        "shadow": "none",
+        "h": 88,
+        "fs": "16px",
+        "fw": "400",
+        "cls": "flex-1 flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all border-slate-200 hover:border-slate-300"
+      },
+      {
+        "text": "",
+        "bg": "rgb(139, 92, 246)",
+        "color": "rgb(250, 250, 250)",
+        "border": "0px rgb(38, 38, 38)",
+        "radius": "12px",
+        "shadow": "rgb(255, 255, 255) 0px 0px 0px 2px, rgb(148, 163, 184) 0px",
+        "h": 53,
+        "fs": "16px",
+        "fw": "400",
+        "cls": "w-12 h-12 rounded-xl transition-transform hover:scale-110 ring-2 ring-offset-2 ring-slate-400 scale-110"
+      },
+      {
+        "text": "",
+        "bg": "rgb(59, 130, 246)",
+        "color": "rgb(250, 250, 250)",
+        "border": "0px rgb(38, 38, 38)",
+        "radius": "12px",
+        "shadow": "none",
+        "h": 48,
+        "fs": "16px",
+        "fw": "400",
+        "cls": "w-12 h-12 rounded-xl transition-transform hover:scale-110"
+      },
+      {
+        "text": "",
+        "bg": "rgb(16, 185, 129)",
+        "color": "rgb(250, 250, 250)",
+        "border": "0px rgb(38, 38, 38)",
+        "radius": "12px",
+        "shadow": "none",
+        "h": 48,
+        "fs": "16px",
+        "fw": "400",
+        "cls": "w-12 h-12 rounded-xl transition-transform hover:scale-110"
+      },
+      {
+        "text": "",
+        "bg": "rgb(245, 158, 11)",
+        "color": "rgb(250, 250, 250)",
+        "border": "0px rgb(38, 38, 38)",
+        "radius": "12px",
+        "shadow": "none",
+        "h": 48,
+        "fs": "16px",
+        "fw": "400",
+        "cls": "w-12 h-12 rounded-xl transition-transform hover:scale-110"
+      },
+      {
+        "text": "",
+        "bg": "rgb(236, 72, 153)",
+        "color": "rgb(250, 250, 250)",
+        "border": "0px rgb(38, 38, 38)",
+        "radius": "12px",
+        "shadow": "none",
+        "h": 48,
+        "fs": "16px",
+        "fw": "400",
+        "cls": "w-12 h-12 rounded-xl transition-transform hover:scale-110"
+      },
+      {
+        "text": "",
+        "bg": "rgb(239, 68, 68)",
+        "color": "rgb(250, 250, 250)",
+        "border": "0px rgb(38, 38, 38)",
+        "radius": "12px",
+        "shadow": "none",
+        "h": 48,
+        "fs": "16px",
+        "fw": "400",
+        "cls": "w-12 h-12 rounded-xl transition-transform hover:scale-110"
+      },
+      {
+        "text": "",
+        "bg": "rgb(20, 184, 166)",
+        "color": "rgb(250, 250, 250)",
+        "border": "0px rgb(38, 38, 38)",
+        "radius": "12px",
+        "shadow": "none",
+        "h": 48,
+        "fs": "16px",
+        "fw": "400",
+        "cls": "w-12 h-12 rounded-xl transition-transform hover:scale-110"
+      },
+      {
+        "text": "🎓",
+        "bg": "rgb(237, 233, 254)",
+        "color": "rgb(250, 250, 250)",
+        "border": "0px rgb(38, 38, 38)",
+        "radius": "12px",
+        "shadow": "rgb(255, 255, 255) 0px 0px 0px 0px, rgb(139, 92, 246) 0px ",
+        "h": 53,
+        "fs": "24px",
+        "fw": "400",
+        "cls": "w-12 h-12 rounded-xl text-2xl flex items-center justify-center transition-all bg-violet-100 ring-2 ring-violet-500 scale"
+      },
+      {
+        "text": "📚",
+        "bg": "rgb(241, 245, 249)",
+        "color": "rgb(250, 250, 250)",
+        "border": "0px rgb(38, 38, 38)",
+        "radius": "12px",
+        "shadow": "none",
+        "h": 48,
+        "fs": "24px",
+        "fw": "400",
+        "cls": "w-12 h-12 rounded-xl text-2xl flex items-center justify-center transition-all bg-slate-100 hover:bg-slate-200"
+      },
+      {
+        "text": "🧠",
+        "bg": "rgb(241, 245, 249)",
+        "color": "rgb(250, 250, 250)",
+        "border": "0px rgb(38, 38, 38)",
+        "radius": "12px",
+        "shadow": "none",
+        "h": 48,
+        "fs": "24px",
+        "fw": "400",
+        "cls": "w-12 h-12 rounded-xl text-2xl flex items-center justify-center transition-all bg-slate-100 hover:bg-slate-200"
+      },
+      {
+        "text": "💡",
+        "bg": "rgb(241, 245, 249)",
+        "color": "rgb(250, 250, 250)",
+        "border": "0px rgb(38, 38, 38)",
+        "radius": "12px",
+        "shadow": "none",
+        "h": 48,
+        "fs": "24px",
+        "fw": "400",
+        "cls": "w-12 h-12 rounded-xl text-2xl flex items-center justify-center transition-all bg-slate-100 hover:bg-slate-200"
+      },
+      {
+        "text": "🎯",
+        "bg": "rgb(241, 245, 249)",
+        "color": "rgb(250, 250, 250)",
+        "border": "0px rgb(38, 38, 38)",
+        "radius": "12px",
+        "shadow": "none",
+        "h": 48,
+        "fs": "24px",
+        "fw": "400",
+        "cls": "w-12 h-12 rounded-xl text-2xl flex items-center justify-center transition-all bg-slate-100 hover:bg-slate-200"
+      },
+      {
+        "text": "🚀",
+        "bg": "rgb(241, 245, 249)",
+        "color": "rgb(250, 250, 250)",
+        "border": "0px rgb(38, 38, 38)",
+        "radius": "12px",
+        "shadow": "none",
+        "h": 48,
+        "fs": "24px",
+        "fw": "400",
+        "cls": "w-12 h-12 rounded-xl text-2xl flex items-center justify-center transition-all bg-slate-100 hover:bg-slate-200"
+      },
+      {
+        "text": "⭐",
+        "bg": "rgb(241, 245, 249)",
+        "color": "rgb(250, 250, 250)",
+        "border": "0px rgb(38, 38, 38)",
+        "radius": "12px",
+        "shadow": "none",
+        "h": 48,
+        "fs": "24px",
+        "fw": "400",
+        "cls": "w-12 h-12 rounded-xl text-2xl flex items-center justify-center transition-all bg-slate-100 hover:bg-slate-200"
+      },
+      {
+        "text": "🌟",
+        "bg": "rgb(241, 245, 249)",
+        "color": "rgb(250, 250, 250)",
+        "border": "0px rgb(38, 38, 38)",
+        "radius": "12px",
+        "shadow": "none",
+        "h": 48,
+        "fs": "24px",
+        "fw": "400",
+        "cls": "w-12 h-12 rounded-xl text-2xl flex items-center justify-center transition-all bg-slate-100 hover:bg-slate-200"
+      },
+      {
+        "text": "🦊",
+        "bg": "rgb(241, 245, 249)",
+        "color": "rgb(250, 250, 250)",
+        "border": "0px rgb(38, 38, 38)",
+        "radius": "12px",
+        "shadow": "none",
+        "h": 48,
+        "fs": "24px",
+        "fw": "400",
+        "cls": "w-12 h-12 rounded-xl text-2xl flex items-center justify-center transition-all bg-slate-100 hover:bg-slate-200"
+      },
+      {
+        "text": "🐱",
+        "bg": "rgb(241, 245, 249)",
+        "color": "rgb(250, 250, 250)",
+        "border": "0px rgb(38, 38, 38)",
+        "radius": "12px",
+        "shadow": "none",
+        "h": 48,
+        "fs": "24px",
+        "fw": "400",
+        "cls": "w-12 h-12 rounded-xl text-2xl flex items-center justify-center transition-all bg-slate-100 hover:bg-slate-200"
+      },
+      {
+        "text": "🐶",
+        "bg": "rgb(241, 245, 249)",
+        "color": "rgb(250, 250, 250)",
+        "border": "0px rgb(38, 38, 38)",
+        "radius": "12px",
+        "shadow": "none",
+        "h": 48,
+        "fs": "24px",
+        "fw": "400",
+        "cls": "w-12 h-12 rounded-xl text-2xl flex items-center justify-center transition-all bg-slate-100 hover:bg-slate-200"
+      },
+      {
+        "text": "🐼",
+        "bg": "rgb(241, 245, 249)",
+        "color": "rgb(250, 250, 250)",
+        "border": "0px rgb(38, 38, 38)",
+        "radius": "12px",
+        "shadow": "none",
+        "h": 48,
+        "fs": "24px",
+        "fw": "400",
+        "cls": "w-12 h-12 rounded-xl text-2xl flex items-center justify-center transition-all bg-slate-100 hover:bg-slate-200"
+      },
+      {
+        "text": "🦁",
+        "bg": "rgb(241, 245, 249)",
+        "color": "rgb(250, 250, 250)",
+        "border": "0px rgb(38, 38, 38)",
+        "radius": "12px",
+        "shadow": "none",
+        "h": 48,
+        "fs": "24px",
+        "fw": "400",
+        "cls": "w-12 h-12 rounded-xl text-2xl flex items-center justify-center transition-all bg-slate-100 hover:bg-slate-200"
+      },
+      {
+        "text": "🐸",
+        "bg": "rgb(241, 245, 249)",
+        "color": "rgb(250, 250, 250)",
+        "border": "0px rgb(38, 38, 38)",
+        "radius": "12px",
+        "shadow": "none",
+        "h": 48,
+        "fs": "24px",
+        "fw": "400",
+        "cls": "w-12 h-12 rounded-xl text-2xl flex items-center justify-center transition-all bg-slate-100 hover:bg-slate-200"
+      },
+      {
+        "text": "🦉",
+        "bg": "rgb(241, 245, 249)",
+        "color": "rgb(250, 250, 250)",
+        "border": "0px rgb(38, 38, 38)",
+        "radius": "12px",
+        "shadow": "none",
+        "h": 48,
+        "fs": "24px",
+        "fw": "400",
+        "cls": "w-12 h-12 rounded-xl text-2xl flex items-center justify-center transition-all bg-slate-100 hover:bg-slate-200"
+      },
+      {
+        "text": "🐧",
+        "bg": "rgb(241, 245, 249)",
+        "color": "rgb(250, 250, 250)",
+        "border": "0px rgb(38, 38, 38)",
+        "radius": "12px",
+        "shadow": "none",
+        "h": 48,
+        "fs": "24px",
+        "fw": "400",
+        "cls": "w-12 h-12 rounded-xl text-2xl flex items-center justify-center transition-all bg-slate-100 hover:bg-slate-200"
+      },
+      {
+        "text": "🎨",
+        "bg": "rgb(241, 245, 249)",
+        "color": "rgb(250, 250, 250)",
+        "border": "0px rgb(38, 38, 38)",
+        "radius": "12px",
+        "shadow": "none",
+        "h": 48,
+        "fs": "24px",
+        "fw": "400",
+        "cls": "w-12 h-12 rounded-xl text-2xl flex items-center justify-center transition-all bg-slate-100 hover:bg-slate-200"
+      },
+      {
+        "text": "🎵",
+        "bg": "rgb(241, 245, 249)",
+        "color": "rgb(250, 250, 250)",
+        "border": "0px rgb(38, 38, 38)",
+        "radius": "12px",
+        "shadow": "none",
+        "h": 48,
+        "fs": "24px",
+        "fw": "400",
+        "cls": "w-12 h-12 rounded-xl text-2xl flex items-center justify-center transition-all bg-slate-100 hover:bg-slate-200"
+      },
+      {
+        "text": "🎮",
+        "bg": "rgb(241, 245, 249)",
+        "color": "rgb(250, 250, 250)",
+        "border": "0px rgb(38, 38, 38)",
+        "radius": "12px",
+        "shadow": "none",
+        "h": 48,
+        "fs": "24px",
+        "fw": "400",
+        "cls": "w-12 h-12 rounded-xl text-2xl flex items-center justify-center transition-all bg-slate-100 hover:bg-slate-200"
+      },
+      {
+        "text": "⚽",
+        "bg": "rgb(241, 245, 249)",
+        "color": "rgb(250, 250, 250)",
+        "border": "0px rgb(38, 38, 38)",
+        "radius": "12px",
+        "shadow": "none",
+        "h": 48,
+        "fs": "24px",
+        "fw": "400",
+        "cls": "w-12 h-12 rounded-xl text-2xl flex items-center justify-center transition-all bg-slate-100 hover:bg-slate-200"
+      },
+      {
+        "text": "🏀",
+        "bg": "rgb(241, 245, 249)",
+        "color": "rgb(250, 250, 250)",
+        "border": "0px rgb(38, 38, 38)",
+        "radius": "12px",
+        "shadow": "none",
+        "h": 48,
+        "fs": "24px",
+        "fw": "400",
+        "cls": "w-12 h-12 rounded-xl text-2xl flex items-center justify-center transition-all bg-slate-100 hover:bg-slate-200"
+      },
+      {
+        "text": "🎾",
+        "bg": "rgb(241, 245, 249)",
+        "color": "rgb(250, 250, 250)",
+        "border": "0px rgb(38, 38, 38)",
+        "radius": "12px",
+        "shadow": "none",
+        "h": 48,
+        "fs": "24px",
+        "fw": "400",
+        "cls": "w-12 h-12 rounded-xl text-2xl flex items-center justify-center transition-all bg-slate-100 hover:bg-slate-200"
+      },
+      {
+        "text": "🏆",
+        "bg": "rgb(241, 245, 249)",
+        "color": "rgb(250, 250, 250)",
+        "border": "0px rgb(38, 38, 38)",
+        "radius": "12px",
+        "shadow": "none",
+        "h": 48,
+        "fs": "24px",
+        "fw": "400",
+        "cls": "w-12 h-12 rounded-xl text-2xl flex items-center justify-center transition-all bg-slate-100 hover:bg-slate-200"
+      },
+      {
+        "text": "🎪",
+        "bg": "rgb(241, 245, 249)",
+        "color": "rgb(250, 250, 250)",
+        "border": "0px rgb(38, 38, 38)",
+        "radius": "12px",
+        "shadow": "none",
+        "h": 48,
+        "fs": "24px",
+        "fw": "400",
+        "cls": "w-12 h-12 rounded-xl text-2xl flex items-center justify-center transition-all bg-slate-100 hover:bg-slate-200"
+      },
+      {
+        "text": "Save Preferences",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(255, 255, 0)",
+        "border": "0px rgb(38, 38, 38)",
+        "radius": "6px",
+        "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px",
+        "h": 36,
+        "fs": "14px",
+        "fw": "500",
+        "cls": "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-v"
+      }
+    ],
+    "/login (anon)": [
+      {
+        "text": "Continue with Google",
+        "bg": "rgb(255, 255, 255)",
+        "color": "rgb(15, 14, 14)",
+        "border": "1px rgb(233, 230, 224)",
+        "radius": "12px",
+        "shadow": "none",
+        "h": 54,
+        "fs": "16px",
+        "fw": "500",
+        "cls": "w-full flex items-center justify-center gap-3 bg-[var(--sem-surface-interactive-white-default)] text-[color:var(--sem-te"
+      },
+      {
+        "text": "Sign in",
+        "bg": "rgb(15, 23, 42)",
+        "color": "rgb(255, 255, 255)",
+        "border": "0px rgb(229, 231, 235)",
+        "radius": "12px",
+        "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px",
+        "h": 48,
+        "fs": "14px",
+        "fw": "500",
+        "cls": "inline-flex items-center justify-center gap-1 whitespace-nowrap text-sm ring-offset-background focus-visible:outline-non"
+      },
+      {
+        "text": "Forgot password?",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(100, 116, 139)",
+        "border": "0px rgb(229, 231, 235)",
+        "radius": "0px",
+        "shadow": "none",
+        "h": 20,
+        "fs": "14px",
+        "fw": "500",
+        "cls": "text-sm text-slate-500 hover:text-slate-700 font-medium transition-colors"
+      },
+      {
+        "text": "Need an account? Sign up",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(100, 116, 139)",
+        "border": "0px rgb(229, 231, 235)",
+        "radius": "0px",
+        "shadow": "none",
+        "h": 20,
+        "fs": "14px",
+        "fw": "400",
+        "cls": "text-sm text-slate-500 hover:text-slate-700 transition-colors"
+      }
+    ]
+  },
+  "summary": {
+    "Dashboard": [
+      {
+        "t": "Start My Day",
+        "k": "ghost/borderless",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(255, 255, 255)",
+        "h": 36
+      },
+      {
+        "t": "View All",
+        "k": "ghost/borderless",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(124, 58, 237)",
+        "h": 32
+      },
+      {
+        "t": "All",
+        "k": "ghost/borderless",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(124, 58, 237)",
+        "h": 32
+      },
+      {
+        "t": "View All",
+        "k": "ghost/borderless",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(124, 58, 237)",
+        "h": 32
+      }
+    ],
+    "Tasks": [
+      {
+        "t": "All Tasks0",
+        "k": "other:rgb(245, 243, 255)",
+        "bg": "rgb(245, 243, 255)",
+        "color": "rgb(109, 40, 217)",
+        "h": 48
+      },
+      {
+        "t": "Important0",
+        "k": "ghost/borderless",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(71, 85, 105)",
+        "h": 48
+      },
+      {
+        "t": "",
+        "k": "ghost/borderless",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(250, 250, 250)",
+        "h": 28
+      },
+      {
+        "t": "Active",
+        "k": "other:rgb(10, 10, 10)",
+        "bg": "rgb(10, 10, 10)",
+        "color": "rgb(250, 250, 250)",
+        "h": 36
+      },
+      {
+        "t": "Add Task",
+        "k": "ghost/borderless",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(255, 255, 0)",
+        "h": 36
+      },
+      {
+        "t": "Create Task",
+        "k": "ghost/borderless",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(255, 255, 255)",
+        "h": 36
+      }
+    ],
+    "Calendar": [
+      {
+        "t": "Calendar",
+        "k": "other:rgb(139, 92, 246)",
+        "bg": "rgb(139, 92, 246)",
+        "color": "rgb(255, 255, 0)",
+        "h": 32
+      },
+      {
+        "t": "Timeline",
+        "k": "ghost/borderless",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(250, 250, 250)",
+        "h": 32
+      },
+      {
+        "t": "",
+        "k": "ghost/borderless",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(250, 250, 250)",
+        "h": 36
+      },
+      {
+        "t": "",
+        "k": "ghost/borderless",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(250, 250, 250)",
+        "h": 36
+      },
+      {
+        "t": "1",
+        "k": "ghost/borderless",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(250, 250, 250)",
+        "h": 95
+      },
+      {
+        "t": "2",
+        "k": "ghost/borderless",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(250, 250, 250)",
+        "h": 95
+      },
+      {
+        "t": "3",
+        "k": "ghost/borderless",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(250, 250, 250)",
+        "h": 95
+      },
+      {
+        "t": "4",
+        "k": "ghost/borderless",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(250, 250, 250)",
+        "h": 95
+      },
+      {
+        "t": "5",
+        "k": "ghost/borderless",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(250, 250, 250)",
+        "h": 95
+      },
+      {
+        "t": "6",
+        "k": "ghost/borderless",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(250, 250, 250)",
+        "h": 95
+      },
+      {
+        "t": "7",
+        "k": "ghost/borderless",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(250, 250, 250)",
+        "h": 95
+      },
+      {
+        "t": "8",
+        "k": "ghost/borderless",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(250, 250, 250)",
+        "h": 95
+      },
+      {
+        "t": "9",
+        "k": "ghost/borderless",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(250, 250, 250)",
+        "h": 95
+      },
+      {
+        "t": "10",
+        "k": "ghost/borderless",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(250, 250, 250)",
+        "h": 95
+      },
+      {
+        "t": "11",
+        "k": "ghost/borderless",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(250, 250, 250)",
+        "h": 95
+      },
+      {
+        "t": "12",
+        "k": "ghost/borderless",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(250, 250, 250)",
+        "h": 95
+      },
+      {
+        "t": "13",
+        "k": "ghost/borderless",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(250, 250, 250)",
+        "h": 95
+      },
+      {
+        "t": "14",
+        "k": "other:rgb(139, 92, 246)",
+        "bg": "rgb(139, 92, 246)",
+        "color": "rgb(255, 255, 255)",
+        "h": 95
+      },
+      {
+        "t": "15",
+        "k": "ghost/borderless",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(250, 250, 250)",
+        "h": 95
+      },
+      {
+        "t": "16",
+        "k": "ghost/borderless",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(250, 250, 250)",
+        "h": 95
+      },
+      {
+        "t": "17",
+        "k": "ghost/borderless",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(250, 250, 250)",
+        "h": 95
+      },
+      {
+        "t": "18",
+        "k": "ghost/borderless",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(250, 250, 250)",
+        "h": 95
+      },
+      {
+        "t": "19",
+        "k": "ghost/borderless",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(250, 250, 250)",
+        "h": 95
+      },
+      {
+        "t": "20",
+        "k": "ghost/borderless",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(250, 250, 250)",
+        "h": 95
+      },
+      {
+        "t": "21",
+        "k": "ghost/borderless",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(250, 250, 250)",
+        "h": 95
+      },
+      {
+        "t": "22",
+        "k": "ghost/borderless",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(250, 250, 250)",
+        "h": 95
+      },
+      {
+        "t": "23",
+        "k": "ghost/borderless",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(250, 250, 250)",
+        "h": 95
+      },
+      {
+        "t": "24",
+        "k": "ghost/borderless",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(250, 250, 250)",
+        "h": 95
+      },
+      {
+        "t": "25",
+        "k": "ghost/borderless",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(250, 250, 250)",
+        "h": 95
+      },
+      {
+        "t": "26",
+        "k": "ghost/borderless",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(250, 250, 250)",
+        "h": 95
+      },
+      {
+        "t": "27",
+        "k": "ghost/borderless",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(250, 250, 250)",
+        "h": 95
+      },
+      {
+        "t": "28",
+        "k": "ghost/borderless",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(250, 250, 250)",
+        "h": 95
+      },
+      {
+        "t": "29",
+        "k": "ghost/borderless",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(250, 250, 250)",
+        "h": 95
+      },
+      {
+        "t": "30",
+        "k": "ghost/borderless",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(250, 250, 250)",
+        "h": 95
+      },
+      {
+        "t": "1",
+        "k": "ghost/borderless",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(203, 213, 225)",
+        "h": 95
+      },
+      {
+        "t": "2",
+        "k": "ghost/borderless",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(203, 213, 225)",
+        "h": 95
+      },
+      {
+        "t": "3",
+        "k": "ghost/borderless",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(203, 213, 225)",
+        "h": 95
+      },
+      {
+        "t": "4",
+        "k": "ghost/borderless",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(203, 213, 225)",
+        "h": 95
+      },
+      {
+        "t": "5",
+        "k": "ghost/borderless",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(203, 213, 225)",
+        "h": 95
+      }
+    ],
+    "Events": [
+      {
+        "t": "",
+        "k": "ghost/borderless",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(148, 163, 184)",
+        "h": 24
+      },
+      {
+        "t": "",
+        "k": "ghost/borderless",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(148, 163, 184)",
+        "h": 24
+      },
+      {
+        "t": "",
+        "k": "ghost/borderless",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(148, 163, 184)",
+        "h": 24
+      },
+      {
+        "t": "",
+        "k": "ghost/borderless",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(148, 163, 184)",
+        "h": 24
+      },
+      {
+        "t": "New Event",
+        "k": "ghost/borderless",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(34, 211, 238)",
+        "h": 36
+      }
+    ],
+    "Timetable": [
+      {
+        "t": "All Weeks",
+        "k": "ghost/borderless",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(250, 250, 250)",
+        "h": 36
+      },
+      {
+        "t": "Grid Builder",
+        "k": "other:rgb(10, 10, 10)",
+        "bg": "rgb(10, 10, 10)",
+        "color": "rgb(250, 250, 250)",
+        "h": 36
+      },
+      {
+        "t": "Add Class",
+        "k": "ghost/borderless",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(255, 255, 0)",
+        "h": 36
+      },
+      {
+        "t": "",
+        "k": "ghost/borderless",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(250, 250, 250)",
+        "h": 36
+      },
+      {
+        "t": "",
+        "k": "ghost/borderless",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(250, 250, 250)",
+        "h": 36
+      }
+    ],
+    "Assignments": [
+      {
+        "t": "Add Assignment",
+        "k": "ghost/borderless",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(255, 255, 0)",
+        "h": 36
+      },
+      {
+        "t": "Active",
+        "k": "ghost/borderless",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(250, 250, 250)",
+        "h": 36
+      },
+      {
+        "t": "All Subjects",
+        "k": "ghost/borderless",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(250, 250, 250)",
+        "h": 36
+      },
+      {
+        "t": "Add Assignment",
+        "k": "ghost/borderless",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(255, 255, 255)",
+        "h": 36
+      }
+    ],
+    "Notes": [
+      {
+        "t": "",
+        "k": "ghost/borderless",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(255, 255, 0)",
+        "h": 36
+      },
+      {
+        "t": "All Notebooks",
+        "k": "ghost/borderless",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(250, 250, 250)",
+        "h": 36
+      },
+      {
+        "t": "All Tags",
+        "k": "ghost/borderless",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(250, 250, 250)",
+        "h": 36
+      },
+      {
+        "t": "New Note",
+        "k": "ghost/borderless",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(255, 255, 255)",
+        "h": 36
+      }
+    ],
+    "Flashcards": [
+      {
+        "t": "",
+        "k": "ghost/borderless",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(255, 255, 0)",
+        "h": 36
+      },
+      {
+        "t": "Create Deck",
+        "k": "ghost/borderless",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(255, 255, 255)",
+        "h": 36
+      }
+    ],
+    "Files": [
+      {
+        "t": "New Folder",
+        "k": "other:rgb(10, 10, 10)",
+        "bg": "rgb(10, 10, 10)",
+        "color": "rgb(250, 250, 250)",
+        "h": 36
+      },
+      {
+        "t": "All Files",
+        "k": "ghost/borderless",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(30, 41, 59)",
+        "h": 20
+      },
+      {
+        "t": "All Types",
+        "k": "ghost/borderless",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(250, 250, 250)",
+        "h": 36
+      },
+      {
+        "t": "",
+        "k": "other:rgb(241, 245, 249)",
+        "bg": "rgb(241, 245, 249)",
+        "color": "rgb(250, 250, 250)",
+        "h": 36
+      },
+      {
+        "t": "",
+        "k": "ghost/borderless",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(250, 250, 250)",
+        "h": 36
+      }
+    ],
+    "Settings": [
+      {
+        "t": "Appearance",
+        "k": "other:rgb(10, 10, 10)",
+        "bg": "rgb(10, 10, 10)",
+        "color": "rgb(250, 250, 250)",
+        "h": 28
+      },
+      {
+        "t": "Profile",
+        "k": "ghost/borderless",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(163, 163, 163)",
+        "h": 28
+      },
+      {
+        "t": "Subjects",
+        "k": "ghost/borderless",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(163, 163, 163)",
+        "h": 28
+      },
+      {
+        "t": "Holidays",
+        "k": "ghost/borderless",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(163, 163, 163)",
+        "h": 28
+      },
+      {
+        "t": "Notifications",
+        "k": "ghost/borderless",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(163, 163, 163)",
+        "h": 28
+      },
+      {
+        "t": "Light",
+        "k": "transparent-bordered",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(250, 250, 250)",
+        "h": 88
+      },
+      {
+        "t": "Dark",
+        "k": "other:rgb(245, 243, 255)",
+        "bg": "rgb(245, 243, 255)",
+        "color": "rgb(250, 250, 250)",
+        "h": 88
+      },
+      {
+        "t": "System",
+        "k": "transparent-bordered",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(250, 250, 250)",
+        "h": 88
+      },
+      {
+        "t": "",
+        "k": "other:rgb(139, 92, 246)",
+        "bg": "rgb(139, 92, 246)",
+        "color": "rgb(250, 250, 250)",
+        "h": 53
+      },
+      {
+        "t": "",
+        "k": "other:rgb(59, 130, 246)",
+        "bg": "rgb(59, 130, 246)",
+        "color": "rgb(250, 250, 250)",
+        "h": 48
+      },
+      {
+        "t": "",
+        "k": "other:rgb(16, 185, 129)",
+        "bg": "rgb(16, 185, 129)",
+        "color": "rgb(250, 250, 250)",
+        "h": 48
+      },
+      {
+        "t": "",
+        "k": "other:rgb(245, 158, 11)",
+        "bg": "rgb(245, 158, 11)",
+        "color": "rgb(250, 250, 250)",
+        "h": 48
+      },
+      {
+        "t": "",
+        "k": "other:rgb(236, 72, 153)",
+        "bg": "rgb(236, 72, 153)",
+        "color": "rgb(250, 250, 250)",
+        "h": 48
+      },
+      {
+        "t": "",
+        "k": "other:rgb(239, 68, 68)",
+        "bg": "rgb(239, 68, 68)",
+        "color": "rgb(250, 250, 250)",
+        "h": 48
+      },
+      {
+        "t": "",
+        "k": "other:rgb(20, 184, 166)",
+        "bg": "rgb(20, 184, 166)",
+        "color": "rgb(250, 250, 250)",
+        "h": 48
+      },
+      {
+        "t": "🎓",
+        "k": "other:rgb(237, 233, 254)",
+        "bg": "rgb(237, 233, 254)",
+        "color": "rgb(250, 250, 250)",
+        "h": 53
+      },
+      {
+        "t": "📚",
+        "k": "other:rgb(241, 245, 249)",
+        "bg": "rgb(241, 245, 249)",
+        "color": "rgb(250, 250, 250)",
+        "h": 48
+      },
+      {
+        "t": "🧠",
+        "k": "other:rgb(241, 245, 249)",
+        "bg": "rgb(241, 245, 249)",
+        "color": "rgb(250, 250, 250)",
+        "h": 48
+      },
+      {
+        "t": "💡",
+        "k": "other:rgb(241, 245, 249)",
+        "bg": "rgb(241, 245, 249)",
+        "color": "rgb(250, 250, 250)",
+        "h": 48
+      },
+      {
+        "t": "🎯",
+        "k": "other:rgb(241, 245, 249)",
+        "bg": "rgb(241, 245, 249)",
+        "color": "rgb(250, 250, 250)",
+        "h": 48
+      },
+      {
+        "t": "🚀",
+        "k": "other:rgb(241, 245, 249)",
+        "bg": "rgb(241, 245, 249)",
+        "color": "rgb(250, 250, 250)",
+        "h": 48
+      },
+      {
+        "t": "⭐",
+        "k": "other:rgb(241, 245, 249)",
+        "bg": "rgb(241, 245, 249)",
+        "color": "rgb(250, 250, 250)",
+        "h": 48
+      },
+      {
+        "t": "🌟",
+        "k": "other:rgb(241, 245, 249)",
+        "bg": "rgb(241, 245, 249)",
+        "color": "rgb(250, 250, 250)",
+        "h": 48
+      },
+      {
+        "t": "🦊",
+        "k": "other:rgb(241, 245, 249)",
+        "bg": "rgb(241, 245, 249)",
+        "color": "rgb(250, 250, 250)",
+        "h": 48
+      },
+      {
+        "t": "🐱",
+        "k": "other:rgb(241, 245, 249)",
+        "bg": "rgb(241, 245, 249)",
+        "color": "rgb(250, 250, 250)",
+        "h": 48
+      },
+      {
+        "t": "🐶",
+        "k": "other:rgb(241, 245, 249)",
+        "bg": "rgb(241, 245, 249)",
+        "color": "rgb(250, 250, 250)",
+        "h": 48
+      },
+      {
+        "t": "🐼",
+        "k": "other:rgb(241, 245, 249)",
+        "bg": "rgb(241, 245, 249)",
+        "color": "rgb(250, 250, 250)",
+        "h": 48
+      },
+      {
+        "t": "🦁",
+        "k": "other:rgb(241, 245, 249)",
+        "bg": "rgb(241, 245, 249)",
+        "color": "rgb(250, 250, 250)",
+        "h": 48
+      },
+      {
+        "t": "🐸",
+        "k": "other:rgb(241, 245, 249)",
+        "bg": "rgb(241, 245, 249)",
+        "color": "rgb(250, 250, 250)",
+        "h": 48
+      },
+      {
+        "t": "🦉",
+        "k": "other:rgb(241, 245, 249)",
+        "bg": "rgb(241, 245, 249)",
+        "color": "rgb(250, 250, 250)",
+        "h": 48
+      },
+      {
+        "t": "🐧",
+        "k": "other:rgb(241, 245, 249)",
+        "bg": "rgb(241, 245, 249)",
+        "color": "rgb(250, 250, 250)",
+        "h": 48
+      },
+      {
+        "t": "🎨",
+        "k": "other:rgb(241, 245, 249)",
+        "bg": "rgb(241, 245, 249)",
+        "color": "rgb(250, 250, 250)",
+        "h": 48
+      },
+      {
+        "t": "🎵",
+        "k": "other:rgb(241, 245, 249)",
+        "bg": "rgb(241, 245, 249)",
+        "color": "rgb(250, 250, 250)",
+        "h": 48
+      },
+      {
+        "t": "🎮",
+        "k": "other:rgb(241, 245, 249)",
+        "bg": "rgb(241, 245, 249)",
+        "color": "rgb(250, 250, 250)",
+        "h": 48
+      },
+      {
+        "t": "⚽",
+        "k": "other:rgb(241, 245, 249)",
+        "bg": "rgb(241, 245, 249)",
+        "color": "rgb(250, 250, 250)",
+        "h": 48
+      },
+      {
+        "t": "🏀",
+        "k": "other:rgb(241, 245, 249)",
+        "bg": "rgb(241, 245, 249)",
+        "color": "rgb(250, 250, 250)",
+        "h": 48
+      },
+      {
+        "t": "🎾",
+        "k": "other:rgb(241, 245, 249)",
+        "bg": "rgb(241, 245, 249)",
+        "color": "rgb(250, 250, 250)",
+        "h": 48
+      },
+      {
+        "t": "🏆",
+        "k": "other:rgb(241, 245, 249)",
+        "bg": "rgb(241, 245, 249)",
+        "color": "rgb(250, 250, 250)",
+        "h": 48
+      },
+      {
+        "t": "🎪",
+        "k": "other:rgb(241, 245, 249)",
+        "bg": "rgb(241, 245, 249)",
+        "color": "rgb(250, 250, 250)",
+        "h": 48
+      },
+      {
+        "t": "Save Preferences",
+        "k": "ghost/borderless",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(255, 255, 0)",
+        "h": 36
+      }
+    ],
+    "/login (anon)": [
+      {
+        "t": "Continue with Google",
+        "k": "other:rgb(255, 255, 255)",
+        "bg": "rgb(255, 255, 255)",
+        "color": "rgb(15, 14, 14)",
+        "h": 54
+      },
+      {
+        "t": "Sign in",
+        "k": "other:rgb(15, 23, 42)",
+        "bg": "rgb(15, 23, 42)",
+        "color": "rgb(255, 255, 255)",
+        "h": 48
+      },
+      {
+        "t": "Forgot password?",
+        "k": "ghost/borderless",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(100, 116, 139)",
+        "h": 20
+      },
+      {
+        "t": "Need an account? Sign up",
+        "k": "ghost/borderless",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(100, 116, 139)",
+        "h": 20
+      }
+    ]
+  }
+}

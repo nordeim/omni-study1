@@ -445,6 +445,7 @@ export function FilesView() {
   return (
     <div className="flex flex-col gap-6">
       <ViewHeader
+        stack
         title="Files"
         // S182/EF6 (measured 2026-11-13, probe s182-rows5): the reference's
         // live subtitle copy — the S131-era "Your study materials" record

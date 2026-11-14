@@ -164,7 +164,9 @@ export function DashboardView() {
     // high (y=120 vs 128).
     <div className="flex flex-col gap-8">
       {/* ---- greeting header ---- */}
-      <header className="flex flex-wrap items-end justify-between gap-3">
+      {/* S186/EJ-C: the measured stacking family + md:justify-between
+          (the reference's Dashboard greeting header, probed 2026-11-15). */}
+      <header className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold text-slate-800 dark:text-slate-100">
             {/* the greeting reads the LIVE clock (reference parity — a
@@ -178,7 +180,7 @@ export function DashboardView() {
         </div>
         <Button
           variant="gradient"
-          className="sf-gradient-shadow h-9 w-fit self-start"
+          className="sf-gradient-shadow h-9 w-fit"
           asChild
         >
           {/* S4-K (measured s68): the reference's hero CTA is an ANCHOR (the

@@ -2,6 +2,23 @@ import { defineConfig } from "vitest/config";
 import path from "node:path";
 
 // Unit-test layer for the pure domain seams — 55 files / 1795 tests
+// (re-anchored S186/EJ — the auth-button family + the view-header row
+// family port: the unit census UNCHANGED at 1795 [55 files — a
+// view-layer port, no new seam]; the e2e census moves 705 → 714: +9 —
+// chunk 2 +6 the S186/EJ view-header pins in parity-session7 at ZERO
+// write units [EJ4 the Tasks 2-kid stacking restructure + mb-6, EJ5
+// the Timetable stack + the toolbar's re-measured 12px gap, EJ6 the
+// Files ViewHeader stack, EJ7 the Dashboard + md:justify-between, EJ8
+// the Exams stack, EJ9 the Calculator ROW family — items-center, the
+// wrap retired] + chunk 5 +3 the S186/EJ auth pins in auth.spec.ts at
+// ZERO write units [EJ1 the Sign in solid slate-900 family — the
+// reference's ENTIRE auth button family measured solid rgb(15,23,42) +
+// white + rounded-xl + shadow-sm, NEVER color-measured before (the
+// S15 probe captured only the first six class tokens; the gradient was
+// the app-wide CTA assumption); EJ2 the Create account h-10 sm:h-11
+// pair (40/44 measured at 390/1440); EJ3 the Send reset link family];
+// the hue-tokens dashboard register anchor re-anchored 210 → 212 — the
+// stacking-header comment pair shifted the overdue chip's line).
 // (re-anchored S185/EI — the Timetable week-strip rows port: the unit
 // census UNCHANGED at 1795 [55 files — a view-layer port, no new seam];
 // the e2e census moves 697 → 705: +8 the S185/EI week-strip pins in

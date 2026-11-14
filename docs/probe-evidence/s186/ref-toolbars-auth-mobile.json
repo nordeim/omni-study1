@@ -1,0 +1,266 @@
+{
+  "mobileSignin": [
+    {
+      "text": "Continue with Google",
+      "bg": "rgb(255, 255, 255)",
+      "h": 54,
+      "radius": "12px",
+      "fs": "16px"
+    },
+    {
+      "text": "Sign in",
+      "bg": "rgb(15, 23, 42)",
+      "h": 44,
+      "radius": "12px",
+      "fs": "14px"
+    },
+    {
+      "text": "Forgot password?",
+      "bg": "rgba(0, 0, 0, 0)",
+      "h": 20,
+      "radius": "0px",
+      "fs": "14px"
+    },
+    {
+      "text": "Need an account? Sign up",
+      "bg": "rgba(0, 0, 0, 0)",
+      "h": 20,
+      "radius": "0px",
+      "fs": "14px"
+    }
+  ],
+  "mobileSignup": [
+    {
+      "text": "Back to sign in",
+      "bg": "rgba(0, 0, 0, 0)",
+      "h": 20,
+      "radius": "0px",
+      "fs": "14px"
+    },
+    {
+      "text": "Create account",
+      "bg": "rgb(15, 23, 42)",
+      "h": 40,
+      "radius": "12px",
+      "fs": "14px"
+    }
+  ],
+  "mobileForgot": [
+    {
+      "text": "Back to sign in",
+      "bg": "rgba(0, 0, 0, 0)",
+      "h": 20,
+      "radius": "0px",
+      "fs": "14px"
+    },
+    {
+      "text": "Send reset link",
+      "bg": "rgb(15, 23, 42)",
+      "h": 40,
+      "radius": "12px",
+      "fs": "14px"
+    }
+  ],
+  "tools": {
+    "desktop": {
+      "Tasks": {
+        "toolbarCls": "flex items-center gap-3",
+        "display": "flex",
+        "wrap": "nowrap",
+        "gap": "12px",
+        "w": 507,
+        "items": [
+          {
+            "tag": "DIV",
+            "cls": "relative flex-1 md:w-64",
+            "w": 256,
+            "text": ""
+          },
+          {
+            "tag": "BUTTON",
+            "cls": "inline-flex items-center justify-center whit",
+            "w": 101,
+            "text": "Active"
+          },
+          {
+            "tag": "BUTTON",
+            "cls": "inline-flex items-center justify-center gap-",
+            "w": 126,
+            "text": "Add Task"
+          }
+        ]
+      },
+      "Timetable": {
+        "toolbarCls": "flex items-center gap-3",
+        "display": "flex",
+        "wrap": "nowrap",
+        "gap": "12px",
+        "w": 430,
+        "items": [
+          {
+            "tag": "BUTTON",
+            "cls": "flex h-9 items-center justify-between whites",
+            "w": 160,
+            "text": "All Weeks"
+          },
+          {
+            "tag": "DIV",
+            "cls": "flex gap-2",
+            "w": 258,
+            "text": "Grid Builder Add C"
+          }
+        ]
+      },
+      "Files": {
+        "toolbarCls": "flex gap-3",
+        "display": "flex",
+        "wrap": "nowrap",
+        "gap": "12px",
+        "w": 269,
+        "items": [
+          {
+            "tag": "BUTTON",
+            "cls": "inline-flex items-center justify-center gap-",
+            "w": 144,
+            "text": "New Folder"
+          },
+          {
+            "tag": "LABEL",
+            "cls": "",
+            "w": 113,
+            "text": "Upload"
+          }
+        ]
+      },
+      "Exams": {
+        "err": "no-toolbar",
+        "rowCls": "flex flex-col md:flex-row md:items-center justify-between gap-4"
+      },
+      "Calendar": {
+        "toolbarCls": "flex items-center gap-2 bg-white rounded-lg border border-slate-200 p-1",
+        "display": "flex",
+        "wrap": "nowrap",
+        "gap": "8px",
+        "w": 235,
+        "items": [
+          {
+            "tag": "BUTTON",
+            "cls": "inline-flex items-center justify-center gap-",
+            "w": 110,
+            "text": "Calendar"
+          },
+          {
+            "tag": "BUTTON",
+            "cls": "inline-flex items-center justify-center gap-",
+            "w": 107,
+            "text": "Timeline"
+          }
+        ]
+      },
+      "Assignments": {
+        "err": "no-toolbar",
+        "rowCls": "flex flex-col md:flex-row md:items-center justify-between gap-4"
+      }
+    },
+    "mobile": {
+      "Tasks": {
+        "toolbarCls": "flex items-center gap-3",
+        "display": "flex",
+        "wrap": "nowrap",
+        "gap": "12px",
+        "w": 358,
+        "items": [
+          {
+            "tag": "DIV",
+            "cls": "relative flex-1 md:w-64",
+            "w": 107,
+            "text": ""
+          },
+          {
+            "tag": "BUTTON",
+            "cls": "inline-flex items-center justify-center whit",
+            "w": 101,
+            "text": "Active"
+          },
+          {
+            "tag": "BUTTON",
+            "cls": "inline-flex items-center justify-center gap-",
+            "w": 126,
+            "text": "Add Task"
+          }
+        ]
+      },
+      "Timetable": {
+        "toolbarCls": "flex items-center gap-3",
+        "display": "flex",
+        "wrap": "nowrap",
+        "gap": "12px",
+        "w": 358,
+        "items": [
+          {
+            "tag": "BUTTON",
+            "cls": "flex h-9 items-center justify-between whites",
+            "w": 109,
+            "text": "All Weeks"
+          },
+          {
+            "tag": "DIV",
+            "cls": "flex gap-2",
+            "w": 258,
+            "text": "Grid Builder Add C"
+          }
+        ]
+      },
+      "Files": {
+        "toolbarCls": "flex gap-3",
+        "display": "flex",
+        "wrap": "nowrap",
+        "gap": "12px",
+        "w": 358,
+        "items": [
+          {
+            "tag": "BUTTON",
+            "cls": "inline-flex items-center justify-center gap-",
+            "w": 144,
+            "text": "New Folder"
+          },
+          {
+            "tag": "LABEL",
+            "cls": "",
+            "w": 113,
+            "text": "Upload"
+          }
+        ]
+      },
+      "Exams": {
+        "err": "no-toolbar",
+        "rowCls": "flex flex-col md:flex-row md:items-center justify-between gap-4"
+      },
+      "Calendar": {
+        "toolbarCls": "flex items-center gap-2 bg-white rounded-lg border border-slate-200 p-1",
+        "display": "flex",
+        "wrap": "nowrap",
+        "gap": "8px",
+        "w": 358,
+        "items": [
+          {
+            "tag": "BUTTON",
+            "cls": "inline-flex items-center justify-center gap-",
+            "w": 110,
+            "text": "Calendar"
+          },
+          {
+            "tag": "BUTTON",
+            "cls": "inline-flex items-center justify-center gap-",
+            "w": 107,
+            "text": "Timeline"
+          }
+        ]
+      },
+      "Assignments": {
+        "err": "no-toolbar",
+        "rowCls": "flex flex-col md:flex-row md:items-center justify-between gap-4"
+      }
+    }
+  }
+}

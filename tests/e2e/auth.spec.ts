@@ -152,3 +152,62 @@ test.describe("S136/CK3: the session cookie's SET-path attributes", () => {
     expect(session?.expires, "a persistent cookie (the 7-day TTL maxAge)").toBeGreaterThan(Date.now() / 1000);
   });
 });
+
+// ---------------------------------------------------------------------------
+// S186/EJ — the auth primary-CTA family (Batch EJ, the S186 cycle). The
+// reference's ENTIRE auth button family measured solid slate-900 —
+// rgb(15,23,42) bg + white text + rounded-xl (12px) + font-medium +
+// shadow-sm + hover:bg-slate-800 — NEVER color-measured before this cycle
+// (the S15 probe captured only the first six class tokens; the clone's
+// gradient was the app-wide CTA assumption). Heights: Sign in h-11
+// sm:h-12 (44/48); the sub-screen CTAs h-10 sm:h-11 (40/44 — measured at
+// 390 and 1440 on the live reference, 2026-11-15). Evidence:
+// docs/probe-evidence/s186/ref-auth-buttons.json + ref-toolbars-auth-mobile.json.
+// ---------------------------------------------------------------------------
+test.describe("S186/EJ · the auth primary-CTA family (solid slate-900)", () => {
+  test("EJ1: the Sign in button renders the solid slate-900 family (RED pre-fix: the gradient)", async ({ page }) => {
+    await page.goto("/login");
+    const signIn = page.getByRole("button", { name: "Sign in", exact: true });
+    await expect(signIn).toBeVisible();
+    const cs = await signIn.evaluate((el) => {
+      const s = getComputedStyle(el);
+      return { bg: s.backgroundColor, color: s.color, bi: s.backgroundImage, radius: s.borderRadius };
+    });
+    expect(cs.bg).toBe("rgb(15, 23, 42)"); // slate-900 — measured on the reference
+    expect(cs.color).toBe("rgb(255, 255, 255)"); // white text
+    expect(cs.bi).toBe("none"); // SOLID — the gradient retired
+    expect(cs.radius).toBe("12px"); // rounded-xl
+  });
+
+  test("EJ2: the Create account button renders the family at h-10 sm:h-11 (RED pre-fix: gradient + 36px)", async ({ page }) => {
+    await page.goto("/login");
+    await page.getByRole("button", { name: /sign up/i }).click();
+    const create = page.getByRole("button", { name: /create account/i });
+    await expect(create).toBeVisible();
+    const cs = await create.evaluate((el) => {
+      const s = getComputedStyle(el);
+      const r = el.getBoundingClientRect();
+      return { bg: s.backgroundColor, color: s.color, bi: s.backgroundImage, h: Math.round(r.height), radius: s.borderRadius };
+    });
+    expect(cs.bg).toBe("rgb(15, 23, 42)");
+    expect(cs.color).toBe("rgb(255, 255, 255)");
+    expect(cs.bi).toBe("none");
+    expect(cs.h).toBe(44); // sm:h-11 at the desktop viewport (40 at 390)
+    expect(cs.radius).toBe("12px");
+  });
+
+  test("EJ3: the Send reset link button renders the family (RED pre-fix: the gradient)", async ({ page }) => {
+    await page.goto("/login");
+    await page.getByText("Forgot password?").click();
+    const send = page.getByRole("button", { name: /send reset link/i });
+    await expect(send).toBeVisible();
+    const cs = await send.evaluate((el) => {
+      const s = getComputedStyle(el);
+      return { bg: s.backgroundColor, color: s.color, bi: s.backgroundImage, h: Math.round(el.getBoundingClientRect().height) };
+    });
+    expect(cs.bg).toBe("rgb(15, 23, 42)");
+    expect(cs.color).toBe("rgb(255, 255, 255)");
+    expect(cs.bi).toBe("none");
+    expect(cs.h).toBe(44); // sm:h-11 desktop
+  });
+});

@@ -1,0 +1,69 @@
+{
+  "dump": [
+    {
+      "tag": "BUTTON",
+      "text": "Light",
+      "cls": "flex-1 flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all border-slat",
+      "bg": "rgba(0, 0, 0, 0)",
+      "w": 274,
+      "h": 88,
+      "ariaPressed": null,
+      "dataState": null
+    },
+    {
+      "tag": "SPAN",
+      "text": "Light",
+      "cls": "text-sm font-medium",
+      "bg": "rgba(0, 0, 0, 0)",
+      "w": 35,
+      "h": 20,
+      "ariaPressed": null,
+      "dataState": null
+    },
+    {
+      "tag": "BUTTON",
+      "text": "Dark",
+      "cls": "flex-1 flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all border-viol",
+      "bg": "rgb(245, 243, 255)",
+      "w": 274,
+      "h": 88,
+      "ariaPressed": null,
+      "dataState": null
+    },
+    {
+      "tag": "SPAN",
+      "text": "Dark",
+      "cls": "text-sm font-medium",
+      "bg": "rgba(0, 0, 0, 0)",
+      "w": 33,
+      "h": 20,
+      "ariaPressed": null,
+      "dataState": null
+    },
+    {
+      "tag": "BUTTON",
+      "text": "System",
+      "cls": "flex-1 flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all border-slat",
+      "bg": "rgba(0, 0, 0, 0)",
+      "w": 274,
+      "h": 88,
+      "ariaPressed": null,
+      "dataState": null
+    },
+    {
+      "tag": "SPAN",
+      "text": "System",
+      "cls": "text-sm font-medium",
+      "bg": "rgba(0, 0, 0, 0)",
+      "w": 52,
+      "h": 20,
+      "ariaPressed": null,
+      "dataState": null
+    }
+  ],
+  "clicked": "clicked:BUTTON.flex-1 flex flex-col items-center gap-2 p-4 rounded-xl borde",
+  "classAfterClick": "dark",
+  "axis": null,
+  "restore": "clicked",
+  "finalClass": "dark"
+}

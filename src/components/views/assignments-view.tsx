@@ -246,8 +246,9 @@ export function AssignmentsView() {
 
   return (
     <div className="flex flex-col gap-6">
-      {/* Row 1 (measured Batch U): title + subtitle | Add Assignment. */}
-      <div className="flex flex-wrap items-center justify-between gap-4">
+      {/* Row 1 (measured Batch U): title + subtitle | Add Assignment.
+          S186/EJ-C: the measured stacking family (probed 2026-11-15). */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-slate-800 dark:text-slate-100">
             Assignments

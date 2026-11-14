@@ -1,0 +1,146 @@
+{
+  "signin": [
+    {
+      "text": "Continue with Google",
+      "type": "submit",
+      "bg": "rgb(255, 255, 255)",
+      "color": "rgb(15, 14, 14)",
+      "bi": "none",
+      "h": 54,
+      "radius": "12px",
+      "shadow": "none",
+      "fw": "500",
+      "fullCls": "w-full flex items-center justify-center gap-3 bg-[var(--sem-surface-interactive-white-default)] text-[color:var(--sem-text-icon-primary)] px-5 py-3.5 rounded-xl border border-[var(--sem-border-light-default)] hover:bg-[var(--sem-surface-interactive-white-hover)] hover:border-[var(--sem-border-default-default)] hover:shadow-sm transition-all duration-200 font-medium text-[16px] group"
+    },
+    {
+      "text": "Sign in",
+      "type": "submit",
+      "bg": "rgb(15, 23, 42)",
+      "color": "rgb(255, 255, 255)",
+      "bi": "none",
+      "h": 48,
+      "radius": "12px",
+      "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0",
+      "fw": "500",
+      "fullCls": "inline-flex items-center justify-center gap-1 whitespace-nowrap text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 px-3 py-2 w-full h-11 sm:h-12 bg-slate-900 hover:bg-slate-800 text-white font-medium shadow-sm rounded-xl transition-all duration-200"
+    },
+    {
+      "text": "Forgot password?",
+      "type": "button",
+      "bg": "rgba(0, 0, 0, 0)",
+      "color": "rgb(100, 116, 139)",
+      "bi": "none",
+      "h": 20,
+      "radius": "0px",
+      "shadow": "none",
+      "fw": "500",
+      "fullCls": "text-sm text-slate-500 hover:text-slate-700 font-medium transition-colors"
+    },
+    {
+      "text": "Need an account? Sign up",
+      "type": "button",
+      "bg": "rgba(0, 0, 0, 0)",
+      "color": "rgb(100, 116, 139)",
+      "bi": "none",
+      "h": 20,
+      "radius": "0px",
+      "shadow": "none",
+      "fw": "400",
+      "fullCls": "text-sm text-slate-500 hover:text-slate-700 transition-colors"
+    }
+  ],
+  "signup": [
+    {
+      "text": "Back to sign in",
+      "type": "button",
+      "bg": "rgba(0, 0, 0, 0)",
+      "color": "rgb(100, 116, 139)",
+      "bi": "none",
+      "h": 20,
+      "radius": "0px",
+      "shadow": "none",
+      "fw": "500",
+      "fullCls": "flex items-center gap-2 text-sm text-slate-500 hover:text-slate-700 font-medium transition-colors -mb-2"
+    },
+    {
+      "text": "Create account",
+      "type": "submit",
+      "bg": "rgb(15, 23, 42)",
+      "color": "rgb(255, 255, 255)",
+      "bi": "none",
+      "h": 44,
+      "radius": "12px",
+      "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0",
+      "fw": "500",
+      "fullCls": "inline-flex items-center justify-center gap-1 whitespace-nowrap text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 px-3 py-2 w-full h-10 sm:h-11 bg-slate-900 hover:bg-slate-800 text-white font-medium shadow-sm rounded-xl transition-all duration-200"
+    }
+  ],
+  "signupHeadings": [
+    "Create your account"
+  ],
+  "verify": [
+    {
+      "text": "Back to sign in",
+      "type": "button",
+      "bg": "rgba(0, 0, 0, 0)",
+      "color": "rgb(100, 116, 139)",
+      "bi": "none",
+      "h": 20,
+      "radius": "0px",
+      "shadow": "none",
+      "fw": "500",
+      "fullCls": "flex items-center gap-2 text-sm text-slate-500 hover:text-slate-700 font-medium transition-colors -mb-2"
+    },
+    {
+      "text": "Verify email",
+      "type": "submit",
+      "bg": "rgb(15, 23, 42)",
+      "color": "rgb(255, 255, 255)",
+      "bi": "none",
+      "h": 44,
+      "radius": "12px",
+      "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0",
+      "fw": "500",
+      "fullCls": "inline-flex items-center justify-center gap-1 whitespace-nowrap text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 px-3 py-2 w-full h-10 sm:h-11 bg-slate-900 hover:bg-slate-800 text-white font-medium shadow-sm rounded-xl transition-all duration-200"
+    },
+    {
+      "text": "Resend",
+      "type": "button",
+      "bg": "rgba(0, 0, 0, 0)",
+      "color": "rgb(51, 65, 85)",
+      "bi": "none",
+      "h": 20,
+      "radius": "0px",
+      "shadow": "none",
+      "fw": "500",
+      "fullCls": "font-medium text-slate-700 hover:text-slate-900 disabled:opacity-50 transition-colors"
+    }
+  ],
+  "verifyText": "Back to sign inVerify your emailWe've sent a 6-digit code tos186probe1794682483141@outlook.comEnter the verification code sent to your emailVerify emailDidn't receive the code? Resend",
+  "forgot": [
+    {
+      "text": "Back to sign in",
+      "type": "button",
+      "bg": "rgba(0, 0, 0, 0)",
+      "color": "rgb(100, 116, 139)",
+      "bi": "none",
+      "h": 20,
+      "radius": "0px",
+      "shadow": "none",
+      "fw": "500",
+      "fullCls": "flex items-center gap-2 text-sm text-slate-500 hover:text-slate-700 font-medium transition-colors -mb-2"
+    },
+    {
+      "text": "Send reset link",
+      "type": "submit",
+      "bg": "rgb(15, 23, 42)",
+      "color": "rgb(255, 255, 255)",
+      "bi": "none",
+      "h": 44,
+      "radius": "12px",
+      "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0",
+      "fw": "500",
+      "fullCls": "inline-flex items-center justify-center gap-1 whitespace-nowrap text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 px-3 py-2 w-full h-10 sm:h-11 bg-slate-900 hover:bg-slate-800 text-white font-medium shadow-sm rounded-xl transition-all duration-200"
+    }
+  ]
+}

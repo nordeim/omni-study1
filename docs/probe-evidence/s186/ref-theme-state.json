@@ -1,0 +1,144 @@
+{
+  "Dashboard": {
+    "htmlClass": "dark",
+    "htmlBg": "rgba(0, 0, 0, 0)",
+    "bodyBg": "rgb(10, 10, 10)",
+    "bodyColor": "rgb(250, 250, 250)",
+    "mainBg": "rgba(0, 0, 0, 0)",
+    "card": {
+      "bg": "rgb(255, 255, 255)",
+      "color": "rgb(250, 250, 250)",
+      "cls": "relative overflow-hidden bg-white rounded-2xl p-6 shadow-sm border border-slate-"
+    },
+    "localStorage": [
+      "i18nextLng=en-US",
+      "token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhcHBfc2lkIjoiVjZBU0Q",
+      "sidebarOpen=true",
+      "base44_analytics_session_id=c6c8anusmjwsvwnskgsxes",
+      "base44_from_url=https://omni-study1.base44.app/Dashboard",
+      "base44_functions_version=prod",
+      "base44_app_id=6969efea366cba53524cde3f",
+      "base44_access_token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhcHBfc2lkIjoiVjZBU0Q"
+    ],
+    "addBtn": null,
+    "cssVars": {
+      "--background": "0 0% 3.9%",
+      "--foreground": "0 0% 98%",
+      "--primary": "139 92 246",
+      "--primary-foreground": "255 255 255",
+      "--card": "0 0% 3.9%",
+      "--card-foreground": "0 0% 98%",
+      "--secondary": "0 0% 14.9%"
+    }
+  },
+  "Tasks": {
+    "htmlClass": "dark",
+    "htmlBg": "rgba(0, 0, 0, 0)",
+    "bodyBg": "rgb(10, 10, 10)",
+    "bodyColor": "rgb(250, 250, 250)",
+    "mainBg": "rgba(0, 0, 0, 0)",
+    "card": {
+      "bg": "rgba(0, 0, 0, 0)",
+      "color": "rgb(250, 250, 250)",
+      "cls": "w-20 h-20 rounded-2xl bg-gradient-to-br from-violet-100 to-indigo-100 flex items"
+    },
+    "localStorage": [
+      "i18nextLng=en-US",
+      "token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhcHBfc2lkIjoiVjZBU0Q",
+      "sidebarOpen=true",
+      "base44_analytics_session_id=c6c8anusmjwsvwnskgsxes",
+      "base44_from_url=https://omni-study1.base44.app/Tasks",
+      "base44_functions_version=prod",
+      "base44_app_id=6969efea366cba53524cde3f",
+      "base44_access_token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhcHBfc2lkIjoiVjZBU0Q"
+    ],
+    "addBtn": {
+      "bg": "rgba(0, 0, 0, 0)",
+      "color": "rgb(255, 255, 0)",
+      "cls": "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-"
+    },
+    "cssVars": {
+      "--background": "0 0% 3.9%",
+      "--foreground": "0 0% 98%",
+      "--primary": "139 92 246",
+      "--primary-foreground": "255 255 255",
+      "--card": "0 0% 3.9%",
+      "--card-foreground": "0 0% 98%",
+      "--secondary": "0 0% 14.9%"
+    }
+  },
+  "Settings": {
+    "htmlClass": "dark",
+    "htmlBg": "rgba(0, 0, 0, 0)",
+    "bodyBg": "rgb(10, 10, 10)",
+    "bodyColor": "rgb(250, 250, 250)",
+    "mainBg": "rgba(0, 0, 0, 0)",
+    "card": null,
+    "localStorage": [
+      "i18nextLng=en-US",
+      "token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhcHBfc2lkIjoiVjZBU0Q",
+      "sidebarOpen=true",
+      "base44_analytics_session_id=c6c8anusmjwsvwnskgsxes",
+      "base44_from_url=https://omni-study1.base44.app/Settings",
+      "base44_functions_version=prod",
+      "base44_app_id=6969efea366cba53524cde3f",
+      "base44_access_token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhcHBfc2lkIjoiVjZBU0Q"
+    ],
+    "addBtn": null,
+    "cssVars": {
+      "--background": "0 0% 3.9%",
+      "--foreground": "0 0% 98%",
+      "--primary": "139 92 246",
+      "--primary-foreground": "255 255 255",
+      "--card": "0 0% 3.9%",
+      "--card-foreground": "0 0% 98%",
+      "--secondary": "0 0% 14.9%"
+    }
+  },
+  "Timetable": {
+    "htmlClass": "dark",
+    "htmlBg": "rgba(0, 0, 0, 0)",
+    "bodyBg": "rgb(10, 10, 10)",
+    "bodyColor": "rgb(250, 250, 250)",
+    "mainBg": "rgba(0, 0, 0, 0)",
+    "card": {
+      "bg": "rgb(255, 255, 255)",
+      "color": "rgb(250, 250, 250)",
+      "cls": "bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden"
+    },
+    "localStorage": [
+      "i18nextLng=en-US",
+      "token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhcHBfc2lkIjoiVjZBU0Q",
+      "sidebarOpen=true",
+      "base44_analytics_session_id=c6c8anusmjwsvwnskgsxes",
+      "base44_from_url=https://omni-study1.base44.app/Timetable",
+      "base44_functions_version=prod",
+      "base44_app_id=6969efea366cba53524cde3f",
+      "base44_access_token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhcHBfc2lkIjoiVjZBU0Q"
+    ],
+    "addBtn": {
+      "bg": "rgba(0, 0, 0, 0)",
+      "color": "rgb(255, 255, 0)",
+      "cls": "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-"
+    },
+    "cssVars": {
+      "--background": "0 0% 3.9%",
+      "--foreground": "0 0% 98%",
+      "--primary": "139 92 246",
+      "--primary-foreground": "255 255 255",
+      "--card": "0 0% 3.9%",
+      "--card-foreground": "0 0% 98%",
+      "--secondary": "0 0% 14.9%"
+    }
+  },
+  "addTaskRect": {
+    "rect": {
+      "x": 1282,
+      "y": 42,
+      "w": 126,
+      "h": 36
+    },
+    "bg": "rgba(0, 0, 0, 0)",
+    "color": "rgb(255, 255, 0)"
+  }
+}

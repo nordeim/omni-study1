@@ -33,6 +33,17 @@ const buttonVariants = cva(
         // inverts the ramp" (dark:#f5f5f5) was drift and a standing
         // dark-sweep flashbulb; dropped.
         neutral: "bg-[#0a0a0a] text-[#fafafa] shadow-sm hover:bg-[#262626] sf-print-exact",
+        // S186/EJ-A (measured 2026-11-15): the reference's ENTIRE auth
+        // primary-CTA family renders solid slate-900 — rgb(15,23,42) bg +
+        // white text + rounded-xl + font-medium + shadow-sm +
+        // hover:bg-slate-800 (Sign in / Create account / Verify email /
+        // Send reset link — the full class list at
+        // docs/probe-evidence/s186/ref-auth-buttons.json). NOT the
+        // violet→indigo gradient: the S15-era gradient was the app-wide
+        // CTA assumption — the family had never been color-measured. The
+        // dark lift (800/700) is the clone's dark-login coherence (the
+        // reference never renders a dark login — no ground truth).
+        solid: "bg-slate-900 text-white shadow-sm hover:bg-slate-800 dark:bg-slate-800 dark:hover:bg-slate-700 sf-print-exact",
       },
       size: {
         default: "h-9 px-4 py-2",

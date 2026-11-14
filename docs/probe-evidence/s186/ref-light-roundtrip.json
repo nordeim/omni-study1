@@ -1,0 +1,268 @@
+{
+  "before": "dark",
+  "afterLight": "dark",
+  "light": {
+    "Tasks": {
+      "addTask": {
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(255, 255, 0)",
+        "bi": "linear-gradient(to right, rgb(139, 92, 246), rgb(79, 70, 229))",
+        "border": "0px rgb(38, 38, 38)",
+        "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0)",
+        "h": 36,
+        "radius": "6px"
+      },
+      "active": {
+        "bg": "rgb(10, 10, 10)",
+        "color": "rgb(250, 250, 250)",
+        "bi": "none",
+        "border": "1px rgb(38, 38, 38)",
+        "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0)",
+        "h": 36,
+        "radius": "6px"
+      },
+      "gridBuilder": null,
+      "newFolder": null,
+      "newNote": null,
+      "createTask": {
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(255, 255, 255)",
+        "bi": "linear-gradient(to right, rgb(139, 92, 246), rgb(79, 70, 229))",
+        "border": "0px rgb(38, 38, 38)",
+        "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0)",
+        "h": 36,
+        "radius": "6px"
+      },
+      "headerRow": {
+        "display": "flex",
+        "direction": "row",
+        "wrap": "nowrap",
+        "gap": "16px",
+        "cls": "flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6"
+      },
+      "card": null,
+      "bodyBg": "rgb(10, 10, 10)",
+      "baseText": "rgb(250, 250, 250)"
+    },
+    "Timetable": {
+      "addTask": null,
+      "active": null,
+      "gridBuilder": {
+        "bg": "rgb(10, 10, 10)",
+        "color": "rgb(250, 250, 250)",
+        "bi": "none",
+        "border": "1px rgb(38, 38, 38)",
+        "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0)",
+        "h": 36,
+        "radius": "6px"
+      },
+      "newFolder": null,
+      "newNote": null,
+      "createTask": null,
+      "headerRow": {
+        "display": "flex",
+        "direction": "row",
+        "wrap": "nowrap",
+        "gap": "16px",
+        "cls": "flex flex-col md:flex-row md:items-center justify-between gap-4"
+      },
+      "card": {
+        "bg": "rgb(255, 255, 255)",
+        "border": "1px rgb(241, 245, 249)",
+        "radius": "16px",
+        "cls": "bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden"
+      },
+      "bodyBg": "rgb(10, 10, 10)",
+      "baseText": "rgb(250, 250, 250)"
+    },
+    "Files": {
+      "addTask": null,
+      "active": null,
+      "gridBuilder": null,
+      "newFolder": {
+        "bg": "rgb(10, 10, 10)",
+        "color": "rgb(250, 250, 250)",
+        "bi": "none",
+        "border": "1px rgb(38, 38, 38)",
+        "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0)",
+        "h": 36,
+        "radius": "6px"
+      },
+      "newNote": null,
+      "createTask": null,
+      "headerRow": {
+        "display": "flex",
+        "direction": "row",
+        "wrap": "nowrap",
+        "gap": "16px",
+        "cls": "flex flex-col md:flex-row md:items-center justify-between gap-4"
+      },
+      "card": null,
+      "bodyBg": "rgb(10, 10, 10)",
+      "baseText": "rgb(250, 250, 250)"
+    },
+    "Notes": {
+      "addTask": null,
+      "active": null,
+      "gridBuilder": null,
+      "newFolder": null,
+      "newNote": {
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(255, 255, 255)",
+        "bi": "linear-gradient(to right, rgb(139, 92, 246), rgb(79, 70, 229))",
+        "border": "0px rgb(38, 38, 38)",
+        "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0)",
+        "h": 36,
+        "radius": "6px"
+      },
+      "createTask": null,
+      "headerRow": {
+        "display": "flex",
+        "direction": "row",
+        "wrap": "nowrap",
+        "gap": "normal",
+        "cls": "flex items-center justify-between mb-4"
+      },
+      "card": null,
+      "bodyBg": "rgb(10, 10, 10)",
+      "baseText": "rgb(250, 250, 250)"
+    },
+    "Settings": {
+      "addTask": null,
+      "active": null,
+      "gridBuilder": null,
+      "newFolder": null,
+      "newNote": null,
+      "createTask": null,
+      "headerRow": null,
+      "card": null,
+      "bodyBg": "rgb(10, 10, 10)",
+      "baseText": "rgb(250, 250, 250)"
+    },
+    "Dashboard": {
+      "addTask": null,
+      "active": null,
+      "gridBuilder": null,
+      "newFolder": null,
+      "newNote": null,
+      "createTask": null,
+      "headerRow": {
+        "display": "flex",
+        "direction": "row",
+        "wrap": "nowrap",
+        "gap": "16px",
+        "cls": "flex flex-col md:flex-row md:items-center md:justify-between gap-4"
+      },
+      "card": {
+        "bg": "rgb(255, 255, 255)",
+        "border": "1px rgb(241, 245, 249)",
+        "radius": "16px",
+        "cls": "lg:col-span-2 bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden"
+      },
+      "bodyBg": "rgb(10, 10, 10)",
+      "baseText": "rgb(250, 250, 250)"
+    }
+  },
+  "mobile": {
+    "Tasks": {
+      "addTask": {
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(255, 255, 0)",
+        "bi": "linear-gradient(to right, rgb(139, 92, 246), rgb(79, 70, 229))",
+        "border": "0px rgb(38, 38, 38)",
+        "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0)",
+        "h": 36,
+        "radius": "6px"
+      },
+      "active": {
+        "bg": "rgb(10, 10, 10)",
+        "color": "rgb(250, 250, 250)",
+        "bi": "none",
+        "border": "1px rgb(38, 38, 38)",
+        "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0)",
+        "h": 36,
+        "radius": "6px"
+      },
+      "gridBuilder": null,
+      "newFolder": null,
+      "newNote": null,
+      "createTask": {
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(255, 255, 255)",
+        "bi": "linear-gradient(to right, rgb(139, 92, 246), rgb(79, 70, 229))",
+        "border": "0px rgb(38, 38, 38)",
+        "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0)",
+        "h": 36,
+        "radius": "6px"
+      },
+      "headerRow": {
+        "display": "flex",
+        "direction": "column",
+        "wrap": "nowrap",
+        "gap": "16px",
+        "cls": "flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6"
+      },
+      "card": null,
+      "bodyBg": "rgb(10, 10, 10)",
+      "baseText": "rgb(250, 250, 250)"
+    },
+    "Timetable": {
+      "addTask": null,
+      "active": null,
+      "gridBuilder": {
+        "bg": "rgb(10, 10, 10)",
+        "color": "rgb(250, 250, 250)",
+        "bi": "none",
+        "border": "1px rgb(38, 38, 38)",
+        "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0)",
+        "h": 36,
+        "radius": "6px"
+      },
+      "newFolder": null,
+      "newNote": null,
+      "createTask": null,
+      "headerRow": {
+        "display": "flex",
+        "direction": "column",
+        "wrap": "nowrap",
+        "gap": "16px",
+        "cls": "flex flex-col md:flex-row md:items-center justify-between gap-4"
+      },
+      "card": {
+        "bg": "rgb(255, 255, 255)",
+        "border": "1px rgb(241, 245, 249)",
+        "radius": "16px",
+        "cls": "bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden"
+      },
+      "bodyBg": "rgb(10, 10, 10)",
+      "baseText": "rgb(250, 250, 250)"
+    },
+    "Files": {
+      "addTask": null,
+      "active": null,
+      "gridBuilder": null,
+      "newFolder": {
+        "bg": "rgb(10, 10, 10)",
+        "color": "rgb(250, 250, 250)",
+        "bi": "none",
+        "border": "1px rgb(38, 38, 38)",
+        "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0)",
+        "h": 36,
+        "radius": "6px"
+      },
+      "newNote": null,
+      "createTask": null,
+      "headerRow": {
+        "display": "flex",
+        "direction": "column",
+        "wrap": "nowrap",
+        "gap": "16px",
+        "cls": "flex flex-col md:flex-row md:items-center justify-between gap-4"
+      },
+      "card": null,
+      "bodyBg": "rgb(10, 10, 10)",
+      "baseText": "rgb(250, 250, 250)"
+    }
+  },
+  "restored": "dark"
+}
