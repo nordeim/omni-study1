@@ -1,0 +1,424 @@
+{
+  "Dashboard": {
+    "present": true,
+    "wrapperClass": "w-12 h-12 rounded-xl bg-gradient-to-br flex items-center justify-center shadow-lg from-violet-500 to-indigo-600 shadow-violet-500/25",
+    "wrapperW": 48,
+    "wrapperH": 48,
+    "wrapperRadius": "12px",
+    "wrapperBg": "linear-gradient(to right bottom, rgb(139, 92, 246), rgb(79, 70, 229))",
+    "wrapperMb": "0px",
+    "iconSize": {
+      "w": "24px",
+      "color": "rgb(255, 255, 255)"
+    },
+    "iconClass": "lucide lucide-target w-6 h-6 text-white",
+    "containerTag": "DIV",
+    "containerClass": "space-y-8",
+    "containerPad": {
+      "x": "0px",
+      "y": "0px"
+    },
+    "titleTag": null,
+    "titleClass": null,
+    "titleText": null,
+    "titleSize": null,
+    "hintTag": null,
+    "hintClass": null,
+    "hintText": null,
+    "hintSize": null,
+    "ctaCount": 8,
+    "ctaFirst": {
+      "tag": "A",
+      "text": "Start My Day",
+      "class": ""
+    }
+  },
+  "My Day": {
+    "present": true,
+    "wrapperClass": "w-14 h-14 rounded-2xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center shadow-lg shadow-amber-500/30",
+    "wrapperW": 56,
+    "wrapperH": 56,
+    "wrapperRadius": "16px",
+    "wrapperBg": "linear-gradient(to right bottom, rgb(251, 191, 36), rgb(249, 115, 22))",
+    "wrapperMb": "0px",
+    "iconSize": {
+      "w": "28px",
+      "color": "rgb(255, 255, 255)"
+    },
+    "iconClass": "lucide lucide-sun w-7 h-7 text-white",
+    "containerTag": "DIV",
+    "containerClass": "p-4 lg:p-8",
+    "containerPad": {
+      "x": "32px",
+      "y": "32px"
+    },
+    "titleTag": null,
+    "titleClass": null,
+    "titleText": null,
+    "titleSize": null,
+    "hintTag": null,
+    "hintClass": null,
+    "hintText": null,
+    "hintSize": null,
+    "ctaCount": 2,
+    "ctaFirst": {
+      "tag": "BUTTON",
+      "text": "More Options",
+      "class": "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium trans"
+    }
+  },
+  "Tasks": {
+    "present": false
+  },
+  "Calendar": {
+    "present": false
+  },
+  "Events": {
+    "present": false
+  },
+  "Timetable": {
+    "present": false
+  },
+  "Assignments": {
+    "present": true,
+    "wrapperClass": "w-20 h-20 rounded-2xl bg-gradient-to-br from-violet-100 to-indigo-100 flex items-center justify-center mb-6",
+    "wrapperW": 80,
+    "wrapperH": 80,
+    "wrapperRadius": "16px",
+    "wrapperBg": "linear-gradient(to right bottom, rgb(237, 233, 254), rgb(224, 231, 255))",
+    "wrapperMb": "24px",
+    "iconSize": {
+      "w": "40px",
+      "color": "rgb(139, 92, 246)"
+    },
+    "iconClass": "lucide lucide-book-open w-10 h-10 text-violet-500",
+    "containerTag": "DIV",
+    "containerClass": "flex flex-col items-center justify-center py-16 px-4 text-center",
+    "containerPad": {
+      "x": "16px",
+      "y": "64px"
+    },
+    "titleTag": "H3",
+    "titleClass": "text-xl font-semibold text-slate-800 mb-2",
+    "titleText": "No assignments yet",
+    "titleSize": {
+      "font": "20px",
+      "weight": "600",
+      "mt": "0px",
+      "mb": "8px",
+      "color": "rgb(30, 41, 59)"
+    },
+    "hintTag": "P",
+    "hintClass": "text-slate-500 max-w-sm mb-6",
+    "hintText": "Add your first assignment to start tracking",
+    "hintSize": {
+      "font": "16px",
+      "mt": "0px",
+      "color": "rgb(100, 116, 139)"
+    },
+    "ctaCount": 1,
+    "ctaFirst": {
+      "tag": "BUTTON",
+      "text": "Add Assignment",
+      "class": "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium trans"
+    }
+  },
+  "Exams": {
+    "present": true,
+    "wrapperClass": "w-20 h-20 rounded-2xl bg-gradient-to-br from-violet-100 to-indigo-100 flex items-center justify-center mb-6",
+    "wrapperW": 80,
+    "wrapperH": 80,
+    "wrapperRadius": "16px",
+    "wrapperBg": "linear-gradient(to right bottom, rgb(237, 233, 254), rgb(224, 231, 255))",
+    "wrapperMb": "24px",
+    "iconSize": {
+      "w": "40px",
+      "color": "rgb(139, 92, 246)"
+    },
+    "iconClass": "lucide lucide-graduation-cap w-10 h-10 text-violet-500",
+    "containerTag": "DIV",
+    "containerClass": "flex flex-col items-center justify-center py-16 px-4 text-center",
+    "containerPad": {
+      "x": "16px",
+      "y": "64px"
+    },
+    "titleTag": "H3",
+    "titleClass": "text-xl font-semibold text-slate-800 mb-2",
+    "titleText": "No exams found",
+    "titleSize": {
+      "font": "20px",
+      "weight": "600",
+      "mt": "0px",
+      "mb": "8px",
+      "color": "rgb(30, 41, 59)"
+    },
+    "hintTag": "P",
+    "hintClass": "text-slate-500 max-w-sm mb-6",
+    "hintText": "Add your exams to start tracking",
+    "hintSize": {
+      "font": "16px",
+      "mt": "0px",
+      "color": "rgb(100, 116, 139)"
+    },
+    "ctaCount": 1,
+    "ctaFirst": {
+      "tag": "BUTTON",
+      "text": "Add Exam",
+      "class": "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium trans"
+    }
+  },
+  "Notes": {
+    "present": true,
+    "wrapperClass": "w-20 h-20 rounded-2xl bg-gradient-to-br from-violet-100 to-indigo-100 flex items-center justify-center mb-6",
+    "wrapperW": 80,
+    "wrapperH": 80,
+    "wrapperRadius": "16px",
+    "wrapperBg": "linear-gradient(to right bottom, rgb(237, 233, 254), rgb(224, 231, 255))",
+    "wrapperMb": "24px",
+    "iconSize": {
+      "w": "40px",
+      "color": "rgb(139, 92, 246)"
+    },
+    "iconClass": "lucide lucide-book-open w-10 h-10 text-violet-500",
+    "containerTag": "DIV",
+    "containerClass": "flex flex-col items-center justify-center py-16 px-4 text-center",
+    "containerPad": {
+      "x": "16px",
+      "y": "64px"
+    },
+    "titleTag": "H3",
+    "titleClass": "text-xl font-semibold text-slate-800 mb-2",
+    "titleText": "No notes yet",
+    "titleSize": {
+      "font": "20px",
+      "weight": "600",
+      "mt": "0px",
+      "mb": "8px",
+      "color": "rgb(30, 41, 59)"
+    },
+    "hintTag": "P",
+    "hintClass": "text-slate-500 max-w-sm mb-6",
+    "hintText": "Create your first note",
+    "hintSize": {
+      "font": "16px",
+      "mt": "0px",
+      "color": "rgb(100, 116, 139)"
+    },
+    "ctaCount": 1,
+    "ctaFirst": {
+      "tag": "BUTTON",
+      "text": "New Note",
+      "class": "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium trans"
+    }
+  },
+  "Flashcards": {
+    "present": true,
+    "wrapperClass": "w-10 h-10 rounded-xl flex items-center justify-center text-white",
+    "wrapperW": 40,
+    "wrapperH": 40,
+    "wrapperRadius": "12px",
+    "wrapperBg": "none",
+    "wrapperMb": "0px",
+    "iconSize": {
+      "w": "20px",
+      "color": "rgb(255, 255, 255)"
+    },
+    "iconClass": "lucide lucide-layers w-5 h-5",
+    "containerTag": "DIV",
+    "containerClass": "w-80 flex flex-col border-r border-slate-100 pr-6",
+    "containerPad": {
+      "x": "0px",
+      "y": "0px"
+    },
+    "titleTag": null,
+    "titleClass": null,
+    "titleText": null,
+    "titleSize": null,
+    "hintTag": null,
+    "hintClass": null,
+    "hintText": null,
+    "hintSize": null,
+    "ctaCount": 1,
+    "ctaFirst": {
+      "tag": "BUTTON",
+      "text": "S79 Probe Deck1 card",
+      "class": "w-full text-left p-4 rounded-xl transition-all group bg-slate-50 hover:bg-slate-100 border-2 border-"
+    }
+  },
+  "Practice Tests": {
+    "present": true,
+    "wrapperClass": "w-20 h-20 rounded-2xl bg-gradient-to-br from-violet-100 to-indigo-100 flex items-center justify-center mb-6",
+    "wrapperW": 80,
+    "wrapperH": 80,
+    "wrapperRadius": "16px",
+    "wrapperBg": "linear-gradient(to right bottom, rgb(237, 233, 254), rgb(224, 231, 255))",
+    "wrapperMb": "24px",
+    "iconSize": {
+      "w": "40px",
+      "color": "rgb(139, 92, 246)"
+    },
+    "iconClass": "lucide lucide-file-question w-10 h-10 text-violet-500",
+    "containerTag": "DIV",
+    "containerClass": "flex flex-col items-center justify-center py-16 px-4 text-center",
+    "containerPad": {
+      "x": "16px",
+      "y": "64px"
+    },
+    "titleTag": "H3",
+    "titleClass": "text-xl font-semibold text-slate-800 mb-2",
+    "titleText": "No practice tests yet",
+    "titleSize": {
+      "font": "20px",
+      "weight": "600",
+      "mt": "0px",
+      "mb": "8px",
+      "color": "rgb(30, 41, 59)"
+    },
+    "hintTag": "P",
+    "hintClass": "text-slate-500 max-w-sm mb-6",
+    "hintText": "Create your first practice test",
+    "hintSize": {
+      "font": "16px",
+      "mt": "0px",
+      "color": "rgb(100, 116, 139)"
+    },
+    "ctaCount": 1,
+    "ctaFirst": {
+      "tag": "BUTTON",
+      "text": "Create Test",
+      "class": "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium trans"
+    }
+  },
+  "Study Groups": {
+    "present": true,
+    "wrapperClass": "w-20 h-20 rounded-2xl bg-gradient-to-br from-violet-100 to-indigo-100 flex items-center justify-center mb-6",
+    "wrapperW": 80,
+    "wrapperH": 80,
+    "wrapperRadius": "16px",
+    "wrapperBg": "linear-gradient(to right bottom, rgb(237, 233, 254), rgb(224, 231, 255))",
+    "wrapperMb": "24px",
+    "iconSize": {
+      "w": "40px",
+      "color": "rgb(139, 92, 246)"
+    },
+    "iconClass": "lucide lucide-users w-10 h-10 text-violet-500",
+    "containerTag": "DIV",
+    "containerClass": "flex flex-col items-center justify-center py-16 px-4 text-center",
+    "containerPad": {
+      "x": "16px",
+      "y": "64px"
+    },
+    "titleTag": "H3",
+    "titleClass": "text-xl font-semibold text-slate-800 mb-2",
+    "titleText": "No study groups",
+    "titleSize": {
+      "font": "20px",
+      "weight": "600",
+      "mt": "0px",
+      "mb": "8px",
+      "color": "rgb(30, 41, 59)"
+    },
+    "hintTag": "P",
+    "hintClass": "text-slate-500 max-w-sm mb-6",
+    "hintText": "Create a group to collaborate",
+    "hintSize": {
+      "font": "16px",
+      "mt": "0px",
+      "color": "rgb(100, 116, 139)"
+    },
+    "ctaCount": 1,
+    "ctaFirst": {
+      "tag": "BUTTON",
+      "text": "Create Group",
+      "class": "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium trans"
+    }
+  },
+  "Grade Tracker": {
+    "present": false
+  },
+  "Analytics": {
+    "present": true,
+    "wrapperClass": "w-12 h-12 rounded-xl flex items-center justify-center bg-violet-100 text-violet-600",
+    "wrapperW": 48,
+    "wrapperH": 48,
+    "wrapperRadius": "12px",
+    "wrapperBg": "none",
+    "wrapperMb": "0px",
+    "iconSize": {
+      "w": "24px",
+      "color": "rgb(124, 58, 237)"
+    },
+    "iconClass": "lucide lucide-square-check-big w-6 h-6",
+    "containerTag": "DIV",
+    "containerClass": "",
+    "containerPad": {
+      "x": "0px",
+      "y": "0px"
+    },
+    "titleTag": null,
+    "titleClass": null,
+    "titleText": null,
+    "titleSize": null,
+    "hintTag": null,
+    "hintClass": null,
+    "hintText": null,
+    "hintSize": null,
+    "ctaCount": 0,
+    "ctaFirst": null
+  },
+  "Files": {
+    "present": true,
+    "wrapperClass": "w-20 h-20 rounded-2xl bg-gradient-to-br from-violet-100 to-indigo-100 flex items-center justify-center mb-6",
+    "wrapperW": 80,
+    "wrapperH": 80,
+    "wrapperRadius": "16px",
+    "wrapperBg": "linear-gradient(to right bottom, rgb(237, 233, 254), rgb(224, 231, 255))",
+    "wrapperMb": "24px",
+    "iconSize": {
+      "w": "40px",
+      "color": "rgb(139, 92, 246)"
+    },
+    "iconClass": "lucide lucide-folder-open w-10 h-10 text-violet-500",
+    "containerTag": "DIV",
+    "containerClass": "flex flex-col items-center justify-center py-16 px-4 text-center",
+    "containerPad": {
+      "x": "16px",
+      "y": "64px"
+    },
+    "titleTag": "H3",
+    "titleClass": "text-xl font-semibold text-slate-800 mb-2",
+    "titleText": "No files yet",
+    "titleSize": {
+      "font": "20px",
+      "weight": "600",
+      "mt": "0px",
+      "mb": "8px",
+      "color": "rgb(30, 41, 59)"
+    },
+    "hintTag": "P",
+    "hintClass": "text-slate-500 max-w-sm mb-6",
+    "hintText": "Upload your first file to get started",
+    "hintSize": {
+      "font": "16px",
+      "mt": "0px",
+      "color": "rgb(100, 116, 139)"
+    },
+    "ctaCount": 0,
+    "ctaFirst": null
+  },
+  "Calculator": {
+    "present": false
+  },
+  "Math Solver": {
+    "present": false
+  },
+  "AI Assistant": {
+    "present": false
+  },
+  "Focus Timer": {
+    "present": false
+  },
+  "Settings": {
+    "present": false
+  }
+}

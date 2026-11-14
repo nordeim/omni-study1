@@ -1,0 +1,62 @@
+{
+  "rowControls": [
+    {
+      "tag": "BUTTON",
+      "aria": null,
+      "svg": "lucide lucide-ellipsis w-4 h-4",
+      "text": "",
+      "visible": true
+    }
+  ],
+  "detailToolbar": [
+    {
+      "aria": null,
+      "svg": "lucide lucide-plus w-4 h-4",
+      "text": ""
+    },
+    {
+      "aria": null,
+      "svg": "lucide lucide-layers w-5 h-5",
+      "text": "S184 Probe Deck0 cards"
+    },
+    {
+      "aria": null,
+      "svg": "lucide lucide-ellipsis w-4 h-4",
+      "text": ""
+    },
+    {
+      "aria": null,
+      "svg": "lucide lucide-sparkles w-4 h-4 mr-2",
+      "text": "AI Generate"
+    },
+    {
+      "aria": null,
+      "svg": "lucide lucide-plus w-4 h-4 mr-2",
+      "text": "Add Card"
+    },
+    {
+      "aria": null,
+      "svg": "lucide lucide-plus w-4 h-4 mr-2",
+      "text": "Add Card"
+    }
+  ],
+  "controlCount": 2,
+  "deletedVia": "row-control+confirm",
+  "flashcardsAfterDelete": "Flashcards No decks yet Create your first flashcard deck Create Deck Select a deck Choose a flashcard deck from the sidebar",
+  "census": {
+    "Tasks": "clean",
+    "Notes": "clean",
+    "Flashcards": "clean",
+    "Practice Tests": "clean",
+    "Study Groups": "clean",
+    "Files": "clean",
+    "Assignments": "clean",
+    "Exams": "clean",
+    "Events": "clean",
+    "Calendar": "clean",
+    "Timetable": "clean",
+    "Grade Tracker": "clean",
+    "Analytics": "clean",
+    "My Day": "clean"
+  }
+}

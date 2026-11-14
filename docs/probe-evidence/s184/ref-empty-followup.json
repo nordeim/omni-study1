@@ -1,0 +1,147 @@
+{
+  "flashcardsDecksBefore": [
+    "FlashcardsS79 Probe Deck1 card",
+    "S79 Probe Deck1 card",
+    "Select a deckChoose a flashcard deck from the sidebar"
+  ],
+  "deckDeleteAttempt": false,
+  "flashcardsZeroDom": {
+    "text": "Flashcards S79 Probe Deck 1 card Select a deck Choose a flashcard deck from the sidebar",
+    "wrapper": "w-20 h-20 rounded-2xl bg-gradient-to-br from-violet-100 to-indigo-100 flex items-center justify-center mb-6"
+  },
+  "Tasks": {
+    "centeredContainers": [],
+    "emptyTexts": [],
+    "text": "All Tasks 1 Important 0 MY LISTS All Tasks 1 task Active Add Task S135 parity probe task"
+  },
+  "Calendar": {
+    "centeredContainers": [],
+    "emptyTexts": [
+      {
+        "tag": "P",
+        "text": "No events for this day",
+        "cls": "text-slate-400 text-center py-8"
+      }
+    ],
+    "text": "Calendar View all your tasks, assignments and classes Calendar Timeline November 2026 Sun Mon Tue Wed Thu Fri Sat 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 1 2 3 4 5 Tasks Assignments Exams Classes Saturday, November 14 No events for this day"
+  },
+  "Events": {
+    "centeredContainers": [],
+    "emptyTexts": [
+      {
+        "tag": "P",
+        "text": "No events",
+        "cls": "text-sm text-slate-500 px-2 py-3"
+      },
+      {
+        "tag": "P",
+        "text": "No events",
+        "cls": "text-sm text-slate-500 px-2 py-3"
+      },
+      {
+        "tag": "P",
+        "text": "No events",
+        "cls": "text-sm text-slate-500 px-2 py-3"
+      },
+      {
+        "tag": "P",
+        "text": "No events",
+        "cls": "text-sm text-slate-500 px-2 py-3"
+      },
+      {
+        "tag": "P",
+        "text": "No events",
+        "cls": "text-sm text-slate-500 px-2 py-3"
+      },
+      {
+        "tag": "P",
+        "text": "No events",
+        "cls": "text-sm text-slate-500 px-2 py-3"
+      },
+      {
+        "tag": "P",
+        "text": "No events",
+        "cls": "text-sm text-slate-500 px-2 py-3"
+      }
+    ],
+    "text": "Events & Reminders Manage your events with custom reminders EVENTS 14 Sat Nov 2026 CW 46 New Event Today No events Tomorrow No events Monday, November 16 No events Tuesday, November 17 No events Wednesday, November 18 No events Thursday, November 19 No events Friday, November 20 No events"
+  },
+  "Timetable": {
+    "centeredContainers": [],
+    "emptyTexts": [
+      {
+        "tag": "P",
+        "text": "No subjects added yet. Go to Settings to add subjects.",
+        "cls": "text-center text-slate-400 py-8"
+      }
+    ],
+    "text": "Timetable Manage your class schedule All Weeks Grid Builder Add Class November 2026 Nov 8 - Nov 14 Time Sunday 8 Monday 9 Tuesday 10 Wednesday 11 Thursday 12 Friday 13 Saturday 14 7 AM 8 AM 9 AM 10 AM 11 AM 12 PM 1 PM 2 PM 3 PM 4 PM 5 PM 6 PM 7 PM 8 PM My Classes Saturday, November 14 No subjects added yet. Go to Settings to add subjects."
+  },
+  "Grade Tracker": {
+    "centeredContainers": [],
+    "emptyTexts": [],
+    "text": "Grade Tracker Monitor your academic performance Add Grade Overall Average 0% Total Grades 0 Subjects Tracked 0"
+  },
+  "Analytics": {
+    "centeredContainers": [],
+    "emptyTexts": [
+      {
+        "tag": "P",
+        "text": "No active items",
+        "cls": "text-slate-400"
+      }
+    ],
+    "text": "Analytics Track your study progress and productivity Tasks Completed 0/1 0% completion rate Assignments 0/0 0% avg progress Focus Time 0h total study hours Upcoming Exams 0 exams scheduled Task Activity (Last 7 Days) Sun Mon Tue Wed Thu Fri Sat 0 1 2 3 4 Focus Time (Last 7 Days) Sun Mon Tue Wed Thu Fri Sat 0h 1h 2h 3h 4h Assignment Status No assignments yet Subject Workload No subject data yet Act"
+  },
+  "ctaButton": {
+    "class": "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabl",
+    "bg": "linear-gradient(to right, rgb(139, 92, 246), rgb(79, 70, 229))",
+    "h": 36,
+    "w": 178,
+    "pad": {
+      "x": "16px",
+      "y": "8px"
+    },
+    "font": {
+      "size": "14px",
+      "weight": "500"
+    },
+    "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0.1) 0px 1px 3px 0px, rgba(0, 0, 0, 0.",
+    "radius": "6px"
+  },
+  "containerChildren": [
+    {
+      "tag": "DIV",
+      "cls": "w-20 h-20 rounded-2xl bg-gradient-to-br from-violet-100 to-indigo-100 flex items-center ju",
+      "text": ""
+    },
+    {
+      "tag": "H3",
+      "cls": "text-xl font-semibold text-slate-800 mb-2",
+      "text": "No assignments yet"
+    },
+    {
+      "tag": "P",
+      "cls": "text-slate-500 max-w-sm mb-6",
+      "text": "Add your first assignment to start track"
+    },
+    {
+      "tag": "BUTTON",
+      "cls": "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-me",
+      "text": "Add Assignment"
+    }
+  ],
+  "finalResidue": {
+    "Tasks": "HAS-DATA",
+    "Notes": "EMPTY",
+    "Flashcards": "HAS-DATA",
+    "Practice Tests": "EMPTY",
+    "Study Groups": "HAS-DATA",
+    "Files": "EMPTY",
+    "Events": "HAS-DATA",
+    "Calendar": "HAS-DATA",
+    "Assignments": "EMPTY",
+    "Exams": "HAS-DATA",
+    "Timetable": "HAS-DATA"
+  }
+}

@@ -1314,7 +1314,7 @@ export function NotesView() {
               title="No notes yet"
               hint="Create your first note"
               cta={
-                <Button type="button" variant="gradient" className="sf-gradient-shadow-lg" onClick={() => openDraft("text")}>
+                <Button type="button" variant="gradient" onClick={() => openDraft("text")}>
                   <Plus className="size-4" strokeWidth={2} />
                   New Note
                 </Button>

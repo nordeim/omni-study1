@@ -324,19 +324,20 @@ export function AssignmentsView() {
           <Spinner className="size-6" />
         </div>
       ) : filtered.length === 0 ? (
-        <div className="sf-card">
-          <EmptyState
-            icon={ClipboardList}
-            title="No assignments yet"
-            hint="Add your first assignment to start tracking"
-            cta={
-              <Button type="button" variant="gradient" className="sf-gradient-shadow-lg" onClick={openCreate}>
-                <Plus className="size-4" strokeWidth={2} />
-                Add Assignment
-              </Button>
-            }
-          />
-        </div>
+        /* S184/EH: the empty renders BARE (measured — no card ancestor;
+           the sf-card wrapper retired) with the family's plain-shadow
+           CTA (the S184 direct measurement). */
+        <EmptyState
+          icon={ClipboardList}
+          title="No assignments yet"
+          hint="Add your first assignment to start tracking"
+          cta={
+            <Button type="button" variant="gradient" onClick={openCreate}>
+              <Plus className="size-4" strokeWidth={2} />
+              Add Assignment
+            </Button>
+          }
+        />
       ) : (
         <div role="group" className="flex flex-col gap-3" aria-label="Assignment rows">
           {filtered.map((a) => {

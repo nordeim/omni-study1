@@ -166,13 +166,21 @@ type EmptyStateProps = {
   cta?: React.ReactNode;
 };
 
-/** The ONE empty-state design (S4): 80px rounded-2xl gradient block
- *  (empty-from → empty-to), 40px accent icon, 20px/600 h3, 16px hint. */
+/** The ONE empty-state design (S4; re-measured live S184/EH — the family
+ * re-rotation): 80px rounded-2xl gradient block (empty-from → empty-to)
+ * with mb-6, 40px accent icon, 20px/600 title with mb-2, 16px slate-500
+ * hint at max-w-sm with mb-6, the CTA as the DIRECT child (the hint's
+ * own mb-6 carries the CTA gap), inside py-16 px-4 (px-4, not px-6 —
+ * measured). The title renders h2 over the reference's h3 — the recorded
+ * heading-laxity deviation (the S77/AD7 precedent: an h1→h3 skip trips
+ * heading-order; the tags are visually identical). The CTA computes the
+ * plain sf-gradient-shadow (the S184 direct measurement — the S5 lg
+ * claim superseded; see button.tsx's gradient variant). */
 export function EmptyState({ icon: Icon, title, hint, cta }: EmptyStateProps) {
   return (
-    <div className="flex flex-col items-center justify-center px-6 py-16 text-center">
+    <div className="flex flex-col items-center justify-center py-16 px-4 text-center">
       <div
-        className="flex size-20 items-center justify-center rounded-2xl"
+        className="mb-6 flex size-20 items-center justify-center rounded-2xl"
         style={{
           backgroundImage:
             "linear-gradient(to bottom right, rgb(var(--sf-primary-empty-from)), rgb(var(--sf-primary-empty-to)))",
@@ -180,9 +188,9 @@ export function EmptyState({ icon: Icon, title, hint, cta }: EmptyStateProps) {
       >
         <Icon className="size-10 text-sf-primary" strokeWidth={2} />
       </div>
-      <h2 className="mt-4 text-xl font-semibold text-slate-800 dark:text-slate-100">{title}</h2>
-      <p className="mt-1 text-base text-slate-500 dark:text-slate-400">{hint}</p>
-      {cta && <div className="mt-6">{cta}</div>}
+      <h2 className="mb-2 text-xl font-semibold text-slate-800 dark:text-slate-100">{title}</h2>
+      <p className="mb-6 max-w-sm text-base text-slate-500 dark:text-slate-400">{hint}</p>
+      {cta}
     </div>
   );
 }

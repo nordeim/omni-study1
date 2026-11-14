@@ -1,0 +1,245 @@
+{
+  "Tasks": {
+    "found": true,
+    "chain": [
+      {
+        "tag": "DIV",
+        "cls": "flex-1 overflow-y-auto space-y-2 pr-2",
+        "cardish": false
+      },
+      {
+        "tag": "MAIN",
+        "cls": "flex-1 flex flex-col md:pl-6",
+        "cardish": false
+      },
+      {
+        "tag": "DIV",
+        "cls": "flex h-[calc(100vh-8rem)]",
+        "cardish": false
+      },
+      {
+        "tag": "DIV",
+        "cls": "p-4 lg:p-8",
+        "cardish": false
+      },
+      {
+        "tag": "MAIN",
+        "cls": "transition-all duration-300 min-h-screen lg:ml-[260px] pt-16 lg:pt-0",
+        "cardish": false
+      },
+      {
+        "tag": "DIV",
+        "cls": "min-h-screen bg-gradient-to-br from-slate-50 via-white to-violet-50/30",
+        "cardish": false
+      }
+    ]
+  },
+  "Assignments": {
+    "found": true,
+    "chain": [
+      {
+        "tag": "DIV",
+        "cls": "space-y-3",
+        "cardish": false
+      },
+      {
+        "tag": "DIV",
+        "cls": "flex-1 space-y-6",
+        "cardish": false
+      },
+      {
+        "tag": "DIV",
+        "cls": "flex gap-6",
+        "cardish": false
+      },
+      {
+        "tag": "DIV",
+        "cls": "p-4 lg:p-8",
+        "cardish": false
+      },
+      {
+        "tag": "MAIN",
+        "cls": "transition-all duration-300 min-h-screen lg:ml-[260px] pt-16 lg:pt-0",
+        "cardish": false
+      },
+      {
+        "tag": "DIV",
+        "cls": "min-h-screen bg-gradient-to-br from-slate-50 via-white to-violet-50/30",
+        "cardish": false
+      }
+    ]
+  },
+  "Exams": {
+    "found": true,
+    "chain": [
+      {
+        "tag": "DIV",
+        "cls": "md:col-span-2 lg:col-span-3",
+        "cardish": false
+      },
+      {
+        "tag": "DIV",
+        "cls": "grid md:grid-cols-2 lg:grid-cols-3 gap-4",
+        "cardish": false
+      },
+      {
+        "tag": "DIV",
+        "cls": "space-y-6",
+        "cardish": false
+      },
+      {
+        "tag": "DIV",
+        "cls": "p-4 lg:p-8",
+        "cardish": false
+      },
+      {
+        "tag": "MAIN",
+        "cls": "transition-all duration-300 min-h-screen lg:ml-[260px] pt-16 lg:pt-0",
+        "cardish": false
+      },
+      {
+        "tag": "DIV",
+        "cls": "min-h-screen bg-gradient-to-br from-slate-50 via-white to-violet-50/30",
+        "cardish": false
+      }
+    ]
+  },
+  "Notes": {
+    "found": true,
+    "chain": [
+      {
+        "tag": "DIV",
+        "cls": "flex-1 overflow-y-auto space-y-4",
+        "cardish": false
+      },
+      {
+        "tag": "DIV",
+        "cls": "w-80 flex flex-col border-r border-slate-100 pr-6",
+        "cardish": false
+      },
+      {
+        "tag": "DIV",
+        "cls": "flex h-[calc(100vh-8rem)] gap-6",
+        "cardish": false
+      },
+      {
+        "tag": "DIV",
+        "cls": "p-4 lg:p-8",
+        "cardish": false
+      },
+      {
+        "tag": "MAIN",
+        "cls": "transition-all duration-300 min-h-screen lg:ml-[260px] pt-16 lg:pt-0",
+        "cardish": false
+      },
+      {
+        "tag": "DIV",
+        "cls": "min-h-screen bg-gradient-to-br from-slate-50 via-white to-violet-50/30",
+        "cardish": false
+      }
+    ]
+  },
+  "Practice Tests": {
+    "found": true,
+    "chain": [
+      {
+        "tag": "DIV",
+        "cls": "space-y-6",
+        "cardish": false
+      },
+      {
+        "tag": "DIV",
+        "cls": "p-4 lg:p-8",
+        "cardish": false
+      },
+      {
+        "tag": "MAIN",
+        "cls": "transition-all duration-300 min-h-screen lg:ml-[260px] pt-16 lg:pt-0",
+        "cardish": false
+      },
+      {
+        "tag": "DIV",
+        "cls": "min-h-screen bg-gradient-to-br from-slate-50 via-white to-violet-50/30",
+        "cardish": false
+      },
+      {
+        "tag": "DIV",
+        "cls": "",
+        "cardish": false
+      }
+    ]
+  },
+  "Study Groups": {
+    "found": true,
+    "chain": [
+      {
+        "tag": "DIV",
+        "cls": "flex-1 overflow-y-auto space-y-2",
+        "cardish": false
+      },
+      {
+        "tag": "DIV",
+        "cls": "w-80 flex flex-col border-r border-slate-100 pr-6",
+        "cardish": false
+      },
+      {
+        "tag": "DIV",
+        "cls": "flex h-[calc(100vh-8rem)] gap-6",
+        "cardish": false
+      },
+      {
+        "tag": "DIV",
+        "cls": "p-4 lg:p-8",
+        "cardish": false
+      },
+      {
+        "tag": "MAIN",
+        "cls": "transition-all duration-300 min-h-screen lg:ml-[260px] pt-16 lg:pt-0",
+        "cardish": false
+      },
+      {
+        "tag": "DIV",
+        "cls": "min-h-screen bg-gradient-to-br from-slate-50 via-white to-violet-50/30",
+        "cardish": false
+      }
+    ]
+  },
+  "Files": {
+    "found": true,
+    "chain": [
+      {
+        "tag": "DIV",
+        "cls": "",
+        "cardish": false
+      },
+      {
+        "tag": "DIV",
+        "cls": "space-y-6",
+        "cardish": false
+      },
+      {
+        "tag": "DIV",
+        "cls": "p-4 lg:p-8",
+        "cardish": false
+      },
+      {
+        "tag": "MAIN",
+        "cls": "transition-all duration-300 min-h-screen lg:ml-[260px] pt-16 lg:pt-0",
+        "cardish": false
+      },
+      {
+        "tag": "DIV",
+        "cls": "min-h-screen bg-gradient-to-br from-slate-50 via-white to-violet-50/30",
+        "cardish": false
+      },
+      {
+        "tag": "DIV",
+        "cls": "",
+        "cardish": false
+      }
+    ]
+  },
+  "Timetable": {
+    "found": false
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "createBtnVisible": 1,
+  "deckDetailZeroCards": {
+    "found": true,
+    "containerClass": "flex flex-col items-center justify-center py-16 px-4 text-center",
+    "children": [
+      {
+        "tag": "DIV",
+        "cls": "w-20 h-20 rounded-2xl bg-gradient-to-br from-violet-100 to-indigo-100 flex items-center justify-cent",
+        "text": ""
+      },
+      {
+        "tag": "H3",
+        "cls": "text-xl font-semibold text-slate-800 mb-2",
+        "text": "Select a deck"
+      },
+      {
+        "tag": "P",
+        "cls": "text-slate-500 max-w-sm mb-6",
+        "text": "Choose a flashcard deck from the sidebar"
+      }
+    ],
+    "detailText": "Select a deckChoose a flashcard deck from the sidebar"
+  },
+  "deckRowFound": true,
+  "flashcardsFinalText": "Flashcards S184 Probe Deck 0 cards S184 Probe Deck AI Generate Add Card No cards in this deck Add flashcards to start studying Add Card"
+}

@@ -2,6 +2,17 @@ import { defineConfig } from "vitest/config";
 import path from "node:path";
 
 // Unit-test layer for the pure domain seams — 55 files / 1795 tests
+// (re-anchored S184/EH — the shared EmptyState family re-rotation: the
+// unit census UNCHANGED at 1795 [55 files — a view-layer port, no new
+// seam]; the e2e census moves 691 → 697: +6 the S184/EH zero-state pins
+// in parity-session7 at ZERO upload-budget units [the EA3
+// route-interception pattern — GETs only: EH1 the Files family anatomy
+// (px-4 + the wrapper mb-6 + the title mb-2 + max-w-sm + the plain-shadow
+// CTA), EH2 the Tasks "Create Task" CTA, EH3 the Flashcards
+// sidebar/main zero split (the sidebar's family empty + the main pane's
+// select-a-deck family empty), EH4 the Exams grid spanning cell, EH5 the
+// Timetable grid-always + the slim panel empty, EH6 the Assignments bare
+// empty].)
 // (re-anchored S183/EG — the Files type-filter/view-mode/move port: the
 // unit census moves 1779 → 1795 [+16, 54 → 55 files: the NEW
 // tests/file-types.test.ts seam spec — the five option labels + the

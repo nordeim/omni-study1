@@ -1,0 +1,19 @@
+=== CHUNK 1: 3 files ===
+  ✓  157 [chromium] › tests/e2e/parity-session8.spec.ts:1808:7 › S163/DL1 · the exams CB8 failure-domain split (Batch DL) › a committed create + a failed refresh answers the success toast (never the false save-failure) (1.2s)
+  ✓  158 [chromium] › tests/e2e/parity-session8.spec.ts:1850:7 › S167/DQ1 · the flashcards save succeeds through a failed refresh (CB8 split) › a committed create + an aborted refresh answers the success toast + closed dialog, never the false save-failure (1.2s)
+  158 passed (3.2m)
+=== CHUNK 2: 7 files ===
+  ✓  235 [chromium] › tests/e2e/tasks.spec.ts:271:7 › S168/DR1 · the tasks save succeeds through a failed refresh (CB8 split) › a committed create + an aborted refresh answers the success toast + closed dialog, never the false save-failure (1.4s)
+  ✓  250 [chromium] › tests/e2e/theme-system.spec.ts:348:7 › S127/CB15 · a failed theme save reverts the visible selection › aborted PATCH leaves Light pressed (was: Dark stayed pressed, lying about persistence) (998ms)
+  254 passed (6.2m)
+=== CHUNK 3: 3 files ===
+  ✓   96 [chromium] › tests/e2e/resilience.spec.ts:2134:7 › S174/DX1b · the holiday save succeeds through a failed refresh (CB8 split) › a committed create + an aborted refresh answers the success toast + closed dialog, never the false add-failure (1.3s)
+  ✓   97 [chromium] › tests/e2e/resilience.spec.ts:2195:7 › S174/DX1c · the calculator history save succeeds through a failed refresh (CB8 split) › a committed entry + an aborted refresh keeps the result on display, never the false history-failure (1.6s)
+  101 passed (4.4m)
+=== CHUNK 4: 5 files ===
+  ✓  48 [chromium] › tests/e2e/calculator.spec.ts:245:7 › S15 physical keyboard (superset) › S119/BT12: a failed history save never toasts the evaluation message (991ms)
+  95 passed (3.0m)
+=== CHUNK 5: 12 files ===
+  ✓  46 [chromium] › tests/e2e/s19-rum-panel.spec.ts:114:7 › S130/CE4 · the panel's load-state machine › a failed initial aggregate load renders the retry hint, never the lying 'Loading the field metrics…' line (496ms)
+  89 passed (1.4m)
+=== DONE — chunked certification complete ===

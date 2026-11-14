@@ -4,9 +4,16 @@
 # SIGKILL escalation → rm db/e2e.db → run the chunk), one chunk per
 # invocation so each foreground run fits the tool timeout.
 # Usage: bash /home/z/my-project/omni-study1/scripts/run-cert-chunk.sh <1-5>
-# Expected (S183/EG re-tag): 158 + 248 + 101 + 95 + 89 = 691 — the same
-# census as scripts/e2e-chunked-cert.sh (the S183/EG re-tag block lives
+# Expected (S184/EH re-tag): 158 + 254 + 101 + 95 + 89 = 697 — the same
+# census as scripts/e2e-chunked-cert.sh (the S184/EH re-tag block lives
 # there; machine-enforced by tests/script-conventions.test.ts).
+# (S184/EH: chunk 2 +6 — the shared-EmptyState-family re-rotation pins in
+# parity-session7 [EH1 the Files anatomy: px-4 + the wrapper mb-6 + the
+# title mb-2 + the hint max-w-sm + no CTA; EH2 the Tasks "Create Task" CTA
+# + the PLAIN gradient shadow; EH3 the Flashcards sidebar/main zero split;
+# EH4 the Exams grid spanning cell; EH5 the Timetable grid-always + the
+# slim panel empty; EH6 the Assignments bare empty]. The unit census
+# UNCHANGED at 1795 [55 files]. See docs/remediation-plan-session184.md.)
 # census as scripts/e2e-chunked-cert.sh (machine-enforced by
 # tests/script-conventions.test.ts, including the identical-CHUNKS pin).
 # (S180/ED: chunk 2 +6 — the notes Attach-File wire pins in parity-session7

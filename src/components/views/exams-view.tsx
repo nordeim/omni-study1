@@ -307,18 +307,24 @@ export function ExamsView() {
           <Spinner className="size-6" />
         </div>
       ) : sorted.length === 0 ? (
-        <div className="sf-card">
-          <EmptyState
-            icon={GraduationCap}
-            title="No exams found"
-            hint="Add your exams to start tracking"
-            cta={
-              <Button type="button" variant="gradient" className="sf-gradient-shadow-lg" onClick={openCreate}>
-                <Plus className="size-4" strokeWidth={2} />
-                Add Exam
-              </Button>
-            }
-          />
+        /* S184/EH: the empty occupies the grid's SPANNING CELL (measured —
+           the 3-col grid renders with the empty as its md:col-span-2
+           lg:col-span-3 cell, BARE — no card wrapper; the S5-lg shadow
+           retired with the family). */
+        <div role="group" className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3" aria-label="Exam cards">
+          <div className="sm:col-span-2 lg:col-span-3">
+            <EmptyState
+              icon={GraduationCap}
+              title="No exams found"
+              hint="Add your exams to start tracking"
+              cta={
+                <Button type="button" variant="gradient" onClick={openCreate}>
+                  <Plus className="size-4" strokeWidth={2} />
+                  Add Exam
+                </Button>
+              }
+            />
+          </div>
         </div>
       ) : (
         <div role="group" className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3" aria-label="Exam cards">

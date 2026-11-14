@@ -513,8 +513,25 @@
 # deterministic defaults so the leg fills only the title + score +
 # max; network-mocked, no server writes beyond the zero-residue
 # create]. The full DW map: docs/remediation-plan-session173.md.)
-# Expected: 158 + 248 + 101 + 95 + 89 = 691 (each chunk's count includes its
+# Expected: 158 + 254 + 101 + 95 + 89 = 697 (each chunk's count includes its
 # auth setup — the current census; the historical re-tag blocks beneath.)
+# (S184/EH re-tag — census 691 → 697, net +6: chunk 2 +6 [the S184/EH
+# shared-EmptyState-family re-rotation pins in parity-session7 — SIX
+# zero-upload-budget pins (the EA3 route-interception pattern, GETs only):
+# EH1 the family anatomy on Files (the px-4 container + the wrapper's mb-6
+# + the title's mb-2 + the hint's max-w-sm + the no-CTA shape — the
+# settled-state heading-wait added after the loading gate's own py-16
+# raced the .first() locator), EH2 the Tasks empty CTA copy "Create Task"
+# + the PLAIN sf-gradient-shadow (the S5 lg claim superseded by the S184
+# direct computed-style measurement), EH3 the Flashcards two-pane zero
+# split (the SIDEBAR family empty with the Create Deck CTA + the MAIN
+# pane's Select-a-deck family empty — the pre-port main-pane EmptyState
+# and the bare <p> both retired), EH4 the Exams empty BARE inside the
+# grid's spanning cell, EH5 the Timetable grid-always zero state + the
+# My Classes slim empty, EH6 the Assignments bare empty + the hint's
+# max-w-sm + the plain-shadow CTA. The unit census UNCHANGED at
+# 1795 [55 files] — a view-layer port, no new seam. See
+# docs/remediation-plan-session184.md.)
 # (S183/EG re-tag — census 684 → 691, net +7: chunk 2 +7 [the S183/EG
 # Files toolbar/cards/filter/move/view family pins in parity-session7 —
 # SEVEN consolidated pins at ELEVEN upload-budget units: the s183 lesson

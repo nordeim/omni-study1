@@ -721,14 +721,16 @@ export function TasksView() {
               cta={
                 <Button
                   variant="gradient"
-                  className="sf-gradient-shadow-lg"
                   onClick={() => {
                     setEditing(null);
                     setDialogOpen(true);
                   }}
                 >
                   <Plus className="size-4" strokeWidth={2} />
-                  Add Task
+                  {/* S184/EH (measured): the empty-state CTA reads "Create
+                      Task" — the reference's own label; the toolbar's Add
+                      Task is a different surface and keeps its label. */}
+                  Create Task
                 </Button>
               }
             />

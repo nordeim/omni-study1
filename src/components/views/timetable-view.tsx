@@ -37,7 +37,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useToast } from "@/components/ui/toast";
-import { EmptyState, Spinner } from "@/components/views/shared";
+import { Spinner } from "@/components/views/shared";
 import { mutations, useDataStore, type TimetableClassInput, type TimetableClassRow } from "@/lib/data";
 import { addDays, formatHHMMRange, formatWeekdayMonthDay, formatShortDate, startOfDay } from "@/lib/date";
 import { ApiError } from "@/lib/api";
@@ -310,22 +310,14 @@ export function TimetableView() {
         >
           <Spinner className="size-6" />
         </div>
-      ) : classes.length === 0 ? (
-        <div className="sf-card">
-          <EmptyState
-            icon={Clock}
-            title="No classes yet"
-            hint="Add your first class to build your weekly timetable."
-            cta={
-              <Button type="button" variant="gradient" className="sf-gradient-shadow-lg" onClick={() => openCreate()}>
-                <Plus className="size-4" strokeWidth={2} />
-                Add Class
-              </Button>
-            }
-          />
-        </div>
       ) : (
         <>
+          {/* S184/EH (measured): the reference renders the FULL GRID at
+              zero subjects — the grid skeleton always renders (empty cells,
+              no class blocks); the zero-state surface is the slim empty
+              in the My Classes panel below, not a family EmptyState. The
+              pre-port EmptyState branch retires; the toolbar's Add Class
+              (measured) keeps the create path. */}
           {/* Session-64 Batch U: the reference's centered month/week banner
               sits between the header and the grid — a white card carrying
               [‹] [month-year + range] [›]; the week nav lives HERE (the ref
@@ -574,14 +566,23 @@ export function TimetableView() {
         </>
       )}
 
-      {/* My Classes */}
-      {classes.length > 0 && (
-        <section className="sf-card p-6">
-          <div role="group" className="flex items-center justify-between" aria-label="My Classes header">
-            <h2 className="text-lg font-bold text-slate-800 dark:text-slate-100">My Classes</h2>
-            <p className="text-sm text-slate-500 dark:text-slate-400">{formatWeekdayMonthDay(today)}</p>
-          </div>
-          <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      {/* My Classes — rendered ALWAYS (S184/EH: the measured zero-state
+          lives HERE — the slim empty in the panel, not a grid-replacing
+          EmptyState); the copy is clone-accurate (the reference's own
+          "No subjects added yet" derives from ITS subject-based model —
+          data-shaped, not portable; the clone's TimetableClass creates
+          through the toolbar's Add Class). */}
+      <section className="sf-card p-6">
+        <div role="group" className="flex items-center justify-between" aria-label="My Classes header">
+          <h2 className="text-lg font-bold text-slate-800 dark:text-slate-100">My Classes</h2>
+          <p className="text-sm text-slate-500 dark:text-slate-400">{formatWeekdayMonthDay(today)}</p>
+        </div>
+        {visible.length === 0 ? (
+          <p className="py-8 text-center text-slate-400 dark:text-slate-500">
+            No classes yet. Use Add Class to build your weekly timetable.
+          </p>
+        ) : (
+        <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {/* S140/CO4c (Audit A L-3): the silent 9-card cap is gone —
                 it hid user data with no affordance and no measured
                 reference basis (the reference renders its empty state
@@ -614,8 +615,8 @@ export function TimetableView() {
               );
             })}
           </div>
+        )}
         </section>
-      )}
 
       <Dialog open={dialog.open} onOpenChange={(open) => !open && setDialog({ open: false, editing: null })}>
         <DialogContent className="max-w-md rounded-lg">

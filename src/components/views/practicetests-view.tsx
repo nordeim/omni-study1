@@ -853,7 +853,6 @@ export function PracticeTestsView() {
           cta={
             <Button
               variant="gradient"
-              className="sf-gradient-shadow-lg"
               onClick={() => {
                 setEditing(null);
                 setDialogOpen(true);

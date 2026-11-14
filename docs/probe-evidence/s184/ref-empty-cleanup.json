@@ -1,0 +1,55 @@
+{
+  "ctaFullShadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0.1) 0px 1px 3px 0px, rgba(0, 0, 0, 0.1) 0px 1px 2px -1px",
+  "flashcardsSelectADeck": {
+    "containerClass": "flex flex-col items-center justify-center py-16 px-4 text-center",
+    "children": [
+      {
+        "tag": "DIV",
+        "cls": "w-20 h-20 rounded-2xl bg-gradient-to-br from-violet-100 to-indigo-100 flex items-center justify-center mb-6",
+        "text": ""
+      },
+      {
+        "tag": "H3",
+        "cls": "text-xl font-semibold text-slate-800 mb-2",
+        "text": "Select a deck"
+      },
+      {
+        "tag": "P",
+        "cls": "text-slate-500 max-w-sm mb-6",
+        "text": "Choose a flashcard deck from the sidebar"
+      }
+    ]
+  },
+  "taskFound": true,
+  "taskDeletedViaMenu": true,
+  "tasksAfterCleanup": "All Tasks 0 Important 0 MY LISTS All Tasks 0 tasks Active Add Task No tasks yet Create your first task to get started Create Task",
+  "deckFound": true,
+  "deckControlCount": 2,
+  "deckDeleted": true,
+  "flashcardsAfterCleanup": "Flashcards No decks yet Create your first flashcard deck Create Deck Select a deck Choose a flashcard deck from the sidebar",
+  "tasksEmptyAfterCleanup": {
+    "containerClass": "flex flex-col items-center justify-center py-16 px-4 text-center",
+    "children": [
+      {
+        "tag": "DIV",
+        "cls": "w-20 h-20 rounded-2xl bg-gradient-to-br from-violet-100 to-indigo-100 flex items-center justify-center mb-6",
+        "text": ""
+      },
+      {
+        "tag": "H3",
+        "cls": "text-xl font-semibold text-slate-800 mb-2",
+        "text": "No tasks yet"
+      },
+      {
+        "tag": "P",
+        "cls": "text-slate-500 max-w-sm mb-6",
+        "text": "Create your first task to get started"
+      },
+      {
+        "tag": "BUTTON",
+        "cls": "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colo",
+        "text": "Create Task"
+      }
+    ]
+  }
+}

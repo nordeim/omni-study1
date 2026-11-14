@@ -1,0 +1,58 @@
+{
+  "flashcardsSidebarEmpty": {
+    "asideClass": "w-80 flex flex-col border-r border-slate-100 pr-6",
+    "asideW": 320,
+    "wrapperClass": "w-20 h-20 rounded-2xl bg-gradient-to-br from-violet-100 to-indigo-100 flex items-center justify-center mb-6",
+    "containerClass": "flex flex-col items-center justify-center py-16 px-4 text-center",
+    "children": [
+      {
+        "tag": "DIV",
+        "cls": "w-20 h-20 rounded-2xl bg-gradient-to-br from-violet-100 to-indigo-100 flex items-center justify-cent",
+        "text": ""
+      },
+      {
+        "tag": "H3",
+        "cls": "text-xl font-semibold text-slate-800 mb-2",
+        "text": "No decks yet"
+      },
+      {
+        "tag": "P",
+        "cls": "text-slate-500 max-w-sm mb-6",
+        "text": "Create your first flashcard deck"
+      },
+      {
+        "tag": "BUTTON",
+        "cls": "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium trans",
+        "text": "Create Deck"
+      }
+    ],
+    "sidebarText": "Flashcards No decks yet Create your first flashcard deck Create Deck"
+  },
+  "notesZero": {
+    "found": true,
+    "containerClass": "flex flex-col items-center justify-center py-16 px-4 text-center",
+    "ancestorChain": [
+      {
+        "tag": "DIV",
+        "cls": "flex flex-col items-center justify-center py-16 px-4 text-center"
+      },
+      {
+        "tag": "DIV",
+        "cls": "flex-1 overflow-y-auto space-y-4"
+      },
+      {
+        "tag": "DIV",
+        "cls": "w-80 flex flex-col border-r border-slate-100 pr-6"
+      },
+      {
+        "tag": "DIV",
+        "cls": "flex h-[calc(100vh-8rem)] gap-6"
+      },
+      {
+        "tag": "DIV",
+        "cls": "p-4 lg:p-8"
+      }
+    ],
+    "mainText": "Notes All Notebooks All Tags No notes yet Create your first note New Note Select a note Choose a note from the sidebar or create a new one"
+  }
+}

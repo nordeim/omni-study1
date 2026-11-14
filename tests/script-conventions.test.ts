@@ -335,7 +335,7 @@ describe("the chunked cert runner's truth contract (S128/CC2)", () => {
     // Files subtitle copy port — see docs/remediation-plan-session182.md;
     // the unit census holds 1779 [54 files] — a view-layer port, no new
     // seam; two hue-tokens register anchors re-anchored 408 → 412).
-    expect(certSource).toContain("Expected: 158 + 248 + 101 + 95 + 89 = 691");
+    expect(certSource).toContain("Expected: 158 + 254 + 101 + 95 + 89 = 697");
   });
 
   it("propagates a failing chunk's exit code (never a green cert on a red run)", () => {

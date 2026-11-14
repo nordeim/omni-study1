@@ -1,0 +1,27 @@
+{
+  "filesAnatomy": {
+    "padX": "16px",
+    "padY": "64px",
+    "wrapperMb": "24px"
+  },
+  "flashcardsSplit": {
+    "sidebarHeading": "No decks yet",
+    "sidebarCta": "Create Deck",
+    "mainHeading": "Select a deck",
+    "mainHint": "Choose a flashcard deck from the sidebar"
+  },
+  "assignmentsBare": {
+    "cardish": false
+  },
+  "timetableZero": {
+    "gridW": 1066,
+    "slim": "No classes yet. Use Add Class to build your weekly timetable"
+  },
+  "ok": true,
+  "frames": [
+    "184-clone-files-empty.png",
+    "184-clone-flashcards-zero-split.png",
+    "184-clone-assignments-bare-empty.png",
+    "184-clone-timetable-grid-always.png"
+  ]
+}

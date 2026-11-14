@@ -532,9 +532,32 @@ export function FlashcardsView() {
               <Spinner className="size-6" />
             </div>
           ) : filteredDecks.length === 0 ? (
-            <p className="py-8 text-center text-sm text-slate-500 dark:text-slate-400">
-              {decks.length === 0 ? "No decks yet." : "No decks match."}
-            </p>
+            decks.length === 0 ? (
+              /* S184/EH (measured at true zero): the SIDEBAR owns the
+                 zero-decks family empty — the full anatomy (the w-20
+                 wrapper, the title, the hint, the "Create Deck" CTA)
+                 inside the deck list pane, replacing the slim p. The
+                 search-no-results variant below stays slim (unprobed). */
+              <EmptyState
+                icon={Layers}
+                title="No decks yet"
+                hint="Create your first flashcard deck"
+                cta={
+                  <Button
+                    type="button"
+                    variant="gradient"
+                    onClick={() => openDeckDialog(null)}
+                  >
+                    <Plus className="size-4" strokeWidth={2} />
+                    Create Deck
+                  </Button>
+                }
+              />
+            ) : (
+              <p className="py-8 text-center text-sm text-slate-500 dark:text-slate-400">
+                No decks match.
+              </p>
+            )
           ) : (
             filteredDecks.map((deck) => {
               const count = flashcards.filter((c) => c.deckId === deck.id).length;
@@ -682,24 +705,18 @@ export function FlashcardsView() {
           >
             <Spinner className="size-6" />
           </div>
-        ) : decks.length === 0 ? (
-          <div className="sf-card flex flex-1 flex-col justify-center">
-            <EmptyState
-              icon={Layers}
-              title="No decks yet"
-              hint="Create your first flashcard deck"
-              cta={
-                <Button type="button" variant="gradient" className="sf-gradient-shadow-lg" onClick={() => openDeckDialog(null)}>
-                  <Plus className="size-4" strokeWidth={2} />
-                  New Deck
-                </Button>
-              }
-            />
-          </div>
         ) : !selectedDeck ? (
-          <div className="flex flex-1 items-center justify-center">
-            <p className="text-sm text-slate-500 dark:text-slate-400">Select a deck.</p>
-          </div>
+          /* S184/EH (measured): the main pane renders the family
+             Select-a-deck empty whenever NO deck is selected — INCLUDING
+             at zero decks (the reference's main pane never carries the
+             zero-decks family empty; that one lives in the sidebar
+             above). The pre-port bare <p>Select a deck.</p> and the
+             sf-card-wrapped zero-decks EmptyState both retire here. */
+          <EmptyState
+            icon={Layers}
+            title="Select a deck"
+            hint="Choose a flashcard deck from the sidebar"
+          />
         ) : (
           <>
             <div className="flex flex-wrap items-start justify-between gap-3">
@@ -737,13 +754,16 @@ export function FlashcardsView() {
             </div>
 
             {deckCards.length === 0 ? (
-              <div className="sf-card mt-4 flex flex-1 flex-col justify-center">
+              /* S184/EH (measured): the deck-detail zero-cards state — the
+                 family empty BARE in the pane (no sf-card wrapper), with the
+                 measured hint copy. */
+              <div className="mt-4">
                 <EmptyState
                   icon={Layers}
                   title="No cards in this deck"
-                  hint="Add cards manually or let the AI draft them for you."
+                  hint="Add flashcards to start studying"
                   cta={
-                    <Button type="button" variant="gradient" className="sf-gradient-shadow-lg" onClick={() => openCardDialog(null)}>
+                    <Button type="button" variant="gradient" onClick={() => openCardDialog(null)}>
                       <Plus className="size-4" strokeWidth={2} />
                       Add Card
                     </Button>
