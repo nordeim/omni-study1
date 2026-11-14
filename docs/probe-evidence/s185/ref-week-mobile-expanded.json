@@ -1,0 +1,108 @@
+{
+  "collapsed": {
+    "present": true,
+    "cardCls": "bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden",
+    "wrappers": [
+      {
+        "i": 0,
+        "tag": "DIV",
+        "cls": "md:hidden",
+        "h": 538,
+        "pad": {
+          "x": "0px",
+          "y": "0px"
+        },
+        "bg": "rgba(0, 0, 0, 0)",
+        "border": "0px rgb(38, 38, 38)",
+        "text": "Sun8Sunday0 classesMon9Mon"
+      }
+    ]
+  },
+  "expanded": {
+    "present": true,
+    "cardCls": "bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden",
+    "wrappers": [
+      {
+        "i": 0,
+        "tag": "DIV",
+        "cls": "md:hidden",
+        "h": 666,
+        "pad": {
+          "x": "0px",
+          "y": "0px"
+        },
+        "bg": "rgba(0, 0, 0, 0)",
+        "border": "0px rgb(38, 38, 38)",
+        "text": "Sun8Sunday0 classesMon9Mon"
+      }
+    ]
+  },
+  "noClasses": [
+    {
+      "tag": "DIV",
+      "cls": "overflow-hidden",
+      "text": "No classes Add Class",
+      "font": {
+        "size": "16px",
+        "weight": "400",
+        "color": "rgb(250, 250, 250)"
+      },
+      "pad": {
+        "x": "0px",
+        "y": "0px"
+      },
+      "mt": "0px",
+      "mb": "0px",
+      "parentCls": "border-b border-slate-100 last:border-b-0",
+      "parentPad": {
+        "x": "0px",
+        "y": "0px"
+      },
+      "parentTag": "DIV"
+    },
+    {
+      "tag": "DIV",
+      "cls": "p-4 space-y-2 bg-slate-50",
+      "text": "No classes Add Class",
+      "font": {
+        "size": "16px",
+        "weight": "400",
+        "color": "rgb(250, 250, 250)"
+      },
+      "pad": {
+        "x": "16px",
+        "y": "16px"
+      },
+      "mt": "0px",
+      "mb": "0px",
+      "parentCls": "overflow-hidden",
+      "parentPad": {
+        "x": "0px",
+        "y": "0px"
+      },
+      "parentTag": "DIV"
+    },
+    {
+      "tag": "P",
+      "cls": "text-center text-slate-500 py-4",
+      "text": "No classes",
+      "font": {
+        "size": "16px",
+        "weight": "400",
+        "color": "rgb(100, 116, 139)"
+      },
+      "pad": {
+        "x": "0px",
+        "y": "16px"
+      },
+      "mt": "0px",
+      "mb": "0px",
+      "parentCls": "p-4 space-y-2 bg-slate-50",
+      "parentPad": {
+        "x": "16px",
+        "y": "16px"
+      },
+      "parentTag": "DIV"
+    }
+  ]
+}

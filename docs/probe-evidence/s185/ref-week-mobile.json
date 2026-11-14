@@ -1,0 +1,182 @@
+{
+  "vw": 390,
+  "blocks": [
+    {
+      "d": 0,
+      "tag": "DIV",
+      "cls": "p-4 lg:p-8",
+      "w": 390,
+      "h": 1036,
+      "text": "TimetableManage your class scheduleAll W"
+    },
+    {
+      "d": 1,
+      "tag": "DIV",
+      "cls": "space-y-6",
+      "w": 358,
+      "h": 1004,
+      "text": "TimetableManage your class scheduleAll W"
+    },
+    {
+      "d": 2,
+      "tag": "DIV",
+      "cls": "flex flex-col md:flex-row md:items-center justify-between gap-4",
+      "w": 358,
+      "h": 108,
+      "text": "TimetableManage your class scheduleAll W"
+    },
+    {
+      "d": 2,
+      "tag": "DIV",
+      "cls": "flex items-center justify-between bg-white rounded-xl p-4 shadow-sm border border-slate-100",
+      "w": 358,
+      "h": 78,
+      "text": "November 2026Nov 8 - Nov 14"
+    },
+    {
+      "d": 2,
+      "tag": "DIV",
+      "cls": "bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden",
+      "w": 358,
+      "h": 540,
+      "text": "Sun8Sunday0 classesMon9Monday0 classesTu"
+    },
+    {
+      "d": 2,
+      "tag": "DIV",
+      "cls": "bg-white rounded-2xl shadow-sm border border-slate-100 p-6",
+      "w": 358,
+      "h": 206,
+      "text": "My ClassesSaturday, November 14No subjec"
+    }
+  ],
+  "dayRows": [
+    {
+      "tag": "DIV",
+      "cls": "text-left",
+      "text": "Sunday0 classes",
+      "w": 64,
+      "h": 44,
+      "bg": "rgba(0, 0, 0, 0)",
+      "radius": "0px",
+      "border": "0px rgb(38, 38, 38)",
+      "display": "block",
+      "role": null,
+      "expanded": null
+    },
+    {
+      "tag": "DIV",
+      "cls": "text-left",
+      "text": "Monday0 classes",
+      "w": 64,
+      "h": 44,
+      "bg": "rgba(0, 0, 0, 0)",
+      "radius": "0px",
+      "border": "0px rgb(38, 38, 38)",
+      "display": "block",
+      "role": null,
+      "expanded": null
+    },
+    {
+      "tag": "DIV",
+      "cls": "text-left",
+      "text": "Tuesday0 classes",
+      "w": 65,
+      "h": 44,
+      "bg": "rgba(0, 0, 0, 0)",
+      "radius": "0px",
+      "border": "0px rgb(38, 38, 38)",
+      "display": "block",
+      "role": null,
+      "expanded": null
+    },
+    {
+      "tag": "DIV",
+      "cls": "text-left",
+      "text": "Wednesday0 classes",
+      "w": 93,
+      "h": 44,
+      "bg": "rgba(0, 0, 0, 0)",
+      "radius": "0px",
+      "border": "0px rgb(38, 38, 38)",
+      "display": "block",
+      "role": null,
+      "expanded": null
+    },
+    {
+      "tag": "DIV",
+      "cls": "text-left",
+      "text": "Thursday0 classes",
+      "w": 74,
+      "h": 44,
+      "bg": "rgba(0, 0, 0, 0)",
+      "radius": "0px",
+      "border": "0px rgb(38, 38, 38)",
+      "display": "block",
+      "role": null,
+      "expanded": null
+    },
+    {
+      "tag": "DIV",
+      "cls": "text-left",
+      "text": "Friday0 classes",
+      "w": 64,
+      "h": 44,
+      "bg": "rgba(0, 0, 0, 0)",
+      "radius": "0px",
+      "border": "0px rgb(38, 38, 38)",
+      "display": "block",
+      "role": null,
+      "expanded": null
+    },
+    {
+      "tag": "DIV",
+      "cls": "text-left",
+      "text": "Saturday0 classes",
+      "w": 72,
+      "h": 44,
+      "bg": "rgba(0, 0, 0, 0)",
+      "radius": "0px",
+      "border": "0px rgb(38, 38, 38)",
+      "display": "block",
+      "role": null,
+      "expanded": null
+    }
+  ],
+  "myClasses": [
+    {
+      "tag": "DIV",
+      "cls": "bg-white rounded-2xl shadow-sm border border-slate-100 p-6",
+      "text": "My ClassesSaturday, November 14No subjects added yet. Go to ",
+      "font": {
+        "size": "16px",
+        "weight": "400",
+        "color": "rgb(250, 250, 250)"
+      },
+      "h": 206
+    },
+    {
+      "tag": "DIV",
+      "cls": "flex items-center justify-between mb-4",
+      "text": "My ClassesSaturday, November 14",
+      "font": {
+        "size": "16px",
+        "weight": "400",
+        "color": "rgb(250, 250, 250)"
+      },
+      "h": 28
+    },
+    {
+      "tag": "H2",
+      "cls": "text-lg font-bold text-slate-800",
+      "text": "My Classes",
+      "font": {
+        "size": "18px",
+        "weight": "700",
+        "color": "rgb(30, 41, 59)"
+      },
+      "h": 28
+    }
+  ],
+  "todayChip": []
+}

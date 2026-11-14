@@ -1,0 +1,69 @@
+{
+  "present": true,
+  "panelCls": "bg-white rounded-2xl shadow-sm border border-slate-100 p-6",
+  "kids": [
+    {
+      "tag": "DIV",
+      "cls": "flex items-center justify-between mb-4",
+      "text": "My ClassesSaturday, November 14",
+      "font": {
+        "size": "16px",
+        "weight": "400",
+        "color": "rgb(250, 250, 250)"
+      },
+      "h": 28,
+      "display": "flex"
+    },
+    {
+      "tag": "P",
+      "cls": "text-center text-slate-400 py-8",
+      "text": "No subjects added yet. Go to Settings to add subje",
+      "font": {
+        "size": "16px",
+        "weight": "400",
+        "color": "rgb(148, 163, 184)"
+      },
+      "h": 112,
+      "display": "block"
+    }
+  ],
+  "hdrKids": [
+    {
+      "tag": "H2",
+      "cls": "text-lg font-bold text-slate-800",
+      "text": "My Classes",
+      "font": {
+        "size": "18px",
+        "weight": "700",
+        "color": "rgb(30, 41, 59)"
+      }
+    },
+    {
+      "tag": "P",
+      "cls": "text-sm text-slate-500",
+      "text": "Saturday, November 14",
+      "font": {
+        "size": "14px",
+        "weight": "400",
+        "color": "rgb(100, 116, 139)"
+      }
+    }
+  ],
+  "emptyLine": [
+    {
+      "tag": "P",
+      "cls": "text-center text-slate-400 py-8",
+      "text": "No subjects added yet. Go to Settings to add subjects.",
+      "font": {
+        "size": "16px",
+        "weight": "400",
+        "color": "rgb(148, 163, 184)"
+      },
+      "pad": {
+        "x": "0px",
+        "y": "32px"
+      },
+      "align": "center"
+    }
+  ]
+}

@@ -1,0 +1,32 @@
+{
+  "cellText": null,
+  "dialogCount": 1,
+  "title": "Add Class",
+  "inputs": [
+    {
+      "type": null,
+      "value": ""
+    },
+    {
+      "type": null,
+      "value": "2"
+    },
+    {
+      "type": "time",
+      "value": "09:00"
+    },
+    {
+      "type": "time",
+      "value": "10:00"
+    },
+    {
+      "type": null,
+      "value": ""
+    },
+    {
+      "type": null,
+      "value": "all"
+    }
+  ],
+  "afterEscape": 0
+}

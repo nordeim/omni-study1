@@ -335,7 +335,19 @@ describe("the chunked cert runner's truth contract (S128/CC2)", () => {
     // Files subtitle copy port — see docs/remediation-plan-session182.md;
     // the unit census holds 1779 [54 files] — a view-layer port, no new
     // seam; two hue-tokens register anchors re-anchored 408 → 412).
-    expect(certSource).toContain("Expected: 158 + 254 + 101 + 95 + 89 = 697");
+    // S185/EI re-tag: 697 → 705, chunk 2 +8 (the S185/EI Timetable
+    // week-strip rows pins in parity-session7 — the reference's own
+    // mobile surface measured for the first time: the flush grid card +
+    // the "Time" corner + the slate-700 date + the today violet pair +
+    // the span-carried hour labels (the readable slate-500 superset over
+    // the reference's own 2.85:1 slate-400 ink) + the empty-cell click
+    // (the day-only prefill + the 10:00 end default) + the mobile flat
+    // rows (the stacked Sun/8 tile + no chevron + all-collapsed + no
+    // Today chip) + the expanded day's slate-50 block with the
+    // near-black Add Class button + the today-day dialog default — see
+    // docs/remediation-plan-session185.md; the unit census holds
+    // 1795 [55 files] — a view-layer port, no new seam.
+    expect(certSource).toContain("Expected: 158 + 262 + 101 + 95 + 89 = 705");
   });
 
   it("propagates a failing chunk's exit code (never a green cert on a red run)", () => {

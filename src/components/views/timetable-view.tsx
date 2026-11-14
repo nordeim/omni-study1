@@ -10,7 +10,6 @@
 
 import * as React from "react";
 import {
-  ChevronDown,
   ChevronLeft,
   ChevronRight,
   Clock,
@@ -39,7 +38,7 @@ import {
 import { useToast } from "@/components/ui/toast";
 import { Spinner } from "@/components/views/shared";
 import { mutations, useDataStore, type TimetableClassInput, type TimetableClassRow } from "@/lib/data";
-import { addDays, formatHHMMRange, formatWeekdayMonthDay, formatShortDate, startOfDay } from "@/lib/date";
+import { addDays, formatHHMMRange, formatWeekdayMonthDay, startOfDay } from "@/lib/date";
 import { ApiError } from "@/lib/api";
 // S165/DN3: the WEEK_TYPES single source joins the import (the DK2
 // events-REPEATS port's map-over-the-import form) — the view had
@@ -60,6 +59,12 @@ const DAY_NAMES = [
   "Saturday",
   "Sunday",
 ];
+// S185/EI (measured): the mobile tile's abbreviated weekday — the reference
+// renders "Sun"/"Mon"/… (text-xs font-medium) stacked OVER the date number
+// (text-sm font-bold) in its w-10 h-10 flex-col tile; the clone's prior
+// date-only tile was its own form, never measured (ISO order like
+// DAY_NAMES).
+const DAY_ABBRS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 // S127/CB6: FOURTEEN rows — 7 AM … 8 PM (measured live on the reference
 // 2026-11-02: its desktop week grid renders 14 hour rows; the clone
 // rendered 12, cutting the 7 PM and 8 PM bands).
@@ -92,6 +97,13 @@ export function TimetableView() {
   const { toast } = useToast();
 
   const today = startOfDay(new Date());
+  // S185/EI (measured): the reference's Add Class dialog opens with the
+  // TODAY day prefilled (measured fresh-context twice on 2026-11-14: the
+  // day select read 6 = Saturday = today from BOTH the toolbar and the
+  // expanded-day button — a day-agnostic default, not a context prefill;
+  // the residual static-6 ambiguity is recorded in the plan §6.5). The
+  // clone's prior Monday-0 default was the S7-era form, never measured.
+  const todayIso = (today.getDay() + 6) % 7;
   // The week containing today, SUNDAY-first (session-63 Batch T: the
   // reference's week runs Sun→Sat — "Oct 18 - Oct 24" with today in the
   // FIRST column). The old Monday-first range under Sunday-first labels
@@ -105,10 +117,20 @@ export function TimetableView() {
   // (WCAG 4.1.2). The reference's own button (measured live, S138) is a
   // no-op with no pressed semantics; the honest clone form is the
   // parity-pinned outline button, stateless.
-  // The mobile accordion opens on today's COLUMN (Sunday-first display:
-  // column === getDay()). The old ISO-index math pointed one column off
+  // The mobile accordion's rows are Sunday-first display columns
+  // (column === getDay()). The old ISO-index math pointed one column off
   // under the Sunday-first heads — part of the session-63 misalignment.
-  const [openDay, setOpenDay] = React.useState<number | null>(today.getDay());
+  const [openDay, setOpenDay] = React.useState<number | null>(null);
+  // S185/EI (measured): the mobile accordion renders ALL-COLLAPSED
+  // initially (the reference's measured initial state — the click test
+  // EXPANDED the today row, so nothing was pre-open; the prior
+  // today-pre-open was the clone's own S105 evidence-frame determinism,
+  // not a reference form).
+  // S185/EI (measured): the desktop grid's column-wide hover — the
+  // reference tints the WHOLE column (hover:bg-slate-50/50 rides the
+  // column div); the row-oriented DOM reproduces it through this state
+  // (a cell's enter sets its column; the grid's leave clears).
+  const [hoverCol, setHoverCol] = React.useState<number | null>(null);
   const [dialog, setDialog] = React.useState<{ open: boolean; editing: TimetableClassRow | null }>({
     open: false,
     editing: null,
@@ -117,7 +139,7 @@ export function TimetableView() {
     name: "",
     dayOfWeek: 0,
     startTime: "09:00",
-    endTime: "10:30",
+    endTime: "10:00",
     subjectId: "",
     room: "",
     weekType: "ALL" as WeekType,
@@ -147,9 +169,9 @@ export function TimetableView() {
   const openCreate = (day?: number) => {
     setForm({
       name: "",
-      dayOfWeek: day ?? 0,
+      dayOfWeek: day ?? todayIso,
       startTime: "09:00",
-      endTime: "10:30",
+      endTime: "10:00",
       subjectId: "",
       room: "",
       weekType: "ALL",
@@ -182,8 +204,9 @@ export function TimetableView() {
     // S152/DA2 (the S151 audit's B-L6): the hand-guard — the noValidate
     // form's empty required fields answer HERE with human copy (the
     // S127/CB17 files-view pattern), never the server's raw Zod issue
-    // text. The time inputs carry dialog defaults ("09:00"/"10:30") but
-    // are clearable — all three required fields guard. Before setBusy:
+    // text. The time inputs carry dialog defaults ("09:00"/"10:00" — the
+    // S185/EI measured pair) but are clearable — all three required fields
+    // guard. Before setBusy:
     // an early return must not strand the busy latch.
     if (!form.name.trim()) {
       setError("Please enter a name.");
@@ -357,11 +380,32 @@ export function TimetableView() {
             </Button>
           </div>
 
-          {/* Desktop week grid */}
-          <section className="sf-card overflow-hidden p-6 max-md:hidden">
-            <div role="group" className="sf-timetable-canvas min-w-[900px] overflow-x-auto" aria-label="Week grid">
-              <div role="group" className="grid grid-cols-8" aria-label="Week header">
-                <div />
+          {/* Desktop week grid — S185/EI (measured): the reference's grid
+              card carries NO padding (the header strip + the grid render
+              FLUSH to the overflow-hidden card's edges — the parent chain
+              measured pad 0 at every hop; the prior p-6 was the clone's own
+              inset). The strip carries the border-b separator + the "Time"
+              corner label; the date reads slate-700 (not 800); the today
+              cell is UNROUNDED with the violet name/date pair. */}
+          <section className="sf-card overflow-hidden max-md:hidden">
+            <div
+              role="group"
+              className="sf-timetable-canvas min-w-[900px] overflow-x-auto"
+              aria-label="Week grid"
+              onMouseLeave={() => setHoverCol(null)}
+            >
+              <div
+                role="group"
+                className="grid grid-cols-8 border-b border-slate-100 dark:border-slate-800"
+                aria-label="Week header"
+              >
+                {/* S185/EI (measured): the reference's corner cell renders
+                    "Time" (p-3 text-center text-sm font-medium
+                    text-slate-500) — the pre-change clone rendered an EMPTY
+                    div. */}
+                <div className="p-3 text-center text-sm font-medium text-slate-500 dark:text-slate-400">
+                  Time
+                </div>
                 {weekDays.map((day, col) => {
                   const isTodayCol = isThisWeek && day.toDateString() === today.toDateString();
                   return (
@@ -370,13 +414,31 @@ export function TimetableView() {
                       data-today-header={isTodayCol ? "" : undefined}
                       className={cn(
                         "border-l border-slate-100 p-3 text-center dark:border-slate-800",
-                        isTodayCol && "rounded-lg sf-today-tint",
+                        isTodayCol && "sf-today-tint",
                       )}
                     >
-                      <p className="text-sm font-medium text-slate-600 dark:text-slate-300">
+                      <p
+                        className={cn(
+                          "text-sm font-medium text-slate-600 dark:text-slate-300",
+                          isTodayCol && "text-violet-600 dark:text-sf-primary-strong-dark",
+                        )}
+                      >
                         {DAY_NAMES[columnToIso(col)]}
                       </p>
-                      <p className="text-lg font-bold text-slate-800 dark:text-sf-primary-strong-dark">
+                      {/* S185/EI (measured): the date reads slate-700 (the
+                          reference's rgb(51,65,85) — not the clone's prior
+                          slate-800); the TODAY date reads violet-700 + the
+                          today name violet-600 (the reference's measured
+                          today pair; the cell itself stays bg-violet-50 —
+                          the sf-today-tint's light value is byte-identical
+                          — now UNROUNDED, the reference's cell carries no
+                          rounding). */}
+                      <p
+                        className={cn(
+                          "text-lg font-bold text-slate-700 dark:text-sf-primary-strong-dark",
+                          isTodayCol && "text-violet-700",
+                        )}
+                      >
                         {day.getDate()}
                       </p>
                     </div>
@@ -386,8 +448,24 @@ export function TimetableView() {
               <div role="group" className="grid grid-cols-8" aria-label="Hour cells">
                 {HOURS.map((hour) => (
                   <React.Fragment key={hour}>
-                    <div className="border-b border-slate-50 pr-2 pt-1 text-right text-xs text-slate-500 dark:text-slate-400 dark:border-slate-800">
-                      {hour === 12 ? "12 PM" : hour > 12 ? `${hour - 12} PM` : `${hour} AM`}
+                    {/* S185/EI (measured): the time label cell — h-[60px]
+                        border-b border-slate-50 px-3 py-1 wrapping the label
+                        in a SPAN (12px at the LEFT, 12px in — the pixel
+                        probe: ink rgb(148,163,184) at x306; the prior bare
+                        right-aligned div was the clone's own form, never
+                        measured). THE COLOR is the readable superset: the
+                        reference's own labels render slate-400 (measured
+                        ink) — a 2.85:1 contrast on white, an axe color-
+                        contrast SERIOUS fail (the same class as its
+                        invisible mobile names, §6.1); the clone's axe gate
+                        keeps slate-500 (4.76:1, the pre-change color, the
+                        S83/AJ5 one-step-darker precedent). The S7-C
+                        hour-rows pin rides the textContent + the 60px
+                        height — both hold. */}
+                    <div className="h-[60px] border-b border-slate-50 px-3 py-1 dark:border-slate-800">
+                      <span className="text-xs text-slate-500 dark:text-slate-400">
+                        {hour === 12 ? "12 PM" : hour > 12 ? `${hour - 12} PM` : `${hour} AM`}
+                      </span>
                     </div>
                     {weekDays.map((day, col) => {
                       const isoDay = columnToIso(col);
@@ -395,7 +473,25 @@ export function TimetableView() {
                       return (
                         <div
                           key={`${day.toISOString()}-${hour}`}
-                          className="relative min-h-[60px] border-b border-l border-slate-50 dark:border-slate-800"
+                          /* S185/EI (measured): the empty-cell click — the
+                             reference's columns carry cursor-pointer +
+                             hover:bg-slate-50/50 and the CLICK opens the
+                             Add Class dialog prefilled with the DAY only
+                             (probe 10: Tuesday's 11 AM cell opened the day
+                             select at Tuesday with the times still at the
+                             09:00/10:00 defaults). The column separators
+                             read slate-100 (the reference's measured
+                             hairline, not slate-50). The plain div stays
+                             the reference's own anatomy (its cells are
+                             divs with cursor-pointer, no keyboard path —
+                             the toolbar's Add Class is the accessible
+                             create route). */
+                          onClick={() => openCreate(isoDay)}
+                          onMouseEnter={() => setHoverCol(col)}
+                          className={cn(
+                            "relative min-h-[60px] cursor-pointer border-b border-l border-slate-100 dark:border-slate-800",
+                            hoverCol === col && "bg-slate-50/50 dark:bg-slate-800/50",
+                          )}
                         >
                           {cellClasses.map((c, idx) => {
                             const subject = subjectOf(c.subjectId);
@@ -407,7 +503,16 @@ export function TimetableView() {
                               <button
                                 key={c.id}
                                 type="button"
-                                onClick={() => openEdit(c)}
+                                onClick={(e) => {
+                                  // S185/EI: the stopPropagation keeps the
+                                  // card's EDIT click from bubbling into the
+                                  // cell's ADD click (the reference's cards
+                                  // own their own click; the cell's add
+                                  // rides the empty area — the S119/BT9
+                                  // edit path unchanged).
+                                  e.stopPropagation();
+                                  openEdit(c);
+                                }}
                                 className="group absolute inset-x-1 rounded-lg border-l-4 p-2 text-left text-xs outline-none focus-visible:ring-2 focus-visible:ring-sf-primary/40"
                                 style={{
                                   top: 2 + idx * 4,
@@ -459,56 +564,83 @@ export function TimetableView() {
             </div>
           </section>
 
-          {/* Mobile day accordion */}
-          <section className="sf-card p-4 md:hidden">
-            {/* The S11 mobile today chip (a real div with the literal soft
-                class — the S11 locator reads it at 390px). */}
-            <div className="sf-chip-dark mb-2 flex items-center justify-between rounded-lg bg-sf-primary-soft px-3 py-2 text-sm font-medium text-sf-primary-strong dark:text-sf-primary-strong-dark">
-              <span>Today</span>
-              <span>{formatShortDate(today)}</span>
-            </div>
-            <div className="flex flex-col gap-2">
+          {/* Mobile day accordion — S185/EI (measured): the reference's own
+              mobile surface (probed for the FIRST time this cycle — the
+              prior "already recorded" mobile anatomy was the clone's own
+              S105/S113 accordion): ONE overflow-hidden card, flat rows
+              separated by slate-100 hairlines (the reference's
+              border-b/last:border-b-0 rows — the divide-y here emits the
+              same six separators), NO "Today" chip above the rows, and NO
+              chevron (its rows are cursor-pointer with no expand glyph;
+              the aria-expanded superset STAYS — invisible semantics over
+              the reference's bare divs). The tile renders the abbreviated
+              weekday stacked over the date ("Sun"/"8" — the measured
+              two-span form); the count reads text-sm (14px); the today
+              marking rides the tile + the violet-700 name (NO row-level
+              tint — the reference tints no row). */}
+          <section className="sf-card overflow-hidden md:hidden">
+            <div className="divide-y divide-slate-100 dark:divide-slate-800">
               {weekDays.map((day, col) => {
                 const isoDay = columnToIso(col);
                 const dayClasses = visible.filter((c) => c.dayOfWeek === isoDay);
                 const isTodayCol = isThisWeek && day.toDateString() === today.toDateString();
                 const open = openDay === col;
                 return (
-                  <div key={day.toISOString()} className="rounded-xl border border-slate-100 dark:border-slate-800">
+                  <div key={day.toISOString()}>
                     <button
                       type="button"
                       aria-expanded={open}
                       onClick={() => setOpenDay(open ? null : col)}
-                      className={cn(
-                        "flex w-full items-center gap-3 rounded-xl p-3 text-left",
-                        isTodayCol && "sf-today-tint",
-                      )}
+                      className="flex w-full items-center gap-3 p-4 text-left"
                     >
                       <span
                         className={cn(
-                          "flex size-10 items-center justify-center rounded-xl text-sm font-bold",
+                          "flex size-10 flex-col items-center justify-center rounded-xl",
                           isTodayCol
                             ? "sf-selected-tint text-white"
                             : "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300",
                         )}
                       >
-                        {day.getDate()}
+                        <span className="text-xs font-medium">{DAY_ABBRS[isoDay]}</span>
+                        <span className="text-sm font-bold">{day.getDate()}</span>
                       </span>
                       <span className="flex-1">
-                        <span className="block font-medium text-slate-700 dark:text-slate-200">
+                        {/* The name stays the readable slate-700 superset —
+                            the reference's own non-today names render
+                            INVISIBLE (the pixel-verified zero-ink inherited
+                            near-white token — its defect, recorded in the
+                            plan §6.1, not ported); the TODAY name reads the
+                            measured violet-700. */}
+                        <span
+                          className={cn(
+                            "block font-medium text-slate-700 dark:text-slate-200",
+                            isTodayCol && "text-violet-700 dark:text-sf-primary-strong-dark",
+                          )}
+                        >
                           {DAY_NAMES[isoDay]}
                         </span>
-                        <span className="text-xs text-slate-500 dark:text-slate-400">
+                        <span className="text-sm text-slate-500 dark:text-slate-400">
                           {dayClasses.length} {dayClasses.length === 1 ? "class" : "classes"}
                         </span>
                       </span>
-                      <ChevronDown
-                        className={cn("size-4 text-slate-400 transition-transform", open && "rotate-180")}
-                        strokeWidth={2}
-                      />
                     </button>
                     {open && (
-                      <div className="flex flex-col gap-2 px-3 pb-3">
+                      <div className="overflow-hidden">
+                        {/* S185/EI (measured): the expanded block — p-4
+                            space-y-2 bg-slate-50 (the reference's own
+                            family; the empty line P text-center
+                            text-slate-500 py-4 "No classes" + the Add
+                            Class button in the measured near-black h-8
+                            text-xs w-full family — its --background token
+                            renders the outline family at rgb(10,10,10);
+                            the clone's neutral variant IS that measured
+                            family, with the reference's border-input
+                            hairline riding the className). The NON-empty
+                            branch re-wraps into the same block — the
+                            wrapper is the measured family; the class rows
+                            keep the clone's own anatomy (unmeasurable
+                            without creating undeletable reference residue —
+                            the plan §6.3). */}
                         {/* S165/DN2: the S130/CE3 day-detail gate is GONE — it
                             was UNREACHABLE dead code (the calendar-pattern
                             copy landed inside the has-classes ternary branch,
@@ -516,12 +648,26 @@ export function TimetableView() {
                             accordion renders, so `loading && classes.length
                             === 0` could never hold here). The OUTER gate at
                             the top of the view owns the in-flight window; a
-                            settled-empty day is the honest "No classes this
-                            day." */}
-                        {dayClasses.length === 0 ? (
-                          <p className="py-2 text-sm text-slate-500 dark:text-slate-400">No classes this day.</p>
-                        ) : (
-                          dayClasses.map((c) => {
+                            settled-empty day is the honest "No classes". */}
+                        <div className="space-y-2 bg-slate-50 p-4 dark:bg-slate-800/50">
+                          {dayClasses.length === 0 ? (
+                            <>
+                              <p className="py-4 text-center text-slate-500 dark:text-slate-400">
+                                No classes
+                              </p>
+                              <Button
+                                type="button"
+                                variant="neutral"
+                                size="sm"
+                                className="mt-2 w-full border border-input"
+                                onClick={() => openCreate()}
+                              >
+                                <Plus className="size-4" strokeWidth={2} />
+                                Add Class
+                              </Button>
+                            </>
+                          ) : (
+                            dayClasses.map((c) => {
                             const subject = subjectOf(c.subjectId);
                             const color = subject?.color ?? "rgb(var(--sf-primary))";
                             return (
@@ -556,6 +702,7 @@ export function TimetableView() {
                             );
                           })
                         )}
+                        </div>
                       </div>
                     )}
                   </div>
@@ -571,9 +718,12 @@ export function TimetableView() {
           EmptyState); the copy is clone-accurate (the reference's own
           "No subjects added yet" derives from ITS subject-based model —
           data-shaped, not portable; the clone's TimetableClass creates
-          through the toolbar's Add Class). */}
+          through the toolbar's Add Class). S185/EI (measured): the header
+          row carries mb-4 (the reference's measured spacing — the empty's
+          16px above its py-8; the grid below drops its own mt-4 — the
+          non-empty spacing stays the same 16px). */}
       <section className="sf-card p-6">
-        <div role="group" className="flex items-center justify-between" aria-label="My Classes header">
+        <div role="group" className="mb-4 flex items-center justify-between" aria-label="My Classes header">
           <h2 className="text-lg font-bold text-slate-800 dark:text-slate-100">My Classes</h2>
           <p className="text-sm text-slate-500 dark:text-slate-400">{formatWeekdayMonthDay(today)}</p>
         </div>
@@ -582,7 +732,7 @@ export function TimetableView() {
             No classes yet. Use Add Class to build your weekly timetable.
           </p>
         ) : (
-        <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {/* S140/CO4c (Audit A L-3): the silent 9-card cap is gone —
                 it hid user data with no affordance and no measured
                 reference basis (the reference renders its empty state

@@ -1,0 +1,340 @@
+{
+  "desktop": {
+    "gridParents": [
+      {
+        "tag": "SECTION",
+        "cls": "sf-card overflow-hidden p-6 max-md:hidden",
+        "pad": {
+          "x": "24px",
+          "y": "24px"
+        },
+        "bg": "rgb(255, 255, 255)",
+        "radius": "16px",
+        "overflow": "hidden",
+        "w": 1116
+      },
+      {
+        "tag": "DIV",
+        "cls": "flex flex-col gap-6",
+        "pad": {
+          "x": "0px",
+          "y": "0px"
+        },
+        "bg": "rgba(0, 0, 0, 0)",
+        "radius": "0px",
+        "overflow": "visible",
+        "w": 1116
+      },
+      {
+        "tag": "MAIN",
+        "cls": "p-4 pt-20 outline-none transition-[margin] duration-200 lg:p-8 lg:pt-8 lg:ml-[260px]",
+        "pad": {
+          "x": "32px",
+          "y": "32px"
+        },
+        "bg": "rgba(0, 0, 0, 0)",
+        "radius": "0px",
+        "overflow": "visible",
+        "w": 1180
+      }
+    ],
+    "headerStrip": {
+      "cls": "grid grid-cols-8",
+      "display": "grid",
+      "borderB": "0px rgb(229, 231, 235)",
+      "w": 1066
+    },
+    "headerCells": [
+      {
+        "i": 0,
+        "tag": "DIV",
+        "cls": "",
+        "bg": "rgba(0, 0, 0, 0)",
+        "radius": "0px",
+        "text": "",
+        "nameColor": null,
+        "nameCls": null,
+        "dateColor": null,
+        "dateCls": null
+      },
+      {
+        "i": 1,
+        "tag": "DIV",
+        "cls": "border-l border-slate-100 p-3 text-center dark:border-slate-800",
+        "bg": "rgba(0, 0, 0, 0)",
+        "radius": "0px",
+        "text": "Sunday8",
+        "nameColor": "rgb(71, 85, 105)",
+        "nameCls": "text-sm font-medium text-slate-600 dark:text-slate-300",
+        "dateColor": "rgb(30, 41, 59)",
+        "dateCls": "text-lg font-bold text-slate-800 dark:text-sf-primary-strong-dark"
+      },
+      {
+        "i": 2,
+        "tag": "DIV",
+        "cls": "border-l border-slate-100 p-3 text-center dark:border-slate-800",
+        "bg": "rgba(0, 0, 0, 0)",
+        "radius": "0px",
+        "text": "Monday9",
+        "nameColor": "rgb(71, 85, 105)",
+        "nameCls": "text-sm font-medium text-slate-600 dark:text-slate-300",
+        "dateColor": "rgb(30, 41, 59)",
+        "dateCls": "text-lg font-bold text-slate-800 dark:text-sf-primary-strong-dark"
+      },
+      {
+        "i": 3,
+        "tag": "DIV",
+        "cls": "border-l border-slate-100 p-3 text-center dark:border-slate-800",
+        "bg": "rgba(0, 0, 0, 0)",
+        "radius": "0px",
+        "text": "Tuesday10",
+        "nameColor": "rgb(71, 85, 105)",
+        "nameCls": "text-sm font-medium text-slate-600 dark:text-slate-300",
+        "dateColor": "rgb(30, 41, 59)",
+        "dateCls": "text-lg font-bold text-slate-800 dark:text-sf-primary-strong-dark"
+      },
+      {
+        "i": 4,
+        "tag": "DIV",
+        "cls": "border-l border-slate-100 p-3 text-center dark:border-slate-800",
+        "bg": "rgba(0, 0, 0, 0)",
+        "radius": "0px",
+        "text": "Wednesday11",
+        "nameColor": "rgb(71, 85, 105)",
+        "nameCls": "text-sm font-medium text-slate-600 dark:text-slate-300",
+        "dateColor": "rgb(30, 41, 59)",
+        "dateCls": "text-lg font-bold text-slate-800 dark:text-sf-primary-strong-dark"
+      },
+      {
+        "i": 5,
+        "tag": "DIV",
+        "cls": "border-l border-slate-100 p-3 text-center dark:border-slate-800",
+        "bg": "rgba(0, 0, 0, 0)",
+        "radius": "0px",
+        "text": "Thursday12",
+        "nameColor": "rgb(71, 85, 105)",
+        "nameCls": "text-sm font-medium text-slate-600 dark:text-slate-300",
+        "dateColor": "rgb(30, 41, 59)",
+        "dateCls": "text-lg font-bold text-slate-800 dark:text-sf-primary-strong-dark"
+      },
+      {
+        "i": 6,
+        "tag": "DIV",
+        "cls": "border-l border-slate-100 p-3 text-center dark:border-slate-800",
+        "bg": "rgba(0, 0, 0, 0)",
+        "radius": "0px",
+        "text": "Friday13",
+        "nameColor": "rgb(71, 85, 105)",
+        "nameCls": "text-sm font-medium text-slate-600 dark:text-slate-300",
+        "dateColor": "rgb(30, 41, 59)",
+        "dateCls": "text-lg font-bold text-slate-800 dark:text-sf-primary-strong-dark"
+      },
+      {
+        "i": 7,
+        "tag": "DIV",
+        "cls": "border-l border-slate-100 p-3 text-center dark:border-slate-800 rounded-lg sf-today-tint",
+        "bg": "rgb(245, 243, 255)",
+        "radius": "8px",
+        "text": "Saturday14",
+        "nameColor": "rgb(71, 85, 105)",
+        "nameCls": "text-sm font-medium text-slate-600 dark:text-slate-300",
+        "dateColor": "rgb(30, 41, 59)",
+        "dateCls": "text-lg font-bold text-slate-800 dark:text-sf-primary-strong-dark"
+      }
+    ],
+    "timeLabel": {
+      "cls": "border-b border-slate-50 pr-2 pt-1 text-right text-xs text-slate-500 dark:text-slate-400 dark:border-slate-800",
+      "font": {
+        "size": "12px",
+        "weight": "400",
+        "color": "rgb(100, 116, 139)"
+      },
+      "pad": {
+        "x": "0px",
+        "y": "4px"
+      },
+      "align": "right",
+      "h": 60,
+      "text": "7 AM"
+    },
+    "dayCell": {
+      "cls": "relative min-h-[60px] border-b border-l border-slate-50 dark:border-slate-800",
+      "cursor": "auto",
+      "borderL": "1px rgb(248, 250, 252)",
+      "borderB": "1px rgb(248, 250, 252)",
+      "h": 60
+    },
+    "hourRowCount": 14
+  },
+  "mobile": {
+    "vw": 390,
+    "mobileSection": {
+      "cls": "sf-card p-4 md:hidden",
+      "pad": {
+        "x": "16px",
+        "y": "16px"
+      },
+      "text": "TodaySat, Nov 148Sunday0 classes9Monday1"
+    },
+    "todayChip": {
+      "cls": "sf-chip-dark mb-2 flex items-center justify-between rounded-lg bg-sf-primary-soft px-3 py-2 text-sm font-mediu",
+      "text": "TodaySat, Nov 14"
+    },
+    "rowCount": 7,
+    "rows": [
+      {
+        "rowCls": "rounded-xl border border-slate-100 dark:border-slate-800",
+        "border": "1px rgb(241, 245, 249) / all:1px",
+        "btnCls": "flex w-full items-center gap-3 rounded-xl p-3 text-left",
+        "btnBg": "rgba(0, 0, 0, 0)",
+        "expanded": "false",
+        "tileCls": "flex size-10 items-center justify-center rounded-xl text-sm font-bold bg-slate-100 text-slate-600 dark:bg-slat",
+        "tileBg": "rgb(241, 245, 249)",
+        "tileText": "8",
+        "tileH": 40,
+        "nameCls": "block font-medium text-slate-700 dark:text-slate-200",
+        "countCls": "flex size-10 items-center justify-center rounded-xl text-sm font-bold ",
+        "countFont": {
+          "size": "14px",
+          "color": "rgb(71, 85, 105)"
+        },
+        "chev": {
+          "cls": "lucide lucide-chevron-down size-4 text-slate-400 transition-"
+        },
+        "text": "8Sunday0 classes"
+      },
+      {
+        "rowCls": "rounded-xl border border-slate-100 dark:border-slate-800",
+        "border": "1px rgb(241, 245, 249) / all:1px",
+        "btnCls": "flex w-full items-center gap-3 rounded-xl p-3 text-left",
+        "btnBg": "rgba(0, 0, 0, 0)",
+        "expanded": "false",
+        "tileCls": "flex size-10 items-center justify-center rounded-xl text-sm font-bold bg-slate-100 text-slate-600 dark:bg-slat",
+        "tileBg": "rgb(241, 245, 249)",
+        "tileText": "9",
+        "tileH": 40,
+        "nameCls": "block font-medium text-slate-700 dark:text-slate-200",
+        "countCls": "flex size-10 items-center justify-center rounded-xl text-sm font-bold ",
+        "countFont": {
+          "size": "14px",
+          "color": "rgb(71, 85, 105)"
+        },
+        "chev": {
+          "cls": "lucide lucide-chevron-down size-4 text-slate-400 transition-"
+        },
+        "text": "9Monday1 class"
+      },
+      {
+        "rowCls": "rounded-xl border border-slate-100 dark:border-slate-800",
+        "border": "1px rgb(241, 245, 249) / all:1px",
+        "btnCls": "flex w-full items-center gap-3 rounded-xl p-3 text-left",
+        "btnBg": "rgba(0, 0, 0, 0)",
+        "expanded": "false",
+        "tileCls": "flex size-10 items-center justify-center rounded-xl text-sm font-bold bg-slate-100 text-slate-600 dark:bg-slat",
+        "tileBg": "rgb(241, 245, 249)",
+        "tileText": "10",
+        "tileH": 40,
+        "nameCls": "block font-medium text-slate-700 dark:text-slate-200",
+        "countCls": "flex size-10 items-center justify-center rounded-xl text-sm font-bold ",
+        "countFont": {
+          "size": "14px",
+          "color": "rgb(71, 85, 105)"
+        },
+        "chev": {
+          "cls": "lucide lucide-chevron-down size-4 text-slate-400 transition-"
+        },
+        "text": "10Tuesday1 class"
+      },
+      {
+        "rowCls": "rounded-xl border border-slate-100 dark:border-slate-800",
+        "border": "1px rgb(241, 245, 249) / all:1px",
+        "btnCls": "flex w-full items-center gap-3 rounded-xl p-3 text-left",
+        "btnBg": "rgba(0, 0, 0, 0)",
+        "expanded": "false",
+        "tileCls": "flex size-10 items-center justify-center rounded-xl text-sm font-bold bg-slate-100 text-slate-600 dark:bg-slat",
+        "tileBg": "rgb(241, 245, 249)",
+        "tileText": "11",
+        "tileH": 40,
+        "nameCls": "block font-medium text-slate-700 dark:text-slate-200",
+        "countCls": "flex size-10 items-center justify-center rounded-xl text-sm font-bold ",
+        "countFont": {
+          "size": "14px",
+          "color": "rgb(71, 85, 105)"
+        },
+        "chev": {
+          "cls": "lucide lucide-chevron-down size-4 text-slate-400 transition-"
+        },
+        "text": "11Wednesday1 class"
+      },
+      {
+        "rowCls": "rounded-xl border border-slate-100 dark:border-slate-800",
+        "border": "1px rgb(241, 245, 249) / all:1px",
+        "btnCls": "flex w-full items-center gap-3 rounded-xl p-3 text-left",
+        "btnBg": "rgba(0, 0, 0, 0)",
+        "expanded": "false",
+        "tileCls": "flex size-10 items-center justify-center rounded-xl text-sm font-bold bg-slate-100 text-slate-600 dark:bg-slat",
+        "tileBg": "rgb(241, 245, 249)",
+        "tileText": "12",
+        "tileH": 40,
+        "nameCls": "block font-medium text-slate-700 dark:text-slate-200",
+        "countCls": "flex size-10 items-center justify-center rounded-xl text-sm font-bold ",
+        "countFont": {
+          "size": "14px",
+          "color": "rgb(71, 85, 105)"
+        },
+        "chev": {
+          "cls": "lucide lucide-chevron-down size-4 text-slate-400 transition-"
+        },
+        "text": "12Thursday1 class"
+      },
+      {
+        "rowCls": "rounded-xl border border-slate-100 dark:border-slate-800",
+        "border": "1px rgb(241, 245, 249) / all:1px",
+        "btnCls": "flex w-full items-center gap-3 rounded-xl p-3 text-left",
+        "btnBg": "rgba(0, 0, 0, 0)",
+        "expanded": "false",
+        "tileCls": "flex size-10 items-center justify-center rounded-xl text-sm font-bold bg-slate-100 text-slate-600 dark:bg-slat",
+        "tileBg": "rgb(241, 245, 249)",
+        "tileText": "13",
+        "tileH": 40,
+        "nameCls": "block font-medium text-slate-700 dark:text-slate-200",
+        "countCls": "flex size-10 items-center justify-center rounded-xl text-sm font-bold ",
+        "countFont": {
+          "size": "14px",
+          "color": "rgb(71, 85, 105)"
+        },
+        "chev": {
+          "cls": "lucide lucide-chevron-down size-4 text-slate-400 transition-"
+        },
+        "text": "13Friday1 class"
+      },
+      {
+        "rowCls": "rounded-xl border border-slate-100 dark:border-slate-800",
+        "border": "1px rgb(241, 245, 249) / all:1px",
+        "btnCls": "flex w-full items-center gap-3 rounded-xl p-3 text-left sf-today-tint",
+        "btnBg": "rgb(245, 243, 255)",
+        "expanded": "true",
+        "tileCls": "flex size-10 items-center justify-center rounded-xl text-sm font-bold sf-selected-tint text-white",
+        "tileBg": "rgb(124, 58, 237)",
+        "tileText": "14",
+        "tileH": 40,
+        "nameCls": "block font-medium text-slate-700 dark:text-slate-200",
+        "countCls": "flex size-10 items-center justify-center rounded-xl text-sm font-bold ",
+        "countFont": {
+          "size": "14px",
+          "color": "rgb(255, 255, 255)"
+        },
+        "chev": {
+          "cls": "lucide lucide-chevron-down size-4 text-slate-400 transition-"
+        },
+        "text": "14Saturday0 classesNo cl"
+      }
+    ],
+    "myClasses": {
+      "cls": "flex items-center justify-between",
+      "mb": "0px",
+      "text": "My ClassesSaturday, November 14"
+    },
+    "myClassesEmpty": null
+  }
+}

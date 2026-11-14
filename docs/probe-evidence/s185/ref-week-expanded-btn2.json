@@ -1,0 +1,16 @@
+{
+  "present": true,
+  "blockCls": "p-4 space-y-2 bg-slate-50",
+  "blockW": 356,
+  "blockH": 128,
+  "btnCls": "inline-flex items-center justify-center gap-2 whitespace-nowrap font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 border border-input bg-background shadow-sm hover:bg-accent hover:text-accent-foreground h-8 rounded-md px-3 text-xs w-full mt-2",
+  "btnW": 324,
+  "btnH": 32,
+  "btnBgColor": "rgb(10, 10, 10)",
+  "btnBgImage": "none",
+  "btnColor": "rgb(250, 250, 250)",
+  "btnShadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0.05) 0p",
+  "svgW": "16px",
+  "svgH": "16px",
+  "btnText": "Add Class"
+}

@@ -153,22 +153,32 @@ test.describe("S11-2..5 · accent surfaces re-theme in dark (the 300-level conve
     expect(color).toBe(STRONG_DARK);
   });
 
-  test("timetable mobile today chip uses the dark accent pair", async ({ page }) => {
+  test("timetable mobile today TILE uses the dark accent pair (re-anchored S185/EI)", async ({ page }) => {
     await gotoMode(page, "/Timetable", "dark");
     await page.setViewportSize({ width: 390, height: 844 });
     await page.waitForTimeout(900); // accordion re-render on breakpoint change
-    // Stable locator across RED→GREEN: the conditional class list keeps the
-    // light utility substring in both states (attribute substring match).
-    // Exact class token — the S8 softest-tint header swap put the substring
-    // "bg-sf-primary-soft" on the DESKTOP header's dark variant too, and DOM
-    // order made that hidden element win the substring match. The literal
-    // utility lives only on the mobile chip (the comment's own contract).
-    const chip = page.locator("div.bg-sf-primary-soft");
-    await expect(chip).toBeVisible();
-    const bg = await chip.evaluate((el) => getComputedStyle(el).backgroundColor);
+    // Re-anchored S185/EI: the S11-era chip (clone-only chrome the reference
+    // never rendered) retired with the week-strip port; the dark-accent leg
+    // re-anchors to the surviving mobile today surface — the today row's
+    // sf-selected-tint tile (the sf-selected-tint dark branch: the
+    // soft-dark fill at 30% + the light text) + the today name's
+    // strong-dark (the port's dark variant).
+    const tile = page.locator('section[class~="md:hidden"] span.sf-selected-tint');
+    await expect(tile).toHaveCount(1);
+    const bg = await tile.evaluate((el) => getComputedStyle(el).backgroundColor);
     expect(bg).toContain(SOFT_DARK);
-    const color = await chip.evaluate((el) => getComputedStyle(el).color);
-    expect(color).toBe(STRONG_DARK);
+    // The tile's text stays WHITE in dark (text-white rides the tile in both
+    // modes — the readable form on the soft-dark wash).
+    const color = await tile.evaluate((el) => getComputedStyle(el).color);
+    expect(color).toBe("rgb(255, 255, 255)");
+    const todayRow = page.locator('section[class~="md:hidden"] button[aria-expanded]').filter({
+      has: page.locator(".sf-selected-tint"),
+    });
+    const nameColor = await todayRow.first().evaluate((el) => {
+      const name = [...el.querySelectorAll("span.block")][0];
+      return name ? getComputedStyle(name).color : null;
+    });
+    expect(nameColor).toBe(STRONG_DARK); // the today name's dark variant
   });
 
   test("settings avatar emoji swatch uses the dark accent wash when selected", async ({ page }) => {
@@ -320,20 +330,32 @@ test.describe("light regression guard (S11)", () => {
     const viewAllColor = await viewAll.evaluate((el) => getComputedStyle(el).color);
     expect(viewAllColor).toBe(STRONG_LIGHT); // violet-600 — unchanged
 
-    // Timetable mobile today chip: light soft tint + strong text (violet-100).
+    // Timetable mobile TODAY TILE (re-anchored S185/EI): the S11-era chip —
+    // clone-only chrome the reference never rendered (its own mobile surface
+    // measured for the first time this cycle carries NO chip) — retired with
+    // the week-strip port; the light-regression leg re-anchors to the
+    // surviving mobile today surface: the today row's sf-selected-tint tile
+    // (the violet-600 STRONG_LIGHT fill + the white text — the a11y
+    // superset over the reference's own violet-500) and the today name's
+    // violet-700 (the measured reference form, the pinned v3-era hex ramp's
+    // value).
     await page.goto("/Timetable");
     await page.setViewportSize({ width: 390, height: 844 });
     await page.waitForTimeout(900);
-    // Exact class token — the S8 softest-tint header swap put the substring
-    // "bg-sf-primary-soft" on the DESKTOP header's dark variant too, and DOM
-    // order made that hidden element win the substring match. The literal
-    // utility lives only on the mobile chip (the comment's own contract).
-    const chip = page.locator("div.bg-sf-primary-soft");
-    await expect(chip).toBeVisible();
-    const bg = await chip.evaluate((el) => getComputedStyle(el).backgroundColor);
-    expect(bg).toBe("rgb(243, 232, 255)"); // violet-100 (--sf-primary-soft)
-    const color = await chip.evaluate((el) => getComputedStyle(el).color);
-    expect(color).toBe(STRONG_LIGHT);
+    const tile = page.locator('section[class~="md:hidden"] span.sf-selected-tint');
+    await expect(tile).toHaveCount(1);
+    const tileBg = await tile.evaluate((el) => getComputedStyle(el).backgroundColor);
+    expect(tileBg).toBe(STRONG_LIGHT); // violet-600 (--sf-primary-strong)
+    const tileColor = await tile.evaluate((el) => getComputedStyle(el).color);
+    expect(tileColor).toBe("rgb(255, 255, 255)"); // the white text on the strong fill
+    const todayRow = page.locator('section[class~="md:hidden"] button[aria-expanded]').filter({
+      has: page.locator(".sf-selected-tint"),
+    });
+    const nameColor = await todayRow.first().evaluate((el) => {
+      const name = [...el.querySelectorAll("span.block")][0];
+      return name ? getComputedStyle(name).color : null;
+    });
+    expect(nameColor).toBe("rgb(109, 40, 217)"); // violet-700 (the measured today-name form)
   });
 });
 

@@ -1,0 +1,58 @@
+{
+  "Dashboard": {
+    "hasProbe": false,
+    "hasSnum": false
+  },
+  "My Day": {
+    "hasProbe": false,
+    "hasSnum": false
+  },
+  "Tasks": {
+    "hasProbe": false,
+    "hasSnum": false
+  },
+  "Calendar": {
+    "hasProbe": false,
+    "hasSnum": false
+  },
+  "Events": {
+    "hasProbe": false,
+    "hasSnum": false
+  },
+  "Timetable": {
+    "hasProbe": false,
+    "hasSnum": false
+  },
+  "Assignments": {
+    "hasProbe": false,
+    "hasSnum": false
+  },
+  "Exams": {
+    "hasProbe": false,
+    "hasSnum": false
+  },
+  "Notes": {
+    "hasProbe": false,
+    "hasSnum": false
+  },
+  "Flashcards": {
+    "hasProbe": false,
+    "hasSnum": false
+  },
+  "Practice Tests": {
+    "hasProbe": false,
+    "hasSnum": false
+  },
+  "Study Groups": {
+    "hasProbe": false,
+    "hasSnum": false
+  },
+  "Grade Tracker": {
+    "hasProbe": false,
+    "hasSnum": false
+  },
+  "Files": {
+    "hasProbe": false,
+    "hasSnum": false
+  }
+}

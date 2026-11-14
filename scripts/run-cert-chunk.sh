@@ -4,9 +4,20 @@
 # SIGKILL escalation → rm db/e2e.db → run the chunk), one chunk per
 # invocation so each foreground run fits the tool timeout.
 # Usage: bash /home/z/my-project/omni-study1/scripts/run-cert-chunk.sh <1-5>
-# Expected (S184/EH re-tag): 158 + 254 + 101 + 95 + 89 = 697 — the same
-# census as scripts/e2e-chunked-cert.sh (the S184/EH re-tag block lives
+# Expected (S185/EI re-tag): 158 + 262 + 101 + 95 + 89 = 705 — the same
+# census as scripts/e2e-chunked-cert.sh (the S185/EI re-tag block lives
 # there; machine-enforced by tests/script-conventions.test.ts).
+# (S185/EI: chunk 2 +8 — the Timetable week-strip rows pins in
+# parity-session7 [EI1 the flush grid card, EI2 the "Time" corner +
+# border-b strip, EI3 the slate-700 date + the today violet pair, EI4
+# the span-carried slate-400-ink→slate-500-readable hour labels, EI5
+# the empty-cell click → Add Class prefilled with the day only, EI6 the
+# mobile flat rows (the stacked tile + no chevron + all-collapsed + no
+# Today chip), EI7 the expanded empty day's slate-50 block + the
+# near-black Add Class button, EI8 the dialog's today-day + 10:00 end
+# defaults]; the endTime default ported 10:30 → 10:00 — the measured
+# reference pair. The unit census UNCHANGED at 1795 [55 files]. See
+# docs/remediation-plan-session185.md.)
 # (S184/EH: chunk 2 +6 — the shared-EmptyState-family re-rotation pins in
 # parity-session7 [EH1 the Files anatomy: px-4 + the wrapper mb-6 + the
 # title mb-2 + the hint max-w-sm + no CTA; EH2 the Tasks "Create Task" CTA

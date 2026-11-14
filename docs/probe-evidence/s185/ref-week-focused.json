@@ -1,0 +1,358 @@
+{
+  "headerStrip": {
+    "tag": "DIV",
+    "cls": "grid grid-cols-8 border-b border-slate-100",
+    "display": "grid",
+    "cols": "139.25px 139.25px 139.25px 139.25px 139.25px 139.25px 139.25px 139.25px",
+    "w": 1114,
+    "h": 73,
+    "mb": "0px",
+    "mt": "0px",
+    "bg": "rgba(0, 0, 0, 0)",
+    "cells": [
+      {
+        "tag": "DIV",
+        "cls": "p-3 text-center text-sm font-medium text-slate-500",
+        "w": 139,
+        "h": 72,
+        "text": "Time",
+        "bg": "rgba(0, 0, 0, 0)",
+        "pad": {
+          "x": "12px",
+          "y": "12px"
+        },
+        "radius": "0px",
+        "border": "0px rgb(38, 38, 38) / l:0px rgb(38, 38, 38)",
+        "nameTag": "DIV",
+        "nameCls": "p-3 text-center text-sm font-medium text-slate-500",
+        "nameFont": {
+          "size": "14px",
+          "weight": "500",
+          "color": "rgb(100, 116, 139)",
+          "lh": "20px"
+        },
+        "nameMb": "0px",
+        "dateTag": null,
+        "dateCls": null,
+        "dateFont": null,
+        "dateText": null
+      },
+      {
+        "tag": "DIV",
+        "cls": "p-3 text-center border-l border-slate-100",
+        "w": 139,
+        "h": 72,
+        "text": "Sunday8",
+        "bg": "rgba(0, 0, 0, 0)",
+        "pad": {
+          "x": "12px",
+          "y": "12px"
+        },
+        "radius": "0px",
+        "border": "0px rgb(241, 245, 249) / l:1px rgb(241, 245, 249)",
+        "nameTag": "DIV",
+        "nameCls": "p-3 text-center border-l border-slate-100",
+        "nameFont": {
+          "size": "16px",
+          "weight": "400",
+          "color": "rgb(250, 250, 250)",
+          "lh": "24px"
+        },
+        "nameMb": "0px",
+        "dateTag": null,
+        "dateCls": null,
+        "dateFont": null,
+        "dateText": null
+      },
+      {
+        "tag": "DIV",
+        "cls": "p-3 text-center border-l border-slate-100",
+        "w": 139,
+        "h": 72,
+        "text": "Monday9",
+        "bg": "rgba(0, 0, 0, 0)",
+        "pad": {
+          "x": "12px",
+          "y": "12px"
+        },
+        "radius": "0px",
+        "border": "0px rgb(241, 245, 249) / l:1px rgb(241, 245, 249)",
+        "nameTag": "DIV",
+        "nameCls": "p-3 text-center border-l border-slate-100",
+        "nameFont": {
+          "size": "16px",
+          "weight": "400",
+          "color": "rgb(250, 250, 250)",
+          "lh": "24px"
+        },
+        "nameMb": "0px",
+        "dateTag": null,
+        "dateCls": null,
+        "dateFont": null,
+        "dateText": null
+      },
+      {
+        "tag": "DIV",
+        "cls": "p-3 text-center border-l border-slate-100",
+        "w": 139,
+        "h": 72,
+        "text": "Tuesday10",
+        "bg": "rgba(0, 0, 0, 0)",
+        "pad": {
+          "x": "12px",
+          "y": "12px"
+        },
+        "radius": "0px",
+        "border": "0px rgb(241, 245, 249) / l:1px rgb(241, 245, 249)",
+        "nameTag": "DIV",
+        "nameCls": "p-3 text-center border-l border-slate-100",
+        "nameFont": {
+          "size": "16px",
+          "weight": "400",
+          "color": "rgb(250, 250, 250)",
+          "lh": "24px"
+        },
+        "nameMb": "0px",
+        "dateTag": null,
+        "dateCls": null,
+        "dateFont": null,
+        "dateText": null
+      },
+      {
+        "tag": "DIV",
+        "cls": "p-3 text-center border-l border-slate-100",
+        "w": 139,
+        "h": 72,
+        "text": "Wednesday11",
+        "bg": "rgba(0, 0, 0, 0)",
+        "pad": {
+          "x": "12px",
+          "y": "12px"
+        },
+        "radius": "0px",
+        "border": "0px rgb(241, 245, 249) / l:1px rgb(241, 245, 249)",
+        "nameTag": "DIV",
+        "nameCls": "p-3 text-center border-l border-slate-100",
+        "nameFont": {
+          "size": "16px",
+          "weight": "400",
+          "color": "rgb(250, 250, 250)",
+          "lh": "24px"
+        },
+        "nameMb": "0px",
+        "dateTag": null,
+        "dateCls": null,
+        "dateFont": null,
+        "dateText": null
+      },
+      {
+        "tag": "DIV",
+        "cls": "p-3 text-center border-l border-slate-100",
+        "w": 139,
+        "h": 72,
+        "text": "Thursday12",
+        "bg": "rgba(0, 0, 0, 0)",
+        "pad": {
+          "x": "12px",
+          "y": "12px"
+        },
+        "radius": "0px",
+        "border": "0px rgb(241, 245, 249) / l:1px rgb(241, 245, 249)",
+        "nameTag": "DIV",
+        "nameCls": "p-3 text-center border-l border-slate-100",
+        "nameFont": {
+          "size": "16px",
+          "weight": "400",
+          "color": "rgb(250, 250, 250)",
+          "lh": "24px"
+        },
+        "nameMb": "0px",
+        "dateTag": null,
+        "dateCls": null,
+        "dateFont": null,
+        "dateText": null
+      },
+      {
+        "tag": "DIV",
+        "cls": "p-3 text-center border-l border-slate-100",
+        "w": 139,
+        "h": 72,
+        "text": "Friday13",
+        "bg": "rgba(0, 0, 0, 0)",
+        "pad": {
+          "x": "12px",
+          "y": "12px"
+        },
+        "radius": "0px",
+        "border": "0px rgb(241, 245, 249) / l:1px rgb(241, 245, 249)",
+        "nameTag": "DIV",
+        "nameCls": "p-3 text-center border-l border-slate-100",
+        "nameFont": {
+          "size": "16px",
+          "weight": "400",
+          "color": "rgb(250, 250, 250)",
+          "lh": "24px"
+        },
+        "nameMb": "0px",
+        "dateTag": null,
+        "dateCls": null,
+        "dateFont": null,
+        "dateText": null
+      },
+      {
+        "tag": "DIV",
+        "cls": "p-3 text-center border-l border-slate-100 bg-violet-50",
+        "w": 139,
+        "h": 72,
+        "text": "Saturday14",
+        "bg": "rgb(245, 243, 255)",
+        "pad": {
+          "x": "12px",
+          "y": "12px"
+        },
+        "radius": "0px",
+        "border": "0px rgb(241, 245, 249) / l:1px rgb(241, 245, 249)",
+        "nameTag": "DIV",
+        "nameCls": "p-3 text-center border-l border-slate-100 bg-violet-50",
+        "nameFont": {
+          "size": "16px",
+          "weight": "400",
+          "color": "rgb(250, 250, 250)",
+          "lh": "24px"
+        },
+        "nameMb": "0px",
+        "dateTag": null,
+        "dateCls": null,
+        "dateFont": null,
+        "dateText": null
+      }
+    ]
+  },
+  "timeColumn": null,
+  "gridColumns": [
+    {
+      "i": 0,
+      "cls": "border-r border-slate-100",
+      "bg": "rgba(0, 0, 0, 0)",
+      "text": "7 AM8 AM9 AM10 AM11 AM12 PM1 P"
+    },
+    {
+      "i": 1,
+      "cls": "relative border-l border-slate-100 cursor-pointer hover:bg-slate-50/50",
+      "bg": "rgba(0, 0, 0, 0)",
+      "text": ""
+    },
+    {
+      "i": 2,
+      "cls": "relative border-l border-slate-100 cursor-pointer hover:bg-slate-50/50",
+      "bg": "rgba(0, 0, 0, 0)",
+      "text": ""
+    },
+    {
+      "i": 3,
+      "cls": "relative border-l border-slate-100 cursor-pointer hover:bg-slate-50/50",
+      "bg": "rgba(0, 0, 0, 0)",
+      "text": ""
+    },
+    {
+      "i": 4,
+      "cls": "relative border-l border-slate-100 cursor-pointer hover:bg-slate-50/50",
+      "bg": "rgba(0, 0, 0, 0)",
+      "text": ""
+    },
+    {
+      "i": 5,
+      "cls": "relative border-l border-slate-100 cursor-pointer hover:bg-slate-50/50",
+      "bg": "rgba(0, 0, 0, 0)",
+      "text": ""
+    },
+    {
+      "i": 6,
+      "cls": "relative border-l border-slate-100 cursor-pointer hover:bg-slate-50/50",
+      "bg": "rgba(0, 0, 0, 0)",
+      "text": ""
+    },
+    {
+      "i": 7,
+      "cls": "relative border-l border-slate-100 cursor-pointer hover:bg-slate-50/50",
+      "bg": "rgba(0, 0, 0, 0)",
+      "text": ""
+    }
+  ],
+  "banner": {
+    "monthTag": "H2",
+    "monthText": "November 2026",
+    "monthFont": {
+      "size": "16px",
+      "weight": "600",
+      "color": "rgb(51, 65, 85)",
+      "family": "ui-sans-serif, system-ui, sans-serif, \"A"
+    },
+    "monthCls": "font-semibold text-slate-700",
+    "rangeTag": "P",
+    "rangeText": "Nov 8 - Nov 14",
+    "rangeFont": {
+      "size": "14px",
+      "weight": "400",
+      "color": "rgb(100, 116, 139)"
+    },
+    "rangeCls": "text-sm text-slate-500",
+    "btns": [
+      {
+        "cls": "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none ",
+        "w": 36,
+        "h": 36,
+        "radius": "6px",
+        "bg": "rgba(0, 0, 0, 0)",
+        "hoverBg": "rgba(0, 0, 0, 0)",
+        "ariaLabel": null
+      },
+      {
+        "cls": "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none ",
+        "w": 36,
+        "h": 36,
+        "radius": "6px",
+        "bg": "rgba(0, 0, 0, 0)",
+        "hoverBg": "rgba(0, 0, 0, 0)",
+        "ariaLabel": null
+      }
+    ]
+  },
+  "viewHeader": {
+    "rowCls": "flex flex-col md:flex-row md:items-center justify-between gap-4",
+    "h1Font": {
+      "size": "24px",
+      "weight": "700",
+      "color": "rgb(30, 41, 59)"
+    },
+    "controls": [
+      {
+        "tag": "BUTTON",
+        "text": "All Weeks",
+        "cls": "flex h-9 items-center justify-between whitespace-nowrap rounded-md border border-input bg-transparent px-3 py-2 text-sm ",
+        "w": 160,
+        "h": 36,
+        "radius": "6px",
+        "ariaLabel": null
+      },
+      {
+        "tag": "BUTTON",
+        "text": "Grid Builder",
+        "cls": "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-v",
+        "w": 117,
+        "h": 36,
+        "radius": "6px",
+        "ariaLabel": null
+      },
+      {
+        "tag": "BUTTON",
+        "text": "Add Class",
+        "cls": "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-v",
+        "w": 132,
+        "h": 36,
+        "radius": "6px",
+        "ariaLabel": null
+      }
+    ]
+  }
+}

@@ -1,0 +1,813 @@
+{
+  "headerOut": {
+    "tag": "H1",
+    "text": "Timetable",
+    "cls": "text-2xl font-bold text-slate-800 flex items-center gap-2"
+  },
+  "bannerOut": {
+    "cls": "flex items-center justify-between bg-white rounded-xl p-4 shadow-sm border border-slate-100",
+    "tag": "DIV",
+    "display": "flex",
+    "bg": "rgb(255, 255, 255)",
+    "radius": "12px",
+    "pad": {
+      "x": "16px",
+      "y": "16px"
+    },
+    "border": "1px rgb(241, 245, 249)",
+    "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rg",
+    "justify": "space-between",
+    "kids": [
+      {
+        "tag": "BUTTON",
+        "cls": "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-me",
+        "text": "",
+        "display": "flex",
+        "w": 36
+      },
+      {
+        "tag": "DIV",
+        "cls": "text-center",
+        "text": "November 2026Nov 8 - Nov 14",
+        "display": "block",
+        "w": 143
+      },
+      {
+        "tag": "BUTTON",
+        "cls": "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-me",
+        "text": "",
+        "display": "flex",
+        "w": 36
+      }
+    ]
+  },
+  "gridOut": {
+    "tag": "DIV",
+    "cls": "grid grid-cols-8",
+    "display": "grid",
+    "cols": "139.25px 139.25px 139.25px 139.25px 139.25px 139.25px 139.25px 139.25px",
+    "bg": "rgba(0, 0, 0, 0)",
+    "pad": {
+      "x": "0px",
+      "y": "0px"
+    },
+    "border": "0px rgb(38, 38, 38)",
+    "radius": "0px",
+    "overflowX": "visible",
+    "minWidth": "0px",
+    "w": 1114,
+    "h": 840,
+    "kids": [
+      {
+        "tag": "DIV",
+        "cls": "border-r border-slate-100",
+        "w": 139,
+        "h": 840,
+        "display": "block",
+        "cols": 1,
+        "text": "7 AM8 AM9 AM10 AM11 AM12 PM1 PM2 PM3 PM4"
+      },
+      {
+        "tag": "DIV",
+        "cls": "relative border-l border-slate-100 cursor-pointer hover:bg-slate-50/50",
+        "w": 139,
+        "h": 840,
+        "display": "block",
+        "cols": 1,
+        "text": ""
+      },
+      {
+        "tag": "DIV",
+        "cls": "relative border-l border-slate-100 cursor-pointer hover:bg-slate-50/50",
+        "w": 139,
+        "h": 840,
+        "display": "block",
+        "cols": 1,
+        "text": ""
+      },
+      {
+        "tag": "DIV",
+        "cls": "relative border-l border-slate-100 cursor-pointer hover:bg-slate-50/50",
+        "w": 139,
+        "h": 840,
+        "display": "block",
+        "cols": 1,
+        "text": ""
+      },
+      {
+        "tag": "DIV",
+        "cls": "relative border-l border-slate-100 cursor-pointer hover:bg-slate-50/50",
+        "w": 139,
+        "h": 840,
+        "display": "block",
+        "cols": 1,
+        "text": ""
+      },
+      {
+        "tag": "DIV",
+        "cls": "relative border-l border-slate-100 cursor-pointer hover:bg-slate-50/50",
+        "w": 139,
+        "h": 840,
+        "display": "block",
+        "cols": 1,
+        "text": ""
+      },
+      {
+        "tag": "DIV",
+        "cls": "relative border-l border-slate-100 cursor-pointer hover:bg-slate-50/50",
+        "w": 139,
+        "h": 840,
+        "display": "block",
+        "cols": 1,
+        "text": ""
+      },
+      {
+        "tag": "DIV",
+        "cls": "relative border-l border-slate-100 cursor-pointer hover:bg-slate-50/50",
+        "w": 139,
+        "h": 840,
+        "display": "block",
+        "cols": 1,
+        "text": ""
+      }
+    ]
+  },
+  "rowsOut": [
+    {
+      "i": 0,
+      "tag": "DIV",
+      "cls": "border-r border-slate-100",
+      "w": 139,
+      "h": 840,
+      "display": "block",
+      "cols": null,
+      "visible": true,
+      "text": "7 AM8 AM9 AM10 AM11 AM12 PM1 PM2 PM3 PM4 PM5",
+      "cells": [
+        {
+          "tag": "DIV",
+          "cls": "h-[60px] border-b border-slate-50 px-3 py-1",
+          "text": "7 AM",
+          "w": 138,
+          "visible": true
+        },
+        {
+          "tag": "DIV",
+          "cls": "h-[60px] border-b border-slate-50 px-3 py-1",
+          "text": "8 AM",
+          "w": 138,
+          "visible": true
+        },
+        {
+          "tag": "DIV",
+          "cls": "h-[60px] border-b border-slate-50 px-3 py-1",
+          "text": "9 AM",
+          "w": 138,
+          "visible": true
+        },
+        {
+          "tag": "DIV",
+          "cls": "h-[60px] border-b border-slate-50 px-3 py-1",
+          "text": "10 AM",
+          "w": 138,
+          "visible": true
+        },
+        {
+          "tag": "DIV",
+          "cls": "h-[60px] border-b border-slate-50 px-3 py-1",
+          "text": "11 AM",
+          "w": 138,
+          "visible": true
+        },
+        {
+          "tag": "DIV",
+          "cls": "h-[60px] border-b border-slate-50 px-3 py-1",
+          "text": "12 PM",
+          "w": 138,
+          "visible": true
+        },
+        {
+          "tag": "DIV",
+          "cls": "h-[60px] border-b border-slate-50 px-3 py-1",
+          "text": "1 PM",
+          "w": 138,
+          "visible": true
+        },
+        {
+          "tag": "DIV",
+          "cls": "h-[60px] border-b border-slate-50 px-3 py-1",
+          "text": "2 PM",
+          "w": 138,
+          "visible": true
+        },
+        {
+          "tag": "DIV",
+          "cls": "h-[60px] border-b border-slate-50 px-3 py-1",
+          "text": "3 PM",
+          "w": 138,
+          "visible": true
+        }
+      ]
+    },
+    {
+      "i": 1,
+      "tag": "DIV",
+      "cls": "relative border-l border-slate-100 cursor-pointer hover:bg-slate-50/50",
+      "w": 139,
+      "h": 840,
+      "display": "block",
+      "cols": null,
+      "visible": true,
+      "text": "",
+      "cells": [
+        {
+          "tag": "DIV",
+          "cls": "h-[60px] border-b border-slate-50",
+          "text": "",
+          "w": 138,
+          "visible": true
+        },
+        {
+          "tag": "DIV",
+          "cls": "h-[60px] border-b border-slate-50",
+          "text": "",
+          "w": 138,
+          "visible": true
+        },
+        {
+          "tag": "DIV",
+          "cls": "h-[60px] border-b border-slate-50",
+          "text": "",
+          "w": 138,
+          "visible": true
+        },
+        {
+          "tag": "DIV",
+          "cls": "h-[60px] border-b border-slate-50",
+          "text": "",
+          "w": 138,
+          "visible": true
+        },
+        {
+          "tag": "DIV",
+          "cls": "h-[60px] border-b border-slate-50",
+          "text": "",
+          "w": 138,
+          "visible": true
+        },
+        {
+          "tag": "DIV",
+          "cls": "h-[60px] border-b border-slate-50",
+          "text": "",
+          "w": 138,
+          "visible": true
+        },
+        {
+          "tag": "DIV",
+          "cls": "h-[60px] border-b border-slate-50",
+          "text": "",
+          "w": 138,
+          "visible": true
+        },
+        {
+          "tag": "DIV",
+          "cls": "h-[60px] border-b border-slate-50",
+          "text": "",
+          "w": 138,
+          "visible": true
+        },
+        {
+          "tag": "DIV",
+          "cls": "h-[60px] border-b border-slate-50",
+          "text": "",
+          "w": 138,
+          "visible": true
+        }
+      ]
+    },
+    {
+      "i": 2,
+      "tag": "DIV",
+      "cls": "relative border-l border-slate-100 cursor-pointer hover:bg-slate-50/50",
+      "w": 139,
+      "h": 840,
+      "display": "block",
+      "cols": null,
+      "visible": true,
+      "text": "",
+      "cells": [
+        {
+          "tag": "DIV",
+          "cls": "h-[60px] border-b border-slate-50",
+          "text": "",
+          "w": 138,
+          "visible": true
+        },
+        {
+          "tag": "DIV",
+          "cls": "h-[60px] border-b border-slate-50",
+          "text": "",
+          "w": 138,
+          "visible": true
+        },
+        {
+          "tag": "DIV",
+          "cls": "h-[60px] border-b border-slate-50",
+          "text": "",
+          "w": 138,
+          "visible": true
+        },
+        {
+          "tag": "DIV",
+          "cls": "h-[60px] border-b border-slate-50",
+          "text": "",
+          "w": 138,
+          "visible": true
+        },
+        {
+          "tag": "DIV",
+          "cls": "h-[60px] border-b border-slate-50",
+          "text": "",
+          "w": 138,
+          "visible": true
+        },
+        {
+          "tag": "DIV",
+          "cls": "h-[60px] border-b border-slate-50",
+          "text": "",
+          "w": 138,
+          "visible": true
+        },
+        {
+          "tag": "DIV",
+          "cls": "h-[60px] border-b border-slate-50",
+          "text": "",
+          "w": 138,
+          "visible": true
+        },
+        {
+          "tag": "DIV",
+          "cls": "h-[60px] border-b border-slate-50",
+          "text": "",
+          "w": 138,
+          "visible": true
+        },
+        {
+          "tag": "DIV",
+          "cls": "h-[60px] border-b border-slate-50",
+          "text": "",
+          "w": 138,
+          "visible": true
+        }
+      ]
+    },
+    {
+      "i": 3,
+      "tag": "DIV",
+      "cls": "relative border-l border-slate-100 cursor-pointer hover:bg-slate-50/50",
+      "w": 139,
+      "h": 840,
+      "display": "block",
+      "cols": null,
+      "visible": true,
+      "text": "",
+      "cells": [
+        {
+          "tag": "DIV",
+          "cls": "h-[60px] border-b border-slate-50",
+          "text": "",
+          "w": 138,
+          "visible": true
+        },
+        {
+          "tag": "DIV",
+          "cls": "h-[60px] border-b border-slate-50",
+          "text": "",
+          "w": 138,
+          "visible": true
+        },
+        {
+          "tag": "DIV",
+          "cls": "h-[60px] border-b border-slate-50",
+          "text": "",
+          "w": 138,
+          "visible": true
+        },
+        {
+          "tag": "DIV",
+          "cls": "h-[60px] border-b border-slate-50",
+          "text": "",
+          "w": 138,
+          "visible": true
+        },
+        {
+          "tag": "DIV",
+          "cls": "h-[60px] border-b border-slate-50",
+          "text": "",
+          "w": 138,
+          "visible": true
+        },
+        {
+          "tag": "DIV",
+          "cls": "h-[60px] border-b border-slate-50",
+          "text": "",
+          "w": 138,
+          "visible": true
+        },
+        {
+          "tag": "DIV",
+          "cls": "h-[60px] border-b border-slate-50",
+          "text": "",
+          "w": 138,
+          "visible": true
+        },
+        {
+          "tag": "DIV",
+          "cls": "h-[60px] border-b border-slate-50",
+          "text": "",
+          "w": 138,
+          "visible": true
+        },
+        {
+          "tag": "DIV",
+          "cls": "h-[60px] border-b border-slate-50",
+          "text": "",
+          "w": 138,
+          "visible": true
+        }
+      ]
+    },
+    {
+      "i": 4,
+      "tag": "DIV",
+      "cls": "relative border-l border-slate-100 cursor-pointer hover:bg-slate-50/50",
+      "w": 139,
+      "h": 840,
+      "display": "block",
+      "cols": null,
+      "visible": true,
+      "text": "",
+      "cells": [
+        {
+          "tag": "DIV",
+          "cls": "h-[60px] border-b border-slate-50",
+          "text": "",
+          "w": 138,
+          "visible": true
+        },
+        {
+          "tag": "DIV",
+          "cls": "h-[60px] border-b border-slate-50",
+          "text": "",
+          "w": 138,
+          "visible": true
+        },
+        {
+          "tag": "DIV",
+          "cls": "h-[60px] border-b border-slate-50",
+          "text": "",
+          "w": 138,
+          "visible": true
+        },
+        {
+          "tag": "DIV",
+          "cls": "h-[60px] border-b border-slate-50",
+          "text": "",
+          "w": 138,
+          "visible": true
+        },
+        {
+          "tag": "DIV",
+          "cls": "h-[60px] border-b border-slate-50",
+          "text": "",
+          "w": 138,
+          "visible": true
+        },
+        {
+          "tag": "DIV",
+          "cls": "h-[60px] border-b border-slate-50",
+          "text": "",
+          "w": 138,
+          "visible": true
+        },
+        {
+          "tag": "DIV",
+          "cls": "h-[60px] border-b border-slate-50",
+          "text": "",
+          "w": 138,
+          "visible": true
+        },
+        {
+          "tag": "DIV",
+          "cls": "h-[60px] border-b border-slate-50",
+          "text": "",
+          "w": 138,
+          "visible": true
+        },
+        {
+          "tag": "DIV",
+          "cls": "h-[60px] border-b border-slate-50",
+          "text": "",
+          "w": 138,
+          "visible": true
+        }
+      ]
+    },
+    {
+      "i": 5,
+      "tag": "DIV",
+      "cls": "relative border-l border-slate-100 cursor-pointer hover:bg-slate-50/50",
+      "w": 139,
+      "h": 840,
+      "display": "block",
+      "cols": null,
+      "visible": true,
+      "text": "",
+      "cells": [
+        {
+          "tag": "DIV",
+          "cls": "h-[60px] border-b border-slate-50",
+          "text": "",
+          "w": 138,
+          "visible": true
+        },
+        {
+          "tag": "DIV",
+          "cls": "h-[60px] border-b border-slate-50",
+          "text": "",
+          "w": 138,
+          "visible": true
+        },
+        {
+          "tag": "DIV",
+          "cls": "h-[60px] border-b border-slate-50",
+          "text": "",
+          "w": 138,
+          "visible": true
+        },
+        {
+          "tag": "DIV",
+          "cls": "h-[60px] border-b border-slate-50",
+          "text": "",
+          "w": 138,
+          "visible": true
+        },
+        {
+          "tag": "DIV",
+          "cls": "h-[60px] border-b border-slate-50",
+          "text": "",
+          "w": 138,
+          "visible": true
+        },
+        {
+          "tag": "DIV",
+          "cls": "h-[60px] border-b border-slate-50",
+          "text": "",
+          "w": 138,
+          "visible": true
+        },
+        {
+          "tag": "DIV",
+          "cls": "h-[60px] border-b border-slate-50",
+          "text": "",
+          "w": 138,
+          "visible": true
+        },
+        {
+          "tag": "DIV",
+          "cls": "h-[60px] border-b border-slate-50",
+          "text": "",
+          "w": 138,
+          "visible": true
+        },
+        {
+          "tag": "DIV",
+          "cls": "h-[60px] border-b border-slate-50",
+          "text": "",
+          "w": 138,
+          "visible": true
+        }
+      ]
+    },
+    {
+      "i": 6,
+      "tag": "DIV",
+      "cls": "relative border-l border-slate-100 cursor-pointer hover:bg-slate-50/50",
+      "w": 139,
+      "h": 840,
+      "display": "block",
+      "cols": null,
+      "visible": true,
+      "text": "",
+      "cells": [
+        {
+          "tag": "DIV",
+          "cls": "h-[60px] border-b border-slate-50",
+          "text": "",
+          "w": 138,
+          "visible": true
+        },
+        {
+          "tag": "DIV",
+          "cls": "h-[60px] border-b border-slate-50",
+          "text": "",
+          "w": 138,
+          "visible": true
+        },
+        {
+          "tag": "DIV",
+          "cls": "h-[60px] border-b border-slate-50",
+          "text": "",
+          "w": 138,
+          "visible": true
+        },
+        {
+          "tag": "DIV",
+          "cls": "h-[60px] border-b border-slate-50",
+          "text": "",
+          "w": 138,
+          "visible": true
+        },
+        {
+          "tag": "DIV",
+          "cls": "h-[60px] border-b border-slate-50",
+          "text": "",
+          "w": 138,
+          "visible": true
+        },
+        {
+          "tag": "DIV",
+          "cls": "h-[60px] border-b border-slate-50",
+          "text": "",
+          "w": 138,
+          "visible": true
+        },
+        {
+          "tag": "DIV",
+          "cls": "h-[60px] border-b border-slate-50",
+          "text": "",
+          "w": 138,
+          "visible": true
+        },
+        {
+          "tag": "DIV",
+          "cls": "h-[60px] border-b border-slate-50",
+          "text": "",
+          "w": 138,
+          "visible": true
+        },
+        {
+          "tag": "DIV",
+          "cls": "h-[60px] border-b border-slate-50",
+          "text": "",
+          "w": 138,
+          "visible": true
+        }
+      ]
+    },
+    {
+      "i": 7,
+      "tag": "DIV",
+      "cls": "relative border-l border-slate-100 cursor-pointer hover:bg-slate-50/50",
+      "w": 139,
+      "h": 840,
+      "display": "block",
+      "cols": null,
+      "visible": true,
+      "text": "",
+      "cells": [
+        {
+          "tag": "DIV",
+          "cls": "h-[60px] border-b border-slate-50",
+          "text": "",
+          "w": 138,
+          "visible": true
+        },
+        {
+          "tag": "DIV",
+          "cls": "h-[60px] border-b border-slate-50",
+          "text": "",
+          "w": 138,
+          "visible": true
+        },
+        {
+          "tag": "DIV",
+          "cls": "h-[60px] border-b border-slate-50",
+          "text": "",
+          "w": 138,
+          "visible": true
+        },
+        {
+          "tag": "DIV",
+          "cls": "h-[60px] border-b border-slate-50",
+          "text": "",
+          "w": 138,
+          "visible": true
+        },
+        {
+          "tag": "DIV",
+          "cls": "h-[60px] border-b border-slate-50",
+          "text": "",
+          "w": 138,
+          "visible": true
+        },
+        {
+          "tag": "DIV",
+          "cls": "h-[60px] border-b border-slate-50",
+          "text": "",
+          "w": 138,
+          "visible": true
+        },
+        {
+          "tag": "DIV",
+          "cls": "h-[60px] border-b border-slate-50",
+          "text": "",
+          "w": 138,
+          "visible": true
+        },
+        {
+          "tag": "DIV",
+          "cls": "h-[60px] border-b border-slate-50",
+          "text": "",
+          "w": 138,
+          "visible": true
+        },
+        {
+          "tag": "DIV",
+          "cls": "h-[60px] border-b border-slate-50",
+          "text": "",
+          "w": 138,
+          "visible": true
+        }
+      ]
+    },
+    {
+      "detail": [
+        {
+          "rowCls": "border-r border-slate-100",
+          "rowH": "840px",
+          "rowBorderB": "0px rgb(241, 245, 249)",
+          "rowCols": "none",
+          "firstCellTag": "DIV",
+          "firstCellCls": "h-[60px] border-b border-slate-50 px-3 py-1",
+          "firstCellText": "7 AM",
+          "firstCellFont": {
+            "size": "16px",
+            "weight": "400",
+            "color": "rgb(250, 250, 250)",
+            "align": "start"
+          },
+          "firstCellPad": {
+            "x": "12px",
+            "y": "4px"
+          },
+          "firstCellH": 60,
+          "firstCellW": 138
+        },
+        {
+          "rowCls": "relative border-l border-slate-100 cursor-pointer hover:bg-slate-50/50",
+          "rowH": "840px",
+          "rowBorderB": "0px rgb(241, 245, 249)",
+          "rowCols": "none",
+          "firstCellTag": "DIV",
+          "firstCellCls": "h-[60px] border-b border-slate-50",
+          "firstCellText": "",
+          "firstCellFont": {
+            "size": "16px",
+            "weight": "400",
+            "color": "rgb(250, 250, 250)",
+            "align": "start"
+          },
+          "firstCellPad": {
+            "x": "0px",
+            "y": "0px"
+          },
+          "firstCellH": 60,
+          "firstCellW": 138
+        },
+        {
+          "rowCls": "relative border-l border-slate-100 cursor-pointer hover:bg-slate-50/50",
+          "rowH": "840px",
+          "rowBorderB": "0px rgb(241, 245, 249)",
+          "rowCols": "none",
+          "firstCellTag": "DIV",
+          "firstCellCls": "h-[60px] border-b border-slate-50",
+          "firstCellText": "",
+          "firstCellFont": {
+            "size": "16px",
+            "weight": "400",
+            "color": "rgb(250, 250, 250)",
+            "align": "start"
+          },
+          "firstCellPad": {
+            "x": "0px",
+            "y": "0px"
+          },
+          "firstCellH": 60,
+          "firstCellW": 138
+        }
+      ]
+    }
+  ],
+  "shallowCount": 14
+}

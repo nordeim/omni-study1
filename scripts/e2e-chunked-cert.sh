@@ -513,8 +513,33 @@
 # deterministic defaults so the leg fills only the title + score +
 # max; network-mocked, no server writes beyond the zero-residue
 # create]. The full DW map: docs/remediation-plan-session173.md.)
-# Expected: 158 + 254 + 101 + 95 + 89 = 697 (each chunk's count includes its
+# Expected: 158 + 262 + 101 + 95 + 89 = 705 (each chunk's count includes its
 # auth setup — the current census; the historical re-tag blocks beneath.)
+# (S185/EI re-tag — census 697 → 705, net +8: chunk 2 +8 [the S185/EI
+# Timetable week-strip rows pins in parity-session7 — EIGHT zero-write
+# pins (every dialog Escape-closed before any submit, no uploads): EI1
+# the FLUSH grid card (the reference's grid card carries NO padding — the
+# strip + grid flush to the overflow-hidden card's edges), EI2 the
+# "Time" corner label + the strip's border-b separator, EI3 the date's
+# slate-700 + the today cell's UNROUNDED violet-600/700 pair (the
+# clone's pinned v3-era violet-700 hex ramp computes rgb(109,40,217)
+# vs the reference's oklch 219 — the standing trap-2/10 deviation,
+# recorded in the pin), EI4 the hour labels' span carrier at px-3 LEFT
+# (the reference's own slate-400 ink fails WCAG at 2.85:1 — the a11y
+# sweep caught the first port; the readable slate-500 superset stays,
+# the S83/AJ5 precedent), EI5 the empty-cell CLICK opening Add Class
+# prefilled with the DAY only (the times stay the 09:00/10:00 defaults —
+# the measured prefill semantics; the default endTime ported 10:30 →
+# 10:00), EI6 the mobile flat rows (the stacked Sun/8 tile spans + the
+# 14px counts + NO chevron + ALL-collapsed initial + NO Today chip —
+# the reference's own mobile surface measured for the first time),
+# EI7 the expanded empty day (the bg-slate-50 p-4 space-y-2 block +
+# "No classes" + the near-black h-8 Add Class button — the reference's
+# --background token renders its outline family at rgb(10,10,10); the
+# clone's neutral variant IS that measured family), EI8 the dialog's
+# today-day DEFAULT + the measured time defaults. The unit census
+# UNCHANGED at 1795 [55 files] — a view-layer port, no new seam. See
+# docs/remediation-plan-session185.md.])
 # (S184/EH re-tag — census 691 → 697, net +6: chunk 2 +6 [the S184/EH
 # shared-EmptyState-family re-rotation pins in parity-session7 — SIX
 # zero-upload-budget pins (the EA3 route-interception pattern, GETs only):

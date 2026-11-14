@@ -1,0 +1,50 @@
+{
+  "btnInfo": {
+    "present": true,
+    "btnPresent": true,
+    "blockCls": "p-4 space-y-2 bg-slate-50",
+    "blockText": "No classes Add Class",
+    "btnTag": "BUTTON",
+    "btnText": "Add Class",
+    "btnCls": "inline-flex items-center justify-center gap-2 whitespace-nowrap font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disa",
+    "btnW": 324,
+    "btnH": 32,
+    "btnBg": "none",
+    "btnRadius": "6px",
+    "btnColor": "rgb(250, 250, 250)",
+    "btnJustify": "center",
+    "btnDisplay": "inline-flex",
+    "svgCount": 1
+  },
+  "click": {
+    "dialogCount": 1,
+    "title": "Add Class",
+    "inputs": [
+      {
+        "type": null,
+        "value": ""
+      },
+      {
+        "type": null,
+        "value": "6"
+      },
+      {
+        "type": "time",
+        "value": "09:00"
+      },
+      {
+        "type": "time",
+        "value": "10:00"
+      },
+      {
+        "type": null,
+        "value": ""
+      },
+      {
+        "type": null,
+        "value": "all"
+      }
+    ],
+    "afterEscape": 0
+  }
+}

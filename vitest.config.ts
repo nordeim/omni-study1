@@ -2,6 +2,21 @@ import { defineConfig } from "vitest/config";
 import path from "node:path";
 
 // Unit-test layer for the pure domain seams — 55 files / 1795 tests
+// (re-anchored S185/EI — the Timetable week-strip rows port: the unit
+// census UNCHANGED at 1795 [55 files — a view-layer port, no new seam];
+// the e2e census moves 697 → 705: +8 the S185/EI week-strip pins in
+// parity-session7 at ZERO write units [every dialog Escape-closed
+// before any submit, no uploads]: EI1 the flush grid card, EI2 the
+// "Time" corner + border-b strip, EI3 the slate-700 date + the today
+// violet pair, EI4 the span-carried hour labels at px-3 LEFT (the
+// readable slate-500 superset over the reference's own 2.85:1
+// slate-400 ink — the a11y-sweep gate caught the first port), EI5 the
+// empty-cell click → Add Class prefilled with the DAY only (the times
+// stay the measured 09:00/10:00 defaults — the clone's endTime default
+// ported 10:30 → 10:00), EI6 the mobile flat rows (the stacked Sun/8
+// tile + 14px counts + NO chevron + ALL-collapsed + NO Today chip), EI7
+// the expanded empty day's bg-slate-50 block + "No classes" + the
+// near-black h-8 Add Class button, EI8 the dialog's today-day default.)
 // (re-anchored S184/EH — the shared EmptyState family re-rotation: the
 // unit census UNCHANGED at 1795 [55 files — a view-layer port, no new
 // seam]; the e2e census moves 691 → 697: +6 the S184/EH zero-state pins

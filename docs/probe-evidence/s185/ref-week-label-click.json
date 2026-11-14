@@ -1,0 +1,59 @@
+{
+  "labelInner": {
+    "present": true,
+    "cellCls": "h-[60px] border-b border-slate-50 px-3 py-1",
+    "childCount": 1,
+    "inner": [
+      {
+        "tag": "SPAN",
+        "cls": "text-xs text-slate-400",
+        "text": "7 AM",
+        "color": "rgb(148, 163, 184)",
+        "size": "12px",
+        "weight": "400",
+        "display": "inline"
+      }
+    ],
+    "directText": []
+  },
+  "clickOut": {
+    "dayColumns": 7,
+    "cellsPerColumn": 14,
+    "dialogCount": 1,
+    "dialogVisible": true,
+    "dialogTitle": "Add Class",
+    "dialogInputs": [
+      {
+        "type": null,
+        "value": "",
+        "ph": null
+      },
+      {
+        "type": null,
+        "value": "6",
+        "ph": null
+      },
+      {
+        "type": "time",
+        "value": "09:00",
+        "ph": null
+      },
+      {
+        "type": "time",
+        "value": "10:00",
+        "ph": null
+      },
+      {
+        "type": null,
+        "value": "",
+        "ph": "e.g., Room 101"
+      },
+      {
+        "type": null,
+        "value": "all",
+        "ph": null
+      }
+    ],
+    "dialogAfterEscape": 0
+  }
+}

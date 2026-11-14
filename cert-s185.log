@@ -1,0 +1,19 @@
+=== CHUNK 1: 3 files ===
+  ✓  157 [chromium] › tests/e2e/parity-session8.spec.ts:1808:7 › S163/DL1 · the exams CB8 failure-domain split (Batch DL) › a committed create + a failed refresh answers the success toast (never the false save-failure) (1.4s)
+  ✓  158 [chromium] › tests/e2e/parity-session8.spec.ts:1850:7 › S167/DQ1 · the flashcards save succeeds through a failed refresh (CB8 split) › a committed create + an aborted refresh answers the success toast + closed dialog, never the false save-failure (1.5s)
+  158 passed (3.4m)
+=== CHUNK 2: 7 files ===
+    test-results/theme-system-light-regress-15dd4-ep-their-exact-light-values-chromium-retry1/test-failed-1.png
+  2 failed
+  260 passed (7.3m)
+=== CHUNK 3: 3 files ===
+    [chromium] › tests/e2e/resilience.spec.ts:775:7 › S145/CT1: the focus-timer completion window (the terminal state must not re-arm) › a Play press through the in-flight save + a failed save never double-logs; the failure re-latches for a fresh session 
+    [chromium] › tests/e2e/resilience.spec.ts:1301:7 › S169/DS1 · the subjects save succeeds through a failed refresh (CB8 split) › a committed create + an aborted refresh answers the success toast + closed dialog, never the false save-failure 
+  97 passed (5.7m)
+=== CHUNK 4: 5 files ===
+  ✓  48 [chromium] › tests/e2e/calculator.spec.ts:245:7 › S15 physical keyboard (superset) › S119/BT12: a failed history save never toasts the evaluation message (939ms)
+  95 passed (3.0m)
+=== CHUNK 5: 12 files ===
+  ✓  46 [chromium] › tests/e2e/s19-rum-panel.spec.ts:114:7 › S130/CE4 · the panel's load-state machine › a failed initial aggregate load renders the retry hint, never the lying 'Loading the field metrics…' line (459ms)
+  89 passed (1.4m)
+=== DONE — chunked certification complete ===
