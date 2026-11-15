@@ -2,6 +2,14 @@ import { defineConfig } from "vitest/config";
 import path from "node:path";
 
 // Unit-test layer for the pure domain seams — 55 files / 1799 tests
+// (re-anchored S194/ER — the files-family e2e consolidation: the
+// unit census UNCHANGED at 1799 [55 files — no source change]; the e2e
+// census UNCHANGED at 744 [160+275+116+101+92] with 739 chromium specs
+// now in 34 spec files — the S183/EG Files-pure describe [7 pins] split
+// byte-faithfully out of parity-session7.spec.ts [55 → 48] into the
+// dedicated files home tests/e2e/files.spec.ts; a pure
+// test-organization refactor, zero application behavior change; see
+// docs/remediation-plan-session194.md.)
 // (re-anchored S193/EQ — the timetable-family e2e consolidation: the
 // unit census UNCHANGED at 1799 [55 files — no source change]; the e2e
 // census UNCHANGED at 744 [160+275+116+101+92] with 739 chromium specs

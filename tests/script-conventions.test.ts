@@ -410,6 +410,19 @@ describe("the chunked cert runner's truth contract (S128/CC2)", () => {
     // /Timetable leg] stay — the S189/S191 boundary precedent; the --list
     // census 740 in 34 files [739 chromium + the setup test; 33 spec
     // files]; see docs/remediation-plan-session193.md).
+    // S194/ER re-tag: the census is UNCHANGED at 744 — the files-family
+    // e2e consolidation (the S183/EG Files-pure describe [7 pins] split
+    // byte-faithfully out of parity-session7.spec.ts [55 → 48 pins] into
+    // the dedicated files home tests/e2e/files.spec.ts; chunk 2 gains it
+    // as its 11th file; the Files strays outside parity-session7 [the
+    // EH1 forced-zero + EJ6 header-stacking pins, the a11y-sweep /Files
+    // leg, the dark-mode Files washes, the resilience upload edge cases,
+    // the s14 /api/files hardening pins] stay — the S189/S191/S193
+    // boundary precedent; files sorts 2nd in the chunk's alphabetical
+    // order — strictly fewer predecessors than the split source's 5th
+    // position; the --list census 740 in 35 files [739 chromium + the
+    // setup test; 34 spec files]; see
+    // docs/remediation-plan-session194.md).
     expect(certSource).toContain("Expected: 160 + 275 + 116 + 101 + 92 = 744");
   });
 
