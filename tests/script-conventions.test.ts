@@ -387,11 +387,20 @@ describe("the chunked cert runner's truth contract (S128/CC2)", () => {
     // was a pure test-organization refactor (the 11 pure-flashcards
     // describes [18 pins] split byte-faithfully out of parity-session7.spec.ts
     // [88 → 70 pins] into the dedicated flashcards home
-    // tests/e2e/flashcards.spec.ts; chunk 2 gains it as the 9th file; the
+    // tests/e2e/flashcards.spec.ts; chunk 2 gains it as its 9th file; the
     // two flashcards strays outside parity-session7 [S167/DQ1 in
     // parity-session8, S9-O in parity-session9] stay — the S189 boundary
     // precedent; see docs/remediation-plan-session191.md).
-    expect(certSource).toContain("Expected: 159 + 275 + 108 + 101 + 92 = 735");
+    // S192/EP re-tag: the census moves 735 → 744, net +9 — the AI-chrome +
+    // calendar-day-header parity port (chunk 1 +1: the EP7 calendar
+    // day-detail year pin in parity-session8; chunk 3 +8: the EP1-EP6b/EP8
+    // AI-chrome pins in parity-session5 — the measured max-w-5xl wrapper,
+    // the 3-col quick grid, the card anatomy with the a11y-safe heading face, the
+    // py-20 wand-sparkles hero, the min-h-500 chat card with the composer
+    // inside, the icon-only send, the mobile 2-col breakpoint; the --list
+    // census 740 in 33 files [739 chromium + the setup test]; see
+    // docs/remediation-plan-session192.md).
+    expect(certSource).toContain("Expected: 160 + 275 + 116 + 101 + 92 = 744");
   });
 
   it("propagates a failing chunk's exit code (never a green cert on a red run)", () => {

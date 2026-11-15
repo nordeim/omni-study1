@@ -281,6 +281,22 @@ test.describe("S8-C · Calendar rework", () => {
     expect(h3cs.weight).toBe("700");
     await expect(h3).toHaveText(/day, /i);
   });
+
+  // S192/EP7 (Batch EP — the calendar day-header port): the reference's
+  // day-detail h3 renders weekday + month + day with NO year ("Sunday,
+  // November 15" — measured live desktop AND mobile 2026-11-16; the clone
+  // shipped formatLongDateWithWeekday's trailing ", 2026"). The MyDay
+  // subtitle already omits the year (the S4-D pin) — the calendar now
+  // matches the same measured family.
+  test("EP7: the day-detail date omits the year (the measured weekday-month-day form)", async ({ page }) => {
+    await page.goto("/Calendar");
+    await hydrated(page);
+    const aside = page.locator('[aria-label="Day detail"]');
+    await expect(aside).toBeVisible();
+    const h3 = aside.locator("h3").first();
+    // The exact measured shape: "Weekday, Month Day" — no trailing year.
+    await expect(h3).toHaveText(/^(Sunday|Monday|Tuesday|Wednesday|Thursday|Friday|Saturday), (January|February|March|April|May|June|July|August|September|October|November|December) \d{1,2}$/);
+  });
 });
 
 test.describe("S8-D · MyDay header + suggestions", () => {
@@ -1906,6 +1922,9 @@ test.describe("S190 · the AI quick-action order port", () => {
     // snapshot race — the S9 lesson; the quick-actions grid renders only
     // after the transcript's loading gate resolves).
     await expect(grid.locator("button").first()).toBeVisible();
+    // The title face is the span heading role (the S192/EP axe-clean
+    // adjudication — the reference's real-h3 DOM trips heading-order after
+    // the h1 view header; the clone's stand-in is visually identical).
     const titles = await grid.locator("button [role=heading]").allInnerTexts();
     expect(titles).toEqual([
       "Explain Concept",

@@ -5,7 +5,11 @@
 // contract (S13): the user's message enters the transcript with a LOCAL id
 // BEFORE the POST; on failure it is removed and the text bounces back into
 // the composer (the restored text IS the retry affordance). The transcript
-// is an aria-live="polite" region with aria-busy (S14).
+// is an aria-live="polite" region with aria-busy (S14). The S192/EP port
+// restructured the chrome to the measured reference anatomy (the max-w-5xl
+// wrapper, the quick-action grid, the big chat card — see
+// docs/remediation-plan-session192.md); every behavioral contract above is
+// untouched.
 // ---------------------------------------------------------------------------
 
 import * as React from "react";
@@ -17,6 +21,7 @@ import {
   FileText,
   Languages,
   Lightbulb,
+  Send,
   WandSparkles,
 } from "lucide-react";
 
@@ -132,43 +137,89 @@ export function AIAssistantView() {
 
   return (
     <div className="flex h-[calc(100vh-8rem)] flex-col">
-      <ViewHeader title="AI Study Assistant" subtitle="Your study copilot" icon={Bot} size="lg" />
+      {/* S192/EP: the measured max-w-5xl view wrapper — the header, the
+          quick-action grid (empty transcript only), and the chat card all
+          ride the reference's 1024px column (measured 2026-11-16; the
+          transcript's old max-w-3xl was the never-measured stand-in). */}
+      <div className="mx-auto flex w-full max-w-5xl flex-1 flex-col space-y-6">
+      <ViewHeader
+        title="AI Study Assistant"
+        subtitle="Your personal AI tutor, available 24/7"
+        icon={Bot}
+      />
 
+      {/* ---- quick actions (S192/EP: the measured grid — 2 cols at base,
+           3 from md, 16px gap; above the card, empty transcript only) ---- */}
+      {!loading && emptyTranscript && !busy && (
+        <div role="group" className="grid grid-cols-2 gap-4 md:grid-cols-3" aria-label="Quick actions">
+          {QUICK_ACTIONS.map((action) => (
+            <button
+              key={action.title}
+              type="button"
+              onClick={() => setInput(action.prompt)}
+              className="group rounded-xl border border-slate-200 bg-white p-4 text-left transition-all hover:border-violet-300 hover:shadow-lg focus-visible:ring-2 focus-visible:ring-sf-primary/40 dark:border-slate-700 dark:bg-card dark:hover:border-violet-400"
+            >
+              <action.icon
+                className="mb-3 size-8 text-sf-primary transition-transform group-hover:scale-110"
+                strokeWidth={2}
+                aria-hidden
+              />
+              {/* The title face: the reference ships a REAL h3 here, but its
+                  own heading order (h1 view header → h3 card titles) trips
+                  axe's heading-order rule — the reference's own a11y gap,
+                  NOT replicated (the S190 Clear-key precedent: the
+                  axe-clean contract is a repo-level pin that outranks
+                  exact DOM parity). The clone's stand-in: a span heading
+                  role at level 2 — visually byte-identical (same classes,
+                  same computed styles), axe-clean order (h1 → 2). */}
+              <span
+                role="heading"
+                aria-level={2}
+                className="block font-semibold text-slate-800 dark:text-slate-100"
+              >
+                {action.title}
+              </span>
+            </button>
+          ))}
+        </div>
+      )}
+
+      {/* ---- the big chat card (S192/EP: the measured panel — the
+              transcript AND the composer inside one rounded-2xl card,
+              min-h-500) ---- */}
+      <div className="flex min-h-[500px] flex-1 flex-col rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-card">
       {/* ---- transcript (S14 aria-live contract) ---- */}
       <div
         ref={transcriptRef}
         aria-live="polite"
         aria-busy={busy}
-        className="sf-scroll mt-6 flex max-h-full flex-1 flex-col space-y-4 overflow-y-auto pb-4"
+        className="sf-scroll flex-1 space-y-4 overflow-y-auto p-6"
       >
-        <div className="mx-auto flex w-full max-w-3xl flex-col space-y-4">
-          {/* S136/CK4: the CE3 gate — an in-flight load renders the spinner
-              branch below, never the false empty-account copy + quick
-              actions on un-hydrated history. */}
+          {/* S192/EP: the measured empty-state hero — INSIDE the card's
+              transcript area (the old bot-circle + one-liner + grid-below
+              layout was the never-measured stand-in). */}
           {!loading && emptyTranscript && !busy && (
-            <>
-              <div className="mx-auto flex size-16 items-center justify-center rounded-2xl bg-sf-primary-soft dark:bg-sf-primary-soft-dark/40">
-                <Bot className="size-8 text-sf-primary" strokeWidth={2} aria-hidden />
-              </div>
-              <p className="text-center text-sm text-slate-500 dark:text-slate-400">
-                Ask anything about your studies — or start with a quick prompt.
+            <div className="py-20 text-center">
+              <WandSparkles
+                className="mx-auto mb-4 size-16 text-violet-300 dark:text-violet-300/80"
+                strokeWidth={2}
+                aria-hidden
+              />
+              {/* The hero heading: the same S192/EP axe-clean adjudication
+                  as the quick-action titles — the reference's h3 (after an
+                  h1) trips heading-order; the span heading role at level 2
+                  is visually identical and axe-clean. */}
+              <span
+                role="heading"
+                aria-level={2}
+                className="mb-2 block text-xl font-semibold text-slate-700 dark:text-slate-200"
+              >
+                How can I help you study today?
+              </span>
+              <p className="text-slate-500 dark:text-slate-400">
+                Ask me anything - explanations, summaries, problem solving, and more!
               </p>
-              <div role="group" className="grid w-full grid-cols-2 gap-2" aria-label="Quick actions">
-                {QUICK_ACTIONS.map((action) => (
-                  <button
-                    key={action.title}
-                    type="button"
-                    onClick={() => setInput(action.prompt)}
-                    className="sf-card rounded-xl p-4 text-left outline-none transition-colors hover:border-sf-primary/40 focus-visible:ring-2 focus-visible:ring-sf-primary/40"
-                  >
-                    <action.icon className="size-8 text-sf-primary" strokeWidth={2} aria-hidden />
-                    <span role="heading" aria-level={2} className="mt-2 block text-base font-semibold text-slate-800 dark:text-slate-100">
-                      {action.title}
-                    </span>
-                  </button>
-                ))}
-              </div>
-            </>
+            </div>
           )}
 
           {loading && persisted.length === 0 && (
@@ -177,6 +228,7 @@ export function AIAssistantView() {
             </div>
           )}
 
+          <div className="mx-auto flex w-full max-w-3xl flex-col space-y-4">
           {persisted.map((message) => (
             <div
               key={message.id}
@@ -210,24 +262,27 @@ export function AIAssistantView() {
               <span className="text-sm text-slate-500 dark:text-slate-400">Thinking…</span>
             </div>
           )}
-        </div>
+          </div>
       </div>
 
-      {/* ---- composer ---- */}
+      {/* ---- composer (S192/EP: the measured border-t footer INSIDE the
+              card — p-4, row gap-3, the icon-only gradient send, the
+              left-aligned hint with the reference's exact copy) ---- */}
       <form
-        className="flex flex-col gap-2 border-t border-slate-100 pt-4 dark:border-slate-800"
+        className="border-t border-slate-100 p-4 dark:border-slate-800"
         onSubmit={(e) => {
           e.preventDefault();
           void send(input);
         }}
       >
-        <div className="flex gap-2">
+        <div className="flex gap-3">
         {/* S119/BT6 — the composer is a REAL textarea, matching the reference's
             measured element (rows=2, 60px, resize-none, the "Ask me anything..."
             placeholder) and honoring the pinned hint's PROMISE: Enter sends,
             Shift+Enter inserts a real newline (the reference's own Shift+Enter
             sends — measured live; delivering the promised behavior is the
-            superset half of the parity decision P1). */}
+            superset half of the parity decision P1). The S192/EP port adds
+            the measured max-h-120 + text-base/md:text-sm responsive face. */}
         <Textarea
           value={input}
           onChange={(e) => setInput(e.target.value)}
@@ -239,25 +294,33 @@ export function AIAssistantView() {
           }}
           placeholder="Ask me anything..."
           aria-label="Message the assistant"
-          className="flex-1 resize-none"
+          className="max-h-[120px] flex-1 resize-none text-base shadow-sm md:text-sm"
           rows={2}
           disabled={busy}
         />
+        {/* The measured send: ICON-ONLY (the reference's lucide-send, no
+            text — its own button carries no label; the clone's aria-label
+            stays as the a11y superset the s14/resilience pins ride). */}
         <Button
           type="submit"
           variant="gradient"
-          className="sf-gradient-shadow"
+          className="h-[60px] px-6"
           disabled={busy || !input.trim()}
           aria-label="Send message"
         >
-          {busy ? <Spinner className="size-4" /> : <WandSparkles className="size-4" strokeWidth={2} aria-hidden />}
-          Send
+          {busy ? <Spinner className="size-4" /> : <Send className="size-5" strokeWidth={2} aria-hidden />}
         </Button>
         </div>
-        <p className="text-center text-xs text-slate-500 dark:text-slate-400">
-          Press Enter to send, Shift + Enter for a new line
+        {/* The hint: the reference's own copy + left alignment; the color
+            rides slate-500 not the measured slate-400 (2.84:1 on white —
+            the reference's own AA fail, the documented not-replicated
+            class; slate-500 = 4.76:1, the S190 inactive-tab precedent). */}
+        <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">
+          Press Enter to send, Shift + Enter for new line
         </p>
       </form>
+      </div>
+      </div>
     </div>
   );
 }

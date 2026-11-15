@@ -4,11 +4,16 @@
 # SIGKILL escalation → rm db/e2e.db → run the chunk), one chunk per
 # invocation so each foreground run fits the tool timeout.
 # Usage: bash /home/z/my-project/omni-study1/scripts/run-cert-chunk.sh <1-5>
-# Expected (S191/EO re-tag): 159 + 275 + 108 + 101 + 92 = 735 — the same
-# census as scripts/e2e-chunked-cert.sh (the S191/EO re-tag block lives
-# there; machine-enforced by tests/script-conventions.test.ts). [The S191
-# change is ORGANIZATIONAL: chunk 2 gains tests/e2e/flashcards.spec.ts as
-# its 9th file — the 11 pure-flashcards describes [18 pins] split out of
+# Expected (S192/EP re-tag): 160 + 275 + 116 + 101 + 92 = 744 — the same
+# census as scripts/e2e-chunked-cert.sh (the S192/EP re-tag block lives
+# there; machine-enforced by tests/script-conventions.test.ts). [The S192
+# change: chunk 1 +1 [the EP7 calendar day-detail year pin in
+# parity-session8] + chunk 3 +8 [the EP1-EP6b/EP8 AI-chrome pins in
+# parity-session5 — the measured wrapper/grid/card/hero/composer family];
+# see docs/remediation-plan-session192.md.]
+# (S191/EO re-tag): the census was UNCHANGED at 735 — the flashcards-family
+# e2e consolidation [chunk 2 gained tests/e2e/flashcards.spec.ts as its 9th
+# file — the 11 pure-flashcards describes [18 pins] split out of
 # parity-session7.spec.ts [88 → 70]; every census count UNCHANGED; see
 # docs/remediation-plan-session191.md.]
 # (S190/EN re-tag): the same census held — the measured three-family

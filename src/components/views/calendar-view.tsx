@@ -25,7 +25,7 @@ import {
   addMonths,
   CALENDAR_WEEKDAYS,
   formatLongDate,
-  formatLongDateWithWeekday,
+  formatWeekdayMonthDay,
   formatHHMMRange,
   isSameDay,
   isoWeekday,
@@ -412,8 +412,12 @@ export function CalendarView() {
         </div>
 
         <section className="rounded-2xl border border-slate-200 bg-white p-6 dark:border-slate-700 dark:bg-card" aria-label="Day detail">
+          {/* S192/EP7: the reference's day-detail date is weekday + month +
+              day with NO year ("Sunday, November 15" — measured live desktop
+              AND mobile 2026-11-16); the old formatLongDateWithWeekday
+              appended the trailing year the reference never renders. */}
           <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100">
-            {formatLongDateWithWeekday(selected)}
+            {formatWeekdayMonthDay(selected)}
           </h3>
 
           {/* S140/CO4b (Audit A L-2): the day detail renders FIVE collections

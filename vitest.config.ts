@@ -2,6 +2,16 @@ import { defineConfig } from "vitest/config";
 import path from "node:path";
 
 // Unit-test layer for the pure domain seams — 55 files / 1799 tests
+// (re-anchored S192/EP — the AI-chrome + calendar-day-header parity port:
+// the unit census UNCHANGED at 1799 [55 files — a view-layer port, no new
+// seam]; the e2e census moves 735 → 744 across the 5-chunk map
+// [160+275+116+101+92] and 739 chromium specs in the same 32 spec files
+// [+9 pins: the EP1-EP6b/EP8 AI-chrome family in parity-session5.spec.ts
+// — the measured max-w-5xl wrapper, the 3-col quick grid, the card
+// anatomy with the a11y-safe heading face, the py-20 wand-sparkles hero, the
+// min-h-500 chat card with the composer inside, the icon-only send, the
+// mobile 2-col breakpoint — and the EP7 calendar day-detail year form in
+// parity-session8.spec.ts]; see docs/remediation-plan-session192.md.)
 // (re-anchored S191/EO — the flashcards-family e2e consolidation: the
 // unit census UNCHANGED at 1799 [55 files — a test-organization cycle,
 // zero application behavior change]; the e2e census UNCHANGED at 735

@@ -23,7 +23,7 @@ import { expect, test, type Page } from "@playwright/test";
  *  S9-M settings tabs carry palette/user/book-open/calendar/bell icons
  *  S9-N notes combobox triggers carry folder/tag leading icons
  *  S9-O flashcards deck row has a hover-revealed ellipsis menu button
- *  S9-P AI composer button icon = wand-sparkles
+ *  S9-P AI composer button icon = the send glyph (S192/EP re-anchor: the reference moved wand-sparkles [the S9-era measurement] → lucide-send, re-measured 2026-11-16)
  *  S9-Q MyDay quick-add row = input + More Options ONLY (no submit button)
  *  S9-R dashboard section empty states are slim (w-12 icon + p-8 text-center)
  *  S9-S study groups right-pane hint wording
@@ -536,11 +536,16 @@ test.describe("S9-O · Flashcards deck-row menu", () => {
 });
 
 test.describe("S9-P · AI composer icon", () => {
-  test("composer submit uses wand-sparkles", async ({ page }) => {
+  test("composer submit uses the reference's send glyph", async ({ page }) => {
     await page.goto("/AIAssistant");
     await hydrated(page);
     const send = page.getByRole("button", { name: /send message/i });
-    await expect(send.locator("svg")).toHaveClass(/lucide-wand-sparkles/);
+    // S192/EP re-anchor: the reference's measured send button carries the
+    // lucide-send glyph (w-5 h-5, probed live 2026-11-16) — the wand-
+    // sparkles this pin originally held was the pre-measurement stand-in;
+    // the wand-sparkles MOVED to the empty-state hero with the port (see
+    // the EP4 pin in parity-session5.spec.ts).
+    await expect(send.locator("svg")).toHaveClass(/lucide-send/);
   });
 });
 

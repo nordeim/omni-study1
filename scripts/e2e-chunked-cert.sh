@@ -542,8 +542,21 @@
 # deterministic defaults so the leg fills only the title + score +
 # max; network-mocked, no server writes beyond the zero-residue
 # create]. The full DW map: docs/remediation-plan-session173.md.)
-# Expected: 159 + 275 + 108 + 101 + 92 = 735 (each chunk's count includes its
+# Expected: 160 + 275 + 116 + 101 + 92 = 744 (each chunk's count includes its
 # auth setup — the current census; the historical re-tag blocks beneath.)
+# (S192/EP re-tag — census 735 → 744, net +9: chunk 1 +1 [the EP7 calendar
+# day-detail year pin in parity-session8 — the reference's measured
+# weekday-month-day form], chunk 3 +8 [the EP1-EP6b/EP8 AI-chrome pins in
+# parity-session5 — the measured max-w-5xl wrapper, the 3-col quick grid,
+# the card anatomy with the a11y-safe heading face, the py-20 wand-sparkles hero,
+# the min-h-500 chat card with the composer inside, the icon-only send,
+# the mobile 2-col breakpoint]; see docs/remediation-plan-session192.md.)
+# (S191/EO re-tag — census UNCHANGED at 735, net +0: the ORGANIZATIONAL
+# flashcards-family e2e consolidation — chunk 2 gains
+# tests/e2e/flashcards.spec.ts as its 9th file [the 11 pure-flashcards
+# describes, 18 pins, split byte-faithfully out of parity-session7.spec.ts
+# {88 → 70}]; every census count UNCHANGED; see
+# docs/remediation-plan-session191.md.)
 # (S190/EN re-tag — census 723 → 735, net +12: chunk 1 +1 [the EN7 AI
 # quick-action order pin in parity-session8 — the reference's measured
 # titles AND order: "Summarize" (was "Summarize Notes") + the tail pair

@@ -580,8 +580,10 @@ test.describe("S5-N · AI quick-action cards", () => {
     expect(await heading.evaluate((el) => getComputedStyle(el).fontWeight)).toBe("600");
     const icon = card.locator("svg").first();
     expect(await icon.evaluate((el) => getComputedStyle(el).width)).toBe("32px");
-    // The composer hint (measured copy).
-    await expect(page.getByText("Press Enter to send, Shift + Enter for a new line")).toBeVisible();
+    // The composer hint (measured copy — S192/EP re-anchor: the reference
+    // reads "for new line", no article; the old pin held the clone's
+    // drifted "for a new line").
+    await expect(page.getByText("Press Enter to send, Shift + Enter for new line")).toBeVisible();
   });
 
   // ---- S119/BT6 — the composer parity decision (P1) ---------------------------
@@ -1128,5 +1130,218 @@ test.describe("S190 · the Focus Timer chrome port", () => {
     );
     expect(xs[0]).toBeLessThan(xs[1]);
     expect(xs[1]).toBeLessThan(xs[2]);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// S192 · Batch EP — the AI-chrome parity port (the never-measured half:
+// the S5-N/S8-M/S119/S190 pins measured the quick-action titles/icons, the
+// composer element and the copy — the grid anatomy, the card anatomy, the
+// empty-state hero, the big chat card, the header row and the subtitle
+// were first measured 2026-11-16; see docs/remediation-plan-session192.md).
+// ---------------------------------------------------------------------------
+test.describe("S192 · the AI-chrome + calendar-day-header parity port", () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto("/AIAssistant");
+    await hydrated(page);
+  });
+
+  test("EP1: the quick-action grid is 3 columns at desktop with a 16px gap", async ({ page }) => {
+    const grid = page.locator('[aria-label="Quick actions"]');
+    await expect(grid.locator("button").first()).toBeVisible();
+    const cs = await grid.evaluate((el) => {
+      const s = getComputedStyle(el);
+      return { cols: s.gridTemplateColumns.split(" ").length, gap: s.gap };
+    });
+    expect(cs.cols).toBe(3); // measured grid-cols-3 @1440 (was 2)
+    expect(cs.gap).toBe("16px"); // measured gap-4 (was 8px)
+  });
+
+  test("EP2: the quick card carries the measured anatomy with the a11y-safe heading face", async ({ page }) => {
+    const card = page.getByRole("button", { name: "Explain Concept" });
+    await expect(card).toBeVisible();
+    const cs = await card.evaluate((el) => {
+      const s = getComputedStyle(el);
+      return { border: s.borderColor, radius: s.borderRadius, pad: s.padding, bg: s.backgroundColor };
+    });
+    expect(cs.border).toBe("rgb(226, 232, 240)"); // slate-200 (measured; sf-card was slate-100)
+    expect(cs.radius).toBe("12px"); // rounded-xl
+    expect(cs.pad).toBe("16px"); // p-4
+    // The title face: the reference ships a REAL h3, but its own heading
+    // order (h1 view header → h3 card titles) trips axe's heading-order
+    // rule — the clone's stand-in is the span heading role at level 2
+    // (visually byte-identical: the same classes, the same computed
+    // styles). The S190 Clear-key precedent: the axe-clean contract
+    // outranks exact DOM parity.
+    const title = card.getByRole("heading", { name: "Explain Concept" });
+    const tcs = await title.evaluate((el) => {
+      const s = getComputedStyle(el);
+      return { tag: el.tagName, role: el.getAttribute("role"), level: el.getAttribute("aria-level"), mt: s.marginTop, fs: s.fontSize, fw: s.fontWeight };
+    });
+    expect(tcs.tag).toBe("SPAN");
+    expect(tcs.role).toBe("heading");
+    expect(tcs.level).toBe("2");
+    expect(tcs.mt).toBe("0px"); // the icon's mb-3 owns the spacing (the old span carried mt-2)
+    expect(tcs.fs).toBe("16px");
+    expect(tcs.fw).toBe("600");
+    // The icon: 32px + the measured mb-3 gap to the title.
+    const icon = card.locator("svg").first();
+    const ics = await icon.evaluate((el) => {
+      const s = getComputedStyle(el);
+      return { w: s.width, mb: s.marginBottom };
+    });
+    expect(ics.w).toBe("32px");
+    expect(ics.mb).toBe("12px");
+  });
+
+  test("EP3: the AI header is the measured 24px row with the tutor subtitle", async ({ page }) => {
+    const h1 = page.getByRole("heading", { name: "AI Study Assistant" });
+    await expect(h1).toBeVisible();
+    const fs = await h1.evaluate((el) => getComputedStyle(el).fontSize);
+    expect(fs).toBe("24px"); // text-2xl (measured; the clone's size="lg" was 30px)
+    await expect(page.getByText("Your personal AI tutor, available 24/7")).toBeVisible();
+  });
+
+  test("EP4: the empty-state hero is the measured py-20 wand-sparkles block INSIDE the chat card", async ({ page }) => {
+    const hero = page.getByRole("heading", { name: "How can I help you study today?" });
+    await expect(hero).toBeVisible();
+    const hcs = await hero.evaluate((el) => {
+      const s = getComputedStyle(el);
+      return { fs: s.fontSize, fw: s.fontWeight, tag: el.tagName, role: el.getAttribute("role") };
+    });
+    // The S192/EP axe-clean adjudication: the span heading role at level 2
+    // (the reference's h3 trips heading-order after the h1 view header —
+    // its own a11y gap, not replicated).
+    expect(hcs.tag).toBe("SPAN");
+    expect(hcs.role).toBe("heading");
+    expect(hcs.fs).toBe("20px"); // text-xl
+    expect(hcs.fw).toBe("600");
+    await expect(page.getByText("Ask me anything - explanations, summaries, problem solving, and more!")).toBeVisible();
+    // The 64px violet-300 wand-sparkles icon (the @theme-pinned step).
+    const icon = hero.evaluate((el) => {
+      const svg = el.parentElement?.querySelector("svg") ?? null;
+      return svg
+        ? { w: getComputedStyle(svg).width, color: getComputedStyle(svg).color, mb: getComputedStyle(svg).marginBottom }
+        : null;
+    });
+    const ics = await icon;
+    expect(ics?.w).toBe("64px");
+    expect(ics?.color).toBe("rgb(196, 181, 253)"); // violet-300 #c4b5fd
+    expect(ics?.mb).toBe("16px"); // mb-4
+    // The hero wrapper carries the measured py-20 + centering.
+    const wrap = await hero.evaluate((el) => {
+      const w = el.parentElement;
+      const s = w ? getComputedStyle(w) : null;
+      return w && s ? { cls: w.getAttribute("class") || "", pt: s.paddingTop, ta: s.textAlign } : null;
+    });
+    expect(wrap?.pt).toBe("80px"); // py-20
+    expect(wrap?.ta).toBe("center");
+    // The hero sits INSIDE the chat card (an ancestor carries rounded-2xl).
+    const inCard = await hero.evaluate((el) => {
+      let node: Element | null = el;
+      while (node) {
+        const cls = node.getAttribute("class") || "";
+        if (/rounded-2xl/.test(cls)) return true;
+        node = node.parentElement;
+      }
+      return false;
+    });
+    expect(inCard).toBe(true);
+  });
+
+  test("EP5: the chat card is the measured min-h-500 rounded-2xl panel with the composer INSIDE", async ({ page }) => {
+    const composer = page.getByLabel("Message the assistant");
+    await expect(composer).toBeVisible();
+    const card = await composer.evaluate((el: HTMLElement) => {
+      let node: HTMLElement | null = el;
+      while (node) {
+        const cls = node.getAttribute("class") || "";
+        if (/rounded-2xl/.test(cls) && /min-h-\[500px\]|flex/.test(cls)) {
+          const s = getComputedStyle(node);
+          return { cls: cls.slice(0, 140), h: Math.round(node.getBoundingClientRect().height), radius: s.borderRadius, border: s.borderColor, minH: s.minHeight };
+        }
+        node = node.parentElement;
+      }
+      return null;
+    });
+    expect(card).not.toBeNull();
+    expect(card?.radius).toBe("16px"); // rounded-2xl
+    expect(card?.border).toBe("rgb(226, 232, 240)"); // border-slate-200
+    expect(card?.minH).toBe("500px"); // min-h-[500px]
+    expect(card?.h).toBeGreaterThanOrEqual(500);
+    // The composer rides the card's border-t footer (measured p-4).
+    const footer = await composer.evaluate((el) => {
+      const f = el.closest("form");
+      const s = f ? getComputedStyle(f) : null;
+      return f && s ? { pad: s.padding, borderTop: s.borderTopWidth + " " + s.borderTopColor } : null;
+    });
+    expect(footer?.pad).toBe("16px"); // p-4
+    expect(footer?.borderTop).toBe("1px rgb(241, 245, 249)"); // border-t border-slate-100
+    // The composer row gap is the measured gap-3.
+    const rowGap = await composer.evaluate((el) => {
+      const row = el.parentElement;
+      return row ? getComputedStyle(row).gap : null;
+    });
+    expect(rowGap).toBe("12px");
+  });
+
+  test("EP6: the composer is the measured textarea + icon-only gradient send + left hint", async ({ page }) => {
+    const composer = page.getByLabel("Message the assistant");
+    await expect(composer).toBeVisible();
+    const ccs = await composer.evaluate((el) => {
+      const s = getComputedStyle(el);
+      return { minH: s.minHeight, maxH: s.maxHeight, fs: s.fontSize };
+    });
+    expect(ccs.minH).toBe("60px"); // min-h-[60px]
+    expect(ccs.maxH).toBe("120px"); // max-h-[120px] (measured; the clone had none)
+    expect(ccs.fs).toBe("14px"); // md:text-sm at desktop
+    const send = page.getByLabel("Send message");
+    await expect(send).toBeVisible();
+    const scs = await send.evaluate((el) => {
+      const s = getComputedStyle(el);
+      const r = el.getBoundingClientRect();
+      return { w: Math.round(r.width), h: Math.round(r.height), bg: s.backgroundImage, text: el.textContent.trim() };
+    });
+    expect(scs.h).toBe(60); // h-[60px]
+    expect(scs.bg).toContain("linear-gradient"); // the gradient send
+    expect(scs.text).toBe(""); // ICON-ONLY — the "Send" text retires (measured)
+    const icon = send.locator("svg");
+    await expect(icon).toHaveCount(1);
+    // The hint: the reference's exact copy, LEFT-aligned under the row.
+    const hint = page.getByText("Press Enter to send, Shift + Enter for new line");
+    await expect(hint).toBeVisible();
+    const hcs = await hint.evaluate((el) => {
+      const s = getComputedStyle(el);
+      return { ta: s.textAlign, fs: s.fontSize };
+    });
+    expect(hcs.ta).toBe("start"); // not centered (measured)
+    expect(hcs.fs).toBe("12px"); // text-xs
+  });
+
+  test("EP8: the view rides the measured max-w-5xl wrapper", async ({ page }) => {
+    // The reference was measured at 1440x900 (the wrapper caps at 1024);
+    // the suite's default viewport is narrower, so widen first — at 1440
+    // the content box is 1116px and the max-w-5xl cap engages.
+    await page.setViewportSize({ width: 1440, height: 900 });
+    const h1 = page.getByRole("heading", { name: "AI Study Assistant" });
+    await expect(h1).toBeVisible();
+    const wrapW = await h1.evaluate((el: HTMLElement) => {
+      let node: HTMLElement | null = el;
+      while (node) {
+        const cls = node.getAttribute("class") || "";
+        if (/max-w-5xl/.test(cls)) return Math.round(node.getBoundingClientRect().width);
+        node = node.parentElement;
+      }
+      return 0;
+    });
+    expect(wrapW).toBe(1024); // max-w-5xl @1440 (measured; the transcript was max-w-3xl)
+  });
+
+  test("EP6b: the quick grid is 2 columns at mobile (the md:grid-cols-3 breakpoint)", async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    const grid = page.locator('[aria-label="Quick actions"]');
+    await expect(grid.locator("button").first()).toBeVisible();
+    const cols = await grid.evaluate((el) => getComputedStyle(el).gridTemplateColumns.split(" ").length);
+    expect(cols).toBe(2); // measured 171px×2 @390 (the reference's own mobile grid)
   });
 });

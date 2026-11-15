@@ -26,6 +26,8 @@ pnpm-debug.log*
 dev.log
 server.log
 dev-server.pid
+# the :3200 verification-host standalone's log (the launcher's own tee)
+standalone-3200.log
 
 # local env files — never commit secrets
 .env
