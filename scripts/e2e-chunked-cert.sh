@@ -1,4 +1,21 @@
 #!/usr/bin/env bash
+# (S193/EQ re-tag — the census is UNCHANGED at 744 [160+275+116+101+92]
+# and the Expected line below is untouched; the change is ORGANIZATIONAL:
+# chunk 2 gains tests/e2e/timetable.spec.ts as its 10th file — the 4
+# pure-timetable describes [15 pins: the S7-C founding set, the S127/CB6
+# 14-hour-row band, the S161/DJ2 typed-path band hand-guard, the S185/EI
+# week-strip rows port] split byte-faithfully out of parity-session7.spec.ts
+# [70 → 55 pins, 2,646 → 2,167 lines] into the dedicated timetable home
+# [519 lines], declaration order preserved; the spec-file census moves
+# 32 → 33 [739 chromium specs + the setup test = 740 by --list]; the
+# split is a pure test-organization refactor with ZERO application
+# behavior change — equivalence proven by the two-file cold run
+# [71 passed, first-roll — the identical outcome to the pre-split
+# baseline] and the chunk-2 composition 275/275 cold [10 files]; the
+# timetable strays outside parity-session7 [S165/DN1 in parity-session9,
+# the theme-system mobile-tile leg, the a11y-sweep /Timetable leg] stay
+# in their coverage-axis homes [the S189/S191 boundary precedent]; see
+# docs/remediation-plan-session193.md.)
 # (S191/EO re-tag — the census is UNCHANGED at 735 [159+275+108+101+92]
 # and the Expected line below is untouched; the change is ORGANIZATIONAL:
 # chunk 2 gains tests/e2e/flashcards.spec.ts as its 9th file — the 11
@@ -949,7 +966,7 @@ cd "$(dirname "$0")/.."
 
 declare -a CHUNKS=(
   "tests/e2e/navigation.spec.ts tests/e2e/parity-session8.spec.ts tests/e2e/mobile-navigation.spec.ts"
-  "tests/e2e/parity-session9.spec.ts tests/e2e/parity-session7.spec.ts tests/e2e/flashcards.spec.ts tests/e2e/notes.spec.ts tests/e2e/theme-system.spec.ts tests/e2e/parity-session6.spec.ts tests/e2e/a11y-sweep.spec.ts tests/e2e/tasks.spec.ts tests/e2e/s14-hardening.spec.ts"
+  "tests/e2e/parity-session9.spec.ts tests/e2e/parity-session7.spec.ts tests/e2e/flashcards.spec.ts tests/e2e/notes.spec.ts tests/e2e/theme-system.spec.ts tests/e2e/parity-session6.spec.ts tests/e2e/a11y-sweep.spec.ts tests/e2e/tasks.spec.ts tests/e2e/s14-hardening.spec.ts tests/e2e/timetable.spec.ts"
   "tests/e2e/parity-session5.spec.ts tests/e2e/resilience.spec.ts tests/e2e/s16-perf-parity.spec.ts"
   "tests/e2e/accessibility.spec.ts tests/e2e/calculator.spec.ts tests/e2e/dark-mode.spec.ts tests/e2e/s17-fresh-user.spec.ts tests/e2e/s52-sidebar-collapse.spec.ts"
   "tests/e2e/auth.spec.ts tests/e2e/auth-flows.spec.ts tests/e2e/greeting-clock.spec.ts tests/e2e/s18-rum.spec.ts tests/e2e/s19-rum-panel.spec.ts tests/e2e/s20-rum-export.spec.ts tests/e2e/s21-data-export.spec.ts tests/e2e/s22-boot-guard.spec.ts tests/e2e/s23-import.spec.ts tests/e2e/s24-change-password.spec.ts tests/e2e/s25-delete-account.spec.ts tests/e2e/s26-change-email.spec.ts"

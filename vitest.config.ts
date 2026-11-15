@@ -2,6 +2,14 @@ import { defineConfig } from "vitest/config";
 import path from "node:path";
 
 // Unit-test layer for the pure domain seams — 55 files / 1799 tests
+// (re-anchored S193/EQ — the timetable-family e2e consolidation: the
+// unit census UNCHANGED at 1799 [55 files — no source change]; the e2e
+// census UNCHANGED at 744 [160+275+116+101+92] with 739 chromium specs
+// now in 33 spec files — the 4 pure-timetable describes [15 pins] split
+// byte-faithfully out of parity-session7.spec.ts [70 → 55] into the
+// dedicated timetable home tests/e2e/timetable.spec.ts; a pure
+// test-organization refactor, zero application behavior change; see
+// docs/remediation-plan-session193.md.)
 // (re-anchored S192/EP — the AI-chrome + calendar-day-header parity port:
 // the unit census UNCHANGED at 1799 [55 files — a view-layer port, no new
 // seam]; the e2e census moves 735 → 744 across the 5-chunk map

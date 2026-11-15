@@ -25,7 +25,7 @@ tags:
 
 > **What this is:** the single-source-of-truth reference for working in
 > `nordeim/omni-study1`. Every fact below is verified against the codebase
-> (2543 tests green, re-anchored at the S192 update: 1799 Vitest unit [55 files] + 744 Playwright e2e [the 5-chunk census: 739 chromium specs in 32 spec files + the per-chunk setup re-runs — 160+275+116+101+92; the S192/EP AI-chrome + calendar-day-header parity port added 9 pins — the measured max-w-5xl wrapper, the 3-col quick grid, the card anatomy with the a11y-safe heading face, the py-20 wand-sparkles hero, the min-h-500 chat card with the composer inside, the icon-only send, the mobile 2-col breakpoint EP1-EP6b/EP8, and the EP7 calendar day-detail year form]) — the census re-anchored through
+> (2543 tests green, re-anchored at the S193 update: 1799 Vitest unit [55 files] + 744 Playwright e2e [the 5-chunk census: 739 chromium specs in 33 spec files + the per-chunk setup re-runs — 160+275+116+101+92; the S193/EQ timetable-family e2e consolidation split the 4 pure-timetable describes [15 pins — the S7-C founding set, the S127/CB6 14-hour-row band, the S161/DJ2 typed-path band hand-guard, the S185/EI week-strip rows port] byte-faithfully out of parity-session7.spec.ts [70 → 55 pins] into the dedicated timetable home tests/e2e/timetable.spec.ts — a pure test-organization refactor, every census count UNCHANGED]) — the census re-anchored through
 > the s117–s124 hardening cycles; the 2.0 baseline was 834 + 299 in six
 > chunks after the parity re-application + account-flow completion +
 > regression hardening).
@@ -628,7 +628,7 @@ tail -40 dev.log                            # request traces + prisma queries
 ```bash
 bun run lint && bun run typecheck && bun run test && bun run build && bun run test:e2e
 ```
-Current green state (re-anchored at S192/EP): lint ✓ · tsc ✓ (`noImplicitAny` + `noUnusedLocals`/`noUnusedParameters` — the BV16 machine guard; plus the S129/CD3 re-enabled `react-hooks/exhaustive-deps` as an error) · 1799 unit ✓ · build ✓ (the type gate live — `ignoreBuildErrors` removed) · 744 e2e ✓ (2543 green).
+Current green state (re-anchored at S193/EQ): lint ✓ · tsc ✓ (`noImplicitAny` + `noUnusedLocals`/`noUnusedParameters` — the BV16 machine guard; plus the S129/CD3 re-enabled `react-hooks/exhaustive-deps` as an error) · 1799 unit ✓ · build ✓ (the type gate live — `ignoreBuildErrors` removed) · 744 e2e ✓ (2543 green).
 
 **Full-suite chunk map** (one server-boot per chunk; the 10-min tool cap makes
 one-shot full runs unreliable — the 2.0 six-chunk map: chrome+s14 104 ·
