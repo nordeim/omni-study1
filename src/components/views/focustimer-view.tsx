@@ -161,7 +161,10 @@ export function FocusTimerView() {
   const [mode, setMode] = React.useState<TimerMode>("focus");
   const [remaining, setRemaining] = React.useState(25 * 60);
   const [running, setRunning] = React.useState(false);
-  const [subjectId, setSubjectId] = React.useState("none");
+  // S190/EN: the no-selection default ("" → the "Select subject"
+  // placeholder renders; "No subject" stays a real option mapping to
+  // a subjectless session — the reference's measured interaction shape).
+  const [subjectId, setSubjectId] = React.useState("");
   const [saving, setSaving] = React.useState(false);
   // S174/DX3: the measured controls' state — the settings dialog's opener,
   // the volume toggle (default muted OFF, the measured volume2 default
@@ -255,7 +258,7 @@ export function FocusTimerView() {
         durationSeconds: Math.max(1, durations.focus - remaining),
         mode: "focus",
         completed: true,
-        subjectId: subjectId === "none" ? null : subjectId,
+        subjectId: subjectId === "none" || subjectId === "" ? null : subjectId,
       })
       .then(() => {
         toast.success("Focus session saved — take a break!");
@@ -367,13 +370,18 @@ export function FocusTimerView() {
       {/* ---- custom 30px header ---- */}
       <header>
         <h1 className="flex items-center gap-2 text-3xl font-bold text-slate-800 dark:text-slate-100">
-          <Timer className="size-7 shrink-0 text-sf-primary" strokeWidth={2} aria-hidden />
+          {/* S190/EN: the measured 32px h1 icon (w-8, probed live). */}
+          <Timer className="size-8 shrink-0 text-sf-primary" strokeWidth={2} aria-hidden />
           Focus Timer
         </h1>
         <p className="mt-1 text-base text-slate-500 dark:text-slate-400">Stay focused and productive</p>
       </header>
 
-      <div className="mx-auto flex w-full max-w-md flex-col items-center gap-6">
+      {/* S190/EN: the measured column — max-w-2xl (672px), the timer
+          chrome riding a white rounded-3xl panel card (bg-white p-8
+          shadow-xl border border-slate-100, probed live 2026-11-15);
+          the stats row stays OUTSIDE the panel (both hosts). */}
+      <div className="mx-auto flex w-full max-w-2xl flex-col gap-8">
         {/* ---- stats (S136/CK4: the CE3 gate — an in-flight load renders
             the loading branch, never the false 0/0/0 row) ---- */}
         {/* S175/DY2: the in-flight window is announced — the Spinner is
@@ -394,8 +402,13 @@ export function FocusTimerView() {
           <StatCard icon={Zap} label="Sessions" value={focusSessions.length} hint="Total sessions logged" />
         </div>
         )}
-        {/* ---- mode tabs ---- */}
-        <div className="flex items-center gap-1 rounded-xl bg-slate-100 p-1 dark:bg-slate-800" role="group" aria-label="Timer mode">
+        {/* ---- the measured timer panel (S190/EN): the mode row, the
+            presets, the ring, the subject row, and the controls ride the
+            white rounded-3xl card (probed live 2026-11-15). ---- */}
+        <div className="flex flex-col items-center rounded-3xl border border-slate-100 bg-white p-8 shadow-xl dark:border-slate-800 dark:bg-slate-900">
+        {/* ---- mode tabs (the measured freestanding row: transparent,
+            36px pills, px-4 py-2, icon FIRST, the gradient active face) ---- */}
+        <div className="mb-8 flex items-center justify-center gap-2" role="group" aria-label="Timer mode">
           {(Object.keys(MODE_LABELS) as TimerMode[]).map((m) => (
             <button
               key={m}
@@ -403,40 +416,50 @@ export function FocusTimerView() {
               aria-pressed={mode === m}
               onClick={() => switchMode(m)}
               className={cn(
-                "rounded-xl px-3 py-1.5 text-sm font-medium transition-colors",
+                "flex items-center gap-1.5 rounded-xl px-4 py-2 text-sm font-medium transition-colors",
                 mode === m
                   ? "sf-gradient text-white"
-                  : "text-slate-600 hover:bg-white/60 dark:text-slate-300 dark:hover:bg-slate-700/60",
+                  : "text-slate-600 hover:text-slate-800 dark:text-slate-300 dark:hover:text-slate-100",
               )}
             >
-              {MODE_LABELS[m]}
               {React.createElement(MODE_ICONS[m], {
-                className: "size-3.5",
+                className: "size-4 shrink-0",
                 strokeWidth: 2,
                 "aria-hidden": true,
               })}
+              {MODE_LABELS[m]}
             </button>
           ))}
         </div>
 
-        {/* ---- presets ---- */}
+        {/* ---- presets (the measured 64px tinted two-line cards: the
+            ACTIVE preset the accent-soft tint + strong text, the inactive
+            the slate-100 tint; the NAME leads font-semibold, the durations
+            ride text-xs opacity-70 — the clone's pair was inverted) ---- */}
         {/* S124/BY13: the labeled container gives the forced-colors
             restoration its scope (invisible in normal rendering). */}
-        <div className="flex items-center gap-2" role="group" aria-label="Timer presets">
+        <div className="flex items-center justify-center gap-2" role="group" aria-label="Timer presets">
           {PRESETS.map((preset) => (
-            <Button
+            <button
               key={preset.id}
-              variant="outline"
-              size="sm"
+              type="button"
               aria-pressed={presetId === preset.id}
-              className={cn(presetId === preset.id && "border-sf-primary text-sf-primary-strong")}
               onClick={() => applyPreset(preset.id)}
+              className={cn(
+                "flex min-h-16 flex-col items-center justify-center rounded-xl px-6 py-3 text-sm transition-colors",
+                presetId === preset.id
+                  ? "bg-sf-primary-empty text-sf-primary-deep dark:bg-sf-primary-soft-dark/40 dark:text-sf-primary-strong-dark"
+                  : "bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700",
+              )}
             >
-              <span className="flex flex-col items-center leading-tight">
-                <span className="text-xs text-slate-500 dark:text-slate-400">{preset.name}</span>
-                <span className="text-sm font-semibold">{preset.durations}</span>
-              </span>
-            </Button>
+              <span className="font-semibold leading-tight">{preset.name}</span>
+              {/* The measured reference rides text-xs opacity-70 here — its own
+                  durations line measures ~2.9:1 (axe color-contrast, serious;
+                  the a11y-sweep's zero-violation pin). The opacity drops, the
+                  text-xs hierarchy stays: the muted secondary line without the
+                  AA fail (docs/remediation-plan-session190.md §6.9). */}
+              <span className="text-xs leading-tight">{preset.durations}</span>
+            </button>
           ))}
         </div>
 
@@ -465,21 +488,29 @@ export function FocusTimerView() {
             />
           </svg>
           <div className="absolute inset-0 flex flex-col items-center justify-center">
-            <span role="timer" aria-label="Time remaining" className="text-5xl font-bold tabular-nums text-slate-800 dark:text-slate-100">
+            {/* S190/EN: the measured ring interior — the lucide-brain icon
+                (w-8 mb-2, accent-aware), the font-mono clock, and the
+                capitalize label (probed live 2026-11-15). */}
+            <Brain className="mb-2 size-8 text-sf-primary" strokeWidth={2} aria-hidden />
+            <span role="timer" aria-label="Time remaining" className="font-mono text-5xl font-bold text-slate-800 dark:text-slate-100">
               {formatClock(remaining)}
             </span>
-            <span className="mt-1 text-sm text-slate-500 dark:text-slate-400">{CLOCK_LABELS[mode]}</span>
+            <span className="mt-2 text-sm capitalize text-slate-500 dark:text-slate-400">{CLOCK_LABELS[mode]}</span>
           </div>
         </div>
 
         {/* ---- subject + the measured sound/settings controls ---- */}
         <div className="flex w-full flex-col gap-1.5">
           <div className="flex items-end gap-2">
-            <div className="flex-1">
+            {/* S190/EN: the measured compact select (~192px) with the
+                "Select subject" PLACEHOLDER at no-selection — the
+                reference's interaction shape ("No subject" stays an
+                option; a choiceless session saves subjectless). */}
+            <div className="w-48 shrink-0">
               <Label htmlFor="focus-subject">Subject (optional)</Label>
               <Select value={subjectId} onValueChange={setSubjectId}>
                 <SelectTrigger id="focus-subject" aria-label="Session subject">
-                  <SelectValue placeholder="No subject" />
+                  <SelectValue placeholder="Select subject" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="none">No subject</SelectItem>
@@ -491,15 +522,15 @@ export function FocusTimerView() {
                 </SelectContent>
               </Select>
             </div>
-            {/* S174/DX3: the measured volume + settings icon buttons (the
-                reference renders both at the subject row's end). The
-                clone's aria-labels are the documented a11y superset. */}
+            {/* S174/DX3 + S190/EN: the measured 40px near-black square
+                icon buttons (rounded-md, rgb(10,10,10) — probed live
+                2026-11-15). The clone's aria-labels are the documented
+                a11y superset. */}
             <Button
               variant="ghost"
-              size="icon"
               aria-label={soundOn ? "Mute completion sound" : "Enable completion sound"}
               aria-pressed={soundOn}
-              className="mb-0.5"
+              className="mb-0.5 size-10 rounded-md bg-[#0a0a0a] text-[#fafafa] hover:bg-[#262626] dark:bg-[#0a0a0a] dark:text-[#fafafa] dark:hover:bg-[#262626]"
               onClick={() => setSoundOn((on) => !on)}
             >
               {soundOn ? (
@@ -510,9 +541,8 @@ export function FocusTimerView() {
             </Button>
             <Button
               variant="ghost"
-              size="icon"
               aria-label="Timer settings"
-              className="mb-0.5"
+              className="mb-0.5 size-10 rounded-md bg-[#0a0a0a] text-[#fafafa] hover:bg-[#262626] dark:bg-[#0a0a0a] dark:text-[#fafafa] dark:hover:bg-[#262626]"
               onClick={() => setSettingsOpen(true)}
             >
               <Settings2 className="size-4" strokeWidth={2} aria-hidden />
@@ -520,8 +550,17 @@ export function FocusTimerView() {
           </div>
         </div>
 
-        {/* ---- controls ---- */}
-        <div className="flex items-center gap-4">
+        {/* ---- controls (the measured order: the 48px near-black Reset,
+            the 64px gradient play, the 48px near-black Complete) ---- */}
+        <div className="flex items-center justify-center gap-4">
+          <button
+            type="button"
+            aria-label="Reset timer"
+            onClick={reset}
+            className="flex size-12 items-center justify-center rounded-full bg-[#0a0a0a] text-[#fafafa] transition-colors hover:bg-[#262626] dark:bg-[#0a0a0a] dark:hover:bg-[#262626]"
+          >
+            <RotateCcw className="size-5" strokeWidth={2} aria-hidden />
+          </button>
           <button
             type="button"
             aria-label={running ? "Pause timer" : "Start timer"}
@@ -539,23 +578,21 @@ export function FocusTimerView() {
               <Play className="size-8 translate-x-0.5" strokeWidth={2} aria-hidden />
             )}
           </button>
-          <Button variant="ghost" size="icon" aria-label="Reset timer" onClick={reset}>
-            <RotateCcw className="size-5" strokeWidth={2} aria-hidden />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
+          <button
+            type="button"
             aria-label="Complete session"
             onClick={complete}
             disabled={saving}
+            className="flex size-12 items-center justify-center rounded-full bg-[#0a0a0a] text-[#fafafa] transition-colors hover:bg-[#262626] disabled:pointer-events-none disabled:opacity-50 dark:bg-[#0a0a0a] dark:hover:bg-[#262626]"
           >
             <Check className="size-5" strokeWidth={2} aria-hidden />
-          </Button>
+          </button>
           {saving && <Spinner className="size-4 text-sf-primary" />}
         </div>
+        </div>{/* (the S190/EN measured timer panel closes here) */}
 
         {/* ---- session count ---- */}
-        <p className="text-sm text-slate-500 dark:text-slate-400" aria-live="polite">
+        <p className="text-center text-sm text-slate-500 dark:text-slate-400" aria-live="polite">
           {loading && focusSessions.length === 0
             ? "Loading your sessions…"
             : `${sessionsToday} focus ${sessionsToday === 1 ? "session" : "sessions"} today`}

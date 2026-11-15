@@ -371,18 +371,19 @@ describe("the chunked cert runner's truth contract (S128/CC2)", () => {
     // 275/275, chunk 3 101 → 103 — see
     // docs/remediation-plan-session188.md; the unit census moves 1795 →
     // 1799 [55 files — the note-attachments EL block]).
-    // S189/EM re-tag: the census is UNCHANGED at 723 — the Expected line
-    // below is untouched by design (the consolidation is a pure
-    // test-organization refactor: the 14 notes-view describes [49 pins]
-    // split byte-faithfully out of parity-session7.spec.ts [137 → 88
-    // pins] into the dedicated notes home tests/e2e/notes.spec.ts,
-    // chunk 2's 8th file, the same 275 total; the spec-file census
-    // moves 30 → 31 [718 chromium specs + the setup test = 719 by
-    // --list]; equivalence proven by the two-file cold run [the
-    // identical outcome to the pre-split baseline] + the chunk-2
-    // composition 275/275 — see docs/remediation-plan-session189.md; the
-    // unit census UNCHANGED at 1799 [55 files]).
-    expect(certSource).toContain("Expected: 158 + 275 + 103 + 95 + 92 = 723");
+    // S189/EM re-tag: the census was UNCHANGED at 723 — the consolidation
+    // was a pure test-organization refactor (the 14 notes-view describes
+    // [49 pins] split byte-faithfully out of parity-session7.spec.ts
+    // [137 → 88 pins] into the dedicated notes home tests/e2e/notes.spec.ts;
+    // see docs/remediation-plan-session189.md).
+    // S190/EN re-tag: the census moves 723 → 735, net +12 — the measured
+    // three-family parity port (the calculator Basic-keypad anatomy [EN1-6,
+    // chunk 4 +6], the AI quick-action copy/order [EN7, chunk 1 +1], the
+    // Focus Timer chrome [EN8-12, chunk 3 +5]); the CHUNKS arrays unchanged
+    // (no new spec files); the --list census 731 in 32 files (730 chromium
+    // + the setup test). See docs/remediation-plan-session190.md; the unit
+    // census UNCHANGED at 1799 [55 files].
+    expect(certSource).toContain("Expected: 159 + 275 + 108 + 101 + 92 = 735");
   });
 
   it("propagates a failing chunk's exit code (never a green cert on a red run)", () => {

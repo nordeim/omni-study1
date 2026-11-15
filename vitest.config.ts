@@ -2,6 +2,18 @@ import { defineConfig } from "vitest/config";
 import path from "node:path";
 
 // Unit-test layer for the pure domain seams — 55 files / 1799 tests
+// (re-anchored S190/EN — the measured three-family parity port: the unit
+// census UNCHANGED at 1799 [55 files — a view-layer port, no new seam];
+// the e2e census moves 723 → 735 across the 5-chunk map
+// [159+275+108+101+92] and 730 chromium specs in the same 31 spec files
+// [+12 pins: the calculator Basic-keypad anatomy EN1-6 in
+// calculator.spec.ts, the AI quick-action copy/order EN7 in
+// parity-session8.spec.ts, the Focus Timer chrome EN8-12 in
+// parity-session5.spec.ts]; the hue-tokens CONSUMERS register dropped
+// calculator-view [the AC key's sf-pill-red retired with the measured
+// near-black Clear key] and the @theme gained --color-sf-primary-deep
+// [the measured violet-700 active-preset face]; see
+// docs/remediation-plan-session190.md.)
 // (re-anchored S189/EM — the notes-family e2e consolidation: the unit
 // census UNCHANGED at 1799 [55 files — a test-organization cycle, zero
 // application behavior change]; the e2e census UNCHANGED at 723 across

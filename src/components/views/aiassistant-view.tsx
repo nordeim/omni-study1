@@ -33,12 +33,16 @@ const CHAT_TIMEOUT_MS = 120_000;
 type PendingMessage = { id: string; role: "user"; content: string };
 
 const QUICK_ACTIONS = [
+  // S190/EN: the reference's measured six — titles AND order (probed live
+  // 2026-11-15; the recon dossier's own record agrees). The third mode is
+  // "Summarize" (the clone's "Summarize Notes" was transcription drift)
+  // and the tail pair is Translate then Essay Ideas.
   { title: "Explain Concept", icon: BookOpen, prompt: "Explain a concept from my studies" },
   { title: "Study Tips", icon: Brain, prompt: "Give me study tips for my next exam" },
-  { title: "Summarize Notes", icon: FileText, prompt: "Summarize my notes" },
+  { title: "Summarize", icon: FileText, prompt: "Summarize my notes" },
   { title: "Solve Problem", icon: Calculator, prompt: "Solve this problem step by step" },
-  { title: "Essay Ideas", icon: Lightbulb, prompt: "Brainstorm essay ideas for my topic" },
   { title: "Translate", icon: Languages, prompt: "Translate a passage I am studying" },
+  { title: "Essay Ideas", icon: Lightbulb, prompt: "Brainstorm essay ideas for my topic" },
 ] as const;
 
 function errorMessage(err: unknown, fallback: string): string {

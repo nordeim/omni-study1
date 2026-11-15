@@ -16,7 +16,7 @@
 // ---------------------------------------------------------------------------
 
 import * as React from "react";
-import { History, RotateCcw, Trash2 } from "lucide-react";
+import { Delete, History, RotateCcw, Trash2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -64,37 +64,46 @@ function spacedExpression(expr: string): string {
 type CalcKey = { label: string; token: string; kind: "digit" | "op" | "eq" | "clear" | "fn"; span?: boolean };
 
 const BASIC_KEYS: CalcKey[] = [
-  { label: "AC", token: "C", kind: "clear", span: true },
-  { label: "±", token: "NEG", kind: "fn" },
-  { label: "÷", token: "÷", kind: "op" },
+  // S190/EN: the measured Basic grid — 7 8 9 ÷ / 4 5 6 × / 1 2 3 - /
+  // 0 . = + (the reference's 4×4 digit grid; the Clear + icon-only
+  // backspace ride row 1 as span-2 keys, rendered by the tabpanel —
+  // see the S190/EN1/EN2 pair below). No ±/^/(/) on Basic: those live
+  // on Scientific (xʸ, (, ), % — the measured split).
   { label: "7", token: "7", kind: "digit" },
   { label: "8", token: "8", kind: "digit" },
   { label: "9", token: "9", kind: "digit" },
-  { label: "×", token: "×", kind: "op" },
+  { label: "÷", token: "÷", kind: "op" },
   { label: "4", token: "4", kind: "digit" },
   { label: "5", token: "5", kind: "digit" },
   { label: "6", token: "6", kind: "digit" },
-  { label: "-", token: "-", kind: "op" },
+  { label: "×", token: "×", kind: "op" },
   { label: "1", token: "1", kind: "digit" },
   { label: "2", token: "2", kind: "digit" },
   { label: "3", token: "3", kind: "digit" },
-  { label: "+", token: "+", kind: "op" },
+  { label: "-", token: "-", kind: "op" },
   { label: "0", token: "0", kind: "digit" },
   { label: ".", token: ".", kind: "digit" },
-  { label: "(", token: "(", kind: "digit" },
-  { label: ")", token: ")", kind: "digit" },
+  { label: "=", token: "=", kind: "eq" },
+  { label: "+", token: "+", kind: "op" },
 ];
 
 const SCIENTIFIC_EXTRA: CalcKey[] = [
+  // S190/EN: the reference's measured fn set in its measured order
+  // (sin cos tan π √ x² xʸ log ( ) % e) + the clone's documented
+  // supersets ln and ! appended (docs/remediation-plan-session190.md §6.2).
   { label: "sin", token: "sin(", kind: "fn" },
   { label: "cos", token: "cos(", kind: "fn" },
   { label: "tan", token: "tan(", kind: "fn" },
-  { label: "ln", token: "ln(", kind: "fn" },
-  { label: "log", token: "log(", kind: "fn" },
+  { label: "π", token: "pi", kind: "fn" },
   { label: "√", token: "sqrt(", kind: "fn" },
   { label: "x²", token: "^2", kind: "fn" },
-  { label: "π", token: "pi", kind: "fn" },
+  { label: "xʸ", token: "^", kind: "fn" },
+  { label: "log", token: "log(", kind: "fn" },
+  { label: "(", token: "(", kind: "fn" },
+  { label: ")", token: ")", kind: "fn" },
+  { label: "%", token: "%", kind: "fn" },
   { label: "e", token: "e", kind: "fn" },
+  { label: "ln", token: "ln(", kind: "fn" },
   { label: "!", token: "!", kind: "fn" },
 ];
 
@@ -261,29 +270,27 @@ export function CalculatorView() {
       aria-label={
         key.kind === "eq"
           ? "Equals"
-          : key.token === "C"
-            ? "Clear: AC" // must contain the visible token "AC" (axe strips parentheticals)
-            : `Insert ${key.label}`
+          : `Insert ${key.label}`
       }
       onClick={() => void press(key.token)}
       className={cn(
-        "h-14 rounded-xl text-lg font-medium transition-colors",
+        // S190/EN: the measured key family — 6px radius (rounded-md),
+        // 56px height, gap-2 grid. The radius family moved 12px → 6px.
+        "h-14 rounded-md text-lg font-semibold transition-colors",
         key.span && "col-span-2",
         key.kind === "digit" &&
-          "border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800",
-        key.kind === "op" && "bg-sf-primary-soft text-sf-primary-strong hover:brightness-95 dark:bg-sf-primary-soft-dark/40 dark:text-sf-primary-strong-dark",
+          "border border-slate-200 bg-white text-slate-800 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800",
+        // S190/EN: the operators are the measured DARK slate-800 family
+        // (rgb(30,41,59), white text, borderless — was violet-soft).
+        key.kind === "op" &&
+          "bg-slate-800 text-white hover:bg-slate-700 dark:bg-slate-700 dark:hover:bg-slate-600",
+        key.kind === "eq" &&
+          // the measured single-cell gradient key (violet-500 → indigo-600)
+          "sf-gradient sf-gradient-shadow text-white hover:brightness-105",
         key.kind === "fn" &&
-          "border border-slate-200 bg-white text-sm text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800",
-        key.kind === "clear" &&
-          // S92/AS1: the AC key rides the sf-pill-red family; its own hover
-          // pair composes on top (hover 0,2,0 and dark:hover 0,3,0 both beat
-          // the utility's branches).
-          "sf-pill-red hover:bg-red-200 dark:hover:bg-red-900",
+          "border border-slate-200 bg-white text-sm font-medium text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800",
       )}
     >
-      {key.kind === "clear" && (
-        <RotateCcw className="size-4" strokeWidth={2} aria-hidden />
-      )}
       {key.label}
     </button>
   );
@@ -331,77 +338,125 @@ export function CalculatorView() {
             413px — the ref itself overflows to 429 at 390 (its own bug
             family); the clone keeps the no-overflow contract by scrolling
             the bar. At ≥sm it fits — identical rendering. */}
-        <TabsList aria-label="Calculator mode" className="max-w-full overflow-x-auto">
-          <TabsTrigger value="basic" className="data-[state=inactive]:text-slate-600 dark:data-[state=inactive]:text-slate-400">Basic</TabsTrigger>
-          <TabsTrigger value="scientific" className="data-[state=inactive]:text-slate-600 dark:data-[state=inactive]:text-slate-400">Scientific</TabsTrigger>
-          <TabsTrigger value="gpa" className="data-[state=inactive]:text-slate-600 dark:data-[state=inactive]:text-slate-400">GPA Calculator</TabsTrigger>
-          <TabsTrigger value="unit" className="data-[state=inactive]:text-slate-600 dark:data-[state=inactive]:text-slate-400">Unit Converter</TabsTrigger>
+        {/* S190/EN: the measured tab family — the white bordered container
+            (bg-white border-slate-200, probed live) + the NEAR-BLACK active
+            face (rgb(10,10,10)/rgb(250,250,250), the AG2/History family).
+            The inactive text stays the slate-600 a11y stand-in: the
+            reference's own neutral-400 measures ~2.2:1 on white (a WCAG AA
+            fail the clone does not replicate — the axe-clean contract,
+            docs/remediation-plan-session190.md §6.8). */}
+        <TabsList
+          aria-label="Calculator mode"
+          className="max-w-full overflow-x-auto border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900"
+        >
+          <TabsTrigger
+            value="basic"
+            className="data-[state=inactive]:text-slate-600 data-[state=active]:bg-[#0a0a0a] data-[state=active]:text-[#fafafa] data-[state=active]:shadow dark:data-[state=inactive]:text-slate-400 dark:data-[state=active]:bg-[#0a0a0a] dark:data-[state=active]:text-[#fafafa]"
+          >
+            Basic
+          </TabsTrigger>
+          <TabsTrigger
+            value="scientific"
+            className="data-[state=inactive]:text-slate-600 data-[state=active]:bg-[#0a0a0a] data-[state=active]:text-[#fafafa] data-[state=active]:shadow dark:data-[state=inactive]:text-slate-400 dark:data-[state=active]:bg-[#0a0a0a] dark:data-[state=active]:text-[#fafafa]"
+          >
+            Scientific
+          </TabsTrigger>
+          <TabsTrigger
+            value="gpa"
+            className="data-[state=inactive]:text-slate-600 data-[state=active]:bg-[#0a0a0a] data-[state=active]:text-[#fafafa] data-[state=active]:shadow dark:data-[state=inactive]:text-slate-400 dark:data-[state=active]:bg-[#0a0a0a] dark:data-[state=active]:text-[#fafafa]"
+          >
+            GPA Calculator
+          </TabsTrigger>
+          <TabsTrigger
+            value="unit"
+            className="data-[state=inactive]:text-slate-600 data-[state=active]:bg-[#0a0a0a] data-[state=active]:text-[#fafafa] data-[state=active]:shadow dark:data-[state=inactive]:text-slate-400 dark:data-[state=active]:bg-[#0a0a0a] dark:data-[state=active]:text-[#fafafa]"
+          >
+            Unit Converter
+          </TabsTrigger>
         </TabsList>
       </div>
 
-      {/* ---- display ---- */}
-      <div role="group" className="sf-calc-display rounded-2xl p-6 text-4xl" aria-label="Calculator display" aria-live="polite">
-        <p className="text-right font-mono text-sm text-slate-500 dark:text-slate-400" data-testid="calc-expression">
-          {expression || "0"}
-        </p>
-        <p className="mt-1 truncate text-right text-4xl font-bold tabular-nums text-slate-800 dark:text-slate-100" data-testid="calc-result">
-          {result || "0"}
-        </p>
-      </div>
-
-      {/* ---- BASIC + SCIENTIFIC share the display ---- */}
-        <TabsContent value="basic" aria-label="Basic" className="mt-0">
-          <div className="grid grid-cols-4 gap-2">{BASIC_KEYS.map(keyButton)}</div>
-          <div className="mt-2 grid grid-cols-4 gap-2">
-            <button
-              type="button"
-              aria-label="Backspace"
-              onClick={() => void press("⌫")}
-              className="h-14 rounded-xl border border-slate-200 bg-white text-lg font-medium text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300"
-            >
-              ⌫
-            </button>
-            <button
-              type="button"
-              aria-label="Insert ^"
-              onClick={() => setExpression((prev) => `${prev}^`)}
-              className="h-14 rounded-xl bg-sf-primary-soft text-lg font-medium text-sf-primary-strong hover:brightness-95 dark:bg-sf-primary-soft-dark/40 dark:text-sf-primary-strong-dark"
-            >
-              ^
-            </button>
-            <div className="col-span-2">
-              <Button
-                variant="gradient"
-                aria-label="Equals"
-                className="sf-gradient-shadow h-14 w-full rounded-xl text-lg"
-                onClick={() => void press("=")}
-              >
-                =
-              </Button>
+      {/* ---- BASIC + SCIENTIFIC: the measured calculator card
+          (S190/EN) — each keypad tabpanel renders the max-w-md centered
+          column (448px) holding the white rounded-2xl card: the sf-calc-
+          display gradient display (the h-6 expression line EMPTY at rest
+          + the LEFT-aligned break-all 36px result) above the slate-50
+          keypad area. Radix unmounts the inactive pane, so the display
+          locator stays unique. The GPA/Unit panels render full-width
+          (the ref's own GPA tab measures 1116px — probed live). ---- */}
+        <TabsContent value="basic" aria-label="Basic" className="mt-2">
+          {/* S190/EN: the measured 18-key Basic pad — ONE grid: row 1 is
+              the near-black Clear(span-2) + icon-only backspace(span-2)
+              pair; rows 2-5 the 4×4 digit/op grid with the single-cell
+              gradient Equals (violet-500 → indigo-600 via the sf-gradient
+              utility, 6px radius). Measured live 2026-11-15 —
+              docs/remediation-plan-session190.md §3.1. */}
+          <div className="mx-auto w-full max-w-md">
+            <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-lg dark:border-slate-700 dark:bg-slate-900">
+              <div role="group" className="sf-calc-display p-6" aria-label="Calculator display" aria-live="polite">
+                <p className="h-6 text-sm text-slate-500 dark:text-slate-400" data-testid="calc-expression">
+                  {expression}
+                </p>
+                <p className="mt-2 break-all text-4xl font-bold text-slate-800 dark:text-slate-100" data-testid="calc-result">
+                  {result || "0"}
+                </p>
+              </div>
+              <div className="bg-slate-50 p-4 dark:bg-slate-800/60">
+                <div className="grid grid-cols-4 gap-2">
+                  <button
+                    type="button"
+                    aria-label="Clear"
+                    onClick={() => void press("C")}
+                    className="col-span-2 flex h-14 items-center justify-center gap-2 rounded-md border border-[#262626] bg-[#0a0a0a] text-sm font-medium text-red-500 transition-colors hover:bg-[#262626] dark:border-[#404040] dark:text-red-400 dark:hover:bg-[#171717]"
+                  >
+                    <RotateCcw className="size-4" strokeWidth={2} aria-hidden />
+                    Clear
+                  </button>
+                  <button
+                    type="button"
+                    aria-label="Backspace"
+                    onClick={() => void press("⌫")}
+                    className="col-span-2 flex h-14 items-center justify-center rounded-md border border-[#262626] bg-[#0a0a0a] text-[#fafafa] transition-colors hover:bg-[#262626] dark:border-[#404040] dark:hover:bg-[#171717]"
+                  >
+                    <Delete className="size-4" strokeWidth={2} aria-hidden />
+                  </button>
+                  {BASIC_KEYS.map(keyButton)}
+                </div>
+              </div>
             </div>
           </div>
         </TabsContent>
 
-        <TabsContent value="scientific" aria-label="Scientific" className="mt-0">
-          <div className="grid grid-cols-5 gap-2">
-            {SCIENTIFIC_EXTRA.map(keyButton)}
-            {BASIC_KEYS.map(keyButton)}
-            <button
-              type="button"
-              aria-label="Backspace"
-              onClick={() => void press("⌫")}
-              className="h-14 rounded-xl border border-slate-200 bg-white text-lg font-medium text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300"
-            >
-              ⌫
-            </button>
-            <div className="col-span-4">
-              <Button
-                variant="gradient"
-                className="sf-gradient-shadow h-14 w-full rounded-xl text-lg"
-                onClick={() => void press("=")}
-              >
-                =
-              </Button>
+        <TabsContent value="scientific" aria-label="Scientific" className="mt-2">
+          {/* S190/EN: the reference's scientific layout — the fn set on its
+              measured 4-column grid, the Basic digit grid below, and the
+              backspace as the trailing icon key (the reference's own
+              scientific carries NO clear/backspace — a defect the clone
+              does not replicate; §6.3's documented superset). */}
+          <div className="mx-auto w-full max-w-md">
+            <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-lg dark:border-slate-700 dark:bg-slate-900">
+              <div role="group" className="sf-calc-display p-6" aria-label="Calculator display" aria-live="polite">
+                <p className="h-6 text-sm text-slate-500 dark:text-slate-400" data-testid="calc-expression">
+                  {expression}
+                </p>
+                <p className="mt-2 break-all text-4xl font-bold text-slate-800 dark:text-slate-100" data-testid="calc-result">
+                  {result || "0"}
+                </p>
+              </div>
+              <div className="bg-slate-50 p-4 dark:bg-slate-800/60">
+                <div className="grid grid-cols-4 gap-2">
+                  {SCIENTIFIC_EXTRA.map(keyButton)}
+                  {BASIC_KEYS.map(keyButton)}
+                  <button
+                    type="button"
+                    aria-label="Backspace"
+                    onClick={() => void press("⌫")}
+                    className="flex h-14 items-center justify-center rounded-md border border-[#262626] bg-[#0a0a0a] text-[#fafafa] transition-colors hover:bg-[#262626] dark:border-[#404040] dark:hover:bg-[#171717]"
+                  >
+                    <Delete className="size-4" strokeWidth={2} aria-hidden />
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         </TabsContent>

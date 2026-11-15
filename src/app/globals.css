@@ -269,6 +269,7 @@
   --color-sf-primary-edge-dark: rgb(var(--sf-primary-edge-dark)); /* S161/DJ4 — the 800-level dark half of the border family (the VIOLET_RESIDUALS harmonization pass) */
   --color-sf-primary-softest: rgb(var(--sf-primary-softest)); /* S135/CJ3 — the 50-level selected-row tint */
   --color-sf-primary-empty: rgb(var(--sf-primary-empty)); /* S135/CJ3 — the solid 100-level empty step (the stat-chip bg) */
+  --color-sf-primary-deep: rgb(var(--sf-primary-deep)); /* S190/EN — the 700-level deep text (the focus-timer active preset's measured violet-700 face) */
 }
 
 /* ---------------------------------------------------------------------------

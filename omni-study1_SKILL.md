@@ -25,7 +25,7 @@ tags:
 
 > **What this is:** the single-source-of-truth reference for working in
 > `nordeim/omni-study1`. Every fact below is verified against the codebase
-> (2522 tests green, re-anchored at the S189 update: 1799 Vitest unit [55 files] + 723 Playwright e2e [the 5-chunk census: 718 chromium specs in 31 spec files + the per-chunk setup re-runs — 158+275+103+95+92; the S189/EM notes-family consolidation split the 14 notes-view describes [49 pins] out of parity-session7.spec.ts into the dedicated notes home tests/e2e/notes.spec.ts, byte-faithfully, every count unchanged]) — the census re-anchored through
+> (2534 tests green, re-anchored at the S190 update: 1799 Vitest unit [55 files] + 735 Playwright e2e [the 5-chunk census: 730 chromium specs in 31 spec files + the per-chunk setup re-runs — 159+275+108+101+92; the S190/EN measured three-family parity port added 12 pins — the calculator Basic-keypad anatomy EN1-6, the AI quick-action copy/order EN7, the Focus Timer chrome EN8-12]) — the census re-anchored through
 > the s117–s124 hardening cycles; the 2.0 baseline was 834 + 299 in six
 > chunks after the parity re-application + account-flow completion +
 > regression hardening).
@@ -135,7 +135,7 @@ touch resolution.
   wholesale disables (~25 rules, unchanged since commit `01cb829`) stay the
   deliberate repo posture — the compensating controls are tsc strict
   (`noUnusedLocals`/`noUnusedParameters`, `_`-prefix as deliberate-unused),
-  the ACTIVE `react-hooks/set-state-in-effect` gate, and the 1799+723 test
+  the ACTIVE `react-hooks/set-state-in-effect` gate, and the 1799+735 test
   suites. Do not re-litigate the remaining disables without a violation
   census first (the s129 probe: 55 unused-vars are the `_`-prefix
   convention, 11 prefer-const are scaffold style, 6 exhaustive-deps were
@@ -628,7 +628,7 @@ tail -40 dev.log                            # request traces + prisma queries
 ```bash
 bun run lint && bun run typecheck && bun run test && bun run build && bun run test:e2e
 ```
-Current green state (re-anchored at S189/EM): lint ✓ · tsc ✓ (`noImplicitAny` + `noUnusedLocals`/`noUnusedParameters` — the BV16 machine guard; plus the S129/CD3 re-enabled `react-hooks/exhaustive-deps` as an error) · 1799 unit ✓ · build ✓ (the type gate live — `ignoreBuildErrors` removed) · 723 e2e ✓ (2522 green).
+Current green state (re-anchored at S190/EN): lint ✓ · tsc ✓ (`noImplicitAny` + `noUnusedLocals`/`noUnusedParameters` — the BV16 machine guard; plus the S129/CD3 re-enabled `react-hooks/exhaustive-deps` as an error) · 1799 unit ✓ · build ✓ (the type gate live — `ignoreBuildErrors` removed) · 735 e2e ✓ (2534 green).
 
 **Full-suite chunk map** (one server-boot per chunk; the 10-min tool cap makes
 one-shot full runs unreliable — the 2.0 six-chunk map: chrome+s14 104 ·

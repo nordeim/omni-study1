@@ -376,14 +376,17 @@ test.describe("S5-G · Calendar segmented switch", () => {
 });
 
 test.describe("S5-H · Calculator keypad + display", () => {
-  test("Clear is a red-text half-width key; '=' is a gradient key; no % key", async ({ page }) => {
+  test("Clear is a red-text half-width key; '=' is a gradient key; no % key on Basic (S190/EN re-anchored)", async ({ page }) => {
     await page.goto("/Calculator");
     await hydrated(page);
     const clear = page.getByRole("button", { name: "Clear" });
     await expect(clear).toBeVisible();
-    // red-700 — was red-600 (220,38,38): the Family F sweep measured 3.99:1
-    // on red-100 (axe color-contrast, serious); one step darker = 4.61:1.
-    expect(await clear.evaluate((el) => getComputedStyle(el).color)).toBe("rgb(185, 28, 28)");
+    // S190/EN: the measured reference key is red-600 (rgb(220,38,38)) on
+    // the near-black rgb(10,10,10) — but that pair measures 4.10:1 (axe
+    // color-contrast, serious; the a11y-sweep's zero-violation pin). The
+    // Family F precedent applies: ONE step for contrast — red-500
+    // (rgb(239,68,68)) on the same near-black measures 5.27:1.
+    expect(await clear.evaluate((el) => getComputedStyle(el).color)).toBe("rgb(239, 68, 68)");
     const clearBox = await clear.boundingBox();
     expect(Math.round(clearBox?.width ?? 0)).toBeGreaterThanOrEqual(190); // half the 448px card.
     const eq = page.getByRole("button", { name: "Equals" });
@@ -395,16 +398,19 @@ test.describe("S5-H · Calculator keypad + display", () => {
     await expect(page.getByRole("button", { name: "Insert -" })).toBeVisible();
   });
 
-  test("the display area renders the softest gradient behind a 36px value", async ({ page }) => {
+  test("the display area renders the softest gradient behind a 36px value (S190/EN re-anchored)", async ({ page }) => {
     await page.goto("/Calculator");
     await hydrated(page);
-    const display = page.locator('[aria-label="Calculator display"]');
-    await expect(display).toBeVisible();
-    expect(await display.evaluate((el) => getComputedStyle(el).fontSize)).toBe("36px");
+    // S190/EN: the 36px face moved onto the RESULT line (the measured
+    // anatomy — the container now carries the h-6 expression line + the
+    // break-all result; the old container-level text-4xl retired).
+    const result = page.locator('[data-testid="calc-result"]');
+    await expect(result).toBeVisible();
+    expect(await result.evaluate((el) => getComputedStyle(el).fontSize)).toBe("36px");
     const area = page.locator(".sf-calc-display").first();
     const bg = await area.evaluate((el) => getComputedStyle(el).backgroundImage);
     expect(bg).toContain("linear-gradient");
-    expect(bg).toContain("rgb(245, 243, 255)"); // softest (violet-50) — measured.
+    expect(bg).toContain("rgb(245, 243, 255)"); // softest (violet-50) — measured (the ref's own violet-50→indigo-50 pair).
   });
 });
 
@@ -963,5 +969,164 @@ test.describe("S162/DK1 · the events CB8 failure-domain split (Batch DK)", () =
     await expect(page.getByText("Event created.")).toBeVisible({ timeout: 10_000 });
     await expect(page.getByRole("dialog")).toBeHidden();
     await expect(page.getByText("Something went wrong.")).toBeHidden();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// S190 · Batch EN — the Focus Timer chrome port (the never-measured half:
+// the S5-E port measured the stats/ring/play; the panel card, the mode
+// row, the preset cards, the ring interior, the subject select, and the
+// control row were first measured 2026-11-15 in LIGHT mode). See
+// docs/remediation-plan-session190.md §3.3.
+// ---------------------------------------------------------------------------
+test.describe("S190 · the Focus Timer chrome port", () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto("/FocusTimer");
+    await hydrated(page);
+  });
+
+  test("EN8: the timer rides a white rounded-3xl panel on the max-w-2xl column", async ({ page }) => {
+    const timer = page.getByRole("timer");
+    await expect(timer).toBeVisible();
+    const panel = await timer.evaluate((el: HTMLElement) => {
+      let node: HTMLElement | null = el;
+      while (node) {
+        const cls = node.getAttribute("class") || "";
+        if (/rounded-3xl/.test(cls)) return { cls: cls.slice(0, 120) };
+        node = node.parentElement;
+      }
+      return null;
+    });
+    expect(panel).not.toBeNull();
+    expect(panel?.cls).toContain("bg-white");
+    expect(panel?.cls).toContain("shadow-xl");
+    // The column is the measured 672px (max-w-2xl), not the old 448px.
+    const colW = await timer.evaluate((el: HTMLElement) => {
+      let node: HTMLElement | null = el;
+      while (node) {
+        const cls = node.getAttribute("class") || "";
+        if (/max-w-2xl/.test(cls)) return Math.round(node.getBoundingClientRect().width);
+        node = node.parentElement;
+      }
+      return 0;
+    });
+    expect(colW).toBeGreaterThanOrEqual(670);
+  });
+
+  test("EN9: the mode row is freestanding 36px pills with the gradient active state", async ({ page }) => {
+    const focus = page.getByRole("button", { name: /Focus/i, exact: true });
+    await expect(focus).toBeVisible();
+    const cs = await focus.evaluate((el) => {
+      const s = getComputedStyle(el);
+      const r = el.getBoundingClientRect();
+      return { h: Math.round(r.height), pad: s.padding, bgImage: s.backgroundImage, color: s.color };
+    });
+    expect(cs.h).toBe(36); // measured (was 46)
+    expect(cs.pad).toBe("8px 16px"); // measured px-4 py-2
+    expect(cs.bgImage).toContain("linear-gradient"); // the active pill is the sf-gradient
+    expect(cs.color).toBe("rgb(255, 255, 255)");
+    // The group container is NOT the old slate-100 pill.
+    const group = await focus.evaluate((el) => {
+      const parent = el.parentElement;
+      const s = parent ? getComputedStyle(parent) : null;
+      return parent && s ? { bg: s.backgroundColor, cls: (parent.getAttribute("class") || "").slice(0, 80) } : null;
+    });
+    expect(group?.bg).toBe("rgba(0, 0, 0, 0)"); // transparent row (measured)
+    // An inactive pill is the transparent slate-600 text face.
+    const short = page.getByRole("button", { name: "Short Break" });
+    const shortCs = await short.evaluate((el) => {
+      const s = getComputedStyle(el);
+      return { bg: s.backgroundColor, color: s.color, h: Math.round(el.getBoundingClientRect().height) };
+    });
+    expect(shortCs.bg).toBe("rgba(0, 0, 0, 0)");
+    expect(shortCs.color).toBe("rgb(71, 85, 105)"); // slate-600
+    expect(shortCs.h).toBe(36);
+  });
+
+  test("EN10: the preset cards are the 64px tinted two-line family (name first)", async ({ page }) => {
+    const pomo = page.getByRole("button", { name: /Pomodoro/ });
+    await expect(pomo).toBeVisible();
+    const cs = await pomo.evaluate((el) => {
+      const s = getComputedStyle(el);
+      const r = el.getBoundingClientRect();
+      return { h: Math.round(r.height), pad: s.padding, bg: s.backgroundColor, color: s.color, border: s.borderWidth };
+    });
+    expect(cs.h).toBe(64); // measured (was 32)
+    expect(cs.pad).toBe("12px 24px"); // measured px-6 py-3
+    expect(cs.bg).toBe("rgb(237, 233, 254)"); // the ACTIVE violet-100 tint (measured)
+    expect(cs.color).toBe("rgb(109, 40, 217)"); // violet-700
+    expect(cs.border).toBe("0px"); // borderless (the old outline Button)
+    // The two-line typography: the NAME is the semibold line, the durations the faded xs line.
+    const lines = await pomo.evaluate((el) =>
+      [...el.querySelectorAll("span, p")].filter((c) => c.textContent.trim()).map((c) => {
+        const s = getComputedStyle(c);
+        return { text: c.textContent.trim(), fs: s.fontSize, fw: s.fontWeight, op: s.opacity };
+      }),
+    );
+    const name = lines.find((l) => l.text === "Pomodoro");
+    const durations = lines.find((l) => l.text === "25/5/15");
+    expect(name?.fw).toBe("600"); // font-semibold — the name leads (the clone's pair was inverted)
+    expect(durations?.fs).toBe("12px"); // text-xs
+    // The inactive preset is the slate-100 tint.
+    const deep = page.getByRole("button", { name: /Deep Work/ });
+    const deepBg = await deep.evaluate((el) => getComputedStyle(el).backgroundColor);
+    expect(deepBg).toBe("rgb(241, 245, 249)"); // slate-100 (measured)
+  });
+
+  test("EN11: the ring interior carries the brain icon, the mono clock and the capitalize label", async ({ page }) => {
+    const timer = page.getByRole("timer");
+    await expect(timer).toBeVisible();
+    const interior = await timer.evaluate((el) => {
+      const holder = el.parentElement;
+      const icon = holder ? holder.querySelector("svg.lucide-brain") : null;
+      return {
+        hasBrain: !!icon,
+        clockFont: getComputedStyle(el).fontFamily,
+        label: holder && holder.lastElementChild ? holder.lastElementChild.textContent.trim() : null,
+        labelCls: holder && holder.lastElementChild ? (holder.lastElementChild.getAttribute("class") || "") : "",
+      };
+    });
+    expect(interior.hasBrain).toBe(true); // the measured lucide-brain w-8 mb-2 violet
+    expect(interior.clockFont).toContain("mono"); // font-mono (measured; was tabular-nums)
+    expect(interior.labelCls).toContain("capitalize"); // the measured label face
+  });
+
+  test("EN12: the subject select is compact with the placeholder; the controls flank the play", async ({ page }) => {
+    const select = page.getByRole("combobox");
+    await expect(select).toBeVisible();
+    const cs = await select.evaluate((el) => {
+      const r = el.getBoundingClientRect();
+      return { w: Math.round(r.width), text: el.textContent.trim() };
+    });
+    // The measured compact trigger (~192px), never the old full-width 360px.
+    expect(cs.w).toBeLessThanOrEqual(260);
+    // The placeholder face at no-selection — the measured "Select subject"
+    // (the old clone rendered the literal "No subject" option as the value).
+    expect(cs.text).toBe("Select subject");
+    // The control row: Reset (48px near-black) → play (64px gradient) → Complete (48px near-black).
+    const play = page.getByRole("button", { name: /start timer|resume timer|pause timer/i });
+    const reset = page.getByRole("button", { name: "Reset timer" });
+    const complete = page.getByRole("button", { name: "Complete session" });
+    for (const [name, btn] of [["reset", reset], ["complete", complete]] as const) {
+      const b = await btn.evaluate((el) => {
+        const s = getComputedStyle(el);
+        const r = el.getBoundingClientRect();
+        return { w: Math.round(r.width), bg: s.backgroundColor, radius: s.borderRadius };
+      });
+      expect(b.w).toBe(48); // the measured near-black round controls
+      expect(b.bg).toBe("rgb(10, 10, 10)");
+      // fully round (the ref's own serialization reads 9999px; the clone's
+      // Tailwind v4 rounded-full computes the infinity clamp — both round)
+      expect(parseFloat(b.radius)).toBeGreaterThanOrEqual(9999);
+      expect(name).toBeTruthy();
+    }
+    const playW = await play.evaluate((el) => Math.round(el.getBoundingClientRect().width));
+    expect(playW).toBe(64); // the standing measured play — unchanged
+    // The order: reset LEFT of play, complete RIGHT of play.
+    const xs = await Promise.all(
+      [reset, play, complete].map((b) => b.evaluate((el) => Math.round(el.getBoundingClientRect().x))),
+    );
+    expect(xs[0]).toBeLessThan(xs[1]);
+    expect(xs[1]).toBeLessThan(xs[2]);
   });
 });

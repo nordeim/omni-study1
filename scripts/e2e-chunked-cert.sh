@@ -527,8 +527,23 @@
 # deterministic defaults so the leg fills only the title + score +
 # max; network-mocked, no server writes beyond the zero-residue
 # create]. The full DW map: docs/remediation-plan-session173.md.)
-# Expected: 158 + 275 + 103 + 95 + 92 = 723 (each chunk's count includes its
+# Expected: 159 + 275 + 108 + 101 + 92 = 735 (each chunk's count includes its
 # auth setup — the current census; the historical re-tag blocks beneath.)
+# (S190/EN re-tag — census 723 → 735, net +12: chunk 1 +1 [the EN7 AI
+# quick-action order pin in parity-session8 — the reference's measured
+# titles AND order: "Summarize" (was "Summarize Notes") + the tail pair
+# Translate-then-Essay-Ideas], chunk 3 +5 [the EN8-EN12 Focus Timer chrome
+# pins in parity-session5 — the measured panel card + max-w-2xl column,
+# the 36px mode pills, the 64px tinted two-line presets, the brain-icon
+# font-mono ring interior, the compact placeholder select + the 48px
+# near-black controls flanking the play], chunk 4 +6 [the EN1-EN6
+# Basic-keypad anatomy pins in calculator — the measured 18-key pad
+# (Clear span-2 + icon-only backspace row 1, slate-800 operators, 6px
+# radius family, single-cell gradient Equals), the max-w-md display card,
+# and the fn-key split (xʸ, (, ), % to Scientific)]. The --list census:
+# 731 in 32 files (730 chromium + the setup test). The unit census
+# UNCHANGED at 1799 [55 files — a view-layer port, no new seam]. See
+# docs/remediation-plan-session190.md.)
 # (S188/EL re-tag — census 721 → 723, net +2: chunk 3 +2 [the S188/EL
 # staged-row GC pins in resilience — the superset hygiene feature, see
 # docs/remediation-plan-session188.md: EL1 the sweep lifecycle (the

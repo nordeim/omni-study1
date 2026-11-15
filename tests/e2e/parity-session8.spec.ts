@@ -1889,3 +1889,31 @@ test.describe("S167/DQ1 · the flashcards save succeeds through a failed refresh
     }
   });
 });
+
+// ---------------------------------------------------------------------------
+// S190 · Batch EN — the AI quick-action copy/order port: the reference's
+// six prompts measured live 2026-11-15 (and the original recon dossier's
+// own record): Explain Concept, Study Tips, Summarize, Solve Problem,
+// Translate, Essay Ideas. The clone shipped "Summarize Notes" with the
+// tail pair swapped. See docs/remediation-plan-session190.md §3.2.
+// ---------------------------------------------------------------------------
+test.describe("S190 · the AI quick-action order port", () => {
+  test("EN7: the six quick actions render the reference's titles in the measured order", async ({ page }) => {
+    await page.goto("/AIAssistant");
+    await hydrated(page);
+    const grid = page.locator('[aria-label="Quick actions"]');
+    // Auto-wait for the view's data gate (the count()/allInnerTexts()
+    // snapshot race — the S9 lesson; the quick-actions grid renders only
+    // after the transcript's loading gate resolves).
+    await expect(grid.locator("button").first()).toBeVisible();
+    const titles = await grid.locator("button [role=heading]").allInnerTexts();
+    expect(titles).toEqual([
+      "Explain Concept",
+      "Study Tips",
+      "Summarize",
+      "Solve Problem",
+      "Translate",
+      "Essay Ideas",
+    ]);
+  });
+});

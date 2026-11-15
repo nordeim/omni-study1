@@ -1,4 +1,4 @@
-# StudyFlow (Omni-Study) — Master Project Architecture Document (PAD) v1.3.97
+# StudyFlow (Omni-Study) — Master Project Architecture Document (PAD) v1.3.98
 
 **Classification:** Internal Engineering Reference
 **Status:** DEFINITIVE, PRODUCTION-LOCKED BLUEPRINT
@@ -9,6 +9,12 @@
 
 ---
 
+
+#### Revision Block — v1.3.98 (Session-190 / Batch EN, Cycle 140)
+
+- `[SR]` Current test census anchor (the v1.2.0 convention, re-anchored): **1799/1799 Vitest unit** (55 files — UNCHANGED: a view-layer port, no new seam) + **735 Playwright e2e** (the 5-chunk cold map: 159+275+108+101+92, net +12; 730 chromium specs in the same 31 spec files + the setup test = 731 by `--list`; verified by `--list`, never estimated).
+- `[AR]` **The measured three-family parity port (the S190 axis — a reference behavior-change cycle discovered by the standing audit's fresh 20-view reference census, taking precedence over the S189 close's named flashcards-consolidation candidate per the blast-radius rule)**: (1) **the calculator Basic-keypad anatomy** — never re-measured since the session-2 E2 fix; the live reference (measured 2026-11-15, LIGHT mode — the account's standing state changed from the S188-era dark, the owner's doing) carries the 18-key pad: the near-black `Clear` (span-2, red label — the clone ships red-500, one step from the measured red-600 for the axe color-contrast floor, the Family F precedent) + an icon-only near-black backspace on row 1, dark slate-800 operators, the 6px radius family, and the single-cell gradient `=` — with the ±/^/(/) keys moved to Scientific (xʸ, (, ), % in the measured fn order; ln and ! stay as documented supersets); the display+keypad ride the measured max-w-md white rounded-2xl card (the h-6 expression line + the left-aligned break-all 36px result); the tab strip carries the white bordered container + the near-black active face (the inactive text stays the slate-600 a11y stand-in — the reference's own neutral-400 measures ~2.2:1, a WCAG AA fail not replicated). (2) **the AI quick-action copy/order** — "Summarize Notes" → "Summarize" (the recon dossier's own record) + the tail pair reordered to Translate-then-Essay-Ideas. (3) **the Focus Timer chrome** — the measured max-w-2xl column + the white rounded-3xl panel card, the freestanding 36px mode pills (icon-first, the gradient active face), the 64px tinted two-line preset cards (name font-semibold FIRST — the clone's pair was inverted; the active face the sf-primary-empty/sf-primary-deep tokens, violet-100/700 at default), the lucide-brain + font-mono + capitalize ring interior, the 32px h1 icon, the compact placeholder-state subject select ("Select subject" — the no-selection default, a deliberate behavior change; "No subject" stays an option), and the 48px near-black Reset/Complete controls flanking the 64px gradient play. The reference's own 4 non-functional carousel dots are NOT ported (dead chrome — the §6.4 adjudication, a Known Issue). The TDD discipline: 12 honest-RED pins (EN1-EN12) failing at their markers against the un-ported tree, then GREEN; the re-anchored pins: AH4b (the footer-era structural guard), S5-H ×2 (the Clear face + the display anatomy), AG3 + AH4a (the dark families), the hue-tokens CONSUMERS register (calculator-view's sf-pill-red retired). The doc-rot rider: `scripts/run-cert-chunk.sh`'s header Expected line re-anchored from the stale S185-era 705 (the S189 lesson-5 class). The evidence: `docs/remediation-plan-session190.md` + the S190 frames under `docs/screenshots/`.
+- `[SR]` The v1.3.97 revision block (the prior cycle's record) follows.
 
 #### Revision Block — v1.3.97 (Session-189 / Batch EM, Cycle 139)
 

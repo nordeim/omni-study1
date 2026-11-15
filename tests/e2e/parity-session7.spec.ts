@@ -803,38 +803,40 @@ test.describe("S81 · the flashcards row keyboard guard (AH6)", () => {
 });
 
 
-test.describe("S81 · the calculator footer structural guard (AH4b)", () => {
-  test("AH4b: the Basic footer row is Backspace + ^ + the col-span-2 gradient Equals", async ({ page }) => {
+test.describe("S81 · the calculator keypad structural guard (AH4b, re-anchored S190/EN)", () => {
+  test("AH4b: the Basic pad is the measured row-1 pair + the single-cell gradient Equals", async ({ page }) => {
     await page.goto("/Calculator");
     await hydrated(page);
 
+    // S190/EN re-anchor: the reference's Basic pad re-measured 2026-11-15 —
+    // the old AH4b footer (Backspace + ^ + col-span-2 Equals) was drift;
+    // the measured pad is the near-black Clear + icon-only Backspace row-1
+    // pair over the 4×4 digit grid with the single-cell gradient Equals.
+    // (The full anatomy lives in calculator.spec.ts's S190 describe; this
+    // pin keeps the S81 structural vantage — the spans and the fill.)
     const backspace = page.getByRole("button", { name: "Backspace" });
     await expect(backspace).toBeVisible();
     const bs = await backspace.evaluate((el) => {
       const s = getComputedStyle(el);
       const r = el.getBoundingClientRect();
-      return { bg: s.backgroundColor, border: s.borderColor, color: s.color, h: r.height };
+      return { bg: s.backgroundColor, h: r.height, w: Math.round(r.width), text: el.textContent.trim() };
     });
-    expect(bs.bg).toBe("rgb(255, 255, 255)"); // bg-white
-    expect(bs.border).toBe("rgb(226, 232, 240)"); // border-slate-200
-    expect(bs.color).toBe("rgb(71, 85, 105)"); // text-slate-600
-    expect(bs.h).toBe(56); // h-14
+    expect(bs.bg).toBe("rgb(10, 10, 10)"); // the near-black row-1 family (measured)
+    expect(bs.h).toBe(56); // h-14 — both hosts
+    expect(bs.w).toBeGreaterThanOrEqual(200); // span-2 ≈ 203px at 1440
+    expect(bs.text).toBe(""); // icon-only (measured)
 
-    const caret = page.getByRole("button", { name: "Insert ^" });
-    await expect(caret).toBeVisible();
+    // No caret key on Basic anymore — the power function is xʸ on Scientific.
+    await expect(page.getByRole("button", { name: "Insert ^" })).toHaveCount(0);
 
-    // The Equals button rides the gradient inside a col-span-2 cell and
-    // fills it (w-full) — the footer's structural contract. S82/AI4: the
-    // original assertion here was a tautology (w ≥ 2·(w/2) − 1 reduces to
-    // w ≥ w − 1); the col-span-2 fill is now pinned against the Backspace
-    // SIBLING cell — a col-span-1 Equals measures ≈ one cell and fails.
+    // The Equals is a SINGLE-CELL key inside the digit grid (the inverse of
+    // the old col-span-2 footer contract — the S82/AI4 anti-tautology
+    // discipline, re-anchored to the measured shape).
     const equals = page.getByRole("button", { name: "Equals" });
     await expect(equals).toBeVisible();
     const eqBox = await equals.boundingBox();
     expect(eqBox).not.toBeNull();
-    const bsBox = await backspace.boundingBox();
-    expect(bsBox).not.toBeNull();
-    expect(eqBox!.width).toBeGreaterThanOrEqual(2 * bsBox!.width - 2); // the col-span-2 fill vs the single-cell sibling (gap-2 tolerant)
+    expect(eqBox!.width).toBeLessThanOrEqual(102); // one cell ≈ 98px at 1440
     const eqBg = await equals.evaluate((el) => getComputedStyle(el).backgroundImage);
     expect(eqBg).toContain("linear-gradient"); // the sf-gradient
   });

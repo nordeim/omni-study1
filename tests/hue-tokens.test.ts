@@ -250,7 +250,10 @@ const CONSUMERS: Record<string, string[]> = {
   "src/components/views/gradetracker-view.tsx": ["sf-pill-emerald", "sf-pill-sky", "sf-pill-amber", "sf-pill-red"],
   "src/components/views/assignments-view.tsx": ["sf-pill-red", "sf-pill-soft-amber", "sf-pill-soft-blue", "sf-pill-soft-yellow", "sf-alert-red"],
   "src/components/views/dashboard-view.tsx": ["sf-pill-red", "sf-pill-yellow"],
-  "src/components/views/calculator-view.tsx": ["sf-pill-red"],
+  // S190/EN: calculator-view DROPPED from the register — the AC key's
+  // sf-pill-red usage retired with the measured near-black Clear key (the
+  // reference's rgb(10,10,10) + red-600 family, docs/remediation-
+  // plan-session190.md §3.1); the file carries no other family consumer.
   "src/components/rum/rum-panel.tsx": ["sf-pill-emerald", "sf-pill-amber", "sf-pill-red"],
   "src/components/views/practicetests-view.tsx": ["sf-pill-red"],
   "src/components/auth/login-surface.tsx": ["sf-alert-emerald"],

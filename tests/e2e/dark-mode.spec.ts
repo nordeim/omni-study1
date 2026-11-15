@@ -399,7 +399,7 @@ test.describe("S80/AG · the dark-canvas flashbulb family", () => {
     expect(cs.color).toBe("rgb(250, 250, 250)");
   });
 
-  test("AG3: the Calculator AC key takes the house dark red pill (red-950 / red-300)", async ({ page }) => {
+  test("AG3: the Calculator Clear key keeps the near-black + red face in dark (S190/EN re-anchor)", async ({ page }) => {
     await gotoDark(page, "/Calculator");
     const clear = page.getByRole("button", { name: "Clear" });
     await expect(clear).toBeVisible();
@@ -407,12 +407,12 @@ test.describe("S80/AG · the dark-canvas flashbulb family", () => {
       const s = getComputedStyle(el);
       return { bg: s.backgroundColor, color: s.color };
     });
-    // The house dark-pill family (dashboard Today pill, assignments and
-    // exams urgency pills): -950 fill / -300 text. The ref's own dark
-    // Clear key (near-black + red-600 among its white digit keys) is its
-    // half-broken keypad family — the clone's dark keypad re-themes.
-    expect(cs.bg).toBe("rgb(69, 10, 10)"); // red-950 #450a0a
-    expect(cs.color).toBe("rgb(252, 165, 165)"); // red-300 #fca5a5
+    // S190/EN: the measured LIGHT key is the near-black + red-600 literal
+    // (rgb(10,10,10)/rgb(220,38,38), probed live 2026-11-15); in dark the
+    // key KEEPS the near-black literal (the AG2/History-toggle family)
+    // with the red-400 label — the clone re-themes only the label leg.
+    expect(cs.bg).toBe("rgb(10, 10, 10)");
+    expect(cs.color).toBe("rgb(248, 113, 113)"); // red-400 #f87171
   });
 
   test("AG4: the GradeTracker score pills re-theme per the house dark ramp", async ({ page }) => {
@@ -556,7 +556,7 @@ test.describe("S81 · the dark toast/banner/footer pairs (AH3/AH4)", () => {
     await page.unroute(/\/api\/notes\//);
   });
 
-  test("AH4a: the calculator footer's Backspace key keeps the dark slate pair", async ({ page }) => {
+  test("AH4a: the calculator's row-1 backspace key keeps the near-black dark face (S190/EN re-anchor)", async ({ page }) => {
     await gotoDark(page, "/Calculator");
     const backspace = page.getByRole("button", { name: "Backspace" });
     await expect(backspace).toBeVisible();
@@ -564,9 +564,12 @@ test.describe("S81 · the dark toast/banner/footer pairs (AH3/AH4)", () => {
       const s = getComputedStyle(el);
       return { bg: s.backgroundColor, border: s.borderColor, color: s.color };
     });
-    expect(cs.bg).toBe("rgb(15, 23, 42)"); // slate-900 #0f172a
-    expect(cs.border).toBe("rgb(51, 65, 85)"); // slate-700 #334155
-    expect(cs.color).toBe("rgb(203, 213, 225)"); // slate-300 #cbd5e1
+    // S190/EN: the measured icon-only row-1 key — the near-black literal
+    // in BOTH modes (the measured light rgb(10,10,10) + the dark hover
+    // family), the #404040 dark border giving the edge on the dark canvas.
+    expect(cs.bg).toBe("rgb(10, 10, 10)");
+    expect(cs.border).toBe("rgb(64, 64, 64)"); // #404040 (dark)
+    expect(cs.color).toBe("rgb(250, 250, 250)"); // the white icon
   });
 });
 

@@ -4,9 +4,13 @@
 # SIGKILL escalation → rm db/e2e.db → run the chunk), one chunk per
 # invocation so each foreground run fits the tool timeout.
 # Usage: bash /home/z/my-project/omni-study1/scripts/run-cert-chunk.sh <1-5>
-# Expected (S185/EI re-tag): 158 + 262 + 101 + 95 + 89 = 705 — the same
-# census as scripts/e2e-chunked-cert.sh (the S185/EI re-tag block lives
-# there; machine-enforced by tests/script-conventions.test.ts).
+# Expected (S190/EN re-tag): 159 + 275 + 108 + 101 + 92 = 735 — the same
+# census as scripts/e2e-chunked-cert.sh (the S190/EN re-tag block lives
+# there; machine-enforced by tests/script-conventions.test.ts). [The
+# header line had ridden stale at the S185-era 705 through S186-S189 —
+# the S189 lesson-5 doc-rot class, an unpinned count-claim site beyond
+# the tripwire's CHUNKS reach; re-anchored in the S190 lockstep sweep
+# (docs/remediation-plan-session190.md §2 G5).]
 # (S185/EI: chunk 2 +8 — the Timetable week-strip rows pins in
 # parity-session7 [EI1 the flush grid card, EI2 the "Time" corner +
 # border-b strip, EI3 the slate-700 date + the today violet pair, EI4
