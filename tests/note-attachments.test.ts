@@ -34,10 +34,12 @@ vi.mock("@/lib/db", () => ({ db: dbMock }));
 import {
   attachmentIdFromUrl,
   bindNoteAttachments,
+  gcStagedNoteAttachments,
   listNotesWithAttachments,
   noteAttachmentUrl,
   NOTE_ATTACHMENT_METADATA,
   readNoteWithAttachments,
+  STAGED_ATTACHMENT_RETENTION_MS,
 } from "@/lib/server/note-attachments";
 import { NOTE_ATTACHMENT_URL_PREFIX } from "@/lib/validation";
 
@@ -183,5 +185,64 @@ describe("S180/ED · the include reads", () => {
     expect(dbMock.note.findFirst).toHaveBeenCalledWith(
       expect.objectContaining({ where: { id: "note1", userId: "user1" } }),
     );
+  });
+});
+
+// ---------------------------------------------------------------------------
+// S188/EL · the staged-row GC sweep (the superset hygiene feature — see
+// docs/remediation-plan-session188.md §3.1/§4). A picked-but-never-saved
+// upload row (noteId null) was NEVER deleted by anything: the bind only
+// touches listed rows, the export excludes staged rows, and the reference's
+// own posture is no GC at all. The GC: the uploader's next staged upload
+// sweeps the caller's OWN stale staged rows (older than the 24h retention)
+// — the actor who mints the scratch cleans it.
+// ---------------------------------------------------------------------------
+
+describe("S188/EL · the staged-row GC sweep (the superset hygiene feature)", () => {
+  beforeEach(() => {
+    dbMock.noteAttachment.deleteMany.mockReset();
+    dbMock.noteAttachment.create.mockReset();
+    dbMock.noteAttachment.updateMany.mockReset();
+  });
+
+  it("EL-u1: the retention is exactly 24h (a draft left open overnight survives)", () => {
+    expect(STAGED_ATTACHMENT_RETENTION_MS).toBe(24 * 60 * 60 * 1000);
+  });
+
+  it("EL-u2: an explicit now computes the cutoff now−24h and sweeps ONLY the caller's stale staged rows", async () => {
+    dbMock.noteAttachment.deleteMany.mockResolvedValue({ count: 2 });
+    const now = new Date("2026-11-15T12:00:00.000Z");
+    await gcStagedNoteAttachments("user1", now);
+    expect(dbMock.noteAttachment.deleteMany).toHaveBeenCalledTimes(1);
+    expect(dbMock.noteAttachment.deleteMany).toHaveBeenCalledWith({
+      where: {
+        userId: "user1",
+        noteId: null,
+        createdAt: { lt: new Date("2026-11-14T12:00:00.000Z") },
+      },
+    });
+    // No side effects beyond the sweep — the GC never creates or rebinds.
+    expect(dbMock.noteAttachment.create).not.toHaveBeenCalled();
+    expect(dbMock.noteAttachment.updateMany).not.toHaveBeenCalled();
+  });
+
+  it("EL-u3: the return rides deleteMany's count (the swept-row tally)", async () => {
+    dbMock.noteAttachment.deleteMany.mockResolvedValue({ count: 7 });
+    await expect(gcStagedNoteAttachments("user1", new Date(0))).resolves.toBe(7);
+  });
+
+  it("EL-u4: the default-now form computes the cutoff within 2s of Date.now()−24h (the production call path)", async () => {
+    dbMock.noteAttachment.deleteMany.mockResolvedValue({ count: 0 });
+    const before = Date.now();
+    await gcStagedNoteAttachments("user1");
+    const after = Date.now();
+    const where = dbMock.noteAttachment.deleteMany.mock.calls[0]?.[0]?.where as
+      | { createdAt?: { lt?: Date } }
+      | undefined;
+    expect(where?.createdAt?.lt).toBeInstanceOf(Date);
+    const cutoff = where?.createdAt?.lt?.getTime() ?? NaN;
+    // The cutoff is ~24h before "now" — bounded by the call's own runtime.
+    expect(cutoff).toBeGreaterThanOrEqual(before - STAGED_ATTACHMENT_RETENTION_MS);
+    expect(cutoff).toBeLessThanOrEqual(after - STAGED_ATTACHMENT_RETENTION_MS);
   });
 });

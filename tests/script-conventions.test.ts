@@ -361,7 +361,17 @@ describe("the chunked cert runner's truth contract (S128/CC2)", () => {
     // family, and the search-input family measured live 2026-11-15;
     // see docs/remediation-plan-session187.md; the unit census holds
     // 1795 [55 files] — a view-layer port, no new seam).
-    expect(certSource).toContain("Expected: 158 + 275 + 101 + 95 + 92 = 721");
+    // S188/EL re-tag: 721 → 723, chunk 3 +2 (the S188/EL staged-row GC
+    // pins in resilience — the superset hygiene feature; the pins' first
+    // cut lived in parity-session7 and the chunk-2 composition 429'd
+    // s14's CU1a/CU1b multipart pins at ~21 shared-bucket units (+3
+    // tipped it — the s183 doctrine replayed, root-caused by the
+    // --grep-invert control run; relocated to resilience, chunk 3's
+    // ~2-unit composition, verified cold both sides: chunk 2 restored
+    // 275/275, chunk 3 101 → 103 — see
+    // docs/remediation-plan-session188.md; the unit census moves 1795 →
+    // 1799 [55 files — the note-attachments EL block]).
+    expect(certSource).toContain("Expected: 158 + 275 + 103 + 95 + 92 = 723");
   });
 
   it("propagates a failing chunk's exit code (never a green cert on a red run)", () => {

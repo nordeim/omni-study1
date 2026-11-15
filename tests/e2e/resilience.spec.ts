@@ -2261,3 +2261,99 @@ test.describe("S174/DX1c · the calculator history save succeeds through a faile
     }
   });
 });
+
+// ---------------------------------------------------------------------------
+// S188/EL · the staged-row GC sweep (the superset hygiene feature —
+// docs/remediation-plan-session188.md). The pins hit the REAL staged
+// upload route through page.request (the storageState cookie rides the
+// context; page-level route interception never sees APIRequestContext
+// calls). The fixtures: scripts/e2e-plant-stale-staged-attachment.ts
+// (wired into global-setup) plants A `s188el-stale-staged-fixture-01`
+// backdated 25h + B `s188el-fresh-staged-fixture-01` fresh — the SAME
+// literals live here and there (the demo@studyflow.app two-site-literal
+// precedent).
+//
+// The two-fixture race analysis (the plan §3.3): fixture B is FRESH —
+// nothing in-suite can sweep it (only the GC removes staged rows, and it
+// only removes rows older than 24h) — so B's 200 proves the plant ran;
+// A's 404 after the trigger proves the sweep (the plant ran, and the GC
+// is the only remover of staged rows — the bind's removal leg targets a
+// note's BOUND rows only, never noteId null). The flat form is
+// ordering-independent AND retry-safe.
+//
+// THE PLACEMENT (the s183 upload-budget doctrine, replayed): the pins
+// first lived in parity-session7 (the notes-family home) — its chunk-2
+// composition rides the demo user's shared 20/15-min upload bucket at
+// ~21 units (the EG Files family's 11 + the ED staged family's 5 +
+// s14-hardening's 5), so +3 EL units 429'd s14's CU1a/CU1b mid-chunk
+// (reproduced twice, root-caused by the exact POST census). THIS file's
+// chunk-3 composition fires 2 upload units — the headroom is the
+// placement's reason, recorded here so the next pin author does not
+// move them back for family tidiness.
+// ---------------------------------------------------------------------------
+
+test.describe("S188/EL · the staged-row GC sweep (the superset hygiene feature)", () => {
+  // The plant's fixed ids (scripts/e2e-plant-stale-staged-attachment.ts).
+  const STALE_FIXTURE_URL = "/api/notes/attachments/s188el-stale-staged-fixture-01";
+  const FRESH_FIXTURE_URL = "/api/notes/attachments/s188el-fresh-staged-fixture-01";
+
+  test("EL1: the staged upload's GC sweeps the caller's stale staged rows — the fresh rows survive (RED pre-fix: no sweep, the stale fixture answers 200)", async ({ page }) => {
+    // (1) The plant-integrity guard: fixture B is fresh — only the plant
+    // creates it and nothing in-suite deletes a fresh staged row.
+    const plant = await page.request.get(FRESH_FIXTURE_URL);
+    expect(plant.status(), "the fresh fixture serves to its owner (the plant ran)").toBe(200);
+
+    // (2) The trigger: a real staged upload (the GC fires inside this
+    // request — or already fired at an ED pin's upload, same wiring).
+    const trigger = await page.request.post("/api/notes/attachments", {
+      multipart: {
+        file: {
+          name: "s188-el-trigger.txt",
+          mimeType: "text/plain",
+          buffer: Buffer.from("s188 el trigger upload", "utf8"),
+        },
+      },
+    });
+    expect(trigger.status()).toBe(201);
+    const created = (await trigger.json()) as { id: string; url: string };
+
+    // (3) THE SWEEP: fixture A (25h stale, staged) is gone. Pre-fix RED
+    // marker: 200 — nothing swept it.
+    const stale = await page.request.get(STALE_FIXTURE_URL);
+    expect(stale.status(), "the stale staged fixture was swept").toBe(404);
+
+    // (4) The boundary: the trigger's own fresh row survives its own
+    // upload's sweep.
+    const fresh = await page.request.get(created.url);
+    expect(fresh.status(), "the fresh staged row survives").toBe(200);
+  });
+
+  test("EL2: a subsequent upload's GC must NOT sweep fresh staged rows (the boundary guard — green both sides by design)", async ({ page }) => {
+    // Two uploads; the second's GC must leave the first's fresh row alone.
+    const first = await page.request.post("/api/notes/attachments", {
+      multipart: {
+        file: {
+          name: "s188-el-boundary-1.txt",
+          mimeType: "text/plain",
+          buffer: Buffer.from("s188 el boundary one", "utf8"),
+        },
+      },
+    });
+    expect(first.status()).toBe(201);
+    const firstRow = (await first.json()) as { url: string };
+
+    const second = await page.request.post("/api/notes/attachments", {
+      multipart: {
+        file: {
+          name: "s188-el-boundary-2.txt",
+          mimeType: "text/plain",
+          buffer: Buffer.from("s188 el boundary two", "utf8"),
+        },
+      },
+    });
+    expect(second.status()).toBe(201);
+
+    const stillThere = await page.request.get(firstRow.url);
+    expect(stillThere.status(), "a fresh staged row is never swept").toBe(200);
+  });
+});

@@ -1,7 +1,19 @@
 import { defineConfig } from "vitest/config";
 import path from "node:path";
 
-// Unit-test layer for the pure domain seams — 55 files / 1795 tests
+// Unit-test layer for the pure domain seams — 55 files / 1799 tests
+// (re-anchored S188/EL — the staged-row GC sweep (the superset hygiene
+// feature): the unit census moves 1795 → 1799 [+4, the note-attachments
+// EL block — EL-u1 the 24h retention constant, EL-u2 the cutoff +
+// deleteMany where-shape { userId, noteId: null, createdAt: lt cutoff }
+// + the no-side-calls guard, EL-u3 the swept-count return, EL-u4 the
+// default-now tolerance]; the e2e census moves 721 → 723: +2 — chunk 3
+// +2 the S188/EL pins in resilience [EL1 the sweep lifecycle (the
+// two-fixture plant-integrity + trigger + 404 + fresh-survival form),
+// EL2 the repeated-GC boundary guard] at THREE upload-budget units
+// (relocated from parity-session7 after the chunk-2 composition 429'd
+// s14's CU1a/CU1b at ~21 shared-bucket units — the s183 doctrine
+// replayed; see docs/remediation-plan-session188.md).)
 // (re-anchored S187/EK — the filter-row separation + the sf-card border
 // token + the Tasks search width port: the unit census UNCHANGED at
 // 1795 [55 files — a view-layer port, no new seam]; the e2e census

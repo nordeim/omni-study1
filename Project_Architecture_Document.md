@@ -1,4 +1,4 @@
-# StudyFlow (Omni-Study) — Master Project Architecture Document (PAD) v1.3.95
+# StudyFlow (Omni-Study) — Master Project Architecture Document (PAD) v1.3.96
 
 **Classification:** Internal Engineering Reference
 **Status:** DEFINITIVE, PRODUCTION-LOCKED BLUEPRINT
@@ -9,6 +9,12 @@
 
 ---
 
+
+#### Revision Block — v1.3.96 (Session-188 / Batch EL, Cycle 138)
+
+- `[SR]` Current test census anchor (the v1.2.0 convention, re-anchored): **1799/1799 Vitest unit** (55 files, +4 — the note-attachments EL block: the retention constant, the cutoff + deleteMany where-shape + the no-side-calls guard, the count return, the default-now tolerance) + **723 Playwright e2e** (the 5-chunk cold map: 158+275+103+95+92, chunk 3 +2 the S188/EL pins at THREE upload-budget units — the relocation's census consequence; verified by `--list`, never estimated).
+- `[AR]` **The staged-row GC sweep (the S188 axis — the S180/ED plan's explicit "no GC ships this cycle" deferral, closed as a SUPERSET hygiene cycle; zero visual surface, zero wire change — the reference's own posture is no GC at all, its probe uploads linger on its CDN forever)**: orphaned staged NoteAttachment rows (noteId null — a picked-but-never-saved upload's scratch, ≤ 2 MiB each, invisible to every view, excluded from every export) previously accumulated indefinitely (the 20/15-min upload budget bounds only the per-window rate). The port: **the uploader's next staged upload sweeps the caller's OWN stale staged rows older than the 24h retention** — the seam `gcStagedNoteAttachments` + `STAGED_ATTACHMENT_RETENTION_MS` (`src/lib/server/note-attachments.ts`), wired into the staged upload POST AFTER the rate-limit guard (the sweep frequency rides the same budget as the minting; a GC failure logs and NEVER blocks the upload — hygiene is not a precondition), user-scoped on the `@@index([userId, createdAt, id])` prefix, staged-only (a bound row is persisted data). **The placement lesson (the s183 upload-budget doctrine replayed, root-caused live)**: the EL pins' first cut lived in parity-session7 and the chunk-2 composition 429'd s14-hardening's CU1a/CU1b multipart pins (reproduced twice, isolated by the `--grep-invert` control run — the exact POST census: chunk 2 rides the shared 20/15-min bucket at ~21 units, with the EG family's page-fired POSTs invisible to a `request.post` grep); the relocation to resilience.spec.ts (the upload-envelope family's own home, chunk 3's ~2-unit composition) verified cold BOTH sides (chunk 2 restored 275/275, chunk 3 101 → 103). The two-fixture plant (`scripts/e2e-plant-stale-staged-attachment.ts`, wired into global-setup): A backdated 25h + B fresh — the flat pin form closes both phantom holes AND the retry hazard (B's 200 proves the plant ran, A's 404 proves the sweep — the GC is the only staged-row remover), ordering-independent by construction. **The dark-mode standing measurement constraint CODEIFIED** (the account persists in DARK mode, re-confirmed live at the S188 open via `scripts/ref-probe-s188-mode.mjs`; the theme never toggled by a probe): static-class surfaces measure fine in dark + cross-verify against the light-era records; token-driven surfaces ride their standing light-mode pins untouched; the structural probes stay the standing chrome. The notes-family e2e consolidation (parity-session7 is 140 pins across five families) is DEFERRED to S189 as a decision (the blast-radius rule: a test-organization refactor must not share a cycle with a behavior change). The evidence: the GC lifecycle frames under `docs/screenshots/` + `docs/remediation-plan-session188.md`.
+- `[SR]` The v1.3.95 revision block (the prior cycle's record) follows.
 
 #### Revision Block — v1.3.95 (Session-187 / Batch EK, Cycle 137)
 

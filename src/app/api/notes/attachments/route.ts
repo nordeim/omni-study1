@@ -21,6 +21,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { checkRateLimit } from "@/lib/auth";
 import { db } from "@/lib/db";
 import {
+  gcStagedNoteAttachments,
   noteAttachmentUrl,
   NOTE_ATTACHMENT_METADATA,
 } from "@/lib/server/note-attachments";
@@ -39,6 +40,18 @@ export const POST = withUser(async (user, request: NextRequest) => {
   const limit = checkRateLimit(`upload:${user.id}`, 20);
   if (!limit.ok) {
     return rateLimitedResponse(limit.retryAfterSec, "Too many uploads. Try again shortly.");
+  }
+
+  // S188/EL: the staged-row GC — the caller's OWN stale scratch (noteId
+  // null + older than the 24h retention) leaves with this upload (the
+  // write path that mints staged rows cleans them; the placement AFTER
+  // the rate-limit guard bounds the sweep frequency by the same
+  // 20/15-min budget). A GC failure NEVER blocks the upload — the sweep
+  // is hygiene, not a precondition (logged, continued).
+  try {
+    await gcStagedNoteAttachments(user.id);
+  } catch (err: unknown) {
+    console.error("[staged-gc] the stale staged-attachment sweep failed (upload continues)", err);
   }
 
   // S119/BT2 — the bounded raw-byte read, then formData() over the bounded

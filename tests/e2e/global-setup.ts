@@ -71,4 +71,16 @@ export default function globalSetup(): void {
     console.error("[global-setup] bun scripts/e2e-plant-legacy-note.ts failed — retrying with npx tsx:", err);
     run("npx tsx scripts/e2e-plant-legacy-note.ts");
   }
+
+  // S188/EL: the staged NoteAttachment fixtures — A backdated 25h (the GC
+  // sweep target) + B fresh (the plant-integrity probe). Idempotent; the
+  // same shell-pinned DATABASE_URL posture (see
+  // docs/remediation-plan-session188.md §3.3 for the two-fixture race
+  // analysis the EL pins ride).
+  try {
+    run("bun scripts/e2e-plant-stale-staged-attachment.ts");
+  } catch (err) {
+    console.error("[global-setup] bun scripts/e2e-plant-stale-staged-attachment.ts failed — retrying with npx tsx:", err);
+    run("npx tsx scripts/e2e-plant-stale-staged-attachment.ts");
+  }
 }

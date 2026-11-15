@@ -513,8 +513,26 @@
 # deterministic defaults so the leg fills only the title + score +
 # max; network-mocked, no server writes beyond the zero-residue
 # create]. The full DW map: docs/remediation-plan-session173.md.)
-# Expected: 158 + 275 + 101 + 95 + 92 = 721 (each chunk's count includes its
+# Expected: 158 + 275 + 103 + 95 + 92 = 723 (each chunk's count includes its
 # auth setup — the current census; the historical re-tag blocks beneath.)
+# (S188/EL re-tag — census 721 → 723, net +2: chunk 3 +2 [the S188/EL
+# staged-row GC pins in resilience — the superset hygiene feature, see
+# docs/remediation-plan-session188.md: EL1 the sweep lifecycle (the
+# fresh-fixture plant-integrity 200 → the trigger upload 201 → the
+# 25h-stale fixture 404 → the trigger's own row 200 — the flat
+# two-fixture form, ordering-independent + retry-safe) + EL2 the
+# boundary guard (a subsequent upload's GC never sweeps a fresh row).
+# THE PLACEMENT LESSON (the s183 doctrine replayed, root-caused live):
+# the pins' first cut lived in parity-session7 (the notes-family home)
+# and the chunk-2 composition 429'd s14's CU1a/CU1b multipart pins —
+# the composition rides the demo user's shared 20/15-min upload bucket
+# at ~21 units (EG Files 11 + ED staged 5 + s14 5) and the +3 EL units
+# tipped it; the relocation to resilience (the upload-envelope family's
+# own home, chunk 3's ~2-unit composition) verified cold BOTH sides:
+# chunk 2 restored 275/275, chunk 3 101 → 103. The unit census moves
+# 1795 → 1799 [55 files — the note-attachments EL block: the retention
+# constant, the cutoff/where-shape pin, the count return, the
+# default-now tolerance].)
 # (S187/EK re-tag — census 714 → 721, net +7: chunk 2 +7 [the S187/EK
 # filter-row + sf-card-border + Tasks-search pins in parity-session7 —
 # the reference's Assignments/Exams filter chrome measured live

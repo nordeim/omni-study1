@@ -63,6 +63,35 @@ export function attachmentIdFromUrl(url: string): string {
   return id;
 }
 
+/** The staged-row retention (S188/EL — the superset hygiene feature): a
+ * picked-but-never-saved upload row (noteId null) older than this is
+ * scratch nobody will bind — the uploader's next staged upload sweeps it
+ * (docs/remediation-plan-session188.md §6.1). 24h: a draft left open
+ * overnight survives; the reference's own posture is no GC at all (its
+ * probe uploads linger on its CDN forever), so this is a SUPERSET
+ * behavior, not a parity port. */
+export const STAGED_ATTACHMENT_RETENTION_MS = 24 * 60 * 60 * 1000;
+
+/** The staged-row GC: the caller's OWN stale staged rows leave with the
+ * next staged upload (the write path that mints them — the actor who
+ * creates the scratch cleans it; the route wires this AFTER its
+ * rate-limit guard, so the sweep frequency rides the same 20/15-min
+ * budget as the minting). User-scoped (the @@index([userId, createdAt,
+ * id]) prefix), staged-only (noteId null — a bound row is persisted
+ * data), and age-gated by the retention. Returns the swept count. The
+ * `now` parameter exists for the deterministic unit pins; production
+ * calls ride the default. */
+export async function gcStagedNoteAttachments(
+  userId: string,
+  now: Date = new Date(),
+): Promise<number> {
+  const cutoff = new Date(now.getTime() - STAGED_ATTACHMENT_RETENTION_MS);
+  const swept = await db.noteAttachment.deleteMany({
+    where: { userId, noteId: null, createdAt: { lt: cutoff } },
+  });
+  return swept.count;
+}
+
 /** The include read shape: the note's bound rows, oldest-first (the chip
  * order matches the reference's upload order), metadata only. (No
  * `as const` on the ARRAY — Prisma's orderBy wants the mutable literal
