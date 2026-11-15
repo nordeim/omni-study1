@@ -2,6 +2,17 @@ import { defineConfig } from "vitest/config";
 import path from "node:path";
 
 // Unit-test layer for the pure domain seams — 55 files / 1799 tests
+// (re-anchored S189/EM — the notes-family e2e consolidation: the unit
+// census UNCHANGED at 1799 [55 files — a test-organization cycle, zero
+// application behavior change]; the e2e census UNCHANGED at 723 across
+// the 5-chunk map [158+275+103+95+92] and 718 chromium specs, but the
+// SPEC-FILE census moves 30 → 31: the 14 notes-view describes [49 pins]
+// split out of parity-session7.spec.ts [5,415 lines] into the dedicated
+// notes home tests/e2e/notes.spec.ts [2,113 lines, 49 pins], byte-
+// faithfully, declaration order preserved — parity-session7 keeps 88
+// pins in 3,388 lines; the chunk-2 composition holds 275 [the same
+// total from the same chunk: 88 + 49]; see
+// docs/remediation-plan-session189.md.)
 // (re-anchored S188/EL — the staged-row GC sweep (the superset hygiene
 // feature): the unit census moves 1795 → 1799 [+4, the note-attachments
 // EL block — EL-u1 the 24h retention constant, EL-u2 the cutoff +

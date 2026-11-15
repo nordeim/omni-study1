@@ -1,4 +1,18 @@
 #!/usr/bin/env bash
+# (S189/EM re-tag — the census is UNCHANGED at 723 [158+275+103+95+92]
+# and the Expected line below is untouched; the change is ORGANIZATIONAL:
+# chunk 2 gains tests/e2e/notes.spec.ts as its 8th file — the 14
+# notes-view describes [49 pins] split byte-faithfully out of
+# parity-session7.spec.ts [137 → 88 pins, 5,415 → 3,388 lines] into the
+# dedicated notes home [2,113 lines], declaration order preserved; the
+# spec-file census moves 30 → 31 [718 chromium specs + the setup test =
+# 719 by --list]; the split is a pure test-organization refactor with
+# ZERO application behavior change — equivalence proven by the two-file
+# cold run [137+setup, the identical outcome to the pre-split baseline
+# down to the same DY1 retry-class flake] and the chunk-2 composition
+# 275/275 cold; the upload budget holds by construction [the same chunk,
+# the same POST units — the ED staged family's ~5 uploads stay in chunk
+# 2; the S188 lesson 3]; see docs/remediation-plan-session189.md.)
 # (S179/EC re-tag — census 662 → 666, net +4: chunk 2 +4 [the
 # S179/EC notes feature pins in parity-session7 — the reference's
 # four-item feature head measured live (computed DOM, zero
@@ -892,7 +906,7 @@ cd "$(dirname "$0")/.."
 
 declare -a CHUNKS=(
   "tests/e2e/navigation.spec.ts tests/e2e/parity-session8.spec.ts tests/e2e/mobile-navigation.spec.ts"
-  "tests/e2e/parity-session9.spec.ts tests/e2e/parity-session7.spec.ts tests/e2e/theme-system.spec.ts tests/e2e/parity-session6.spec.ts tests/e2e/a11y-sweep.spec.ts tests/e2e/tasks.spec.ts tests/e2e/s14-hardening.spec.ts"
+  "tests/e2e/parity-session9.spec.ts tests/e2e/parity-session7.spec.ts tests/e2e/notes.spec.ts tests/e2e/theme-system.spec.ts tests/e2e/parity-session6.spec.ts tests/e2e/a11y-sweep.spec.ts tests/e2e/tasks.spec.ts tests/e2e/s14-hardening.spec.ts"
   "tests/e2e/parity-session5.spec.ts tests/e2e/resilience.spec.ts tests/e2e/s16-perf-parity.spec.ts"
   "tests/e2e/accessibility.spec.ts tests/e2e/calculator.spec.ts tests/e2e/dark-mode.spec.ts tests/e2e/s17-fresh-user.spec.ts tests/e2e/s52-sidebar-collapse.spec.ts"
   "tests/e2e/auth.spec.ts tests/e2e/auth-flows.spec.ts tests/e2e/greeting-clock.spec.ts tests/e2e/s18-rum.spec.ts tests/e2e/s19-rum-panel.spec.ts tests/e2e/s20-rum-export.spec.ts tests/e2e/s21-data-export.spec.ts tests/e2e/s22-boot-guard.spec.ts tests/e2e/s23-import.spec.ts tests/e2e/s24-change-password.spec.ts tests/e2e/s25-delete-account.spec.ts tests/e2e/s26-change-email.spec.ts"

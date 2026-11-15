@@ -1,4 +1,4 @@
-# StudyFlow (Omni-Study) — Master Project Architecture Document (PAD) v1.3.96
+# StudyFlow (Omni-Study) — Master Project Architecture Document (PAD) v1.3.97
 
 **Classification:** Internal Engineering Reference
 **Status:** DEFINITIVE, PRODUCTION-LOCKED BLUEPRINT
@@ -9,6 +9,12 @@
 
 ---
 
+
+#### Revision Block — v1.3.97 (Session-189 / Batch EM, Cycle 139)
+
+- `[SR]` Current test census anchor (the v1.2.0 convention, re-anchored): **1799/1799 Vitest unit** (55 files — UNCHANGED: a test-organization cycle, zero application behavior change) + **723 Playwright e2e** (the 5-chunk cold map: 158+275+103+95+92, EVERY COUNT UNCHANGED; the spec-file census moves 30 → 31 [718 chromium specs + the setup test = 719 by `--list`]; verified by `--list`, never estimated).
+- `[AR]` **The notes-family e2e consolidation (the S189 axis — the S188 close's named S189 candidate, five times deferred as a deliberate blast-radius decision, executed in the clean behavior-change-free window)**: `parity-session7.spec.ts` — the suite's largest file at 5,415 lines / 50 describes / 137 pins, the default landing spot for six generations of pins — split into the **dedicated notes home `tests/e2e/notes.spec.ts`** (the view-dedicated convention, the tasks.spec.ts precedent): the **14 notes-view describes / 49 pins moved BYTE-FAITHFULLY** (S7-F the title pin, S7-AD the rich-text editor, DJ1 the tag failure surfaces, AG6 the autosave streak, AH1/AH2 the delete/departed-Save settlements, AH8 the partial-PATCH, CQ3 the notebook mover, DP3 the rendered-text search, EA1 the inline-draft create, EB the view/edit split, EC the pin/palette/coding-note, ED the Attach-File wire, EE the tag-row family [the EF6 Files-subtitle rider rides with its batch — the describe is the unit of consolidation, the S189 §6.4 adjudication; the mixed AE audit family STAYS]), declaration order preserved; parity-session7 keeps 88 pins / 36 describes / 3,388 lines. **The Mode-D characterization discipline** (a pure refactor has no honest-RED shape): the pre-split baseline cold (137 + setup, one documented DY1 retry-class flake) → the machine-verified byte-faithfulness (block containment + the title multiset + the describe/pin arithmetic 14+36=50, 49+88=137) → the post-split equivalence (the two-file cold run reproducing the pre-split outcome down to the IDENTICAL flake signature) → the chunk-2 composition **275/275 cold** (notes.spec.ts joins as chunk 2's 8th file at its alphabetical slot — after a11y-sweep, before parity-session6, which never touches /Notes or /api/notes; the upload budget holds by construction: the same chunk, the same POST units) → the 5-chunk cold cert map **723/723**. **The census-authority lesson root-caused live**: a `test(` grep matches `test.describe(` lines and the run output counts the setup test — the first census (63/75/138) was corrected by `--list` to 49/88/137 (the S189 lesson 2). **The doc-rot catch**: the README tree diagram's e2e count had carried the S180-era 672 for eight cycles (beyond the DA6 tripwire's unit-count reach) — corrected to 723 with the class recorded (the S189 lesson 5). The evidence: the notes-home frames under `docs/screenshots/` + `docs/remediation-plan-session189.md`.
+- `[SR]` The v1.3.96 revision block (the prior cycle's record) follows.
 
 #### Revision Block — v1.3.96 (Session-188 / Batch EL, Cycle 138)
 
