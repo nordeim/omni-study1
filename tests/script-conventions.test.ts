@@ -383,6 +383,14 @@ describe("the chunked cert runner's truth contract (S128/CC2)", () => {
     // (no new spec files); the --list census 731 in 32 files (730 chromium
     // + the setup test). See docs/remediation-plan-session190.md; the unit
     // census UNCHANGED at 1799 [55 files].
+    // S191/EO re-tag: the census is UNCHANGED at 735 — the consolidation
+    // was a pure test-organization refactor (the 11 pure-flashcards
+    // describes [18 pins] split byte-faithfully out of parity-session7.spec.ts
+    // [88 → 70 pins] into the dedicated flashcards home
+    // tests/e2e/flashcards.spec.ts; chunk 2 gains it as the 9th file; the
+    // two flashcards strays outside parity-session7 [S167/DQ1 in
+    // parity-session8, S9-O in parity-session9] stay — the S189 boundary
+    // precedent; see docs/remediation-plan-session191.md).
     expect(certSource).toContain("Expected: 159 + 275 + 108 + 101 + 92 = 735");
   });
 

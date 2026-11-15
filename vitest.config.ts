@@ -2,6 +2,16 @@ import { defineConfig } from "vitest/config";
 import path from "node:path";
 
 // Unit-test layer for the pure domain seams — 55 files / 1799 tests
+// (re-anchored S191/EO — the flashcards-family e2e consolidation: the
+// unit census UNCHANGED at 1799 [55 files — a test-organization cycle,
+// zero application behavior change]; the e2e census UNCHANGED at 735
+// across the 5-chunk map [159+275+108+101+92] and 730 chromium specs,
+// but the spec-file census moves 31 → 32 [the 11 pure-flashcards
+// describes — 18 pins, the S7-A founding set through the S125/BZ1 Add
+// Card dialog — split byte-faithfully out of parity-session7.spec.ts
+// {88 → 70 pins} into the dedicated flashcards home
+// tests/e2e/flashcards.spec.ts {793 lines}, chunk 2's 9th file]; see
+// docs/remediation-plan-session191.md.)
 // (re-anchored S190/EN — the measured three-family parity port: the unit
 // census UNCHANGED at 1799 [55 files — a view-layer port, no new seam];
 // the e2e census moves 723 → 735 across the 5-chunk map
