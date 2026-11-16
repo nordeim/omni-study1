@@ -484,6 +484,27 @@ describe("the chunked cert runner's truth contract (S128/CC2)", () => {
     // + PATCH + DELETE through the real UI] ride WITH the pin inside
     // chunk 2 [the chunk is the budget boundary]; see
     // docs/remediation-plan-session197.md).
+    // S198/EV: the census is UNCHANGED at 744 [160+275+116+101+92] and
+    // chunk 2 gains tests/e2e/emptystates.spec.ts + tests/e2e/
+    // filterrows.spec.ts + tests/e2e/viewheaders.spec.ts as its
+    // 17th/18th/19th files — the cross-view three-family e2e
+    // consolidation [the S197 close's named next candidate, the SECOND
+    // AXIS-HOME kind]: the S184/EH [6 pins] + S186/EJ [6 pins] +
+    // S187/EK [7 pins] cross-view describes split byte-faithfully out
+    // of parity-session7.spec.ts [31 → 12 pins, 1,016 → 482 lines]
+    // into the three dedicated axis homes [emptystates + viewheaders +
+    // filterrows — each family's binding axis is a UI pattern measured
+    // across views, not a view]; the spec-file census moves 39 → 42
+    // [739 chromium + the setup test = 740 by --list]; emptystates
+    // sorts 4th + filterrows 6th in the chunk's alphabetical order —
+    // strictly FEWER predecessors than the split source's 11th
+    // position [the S194/S195 safe direction]; viewheaders sorts
+    // 19th/LAST — the S196 after-position direction, immune by
+    // construction [every EJ pin a read-only chrome assert, zero
+    // writes, zero data-shaped reads]; ZERO budget units move [the
+    // family issues no writes at all — the six page.route GETs are the
+    // EA3 zero-forcing interception]; see
+    // docs/remediation-plan-session198.md).
     expect(certSource).toContain("Expected: 160 + 275 + 116 + 101 + 92 = 744");
   });
 

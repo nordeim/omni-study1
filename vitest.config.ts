@@ -2,6 +2,17 @@ import { defineConfig } from "vitest/config";
 import path from "node:path";
 
 // Unit-test layer for the pure domain seams — 55 files / 1799 tests
+// (re-anchored S198/EV — the cross-view three-family e2e consolidation:
+// the unit census UNCHANGED at 1799 [55 files — no source change]; the
+// e2e census UNCHANGED at 744 [160+275+116+101+92] with 739 chromium
+// specs now in 42 spec files — the S184/EH [6 pins] + S186/EJ [6 pins]
+// + S187/EK [7 pins] cross-view describes split byte-faithfully out of
+// parity-session7.spec.ts [31 → 12] into the dedicated axis homes
+// tests/e2e/emptystates.spec.ts + tests/e2e/viewheaders.spec.ts +
+// tests/e2e/filterrows.spec.ts [each family's binding axis is a UI
+// pattern measured across views, not a view — the second axis-home
+// kind after S197's dialogs]; a pure test-organization refactor, zero
+// application behavior change; see docs/remediation-plan-session198.md.)
 // (re-anchored S197/EU — the dialog catch-up family e2e consolidation:
 // the unit census UNCHANGED at 1799 [55 files — no source change]; the
 // e2e census UNCHANGED at 744 [160+275+116+101+92] with 739 chromium

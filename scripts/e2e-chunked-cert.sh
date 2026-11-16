@@ -1,4 +1,30 @@
 #!/usr/bin/env bash
+# (S198/EV re-tag — the census is UNCHANGED at 744 [160+275+116+101+92]
+# and the Expected line below is untouched; the change is ORGANIZATIONAL:
+# chunk 2 gains tests/e2e/emptystates.spec.ts + tests/e2e/filterrows.spec.ts
+# + tests/e2e/viewheaders.spec.ts [its 17th/18th/19th files] — the
+# cross-view three-family e2e consolidation [the S197 close's named next
+# candidate, the SECOND AXIS-HOME kind]: the S184/EH shared-EmptyState
+# describe [6 pins] + the S186/EJ view-header-row describe [6 pins] +
+# the S187/EK filter-row + sf-card-border + Tasks-search-width describe
+# [7 pins] split byte-faithfully out of parity-session7.spec.ts
+# [31 → 12 pins, 1,016 → 482 lines] into the three dedicated axis homes
+# [emptystates 259 lines + viewheaders 166 + filterrows 245 — each
+# family's binding axis is a UI pattern measured across views, not a
+# view]; the spec-file census moves 39 → 42 [739 chromium specs + the
+# setup test = 740 by --list]; the split is a pure test-organization
+# refactor with ZERO application behavior change — equivalence proven
+# by the four-file cold run [32 passed, first-roll — the identical
+# outcome to the pre-split baseline]; ZERO budget units move [the
+# family issues no writes at all — grep-verified: zero clicks, zero
+# POST/PATCH/DELETE, the six page.route GETs are the EA3 zero-forcing
+# interception]; emptystates sorts 4th + filterrows 6th in the chunk's
+# alphabetical order — strictly FEWER predecessors than the split
+# source's 11th position [the S194/S195 safe direction]; viewheaders
+# sorts 19th/LAST — the S196 after-position direction, immune by
+# construction [every EJ pin a read-only chrome assert, zero writes,
+# zero data-shaped reads]; the residue two-direction analysis in
+# docs/remediation-plan-session198.md §4.)
 # (S197/EU re-tag — the census is UNCHANGED at 744 [160+275+116+101+92]
 # and the Expected line below is untouched; the change is ORGANIZATIONAL:
 # chunk 2 gains tests/e2e/dialogs.spec.ts [its 16th file] — the dialog
@@ -1064,7 +1090,7 @@ cd "$(dirname "$0")/.."
 
 declare -a CHUNKS=(
   "tests/e2e/navigation.spec.ts tests/e2e/parity-session8.spec.ts tests/e2e/mobile-navigation.spec.ts"
-  "tests/e2e/parity-session9.spec.ts tests/e2e/parity-session7.spec.ts tests/e2e/analytics.spec.ts tests/e2e/gradetracker.spec.ts tests/e2e/flashcards.spec.ts tests/e2e/notes.spec.ts tests/e2e/theme-system.spec.ts tests/e2e/parity-session6.spec.ts tests/e2e/a11y-sweep.spec.ts tests/e2e/tasks.spec.ts tests/e2e/s14-hardening.spec.ts tests/e2e/timetable.spec.ts tests/e2e/files.spec.ts tests/e2e/practicetests.spec.ts tests/e2e/studygroups.spec.ts tests/e2e/dialogs.spec.ts"
+  "tests/e2e/parity-session9.spec.ts tests/e2e/parity-session7.spec.ts tests/e2e/analytics.spec.ts tests/e2e/gradetracker.spec.ts tests/e2e/flashcards.spec.ts tests/e2e/notes.spec.ts tests/e2e/theme-system.spec.ts tests/e2e/parity-session6.spec.ts tests/e2e/a11y-sweep.spec.ts tests/e2e/tasks.spec.ts tests/e2e/s14-hardening.spec.ts tests/e2e/timetable.spec.ts tests/e2e/files.spec.ts tests/e2e/practicetests.spec.ts tests/e2e/studygroups.spec.ts tests/e2e/dialogs.spec.ts tests/e2e/emptystates.spec.ts tests/e2e/filterrows.spec.ts tests/e2e/viewheaders.spec.ts"
   "tests/e2e/parity-session5.spec.ts tests/e2e/resilience.spec.ts tests/e2e/s16-perf-parity.spec.ts"
   "tests/e2e/accessibility.spec.ts tests/e2e/calculator.spec.ts tests/e2e/dark-mode.spec.ts tests/e2e/s17-fresh-user.spec.ts tests/e2e/s52-sidebar-collapse.spec.ts"
   "tests/e2e/auth.spec.ts tests/e2e/auth-flows.spec.ts tests/e2e/greeting-clock.spec.ts tests/e2e/s18-rum.spec.ts tests/e2e/s19-rum-panel.spec.ts tests/e2e/s20-rum-export.spec.ts tests/e2e/s21-data-export.spec.ts tests/e2e/s22-boot-guard.spec.ts tests/e2e/s23-import.spec.ts tests/e2e/s24-change-password.spec.ts tests/e2e/s25-delete-account.spec.ts tests/e2e/s26-change-email.spec.ts"
