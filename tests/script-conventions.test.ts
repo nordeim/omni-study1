@@ -443,6 +443,30 @@ describe("the chunked cert runner's truth contract (S128/CC2)", () => {
     // split source's 6th position; the --list census 740 in 37 files
     // [739 chromium + the setup test; 36 spec files]; see
     // docs/remediation-plan-session195.md).
+    // S196/ET re-tag: the census is UNCHANGED at 744 — the studygroups +
+    // practicetests two-family e2e consolidation (the S7-P [1 pin] +
+    // S130/CE2 [1 pin] + S172/DV2 [1 pin] PracticeTests describes + the
+    // S171/DU2 [2 pins] + S176/DZ2 [1 pin] StudyGroups describes — the
+    // S195 close's named next candidates, the SECOND two-family cycle —
+    // split byte-faithfully out of parity-session7.spec.ts [42 → 36
+    // pins, 1,558 → 1,302 lines] into the dedicated practicetests
+    // tests/e2e/practicetests.spec.ts + studygroups
+    // tests/e2e/studygroups.spec.ts homes; chunk 2 gains them as its
+    // 14th/15th files; the StudyGroups/PracticeTests strays outside
+    // parity-session7 [the a11y-sweep legs, the navigation legs, the
+    // parity-session5/8/9 batch homes, the s17-fresh-user zero-data
+    // legs, the resilience legs, the mobile-navigation StudyGroups leg,
+    // the MIXED S7-B family] stay — the S189–S195 boundary precedent;
+    // the S7-P register/verify POSTs ride WITH the pin inside chunk 2
+    // [register budget unchanged]; practicetests sorts 10th +
+    // studygroups 12th — BOTH AFTER the split source's 8th position [the
+    // S193 both-directions shape]: the direction-1 immunity proof rides
+    // each pin's own isolation [fresh-account storageState /
+    // uniquely-titled rows / Date.now-stamped self-deleting fixtures /
+    // read-only anatomy], direction-2 a strict REDUCTION
+    // [parity-session9 no longer sees the CE2 row]; the --list census
+    // 740 in 39 files [739 chromium + the setup test; 38 spec files];
+    // see docs/remediation-plan-session196.md).
     expect(certSource).toContain("Expected: 160 + 275 + 116 + 101 + 92 = 744");
   });
 

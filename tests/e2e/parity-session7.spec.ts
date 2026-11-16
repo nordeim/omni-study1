@@ -19,7 +19,9 @@ import { expect, test, type Page } from "@playwright/test";
  *      keeps the non-flashcards families — see
  *      docs/remediation-plan-session191.md)
  *  S7-B Study Groups swatch palette + Practice Tests dialog (questions +
- *      AI Generate Questions)
+ *      AI Generate Questions) — the MIXED family STAYS (the S78/AE
+ *      boundary precedent; its studygroups/practicetests strays are
+ *      resolved by view at S196/ET)
  *  S7-C Timetable grid-cols-8 week grid (day heads, 60px hours, "7 AM"
  *      labels, mobile accordion) + My Classes today-date header — MOVED
  *      to tests/e2e/timetable.spec.ts at S193/EQ (the timetable-family
@@ -46,6 +48,18 @@ import { expect, test, type Page } from "@playwright/test";
  *      docs/remediation-plan-session194.md)
  *  S127/CB13 the analytics Assignments-card avg-progress derivation —
  *      MOVED to tests/e2e/analytics.spec.ts at S195/ES
+ *  S7-P Practice Tests bare empty state (the fresh-account zero
+ *      state) + S130/CE2 (the True/False default answer) + S172/DV2
+ *      (the practiceTests create-dialog catch-up) — MOVED to
+ *      tests/e2e/practicetests.spec.ts at S196/ET (the practicetests-
+ *      family consolidation: every pure-practicetests describe in this
+ *      file moved there; see docs/remediation-plan-session196.md)
+ *  S171/DU2 (the studygroups create-dialog catch-up + the description
+ *      round-trip) + S176/DZ2 (the studygroups create-dialog + swatch
+ *      idiom port) — MOVED to tests/e2e/studygroups.spec.ts at
+ *      S196/ET (the studygroups-family consolidation: every pure-
+ *      studygroups describe in this file moved there; see
+ *      docs/remediation-plan-session196.md)
  *  S173/DW2 the grades create-dialog parity catch-up — MOVED to
  *      tests/e2e/gradetracker.spec.ts at S195/ES
  */
@@ -95,48 +109,6 @@ test.describe("S7-B · Study Groups + Practice Tests dialogs", () => {
       has: page.getByText(/question/i),
     });
     await expect(card.first()).toBeVisible();
-  });
-});
-
-
-
-test.describe("S7-P · Practice Tests bare empty state", () => {
-  // The demo seed ships practice tests — the zero state needs a fresh
-  // account (the S17 pattern: empty storageState + register/verify).
-  test.use({ storageState: { cookies: [], origins: [] } });
-
-  test("the empty state sits BARE on the canvas with the file-question icon (S7-P pin)", async ({ page }) => {
-    // Reference (measured s69): the PT zero state floats directly on the
-    // canvas — NO white card wrapper — and the icon block carries
-    // file-question (the clone wrapped EmptyState in an sf-card and used
-    // the pre-Y1 file-text glyph).
-    const email = `s7p-${Date.now()}@studyflow.app`;
-    const res = await page.request.post("/api/auth/register", {
-      data: { email, password: "Fresh1234!", name: "S7P Probe" },
-    });
-    expect(res.ok(), `register failed: ${res.status()}`).toBe(true);
-    const { code } = (await res.json()) as { code: string };
-    await page.request.post("/api/auth/verify-email", { data: { email, code } });
-    await page.goto("/PracticeTests");
-    await hydrated(page);
-    const title = page.getByRole("heading", { name: "No practice tests yet" });
-    await expect(title).toBeVisible();
-    const boxed = await title.evaluate((el) => {
-      let node: Element | null = el;
-      for (let i = 0; i < 6 && node; i++) {
-        node = node.parentElement;
-        if (!node) break;
-        const cs = getComputedStyle(node);
-        if (cs.borderTopWidth !== "0px" && cs.backgroundColor !== "rgba(0, 0, 0, 0)") {
-          return { found: true, cls: node.className.slice(0, 120) };
-        }
-      }
-      return { found: false, cls: "" };
-    });
-    expect(boxed.found).toBe(false);
-    const icon = title.locator("xpath=preceding-sibling::div[1]").locator("svg");
-    const cls = await icon.evaluate((el) => el.getAttribute("class") ?? "");
-    expect(cls).toContain("lucide-file-question");
   });
 });
 
@@ -369,196 +341,6 @@ test.describe("S81 · the calculator keypad structural guard (AH4b, re-anchored 
 //   AI1c the study-mode UI round-trip — Correct on a hard card keeps
 //        the card hard end-to-end (the full user path).
 // ---------------------------------------------------------------------------
-
-
-
-// S130/CE2 — the True/False default answer (docs/remediation-plan-session130.md).
-//
-// The s130 FE audit: the question editor's True/False Select rendered
-// `value={draft.correctAnswer || "True"}` — the UI SHOWED "True" selected
-// while the stored draft kept correctAnswer "" — and the submit loop then
-// rejected with "Question N needs a correct answer" even though the user
-// saw an answer selected (the user had to re-pick True to unstick it).
-// The fix seeds the stored default at the type switch (switching a draft
-// TO true_false sets correctAnswer "True" — the displayed default becomes
-// the stored default). The pin builds a one-question True/False test
-// WITHOUT ever touching the correct-answer Select and asserts the save
-// succeeds — pre-fix the toast error blocks it (RED).
-test.describe("S130/CE2 · the True/False default answer", () => {
-  test("a True/False question saves without touching the correct-answer select (the displayed default is the stored default)", async ({ page }) => {
-    await page.goto("/PracticeTests");
-    await hydrated(page);
-    await page.getByRole("button", { name: "Create Test" }).first().click();
-    const dlg = page.getByRole("dialog");
-    await expect(dlg).toBeVisible();
-    await dlg.getByLabel("Test Title").fill("CE2 True/False default probe");
-    await dlg.getByLabel("Time Limit (minutes)").fill("10");
-    await dlg.getByRole("button", { name: "Add question" }).click();
-    // Switch the single question's type to True / False.
-    await dlg.getByRole("combobox", { name: "Question 1 type" }).click();
-    await page.getByRole("option", { name: "True / False" }).click();
-    await dlg.getByLabel("Question 1 text").fill("The stored default matches the displayed default.");
-    // Save WITHOUT touching the correct-answer Select — the displayed
-    // "True" must be the stored value. (The submit button inside the
-    // dialog reads "Create Test" — same name as the page's opener, so the
-    // locator is dialog-scoped.)
-    await dlg.getByRole("button", { name: "Create Test" }).click();
-    await expect(dlg).not.toBeVisible();
-    // The saved card surfaces in the list with its question count.
-    await expect(page.locator("main").getByText("CE2 True/False default probe").first()).toBeVisible();
-  });
-});
-
-
-// ---------------------------------------------------------------------------
-// S171/DU2 — the studygroups create-dialog parity catch-up + the
-// description port (the s171 audit B/L-1 + I-1). Measured live at the
-// s171 gated write-path probe (one throwaway row created, captured,
-// DELETEd — zero residue verified): the reference's create dialog reads
-// title "Create Study Group", a name INPUT (placeholder "e.g., Math
-// Study Squad"), a description TEXTAREA (placeholder "What's this group
-// about?"), the six swatches (the clone's GROUP_COLORS already match
-// exactly), and the footer's DOM order submit-then-secondary ("Create
-// Group" then "Close"). The clone's copy was scaffold-era (git -S
-// provenance: the "New Study Group" title + "e.g. Calculus cram crew"
-// placeholder date from the initial 7b1e78d implementation and were
-// never re-measured) and the family carried NO description field
-// end-to-end. The description ports bounded at 500 (the deck family's
-// 1_000-char description the precedent; the bounded-everything posture)
-// with the clone's visible-Label superset over the reference's
-// placeholder-only inputs. The reference's own create→list flow is
-// BROKEN (the POST commits, the list GET returns [] — measured), so the
-// round-trip leg pins the CLONE's working surface (the documented
-// superset posture).
-// ---------------------------------------------------------------------------
-test.describe("S171/DU2 · the studygroups create-dialog parity catch-up + the description round-trip", () => {
-  test("the create dialog carries the reference's measured title, placeholders, and footer", async ({ page }) => {
-    await page.goto("/StudyGroups");
-    await hydrated(page);
-    await page.getByRole("button", { name: "Create study group" }).click();
-    const dlg = page.getByRole("dialog");
-    await expect(dlg).toBeVisible();
-    // The measured title (RED pre-fix: the scaffold-era "New Study
-    // Group").
-    await expect(dlg.getByRole("heading", { name: "Create Study Group" })).toBeVisible();
-    // The measured name placeholder (S176/DZ2 re-measured the label —
-    // "Group Name \*" now, the scaffold-era "Name" retired).
-    await expect(dlg.getByLabel("Group Name *")).toHaveAttribute("placeholder", "e.g., Math Study Squad");
-    // The measured description textarea (the clone's visible-Label
-    // superset over the reference's placeholder-only input).
-    const description = dlg.getByLabel("Description");
-    await expect(description).toHaveAttribute("placeholder", "What's this group about?");
-    await expect(description).toBeVisible();
-    // The measured footer: submit "Create Group" + secondary "Close".
-    // The secondary is scoped to the FORM — the clone's shared shadcn
-    // dialog chrome adds a top-right X whose sr-only name is also
-    // "Close" (the documented superset; the reference carries no X —
-    // its measured dialog has ONE Close, the footer text button).
-    const submit = dlg.getByRole("button", { name: "Create Group", exact: true });
-    const close = dlg.locator("form").getByRole("button", { name: "Close", exact: true });
-    await expect(submit).toBeVisible();
-    await expect(close).toBeVisible();
-    // The measured DOM ORDER: the submit renders BEFORE the secondary
-    // (both scoped to the form's footer).
-    const order = await dlg
-      .locator("form")
-      .getByRole("button")
-      .evaluateAll((els) =>
-        els
-          .map((el, i) => ({ i, text: (el.textContent ?? "").trim() }))
-          .filter((b) => b.text === "Create Group" || b.text === "Close"),
-      );
-    expect(order.map((b) => b.text)).toEqual(["Create Group", "Close"]);
-  });
-
-  test("a description entered in the create dialog survives the round-trip into the detail pane", async ({ page }) => {
-    const stamp = `s171-du2-${Date.now()}`;
-    await page.goto("/StudyGroups");
-    await hydrated(page);
-    await page.getByRole("button", { name: "Create study group" }).click();
-    const dlg = page.getByRole("dialog");
-    await expect(dlg).toBeVisible();
-    await dlg.getByLabel("Group Name *").fill(`S171-DU2 description probe ${stamp}`);
-    await dlg.getByLabel("Description").fill("We drill problem sets every Tuesday before the bus leaves.");
-    const saved = page.waitForResponse(
-      (r) => r.request().method() === "POST" && r.url().includes("/api/study-groups"),
-    );
-    await dlg.getByRole("button", { name: "Create Group", exact: true }).click();
-    const res = await saved;
-    expect(res.ok()).toBe(true);
-    const createdId = ((await res.json()) as { id: string }).id;
-    try {
-      // The success toast + the closed dialog (the create resolved).
-      await expect(page.getByText("Study group created")).toBeVisible({ timeout: 10_000 });
-      await expect(dlg).toBeHidden();
-      // Select the new group — the detail pane renders the description.
-      await page.getByRole("button", { name: new RegExp(`S171-DU2 description probe ${stamp}`) }).first().click();
-      const detail = page.locator('[aria-label="Study group detail pane"]');
-      await expect(detail.getByText("We drill problem sets every Tuesday before the bus leaves.")).toBeVisible();
-    } finally {
-      // Zero residue on the shared demo user (the CC4/AR3 convention).
-      await page.request.delete(`/api/study-groups/${createdId}`);
-    }
-  });
-});
-
-
-// S172/DV2 — the practiceTests create-dialog parity catch-up (the s172
-// audit B/L-1). Measured live at the s172 gated write-path probe (TWO
-// throwaway rows created through the real dialog, captured, DELETEd —
-// zero residue verified after each): the reference's create dialog reads
-// title "Create Practice Test" (an H2), a title INPUT with label
-// "Test Title *" (the required asterisk) and placeholder "e.g., Biology
-// Chapter 5 Review", a "N questions added" counter (the clone's
-// "{n} questions added" already matches exactly), and the footer's DOM
-// order submit-then-secondary ("Create Test" then "Close"). The clone's
-// copy was scaffold-era (git -S provenance: the "Create Test" title +
-// "e.g. Algebra Chapter 4 Quiz" placeholder date from the initial
-// 7b1e78d implementation and were never re-measured) and the footer was
-// Cancel-BEFORE-submit. The reference carries NO manual add-question
-// affordance, NO subject picker, and NO edit affordance at all (the card
-// menu measured Delete-only twice) — the clone's manual editor + Subject
-// select + Edit leg are the documented supersets and stay. The submit
-// stays "Create Test" on both hosts — identical pre-fix and post-fix.
-// ---------------------------------------------------------------------------
-test.describe("S172/DV2 · the practiceTests create-dialog parity catch-up", () => {
-  test("the create dialog carries the reference's measured title, label, placeholder, and footer", async ({ page }) => {
-    await page.goto("/PracticeTests");
-    await hydrated(page);
-    await page.getByRole("button", { name: "Create Test" }).first().click();
-    const dlg = page.getByRole("dialog");
-    await expect(dlg).toBeVisible();
-    // The measured title (RED pre-fix: the scaffold-era "Create Test").
-    await expect(dlg.getByRole("heading", { name: "Create Practice Test" })).toBeVisible();
-    // The measured label — the required asterisk included (exact).
-    await expect(dlg.getByText("Test Title *", { exact: true })).toBeVisible();
-    // The measured title placeholder.
-    await expect(dlg.locator("#test-title")).toHaveAttribute(
-      "placeholder",
-      "e.g., Biology Chapter 5 Review",
-    );
-    // The measured footer: submit "Create Test" + secondary "Close".
-    // The secondary is scoped to the FORM — the clone's shared shadcn
-    // dialog chrome adds a top-right X whose sr-only name is also
-    // "Close" (the documented superset; the reference carries no X —
-    // its measured dialog has ONE Close, the footer text button).
-    const submit = dlg.getByRole("button", { name: "Create Test", exact: true });
-    const close = dlg.locator("form").getByRole("button", { name: "Close", exact: true });
-    await expect(submit).toBeVisible();
-    await expect(close).toBeVisible();
-    // The measured DOM ORDER: the submit renders BEFORE the secondary
-    // (both scoped to the form's footer).
-    const order = await dlg
-      .locator("form")
-      .getByRole("button")
-      .evaluateAll((els) =>
-        els
-          .map((el, i) => ({ i, text: (el.textContent ?? "").trim() }))
-          .filter((b) => b.text === "Create Test" || b.text === "Close"),
-      );
-    expect(order.map((b) => b.text)).toEqual(["Create Test", "Close"]);
-  });
-});
 
 
 // S174/DX4 — the holidays create-dialog parity catch-up + the
@@ -963,44 +745,6 @@ test.describe("S176/DZ1 · the events create-dialog parity catch-up + the remind
     // Zero residue: the row is this leg's own; deleted through the UI.
     await row.getByRole("button", { name: `Delete ${name}` }).click();
     await expect(page.locator("article", { hasText: name })).toHaveCount(0);
-  });
-});
-
-
-test.describe("S176/DZ2 · the studygroups create-dialog parity catch-up + the swatch idiom port", () => {
-  test("the Create Study Group dialog carries the reference's measured labels, palette geometry, and selected state", async ({ page }) => {
-    await page.goto("/StudyGroups");
-    await hydrated(page);
-    await page.getByRole("button", { name: "Create study group" }).first().click();
-    const dlg = page.getByRole("dialog");
-    await expect(dlg).toBeVisible();
-    // The measured labels (RED pre-fix: the scaffold-era "Name" and
-    // "Description (optional)").
-    await expect(dlg.getByText("Group Name *", { exact: true })).toBeVisible();
-    await expect(dlg.locator("#group-name")).toHaveAttribute("placeholder", "e.g., Math Study Squad");
-    await expect(dlg.getByText("Description", { exact: true })).toBeVisible();
-    await expect(dlg.locator("#group-description")).toHaveAttribute("placeholder", "What's this group about?");
-    // The measured swatch idiom: SIX 32px rounded-full swatches with the
-    // white 2px + slate 4px double-ring + scale(1.1) selected state
-    // (RED pre-fix: the 28px size-7 with the plain slate ring). The
-    // geometry assert reads an UNSELECTED swatch (the selected scales).
-    const swatches = dlg.locator("button[aria-label^='Choose color #']");
-    await expect(swatches).toHaveCount(6);
-    // A rounded read (the dialog's flex layout lands the swatch at a
-    // fractional x — 31.95px measured; the base is 32).
-    const box = await swatches.nth(1).boundingBox();
-    expect(Math.round(box?.width ?? 0)).toBe(32);
-    const sel = await dlg.locator("button[aria-label^='Choose color #'][aria-pressed='true']").first().evaluate((el) => {
-      const s = getComputedStyle(el);
-      return { shadow: s.boxShadow, transform: s.transform };
-    });
-    expect(sel.shadow).toContain("rgb(255, 255, 255) 0px 0px 0px 2px");
-    expect(sel.transform).toContain("1.1");
-    // The S171-measured footer holds: [Create Group] submit. The dialog
-    // carries TWO "Close" buttons (the footer secondary + the header ×) —
-    // scope to the form's footer.
-    await expect(dlg.getByRole("button", { name: "Create Group", exact: true })).toBeVisible();
-    await dlg.locator("form").getByRole("button", { name: "Close" }).click();
   });
 });
 

@@ -4,6 +4,23 @@
 # SIGKILL escalation → rm db/e2e.db → run the chunk), one chunk per
 # invocation so each foreground run fits the tool timeout.
 # Usage: bash /home/z/my-project/omni-study1/scripts/run-cert-chunk.sh <1-5>
+# Expected (S196/ET re-tag): 160 + 275 + 116 + 101 + 92 = 744 — UNCHANGED
+# (the studygroups + practicetests two-family e2e consolidation: chunk 2
+# gains tests/e2e/practicetests.spec.ts [14th file] +
+# tests/e2e/studygroups.spec.ts [15th file] — the S7-P [1 pin] +
+# S130/CE2 [1 pin] + S172/DV2 [1 pin] PracticeTests describes + the
+# S171/DU2 [2 pins] + S176/DZ2 [1 pin] StudyGroups describes split
+# byte-faithfully out of parity-session7.spec.ts [42 → 36 pins, 1,558 →
+# 1,302 lines] into the dedicated practicetests [185 lines] +
+# studygroups [174 lines] homes; every census count UNCHANGED except
+# the spec-file count [36 → 38] — a pure test-organization refactor;
+# equivalence proven by the three-file cold run [43 passed = the
+# pre-split outcome, first-roll]; the S7-P register/verify POSTs ride
+# WITH the pin inside chunk 2 [register budget unchanged]; the moved
+# pins' immunity: own fresh-account storageState / uniquely-titled
+# self-owned rows / Date.now-stamped self-deleting fixtures / read-only
+# anatomy; direction-2 is a strict REDUCTION [parity-session9 no longer
+# sees the CE2 row]; see docs/remediation-plan-session196.md.)
 # Expected (S195/ES re-tag): 160 + 275 + 116 + 101 + 92 = 744 — UNCHANGED
 # (the analytics + gradetracker two-family e2e consolidation: chunk 2
 # gains tests/e2e/analytics.spec.ts [12th file] +
@@ -150,7 +167,7 @@ cd "$(dirname "$0")/.."
 
 declare -a CHUNKS=(
   "tests/e2e/navigation.spec.ts tests/e2e/parity-session8.spec.ts tests/e2e/mobile-navigation.spec.ts"
-  "tests/e2e/parity-session9.spec.ts tests/e2e/parity-session7.spec.ts tests/e2e/analytics.spec.ts tests/e2e/gradetracker.spec.ts tests/e2e/flashcards.spec.ts tests/e2e/notes.spec.ts tests/e2e/theme-system.spec.ts tests/e2e/parity-session6.spec.ts tests/e2e/a11y-sweep.spec.ts tests/e2e/tasks.spec.ts tests/e2e/s14-hardening.spec.ts tests/e2e/timetable.spec.ts tests/e2e/files.spec.ts"
+  "tests/e2e/parity-session9.spec.ts tests/e2e/parity-session7.spec.ts tests/e2e/analytics.spec.ts tests/e2e/gradetracker.spec.ts tests/e2e/flashcards.spec.ts tests/e2e/notes.spec.ts tests/e2e/theme-system.spec.ts tests/e2e/parity-session6.spec.ts tests/e2e/a11y-sweep.spec.ts tests/e2e/tasks.spec.ts tests/e2e/s14-hardening.spec.ts tests/e2e/timetable.spec.ts tests/e2e/files.spec.ts tests/e2e/practicetests.spec.ts tests/e2e/studygroups.spec.ts"
   "tests/e2e/parity-session5.spec.ts tests/e2e/resilience.spec.ts tests/e2e/s16-perf-parity.spec.ts"
   "tests/e2e/accessibility.spec.ts tests/e2e/calculator.spec.ts tests/e2e/dark-mode.spec.ts tests/e2e/s17-fresh-user.spec.ts tests/e2e/s52-sidebar-collapse.spec.ts"
   "tests/e2e/auth.spec.ts tests/e2e/auth-flows.spec.ts tests/e2e/greeting-clock.spec.ts tests/e2e/s18-rum.spec.ts tests/e2e/s19-rum-panel.spec.ts tests/e2e/s20-rum-export.spec.ts tests/e2e/s21-data-export.spec.ts tests/e2e/s22-boot-guard.spec.ts tests/e2e/s23-import.spec.ts tests/e2e/s24-change-password.spec.ts tests/e2e/s25-delete-account.spec.ts tests/e2e/s26-change-email.spec.ts"

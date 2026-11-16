@@ -1,4 +1,34 @@
 #!/usr/bin/env bash
+# (S196/ET re-tag — the census is UNCHANGED at 744 [160+275+116+101+92]
+# and the Expected line below is untouched; the change is ORGANIZATIONAL:
+# chunk 2 gains tests/e2e/practicetests.spec.ts [its 14th file] +
+# tests/e2e/studygroups.spec.ts [its 15th file] — the studygroups +
+# practicetests two-family e2e consolidation [the S195 close's named
+# next candidates, the SECOND two-family cycle]: the S7-P Practice
+# Tests bare-empty-state describe [1 pin] + the S130/CE2 True/False
+# default [1 pin] + the S172/DV2 create-dialog catch-up [1 pin] split
+# byte-faithfully out of parity-session7.spec.ts [42 → 36 pins, 1,558 →
+# 1,302 lines] into the dedicated practicetests home [185 lines], and
+# the S171/DU2 create-dialog + description round-trip describe [2 pins]
+# + the S176/DZ2 create-dialog + swatch idiom describe [1 pin] into the
+# dedicated studygroups home [174 lines]; the spec-file census moves
+# 36 → 38 [739 chromium specs + the setup test = 740 by --list]; the
+# split is a pure test-organization refactor with ZERO application
+# behavior change — equivalence proven by the three-file cold run
+# [43 passed, first-roll — the identical outcome to the pre-split
+# baseline]; the register/verify POSTs of S7-P's fresh-account pin ride
+# WITH the pin inside chunk 2, so the chunk's register budget is
+# unchanged by construction; practicetests sorts 10th and studygroups
+# 12th in the chunk's alphabetical order — BOTH AFTER the split
+# source's 8th position [the S193 both-directions shape, NOT the
+# strictly-fewer S194/S195 one]: the direction-1 immunity proof rides
+# each pin's own isolation [S7-P: its OWN fresh-account storageState;
+# S130/CE2: its OWN uniquely-titled row; S171/DU2: Date.now-stamped
+# self-deleting fixture; S172/DV2 + S176/DZ2: read-only anatomy], and
+# direction-2 is a strict REDUCTION [parity-session9 no longer sees the
+# CE2 row; no spec references it outside the split source]; the
+# residue two-direction analysis in docs/remediation-plan-session196.md
+# §4.)
 # (S195/ES re-tag — the census is UNCHANGED at 744 [160+275+116+101+92]
 # and the Expected line below is untouched; the change is ORGANIZATIONAL:
 # chunk 2 gains tests/e2e/analytics.spec.ts [its 12th file] +
@@ -1010,7 +1040,7 @@ cd "$(dirname "$0")/.."
 
 declare -a CHUNKS=(
   "tests/e2e/navigation.spec.ts tests/e2e/parity-session8.spec.ts tests/e2e/mobile-navigation.spec.ts"
-  "tests/e2e/parity-session9.spec.ts tests/e2e/parity-session7.spec.ts tests/e2e/analytics.spec.ts tests/e2e/gradetracker.spec.ts tests/e2e/flashcards.spec.ts tests/e2e/notes.spec.ts tests/e2e/theme-system.spec.ts tests/e2e/parity-session6.spec.ts tests/e2e/a11y-sweep.spec.ts tests/e2e/tasks.spec.ts tests/e2e/s14-hardening.spec.ts tests/e2e/timetable.spec.ts tests/e2e/files.spec.ts"
+  "tests/e2e/parity-session9.spec.ts tests/e2e/parity-session7.spec.ts tests/e2e/analytics.spec.ts tests/e2e/gradetracker.spec.ts tests/e2e/flashcards.spec.ts tests/e2e/notes.spec.ts tests/e2e/theme-system.spec.ts tests/e2e/parity-session6.spec.ts tests/e2e/a11y-sweep.spec.ts tests/e2e/tasks.spec.ts tests/e2e/s14-hardening.spec.ts tests/e2e/timetable.spec.ts tests/e2e/files.spec.ts tests/e2e/practicetests.spec.ts tests/e2e/studygroups.spec.ts"
   "tests/e2e/parity-session5.spec.ts tests/e2e/resilience.spec.ts tests/e2e/s16-perf-parity.spec.ts"
   "tests/e2e/accessibility.spec.ts tests/e2e/calculator.spec.ts tests/e2e/dark-mode.spec.ts tests/e2e/s17-fresh-user.spec.ts tests/e2e/s52-sidebar-collapse.spec.ts"
   "tests/e2e/auth.spec.ts tests/e2e/auth-flows.spec.ts tests/e2e/greeting-clock.spec.ts tests/e2e/s18-rum.spec.ts tests/e2e/s19-rum-panel.spec.ts tests/e2e/s20-rum-export.spec.ts tests/e2e/s21-data-export.spec.ts tests/e2e/s22-boot-guard.spec.ts tests/e2e/s23-import.spec.ts tests/e2e/s24-change-password.spec.ts tests/e2e/s25-delete-account.spec.ts tests/e2e/s26-change-email.spec.ts"

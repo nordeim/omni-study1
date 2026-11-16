@@ -2,6 +2,17 @@ import { defineConfig } from "vitest/config";
 import path from "node:path";
 
 // Unit-test layer for the pure domain seams — 55 files / 1799 tests
+// (re-anchored S196/ET — the studygroups + practicetests two-family e2e
+// consolidation: the unit census UNCHANGED at 1799 [55 files — no
+// source change]; the e2e census UNCHANGED at 744 [160+275+116+101+92]
+// with 739 chromium specs now in 38 spec files — the S7-P [1 pin] +
+// S130/CE2 [1 pin] + S172/DV2 [1 pin] PracticeTests describes split
+// into the dedicated practicetests home tests/e2e/practicetests.spec.ts
+// and the S171/DU2 [2 pins] + S176/DZ2 [1 pin] StudyGroups describes
+// into the dedicated studygroups home tests/e2e/studygroups.spec.ts,
+// byte-faithfully out of parity-session7.spec.ts [42 → 36]; a pure
+// test-organization refactor, zero application behavior change; see
+// docs/remediation-plan-session196.md.)
 // (re-anchored S195/ES — the analytics + gradetracker two-family e2e
 // consolidation: the unit census UNCHANGED at 1799 [55 files — no
 // source change]; the e2e census UNCHANGED at 744 [160+275+116+101+92]
