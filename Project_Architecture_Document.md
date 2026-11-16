@@ -1,11 +1,19 @@
-# StudyFlow (Omni-Study) — Master Project Architecture Document (PAD) v1.3.108
+# StudyFlow (Omni-Study) — Master Project Architecture Document (PAD) v1.3.109
 
 **Classification:** Internal Engineering Reference
 **Status:** DEFINITIVE, PRODUCTION-LOCKED BLUEPRINT
 **Companion Documents:** `README.md` (user-facing), `AGENTS.md` (agent quick-reference), `CLAUDE.md` (agent operating conventions), `docs/Tailwind-V4-Validation-Report.md` (parity trap log)
-**Last Updated:** 2026-11-16
+**Last Updated:** 2026-11-17
 **Audience:** Senior Engineers, Tech Leads, DevOps, Onboarding Engineers, and AI Coding Agents
 **Rule:** Every architectural decision in this document traces to a specific rationale. Nothing is here "because it's popular."
+
+---
+
+#### Revision Block — v1.3.109 (Session-201 / Batch EY, Cycle 151)
+
+- `[SR]` Current test census anchor (the v1.2.0 convention, re-anchored): **1799/1799 Vitest unit** (55 files — UNCHANGED: a test-organization cycle, zero application behavior change) + **744 Playwright e2e** (the 5-chunk cold map: 160+275+116+101+92, UNCHANGED) with **739 chromium specs in 48 spec files** + the per-chunk setup re-runs (the spec-file census 47 → 48) — the badge holds 2543.
+- `[AR]` **The Sidebar-chrome AXIS-home e2e consolidation (the S201 axis — the S200 close's named next candidate: "the S8-A Sidebar chrome [4 pins] as its largest remaining pure cross-view family (its own future AXIS-home candidate)", executed in the census-clean window the standing audit confirmed, the eleventh consecutive clean window)**: the S8-A sidebar chrome describe [4 pins — the reference's lucide nav-icon set, the active-nav gradient's avatarTo stop, the untruncated brand tagline, the reference's 36px collapse button] split byte-faithfully out of `parity-session8.spec.ts` [61 → 57 pins, 1,671 → 1,613 lines] into the dedicated **FIFTH AXIS home `tests/e2e/sidebar.spec.ts`** [101 lines — the S197/EU dialogs + S198/EV emptystates/viewheaders/filterrows AXIS-home kind; the family's binding axis is the sidebar chrome measured across the shell, not a view]. The S6-A populated task rows and S9-B/Q MyDay families STAY (the boundary doctrine: "a pin whose family already has a home is a reason NOT to move it" — the tasks home predates the program, the myday home was created at S200/EX). The new home sorts LAST in chunk 1's alphabetical order — the after-position direction with the S198 per-pin immunity proof (every pin a read-only computed-style assert on shell chrome whose state no predecessor can mutate: zero writes, the accent from the untouched user record, the collapse preference in per-context localStorage, empty at start). A pure test-organization refactor, ZERO application behavior change; see `docs/remediation-plan-session201.md`.
+- `[SR]` The v1.3.108 revision block (the prior cycle's record) follows.
 
 ---
 

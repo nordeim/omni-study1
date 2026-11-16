@@ -2,6 +2,18 @@ import { defineConfig } from "vitest/config";
 import path from "node:path";
 
 // Unit-test layer for the pure domain seams — 55 files / 1799 tests
+// (re-anchored S201/EY — the Sidebar-chrome AXIS-home e2e
+// consolidation: the unit census UNCHANGED at 1799 [55
+// files — no source change]; the e2e census UNCHANGED at 744
+// [160+275+116+101+92] with 739 chromium specs now in 48 spec files —
+// the S8-A [4 pins] sidebar chrome describe
+// split byte-faithfully out of parity-session8.spec.ts [61 → 57 pins]
+// into the dedicated FIFTH AXIS home tests/e2e/sidebar.spec.ts [the
+// S197/EU dialogs + S198/EV emptystates/viewheaders/filterrows
+// AXIS-home kind — the family's binding axis is the sidebar chrome
+// measured across the shell, not a view]; a pure test-organization
+// refactor, zero application behavior change; see
+// docs/remediation-plan-session201.md.)
 // (re-anchored S200/EX — the Calendar + Dashboard + MyDay three-family
 // view-home e2e consolidation: the unit census UNCHANGED at 1799 [55
 // files — no source change]; the e2e census UNCHANGED at 744

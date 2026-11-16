@@ -25,7 +25,7 @@ tags:
 
 > **What this is:** the single-source-of-truth reference for working in
 > `nordeim/omni-study1`. Every fact below is verified against the codebase
-> (2543 tests green, re-anchored at the S200 update: 1799 Vitest unit [55 files] + 744 Playwright e2e [the 5-chunk census: 739 chromium specs in 47 spec files + the per-chunk setup re-runs — 160+275+116+101+92; the S200/EX Calendar + Dashboard + MyDay three-family view-home consolidation split the S8-C [6 pins] + S8-B [3 pins] + S8-D [3 pins] view describes into the dedicated view homes tests/e2e/calendar.spec.ts + tests/e2e/dashboard.spec.ts + tests/e2e/myday.spec.ts, byte-faithfully out of parity-session8.spec.ts [73 → 61 pins] — a pure test-organization refactor, every census count UNCHANGED but the spec-file count 44 → 47]) — the census re-anchored through
+> (2543 tests green, re-anchored at the S201 update: 1799 Vitest unit [55 files] + 744 Playwright e2e [the 5-chunk census: 739 chromium specs in 48 spec files + the per-chunk setup re-runs — 160+275+116+101+92; the S201/EY Sidebar-chrome AXIS-home consolidation split the S8-A sidebar chrome describe [4 pins — the reference's lucide nav-icon set, the active-nav gradient's avatarTo stop, the untruncated brand tagline, the reference's 36px collapse button] into the dedicated FIFTH AXIS home tests/e2e/sidebar.spec.ts, byte-faithfully out of parity-session8.spec.ts [61 → 57 pins] — a pure test-organization refactor, every census count UNCHANGED but the spec-file count 47 → 48]) — the census re-anchored through
 > the s117–s124 hardening cycles; the 2.0 baseline was 834 + 299 in six
 > chunks after the parity re-application + account-flow completion +
 > regression hardening).
@@ -628,7 +628,7 @@ tail -40 dev.log                            # request traces + prisma queries
 ```bash
 bun run lint && bun run typecheck && bun run test && bun run build && bun run test:e2e
 ```
-Current green state (re-anchored at S200/EX): lint ✓ · tsc ✓ (`noImplicitAny` + `noUnusedLocals`/`noUnusedParameters` — the BV16 machine guard; plus the S129/CD3 re-enabled `react-hooks/exhaustive-deps` as an error) · 1799 unit ✓ · build ✓ (the type gate live — `ignoreBuildErrors` removed) · 744 e2e ✓ (2543 green) — the spec-file census 47 (the S197/EU dialogs home, the first axis home, + the S198/EV emptystates + viewheaders + filterrows axis homes, the second axis-home kind, + the S199/EW events + focustimer view homes, the 11th and 12th VIEW homes, + the S200/EX calendar + dashboard + myday view homes, the 13th, 14th and 15th VIEW homes).
+Current green state (re-anchored at S201/EY): lint ✓ · tsc ✓ (`noImplicitAny` + `noUnusedLocals`/`noUnusedParameters` — the BV16 machine guard; plus the S129/CD3 re-enabled `react-hooks/exhaustive-deps` as an error) · 1799 unit ✓ · build ✓ (the type gate live — `ignoreBuildErrors` removed) · 744 e2e ✓ (2543 green) — the spec-file census 48 (the S197/EU dialogs home, the first axis home, + the S198/EV emptystates + viewheaders + filterrows axis homes, the second axis-home kind, + the S199/EW events + focustimer view homes, the 11th and 12th VIEW homes, + the S200/EX calendar + dashboard + myday view homes, the 13th, 14th and 15th VIEW homes, + the S201/EY sidebar home, the FIFTH AXIS home).
 
 **Full-suite chunk map** (one server-boot per chunk; the 10-min tool cap makes
 one-shot full runs unreliable — the 2.0 six-chunk map: chrome+s14 104 ·

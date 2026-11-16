@@ -1,4 +1,27 @@
 #!/usr/bin/env bash
+# (S201/EY re-tag — the census is UNCHANGED at 744 [160+275+116+101+92]
+# and the Expected line below is untouched; the change is ORGANIZATIONAL:
+# chunk 1 gains tests/e2e/sidebar.spec.ts [its 7th file, sorting LAST]
+# — the Sidebar-chrome AXIS-home e2e consolidation [the S200 close's
+# named next candidate: "the S8-A Sidebar chrome [4 pins] as its largest
+# remaining pure cross-view family (its own future AXIS-home candidate)"]:
+# the S8-A sidebar chrome describe [4 pins — the reference's lucide
+# nav-icon set, the active-nav gradient's avatarTo stop, the untruncated
+# brand tagline, the reference's 36px collapse button] split
+# byte-faithfully out of parity-session8.spec.ts [61 → 57 pins, 1,671 →
+# 1,613 lines] into the dedicated FIFTH AXIS home tests/e2e/sidebar.spec.ts
+# [the S197/EU dialogs + S198/EV emptystates/viewheaders/filterrows
+# AXIS-home kind — the family's binding axis is the sidebar chrome
+# measured across the shell, not a view]; the census UNCHANGED, the
+# spec-file census 47 → 48; sidebar sorts LAST in the chunk's
+# alphabetical order — strictly MORE predecessors than the pins' old
+# exposure inside parity-session8's first describe [the after-position
+# direction, the S198 per-pin immunity proof: every pin is a read-only
+# computed-style assert on shell chrome whose state no predecessor can
+# mutate — zero writes, the accent from the untouched user record, the
+# collapse preference in per-context localStorage, empty at start];
+# ZERO budget units move [the family issues no writes at all — not even
+# a click]; see docs/remediation-plan-session201.md)
 # (S200/EX re-tag — the census is UNCHANGED at 744 [160+275+116+101+92]
 # and the Expected line below is untouched; the change is ORGANIZATIONAL:
 # chunk 1 gains tests/e2e/calendar.spec.ts + tests/e2e/dashboard.spec.ts
@@ -1135,7 +1158,7 @@ set -uo pipefail
 cd "$(dirname "$0")/.."
 
 declare -a CHUNKS=(
-  "tests/e2e/calendar.spec.ts tests/e2e/dashboard.spec.ts tests/e2e/navigation.spec.ts tests/e2e/mobile-navigation.spec.ts tests/e2e/myday.spec.ts tests/e2e/parity-session8.spec.ts"
+  "tests/e2e/calendar.spec.ts tests/e2e/dashboard.spec.ts tests/e2e/navigation.spec.ts tests/e2e/mobile-navigation.spec.ts tests/e2e/myday.spec.ts tests/e2e/parity-session8.spec.ts tests/e2e/sidebar.spec.ts"
   "tests/e2e/parity-session9.spec.ts tests/e2e/parity-session7.spec.ts tests/e2e/analytics.spec.ts tests/e2e/gradetracker.spec.ts tests/e2e/flashcards.spec.ts tests/e2e/notes.spec.ts tests/e2e/theme-system.spec.ts tests/e2e/parity-session6.spec.ts tests/e2e/a11y-sweep.spec.ts tests/e2e/tasks.spec.ts tests/e2e/s14-hardening.spec.ts tests/e2e/timetable.spec.ts tests/e2e/files.spec.ts tests/e2e/practicetests.spec.ts tests/e2e/studygroups.spec.ts tests/e2e/dialogs.spec.ts tests/e2e/emptystates.spec.ts tests/e2e/filterrows.spec.ts tests/e2e/viewheaders.spec.ts"
   "tests/e2e/events.spec.ts tests/e2e/focustimer.spec.ts tests/e2e/parity-session5.spec.ts tests/e2e/resilience.spec.ts tests/e2e/s16-perf-parity.spec.ts"
   "tests/e2e/accessibility.spec.ts tests/e2e/calculator.spec.ts tests/e2e/dark-mode.spec.ts tests/e2e/s17-fresh-user.spec.ts tests/e2e/s52-sidebar-collapse.spec.ts"

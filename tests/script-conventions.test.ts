@@ -549,6 +549,32 @@ describe("the chunked cert runner's truth contract (S128/CC2)", () => {
     // zero-write both-directions collapse]; the staying file DROPS the
     // orphaned isRound helper definition [its only consumers moved];
     // see docs/remediation-plan-session200.md).
+    // S201/EY: the census is UNCHANGED at 744 [160+275+116+101+92] and
+    // the Expected line below is untouched; the change is ORGANIZATIONAL:
+    // chunk 1 gains tests/e2e/sidebar.spec.ts as its 7th file [sorting
+    // LAST] — the Sidebar-chrome AXIS-home e2e consolidation [the S200
+    // close's named next candidate: "the S8-A Sidebar chrome [4 pins]
+    // as its largest remaining pure cross-view family (its own future
+    // AXIS-home candidate)"]: the S8-A sidebar chrome describe
+    // [4 pins — the reference's lucide nav-icon set, the active-nav
+    // gradient's avatarTo stop, the untruncated brand tagline, the
+    // reference's 36px collapse button] split byte-faithfully out of
+    // parity-session8.spec.ts [61 → 57 pins, 1,671 → 1,613 lines]
+    // into the dedicated FIFTH AXIS home tests/e2e/sidebar.spec.ts
+    // [the S197/EU dialogs + S198/EV emptystates/viewheaders/filterrows
+    // AXIS-home kind — the family's binding axis is the sidebar chrome
+    // measured across the shell, not a view]; the spec-file census
+    // moves 47 → 48 [739 chromium + the setup test = 740 by --list];
+    // sidebar sorts LAST in the chunk's alphabetical order — strictly
+    // MORE predecessors than the pins' old exposure inside
+    // parity-session8's first describe [the after-position direction,
+    // the S198 per-pin immunity proof: every pin is a read-only
+    // computed-style assert on shell chrome whose state no predecessor
+    // can mutate — zero writes, the accent from the untouched user
+    // record, the collapse preference in per-context localStorage,
+    // empty at start]; ZERO budget units move [the family issues no
+    // writes at all — not even a click]; see
+    // docs/remediation-plan-session201.md).
     expect(certSource).toContain("Expected: 160 + 275 + 116 + 101 + 92 = 744");
   });
 
