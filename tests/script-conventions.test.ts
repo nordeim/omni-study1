@@ -423,6 +423,26 @@ describe("the chunked cert runner's truth contract (S128/CC2)", () => {
     // position; the --list census 740 in 35 files [739 chromium + the
     // setup test; 34 spec files]; see
     // docs/remediation-plan-session194.md).
+    // S195/ES re-tag: the census is UNCHANGED at 744 — the analytics +
+    // gradetracker two-family e2e consolidation (the S7-D [3 pins] +
+    // S127/CB13 [1 pin] Analytics describes + the S7-E [1 pin] +
+    // S173/DW2 [1 pin] GradeTracker describes — the last S7-era
+    // founding strays + their same-file pure siblings — split
+    // byte-faithfully out of parity-session7.spec.ts [48 → 42 pins,
+    // 1,724 → 1,558 lines] into the dedicated analytics
+    // tests/e2e/analytics.spec.ts + gradetracker
+    // tests/e2e/gradetracker.spec.ts homes; chunk 2 gains them as its
+    // 12th/13th files; the Analytics/GradeTracker strays outside
+    // parity-session7 [the a11y-sweep legs, the dark-mode washes, the
+    // navigation legs, the parity-session5/8/9 batch homes, the
+    // s17-fresh-user zero-data legs, the mixed S175/DY4 journeys, the
+    // S187/EK GT-stat border leg] stay — the S189/S191/S193/S194
+    // boundary precedent; ALL FOUR moved describes are read-only/
+    // zero-write, so no budget units move; analytics sorts 2nd +
+    // gradetracker 5th — BOTH strictly fewer predecessors than the
+    // split source's 6th position; the --list census 740 in 37 files
+    // [739 chromium + the setup test; 36 spec files]; see
+    // docs/remediation-plan-session195.md).
     expect(certSource).toContain("Expected: 160 + 275 + 116 + 101 + 92 = 744");
   });
 
