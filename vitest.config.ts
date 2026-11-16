@@ -2,6 +2,16 @@ import { defineConfig } from "vitest/config";
 import path from "node:path";
 
 // Unit-test layer for the pure domain seams — 55 files / 1799 tests
+// (re-anchored S197/EU — the dialog catch-up family e2e consolidation:
+// the unit census UNCHANGED at 1799 [55 files — no source change]; the
+// e2e census UNCHANGED at 744 [160+275+116+101+92] with 739 chromium
+// specs now in 39 spec files — the S174/DX4 [1 pin] + S175/DY1 [1 pin]
+// + S176/DZ1 [2 pins] + S176/DZ3 [1 pin] create-dialog describes split
+// byte-faithfully out of parity-session7.spec.ts [36 → 31] into the
+// dedicated FIRST AXIS home tests/e2e/dialogs.spec.ts [349 lines — the
+// family's binding axis is the dialog anatomy, not a view]; a pure
+// test-organization refactor, zero application behavior change; see
+// docs/remediation-plan-session197.md.)
 // (re-anchored S196/ET — the studygroups + practicetests two-family e2e
 // consolidation: the unit census UNCHANGED at 1799 [55 files — no
 // source change]; the e2e census UNCHANGED at 744 [160+275+116+101+92]

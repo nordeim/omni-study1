@@ -467,6 +467,23 @@ describe("the chunked cert runner's truth contract (S128/CC2)", () => {
     // [parity-session9 no longer sees the CE2 row]; the --list census
     // 740 in 39 files [739 chromium + the setup test; 38 spec files];
     // see docs/remediation-plan-session196.md).
+    // S197/EU: the census is UNCHANGED at 744 [160+275+116+101+92] and
+    // chunk 2 gains tests/e2e/dialogs.spec.ts as its 16th file — the
+    // dialog catch-up family e2e consolidation [the S196 close's first
+    // named next candidate, the FIRST AXIS home]: the S174/DX4 [1 pin]
+    // + S175/DY1 [1 pin] + S176/DZ1 [2 pins] + S176/DZ3 [1 pin]
+    // create-dialog describes split byte-faithfully out of
+    // parity-session7.spec.ts [36 → 31 pins, 1,302 → 1,017 lines] into
+    // the dedicated dialogs home [349 lines; the family's binding axis
+    // is the dialog anatomy, not a view — four dialogs across Settings/
+    // Events/Tasks]; the spec-file census moves 38 → 39 [739 chromium +
+    // the setup test = 740 by --list]; dialogs sorts 3rd in the chunk's
+    // alphabetical order [a11y-sweep < analytics < dialogs < files] —
+    // strictly FEWER predecessors than the split source's 8th position
+    // [the S194/S195 safe direction]; the DZ1b write units [event POST
+    // + PATCH + DELETE through the real UI] ride WITH the pin inside
+    // chunk 2 [the chunk is the budget boundary]; see
+    // docs/remediation-plan-session197.md).
     expect(certSource).toContain("Expected: 160 + 275 + 116 + 101 + 92 = 744");
   });
 
