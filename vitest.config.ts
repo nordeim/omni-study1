@@ -2,6 +2,17 @@ import { defineConfig } from "vitest/config";
 import path from "node:path";
 
 // Unit-test layer for the pure domain seams — 55 files / 1799 tests
+// (re-anchored S200/EX — the Calendar + Dashboard + MyDay three-family
+// view-home e2e consolidation: the unit census UNCHANGED at 1799 [55
+// files — no source change]; the e2e census UNCHANGED at 744
+// [160+275+116+101+92] with 739 chromium specs now in 47 spec files —
+// the S8-C [6 pins] + S8-B [3 pins] + S8-D [3 pins] view describes
+// split byte-faithfully out of parity-session8.spec.ts [73 → 61 pins]
+// into the dedicated view homes tests/e2e/calendar.spec.ts +
+// tests/e2e/dashboard.spec.ts + tests/e2e/myday.spec.ts [the 13th,
+// 14th and 15th VIEW homes — the S195/S196/S199 multi-family shape,
+// fourth application]; a pure test-organization refactor, zero
+// application behavior change; see docs/remediation-plan-session200.md.)
 // (re-anchored S199/EW — the Events + FocusTimer two-family view-home
 // e2e consolidation: the unit census UNCHANGED at 1799 [55 files — no
 // source change]; the e2e census UNCHANGED at 744 [160+275+116+101+92]

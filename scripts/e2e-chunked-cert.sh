@@ -1,4 +1,24 @@
 #!/usr/bin/env bash
+# (S200/EX re-tag — the census is UNCHANGED at 744 [160+275+116+101+92]
+# and the Expected line below is untouched; the change is ORGANIZATIONAL:
+# chunk 1 gains tests/e2e/calendar.spec.ts + tests/e2e/dashboard.spec.ts
+# + tests/e2e/myday.spec.ts [its 1st/2nd/4th files] — the Calendar +
+# Dashboard + MyDay three-family view-home e2e consolidation [the S199
+# close's named next candidate, the size-debt re-adjudication of the
+# remaining coverage-axis files]: the S8-C Calendar rework describe
+# [6 pins] + the S8-B Dashboard flush rows describe [3 pins] + the S8-D
+# MyDay header + suggestions describe [3 pins] split byte-faithfully
+# out of parity-session8.spec.ts [73 → 61 pins, 1,939 → 1,671 lines]
+# into the three dedicated view homes [calendar 166 lines + dashboard
+# 115 + myday 112 — the 13th, 14th and 15th VIEW homes, the
+# S195/S196/S199 multi-family shape, fourth application]; the census
+# UNCHANGED, the spec-file census 44 → 47; calendar sorts 1st +
+# dashboard 2nd + myday 4th in the chunk's alphabetical order — strictly
+# FEWER predecessors than the split source's new 6th position [the
+# S194/S195 safe direction]; the family issues ZERO writes [the two
+# clicks are the client-state day-cell selection + the suggestions
+# toggle, never the API — the S198 lesson-2 both-directions collapse];
+# see docs/remediation-plan-session200.md)
 # (S199/EW re-tag — the census is UNCHANGED at 744 [160+275+116+101+92]
 # and the Expected line below is untouched; the change is ORGANIZATIONAL:
 # chunk 3 gains tests/e2e/events.spec.ts + tests/e2e/focustimer.spec.ts
@@ -1115,7 +1135,7 @@ set -uo pipefail
 cd "$(dirname "$0")/.."
 
 declare -a CHUNKS=(
-  "tests/e2e/navigation.spec.ts tests/e2e/parity-session8.spec.ts tests/e2e/mobile-navigation.spec.ts"
+  "tests/e2e/calendar.spec.ts tests/e2e/dashboard.spec.ts tests/e2e/navigation.spec.ts tests/e2e/mobile-navigation.spec.ts tests/e2e/myday.spec.ts tests/e2e/parity-session8.spec.ts"
   "tests/e2e/parity-session9.spec.ts tests/e2e/parity-session7.spec.ts tests/e2e/analytics.spec.ts tests/e2e/gradetracker.spec.ts tests/e2e/flashcards.spec.ts tests/e2e/notes.spec.ts tests/e2e/theme-system.spec.ts tests/e2e/parity-session6.spec.ts tests/e2e/a11y-sweep.spec.ts tests/e2e/tasks.spec.ts tests/e2e/s14-hardening.spec.ts tests/e2e/timetable.spec.ts tests/e2e/files.spec.ts tests/e2e/practicetests.spec.ts tests/e2e/studygroups.spec.ts tests/e2e/dialogs.spec.ts tests/e2e/emptystates.spec.ts tests/e2e/filterrows.spec.ts tests/e2e/viewheaders.spec.ts"
   "tests/e2e/events.spec.ts tests/e2e/focustimer.spec.ts tests/e2e/parity-session5.spec.ts tests/e2e/resilience.spec.ts tests/e2e/s16-perf-parity.spec.ts"
   "tests/e2e/accessibility.spec.ts tests/e2e/calculator.spec.ts tests/e2e/dark-mode.spec.ts tests/e2e/s17-fresh-user.spec.ts tests/e2e/s52-sidebar-collapse.spec.ts"

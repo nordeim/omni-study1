@@ -528,6 +528,27 @@ describe("the chunked cert runner's truth contract (S128/CC2)", () => {
     // leg and the S123/BX6 + S127/CB1 duration legs STAY in
     // parity-session5 as hardening coverage]; see
     // docs/remediation-plan-session199.md).
+    // S200/EX: the census is UNCHANGED at 744 [160+275+116+101+92] and
+    // chunk 1 gains tests/e2e/calendar.spec.ts + tests/e2e/
+    // dashboard.spec.ts + tests/e2e/myday.spec.ts as its 1st/2nd/4th
+    // files — the Calendar + Dashboard + MyDay three-family view-home
+    // e2e consolidation [the S199 close's named next candidate, the
+    // size-debt re-adjudication of the remaining coverage-axis files]:
+    // the S8-C [6 pins] + S8-B [3 pins] + S8-D [3 pins] view describes
+    // split byte-faithfully out of parity-session8.spec.ts
+    // [73 → 61 pins, 1,939 → 1,671 lines] into the three dedicated
+    // view homes [the 13th, 14th and 15th VIEW homes, the S195/S196/
+    // S199 multi-family shape, fourth application]; the spec-file
+    // census moves 44 → 47 [739 chromium + the setup test = 740 by
+    // --list]; calendar sorts 1st + dashboard 2nd + myday 4th in the
+    // chunk's alphabetical order — strictly FEWER predecessors than
+    // the split source's new 6th position [the S194/S195 safe
+    // direction]; ZERO budget units move [the family issues no writes
+    // at all — the two clicks are the client-state day-cell selection
+    // and the suggestions toggle, never the API — the S198 lesson-2
+    // zero-write both-directions collapse]; the staying file DROPS the
+    // orphaned isRound helper definition [its only consumers moved];
+    // see docs/remediation-plan-session200.md).
     expect(certSource).toContain("Expected: 160 + 275 + 116 + 101 + 92 = 744");
   });
 

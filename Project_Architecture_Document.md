@@ -1,4 +1,4 @@
-# StudyFlow (Omni-Study) — Master Project Architecture Document (PAD) v1.3.107
+# StudyFlow (Omni-Study) — Master Project Architecture Document (PAD) v1.3.108
 
 **Classification:** Internal Engineering Reference
 **Status:** DEFINITIVE, PRODUCTION-LOCKED BLUEPRINT
@@ -9,6 +9,12 @@
 
 ---
 
+
+#### Revision Block — v1.3.108 (Session-200 / Batch EX, Cycle 150)
+
+- `[SR]` Current test census anchor (the v1.2.0 convention, re-anchored): **1799/1799 Vitest unit** (55 files — UNCHANGED: a test-organization cycle, zero application behavior change) + **744 Playwright e2e** (the 5-chunk cold map: 160+275+116+101+92, EVERY COUNT UNCHANGED; the spec-file census moves 44 → 47 [739 chromium specs + the setup test = 740 by `--list`]; verified by `--list`, never estimated).
+- `[AR]` **The Calendar + Dashboard + MyDay three-family view-home e2e consolidation (the S200 axis — the S199 close's named next candidate, the size-debt re-adjudication of the remaining coverage-axis files, executed in the census-clean window the standing audit confirmed — the tenth consecutive clean window).** The S8-C Calendar rework describe [6 pins] + the S8-B Dashboard flush rows describe [3 pins] + the S8-D MyDay header + suggestions describe [3 pins] split byte-faithfully out of `parity-session8.spec.ts` [73 → 61 pins, 1,939 → 1,671 lines] into the three dedicated view homes `tests/e2e/calendar.spec.ts` [166 lines — the 13th VIEW home] + `tests/e2e/dashboard.spec.ts` [115 lines — the 14th VIEW home] + `tests/e2e/myday.spec.ts` [112 lines — the 15th VIEW home] — the S195/S196/S199 multi-family shape, fourth application. The boundary adjudications: the S8-A sidebar chrome (cross-view chrome, its own future axis candidate), the S8-G Notes + S8-I Analytics already-homed stragglers, the S8-AC S76 measurement-batch trio, the S8-P mixed axis, and every hardening leg STAY (the boundary doctrine); the same-view strays in the other coverage files stay (the file-boundary doctrine); the orphaned isRound helper definition moved with its only consumers (the staying file would fail tsc noUnusedLocals otherwise). The residue analysis: all 12 moved pins issue ZERO writes (the two clicks are the client-state day-cell selection + the suggestions toggle, never the API — the S198 lesson-2 both-directions collapse); calendar sorts 1st + dashboard 2nd + myday 4th in chunk 1 — strictly fewer predecessors than the split source's new 6th position (the S194/S195 safe direction). The doc-chain lockstep: AGENTS (the census line 44 → 47 + the S200 lessons ×4) · CLAUDE (the e2e line's three-homes note) · README (the tree 44 → 47 + the Session-200 row) · the SKILL census sites · the vitest header · the cert scripts' re-tags (BOTH) + the tripwire chain · the worklog Session-211 entry · `docs/remediation-plan-session200.md` + `docs/session_272.md`.
+- `[SR]` The v1.3.107 revision block (the prior cycle's record) follows.
 
 #### Revision Block — v1.3.107 (Session-199 / Batch EW, Cycle 149)
 
