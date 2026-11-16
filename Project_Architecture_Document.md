@@ -1,4 +1,4 @@
-# StudyFlow (Omni-Study) — Master Project Architecture Document (PAD) v1.3.106
+# StudyFlow (Omni-Study) — Master Project Architecture Document (PAD) v1.3.107
 
 **Classification:** Internal Engineering Reference
 **Status:** DEFINITIVE, PRODUCTION-LOCKED BLUEPRINT
@@ -9,6 +9,12 @@
 
 ---
 
+
+#### Revision Block — v1.3.107 (Session-199 / Batch EW, Cycle 149)
+
+- `[SR]` Current test census anchor (the v1.2.0 convention, re-anchored): **1799/1799 Vitest unit** (55 files — UNCHANGED: a test-organization cycle, zero application behavior change) + **744 Playwright e2e** (the 5-chunk cold map: 160+275+116+101+92, EVERY COUNT UNCHANGED; the spec-file census moves 42 → 44 [739 chromium specs + the setup test = 740 by `--list`]; verified by `--list`, never estimated).
+- `[AR]` **The Events + FocusTimer two-family view-home e2e consolidation (the S199 axis — the S198 close's named next candidate, the size-debt adjudication of the remaining coverage-axis files, executed in the census-clean window the standing audit confirmed — the ninth consecutive clean window).** The S5-B Events dark terminal panel describe [7 pins] + the S5-U1 Events day-focus carousel describe [4 pins] + the S5-E FocusTimer layout describe [1 pin] + the S190 Focus Timer chrome port describe [5 pins] split byte-faithfully out of `parity-session5.spec.ts` [60 → 43 pins, 1,347 → 951 lines] into the two dedicated view homes `tests/e2e/events.spec.ts` [259 lines — the 11th VIEW home] + `tests/e2e/focustimer.spec.ts` [235 lines — the 12th VIEW home] — the S195/S196 multi-family shape, third application. The boundary adjudications: the S162/DK1 events CB8 failure-domain leg and the S123/BX6 + S127/CB1 duration-recording legs STAY in parity-session5 (hardening coverage, not chrome); the S8-N + S9-L focustimer strays stay in their files (the file-boundary doctrine); the Batch EN calculator/AI legs stay with their own families. The residue analysis: all 17 moved pins issue ZERO writes (the S198 lesson-2 both-directions collapse); events sorts 1st + focustimer 2nd in chunk 3 — strictly fewer predecessors than the split source's new 3rd position (the S194/S195 safe direction). The doc-chain lockstep: AGENTS (the census line 42 → 44 + the S199 lessons ×4) · CLAUDE (the e2e line's two-homes note) · README (the tree 42 → 44 + the Session-199 row) · the SKILL census sites · the vitest header · the cert scripts' re-tags (BOTH) + the tripwire chain · the worklog Session-210 entry · `docs/remediation-plan-session199.md` + `docs/session_270.md`.
+- `[SR]` The v1.3.106 revision block (the prior cycle's record) follows.
 
 #### Revision Block — v1.3.106 (Session-198 / Batch EV, Cycle 148)
 

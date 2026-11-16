@@ -2,6 +2,17 @@ import { defineConfig } from "vitest/config";
 import path from "node:path";
 
 // Unit-test layer for the pure domain seams — 55 files / 1799 tests
+// (re-anchored S199/EW — the Events + FocusTimer two-family view-home
+// e2e consolidation: the unit census UNCHANGED at 1799 [55 files — no
+// source change]; the e2e census UNCHANGED at 744 [160+275+116+101+92]
+// with 739 chromium specs now in 44 spec files — the S5-B [7 pins] +
+// S5-U1 [4 pins] Events describes + the S5-E [1 pin] + S190 [5 pins]
+// FocusTimer describes split byte-faithfully out of
+// parity-session5.spec.ts [60 → 43 pins] into the dedicated view homes
+// tests/e2e/events.spec.ts + tests/e2e/focustimer.spec.ts [the 11th
+// and 12th VIEW homes — the S195/S196 multi-family shape, third
+// application]; a pure test-organization refactor, zero application
+// behavior change; see docs/remediation-plan-session199.md.)
 // (re-anchored S198/EV — the cross-view three-family e2e consolidation:
 // the unit census UNCHANGED at 1799 [55 files — no source change]; the
 // e2e census UNCHANGED at 744 [160+275+116+101+92] with 739 chromium

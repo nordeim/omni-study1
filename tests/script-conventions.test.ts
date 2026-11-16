@@ -505,6 +505,29 @@ describe("the chunked cert runner's truth contract (S128/CC2)", () => {
     // family issues no writes at all — the six page.route GETs are the
     // EA3 zero-forcing interception]; see
     // docs/remediation-plan-session198.md).
+    // S199/EW: the census is UNCHANGED at 744 [160+275+116+101+92] and
+    // chunk 3 gains tests/e2e/events.spec.ts + tests/e2e/
+    // focustimer.spec.ts as its 1st/2nd files — the Events +
+    // FocusTimer two-family view-home e2e consolidation [the S198
+    // close's named next candidate, the size-debt adjudication of the
+    // remaining coverage-axis files]: the S5-B [7 pins] + S5-U1 [4
+    // pins] Events describes + the S5-E [1 pin] + S190 [5 pins]
+    // FocusTimer describes split byte-faithfully out of
+    // parity-session5.spec.ts [60 → 43 pins, 1,347 → 951 lines] into
+    // the two dedicated view homes [the 11th and 12th VIEW homes, the
+    // S195/S196 multi-family shape, third application]; the spec-file
+    // census moves 42 → 44 [739 chromium + the setup test = 740 by
+    // --list]; events sorts 1st + focustimer 2nd in the chunk's
+    // alphabetical order — strictly FEWER predecessors than the split
+    // source's new 3rd position [the S194/S195 safe direction]; the
+    // staying 43 pins see two ZERO-WRITE predecessors ≡ zero state
+    // delta [the S198 lesson-2 zero-write both-directions collapse];
+    // ZERO budget units move [the family issues no writes at all —
+    // the seven clicks are the dialog open + Escape-Close WITHOUT
+    // submitting and the carousel navigation; the S162/DK1 events CB8
+    // leg and the S123/BX6 + S127/CB1 duration legs STAY in
+    // parity-session5 as hardening coverage]; see
+    // docs/remediation-plan-session199.md).
     expect(certSource).toContain("Expected: 160 + 275 + 116 + 101 + 92 = 744");
   });
 

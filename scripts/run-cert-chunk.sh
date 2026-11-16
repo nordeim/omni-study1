@@ -4,6 +4,18 @@
 # SIGKILL escalation → rm db/e2e.db → run the chunk), one chunk per
 # invocation so each foreground run fits the tool timeout.
 # Usage: bash /home/z/my-project/omni-study1/scripts/run-cert-chunk.sh <1-5>
+# Expected (S199/EW re-tag): 160 + 275 + 116 + 101 + 92 = 744 — UNCHANGED
+# (the Events + FocusTimer two-family view-home e2e consolidation: chunk 3
+# gains tests/e2e/events.spec.ts + tests/e2e/focustimer.spec.ts [its
+# 1st/2nd files] — the S5-B [7 pins] + S5-U1 [4 pins] Events describes +
+# the S5-E [1 pin] + S190 [5 pins] FocusTimer describes split
+# byte-faithfully out of parity-session5.spec.ts [60 → 43 pins] into the
+# two dedicated view homes [the 11th and 12th VIEW homes]; the census
+# UNCHANGED, the spec-file census 42 → 44; events sorts 1st + focustimer
+# 2nd in the chunk's alphabetical order — strictly FEWER predecessors
+# than the split source's new 3rd position [the S194/S195 safe
+# direction]; the family issues ZERO writes [the S198 lesson-2
+# both-directions collapse]; see docs/remediation-plan-session199.md)
 # Expected (S198/EV re-tag): 160 + 275 + 116 + 101 + 92 = 744 — UNCHANGED
 # (the cross-view three-family e2e consolidation: chunk 2 gains
 # tests/e2e/emptystates.spec.ts + tests/e2e/filterrows.spec.ts +
@@ -191,7 +203,7 @@ cd "$(dirname "$0")/.."
 declare -a CHUNKS=(
   "tests/e2e/navigation.spec.ts tests/e2e/parity-session8.spec.ts tests/e2e/mobile-navigation.spec.ts"
   "tests/e2e/parity-session9.spec.ts tests/e2e/parity-session7.spec.ts tests/e2e/analytics.spec.ts tests/e2e/gradetracker.spec.ts tests/e2e/flashcards.spec.ts tests/e2e/notes.spec.ts tests/e2e/theme-system.spec.ts tests/e2e/parity-session6.spec.ts tests/e2e/a11y-sweep.spec.ts tests/e2e/tasks.spec.ts tests/e2e/s14-hardening.spec.ts tests/e2e/timetable.spec.ts tests/e2e/files.spec.ts tests/e2e/practicetests.spec.ts tests/e2e/studygroups.spec.ts tests/e2e/dialogs.spec.ts tests/e2e/emptystates.spec.ts tests/e2e/filterrows.spec.ts tests/e2e/viewheaders.spec.ts"
-  "tests/e2e/parity-session5.spec.ts tests/e2e/resilience.spec.ts tests/e2e/s16-perf-parity.spec.ts"
+  "tests/e2e/events.spec.ts tests/e2e/focustimer.spec.ts tests/e2e/parity-session5.spec.ts tests/e2e/resilience.spec.ts tests/e2e/s16-perf-parity.spec.ts"
   "tests/e2e/accessibility.spec.ts tests/e2e/calculator.spec.ts tests/e2e/dark-mode.spec.ts tests/e2e/s17-fresh-user.spec.ts tests/e2e/s52-sidebar-collapse.spec.ts"
   "tests/e2e/auth.spec.ts tests/e2e/auth-flows.spec.ts tests/e2e/greeting-clock.spec.ts tests/e2e/s18-rum.spec.ts tests/e2e/s19-rum-panel.spec.ts tests/e2e/s20-rum-export.spec.ts tests/e2e/s21-data-export.spec.ts tests/e2e/s22-boot-guard.spec.ts tests/e2e/s23-import.spec.ts tests/e2e/s24-change-password.spec.ts tests/e2e/s25-delete-account.spec.ts tests/e2e/s26-change-email.spec.ts"
 )
