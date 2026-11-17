@@ -575,6 +575,18 @@ describe("the chunked cert runner's truth contract (S128/CC2)", () => {
     // empty at start]; ZERO budget units move [the family issues no
     // writes at all — not even a click]; see
     // docs/remediation-plan-session201.md).
+    // S202/EZ: the e2e census is UNCHANGED at 744 [160+275+116+101+92]
+    // and the Expected line below is untouched — the audit-driven
+    // dependency-security hardening changes NO e2e file: the framework
+    // upgrade next 16.4.2 → 16.4.6 [GHSA-mfr8-8qww-v76h, fixed 16.4.5;
+    // the dep-audit stage's runtime-reachable FAIL → GREEN] + zod
+    // 4.6.5 → 4.6.7 [GHSA-mrhx-c7xc-m3w5, fixed 4.6.6] via bun add, the
+    // security-floor seam [src/lib/security-floor.ts +
+    // tests/security-floor.test.ts, 11 pins — the honest RED → GREEN],
+    // and the full 5-chunk cold map re-certified on the upgraded
+    // framework [744/744, every chunk first-roll]; the unit census
+    // moves 1799 → 1810 [56 files]; the cert map's file set UNCHANGED
+    // [48 spec files]; see docs/remediation-plan-session202.md).
     expect(certSource).toContain("Expected: 160 + 275 + 116 + 101 + 92 = 744");
   });
 

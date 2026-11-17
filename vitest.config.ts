@@ -1,7 +1,18 @@
 import { defineConfig } from "vitest/config";
 import path from "node:path";
 
-// Unit-test layer for the pure domain seams — 55 files / 1799 tests
+// Unit-test layer for the pure domain seams — 56 files / 1810 tests
+// (re-anchored S202/EZ — the audit-driven dependency-security
+// hardening: the unit census moves 1799 → 1810 [56 files — the new
+// security-floor seam src/lib/security-floor.ts + tests/
+// security-floor.test.ts, 11 pins: the bun.lock parser + the fail-closed
+// comparator + the two REAL floor pins, the cycle's honest RED → GREEN
+// against next@16.4.2/zod@4.6.5 → next@16.4.6/zod@4.6.7 via bun add —
+// the GHSA-mfr8-8qww-v76h [next, fixed 16.4.5] + GHSA-mrhx-c7xc-m3w5
+// [zod, fixed 4.6.6] floors; the dep-audit stage re-run GREEN with zero
+// runtime-reachable; the e2e census UNCHANGED at 744
+// [160+275+116+101+92, every chunk first-roll on the upgraded
+// framework]; see docs/remediation-plan-session202.md.)
 // (re-anchored S201/EY — the Sidebar-chrome AXIS-home e2e
 // consolidation: the unit census UNCHANGED at 1799 [55
 // files — no source change]; the e2e census UNCHANGED at 744
